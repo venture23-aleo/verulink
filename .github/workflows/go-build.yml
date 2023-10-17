@@ -47,5 +47,5 @@ jobs:
       - name: upload binaries
         uses: actions/upload-artifact@v1
         with:
-          name: rly
-          path: ./build/rly
+          name: aleo
+          path: ./build/aleo

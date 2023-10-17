@@ -7,12 +7,7 @@ on:
   pull_request:
     branches:
       - "**"
-    paths:
-      - "contracts/evm/**"
-      - ".github/workflows/solidity-cov.yml"
-  push:
-    branches:
-      - "**"
+ 
 
 defaults:
   run:

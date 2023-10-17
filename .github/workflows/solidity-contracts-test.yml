@@ -4,12 +4,6 @@ on:
   pull_request:
     branches:
       - "**"
-    paths:
-      - "contracts/evm/**"
-      - ".github/workflows/solidity-cov.yml"
-  push:
-    branches:
-      - "**"
 
 env:
   FOUNDRY_PROFILE: ci
@@ -23,7 +17,7 @@ jobs:
     strategy:
       fail-fast: true
 
-    name: xCall-Multi Solidity Tests
+    name: Aleo Bridge Solidity Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
