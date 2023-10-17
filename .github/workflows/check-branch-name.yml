@@ -11,4 +11,4 @@ jobs:
           allowed_prefixes: 'feature,stable,fix,test,ci,bugfix'
           ignore: master,develop,release
           min_length: 5
-          max_length: 20
+          max_length: 50
