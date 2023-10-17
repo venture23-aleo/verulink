@@ -10,7 +10,7 @@ env:
 
 defaults:
   run:
-    working-directory: contracts/evm/xcall
+    working-directory: contracts/solidity
 
 jobs:
   check:
