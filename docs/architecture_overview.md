@@ -185,7 +185,7 @@ Validate Blacklist
 ### Attestor
 Attestor is the bridge component that will be responsible for detecting new messages, validating them and broadcasting them to the target network by calling the target bridge contract. Each attestor entity will be running their own full node of the involved chains and listen for incoming messages. Attestors do not have knowledge of other attestors in the network and are concerned only with verifying messages it has seen in the network. It will follow the following steps to make sure that the messages are delivered infallibly.
 
-![Attestor Workflow](attestor.png)
+![Attestor Workflow](images/attestor.png)
 
 #### Workflow Steps
  - Listen/Poll for new packets from source chain contract.
@@ -270,10 +270,10 @@ pub struct Relayer {
 ```
 
 #### Components Overview
-![Bridge](bridge.png)
+![Bridge](images/bridge.png)
 
 #### Architecture Overview
-![Architecture](contained.png)
+![Architecture](images/contained.png)
 
 
 #### Reference For Implementation
