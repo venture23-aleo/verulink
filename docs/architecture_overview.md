@@ -1,11 +1,47 @@
+# Table of Contents
+
+1. [Architecture Overview](#architecture-overview)
+   - [Introduction](#introduction)
+   - [Common Data Structures](#common-data-structures)
+   - [Logical Components](#logical-components)
+2. [Common Data Structures](#common-data-structures)
+   - [NetworkAddress](#networkaddress)
+   - [Packet](#packet)
+   - [TokenMessage](#tokenmessage)
+3. [Logical Components](#logical-components)
+   - [Contracts](#contracts)
+     - [Bridge Contract](#bridge-contract)
+       - [Bridge Contract Storage Structure](#bridge-contract-storage-structure)
+       - [Bridge Contract Interface](#bridge-contract-interface)
+     - [Token Service Contract](#token-service-contract)
+       - [Token Contract Storage Structure](#token-contract-storage-structure)
+       - [Token Service Contract Interface](#token-service-contract-interface)
+   - [Attestor](#attestor)
+     - [Workflow Steps](#workflow-steps)
+     - [Data Structures](#data-structures)
+     - [Components Overview](#components-overview)
+4. [Architecture Overview](#architecture-overview)
+   - [Reference For Implementation](#reference-for-implementation)
+     - [Chain Config Interface](#chain-config-interface)
+     - [Message Interface](#message-interface)
+     - [Store Interface](#store-interface)
+     - [Client Interface](#client-interface)
+     - [Chain Interface](#chain-interface)
+     - [Receiver Interface](#receiver-interface)
+     - [Sender Interface](#sender-interface)
+     - [Relayer Interface](#relayer-interface)
+     - [Bridge Interface](#bridge-interface)
+5. [Glossary](#glossary)
+
 # Architecture Overview
 
 This document provides detailed requirements and design guidelines for the smart contracts required for the Aleo-Eth Multisig bridge. This will make sure that we have a general consensus on workflow of the bridge and also keep the spec uniform over multiple languages or platforms. There might be platform specific deviations in implementation details but it is expected the overall architecture will remain consistent on every platform.
 
 
-## Aleo-Eth Multisig Bridge
+## Introduction
 
 This is a trusted  bridge platform that is designed to help move assets between Ethereum and Aleo blockchain.
+
 
 ## Common Data Structures
 All components of bridge agree to some common data structures which are as follows:
@@ -123,31 +159,31 @@ pub trait BridgeContract {
 
 
 ```
-Send Message
+**Send Message**
 : Send message will be called by external contracts that want to relay a message to a target chain. They will provide network address of target chain i.e. chain id and contact address of bridge contract on target end. Bridge contract on receiving the message creates an outgoing packet that will include this message hash and other necessary information. This outgoing queue needs to be queryable from outside using the target chain’s chain id and sequence number of packets.
 
-Receive Packet
+**Receive Packet**
 : Callable only by attestors in our list. The bridge contract will hash the packet then the packet is queued for voting. Once the packet reaches enough quorum it is migrated to the incoming packets queue for consumption.
 
-Receive Packet Batch
+**Receive Packet Batch**
 : This will be called by our attestor or may even be called by outsiders as well. The bridge contract will hash the packet and extract the signer from the signature using that hash. If the signer is in our attestor list then the packet is queued for voting. Once the packet reaches enough quorum it is migrated to the incoming packets queue for consumption.
 
-Set attestors
+**Set attestors**
 : Governance controlled entry point for updating a new attestor set.
 
-Get attestors
+**Get attestors**
 : Returns currently set attestors.
 
-Get Current Sequence
+**Get Current Sequence**
 : Returns current sequence number for given target chain id.
 
-Is Packet Received
+**Is Packet Received**
 : Invoked by attestors to check if packet has already passed quorum to avoid submitting the packet.
 
-Get Outgoing Packet
+**Get Outgoing Packet**
 : Invoked by attestor to see if there is a packet queued for a target chain with a given sequence number.
 
-Consume Packet
+**Consume Packet**
 : Will be called by external contracts to check if a message has arrived and consume it to take necessary action on their contract. The bridge contract will verify if the calling contract is the same as the target contract associated with the message. If the message is valid then it is logged in consumed messages or flagged as consumed to prevent double spending.
 
 #### Token Service Contract
