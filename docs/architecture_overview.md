@@ -9,27 +9,34 @@
    - [Packet](#packet)
    - [TokenMessage](#tokenmessage)
 3. [Logical Components](#logical-components)
-   - [Contracts](#contracts)
+   - [Common Contracts](#common-contracts)
      - [Bridge Contract](#bridge-contract)
        - [Bridge Contract Storage Structure](#bridge-contract-storage-structure)
        - [Bridge Contract Interface](#bridge-contract-interface)
      - [Token Service Contract](#token-service-contract)
        - [Token Contract Storage Structure](#token-contract-storage-structure)
        - [Token Service Contract Interface](#token-service-contract-interface)
+    - [Additional Contracts](#additional-contracts)
+        - [Token Contract - Aleo](#token-contract--aleo)
+        - [Multisig Contract - Aleo](#multisig-contract--aleo)
    - [Attestor](#attestor)
      - [Workflow Steps](#workflow-steps)
      - [Data Structures](#data-structures)
      - [Components Overview](#components-overview)
-4. [Reference For Implementation](#reference-for-implementation)
-     - [Chain Config Interface](#chain-config-interface)
-     - [Message Interface](#message-interface)
-     - [Store Interface](#store-interface)
-     - [Client Interface](#client-interface)
-     - [Chain Interface](#chain-interface)
-     - [Receiver Interface](#receiver-interface)
-     - [Sender Interface](#sender-interface)
-     - [Relayer Interface](#relayer-interface)
-     - [Bridge Interface](#bridge-interface)
+     - [Reference For Implementation](#reference-for-implementation)
+         - [Chain Config Interface](#chain-config-interface)
+            - [Message Interface](#message-interface)
+            - [Store Interface](#store-interface)
+            - [Client Interface](#client-interface)
+            - [Chain Interface](#chain-interface)
+            - [Receiver Interface](#receiver-interface)
+            - [Sender Interface](#sender-interface)
+            - [Relayer Interface](#relayer-interface)
+            - [Bridge Interface](#bridge-interface)
+4. [ Key Management](#key-management)
+5. [Fee Management](#fee-management)
+6. [System Error And Recovery](#system-error-and-recovery)
+7. [Safeguarding Against Disasters](#safeguarding-against-disaster)
 5. [Glossary](#glossary)
 
 # Architecture Overview
@@ -114,7 +121,7 @@ Token Message
 ## Logical Components
 Key logical components in the platform and their interfaces are describe below in detail.
 
-### Contracts
+### Common Contracts
 Each participating chain will have at least two contracts i.e. Bridge Contract and TokenService Contract. 
 There may be more contracts depending on the platform requirements.
 
@@ -129,9 +136,10 @@ It will make sure that the message is accessible only to the contract that the m
 | Outgoing Packets | (target_chain_id ,sequence)=>Packet | Queue for outgoing packets to be picked by attestors           |
 | Incoming Packets | packet_hash=>Packet                 | Incoming packets that have crossed the quorum threshold.       |
 | Consumed Packets | packet_hash=>bool                   | Log of consumed packets by their hash.                         |
-| Packet Votes     | packet_hash=>address                | Map of packet hash and voter address to prevent double voting. |
+| Packet Votes     | (packet_hash,address)=>bool                | Map of packet hash + voter address to prevent double voting. |
 | Pending Packets  | packet_hash=>Packet                 | Incoming packets that are not yet crossed quorum.              |
 | Attestors        | address=>bool                       | List of known attestors.                                       |
+| Supported Services  | address=>bool                    | Should return true for supported services only. Initially, token service contract will be the only supported service.|
 
 ##### Bridge Contract Interface
 ```
@@ -153,6 +161,8 @@ pub trait BridgeContract {
      fn get_outgoing_packet(&self,chain_id:u32,sequence:u128)->Option<Packet>;
   
      fn consume_packet(&self,packet_hash:[u8;32])->bool;
+
+     fn register_service(&self,contract_address:String);
 }
 
 
@@ -185,6 +195,9 @@ pub trait BridgeContract {
 **Consume Packet**
 : Will be called by external contracts to check if a message has arrived and consume it to take necessary action on their contract. The bridge contract will verify if the calling contract is the same as the target contract associated with the message. If the message is valid then it is logged in consumed messages or flagged as consumed to prevent double spending.
 
+**Register Service**
+: Will be called by multisig to register external programs that can use the bridge. 
+
 #### Token Service Contract
 This contract is responsible for interacting with other er20 tokens to mint/burn and pass relevant information to bridge contract as a Token Message.
 ##### Token Contract Storage Structure
@@ -193,6 +206,7 @@ This contract is responsible for interacting with other er20 tokens to mint/burn
 |-----------|----------------|-----------------------------------------------|
 | TVL       | token_id=>u128 | Total Volume Locked On Contract               |
 | Blacklist | address=>bool  | List of black listed address on current chain |
+| Supported Tokens | token_id=>bool  | List of tokens recognized by the contract and status of the token (enabled/disabled) |
 
 ##### Token Service Contract Interface
 ``` 
@@ -201,6 +215,11 @@ pub trait TokenContract{
     pub fn withdraw(&self,packet:Packet,msg:TokenMessage);
     pub fn get_transfer_info(sequence_no:u128)->TokenMessage;
     pub fn validate_blacklisted(address:String)->bool;
+
+    pub fn enable_token(address: String);
+    pub fn disable_token(address: String);
+    pub fn add_to_blacklist(address: String);
+    pub fn remove_from_blacklist(address: String);
 }
 
 
@@ -216,6 +235,27 @@ GetTransfer Info
 
 Validate Blacklist
 : Frontend can query on eth side to check if address is already on our blacklist or not.
+
+Enable Token
+: This will either create a new entry on supported token or enable it if it is disabled. Called by governance.
+
+Disable Token
+: This will temporarily disable moving of the token specified in case of a disaster.Called by governance.
+
+Add To Blacklist
+: Add an address of a malicious user in blacklist to prevent it from utilizing the token service.Called by givernance.
+
+Remove Blacklist
+: Remove a user from blacklist. Called by governance.
+
+
+### Additional Contracts
+Apart from above two contracts there might be additional contracts depending on the platform.These contracts are covered here.
+##### Token Contract -Aleo
+
+
+##### MultiSig Contract -Aleo
+
 
 ### Attestor
 Attestor is the bridge component that will be responsible for detecting new messages, validating them and broadcasting them to the target network by calling the target bridge contract. Each attestor entity will be running their own full node of the involved chains and listen for incoming messages. Attestors do not have knowledge of other attestors in the network and are concerned only with verifying messages it has seen in the network. It will follow the following steps to make sure that the messages are delivered infallibly.
@@ -479,11 +519,28 @@ pub trait IBridge<M: IMessage, Source: IReceiver<M>, Target: ISender<M>>{
 }
 ```
 
+## Key Management
+Each team involved in maintaining attestors for the bridge platform are required to have 2 set of keys. Which are as follows.
 
+**Attesting Key**
+This key will be used in attestor machine instance to sign the relevant messages.
 
+**Council Key**
+This key will be used to participate in multisig processes like updating attestor list,updating blacklist and upgrading the contract and deploying the contract as well.
 
+## Fee Management
+The fee required to relay messages from one end to another will be paid by the attestor itself for now. Since every attestor will be relaying the message to target chain it becomes possible to drain attestors of their funds by transferring very dust amounts frequently. To overcome this we will set a minimium amount that can be bridged out or bridged in. This can also be overcome by adding message passing fee on the transaction cost itself as well once we have the swap metrics between Aleo/Eth pair.
 
+## System Error And Recovery
+The platform being a stateful application it is imperative that following measures are taken for fault tolerance.
+- *Checkpoints*: Determine checkpoints in application state transitions and save them in storage so that it can continue from the checkpoint on recovery.
+- *Database Snapshots*: Since the data persisted will be minimal it would make sense to take periodic and rotating snapshot of entire database as a backup.
+- *Backup Restoration* : Design and implement backup restoration process that is easy to apply and well tested in realistic scenarios. 
 
+## Safeguarding Against Disaster
+To address disasters that may occur outside of the system itself following measures can be taken beforehand.
+- *Limits On Withdrawls*: Define limits on contracts that will disallow users to withdraw funds that are huge in proportion in a single transaction. E.g. Min of (10% of total user fund or 10K).
+- *Immediate Blacklisting* : Maintain onchain blacklist of users so that malicious actors can be stopped abruptly.
 
 
 
