@@ -85,8 +85,8 @@ Packet
 | Name        | Remarks                                                                             |
 |-------------|-------------------------------------------------------------------------------------|
 | Version     | Packet versioning for future enhancements or changes.                               |
-| Destination | Target chain’s chain id and bridge contract address represented as network address. |
-| Source      | Source chain id and contact address of bridge contract in source chain              |
+| Destination | Target chain’s chain id and token contract address represented as network address. |
+| Source      | Source chain id and contact address of token contract in source chain              |
 | Sequence    | sequence no of the packet for the target chain id.                                  |
 | Message     | keccak256 hash of the token message contents.                                       |
 | Height      | Height of the source chain                                                          |
@@ -518,6 +518,45 @@ pub trait IBridge<M: IMessage, Source: IReceiver<M>, Target: ISender<M>>{
     }
 }
 ```
+
+## Workflows
+### Bridge Asset into Aleo (Lock on Ethereum, Mint on Aleo)
+1. Ethereum users lock assets (ETH, USDC, USDT) on the Token Contract (on Ethereum) and specify the Aleo address on which it should be minted.
+2. Token Contract publishes this message to Bridge Contract (on Ethereum).
+3. Validators will pick up the message. 
+4. Validators verify the message and queue it on the Bridge Contract (on Aleo).
+
+Once sufficient validators (k out of N) have verified and queued the message it can be unlocked and used on Aleo. To use it on Aleo:
+
+5. Aleo user call request to mint wrapped assets (wETH, wUSDC) on the Token Contract (on Aleo).
+6. Token contract checks if the requested asset can be minted. To mint the asset, the bridge contract (on Aleo) needs to have received validation from at least k/N validators.
+7. If the message exists and has enough validation, it can be minted. 
+Token contract mints the wrapped assets.
+
+#### Notes:
+A. The Ethereum that wants to lock assets (on Step 1) are checked against blacklisted addresses for OFAC compliance.
+B. The address to unlock is specified on the message itself. So anyone is able to call the unlock method and the locked asset will be minted on the right Aleo address.
+C. Once minted, the message is marked as consumed on Bridge contract (on Aleo) and cannot be used again. This prevents double spending.
+
+### Bridge Asset out of Aleo (Burn on Aleo, unlock on Ethereum)
+1. Aleo users burn their asset (wETH, wUSDC) on the Token Contract (on Aleo) and specify the Ethereum address on which asset (ETH, USDC) should be unlocked.
+2. Token Contract publishes this message to Bridge Contract (on Aleo). It is stored as mapping on the Bridge Contract.
+3. Validators will pick up the message by checking if there are any new outgoing messages. This can be done by querying the mapping with the expected sequence number of the new message.
+4. Validators verify the message and queue it on the Bridge Contract (on Ethereum).
+
+Once sufficient validators (k out of N) have verified and queued the message it can be unlocked and used again on Ethereum. To use it on Ethereum:
+
+5. Ethereum user call request to unlock assets (ETH, USDC) on the Token Contract (on Ethereum).
+6. Token contract checks if the requested asset can be unlocked. To mint the asset, the bridge contract (on Ethereum) needs to have received validation from at least k/N validators.
+7. If the message exists and has enough validation, it can be unlocked.
+8. Token contract unlocks the locked assets.
+
+Notes:
+A. The address to unlock is checked against blacklisted addresses for OFAC compliance at step 6.
+B. The address to mint is specified on the message itself. So anyone is able to call the mint method and the wrapped asset will be locked on the right Ethereum address.
+
+
+
 
 ## Key Management
 Each team involved in maintaining attestors for the bridge platform are required to have 2 set of keys. Which are as follows.
