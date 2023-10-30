@@ -1,0 +1,12 @@
+{
+  "chains": [
+    {
+      "name": "aleo",
+      "chain_id": 1,
+      "bridge_contract": "contract",
+      "node_url": "url",
+      "start_height": 5,
+      "wallet_path": "path"
+    }
+  ]
+}
