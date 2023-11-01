@@ -1,6 +1,9 @@
 package relay
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
@@ -16,7 +19,7 @@ var (
 )
 
 type Relay interface {
-	Start()
+	Start(ctx context.Context)
 }
 
 type relay struct {
@@ -35,7 +38,7 @@ func NewRelay(src chain.IReceiver, dst chain.ISender) Relay {
 	}
 }
 
-func MultiRelay(cfg AppConfig) *Relays {
+func MultiRelay(ctx context.Context, cfg AppConfig) *Relays {
 	multiRelay := &Relays{}
 	for _, r := range cfg.Chains {
 		switch r.Name {
@@ -68,7 +71,7 @@ func MultiRelay(cfg AppConfig) *Relays {
 	return multiRelay
 }
 
-func (r *Relays) StartMultiRelay() {
+func (r *Relays) StartMultiRelay(ctx context.Context) {
 	relayCh := make(chan *relay, len(r.relay))
 
 	for _, relay := range(r.relay) {
@@ -88,9 +91,13 @@ func (r *Relays) StartMultiRelay() {
 	
 	for {
 		select {
+		case <- ctx.Done():
+			fmt.Println("context cancelled")
+			return 
 		case re := <- relayCh:
 			go func (relay *relay)  {
-				re.Start()
+				fmt.Println("started multirelay")
+				re.Start(ctx)
 			}(re)
 		}
 	}
@@ -98,7 +105,8 @@ func (r *Relays) StartMultiRelay() {
 
 }
 
-func (r *relay) Start() {
-	r.Src.Subscribe()
-	r.Dst.Send()
+func (r *relay) Start(ctx context.Context) {
+	fmt.Println("started individual relay")
+	r.Src.Subscribe(ctx)
+	r.Dst.Send(ctx)
 }
