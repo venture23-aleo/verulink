@@ -1,9 +1,11 @@
 package chain
 
+import "context"
+
 type ISender interface {
-	Send()
+	Send(ctx context.Context)
 }
 
 type IReceiver interface {
-	Subscribe() 
+	Subscribe(ctx context.Context) 
 }
