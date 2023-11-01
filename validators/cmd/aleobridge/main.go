@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -38,10 +39,17 @@ func main() {
 	if err != nil {
 		return
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	for _, value := range(cfg.Chains) {
+	fmt.Println(ctx)
+
+	for _, value := range cfg.Chains {
 		fmt.Println(value)
 	}
+
+	multirelayer := relay.MultiRelay(ctx, *cfg)
+	multirelayer.StartMultiRelay(ctx)
 
 }
 
