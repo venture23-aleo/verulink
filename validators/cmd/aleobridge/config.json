@@ -7,6 +7,14 @@
       "node_url": "url",
       "start_height": 5,
       "wallet_path": "path"
+    },
+    {
+      "name": "ethereum",
+      "chain_id": 2,
+      "bridge_contract": "contract",
+      "node_url": "url",
+      "start_height": 5,
+      "wallet_path": "path"
     }
   ]
 }
