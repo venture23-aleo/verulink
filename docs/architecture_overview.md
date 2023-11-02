@@ -2,6 +2,7 @@
 
 1. [Architecture Overview](#architecture-overview)
    - [Introduction](#introduction)
+   - [Assumptions] (#Assumptions)
    - [Common Data Structures](#common-data-structures)
    - [Logical Components](#logical-components)
 2. [Common Data Structures](#common-data-structures)
@@ -16,6 +17,7 @@
      - [Token Service Contract](#token-service-contract)
        - [Token Contract Storage Structure](#token-contract-storage-structure)
        - [Token Service Contract Interface](#token-service-contract-interface)
+     - [Holding Contract](#holding-contract)
     - [Additional Contracts](#additional-contracts)
         - [Token Contract - Aleo](#token-contract--aleo)
         - [Multisig Contract - Aleo](#multisig-contract--aleo)
@@ -47,6 +49,21 @@ This document provides detailed requirements and design guidelines for the smart
 ## Introduction
 
 This is a trusted  bridge platform that is designed to help move assets between Ethereum and Aleo blockchain.
+
+## Assumptions
+The design of the platform relies on following assumptions to be correct.
+### Trustable Participants
+It is assumed that the parties that will be running the attestor for the bridge can be trusted because of their self-interest and reputation.It is assumed the majority of participants wont collude to attack the bridge.
+
+### Guaranteed Delivery
+It is assumed that delivery of valid messages is guaranteed and messages will not be lost in process. Messages are persisted on source and target which will help ensure this.
+
+### Finality Is Ensured
+It is assumed that only the messages that are included in finalized blocks are attested by the participants and attestor will ensure that submission of message is also included in finalized block.
+
+### Message Delivery Is Sponsored
+It is assumed that the fee required for delivery of messages is sponsored by the participants that will be running the attestor nodes. 
+
 
 
 ## Common Data Structures
@@ -247,6 +264,14 @@ Add To Blacklist
 
 Remove Blacklist
 : Remove a user from blacklist. Called by governance.
+
+#### Holding Contract
+This contract is reponsible for holding disputed funds and transfers. In event of transfer being initiated to an address that is blacklisted on target chain, the token service contract on target chain will lock the funds in holding contract. The funds can be released by council multisig once the dispute has been settled for the blacklisted address.
+![Contract Design And Interface](holding_contract.md)
+
+
+
+
 
 
 ### Additional Contracts
