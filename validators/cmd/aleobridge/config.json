@@ -5,7 +5,7 @@
       "chain_id": 1,
       "bridge_contract": "contract",
       "node_url": "url",
-      "start_height": 5,
+      "start_height": 5000,
       "wallet_path": "path"
     },
     {
@@ -13,7 +13,7 @@
       "chain_id": 2,
       "bridge_contract": "contract",
       "node_url": "url",
-      "start_height": 5,
+      "start_height": 500000,
       "wallet_path": "path"
     }
   ]
