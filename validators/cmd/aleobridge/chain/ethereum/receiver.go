@@ -27,21 +27,22 @@ func NewClient(nodeUrl string) IClient {
 	return client
 }
 
-func (r *Receiver) Subscribe(ctx context.Context) {
+func (r *Receiver) Subscribe(ctx context.Context, startHeight int64) {
 	fmt.Println("subscribe the ethereum")
 	client := NewClient("https://eth.llamarpc.com")
-	startHeight := int64(5000)
-	endHeight := int64(5100)
-	for i := startHeight; i < endHeight; i++ {
+	latestHeight := startHeight + 200
+	for i := startHeight; i < latestHeight; i++ {
 		fmt.Println("ethereum subscription")
 		go func(h int64) {
 			header, err := client.GetHeaderByHeight(ctx, big.NewInt(h))
 			if err!= nil {
 				return 
 			}
-			fmt.Println(header.Hash())
+			fmt.Println("ethereum", header.Number, header.Hash())
 		} (i)
 	}
 }
 
-func NewReceiver(src string, dst string, nodeAddress string) chain.IReceiver { return &Receiver{} }
+func NewReceiver(src string, dst string, nodeAddress string) chain.IReceiver { 
+	return &Receiver{} 
+}
