@@ -251,10 +251,33 @@ Remove Blacklist
 
 ### Additional Contracts
 Apart from above two contracts there might be additional contracts depending on the platform.These contracts are covered here.
-##### Token Contract -Aleo
+
+##### Wrapped Token Contract - Aleo
+The Wrapped Token Contract is responsible for managing the minting, burning, and transfer of all wrapped assets.
+
+``` 
+pub trait WrappedToken{
+    pub fn add(name: String, symbol: String, decimals: u8, origin_contract: NetworkAddress);
+    pub fn mint(recipient: String, amount: u128, token_id: String);
+    pub fn burn(recipient: String, amount: u128, token_id: String);
+    pub fn transfer(recipient: String, amount: u128, token_id: String);
+}
+```
+Add Token:
+This method will be invoked by the council to support new wrapped tokens. When a token is added, a `token_id` is generated to identify the token.
+
+Mint:
+This method will be invoked by the user to mint the token after locking it first on `origin_contract`. Message with right `recipient` and `amount` should exist on the bridge contract with enough attestations to be able to mint the token. Once minted, the message on the bridge contract should be marked as consumed.
+
+Burn:
+This method will be invoked by the user to transfer the token back to the `origin_contract`.
+
+Transfer:
+This method is used to transfer the tokens in the new network. 
 
 
-##### MultiSig Contract -Aleo
+##### MultiSig Contract - Aleo
+To be based on Puzzle's multisig.
 
 
 ### Attestor
