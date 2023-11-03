@@ -1,6 +1,7 @@
 package ethereum
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -14,10 +15,8 @@ type Sender struct {
 	Client *Client
 }
 
-type Client struct{}
-
-func (s *Sender) Send() {
-	fmt.Println("send")
+func (s *Sender) Send(ctx context.Context) {
+	fmt.Println("send from ethereum")
 }
 
 func NewSender(src, dst, url string, wallet common.Wallet) chain.ISender { return &Sender{} }
