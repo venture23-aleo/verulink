@@ -82,11 +82,13 @@ pub trait IBridgeContract {
         destination: NetworkAddress,
         msg_hash: [u8; 32],
     ) -> Result<u128, ContractError> {
-        self.ensure_registered_service(&caller)?;
-        self.ensure_allowed_target_chain(destination.chain_id)?;
+       self.ensure_registered_service(&caller)?;
+        let target_chain_id=destination.chain_id;
+        self.ensure_allowed_target_chain(target_chain_id)?;
         let self_chain_id = self
             .get_own_chain_id()
             .ok_or(ContractError::ContractNotInit)?;
+        let target_chain_id=destination.chain_id;
 
         let next_sequence = self.get_current_sequence(destination.chain_id) + 1;
         let packet = Packet {
@@ -101,6 +103,7 @@ pub trait IBridgeContract {
         let next_nonce = self.hash(&[self.get_nonce(), self.hash_packet(&packet)].concat());
         self.set_nonce(next_nonce);
         self.queue_outgoing_packet(packet)?;
+        self.set_chain_sequence(target_chain_id, next_sequence);
 
         Ok(next_sequence)
     }
@@ -252,6 +255,7 @@ ___
 5. Create a new packet with the destination address, host height, message hash, sequence number, source address, version, and nonce.
 6. Update the nonce by hashing the current nonce and the packet using the `hash` method.
 7. Queue the outgoing packet using the `queue_outgoing_packet` method.
+8. Save incremented sequence to storage.
 ___
 ### Outputs
 - Result<u128, ContractError>: The sequence number of the sent message, wrapped in a `Result` indicating success or an error if any of the checks fail.
