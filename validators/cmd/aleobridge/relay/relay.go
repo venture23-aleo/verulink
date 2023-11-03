@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
@@ -121,7 +120,7 @@ func (r *Relays) StartMultiRelay(ctx context.Context) {
 
 func (r *relay) Start(ctx context.Context) {
 	fmt.Println("started individual relay")
-	msgch := make(chan *ethTypes.Header)
+	msgch := make(chan *chain.Packet)
 	srcErrCh := r.Src.Subscribe(ctx, msgch, uint64(r.Cfg.StartHeight))
 
 	for {
@@ -130,9 +129,9 @@ func (r *relay) Start(ctx context.Context) {
 			return
 		case err := <-srcErrCh:
 			fmt.Println(err)
-			return 
+			return
 		case msg := <-msgch:
-			fmt.Println("reached in the msg ch", msg.Number)
+			fmt.Println("reached in the msg ch", msg.Height)
 			// now send here
 		}
 	}
