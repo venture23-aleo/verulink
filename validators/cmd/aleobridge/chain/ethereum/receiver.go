@@ -30,11 +30,22 @@ func NewClient(nodeUrl string) IClient {
 	return client
 }
 
-func (r *Receiver) Subscribe(ctx context.Context, startHeight uint64) error {
+func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *ethTypes.Header, startHeight uint64) (errch <-chan error) {
+	go func() {
+		r.callLoop(ctx, startHeight, 
+			func(v *ethTypes.Header) error{
+				msgch <- v
+				return nil 
+		})
+	}()
+	return nil 
+}
+
+func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback func(v *ethTypes.Header) error) {
 	fmt.Println("subscribe the ethereum")
-	client := NewClient("https://eth.llamarpc.com")
-	
-	latest := func() uint64{
+	client := NewClient("https://rpc.mevblocker.io")
+
+	latest := func() uint64 {
 		latestHeight, err := client.GetBlockNumber()
 		if err != nil {
 			return 0
@@ -57,13 +68,14 @@ func (r *Receiver) Subscribe(ctx context.Context, startHeight uint64) error {
 	type query struct {
 		height uint64
 		bn     *notification
-		err error 
+		err    error
 	}
-	
+
 	for {
 		select {
 		case bn := <-bnCh:
 			fmt.Println("eth notification", bn.Number, bn.Hash())
+			callback(bn)
 		case <-pollTicker.C:
 			fmt.Println("poll ticker")
 			latestHeight = latest()
@@ -74,7 +86,7 @@ func (r *Receiver) Subscribe(ctx context.Context, startHeight uint64) error {
 				continue
 			}
 
-			qchLen := min(cap(bnCh), int(latestHeight - next))
+			qchLen := min(cap(bnCh), int(latestHeight-next))
 
 			qch := make(chan *query, qchLen)
 			for i := next; i < latestHeight && len(qch) < cap(qch); i++ {
@@ -84,10 +96,10 @@ func (r *Receiver) Subscribe(ctx context.Context, startHeight uint64) error {
 			for q := range qch {
 				switch {
 				case q.err != nil:
-					q.bn, q.err = nil, nil 
+					q.bn, q.err = nil, nil
 					qch <- q
 					continue
-					
+
 				case q.bn != nil:
 					headers = append(headers, q.bn)
 					if len(headers) == cap(qch) {
