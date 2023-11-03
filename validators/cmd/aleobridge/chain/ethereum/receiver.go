@@ -30,11 +30,11 @@ func NewClient(nodeUrl string) IClient {
 	return client
 }
 
-func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *ethTypes.Header, startHeight uint64) (errch <-chan error) {
+func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.Packet, startHeight uint64) (errch <-chan error) {
 	go func() {
 		r.callLoop(ctx, startHeight, 
 			func(v *ethTypes.Header) error{
-				msgch <- v
+				msgch <- &chain.Packet{Height: v.Number.String()}
 				return nil 
 		})
 	}()
