@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	cosmossdk.io/errors v1.0.0
 	github.com/ethereum/go-ethereum v1.13.4
-	github.com/parajuliswopnil/aleo-go-sdk v1.0.21
+	github.com/parajuliswopnil/aleo-go-sdk v1.0.22
 	github.com/stretchr/testify v1.8.4
 )
 
@@ -45,3 +45,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+replace github.com/parajuliswopnil/aleo-go-sdk => ../../../GoProjects/AleoBlockStreamer
