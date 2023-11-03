@@ -2,8 +2,6 @@ package chain
 
 import (
 	"context"
-
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 type ISender interface {
@@ -11,7 +9,7 @@ type ISender interface {
 }
 
 type IReceiver interface {
-	Subscribe(ctx context.Context, msgch chan<- *ethTypes.Header, startHeight uint64) (errch <-chan error)
+	Subscribe(ctx context.Context, msgch chan<- *Packet, startHeight uint64) (errch <-chan error)
 }
 
 type NetworkAddress string
