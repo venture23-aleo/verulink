@@ -12,8 +12,6 @@
 3. [Logical Components](#logical-components)
    - [Common Contracts](#common-contracts)
      - [Bridge Contract](#bridge-contract)
-       - [Bridge Contract Storage Structure](#bridge-contract-storage-structure)
-       - [Bridge Contract Interface](#bridge-contract-interface)
      - [Token Service Contract](#token-service-contract)
        - [Token Contract Storage Structure](#token-contract-storage-structure)
        - [Token Service Contract Interface](#token-service-contract-interface)
@@ -145,75 +143,9 @@ There may be more contracts depending on the platform requirements.
 #### Bridge Contract
 Bridge contract is responsible for sending and receiving messages and does not concern with the contents of the message.
 It will make sure that the message is accessible only to the contract that the message was addressed to.
-##### Bridge Contract Storage Structure
-
-| Name             | Structure                           | Remarks                                                        |
-|------------------|-------------------------------------|----------------------------------------------------------------|
-| Packet Sequence  | chain_id=>sequence                  | Sequence counter of each chain.                                |
-| Outgoing Packets | (target_chain_id ,sequence)=>Packet | Queue for outgoing packets to be picked by attestors           |
-| Incoming Packets | packet_hash=>Packet                 | Incoming packets that have crossed the quorum threshold.       |
-| Consumed Packets | packet_hash=>bool                   | Log of consumed packets by their hash.                         |
-| Packet Votes     | (packet_hash,address)=>bool                | Map of packet hash + voter address to prevent double voting. |
-| Pending Packets  | packet_hash=>Packet                 | Incoming packets that are not yet crossed quorum.              |
-| Attestors        | address=>bool                       | List of known attestors.                                       |
-| Supported Services  | address=>bool                    | Should return true for supported services only. Initially, token service contract will be the only supported service.|
-
-##### Bridge Contract Interface
-```
-pub trait BridgeContract {
-     fn send_message(&self,destination:NetworkAddress,msg_hash:[u8;32])->u128;
-     
-     fn receive_packet_batch(&self,packet:Packet,signatures:Vec<Signature>);
-     
-     fn receive_packet(&self,packet:Packet);
-     
-     fn set_attestors(&self,attestors:Vec<attestors>);
-     
-     fn get_attestor(&self)->Vec<attestors>;
-     
-     fn get_current_sequence(&self,chain_id:u32)->u128;
-     
-     fn is_packet_received(&self,packet_hash:[u8;32])->bool;
-
-     fn get_outgoing_packet(&self,chain_id:u32,sequence:u128)->Option<Packet>;
-  
-     fn consume_packet(&self,packet_hash:[u8;32])->bool;
-
-     fn register_service(&self,contract_address:String);
-}
+[BridgeContract Design And Interface](bridge_contract.md)
 
 
-
-```
-**Send Message**
-: Send message will be called by external contracts that want to relay a message to a target chain. They will provide network address of target chain i.e. chain id and contact address of bridge contract on target end. Bridge contract on receiving the message creates an outgoing packet that will include this message hash and other necessary information. This outgoing queue needs to be queryable from outside using the target chain’s chain id and sequence number of packets.
-
-**Receive Packet**
-: Callable only by attestors in our list. The bridge contract will hash the packet then the packet is queued for voting. Once the packet reaches enough quorum it is migrated to the incoming packets queue for consumption.
-
-**Receive Packet Batch**
-: This will be called by our attestor or may even be called by outsiders as well. The bridge contract will hash the packet and extract the signer from the signature using that hash. If the signer is in our attestor list then the packet is queued for voting. Once the packet reaches enough quorum it is migrated to the incoming packets queue for consumption.
-
-**Set attestors**
-: Governance controlled entry point for updating a new attestor set.
-
-**Get attestors**
-: Returns currently set attestors.
-
-**Get Current Sequence**
-: Returns current sequence number for given target chain id.
-
-**Is Packet Received**
-: Invoked by attestors to check if packet has already passed quorum to avoid submitting the packet.
-
-**Get Outgoing Packet**
-: Invoked by attestor to see if there is a packet queued for a target chain with a given sequence number.
-
-**Consume Packet**
-: Will be called by external contracts to check if a message has arrived and consume it to take necessary action on their contract. The bridge contract will verify if the calling contract is the same as the target contract associated with the message. If the message is valid then it is logged in consumed messages or flagged as consumed to prevent double spending.
-
-**Register Service**
-: Will be called by multisig to register external programs that can use the bridge. 
 
 #### Token Service Contract
 This contract is responsible for interacting with other er20 tokens to mint/burn and pass relevant information to bridge contract as a Token Message.
@@ -267,7 +199,7 @@ Remove Blacklist
 
 #### Holding Contract
 This contract is reponsible for holding disputed funds and transfers. In event of transfer being initiated to an address that is blacklisted on target chain, the token service contract on target chain will lock the funds in holding contract. The funds can be released by council multisig once the dispute has been settled for the blacklisted address.
-![Contract Design And Interface](holding_contract.md)
+[Contract Design And Interface](holding_contract.md)
 
 
 

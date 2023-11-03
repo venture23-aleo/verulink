@@ -13,3 +13,5 @@ Ensures that any major changes on the smart contracts like upgrades, adding/remo
 To be compliant with current blockchain ethos and also to prevent malicious activity on the bridge the contracts will maintain an updated copy of blacklisted addresses and forbid them from utilizing the bridge. This list will be actively managed. Updates to the list will be managed via a multi signature process. This is on top of the USDT/ USDC blacklist maintained by the respective tokens.
 ### OFAC Compliance
 We rely on Circle's and Tether's sanction lists as a means to streamline compliance efforts and alleviate the necessity of maintaining our proprietary sanction list.
+### Segregate Disputed Funds
+Funds from blacklisted addresses will be held separately by a holding contract to prevent it from being mixed along with funds of other users. This will help us prevent clean funds to be freezed in case of dispute or litigation.
