@@ -23,3 +23,19 @@ func TestGetLatestHeight(t *testing.T) {
 	assert.Nil(t, err)
 	fmt.Println(latestHeight)
 }
+
+func TestGetHeaderByHeight(t *testing.T) {
+	aleoClient, err := rpc.NewClient("https://vm.aleo.org/api", "testnet3")
+	if err != nil {
+		return
+	}
+
+	c := Client{
+		aleoClient: aleoClient,
+	}
+	
+
+	latestHeight, err := c.GetBlockHeaderByHeight(context.Background(), 5000)
+	assert.Nil(t, err)
+	fmt.Println(latestHeight)
+}
