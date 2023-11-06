@@ -120,8 +120,20 @@ func (r *Relays) StartMultiRelay(ctx context.Context) {
 
 func (r *relay) Start(ctx context.Context) {
 	fmt.Println("started individual relay")
-	msgch := make(chan *chain.Packet)
+	msgch := make(chan *chain.QueuedMessage)
 	srcErrCh := r.Src.Subscribe(ctx, msgch, uint64(r.Cfg.StartHeight))
+
+	var messageQueue []*chain.QueuedMessage 
+
+	heightTicker := r.Src.HeightPoller()
+
+	latest := func(ctx context.Context) uint64 {
+		latestHeight, err := r.Src.GetLatestHeight(ctx)
+		if err != nil {
+			return 0
+		}
+		return latestHeight
+	}
 
 	for {
 		select {
@@ -131,8 +143,31 @@ func (r *relay) Start(ctx context.Context) {
 			fmt.Println(err)
 			return
 		case msg := <-msgch:
-			fmt.Println("reached in the msg ch", msg.Height)
+			fmt.Println("reached in the msg ch", msg.DepartureBlock, msg.Message.Height)
+			messageQueue = append(messageQueue, msg)
 			// now send here
+		case <- heightTicker.C:
+			latest := latest(ctx)
+			fmt.Println("len", len(messageQueue))
+			if len(messageQueue) > 0 {
+				for i := 0; i < len(messageQueue); i++ {
+					
+					if messageQueue[i].DepartureBlock < latest {
+						// send
+						fmt.Println("from height ticker in relay", messageQueue[i].DepartureBlock)
+						messageQueue[i] = nil 
+					}
+				}
+				var _msgQ []*chain.QueuedMessage
+				_msgQ, messageQueue = messageQueue, messageQueue[0:0]
+				// remove nil 
+				for _, m := range(_msgQ) {
+					if m != nil {
+						messageQueue = append(messageQueue, m)
+					}
+				}
+			}
 		}
 	}
 }
+
