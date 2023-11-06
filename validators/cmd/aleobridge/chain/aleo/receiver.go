@@ -13,6 +13,10 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
+const (
+	AleoBlockFinality = 1
+)
+
 var (
 	SyncConcurrency = int64(200)
 )
@@ -20,7 +24,7 @@ var (
 type Receiver struct {
 	Src    string
 	Dst    string
-	Client Client
+	Client IClient
 }
 
 func NewClient(nodeURL, network string) IClient {
@@ -35,24 +39,38 @@ func NewClient(nodeURL, network string) IClient {
 	return c
 }
 
-func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.Packet, startHeight uint64) (errch <-chan error) {
+func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.QueuedMessage, startHeight uint64) (errch <-chan error) {
 	go func() {
 		r.callLoop(ctx, startHeight,
 			func(v *aleoTypes.Header) error {
-				h := strconv.Itoa(int(v.Metadata.Height))
-				msgch <- &chain.Packet{Height: h}
+				arrivalBlock := v.Metadata.Height
+				h := strconv.Itoa(int(arrivalBlock))
+				msgch <- &chain.QueuedMessage{DepartureBlock: uint64(arrivalBlock) + AleoBlockFinality, Message: &chain.Packet{Height: h}}
 				return nil
 			})
 	}()
 	return nil
 }
 
+func (r *Receiver) GetLatestHeight(ctx context.Context) (uint64, error) {
+	fmt.Println("getlatestheight", r.Client)
+	latestHeight, err := r.Client.GetLatestHeight(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return latestHeight, nil
+}
+
+func (r *Receiver) HeightPoller() *time.Ticker {
+	heightPoller := time.NewTicker(time.Second * 15)
+	return heightPoller
+}
+
 func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback func(v *aleoTypes.Header) error) {
 	fmt.Println("subscribe the aleo")
-	client := NewClient("https://vm.aleo.org/api", "testnet3")
 
 	latest := func() uint64 {
-		latestHeight, err := client.GetLatestHeight(ctx)
+		latestHeight, err := r.Client.GetLatestHeight(ctx)
 		if err != nil {
 			return 0
 		}
@@ -120,7 +138,7 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 						if q.bn == nil {
 							q.bn = &notification{}
 						}
-						header, err := client.GetBlockHeaderByHeight(ctx, int64(q.height))
+						header, err := r.Client.GetBlockHeaderByHeight(ctx, int64(q.height))
 						if err != nil {
 							q.err = err
 						}
@@ -141,4 +159,10 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 
 }
 
-func NewReceiver(src string, dst string, nodeAddress string) chain.IReceiver { return &Receiver{} }
+func NewReceiver(src string, dst string, nodeAddress string) chain.IReceiver {
+	client := NewClient("https://vm.aleo.org/api", "testnet3")
+
+	return &Receiver{
+		Client: client,
+	}
+}
