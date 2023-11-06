@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"time"
 )
 
 type ISender interface {
@@ -9,7 +10,9 @@ type ISender interface {
 }
 
 type IReceiver interface {
-	Subscribe(ctx context.Context, msgch chan<- *Packet, startHeight uint64) (errch <-chan error)
+	Subscribe(ctx context.Context, msgch chan<- *QueuedMessage, startHeight uint64) (errch <-chan error)
+	GetLatestHeight(ctx context.Context) (uint64, error)
+	HeightPoller() *time.Ticker
 }
 
 type NetworkAddress string
@@ -24,4 +27,9 @@ type Packet struct {
 	Message     Message
 	Height      string
 	Nonce       []byte
+}
+
+type QueuedMessage struct {
+	DepartureBlock uint64
+	Message        *Packet
 }
