@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strconv"
 	"time"
 
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
@@ -16,8 +17,12 @@ import (
 type Receiver struct {
 	Src    string
 	Dst    string
-	Client Client
+	Client IClient
 }
+
+const (
+	EthBlockFinality = 64
+)
 
 func NewClient(nodeUrl string) IClient {
 	rpc, err := rpc.Dial(nodeUrl)
@@ -30,23 +35,36 @@ func NewClient(nodeUrl string) IClient {
 	return client
 }
 
-func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.Packet, startHeight uint64) (errch <-chan error) {
+func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.QueuedMessage, startHeight uint64) (errch <-chan error) {
 	go func() {
 		r.callLoop(ctx, startHeight, 
 			func(v *ethTypes.Header) error{
-				msgch <- &chain.Packet{Height: v.Number.String()}
+				arrivalBlock := v.Number
+				msgch <- &chain.QueuedMessage{DepartureBlock: arrivalBlock.Uint64() + EthBlockFinality, Message: &chain.Packet{Height: strconv.Itoa(int(v.Number.Int64()))}}
 				return nil 
 		})
 	}()
 	return nil 
 }
 
+func (r *Receiver) GetLatestHeight(ctx context.Context) (uint64, error){
+	latestHeight, err := r.Client.GetBlockNumber()
+	if err != nil {
+		return 0, err
+	}
+	return latestHeight, nil 
+}
+
+func (r *Receiver) HeightPoller() (*time.Ticker) {
+	heightPoller := time.NewTicker(time.Minute * 2)
+	return heightPoller
+}
+
 func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback func(v *ethTypes.Header) error) {
 	fmt.Println("subscribe the ethereum")
-	client := NewClient("https://rpc.mevblocker.io")
 
 	latest := func() uint64 {
-		latestHeight, err := client.GetBlockNumber()
+		latestHeight, err := r.Client.GetBlockNumber()
 		if err != nil {
 			return 0
 		}
@@ -114,7 +132,7 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 						if q.bn == nil {
 							q.bn = &notification{}
 						}
-						header, err := client.GetHeaderByHeight(ctx, big.NewInt(int64(q.height)))
+						header, err := r.Client.GetHeaderByHeight(ctx, big.NewInt(int64(q.height)))
 						if err != nil {
 							q.err = err
 						}
@@ -136,5 +154,8 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 }
 
 func NewReceiver(src string, dst string, nodeAddress string) chain.IReceiver {
-	return &Receiver{}
+	client := NewClient("https://rpc.mevblocker.io")
+	return &Receiver{
+		Client: client,
+	}
 }
