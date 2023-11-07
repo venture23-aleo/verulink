@@ -40,7 +40,7 @@ func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.QueuedMess
 		r.callLoop(ctx, startHeight, 
 			func(v *ethTypes.Header) error{
 				arrivalBlock := v.Number
-				msgch <- &chain.QueuedMessage{DepartureBlock: arrivalBlock.Uint64() + EthBlockFinality, Message: &chain.Packet{Height: strconv.Itoa(int(v.Number.Int64()))}}
+				msgch <- &chain.QueuedMessage{DepartureBlock: arrivalBlock.Uint64() + EthBlockFinality, Message: &chain.Packet{Height: strconv.Itoa(int(v.Number.Int64())), Destination: "aleo"}}
 				return nil 
 		})
 	}()

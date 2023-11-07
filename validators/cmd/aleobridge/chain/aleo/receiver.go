@@ -45,7 +45,7 @@ func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.QueuedMess
 			func(v *aleoTypes.Header) error {
 				arrivalBlock := v.Metadata.Height
 				h := strconv.Itoa(int(arrivalBlock))
-				msgch <- &chain.QueuedMessage{DepartureBlock: uint64(arrivalBlock) + AleoBlockFinality, Message: &chain.Packet{Height: h}}
+				msgch <- &chain.QueuedMessage{DepartureBlock: uint64(arrivalBlock) + AleoBlockFinality, Message: &chain.Packet{Height: h, Destination: "ethereum"}}
 				return nil
 			})
 	}()
