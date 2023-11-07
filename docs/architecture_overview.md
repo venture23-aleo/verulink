@@ -206,7 +206,7 @@ This contract is reponsible for holding disputed funds and transfers. In event o
 
 
 
-### Additional Contracts
+### Additional Components
 Apart from above two contracts there might be additional contracts depending on the platform.These contracts are covered here.
 
 ##### Wrapped Token Contract - Aleo
@@ -235,6 +235,11 @@ This method is used to transfer the tokens in the new network.
 
 ##### MultiSig Contract - Aleo
 To be based on Puzzle's multisig.
+
+##### Ethereum Multisig
+Gnosis Safe Multisig will be maintained using council keys which will also follow majority threshold. 
+The multisig will be used to deploy contracts, upgrade contracts and update contract configurations/blacklists.
+
 
 
 ### Attestor
