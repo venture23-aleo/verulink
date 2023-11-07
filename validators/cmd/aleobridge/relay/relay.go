@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -14,12 +15,37 @@ type ReceiverFunc func(src string, dst string, nodeAddress string) chain.IReceiv
 
 const (
 	DefaultSendMessageTicker = 10 * time.Second
+	DefaultTxRetryCount      = 0
 )
 
 var (
 	RegisteredSender   = map[string]SenderFunc{}
 	RegisteredReceiver = map[string]ReceiverFunc{}
 )
+
+type MsgQueue struct {
+	mu               sync.RWMutex
+	QueuedMessage    []*chain.QueuedMessage
+	FinalizedMessage map[string][]*chain.QueuedMessage
+}
+
+func NewQueue() *MsgQueue {
+	var queuedMsg []*chain.QueuedMessage
+	finalizedQueue := map[string][]*chain.QueuedMessage{}
+	return &MsgQueue{sync.RWMutex{}, queuedMsg, finalizedQueue}
+}
+
+func (q *MsgQueue) AppendQueuedMessage(msg *chain.QueuedMessage) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.QueuedMessage = append(q.QueuedMessage, msg)
+}
+
+func (q *MsgQueue) AppendFinalizedMessage(dst string, msg *chain.QueuedMessage) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.FinalizedMessage[dst] = append(q.FinalizedMessage[dst], msg)
+}
 
 type Relay interface {
 	Start(ctx context.Context)
@@ -128,8 +154,10 @@ func (r *relay) Start(ctx context.Context) {
 	msgch := make(chan *chain.QueuedMessage)
 	srcErrCh := r.Src.Subscribe(ctx, msgch, uint64(r.Cfg.StartHeight))
 
-	var messageQueue []*chain.QueuedMessage
-	var finalizedQueue []*chain.QueuedMessage
+	msgQ := NewQueue()
+
+	// var messageQueue []*chain.QueuedMessage
+	// var finalizedQueue []*chain.QueuedMessage
 
 	heightTicker := r.Src.HeightPoller()
 
@@ -151,44 +179,64 @@ func (r *relay) Start(ctx context.Context) {
 			fmt.Println(err)
 			return
 		case msg := <-msgch:
-			fmt.Println("reached in the msg ch", msg.DepartureBlock, msg.Message.Height)
-			messageQueue = append(messageQueue, msg)
-			fmt.Println(len(messageQueue))
+			fmt.Println("reached in the msg ch", msg.DepartureBlock, msg.DepartureBlock)
+			msgQ.AppendQueuedMessage(msg)
+			fmt.Println(len(msgQ.QueuedMessage))
 			// now send here
 		case <-heightTicker.C:
 			latest := latest(ctx)
-			fmt.Println(len(messageQueue))
-			if len(messageQueue) > 0 {
-				for i := 0; i < len(messageQueue); i++ {
-					if messageQueue[i].DepartureBlock < latest {
+			fmt.Println(len(msgQ.QueuedMessage))
+			if len(msgQ.QueuedMessage) > 0 {
+				for i := 0; i < len(msgQ.QueuedMessage); i++ {
+					if msgQ.QueuedMessage[i].DepartureBlock < latest {
 						// send
-						finalizedQueue = append(finalizedQueue, messageQueue[i])
-						fmt.Println("from height ticker in relay ", messageQueue[i].DepartureBlock)
-						messageQueue[i] = nil
+						msgDest := string(msgQ.QueuedMessage[i].Message.Destination)
+						msgQ.AppendFinalizedMessage(msgDest, msgQ.QueuedMessage[i])
+						fmt.Println("from height ticker in relay ", msgQ.QueuedMessage[i].DepartureBlock)
+						msgQ.QueuedMessage[i] = nil
 					}
 				}
 				var _msgQ []*chain.QueuedMessage
-				_msgQ, messageQueue = messageQueue, messageQueue[0:0]
+				_msgQ, msgQ.QueuedMessage = msgQ.QueuedMessage, msgQ.QueuedMessage[0:0]
 				// remove nil
 				for _, m := range _msgQ {
 					if m != nil {
-						messageQueue = append(messageQueue, m)
+						msgQ.AppendQueuedMessage(m)
 					}
 				}
 			}
 		case <-sendMessageTicker.C:
-			finalQLen := len(finalizedQueue)
+			finalQLen := len(msgQ.FinalizedMessage)
 			if finalQLen > 0 {
-				for i := 0; i < finalQLen; i++ {
-					fmt.Println("reached in send ch ", finalizedQueue[i].DepartureBlock)
-					finalizedQueue[i] = nil
+				for k, _ := range msgQ.FinalizedMessage {
+					length := len(msgQ.FinalizedMessage[k])
+					for i := 0; i < length; i++ {
+						sentSeq, err := r.Dst[k].Send(ctx, msgQ.FinalizedMessage[k][i])
+						if err != nil {
+							if msgQ.FinalizedMessage[k][i].RetryCount >= DefaultTxRetryCount {
+								fmt.Println("retry count exceeded for", msgQ.FinalizedMessage[k][i].DepartureBlock)
+								msgQ.FinalizedMessage[k][i] = nil // remove from finalized block and add to the db
+								continue
+							}
+							msgQ.FinalizedMessage[k][i].RetryCount++
+
+						} else {
+							// put sent seq in the db
+							fmt.Println("this is sent", sentSeq, "retried ", msgQ.FinalizedMessage[k][i].RetryCount)
+
+							msgQ.FinalizedMessage[k][i] = nil // remove the message from final
+						}
+					}
 				}
+
 				var _msgQ []*chain.QueuedMessage
-				_msgQ, finalizedQueue = finalizedQueue, finalizedQueue[0:0]
-				// remove nil
-				for _, m := range _msgQ {
-					if m != nil {
-						messageQueue = append(finalizedQueue, m)
+				for k, v := range msgQ.FinalizedMessage {
+					_msgQ, msgQ.FinalizedMessage[k] = msgQ.FinalizedMessage[k], v[0:0]
+					// remove nil
+					for _, m := range _msgQ {
+						if m != nil {
+							msgQ.AppendFinalizedMessage(k, m)
+						}
 					}
 				}
 			}
