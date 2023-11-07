@@ -6,7 +6,7 @@ import (
 )
 
 type ISender interface {
-	Send(ctx context.Context)
+	Send(ctx context.Context, msg *QueuedMessage) (uint64, error)
 }
 
 type IReceiver interface {
@@ -31,5 +31,6 @@ type Packet struct {
 
 type QueuedMessage struct {
 	DepartureBlock uint64
+	RetryCount int
 	Message        *Packet
 }
