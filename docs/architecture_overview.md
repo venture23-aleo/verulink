@@ -56,9 +56,10 @@ It is assumed that the parties that will be running the attestor for the bridge 
 
 ### Guaranteed Delivery
 It is assumed that delivery of valid messages is guaranteed and messages will not be lost in process. Messages are persisted on source and target which will help ensure this.
+Attestor will be responsible for guaranteed delivery of message.
 
 ### Finality Is Ensured
-It is assumed that only the messages that are included in finalized blocks are attested by the participants and attestor will ensure that submission of message is also included in finalized block.
+It is assumed that only the messages that are included in finalized blocks are attested by the participants and attestor will ensure that submission of message is also included in finalized block. Because of ethereum finality delay it might take approx (64 blocks or 15 min) for the transaction to be finalized and attested.
 
 ### Message Delivery Is Sponsored
 It is assumed that the fee required for delivery of messages is sponsored by the participants that will be running the attestor nodes. 
@@ -144,6 +145,7 @@ There may be more contracts depending on the platform requirements.
 #### Bridge Contract
 Bridge contract is responsible for sending and receiving messages and does not concern with the contents of the message.
 It will make sure that the message is accessible only to the contract that the message was addressed to.
+For detailed design and interface we can follow below link:
 [BridgeContract Design And Interface](bridge_contract.md)
 
 
@@ -566,6 +568,11 @@ The platform being a stateful application it is imperative that following measur
 To address disasters that may occur outside of the system itself following measures can be taken beforehand.
 - *Limits On Withdrawls*: Define limits on contracts that will disallow users to withdraw funds that are huge in proportion in a single transaction. E.g. Min of (10% of total user fund or 10K).
 - *Immediate Blacklisting* : Maintain onchain blacklist of users so that malicious actors can be stopped abruptly.
+
+## Future Enhancements
+- The architecture is open to adding new chains with least amount of changes so we will be adding high value chains in future.
+- User experience can be improved in future by selecting different finality mode based on amount being transferred. For smaller amounts will be transferred using instant finality while larger sums will have to wait for block finality.
+- Transfer of assets from aleo can also be added in coming future which will help to spread aleo assets as well.
 
 
 
