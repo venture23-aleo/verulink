@@ -53,7 +53,6 @@ func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.QueuedMess
 }
 
 func (r *Receiver) GetLatestHeight(ctx context.Context) (uint64, error) {
-	fmt.Println("getlatestheight", r.Client)
 	latestHeight, err := r.Client.GetLatestHeight(ctx)
 	if err != nil {
 		return 0, err
@@ -98,10 +97,8 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 	for {
 		select {
 		case bn := <-bnCh:
-			fmt.Println("aleo notification", bn.Metadata.Height)
 			callback(bn)
 		case <-pollTicker.C:
-			fmt.Println("poll ticker")
 			latestHeight = latest()
 		default:
 			var headers []*notification

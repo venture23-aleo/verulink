@@ -92,10 +92,8 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 	for {
 		select {
 		case bn := <-bnCh:
-			fmt.Println("eth notification", bn.Number, bn.Hash())
 			callback(bn)
 		case <-pollTicker.C:
-			fmt.Println("poll ticker")
 			latestHeight = latest()
 		default:
 			var headers []*notification
