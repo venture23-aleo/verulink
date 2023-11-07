@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
@@ -10,6 +11,10 @@ import (
 
 type SenderFunc func(src, dst, url string, wallet common.Wallet) chain.ISender
 type ReceiverFunc func(src string, dst string, nodeAddress string) chain.IReceiver
+
+const (
+	DefaultSendMessageTicker = 10 * time.Second
+)
 
 var (
 	RegisteredSender   = map[string]SenderFunc{}
@@ -123,9 +128,12 @@ func (r *relay) Start(ctx context.Context) {
 	msgch := make(chan *chain.QueuedMessage)
 	srcErrCh := r.Src.Subscribe(ctx, msgch, uint64(r.Cfg.StartHeight))
 
-	var messageQueue []*chain.QueuedMessage 
+	var messageQueue []*chain.QueuedMessage
+	var finalizedQueue []*chain.QueuedMessage
 
 	heightTicker := r.Src.HeightPoller()
+
+	sendMessageTicker := time.NewTicker(DefaultSendMessageTicker)
 
 	latest := func(ctx context.Context) uint64 {
 		latestHeight, err := r.Src.GetLatestHeight(ctx)
@@ -145,29 +153,45 @@ func (r *relay) Start(ctx context.Context) {
 		case msg := <-msgch:
 			fmt.Println("reached in the msg ch", msg.DepartureBlock, msg.Message.Height)
 			messageQueue = append(messageQueue, msg)
+			fmt.Println(len(messageQueue))
 			// now send here
-		case <- heightTicker.C:
+		case <-heightTicker.C:
 			latest := latest(ctx)
-			fmt.Println("len", len(messageQueue))
+			fmt.Println(len(messageQueue))
 			if len(messageQueue) > 0 {
 				for i := 0; i < len(messageQueue); i++ {
-					
 					if messageQueue[i].DepartureBlock < latest {
 						// send
-						fmt.Println("from height ticker in relay", messageQueue[i].DepartureBlock)
-						messageQueue[i] = nil 
+						finalizedQueue = append(finalizedQueue, messageQueue[i])
+						fmt.Println("from height ticker in relay ", messageQueue[i].DepartureBlock)
+						messageQueue[i] = nil
 					}
 				}
 				var _msgQ []*chain.QueuedMessage
 				_msgQ, messageQueue = messageQueue, messageQueue[0:0]
-				// remove nil 
-				for _, m := range(_msgQ) {
+				// remove nil
+				for _, m := range _msgQ {
 					if m != nil {
 						messageQueue = append(messageQueue, m)
+					}
+				}
+			}
+		case <-sendMessageTicker.C:
+			finalQLen := len(finalizedQueue)
+			if finalQLen > 0 {
+				for i := 0; i < finalQLen; i++ {
+					fmt.Println("reached in send ch ", finalizedQueue[i].DepartureBlock)
+					finalizedQueue[i] = nil
+				}
+				var _msgQ []*chain.QueuedMessage
+				_msgQ, finalizedQueue = finalizedQueue, finalizedQueue[0:0]
+				// remove nil
+				for _, m := range _msgQ {
+					if m != nil {
+						messageQueue = append(finalizedQueue, m)
 					}
 				}
 			}
 		}
 	}
 }
-
