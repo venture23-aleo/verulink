@@ -162,6 +162,7 @@ func (r *relay) Start(ctx context.Context) {
 	heightTicker := r.Src.HeightPoller()
 
 	sendMessageTicker := time.NewTicker(DefaultSendMessageTicker)
+	retryTicker := time.NewTicker(time.Minute)
 
 	for {
 		select {
@@ -198,15 +199,26 @@ func (r *relay) Start(ctx context.Context) {
 		case <-sendMessageTicker.C:
 			finalQLen := len(msgQ.FinalizedMessage)
 			if finalQLen > 0 {
-				for k, _ := range msgQ.FinalizedMessage {
+				for k := range msgQ.FinalizedMessage {
 					dstMsgLength := len(msgQ.FinalizedMessage[k])
 					fmt.Println("dst msg len pre: ", dstMsgLength)
 					err := r.Dst[k].Send(ctx, msgQ.FinalizedMessage[k])
 					if err != nil {
-						return 
+						return
 					}
 					msgQ.FinalizedMessage[k] = msgQ.FinalizedMessage[k][dstMsgLength:]
 					fmt.Println("dst msg len post: ", len(msgQ.FinalizedMessage[k]))
+				}
+			}
+		case <-retryTicker.C:
+			for k := range r.Dst {
+				retryBlocks := r.Dst[k].GetRetryingBlocks()
+				for _, v := range retryBlocks {
+					fmt.Println("sending retrying message", v.DepartureBlock)
+					err := r.Dst[k].Send(ctx, []*chain.QueuedMessage{v})
+					if err != nil {
+						return
+					}
 				}
 			}
 		}
