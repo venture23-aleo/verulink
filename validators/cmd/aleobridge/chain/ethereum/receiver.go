@@ -37,25 +37,25 @@ func NewClient(nodeUrl string) IClient {
 
 func (r *Receiver) Subscribe(ctx context.Context, msgch chan<- *chain.QueuedMessage, startHeight uint64) (errch <-chan error) {
 	go func() {
-		r.callLoop(ctx, startHeight, 
-			func(v *ethTypes.Header) error{
+		r.callLoop(ctx, startHeight,
+			func(v *ethTypes.Header) error {
 				arrivalBlock := v.Number
 				msgch <- &chain.QueuedMessage{DepartureBlock: arrivalBlock.Uint64() + EthBlockFinality, Message: &chain.Packet{Height: strconv.Itoa(int(v.Number.Int64())), Destination: "aleo"}}
-				return nil 
-		})
+				return nil
+			})
 	}()
-	return nil 
+	return nil
 }
 
-func (r *Receiver) GetLatestHeight(ctx context.Context) (uint64, error){
+func (r *Receiver) GetLatestHeight(ctx context.Context) (uint64, error) {
 	latestHeight, err := r.Client.GetBlockNumber()
 	if err != nil {
 		return 0, err
 	}
-	return latestHeight, nil 
+	return latestHeight, nil
 }
 
-func (r *Receiver) HeightPoller() (*time.Ticker) {
+func (r *Receiver) HeightPoller() *time.Ticker {
 	heightPoller := time.NewTicker(time.Minute * 2)
 	return heightPoller
 }
@@ -130,11 +130,15 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 						if q.bn == nil {
 							q.bn = &notification{}
 						}
+						// packet
+						// range query for new packets 1,7 [1,3,5]
 						header, err := r.Client.GetHeaderByHeight(ctx, big.NewInt(int64(q.height)))
 						if err != nil {
 							q.err = err
 						}
-						q.bn.header = header
+						if header.Number.Uint64() <= latest() {
+							q.bn.header = header
+						}
 					}(q)
 				}
 			}

@@ -139,7 +139,9 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 						if err != nil {
 							q.err = err
 						}
-						q.bn.header = header
+						if uint64(header.Metadata.Height) <= latestHeight {
+							q.bn.header = header
+						}
 					}(q)
 				}
 			}
@@ -157,7 +159,7 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 }
 
 func NewReceiver(src string, dst string, nodeAddress string) chain.IReceiver {
-	client := NewClient("https://vm.aleo.org/api", "testnet3")
+	client := NewClient("https://api.explorer.aleo.org/v1", "testnet3")
 
 	return &Receiver{
 		Client: client,
