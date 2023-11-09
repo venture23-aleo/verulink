@@ -6,7 +6,11 @@ import (
 )
 
 type ISender interface {
-	Send(ctx context.Context, msg *QueuedMessage) (uint64, error)
+
+	// returns []uint64 denoting which messages are sent, returns []*Packet to denote which packet batch could not be sent
+
+	// TODO: optimization available attested message batch in a single txn
+	Send(ctx context.Context, msg []*QueuedMessage) (error)
 }
 
 type IReceiver interface {
@@ -31,6 +35,6 @@ type Packet struct {
 
 type QueuedMessage struct {
 	DepartureBlock uint64
-	RetryCount int
+	RetryCount     int // balance, network timeout, 
 	Message        *Packet
 }
