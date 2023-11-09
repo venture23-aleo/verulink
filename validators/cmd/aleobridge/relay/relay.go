@@ -133,7 +133,7 @@ func (r *Relays) StartMultiRelay(ctx context.Context) {
 	for _, relay := range r.relay {
 		relayCh <- relay
 	}
-
+	// handle panicking case
 	for {
 		select {
 		case <-ctx.Done():
@@ -163,14 +163,6 @@ func (r *relay) Start(ctx context.Context) {
 
 	sendMessageTicker := time.NewTicker(DefaultSendMessageTicker)
 
-	latest := func(ctx context.Context) uint64 {
-		latestHeight, err := r.Src.GetLatestHeight(ctx)
-		if err != nil {
-			return 0
-		}
-		return latestHeight
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -184,17 +176,15 @@ func (r *relay) Start(ctx context.Context) {
 			fmt.Println(len(msgQ.QueuedMessage))
 			// now send here
 		case <-heightTicker.C:
-			latest := latest(ctx)
 			fmt.Println(len(msgQ.QueuedMessage))
 			if len(msgQ.QueuedMessage) > 0 {
 				for i := 0; i < len(msgQ.QueuedMessage); i++ {
-					if msgQ.QueuedMessage[i].DepartureBlock < latest {
-						// send
-						msgDest := string(msgQ.QueuedMessage[i].Message.Destination)
-						msgQ.AppendFinalizedMessage(msgDest, msgQ.QueuedMessage[i])
-						fmt.Println("from height ticker in relay ", msgQ.QueuedMessage[i].DepartureBlock)
-						msgQ.QueuedMessage[i] = nil
-					}
+					// filter messages according to the destination
+					msgDest := string(msgQ.QueuedMessage[i].Message.Destination)
+					msgQ.AppendFinalizedMessage(msgDest, msgQ.QueuedMessage[i])
+					fmt.Println("from height ticker in relay ", msgQ.QueuedMessage[i].DepartureBlock)
+					msgQ.QueuedMessage[i] = nil
+
 				}
 				var _msgQ []*chain.QueuedMessage
 				_msgQ, msgQ.QueuedMessage = msgQ.QueuedMessage, msgQ.QueuedMessage[0:0]
@@ -209,35 +199,14 @@ func (r *relay) Start(ctx context.Context) {
 			finalQLen := len(msgQ.FinalizedMessage)
 			if finalQLen > 0 {
 				for k, _ := range msgQ.FinalizedMessage {
-					length := len(msgQ.FinalizedMessage[k])
-					for i := 0; i < length; i++ {
-						sentSeq, err := r.Dst[k].Send(ctx, msgQ.FinalizedMessage[k][i])
-						if err != nil {
-							if msgQ.FinalizedMessage[k][i].RetryCount >= DefaultTxRetryCount {
-								fmt.Println("retry count exceeded for", msgQ.FinalizedMessage[k][i].DepartureBlock)
-								msgQ.FinalizedMessage[k][i] = nil // remove from finalized block and add to the db
-								continue
-							}
-							msgQ.FinalizedMessage[k][i].RetryCount++
-
-						} else {
-							// put sent seq in the db
-							fmt.Println("this is sent", sentSeq, "retried ", msgQ.FinalizedMessage[k][i].RetryCount)
-
-							msgQ.FinalizedMessage[k][i] = nil // remove the message from final
-						}
+					dstMsgLength := len(msgQ.FinalizedMessage[k])
+					fmt.Println("dst msg len pre: ", dstMsgLength)
+					err := r.Dst[k].Send(ctx, msgQ.FinalizedMessage[k])
+					if err != nil {
+						return 
 					}
-				}
-
-				var _msgQ []*chain.QueuedMessage
-				for k, v := range msgQ.FinalizedMessage {
-					_msgQ, msgQ.FinalizedMessage[k] = msgQ.FinalizedMessage[k], v[0:0]
-					// remove nil
-					for _, m := range _msgQ {
-						if m != nil {
-							msgQ.AppendFinalizedMessage(k, m)
-						}
-					}
+					msgQ.FinalizedMessage[k] = msgQ.FinalizedMessage[k][dstMsgLength:]
+					fmt.Println("dst msg len post: ", len(msgQ.FinalizedMessage[k]))
 				}
 			}
 		}
