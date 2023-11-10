@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/boltdb/bolt"
+	"go.etcd.io/bbolt"
 )
 
 type Database struct {
-	Db *bolt.DB
+	Db *bbolt.DB
 }
 
 func NewDatabase(path string) (*Database, error) {
-	db, err := bolt.Open(path, 0777, nil)
+	db, err := bbolt.Open(path, 0777, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (d *Database) DbPut(bucket string, key string, value interface{}) error {
 		return nil
 	}
 
-	d.Db.Update(func(tx *bolt.Tx) error {
+	d.Db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		val, err := json.Marshal(value)
 		if err != nil {
@@ -58,7 +58,7 @@ func (d *Database) DbPut(bucket string, key string, value interface{}) error {
 }
 
 func (d *Database) ViewData(bucket, key string) error {
-	d.Db.View(func(tx *bolt.Tx) error {
+	d.Db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		v := b.Get([]byte(key))
 		fmt.Println(string(v))
