@@ -80,7 +80,7 @@ pub trait IBridgeContract {
         &mut self,
         caller: String,
         destination: NetworkAddress,
-        msg_hash: [u8; 32],
+        msg:TokenMessage,
     ) -> Result<u128, ContractError> {
        self.ensure_registered_service(&caller)?;
         let target_chain_id=destination.chain_id;
@@ -245,7 +245,7 @@ The code snippet is a method called `send_message` that sends a message from one
 ### Inputs
 - `caller` (String): The address of the sender.
 - `destination` (NetworkAddress): The address of the recipient.
-- `msg_hash` ([u8; 32]): The hash of the message to be sent.
+- `msg` (TokenMessage): Message containing token transfer details for target chain.
 ___
 ### Flow
 1. Check if the sender is a registered service using the `ensure_registered_service` method.
