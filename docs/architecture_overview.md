@@ -16,9 +16,10 @@
        - [Token Contract Storage Structure](#token-contract-storage-structure)
        - [Token Service Contract Interface](#token-service-contract-interface)
      - [Holding Contract](#holding-contract)
-    - [Additional Contracts](#additional-contracts)
+    - [Additional Components](#additional-components)
         - [Token Contract - Aleo](#token-contract--aleo)
         - [Multisig Contract - Aleo](#multisig-contract--aleo)
+        - [Ethereum Multisig](#ethereum-multisig)
    - [Attestor](#attestor)
      - [Workflow Steps](#workflow-steps)
      - [Data Structures](#data-structures)
@@ -54,7 +55,8 @@ The design of the platform relies on following assumptions to be correct.
 It is assumed that the parties that will be running the attestor for the bridge can be trusted because of their self-interest and reputation.It is assumed the majority of participants (3 out of 5) wont collude to attack the bridge.
 
 ### Finality Is Ensured
-It is assumed that only the messages that are included in finalized blocks are attested by the participants and attestor will ensure that submission of message is also included in finalized block.For more on ethereum finality refer [here](https://ethereum.org/tk/roadmap/single-slot-finality/)
+It is assumed that only the messages that are included in finalized blocks are attested by the participants and attestor will ensure that submission of message is also included in finalized block.Because of ethereum finality delay it might take approx (64 blocks or 15 min) for the transaction to be finalized and attested.For more on ethereum finality refer [here](https://ethereum.org/tk/roadmap/single-slot-finality/)
+
 
 ### Message Delivery Is Sponsored
 It is assumed that the fee required for delivery of messages is sponsored by the participants that will be running the attestor nodes. 
@@ -140,6 +142,7 @@ There may be more contracts depending on the platform requirements.
 #### Bridge Contract
 Bridge contract is responsible for sending and receiving messages and does not concern with the contents of the message.
 It will make sure that the message is accessible only to the contract that the message was addressed to.
+For detailed design and interface we can follow below link:
 [BridgeContract Design And Interface](bridge_contract.md)
 
 
@@ -203,7 +206,7 @@ This contract is reponsible for holding disputed funds and transfers. In event o
 
 
 
-### Additional Contracts
+### Additional Components
 Apart from above two contracts there might be additional contracts depending on the platform.These contracts are covered here.
 
 ##### Wrapped Token Contract - Aleo
@@ -232,6 +235,11 @@ This method is used to transfer the tokens in the new network.
 
 ##### MultiSig Contract - Aleo
 To be based on Puzzle's multisig.
+
+##### Ethereum Multisig
+Gnosis Safe Multisig will be maintained using council keys which will also follow majority threshold. 
+The multisig will be used to deploy contracts, upgrade contracts and update contract configurations/blacklists.
+
 
 
 ### Attestor
@@ -577,6 +585,11 @@ To address disasters that may occur outside of the system itself following measu
 - * Immediate Blacklisting* : Maintain onchain blacklist of users so that malicious actors can be stopped abruptly.
 - * Pausability By Governance*: In case of any forseen threats or attacks, council multisig can pause bridge contracts and token contracts to protect user's funds.
 - * Prevent Continuous Value Drain*: In scenarious where TVL in bridge is constantly draining (e.g. 10% decrease within 24hrs) due to any social causes or malicious activity , the bridge will suspend operating unless all the attestors are restarted again by council. 
+
+## Future Enhancements
+- The architecture is open to adding new chains with least amount of changes so we will be adding high value chains in future.
+- User experience can be improved in future by selecting different finality mode based on amount being transferred. For smaller amounts will be transferred using instant finality while larger sums will have to wait for block finality.
+- Transfer of assets from aleo can also be added in coming future which will help to spread aleo assets as well.
 
 
 
