@@ -139,7 +139,7 @@ func (r *Receiver) callLoop(ctx context.Context, startHeight uint64, callback fu
 						if err != nil {
 							q.err = err
 						}
-						if uint64(header.Metadata.Height) <= latestHeight {
+						if uint64(header.Metadata.Height) <= latestHeight { // message ko arrival height + finalityHeight < latestHeight 
 							q.bn.header = header
 						}
 					}(q)

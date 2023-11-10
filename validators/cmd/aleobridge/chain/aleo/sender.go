@@ -17,7 +17,7 @@ type Sender struct {
 	Src        string
 	Dst        string
 	Client     *Client
-	RetryQueue map[uint64]*chain.QueuedMessage
+	RetryQueue map[uint64]*chain.QueuedMessage // include err also
 }
 
 func (s *Sender) Send(ctx context.Context, msg []*chain.QueuedMessage) error {
@@ -32,9 +32,7 @@ func (s *Sender) Send(ctx context.Context, msg []*chain.QueuedMessage) error {
 			fmt.Println("couldnot send ", m.DepartureBlock)
 
 		} else {
-			if _, ok := s.RetryQueue[m.DepartureBlock]; ok {
-				delete(s.RetryQueue, m.DepartureBlock)
-			}
+			delete(s.RetryQueue, m.DepartureBlock)
 			fmt.Println("message sent", m.DepartureBlock, "retry count", m.RetryCount)
 			time.Sleep(5 * time.Second)
 		}

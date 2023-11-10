@@ -30,8 +30,8 @@ type MsgQueue struct {
 }
 
 func NewQueue() *MsgQueue {
-	var queuedMsg []*chain.QueuedMessage
-	finalizedQueue := map[string][]*chain.QueuedMessage{}
+	var queuedMsg []*chain.QueuedMessage	// TODO: packetQueue
+	finalizedQueue := map[string][]*chain.QueuedMessage{} // TODO: dstPacketQueue
 	return &MsgQueue{sync.RWMutex{}, queuedMsg, finalizedQueue}
 }
 
