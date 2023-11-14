@@ -2,7 +2,7 @@
 
 1. [Architecture Overview](#architecture-overview)
    - [Introduction](#introduction)
-   - [Assumptions] (#assumptions)
+   - [Assumptions](#assumptions)
    - [Common Data Structures](#common-data-structures)
    - [Logical Components](#logical-components)
 2. [Common Data Structures](#common-data-structures)
@@ -145,8 +145,6 @@ It will make sure that the message is accessible only to the contract that the m
 For detailed design and interface we can follow below link:
 [BridgeContract Design And Interface](bridge_contract.md)
 
-
-
 #### Token Service Contract
 This contract is responsible for interacting with other er20 tokens to mint/burn and pass relevant information to bridge contract as a Token Message.
 ##### Token Contract Storage Structure
@@ -201,37 +199,11 @@ Remove Blacklist
 This contract is reponsible for holding disputed funds and transfers. In event of transfer being initiated to an address that is blacklisted on target chain, the token service contract on target chain will lock the funds in holding contract. The funds can be released by council multisig once the dispute has been settled for the blacklisted address.
 [Contract Design And Interface](holding_contract.md)
 
-
-
-
-
-
 ### Additional Components
 Apart from above two contracts there might be additional contracts depending on the platform.These contracts are covered here.
 
 ##### Wrapped Token Contract - Aleo
-The Wrapped Token Contract is responsible for managing the minting, burning, and transfer of all wrapped assets.
-
-``` 
-pub trait WrappedToken{
-    pub fn add(name: String, symbol: String, decimals: u8, origin_contract: NetworkAddress);
-    pub fn mint(recipient: String, amount: u128, token_id: String);
-    pub fn burn(recipient: String, amount: u128, token_id: String);
-    pub fn transfer(recipient: String, amount: u128, token_id: String);
-}
-```
-Add Token:
-This method will be invoked by the council to support new wrapped tokens. When a token is added, a `token_id` is generated to identify the token.
-
-Mint:
-This method will be invoked by the user to mint the token after locking it first on `origin_contract`. Message with right `recipient` and `amount` should exist on the bridge contract with enough attestations to be able to mint the token. Once minted, the message on the bridge contract should be marked as consumed.
-
-Burn:
-This method will be invoked by the user to transfer the token back to the `origin_contract`.
-
-Transfer:
-This method is used to transfer the tokens in the new network. 
-
+The Wrapped Token Contract is responsible for managing the minting, burning, and transfer of all wrapped assets. Each wrapped token will be deployed as a separate program on Aleo. The wrapped token will follow the [ARC20 proposal](https://github.com/AleoHQ/ARCs/discussions/42) to be compatible with the larger ecosystem.
 
 ##### MultiSig Contract - Aleo
 To be based on Puzzle's multisig.
@@ -239,7 +211,6 @@ To be based on Puzzle's multisig.
 ##### Ethereum Multisig
 Gnosis Safe Multisig will be maintained using council keys which will also follow majority threshold. 
 The multisig will be used to deploy contracts, upgrade contracts and update contract configurations/blacklists.
-
 
 
 ### Attestor
