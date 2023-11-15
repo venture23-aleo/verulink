@@ -22,13 +22,11 @@ pub struct InPacketQueue {
  pub struct InitMsg {
     self_chain_id: u32,
     attestors: Vec<String>,
-    nonce_seed: [u8; 32],
 }
  ```
 The `InitMsg` struct is used to pass the initialization message for the contract. It contains three fields:
 1. `self_chain_id`: represents the chain ID of the current host chain.
 2. `attestors`: addresses of the attestors.
-3. `nonce_seed`: holds the seed for generating nonces.
 
  ### Contract Storage
  ```
@@ -39,7 +37,6 @@ The `InitMsg` struct is used to pass the initialization message for the contract
     consumed_packets: HashMap<PacketHash, bool>,
     attestors: HashMap<String, bool>,
     chain_sequence: HashMap<u32, u128>,
-    nonce: [u8; 32],
     registered_services: HashMap<String, bool>,
     allowed_target_chains: HashMap<u32, bool>,
     config: Option<Config>,
@@ -58,7 +55,6 @@ The `InitMsg` struct is used to pass the initialization message for the contract
 | Registered Services  | address=>bool                    | Should return true for supported services only. Initially, token service contract will be the only supported service.|
 | Allowed Target Chains        | chain_id=>bool                       | List of recognized target chains.                  |
 | Config        | single nullable item config                     | Info on governance address and chain id                |
-| Nonce        | single random value in bytes                     | Updatable value to be used as nonce                    |
 
 
 ### Contract Interface
@@ -72,7 +68,6 @@ pub trait IBridgeContract {
             };
             self.set_attestors(msg.attestors);
             self.set_config(config);
-            self.set_nonce(msg.nonce_seed);
         }
         return Err(ContractError::AlreadyInit);
     }
@@ -98,10 +93,7 @@ pub trait IBridgeContract {
             sequence: next_sequence,
             source: NetworkAddress::new(self_chain_id, &caller),
             version: 1,
-            nonce: self.get_nonce(),
         };
-        let next_nonce = self.hash(&[self.get_nonce(), self.hash_packet(&packet)].concat());
-        self.set_nonce(next_nonce);
         self.queue_outgoing_packet(packet)?;
         self.set_chain_sequence(target_chain_id, next_sequence);
 
@@ -169,9 +161,7 @@ pub trait IBridgeContract {
     fn get_attestors(&self) -> Vec<String>;
 
     fn get_current_sequence(&self, chain_id: u32) -> u128;
-    fn get_nonce(&self) -> [u8; 32];
-    // private
-    fn set_nonce(&mut self, nonce: [u8; 32]);
+    
 
     fn is_packet_received(&self, packet_hash: [u8; 32]) -> bool;
 
@@ -219,20 +209,20 @@ pub trait IBridgeContract {
 }
 ```
 ## Init Contract (EntryPoint)
-The code snippet is a method called `init_contract` that initializes the contract by setting the configuration, attestors, and nonce if the contract has not been initialized before.
+The code snippet is a method called `init_contract` that initializes the contract by setting the configuration and attestors,if the contract has not been initialized before.
 
 
 ### Inputs
 - `caller`: A string representing the address of the caller.
-- `msg`: An `InitMsg` struct containing the self chain ID, attestors, and nonce seed.
+- `msg`: An `InitMsg` struct containing the self chain ID and attestors.
 ___
 ### Flow
 1. Check if the contract has already been initialized by calling the `get_config` method. If the result is `None`, proceed to the next step.
 2. Create a new `Config` struct with the `governance_address` set to the `caller` and the `chain_id` set to `msg.self_chain_id`.
 3. Set the attestors of the contract to `msg.attestors` by calling the `set_attestors` method.
 4. Set the configuration of the contract to the newly created `Config` struct by calling the `set_config` method.
-5. Set the nonce of the contract to `msg.nonce_seed` by calling the `set_nonce` method.
-6. Return an error of type `ContractError::AlreadyInit` to indicate that the contract has already been initialized.
+
+5. Return an error of type `ContractError::AlreadyInit` to indicate that the contract has already been initialized.
 ___
 ### Outputs
 - If the contract has not been initialized before, the method returns `Ok(())`.
@@ -240,7 +230,7 @@ ___
 ___
 
 ## Send Message (EntryPoint)
-The code snippet is a method called `send_message` that sends a message from one network address to another. It performs several checks to ensure that the sender is a registered service and that the destination chain is allowed. It then creates a packet with the necessary information, such as the destination address, message hash, and sequence number. Finally, it updates the nonce and queues the outgoing packet.
+The code snippet is a method called `send_message` that sends a message from one network address to another. It performs several checks to ensure that the sender is a registered service and that the destination chain is allowed. It then creates a packet with the necessary information, such as the destination address, message hash, and sequence number.
 
 ### Inputs
 - `caller` (String): The address of the sender.
@@ -252,10 +242,10 @@ ___
 2. Check if the destination chain is allowed using the `ensure_allowed_target_chain` method.
 3. Get the chain ID of the sender's own chain using the `get_own_chain_id` method.
 4. Get the current sequence number for the destination chain using the `get_current_sequence` method and increment it by 1.
-5. Create a new packet with the destination address, host height, message hash, sequence number, source address, version, and nonce.
-6. Update the nonce by hashing the current nonce and the packet using the `hash` method.
-7. Queue the outgoing packet using the `queue_outgoing_packet` method.
-8. Save incremented sequence to storage.
+5. Create a new packet with the destination address, host height, message hash, sequence number, source address, version.
+
+6. Queue the outgoing packet using the `queue_outgoing_packet` method.
+7. Save incremented sequence to storage.
 ___
 ### Outputs
 - Result<u128, ContractError>: The sequence number of the sent message, wrapped in a `Result` indicating success or an error if any of the checks fail.

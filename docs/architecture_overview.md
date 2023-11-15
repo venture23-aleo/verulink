@@ -89,7 +89,6 @@ pub struct Packet{
     sequence:u128,
     message:TokenMessage,
     height:String,
-    nonce:[u8;32],
 }
 
 ```
@@ -104,7 +103,6 @@ Packet
 | Sequence    | sequence no of the packet for the target chain id.                                  |
 | Message     | keccak256 hash of the token message contents.                                       |
 | Height      | Height of the source chain                                                          |
-| Nonce       | Accumulated hash of previous nonce and sequence to prevent bruteforce attempts      |
 
 ```
 pub struct TokenMessage {
