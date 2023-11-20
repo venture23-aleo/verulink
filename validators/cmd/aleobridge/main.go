@@ -12,6 +12,7 @@ import (
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
 )
 
 var configFile string
@@ -49,6 +50,9 @@ func main() {
 	for _, value := range cfg.Chains {
 		fmt.Println(value)
 	}
+
+	// InitializeDB for retry
+	store.InitKVStore(cfg.DBPath)
 
 	multirelayer := relay.MultiRelay(ctx, *cfg)
 	multirelayer.StartMultiRelay(ctx)
