@@ -7,11 +7,12 @@ import (
 )
 
 var (
-	RetryBucket = "retryBucket"
+	RetryBucket    = "retryBucket"
+	SnapShotBucket = "snapshotBucket"
 )
 
-func InitKVStore() {
-	initDB("database")
+func InitKVStore(path string) {
+	initDB(path)
 }
 
 // key can have separate bucket to be stored on, so if key is to be store is bucket A then it can be named as
@@ -24,6 +25,15 @@ func StoreRetryPacket(dst, key string, value *chain.QueuedMessage) error {
 		return err
 	}
 	err = put(bucket, []byte(key), val)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func StoreSnapshot(src, key string, value string) error {
+	bucket := getSnapshotBucketName(src)
+	err := put(bucket, []byte(key), []byte(value))
 	if err != nil {
 		return err
 	}
@@ -45,6 +55,27 @@ func GetRetryPacket(dst, key string) (*chain.QueuedMessage, error) {
 
 func getRetryBucketName(dst string) string {
 	return RetryBucket + "|" + dst
+}
+
+func getSnapshotBucketName(src string) string {
+	return SnapShotBucket + "|" + src
+}
+
+func GetAllRetryPackets(dst string) ([]*chain.QueuedMessage, error) {
+	bucket := getRetryBucketName(dst)
+	value := getAll(bucket)
+
+	msgList := []*chain.QueuedMessage{}
+
+	for _, v := range value {
+		msg := &chain.QueuedMessage{}
+		err := json.Unmarshal(v, msg)
+		if err != nil {
+			return nil, err
+		}
+		msgList = append(msgList, msg)
+	}
+	return msgList, nil
 }
 
 func DeleteRetryPacket(dst, key string) error {
