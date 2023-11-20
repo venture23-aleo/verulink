@@ -14,10 +14,11 @@ type ChainConfig struct {
 } 
 
 // no need to put the destination address in the config because each chains will create its own receiver and sender
-// and calling the senders will be done by using the destination address in packet 
+// and calling the senders will be done by using the destination address in packet
 
 type AppConfig struct {
 	Chains []*ChainConfig `json:"chains"`
+	DBPath string         `json:"db_path"`
 }
 
 func (c *ChainConfig) Wallet() (common.Wallet, error) {
