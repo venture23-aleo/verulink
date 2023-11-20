@@ -16,5 +16,6 @@
       "start_height": 500000,
       "wallet_path": "path"
     }
-  ]
+  ], 
+  "db_path" : "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store/retrydb"
 }
