@@ -30,7 +30,7 @@ type MsgQueue struct {
 }
 
 func NewQueue() *MsgQueue {
-	var queuedMsg []*chain.QueuedMessage	// TODO: packetQueue
+	var queuedMsg []*chain.QueuedMessage                  // TODO: packetQueue
 	finalizedQueue := map[string][]*chain.QueuedMessage{} // TODO: dstPacketQueue
 	return &MsgQueue{sync.RWMutex{}, queuedMsg, finalizedQueue}
 }
@@ -163,6 +163,7 @@ func (r *relay) Start(ctx context.Context) {
 
 	sendMessageTicker := time.NewTicker(DefaultSendMessageTicker)
 	retryTicker := time.NewTicker(time.Minute)
+	dbRetryTicker := time.NewTicker(time.Minute * 10)
 
 	for {
 		select {
@@ -219,6 +220,17 @@ func (r *relay) Start(ctx context.Context) {
 					if err != nil {
 						return
 					}
+				}
+			}
+		case <-dbRetryTicker.C:
+			for k := range r.Dst {
+				retryingBlocks, err := r.Dst[k].GetRetryingBlocksFromDB()
+				if err != nil {
+					return
+				}
+				err = r.Dst[k].Send(ctx, retryingBlocks)
+				if err != nil {
+					return
 				}
 			}
 		}
