@@ -12,6 +12,7 @@ type ISender interface {
 	// TODO: optimization available attested message batch in a single txn
 	Send(ctx context.Context, msg []*QueuedMessage) error
 	GetRetryingBlocks() map[uint64]*QueuedMessage
+	GetRetryingBlocksFromDB() ([]*QueuedMessage, error)
 }
 
 type IReceiver interface {
