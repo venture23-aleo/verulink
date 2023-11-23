@@ -46,26 +46,20 @@ func main() {
 
 	fmt.Println(ctx)
 
-	for _, value := range cfg.Chains {
-		fmt.Println(value)
-	}
-
-	multirelayer := relay.MultiRelay(ctx, *cfg)
+	multirelayer := relay.MultiRelay(ctx, cfg)
 	multirelayer.StartMultiRelay(ctx)
 
 }
 
-func loadConfig(file string) (*relay.AppConfig, error) {
+func loadConfig(file string) (*relay.Config, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
-	cfg := &relay.AppConfig{}
+	cfg := &relay.Config{}
 	err = json.NewDecoder(f).Decode(cfg)
 	if err != nil {
 		return nil, err
 	}
 	return cfg, nil
 }
-
-// bolt db

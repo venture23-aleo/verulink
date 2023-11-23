@@ -3,18 +3,22 @@
     {
       "name": "aleo",
       "chain_id": 1,
-      "bridge_contract": "contract",
+      "bridge_contract": "contract_address",
       "node_url": "url",
       "start_height": 5000,
-      "wallet_path": "path"
+      "finality_height": 1,
+      "wallet_path": "path/to/wallet",
+      "dest_chains":["ethereum"]
     },
     {
       "name": "ethereum",
       "chain_id": 2,
-      "bridge_contract": "contract",
+      "bridge_contract": "contract_address",
       "node_url": "url",
       "start_height": 500000,
-      "wallet_path": "path"
+      "finality_height":64,
+      "wallet_path": "path/to/wallet",
+      "dest_chains":["aleo"]
     }
   ]
 }

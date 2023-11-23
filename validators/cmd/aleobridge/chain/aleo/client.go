@@ -2,49 +2,51 @@ package aleo
 
 import (
 	"context"
-	"log"
-	"strconv"
-	"time"
 
 	aleoRpc "github.com/parajuliswopnil/aleo-go-sdk/rpc"
-	aleoTypes "github.com/parajuliswopnil/aleo-go-sdk/types"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 )
 
-type IClient interface {
-	GetLatestHeight(ctx context.Context) (uint64, error)
-	GetBlockHashByHeight(ctx context.Context, height int64) (string, error)
-	GetBlockHeaderByHeight(ctx context.Context, height int64) (*aleoTypes.Header, error)
-}
+const (
+	AleoBlockFinality = 1
+)
 
 type Client struct {
-	log        log.Logger
 	aleoClient *aleoRpc.Client
-	// bmc     *bmcperiphery.Bmcperiphery
-	mock IClient
+	chainID    uint32
+	chainCfg   *relay.ChainConfig
 }
 
-func (c *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
-	height, err := c.aleoClient.GetLatestHeight(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return uint64(height), nil
+func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
+	return &chain.Packet{}, nil
 }
 
-func (c *Client) GetBlockHashByHeight(ctx context.Context, height int64) (string, error) {
-	block, err := c.aleoClient.GetBlock(ctx, strconv.Itoa(int(height)))
-	if err != nil {
-		return "", err
-	}
-	return block.BlockHash, err
+func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {
+	packets := make([]*chain.Packet, 0)
+	return packets, nil
 }
 
-func (c *Client) GetBlockHeaderByHeight(ctx context.Context, height int64) (*aleoTypes.Header, error) {
-	ctx_, cancel := context.WithTimeout(ctx, time.Minute)
-	defer cancel()
-	block, err := c.aleoClient.GetBlock(ctx_, strconv.Itoa(int(height)))
-	if err != nil {
-		return nil, err
-	}
-	return &block.Header, nil
+// SendAttestedPacket sends packet from source chain to target chain
+func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
+	return nil
+}
+
+func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
+	return 0, nil
+}
+
+func (cl *Client) IsTxnFinalized(ctx context.Context, txnHash string) (bool, error) {
+	return false, nil
+}
+
+func (cl *Client) Name() string {
+	return "Ethereum"
+}
+
+func NewClient(cfg *relay.ChainConfig) relay.IClient {
+	/*
+		Initialize aleo client and panic if any error occurs.
+	*/
+	return &Client{}
 }

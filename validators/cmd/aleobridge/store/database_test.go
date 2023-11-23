@@ -11,15 +11,13 @@ func TestDatabase(t *testing.T) {
 	InitKVStore()
 	key := "111"
 	value := &chain.QueuedMessage{
-		DepartureBlock: 100,
-		RetryCount:     50,
+		RetryCount: 50,
 	}
 	err := StoreRetryPacket("aleo", key, value)
 	assert.Nil(t, err)
 
 	dbVal, err := GetRetryPacket("aleo", key)
 	assert.Nil(t, err)
-	assert.Equal(t, uint64(100), dbVal.DepartureBlock)
 	assert.Equal(t, 50, dbVal.RetryCount)
 }
 

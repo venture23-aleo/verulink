@@ -2,40 +2,48 @@ package chain
 
 import (
 	"context"
-	"time"
 )
 
 type ISender interface {
-
-	// returns []uint64 denoting which messages are sent, returns []*Packet to denote which packet batch could not be sent
-
-	// TODO: optimization available attested message batch in a single txn
-	Send(ctx context.Context, msg []*QueuedMessage) error
-	GetRetryingBlocks() map[uint64]*QueuedMessage
+	// TODO: optimization might be achieved if packets can be sent in single txn
+	SendPacket(ctx context.Context, packet *Packet) error
+	GetLatestHeight(ctx context.Context) (uint64, error)
+	IsTxnFinalized(ctx context.Context, txnHash string) (bool, error)
 }
 
 type IReceiver interface {
-	Subscribe(ctx context.Context, msgch chan<- *QueuedMessage, startHeight uint64) (errch <-chan error)
-	GetLatestHeight(ctx context.Context) (uint64, error)
-	HeightPoller() *time.Ticker
+	// TODO: move these methods elsewhere. This interface is
+	// Subscribe(ctx context.Context, msgch chan<- *QueuedMessage, startHeight uint64) (errch <-chan error)
+	// HeightPoller() *time.Ticker
+	//        ^      ^        ^          ^
+	//        |      |        |          |
+	//        |      |        |          |
+	/***************************************/
+
+	// GetPktWithSeqGT will be called periodically by subscriber. Thus it shall return packet
+	// which it shall put into the channel given by subscriber
+	GetPktWithSeq(ctx context.Context, seqNum uint64) (*Packet, error)
+	// GetPktsWithSeqGTAndInSameHeight will return packets of same height of packet with given seqNum.
+	// This might make processing multiple packets that comes under same block efficient.
+	// But might as well be obsolete
+	GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*Packet, error)
 }
 
-type NetworkAddress string
-
-type Message []byte
+type NetworkAddress struct {
+	ChainID uint32
+	Address string
+}
 
 type Packet struct {
 	Version     uint64
 	Destination NetworkAddress
 	Source      NetworkAddress
 	Sequence    uint64
-	Message     Message
+	Message     []byte
 	Height      string
-	Nonce       []byte
 }
 
 type QueuedMessage struct {
-	DepartureBlock uint64
-	RetryCount     int // balance, network timeout,
-	Message        *Packet
+	RetryCount int8 // balance, network timeout,
+	Message    *Packet
 }
