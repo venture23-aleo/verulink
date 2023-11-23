@@ -20,5 +20,6 @@
       "wallet_path": "path/to/wallet",
       "dest_chains":["aleo"]
     }
-  ]
+  ], 
+  "db_path" : "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store/retrydb"
 }

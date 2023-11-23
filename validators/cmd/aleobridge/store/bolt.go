@@ -1,11 +1,19 @@
 package store
 
-import "go.etcd.io/bbolt"
+import (
+	"sync"
 
-var db *bbolt.DB
+	"go.etcd.io/bbolt"
+)
+
+var (
+	db *bbolt.DB
+	mu sync.RWMutex
+)
 
 func initDB(path string) error {
 	var err error
+	mu = sync.RWMutex{}
 	db, err = bbolt.Open(path, 0655, nil)
 	if err != nil {
 		return err
@@ -22,8 +30,11 @@ func closeDB() error {
 }
 
 func put(bucket string, key, value []byte) error {
-	tx, err := db.Begin(true)
+	mu.Lock()
+	defer mu.Unlock()
 	
+	tx, err := db.Begin(true)
+
 	if err != nil {
 		return err
 	}
@@ -55,6 +66,8 @@ func put(bucket string, key, value []byte) error {
 }
 
 func get(bucket string, key []byte) []byte {
+	mu.RLock()
+	defer mu.RUnlock()
 	var value []byte
 	db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
@@ -67,7 +80,32 @@ func get(bucket string, key []byte) []byte {
 	return nil
 }
 
+func getAll(bucket string) [][]byte {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	val := [][]byte{}
+
+	db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+
+		if err := b.ForEach(func(k, v []byte) error {
+			if v != nil {
+				val = append(val, v)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+	return val
+}
+
 func delete(bucket string, key []byte) error {
+	mu.Lock()
+	defer mu.Unlock()
+
 	tx, err := db.Begin(true)
 	if err != nil {
 		return err

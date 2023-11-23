@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,7 +9,7 @@ import (
 )
 
 func TestDatabase(t *testing.T) {
-	InitKVStore()
+	InitKVStore("database")
 	key := "111"
 	value := &chain.QueuedMessage{
 		RetryCount: 50,
@@ -22,14 +23,26 @@ func TestDatabase(t *testing.T) {
 }
 
 func TestGetDatabaseValue(t *testing.T) {
-	InitKVStore()
-	key := "111"
-	_, err := GetRetryPacket("aleo", key)
+	InitKVStore("retrydb")
+	key := "507884"
+	value, err := GetRetryPacket("ethereum", key)
+	fmt.Println(value.DepartureBlock)
+	assert.Nil(t, err)
+}
+
+func TestGetALLDBValue(t *testing.T) {
+	InitKVStore("retrydb")
+	value, err := GetAllRetryPackets("ethereum")
+	fmt.Println("value len is:", len(value))
+
+	for _, v := range(value) {
+		fmt.Println("depart block:", v.DepartureBlock)
+	}
 	assert.Nil(t, err)
 }
 
 func TestDatabaseDelete(t *testing.T) {
-	InitKVStore()
+	InitKVStore("database")
 	key := "111"
 	err := DeleteRetryPacket("aleo", key)
 	assert.Nil(t, err)
