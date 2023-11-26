@@ -13,12 +13,23 @@ type Client struct {
 	eth      *ethclient.Client
 	chainID  uint32
 	chainCfg *relay.ChainConfig
+	nextSeq  uint64
 }
 
 const (
 	defaultReadTimeout = 50 * time.Second
 	RPCCallRetry       = 5
 )
+
+func (cl *Client) GetNextPacket(ctx context.Context) (*chain.Packet, error) {
+	pkt, err := cl.GetPktWithSeq(ctx, cl.nextSeq)
+	if err != nil {
+		return nil, err
+	}
+	cl.nextSeq = pkt.Sequence + 1 // | cl.nextSeq++
+
+	return pkt, nil
+}
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
 	return &chain.Packet{}, nil
@@ -49,6 +60,7 @@ func (cl *Client) Name() string {
 func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
+		nextSeq should start from 1
 	*/
 	return &Client{}
 }

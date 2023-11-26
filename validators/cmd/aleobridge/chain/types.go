@@ -20,6 +20,7 @@ type IReceiver interface {
 	//        |      |        |          |
 	/***************************************/
 
+	GetNextPacket(ctx context.Context) (*Packet, error)
 	// GetPktWithSeqGT will be called periodically by subscriber. Thus it shall return packet
 	// which it shall put into the channel given by subscriber
 	GetPktWithSeq(ctx context.Context, seqNum uint64) (*Packet, error)
@@ -30,7 +31,7 @@ type IReceiver interface {
 }
 
 type NetworkAddress struct {
-	ChainID uint32
+	ChainID string
 	Address string
 }
 
@@ -40,7 +41,7 @@ type Packet struct {
 	Source      NetworkAddress
 	Sequence    uint64
 	Message     []byte
-	Height      string
+	Height      uint64
 }
 
 type QueuedMessage struct {

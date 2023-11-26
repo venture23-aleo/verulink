@@ -7,8 +7,7 @@
       "node_url": "url",
       "start_height": 5000,
       "finality_height": 1,
-      "wallet_path": "path/to/wallet",
-      "dest_chains":["ethereum"]
+      "wallet_path": "path/to/wallet"
     },
     {
       "name": "ethereum",
@@ -17,9 +16,11 @@
       "node_url": "url",
       "start_height": 500000,
       "finality_height":64,
-      "wallet_path": "path/to/wallet",
-      "dest_chains":["aleo"]
+      "wallet_path": "path/to/wallet"
     }
   ], 
+  "bridge_pair":{
+    "ethereum": "aleo"
+  },
   "db_path" : "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store/retrydb"
 }
