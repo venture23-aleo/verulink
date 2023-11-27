@@ -520,7 +520,7 @@ Once sufficient attestors (k out of N) have verified and queued the message it c
 
 Notes:
 1. The address to unlock is checked against blacklisted addresses for OFAC compliance at step 6.
-2. The address to mint is specified on the message itself. So anyone is able to call the mint method and the wrapped asset will be locked on the right Ethereum address.
+2. The address to unlock is specified on the message itself. So anyone is able to call the unlock method and the wrapped asset will be unlocked on the right Ethereum address.
 
 
 
