@@ -9,15 +9,21 @@ import (
 )
 
 type Relayer interface {
-	Start(ctx context.Context)
 	Init(ctx context.Context)
 	Name() string
 }
 
-func NewRelay(chain1, chain2 IClient) Relayer {
+func NewRelay(
+	srcChain chain.IReceiver,
+	destChain chain.ISender,
+	srcEventCh, destEventCh <-chan *chain.ChainEvent,
+
+) Relayer {
 	return &relay{
-		Chain1: chain1,
-		Chain2: chain2,
+		srcChain:    srcChain,
+		destChain:   destChain,
+		srcEventCh:  srcEventCh,
+		destEventCh: destEventCh,
 	}
 }
 
@@ -30,9 +36,16 @@ type chainShore struct {
 	packetChn chan *chain.Packet       // buffer channel, probably buffer num=10
 }
 
+// structure to manage packet transfer from source to destination.
 type relay struct {
-	Chain1         IClient
-	Chain2         IClient
+	srcChain  chain.IReceiver
+	destChain chain.ISender
+
+	pktCh       chan *chain.Packet
+	nextSeqNum  uint64
+	srcEventCh  <-chan *chain.ChainEvent
+	destEventCh <-chan *chain.ChainEvent
+
 	mu             sync.Mutex
 	initliazed     bool
 	panicRecovered chan struct{}
@@ -51,56 +64,96 @@ func (r *relay) Init(ctx context.Context) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	/* todo:
+	1. Check base sequence number in both contracts // think about Sabin dai's concern
+	2. Check sequence number from database.
+	3. Consider max(baseSeqNum, dbSeqNum)
+	4. Start getting packets from contracts
+	5. Attest and relay the packets
+	*/
+
 	//panic if any error
 	r.initliazed = true
 	r.panicRecovered = make(chan struct{}) // shall need bufferred channel equal to the number of goroutines that handles panic for panic context
+
+	go r.startReceiving(ctx)
+	// add configurable num
+	for i := 0; i < 10; i++ {
+		go r.startSending(ctx)
+	}
+
+	go r.pruneDB(ctx)
+
+	// todo: add appropriate waiters here or where Init is being called
 }
 
-func (r *relay) Start(ctx context.Context) {
+func (r *relay) startReceiving(ctx context.Context) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	go r.chainEvents(ctx, r.Chain1)
-	go r.chainEvents(ctx, r.Chain2)
-
-	/*
-		1. Check base sequence number in both contracts // think about Sabin dai's concern
-		2. Check sequence number from database.
-		3. Consider max(baseSeqNum, dbSeqNum)
-		4. Start getting packets from contracts
-		5. Attest and relay the packets
-	*/
-
-	go r.relayPackets(ctx, r.Chain1, r.Chain2)
-	go r.relayPackets(ctx, r.Chain2, r.Chain1)
-}
-
-func (r *relay) Name() string {
-	return fmt.Sprintf("%s-%s bridge", r.Chain1.Name(), r.Chain2.Name())
-}
-
-// Relay Packets from `fromChain` to `toChain`
-func (r *relay) relayPackets(ctx context.Context, fromChain, toChain IClient) {
 	for {
 		select {
 		case <-ctx.Done():
-			// manage current states
+			// todo: Manage context done, basically packet states
 			return
 		default:
 		}
 
-		pkt, err := fromChain.GetNextPacket(ctx)
+		pkt, err := r.srcChain.GetPktWithSeq(ctx, r.nextSeqNum)
 		if err != nil {
-			// handle error based on error type
+
+		}
+
+		if pkt.Height+r.srcChain.GetFinalityHeight() >= r.srcChain.CurHeight() {
+			// todo: wait according to difference between curHeight and packet height
 			continue
 		}
 
-		// toChain.SendPacket()
-		_ = pkt
+		r.pktCh <- pkt
+
+	}
+
+}
+
+func (r *relay) startSending(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			//
+		default:
+		}
+
+		pkt := <-r.pktCh
+
+		txnHash, err := r.destChain.SendPacket(ctx, pkt)
+		if err != nil {
+			// todo: send to retry loop and handle according to error
+		}
+		// store packet and txnHash in db
+		// run a function that prunes db by checking if txn is finalized.
+		// if we can decide that txn is not going to finalize then we can resend packet to r.pktCh
+		_ = txnHash
+		//
 
 	}
 }
 
-func (r *relay) chainEvents(ctx context.Context, chain IClient /*channels for transferring events as well*/) {
+func (r *relay) pruneDB(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			// todo:
+		default:
+		}
 
+		/*
+			Store txnHash as value with key as orderable timestamp
+
+			Get ordered hashes and check if txn is finalized
+		*/
+	}
+}
+
+func (r *relay) Name() string {
+	return fmt.Sprintf("%s-%s bridge", r.srcChain.Name(), r.destChain.Name())
 }

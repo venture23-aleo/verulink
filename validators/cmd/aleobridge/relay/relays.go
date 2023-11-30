@@ -16,6 +16,7 @@ const (
 type IClient interface {
 	chain.IReceiver
 	chain.ISender
+	GetDestChains() ([]string, error)
 	Name() string
 }
 
@@ -25,11 +26,9 @@ var (
 	RegisteredClients = map[string]ClientFunc{}
 )
 
-type Relays struct {
-	relays []Relayer
-}
+type Relays []Relayer
 
-func MultiRelay(ctx context.Context, cfg *Config) *Relays {
+func MultiRelay(ctx context.Context, cfg *Config) Relays {
 	chains := map[string]IClient{}
 	for _, chainCfg := range cfg.ChainConfigs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
@@ -39,30 +38,26 @@ func MultiRelay(ctx context.Context, cfg *Config) *Relays {
 		chains[chainCfg.Name] = RegisteredClients[chainCfg.Name](chainCfg)
 	}
 
-	/*
-		For each dst in chain config, we need to make one relay which raises two goroutines to
-		communicate packets separately.
-
-
-	*/
-
-	relays := &Relays{}
-	for chain1, chain2 := range cfg.BridgePairs {
-		relay := relay{
-			Chain1: chains[chain1],
-			Chain2: chains[chain2],
+	var relays Relays
+	for _, chain := range chains {
+		destChains, err := chain.GetDestChains()
+		if err != nil {
+			// todo: handle error and if it persists panic
 		}
 
-		relays.relays = append(relays.relays, &relay)
+		for _, destChain := range destChains {
+			r := NewRelay(chain, chains[destChain], nil, nil)
+			relays = append(relays, r)
+		}
 	}
 
 	return relays
 }
 
-func (r *Relays) StartMultiRelay(ctx context.Context) {
-	relayCh := make(chan Relayer, len(r.relays))
+func (r Relays) StartMultiRelay(ctx context.Context) {
+	relayCh := make(chan Relayer, len(r))
 
-	for _, relay := range r.relays {
+	for _, relay := range r {
 		relayCh <- relay
 	}
 	// handle panicking case
@@ -76,7 +71,6 @@ func (r *Relays) StartMultiRelay(ctx context.Context) {
 				relayCtx, relayCtxCncl := context.WithCancelCause(ctx)
 				defer relayCtxCncl(nil)
 
-				re.Init(relayCtx)
 				defer func() {
 					if r := recover(); r != nil {
 						relayCtxCncl(Panic)
@@ -84,8 +78,7 @@ func (r *Relays) StartMultiRelay(ctx context.Context) {
 						relayCh <- re
 					}
 				}()
-				fmt.Printf("Started %s\n", re.Name())
-				re.Start(relayCtx)
+				re.Init(relayCtx)
 			}(re)
 		}
 	}

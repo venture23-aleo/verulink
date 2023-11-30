@@ -2,7 +2,6 @@ package ethereum
 
 import (
 	"context"
-	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -10,25 +9,11 @@ import (
 )
 
 type Client struct {
-	eth      *ethclient.Client
-	chainID  uint32
-	chainCfg *relay.ChainConfig
-	nextSeq  uint64
-}
-
-const (
-	defaultReadTimeout = 50 * time.Second
-	RPCCallRetry       = 5
-)
-
-func (cl *Client) GetNextPacket(ctx context.Context) (*chain.Packet, error) {
-	pkt, err := cl.GetPktWithSeq(ctx, cl.nextSeq)
-	if err != nil {
-		return nil, err
-	}
-	cl.nextSeq = pkt.Sequence + 1 // | cl.nextSeq++
-
-	return pkt, nil
+	eth            *ethclient.Client
+	finalizeHeight uint64
+	chainID        uint32
+	chainCfg       *relay.ChainConfig
+	nextSeq        uint64
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
@@ -41,8 +26,8 @@ func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
-func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
-	return nil
+func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) (string, error) {
+	return "", nil
 }
 
 func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
@@ -51,6 +36,18 @@ func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
 
 func (cl *Client) IsTxnFinalized(ctx context.Context, txnHash string) (bool, error) {
 	return false, nil
+}
+
+func (cl *Client) CurHeight() uint64 {
+	return 0
+}
+
+func (cl *Client) GetFinalityHeight() uint64 {
+	return cl.finalizeHeight
+}
+
+func (cl *Client) GetDestChains() ([]string, error) {
+	return nil, nil
 }
 
 func (cl *Client) Name() string {

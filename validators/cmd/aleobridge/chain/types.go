@@ -4,23 +4,28 @@ import (
 	"context"
 )
 
+type ChainEvent struct {
+}
+
+type ICommon interface {
+	Name() string
+	GetFinalityHeight() uint64
+	// GetChainEvents(ctx context.Context, eventCh chan<- *ChainEvent)
+}
+
 type ISender interface {
+	ICommon
 	// TODO: optimization might be achieved if packets can be sent in single txn
-	SendPacket(ctx context.Context, packet *Packet) error
-	GetLatestHeight(ctx context.Context) (uint64, error)
+	SendPacket(ctx context.Context, packet *Packet) (txnHash string, err error)
+
+	// seems not required
+	// GetLatestHeight(ctx context.Context) (uint64, error)
 	IsTxnFinalized(ctx context.Context, txnHash string) (bool, error)
 }
 
 type IReceiver interface {
-	// TODO: move these methods elsewhere. This interface is
-	// Subscribe(ctx context.Context, msgch chan<- *QueuedMessage, startHeight uint64) (errch <-chan error)
-	// HeightPoller() *time.Ticker
-	//        ^      ^        ^          ^
-	//        |      |        |          |
-	//        |      |        |          |
-	/***************************************/
+	ICommon
 
-	GetNextPacket(ctx context.Context) (*Packet, error)
 	// GetPktWithSeqGT will be called periodically by subscriber. Thus it shall return packet
 	// which it shall put into the channel given by subscriber
 	GetPktWithSeq(ctx context.Context, seqNum uint64) (*Packet, error)
@@ -28,6 +33,8 @@ type IReceiver interface {
 	// This might make processing multiple packets that comes under same block efficient.
 	// But might as well be obsolete
 	GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*Packet, error)
+	// Returns current height of chain
+	CurHeight() uint64
 }
 
 type NetworkAddress struct {

@@ -77,6 +77,8 @@ func validateAndUpdateConfig(cfg *relay.Config) error {
 
 	// bridge pair validation
 	bridgePairs := map[string]string{}
+
+	// bridge pair validation might be obsolete as destination chains shall be taken from contract
 	for chain1, chain2 := range cfg.BridgePairs {
 		if chain1 == chain2 {
 			return fmt.Errorf("cannot bridge packects within same chain")
