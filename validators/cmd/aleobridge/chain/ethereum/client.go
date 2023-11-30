@@ -13,7 +13,6 @@ type Client struct {
 	finalizeHeight uint64
 	chainID        uint32
 	chainCfg       *relay.ChainConfig
-	nextSeq        uint64
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
@@ -47,6 +46,10 @@ func (cl *Client) GetFinalityHeight() uint64 {
 }
 
 func (cl *Client) GetDestChains() ([]string, error) {
+	return nil, nil
+}
+
+func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
 	return nil, nil
 }
 

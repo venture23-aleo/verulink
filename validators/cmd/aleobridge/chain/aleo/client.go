@@ -53,6 +53,10 @@ func (cl *Client) GetDestChains() ([]string, error) {
 	return nil, nil
 }
 
+func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
+	return nil, nil
+}
+
 func (cl *Client) Name() string {
 	return "Aleo"
 }

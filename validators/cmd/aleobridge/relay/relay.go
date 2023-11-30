@@ -16,14 +16,13 @@ type Relayer interface {
 func NewRelay(
 	srcChain chain.IReceiver,
 	destChain chain.ISender,
-	srcEventCh, destEventCh <-chan *chain.ChainEvent,
+	eventCh <-chan *chain.ChainEvent,
 
 ) Relayer {
 	return &relay{
-		srcChain:    srcChain,
-		destChain:   destChain,
-		srcEventCh:  srcEventCh,
-		destEventCh: destEventCh,
+		srcChain:  srcChain,
+		destChain: destChain,
+		eventCh:   eventCh,
 	}
 }
 
@@ -41,10 +40,9 @@ type relay struct {
 	srcChain  chain.IReceiver
 	destChain chain.ISender
 
-	pktCh       chan *chain.Packet
-	nextSeqNum  uint64
-	srcEventCh  <-chan *chain.ChainEvent
-	destEventCh <-chan *chain.ChainEvent
+	pktCh      chan *chain.Packet
+	nextSeqNum uint64
+	eventCh    <-chan *chain.ChainEvent
 
 	mu             sync.Mutex
 	initliazed     bool
@@ -83,6 +81,22 @@ func (r *relay) Init(ctx context.Context) {
 	}
 
 	go r.pruneDB(ctx)
+
+	for {
+		select {
+		case <-ctx.Done():
+			//
+		default:
+		}
+
+		event := <-r.eventCh
+		_ = event
+
+		// if event means that we need to exit{
+		// 	break
+		// }
+
+	}
 
 	// todo: add appropriate waiters here or where Init is being called
 }
