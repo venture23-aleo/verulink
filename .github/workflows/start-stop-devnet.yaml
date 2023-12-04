@@ -1,0 +1,54 @@
+name: Start or Stop Devnet
+on:
+  workflow_dispatch:
+    inputs:
+      destroy_instance:
+        description: start-devnet
+        required: true
+        type: choice
+        default: "NULL"
+        options:
+          - YES
+          - NO
+          - NULL
+      
+jobs:
+  create-destroy-deployment-machine:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: configureawscredentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_STS_ROLE }}
+          role-session-name: lambda
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      
+      - name: Install awscli
+        uses: quipper/setup-aws-cli-action@main
+      
+      - name: Trigger Lamda
+        run: |
+          aws lambda list-functions
+          aws lambda get-function — function-name StartAleoDevNode
+          if [[ "${{ github.event.inputs.start-devnet }}" == "YES" ]]; then
+            aws lambda invoke \
+              — function-name StartAleoDevNode \
+              — cli-binary-format raw-in-base64-out \
+              — payload ‘{ "key1": "value1" }’ \
+              response.json
+
+          elif [[ "${{ github.event.inputs.start-devnet }}" == "NO" ]]; then
+            aws lambda invoke \
+              — function-name StopAleoDevNode \
+              — cli-binary-format raw-in-base64-out \
+              — payload ‘{ "key1": "value1" }’ \
+              response.json
+          else
+            echo "Invalid Option."
+          fi
