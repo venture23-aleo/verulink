@@ -131,7 +131,7 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport {
     address erc20Bridge;
 
     // token address => amount
-    mapping(address => uint256) public valueLocked;
+    // mapping(address => uint256) public valueLocked;
 
     Holding public holding;
     
@@ -171,7 +171,7 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport {
         packet.message = message;
         packet.height = block.number;
 
-        valueLocked[tokenAddress] += amount;
+        // valueLocked[tokenAddress] += amount;
 
         IERC20TokenBridge(erc20Bridge).sendMessage(packet);
     }
