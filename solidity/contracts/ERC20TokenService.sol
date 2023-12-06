@@ -128,20 +128,12 @@ abstract contract ERC20TokenSupport is Ownable {
 }
 
 contract ERC20TokenService is BlackListService, ERC20TokenSupport {
-
-    struct TokenMessage {
-        string denom;
-        uint256 amount;
-        string receiverAddress;
-    }
-
-    
     address erc20Bridge;
 
     // token address => amount
     mapping(address => uint256) public valueLocked;
 
-    Holding holding;
+    Holding public holding;
     
 
     IERC20TokenBridge.InNetworkAddress public self;
@@ -189,14 +181,15 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport {
         require(packet.destination.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;
         require(receiver != address(0), "Receiver Zero Address");
-        require(isSupportedToken(packet.message.destTokenAddress), "Token not supported");
-        if(isBlackListed(receiver)) {
-            IERC20(packet.message.destTokenAddress).transfer(address(holding), packet.message.amount);
-            holding.lock(receiver, packet.message.destTokenAddress, packet.message.amount);
-        }
         address tokenAddress = packet.message.destTokenAddress;
-        emit Withdrawn(packet.message.amount);
-        IERC20(tokenAddress).transfer(receiver, packet.message.amount);
+        require(isSupportedToken(tokenAddress), "Token not supported");
+        if(isBlackListed(receiver)) {
+            IERC20(tokenAddress).transfer(address(holding), packet.message.amount);
+            holding.lock(receiver, tokenAddress, packet.message.amount);
+        }else {
+            emit Withdrawn(packet.message.amount);
+            IERC20(tokenAddress).transfer(receiver, packet.message.amount);
+        }
     }
 }
 
