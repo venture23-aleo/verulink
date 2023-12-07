@@ -158,6 +158,8 @@ abstract contract AttestorManager is Ownable{
 abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
     event Consumed(InPacket packet);
 
+    function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
+
     function _preValidateInPacket(InPacket memory packet) internal view override virtual {
         super._preValidateInPacket(packet);
         require(!isPacketConsumed(packet), "Packet already consumed");
@@ -165,12 +167,13 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
 
     function _updateInPacketState(InPacket memory packet, uint256 action) internal override virtual {
         super._updateInPacketState(packet, action);
-        if(!incomingPacketExists(packet) || action != 2) return; // 2 to represent consume operation, 1 to receive packet operation
+        if(action != 2 || !incomingPacketExists(packet)) return; // 2 to represent consume operation, 1 to receive packet operation
         _removeIncomingPacket(packet);
         _setConsumedPacket(packet);
     }
 
     function consume(uint256 chainId, uint256 sequence) external returns (InPacket memory){
+        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         InPacket memory packet = getIncomingPacket(chainId, sequence);
         require(packet.source.chainId != 0 && packet.sequence !=0, "Zero Packet");
         _preValidateInPacket(packet);
@@ -181,13 +184,18 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
 }
 
 abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
-    event Voted(InPacket packet, address voter);
-    event AlreadyVoted(InPacket packet, address voter);
+    event Voted(bytes32 packetHash, address voter);
+    event AlreadyVoted(bytes32 packetHash, address voter);
 
     // chainId => sequence => vote count
-    mapping(uint256 => mapping(uint256 => uint256)) public votes;
+    // mapping(uint256 => mapping(uint256 => uint256)) public votes;
     // chainId => sequence => attestor address => bool
-    mapping(uint256 => mapping(uint256 => mapping(address => bool))) private voted;
+    // mapping(uint256 => mapping(uint256 => mapping(address => bool))) private voted;
+
+    // packetHash => vote count
+    mapping(bytes32 => uint256) votes;
+    // packetHash => attestor address => bool
+    mapping(bytes32 => mapping(address => bool)) voted;
 
     function _receivePacket(InPacket memory packet) internal {
         _preValidateInPacket(packet);
@@ -207,39 +215,68 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         }
     }
 
-    function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
+    // function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
 
     function _preValidateInPacket(InPacket memory packet) internal view override virtual {
         super._preValidateInPacket(packet);
         if(incomingPacketExists(packet)) return;
-        require(self.chainId == packet.destination.chainId, "Packet not intended for this Chain");
-        require(isRegisteredTokenService(packet.destination.addr), "Unknown Token Service");
+        
+        // require(self.chainId == packet.destination.chainId, "Packet not intended for this Chain");
+        // require(isRegisteredTokenService(packet.destination.addr), "Unknown Token Service");
     }
 
+    // function _updateInPacketState(InPacket memory packet, uint256 action) internal override virtual {
+    //     if(action != 1) return; // 2 to represent consume operation, 1 to receive operation
+    //     super._updateInPacketState(packet, action);
+    //     if(hasVoted(packet, msg.sender)) {
+    //         emit AlreadyVoted(packet, msg.sender);
+    //         return;
+    //     }
+    //     emit Voted(packet, msg.sender);
+    //     voted[packet.source.chainId][packet.sequence][msg.sender] = true;
+    //     votes[packet.source.chainId][packet.sequence]+=1;
+    //     if(hasQuorumReached(packet) && !incomingPacketExists(packet)) {
+    //         _setIncomingPacket(packet);
+    //     }
+    // }
+
     function _updateInPacketState(InPacket memory packet, uint256 action) internal override virtual {
+        super._updateInPacketState(packet, action);
         if(action != 1) return; // 2 to represent consume operation, 1 to receive operation
         
-        super._updateInPacketState(packet, action);
+        
+        bytes32 packetHash = keccak256(abi.encodePacked(packet.version,
+                                        packet.sequence,
+                                        packet.source.chainId,
+                                        packet.source.addr,
+                                        packet.destination.chainId,
+                                        packet.destination.addr,
+                                        packet.message.destTokenAddress,
+                                        packet.message.amount,
+                                        packet.message.receiverAddress)
+                                );
 
-        if(hasVoted(packet, msg.sender)) {
-            emit AlreadyVoted(packet, msg.sender);
+        if(hasVoted(packetHash, msg.sender)) {
+            emit AlreadyVoted(packetHash, msg.sender);
             return;
         }
 
-        emit Voted(packet, msg.sender);
-        voted[packet.source.chainId][packet.sequence][msg.sender] = true;
-        votes[packet.source.chainId][packet.sequence]+=1;
-        if(hasQuorumReached(packet) && !incomingPacketExists(packet)) {
-            _setIncomingPacket(packet);
-        }
+        emit Voted(packetHash, msg.sender);
+
+        voted[packetHash][msg.sender] = true;
+        votes[packetHash] += 1;
+
+        if(!hasQuorumReached(packetHash) || incomingPacketExists(packet)) return;
+
+        _setIncomingPacket(packet);
     }
 
-    function hasQuorumReached(InPacket memory packet) public view returns (bool) {
-        return votes[packet.source.chainId][packet.sequence] >= _getQuorumRequired();
+    function hasQuorumReached(bytes32 packetHash) public view returns (bool) {
+        return votes[packetHash] >= _getQuorumRequired();
     }
 
-    function hasVoted(InPacket memory packet, address voter) public view returns (bool) {
-        return voted[packet.source.chainId][packet.sequence][voter];
+    function hasVoted(bytes32 packetHash, address voter) public view returns (bool) {
+        return voted[packetHash][voter];
     }
 }
 
@@ -259,18 +296,14 @@ abstract contract OutgoingPacketManagerImpl is PacketManager {
 
     function sendMessage(OutPacket memory packet) external {
         _beforeTokenBridge(packet.destination.chainId);
-        //Packet memory packet = _createPacket(sourceTokenService, destNetworkAddress, message);
-        
+
         packet.version = 1;
         packet.sequence = _incrementSequence(packet.destination.chainId);
 
          _setOutgoingPacket(packet);
-
         emit NewPacket(packet);
         _afterTokenBridge(packet);
-    }
-
-    
+    }    
 }
 
 contract ERC20TokenBridge is PacketManager, 
@@ -287,12 +320,12 @@ contract ERC20TokenBridge is PacketManager,
     mapping(uint256 => mapping(uint256 => InPacket)) public consumedPackets;
     mapping(uint256 => mapping(uint256 => OutPacket)) public outgoingPackets;
 
-    function isRegisteredTokenService(address tokenService) public view override(BridgeTokenServiceManager, IncomingPacketManagerImpl) returns(bool) {
+    function isRegisteredTokenService(address tokenService) public view override(BridgeTokenServiceManager, ConsumedPacketManagerImpl) returns(bool) {
         return tokenServices[tokenService];
     }
     
     function _preValidateInPacket(InPacket memory packet) internal view override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
-        require(isSupportedChain(packet.source.chainId), "Unknown chainId");
+        // require(isSupportedChain(packet.source.chainId), "Unknown chainId");
         super._preValidateInPacket(packet);
     }
 
