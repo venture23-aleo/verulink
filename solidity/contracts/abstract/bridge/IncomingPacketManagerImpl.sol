@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 
 abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
+    event PacketArrived(InPacket packet);
     event Voted(bytes32 packetHash, address voter);
     event AlreadyVoted(bytes32 packetHash, address voter);
 
@@ -38,7 +39,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
 
     function _preValidateInPacket(InPacket memory packet) internal view override virtual {
         super._preValidateInPacket(packet);
-        if(incomingPacketExists(packet)) return;
+        //if(incomingPacketExists(packet)) return;
         
         // require(self.chainId == packet.destination.chainId, "Packet not intended for this Chain");
         // require(isRegisteredTokenService(packet.destination.addr), "Unknown Token Service");
@@ -61,19 +62,12 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
 
     function _updateInPacketState(InPacket memory packet, uint256 action) internal override virtual {
         super._updateInPacketState(packet, action);
+        
         if(action != 1) return; // 2 to represent consume operation, 1 to receive operation
+       if(incomingPacketExists(packet.source.chainId, packet.sequence)) return;
         
         
-        bytes32 packetHash = keccak256(abi.encodePacked(packet.version,
-                                        packet.sequence,
-                                        packet.source.chainId,
-                                        packet.source.addr,
-                                        packet.destination.chainId,
-                                        packet.destination.addr,
-                                        packet.message.destTokenAddress,
-                                        packet.message.amount,
-                                        packet.message.receiverAddress)
-                                );
+        bytes32 packetHash = _hash(packet);
 
         if(hasVoted(packetHash, msg.sender)) {
             emit AlreadyVoted(packetHash, msg.sender);
@@ -85,9 +79,10 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         voted[packetHash][msg.sender] = true;
         votes[packetHash] += 1;
 
-        if(!hasQuorumReached(packetHash) || incomingPacketExists(packet)) return;
+        if(!hasQuorumReached(packetHash)) return;
 
-        _setIncomingPacket(packet);
+        _setIncomingPacket(packet.source.chainId, packet.sequence, packetHash);
+        emit PacketArrived(packet);
     }
 
     function hasQuorumReached(bytes32 packetHash) public view returns (bool) {

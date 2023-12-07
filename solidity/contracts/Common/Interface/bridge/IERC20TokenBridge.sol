@@ -43,6 +43,5 @@ interface IERC20TokenBridge {
     }
 
     function sendMessage(OutPacket memory packet) external;
-    function consume(uint256 chainId, uint256 sequence) external returns (InPacket memory);
-    function chainId() external view returns (uint256);
+    function consume(InPacket memory packet) external returns (InPacket memory);
 }

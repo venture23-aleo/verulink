@@ -9,20 +9,14 @@ import {Holding} from "./HoldingContract.sol";
 
 contract ERC20TokenService is BlackListService, ERC20TokenSupport {
     address erc20Bridge;
-
-    // token address => amount
-    // mapping(address => uint256) public valueLocked;
-
-    Holding public holding;
-    
-
+    Holding holding;
     IERC20TokenBridge.InNetworkAddress public self;
 
-    constructor(address bridge, address _owner) {
+    constructor(address bridge, address _owner, uint256 _chainId) {
         owner = _owner;
         erc20Bridge = bridge;
         self = IERC20TokenBridge.InNetworkAddress(
-            IERC20TokenBridge(bridge).chainId(), 
+            _chainId, 
             address(this)
         );
     }
@@ -51,16 +45,13 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport {
         packet.message = message;
         packet.height = block.number;
 
-        // valueLocked[tokenAddress] += amount;
-
         IERC20TokenBridge(erc20Bridge).sendMessage(packet);
     }
 
-    function withdraw(uint256 chainId, uint256 sequence) external {
-        IERC20TokenBridge.InPacket memory packet = IERC20TokenBridge(erc20Bridge).consume(chainId, sequence);
+    function withdraw(IERC20TokenBridge.InPacket memory packet) external {
+        IERC20TokenBridge(erc20Bridge).consume(packet);
         require(packet.destination.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;
-        require(receiver != address(0), "Receiver Zero Address");
         address tokenAddress = packet.message.destTokenAddress;
         require(isSupportedToken(tokenAddress), "Token not supported");
         if(isBlackListed(receiver)) {

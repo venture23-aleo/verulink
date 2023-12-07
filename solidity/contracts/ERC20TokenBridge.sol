@@ -21,8 +21,8 @@ contract ERC20TokenBridge is PacketManager,
     ChainManager
 {
     // chainId => sequence => Packet
-    mapping(uint256 => mapping(uint256 => InPacket)) private incomingPackets;
-    mapping(uint256 => mapping(uint256 => InPacket)) public consumedPackets;
+    mapping(uint256 => mapping(uint256 => bytes32)) public incomingPackets;
+    mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
     mapping(uint256 => mapping(uint256 => OutPacket)) public outgoingPackets;
 
     function isRegisteredTokenService(address tokenService) public view override(BridgeTokenServiceManager, ConsumedPacketManagerImpl) returns(bool) {
@@ -50,35 +50,31 @@ contract ERC20TokenBridge is PacketManager,
             address(this)
         );
     }
-
-    function incomingPacketExists(InPacket memory packet) public view override returns (bool) {
-        return incomingPackets[packet.source.chainId][packet.sequence].sequence == packet.sequence;
-    }
     
-    function _setIncomingPacket(InPacket memory packet) internal override {
-        incomingPackets[packet.source.chainId][packet.sequence] = packet;
+    function _setIncomingPacket(uint256 _chainId, uint256 _sequence, bytes32 packetHash) internal override {
+        incomingPackets[_chainId][_sequence] = packetHash;
     }
 
-    function getIncomingPacket(uint256 _chainId, uint256 sequence) public view override returns (InPacket memory) {
+    function getIncomingPacketHash(uint256 _chainId, uint256 sequence) public view override returns (bytes32 packetHash) {
         return incomingPackets[_chainId][sequence];
     }
 
-    function _removeIncomingPacket(InPacket memory packet) internal override {
-        delete incomingPackets[packet.source.chainId][packet.sequence];
+    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override {
+        delete incomingPackets[_chainId][_sequence];
     }
 
     function _beforeTokenBridge(uint256 destChainId) internal override {
         super._beforeTokenBridge(destChainId);
-        require(isRegisteredTokenService(msg.sender), "Caller is not registered Token Service");
-        require(isSupportedChain(destChainId), "Destination Chain not supported");
+        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        require(isSupportedChain(destChainId), "Unknown destination chain");
     }
 
-    function isPacketConsumed(InPacket memory packet) public view override returns (bool) {
-        return consumedPackets[packet.source.chainId][packet.sequence].sequence == packet.sequence;
+    function isPacketConsumed(uint256 _chainId, uint256 _sequence) public view override returns (bool) {
+        return consumedPackets[_chainId][_sequence] != bytes32(0);
     }
 
-    function _setConsumedPacket(InPacket memory packet) internal override {
-        consumedPackets[packet.source.chainId][packet.sequence] = packet;
+    function _setConsumedPacket(uint256 _chainId, uint256 _sequence, bytes32 packetHash) internal override {
+        consumedPackets[_chainId][_sequence] = packetHash;
     }
 
     function _setOutgoingPacket(OutPacket memory packet) internal override {
@@ -91,9 +87,5 @@ contract ERC20TokenBridge is PacketManager,
 
     function _getQuorumRequired() internal view override returns (uint256) {
         return quorumRequired;
-    }
-
-    function chainId() public view returns (uint256) {
-        return self.chainId;
     }
 }
