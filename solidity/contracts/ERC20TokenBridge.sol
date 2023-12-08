@@ -8,7 +8,7 @@ import {PacketManager} from "./abstract/bridge/PacketManager.sol";
 import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
 import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "./abstract/bridge/OutgoingPacketManagerImpl.sol";
-import {Ownable} from "./Common/Ownable.sol";
+import {Ownable} from "./common/Ownable.sol";
 import {AttestorManager} from "./abstract/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "./abstract/bridge/BridgeTokenServiceManager.sol";
 import {ChainManager} from "./abstract/bridge/ChainManager.sol";

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../Common/Ownable.sol";
-import {IERC20TokenBridge} from "../../Common/Interface/bridge/IERC20TokenBridge.sol";
+import {Ownable} from "../../common/Ownable.sol";
+import {IERC20TokenBridge} from "../../common/Interface/bridge/IERC20TokenBridge.sol";
 
 abstract contract ERC20TokenSupport is Ownable {
     struct Token {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../Common/Ownable.sol";
+import {Ownable} from "../../common/Ownable.sol";
 
 abstract contract BlackListService is Ownable {
     event BlackListAdded(address addr);
