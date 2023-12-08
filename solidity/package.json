@@ -3,5 +3,8 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "hardhat": "^2.19.2"
+  },
+  "dependencies": {
+    "@thirdweb-dev/contracts": "^3.10.3"
   }
 }

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
+import "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {PacketManager} from "./abstract/bridge/PacketManager.sol";
 import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
 import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
@@ -18,7 +21,9 @@ contract ERC20TokenBridge is PacketManager,
     Ownable,
     AttestorManager,
     BridgeTokenServiceManager,
-    ChainManager
+    ChainManager,
+    Upgradeable,
+    Initializable
 {
     // chainId => sequence => Packet
     mapping(uint256 => mapping(uint256 => bytes32)) public incomingPackets;
@@ -37,8 +42,10 @@ contract ERC20TokenBridge is PacketManager,
     function _updateInPacketState(InPacket memory packet, uint256 action) internal override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
         super._updateInPacketState(packet, action);
     }
-
-    constructor(uint256 _chainId) {
+    
+    function initialize(
+        uint256 _chainId
+    ) external initializer {
         owner = msg.sender;
         addAttestor(msg.sender, 1);
         
@@ -49,6 +56,10 @@ contract ERC20TokenBridge is PacketManager,
             _chainId, 
             address(this)
         );
+    }
+
+    function _authorizeUpgrade(address) internal view override {
+        require(msg.sender == owner);
     }
     
     function _setIncomingPacket(uint256 _chainId, uint256 _sequence, bytes32 packetHash) internal override {

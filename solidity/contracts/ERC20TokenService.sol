@@ -1,24 +1,31 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
+import "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {BlackListService} from "./abstract/tokenservice/BlackListService.sol";
 import {ERC20TokenSupport} from "./abstract/tokenservice/ERC20TokenSupport.sol";
 import {IERC20TokenBridge} from "./Common/Interface/bridge/IERC20TokenBridge.sol";
 import {IERC20} from "./Common/Interface/tokenservice/IERC20.sol";
 import {Holding} from "./HoldingContract.sol";
 
-contract ERC20TokenService is BlackListService, ERC20TokenSupport {
+contract ERC20TokenService is BlackListService, ERC20TokenSupport, Upgradeable, Initializable {
     address erc20Bridge;
     Holding holding;
     IERC20TokenBridge.InNetworkAddress public self;
 
-    constructor(address bridge, address _owner, uint256 _chainId) {
+    function initialize(address bridge, address _owner, uint256 _chainId) external initializer {
         owner = _owner;
         erc20Bridge = bridge;
         self = IERC20TokenBridge.InNetworkAddress(
             _chainId, 
             address(this)
         );
+    }
+
+    function _authorizeUpgrade(address) internal view override {
+        msg.sender == owner;
     }
 
     function setHolding(Holding _holding) public onlyOwner {
