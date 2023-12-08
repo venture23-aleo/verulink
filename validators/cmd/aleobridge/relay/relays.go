@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -13,15 +14,25 @@ const (
 	DefaultTxRetryCount      = 0
 )
 
+var chainEventRWMu = sync.RWMutex{}
+var chainEvents = map[string]*chain.ChainEvent{}
+var chainConds = map[string]*sync.Cond{}
+var chainCtxCncls = map[string]context.CancelCauseFunc{}
+var chainCtxs = map[string]context.Context{}
+
+type Namer interface {
+	Name() string
+}
 type IChainEvent interface {
+	Namer
 	GetChainEvent(ctx context.Context) (*chain.ChainEvent, error)
 }
 type IClient interface {
 	chain.IReceiver
 	chain.ISender
 	IChainEvent
+	Namer
 	GetDestChains() ([]string, error)
-	Name() string
 }
 
 type ClientFunc func(cfg *ChainConfig) IClient
@@ -35,12 +46,25 @@ type Relays []Relayer
 
 func MultiRelay(ctx context.Context, cfg *Config) Relays {
 	chains := map[string]IClient{}
+
 	for _, chainCfg := range cfg.ChainConfigs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
 		}
 
 		chains[chainCfg.Name] = RegisteredClients[chainCfg.Name](chainCfg)
+		chainCtx, chainCtxCnclCause := context.WithCancelCause(ctx)
+		cond := &sync.Cond{
+			L: &sync.Mutex{},
+		}
+
+		chainConds[chainCfg.Name] = cond
+		chainCtxs[chainCfg.Name] = chainCtx
+		chainCtxCncls[chainCfg.Name] = chainCtxCnclCause
+
+		go GetChainEvents(chainCtx, chains[chainCfg.Name], cond)
+		go CancelCtxOnCnclEvent(chainCfg.Name, cond)
+
 	}
 
 	var relays Relays
@@ -51,15 +75,13 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 		}
 
 		for _, destChain := range destChains {
-
-			ch := make(chan *chain.ChainEvent)
-			EventChanMap[c.Name()] = append(EventChanMap[c.Name()], ch)
-
-			r := NewRelay(c, chains[destChain], ch)
+			srcIClient := c
+			descIClient := chains[destChain]
+			srcCond := chainConds[c.Name()]
+			destCond := chainConds[destChain]
+			r := NewRelay(srcIClient, descIClient, srcCond, destCond)
 			relays = append(relays, r)
 		}
-
-		go GetChainEvents(ctx, c, EventChanMap[c.Name()])
 	}
 
 	return relays
@@ -82,7 +104,6 @@ func (r Relays) StartMultiRelay(ctx context.Context) {
 			go func(relay Relayer) {
 				relayCtx, relayCtxCncl := context.WithCancelCause(ctx)
 				defer relayCtxCncl(nil)
-
 				defer func() {
 					if r := recover(); r != nil {
 						relayCtxCncl(Panic)
@@ -114,13 +135,16 @@ go GetChainEvents(ctx, aleoChain, eventChannels)
 
 */
 
-func GetChainEvents(ctx context.Context, chain IChainEvent, eventChannels []chan<- *chain.ChainEvent) {
+func GetChainEvents(ctx context.Context, chain IChainEvent, cond *sync.Cond) {
 	// todo: initialize some ticker to poll the chain at regular interval
+	// It should also match the frequency of chain events.
+	ticker := time.NewTicker(time.Hour)
+
 	for {
 		select {
 		case <-ctx.Done():
-			//
-			//case <-ticker.C:
+		//
+		case <-ticker.C:
 		}
 
 		event, err := chain.GetChainEvent(ctx)
@@ -133,11 +157,44 @@ func GetChainEvents(ctx context.Context, chain IChainEvent, eventChannels []chan
 			continue
 		}
 
-		for _, ch := range eventChannels {
+		chainEventRWMu.Lock()
+		chainEvents[chain.Name()] = event
+		chainEventRWMu.Unlock()
+
+		cond.L.Lock()
+		cond.Broadcast()
+		cond.L.Unlock()
+
+	}
+}
+
+func CancelCtxOnCnclEvent(name string, cond *sync.Cond) {
+	var breakFor bool
+	for {
+
+		func() {
+			cond.L.Lock()
+			cond.Wait()
+
+			chainEventRWMu.RLock()
+			event := chainEvents[name]
+
+			_ = event
+			// todo: manage event
 			/*
-			   todo: What happens when goroutine that would consume event has terminated? or channel is closed by other goroutine?
+				for example;
+				if event.Type == Cancel{
+					chainCtxCncls[name](errors.New("chain is cancelled"))
+				}
+				breakFor = true
 			*/
-			ch <- event
+
+			defer chainEventRWMu.RUnlock()
+			cond.L.Unlock()
+		}()
+
+		if breakFor {
+			break
 		}
 	}
 }

@@ -16,23 +16,15 @@ type Relayer interface {
 func NewRelay(
 	srcChain chain.IReceiver,
 	destChain chain.ISender,
-	eventCh <-chan *chain.ChainEvent,
+	sChainCond, dChainCond *sync.Cond,
 
 ) Relayer {
 	return &relay{
-		srcChain:  srcChain,
-		destChain: destChain,
-		eventCh:   eventCh,
+		srcChain:   srcChain,
+		destChain:  destChain,
+		sChainCond: sChainCond,
+		dChainCond: dChainCond,
 	}
-}
-
-type chainShore struct {
-	client IClient
-	/*
-		fields like events, channels, packets
-	*/
-	packets   map[uint64]*chain.Packet // seqNum: Packet
-	packetChn chan *chain.Packet       // buffer channel, probably buffer num=10
 }
 
 // structure to manage packet transfer from source to destination.
@@ -40,9 +32,10 @@ type relay struct {
 	srcChain  chain.IReceiver
 	destChain chain.ISender
 
-	pktCh      chan *chain.Packet
-	nextSeqNum uint64
-	eventCh    <-chan *chain.ChainEvent
+	sChainCond, dChainCond *sync.Cond
+	pktCh                  chan *chain.Packet
+	nextSeqNum             uint64
+	eventCh                <-chan *chain.ChainEvent
 
 	mu             sync.Mutex
 	initliazed     bool
@@ -74,6 +67,9 @@ func (r *relay) Init(ctx context.Context) {
 	r.initliazed = true
 	r.panicRecovered = make(chan struct{}) // shall need bufferred channel equal to the number of goroutines that handles panic for panic context
 
+	go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
+	go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
+
 	go r.startReceiving(ctx)
 	// add configurable num
 	for i := 0; i < 10; i++ {
@@ -82,23 +78,9 @@ func (r *relay) Init(ctx context.Context) {
 
 	go r.pruneDB(ctx)
 
-	for {
-		select {
-		case <-ctx.Done():
-			//
-		default:
-		}
-
-		event := <-r.eventCh
-		_ = event
-
-		// if event means that we need to exit{
-		// 	break
-		// }
-
-	}
-
 	// todo: add appropriate waiters here or where Init is being called
+	// seems reasonable to use ctx.Done() call here and check if cancel error is due to panic
+	// and if so, uninitialize relay i.e. r.initialiazed = false
 }
 
 func (r *relay) startReceiving(ctx context.Context) {
@@ -108,7 +90,15 @@ func (r *relay) startReceiving(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			// todo: Manage context done, basically packet states
+			ctxErr := ctx.Err()
+			_ = ctxErr
+			/*
+				if ctxErr == PanicErr{
+					1. handle panic for startReceiving, basically packet states
+					2. Notify r.panicRecovered or some other field
+
+				}
+			*/
 			return
 		default:
 		}
@@ -133,6 +123,15 @@ func (r *relay) startSending(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			ctxErr := ctx.Err()
+			_ = ctxErr
+			/*
+				if ctxErr == PanicErr{
+					1. handle panic for startSending
+					2. Notify r.panicRecovered or some other field
+
+				}
+			*/
 			//
 		default:
 		}
@@ -156,6 +155,15 @@ func (r *relay) pruneDB(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			ctxErr := ctx.Err()
+			_ = ctxErr
+			/*
+				if ctxErr == PanicErr{
+					1. handle panic for pruneDB
+					2. Notify r.panicRecovered or some other field
+
+				}
+			*/
 			// todo:
 		default:
 		}
@@ -165,6 +173,28 @@ func (r *relay) pruneDB(ctx context.Context) {
 
 			Get ordered hashes and check if txn is finalized
 		*/
+	}
+}
+
+func (r *relay) pollChainEvents(ctx context.Context, name string, cond *sync.Cond) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		func() {
+			cond.L.Lock()
+			cond.Wait()
+			cond.L.Unlock()
+
+			chainEventRWMu.RLock()
+			event := chainEvents[name]
+			chainEventRWMu.RUnlock()
+
+			_ = event
+		}()
 	}
 }
 
