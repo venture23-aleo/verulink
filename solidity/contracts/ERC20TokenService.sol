@@ -15,6 +15,8 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport, Upgradeable, 
     Holding holding;
     IERC20TokenBridge.InNetworkAddress public self;
 
+    event Withdrawn(IERC20TokenBridge.InPacket packet);
+
     function initialize(address bridge, address _owner, uint256 _chainId) external initializer {
         owner = _owner;
         erc20Bridge = bridge;
@@ -31,8 +33,6 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport, Upgradeable, 
     function setHolding(Holding _holding) public onlyOwner {
         holding = _holding;
     }
-
-    event Withdrawn(uint256 amount);
 
     function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
         require(!isBlackListed(msg.sender), "Sender Blacklisted");
@@ -65,7 +65,7 @@ contract ERC20TokenService is BlackListService, ERC20TokenSupport, Upgradeable, 
             IERC20(tokenAddress).transfer(address(holding), packet.message.amount);
             holding.lock(receiver, tokenAddress, packet.message.amount);
         }else {
-            emit Withdrawn(packet.message.amount);
+            emit Withdrawn(packet);
             IERC20(tokenAddress).transfer(receiver, packet.message.amount);
         }
     }
