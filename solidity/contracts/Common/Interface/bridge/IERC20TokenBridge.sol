@@ -42,6 +42,9 @@ interface IERC20TokenBridge {
         uint256 height;
     }
 
+    event PacketDispatched(OutPacket packet);
+    event PacketArrived(InPacket packet);
+
     function sendMessage(OutPacket memory packet) external;
     function consume(InPacket memory packet) external returns (InPacket memory);
 }

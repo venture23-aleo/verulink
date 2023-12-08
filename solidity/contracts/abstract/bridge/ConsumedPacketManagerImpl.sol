@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 
 abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
-    event Consumed(InPacket packet);
+    event Consumed(bytes32 packetHash);
 
     function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
 
@@ -20,11 +20,12 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
         _setConsumedPacket(packet.destination.chainId, packet.sequence, _hash(packet));
     }
 
-    function consume(InPacket memory packet) external returns (InPacket memory){
+    function consume(InPacket memory packet) external {
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
-        require(getIncomingPacketHash(packet.destination.chainId, packet.sequence) == _hash(packet), "Unknown Packet");
+        bytes32 packetHash = getIncomingPacketHash(packet.destination.chainId, packet.sequence);
+        require(packetHash == _hash(packet), "Unknown Packet");
         _preValidateInPacket(packet);
         _updateInPacketState(packet, 2);
-        return packet;
+        emit Consumed(packetHash);
     }
 }
