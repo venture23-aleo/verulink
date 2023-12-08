@@ -49,6 +49,9 @@ func main() {
 		os.Exit(1)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
+	/*
+		trap any kill signal and cancel process gracefully
+	*/
 	defer cancel()
 
 	multirelayer := relay.MultiRelay(ctx, cfg)
