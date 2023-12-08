@@ -17,7 +17,8 @@ abstract contract IncomingPacketManager is PacketManager {
             packet.destination.addr,
             packet.message.destTokenAddress,
             packet.message.amount,
-            packet.message.receiverAddress)
+            packet.message.receiverAddress,
+            packet.height)
         );
     }
 }
