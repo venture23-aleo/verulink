@@ -9,6 +9,11 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
 )
 
+const (
+	retry = iota
+	transacted
+)
+
 type Relayer interface {
 	Init(ctx context.Context)
 	Name() string
@@ -30,9 +35,10 @@ func NewRelay(
 
 // structure to manage packet transfer from source to destination.
 type relay struct {
-	srcChain  chain.IReceiver
-	destChain chain.ISender
-
+	srcChain               chain.IReceiver
+	destChain              chain.ISender
+	retryPktNameSpace      string
+	transactedPktNameSpace string
 	sChainCond, dChainCond *sync.Cond
 	pktCh                  chan *chain.Packet
 	nextSeqNum             uint64
@@ -67,15 +73,23 @@ func (r *relay) Init(ctx context.Context) {
 	//panic if any error
 	r.initliazed = true
 	r.panicRecovered = make(chan struct{}) // shall need bufferred channel equal to the number of goroutines that handles panic for panic context
+	r.retryPktNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), retry)
+	r.transactedPktNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), transacted)
+	err := store.CreateNamespace(r.retryPktNameSpace)
+	if err != nil {
+		panic(err)
+	}
+
+	err = store.CreateNamespace(r.transactedPktNameSpace)
+	if err != nil {
+		panic(err)
+	}
 
 	go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
 	go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
 
 	go r.startReceiving(ctx)
-	// add configurable num
-	for i := 0; i < 10; i++ {
-		go r.startSending(ctx)
-	}
+	go r.startSending(ctx)
 
 	go r.pruneDB(ctx)
 
@@ -121,6 +135,8 @@ func (r *relay) startReceiving(ctx context.Context) {
 
 }
 
+// should not be run in multiple goroutine because timestamp is made key for storing packet
+// and multiple goroutine can cause loosing packet
 func (r *relay) startSending(ctx context.Context) {
 	for {
 		select {
@@ -143,13 +159,15 @@ func (r *relay) startSending(ctx context.Context) {
 		txnHash, err := r.destChain.SendPacket(ctx, pkt)
 		if err != nil {
 			// todo: send to retry loop and handle according to error
+			// store packet to retry later
+			err = store.StoreRetryPacket(r.retryPktNameSpace, pkt)
 		}
 
 		txnPkt := &chain.TxnPacket{
 			TxnHash: txnHash,
 			Pkt:     pkt,
 		}
-		err = store.StoreTransactedPacket("", txnPkt)
+		err = store.StoreTransactedPacket(r.transactedPktNameSpace, txnPkt)
 		if err != nil {
 			//
 		}
@@ -160,6 +178,8 @@ func (r *relay) startSending(ctx context.Context) {
 	}
 }
 
+// If we find that transaction is not going to be finalized then we shall send the packet
+// to retry namespace in database
 func (r *relay) pruneDB(ctx context.Context) {
 	for {
 		select {

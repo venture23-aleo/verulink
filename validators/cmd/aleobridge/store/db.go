@@ -20,6 +20,12 @@ func CloseDB() error {
 	return nil
 }
 
+func CreateNamespace(ns string) error {
+	return createBucket(ns)
+}
+
+/*****************************************************************************************************/
+
 // StoreRetryPacket for storing transaction failed packetes with current timestamp as its key.
 // i.e. Attestor sends transaction with packet as data in the field
 // and transaction fails.

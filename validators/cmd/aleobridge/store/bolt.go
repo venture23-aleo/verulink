@@ -29,6 +29,13 @@ func closeDB() error {
 	return nil
 }
 
+func createBucket(ns string) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(ns))
+		return err
+	})
+}
+
 func put(bucket string, key, value []byte) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		bkt := tx.Bucket([]byte(bucket))
