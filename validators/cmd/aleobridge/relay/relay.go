@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
 )
 
 type Relayer interface {
@@ -114,6 +115,7 @@ func (r *relay) startReceiving(ctx context.Context) {
 		}
 
 		r.pktCh <- pkt
+		r.nextSeqNum++
 
 	}
 
@@ -142,10 +144,17 @@ func (r *relay) startSending(ctx context.Context) {
 		if err != nil {
 			// todo: send to retry loop and handle according to error
 		}
-		// store packet and txnHash in db
+
+		txnPkt := &chain.TxnPacket{
+			TxnHash: txnHash,
+			Pkt:     pkt,
+		}
+		err = store.StoreTransactedPacket("", txnPkt)
+		if err != nil {
+			//
+		}
 		// run a function that prunes db by checking if txn is finalized.
 		// if we can decide that txn is not going to finalize then we can resend packet to r.pktCh
-		_ = txnHash
 		//
 
 	}

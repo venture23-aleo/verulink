@@ -43,12 +43,24 @@ type NetworkAddress struct {
 }
 
 type Packet struct {
+	// Ts is timestamp as byte which is used as key to store in key-value db.
+	// It is assigned by Storing function and will be populated in struct when retrieving from the db
+	TSByte []byte `json:"-"`
+	//
 	Version     uint64
 	Destination NetworkAddress
 	Source      NetworkAddress
 	Sequence    uint64
 	Message     []byte
 	Height      uint64
+}
+
+type TxnPacket struct {
+	// Ts is timestamp as byte which is used as key to store in key-value db.
+	// It is assigned by Storing function and will be populated in struct when retrieving from the db
+	TSByte  []byte `json:"-"`
+	TxnHash string
+	Pkt     *Packet
 }
 
 type QueuedMessage struct {

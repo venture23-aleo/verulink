@@ -30,104 +30,71 @@ func closeDB() error {
 }
 
 func put(bucket string, key, value []byte) error {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	tx, err := db.Begin(true)
-
-	if err != nil {
-		return err
-	}
-
-	defer tx.Rollback()
-
-	_, err = tx.CreateBucketIfNotExists([]byte(bucket))
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return nil
-	}
-
-	err = db.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucket))
-
-		if err != nil {
-			return err
-		}
-		err = b.Put(key, value)
-		return err
+	return db.Update(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		return bkt.Put(key, value)
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
-func get(bucket string, key []byte) []byte {
-	mu.RLock()
-	defer mu.RUnlock()
-	var value []byte
-	db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucket))
-		value = b.Get(key)
-		return nil
+func batchPut(bucket string, key, value []byte) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		return bkt.Put(key, value)
 	})
-	if value != nil {
-		return value
-	}
-	return nil
 }
 
-func getAll(bucket string) [][]byte {
-	mu.RLock()
-	defer mu.RUnlock()
-
-	val := [][]byte{}
-
+func get(bucket string, key []byte) (value []byte) {
 	db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(bucket))
+		bkt := tx.Bucket([]byte(bucket))
+		data := bkt.Get(key)
+		value = make([]byte, len(data))
+		copy(value, data)
+		return nil
+	})
 
-		if err := b.ForEach(func(k, v []byte) error {
-			if v != nil {
-				val = append(val, v)
-			}
-			return nil
-		}); err != nil {
-			return err
+	return
+}
+
+func retrieveNKeyValuesAfterPrefix(bucket string, n int, prefix string) [][2][]byte {
+	count := 0
+	s := make([][2][]byte, 0)
+	db.View(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		c := bkt.Cursor()
+		for key, value := c.Seek([]byte(prefix)); count != n && key != nil; key, value = c.Next() {
+			k := make([]byte, len(key))
+			v := make([]byte, len(value))
+			copy(k, key)
+			copy(v, value)
+			a := [2][]byte{k, v}
+			s = append(s, a)
+			count++
 		}
 		return nil
 	})
-	return val
+	return s
 }
 
-func delete(bucket string, key []byte) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	tx, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	err = db.Update(
-		func(tx *bbolt.Tx) error {
-			b := tx.Bucket([]byte(bucket))
-			err := b.Delete(key)
-			if err != nil {
-				return err
+// This function will return channel and populate minimum of n and total keys number of packets
+func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
+	ch := make(chan [2][]byte, n)
+	go func() {
+		count := 0
+		db.View(func(tx *bbolt.Tx) error {
+			bkt := tx.Bucket([]byte(bucket))
+			c := bkt.Cursor()
+			for key, value := c.First(); count != n && key != nil; key, value = c.Next() {
+				k := make([]byte, len(key))
+				v := make([]byte, len(value))
+				copy(k, key)
+				copy(v, value)
+				ch <- [2][]byte{k, v}
+				count++
 			}
 			return nil
 		})
-	if err != nil {
-		return err
-	}
-	return nil
+		close(ch)
+	}()
+
+	return ch
 }

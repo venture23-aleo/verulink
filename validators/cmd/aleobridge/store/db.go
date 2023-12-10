@@ -1,90 +1,15 @@
 package store
 
 import (
+	"encoding/binary"
 	"encoding/json"
+	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-var (
-	RetryBucket    = "retryBucket"
-	SnapShotBucket = "snapshotBucket"
-)
-
 func InitKVStore(path string) {
 	initDB(path)
-}
-
-// key can have separate bucket to be stored on, so if key is to be store is bucket A then it can be named as
-// StoreInBucketA or if it is storing some state then it can be named as StoreState and pass bucket name
-// as parameter to put() function in bolt.go
-func StoreRetryPacket(dst, key string, value *chain.QueuedMessage) error {
-	bucket := getRetryBucketName(dst)
-	val, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-	err = put(bucket, []byte(key), val)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func StoreSnapshot(src, key string, value string) error {
-	bucket := getSnapshotBucketName(src)
-	err := put(bucket, []byte(key), []byte(value))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetRetryPacket(dst, key string) (*chain.QueuedMessage, error) {
-	bucket := getRetryBucketName(dst)
-	value := get(bucket, []byte(key))
-
-	msg := &chain.QueuedMessage{}
-
-	err := json.Unmarshal(value, msg)
-	if err != nil {
-		return nil, err
-	}
-	return msg, nil
-}
-
-func getRetryBucketName(dst string) string {
-	return RetryBucket + "|" + dst
-}
-
-func getSnapshotBucketName(src string) string {
-	return SnapShotBucket + "|" + src
-}
-
-func GetAllRetryPackets(dst string) ([]*chain.QueuedMessage, error) {
-	bucket := getRetryBucketName(dst)
-	value := getAll(bucket)
-
-	msgList := []*chain.QueuedMessage{}
-
-	for _, v := range value {
-		msg := &chain.QueuedMessage{}
-		err := json.Unmarshal(v, msg)
-		if err != nil {
-			return nil, err
-		}
-		msgList = append(msgList, msg)
-	}
-	return msgList, nil
-}
-
-func DeleteRetryPacket(dst, key string) error {
-	bucket := getRetryBucketName(dst)
-	err := delete(bucket, []byte(key))
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func CloseDB() error {
@@ -93,4 +18,71 @@ func CloseDB() error {
 		return err
 	}
 	return nil
+}
+
+// StoreRetryPacket for storing transaction failed packetes with current timestamp as its key.
+// i.e. Attestor sends transaction with packet as data in the field
+// and transaction fails.
+// namespace will collect packets that are destined to same bridge.
+func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
+	// Make sure each key in a bucket are unique.
+	// It also means that there should be single sender between src-destination configuration
+	time.Sleep(time.Nanosecond)
+	ts := time.Now().Nanosecond()
+	key := make([]byte, 8)
+	binary.BigEndian.PutUint64(key, uint64(ts))
+	value, err := json.Marshal(pkt)
+	if err != nil {
+		return err
+	}
+	return put(namespace, key, value)
+}
+
+func RetrieveNRetryPackets(namespace string, n int) chan *chain.Packet {
+	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
+	ch := make(chan *chain.Packet)
+	go func() {
+		for kv := range pktCh {
+			key := kv[0]
+			value := kv[1]
+			pkt := new(chain.Packet)
+			pkt.TSByte = key
+			json.Unmarshal(value, pkt)
+			ch <- pkt
+		}
+		close(ch)
+	}()
+	return ch
+}
+
+func StoreTransactedPacket(namespace string, txnPkt *chain.TxnPacket) error {
+	// Make sure each key in a bucket are unique.
+	// It also means that there should be single sender between src-destination configuration
+	time.Sleep(time.Nanosecond)
+	ts := time.Now().UnixNano()
+	data, err := json.Marshal(txnPkt)
+	if err != nil {
+		return err
+	}
+
+	key := make([]byte, 8)
+	binary.NativeEndian.PutUint64(key, uint64(ts))
+	return put(namespace, key, data)
+}
+
+func RetrieveNPackets(namespace string, n int) chan *chain.TxnPacket {
+	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
+	ch := make(chan *chain.TxnPacket)
+	go func() {
+		for kv := range pktCh {
+			key := kv[0]
+			value := kv[1]
+			txnPkt := new(chain.TxnPacket)
+			json.Unmarshal(value, txnPkt)
+			txnPkt.TSByte = key
+			ch <- txnPkt
+		}
+		close(ch)
+	}()
+	return ch
 }
