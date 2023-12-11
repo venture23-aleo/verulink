@@ -4,8 +4,8 @@ pragma solidity ^0.8.19;
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {BlackListService} from "./abstract/tokenservice/BlackListService.sol";
 import {ERC20TokenSupport} from "./abstract/tokenservice/ERC20TokenSupport.sol";
-import {IERC20TokenBridge} from "./common/Interface/bridge/IERC20TokenBridge.sol";
-import {IERC20} from "./common/Interface/tokenservice/IERC20.sol";
+import {IERC20TokenBridge} from "./Common/Interface/bridge/IERC20TokenBridge.sol";
+import {IERC20} from "./Common/Interface/tokenservice/IERC20.sol";
 import {Holding} from "./HoldingContract.sol";
 
 contract ERC20TokenService is BlackListService, 

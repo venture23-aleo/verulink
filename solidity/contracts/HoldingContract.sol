@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "./common/Ownable.sol";
-import {IERC20} from "./common/Interface/tokenservice/IERC20.sol";
+import {Ownable} from "./Common/Ownable.sol";
+import {IERC20} from "./Common/Interface/tokenservice/IERC20.sol";
 
 contract Holding is Ownable {
     // user address => token address => amount

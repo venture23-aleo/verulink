@@ -23,7 +23,7 @@ abstract contract OutgoingPacketManagerImpl is PacketManager {
         packet.version = 1;
         packet.sequence = _incrementSequence(packet.destination.chainId);
 
-         _setOutgoingPacket(packet);
+        _setOutgoingPacket(packet);
         emit PacketDispatched(packet);
         _afterTokenBridge(packet);
     }    

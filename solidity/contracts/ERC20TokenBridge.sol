@@ -8,7 +8,7 @@ import {PacketManager} from "./abstract/bridge/PacketManager.sol";
 import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
 import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "./abstract/bridge/OutgoingPacketManagerImpl.sol";
-import {Ownable} from "./common/Ownable.sol";
+import {Ownable} from "./Common/Ownable.sol";
 import {AttestorManager} from "./abstract/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "./abstract/bridge/BridgeTokenServiceManager.sol";
 import {ChainManager} from "./abstract/bridge/ChainManager.sol";
@@ -44,10 +44,11 @@ contract ERC20TokenBridge is PacketManager,
     }
     
     function initialize(
-        uint256 _chainId
+        uint256 _chainId,
+        address _owner
     ) external initializer {
-        owner = msg.sender;
-        addAttestor(msg.sender, 1);
+        owner = _owner;
+        // addAttestor(msg.sender, 1);
         
         //addChain(2, "target");
         //addChain(1, "self");

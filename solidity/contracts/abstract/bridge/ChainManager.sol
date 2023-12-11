@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../common/Ownable.sol";
+import {Ownable} from "../../Common/Ownable.sol";
 import {PacketManager} from "./PacketManager.sol";
 
 abstract contract ChainManager is Ownable {
