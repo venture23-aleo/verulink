@@ -26,17 +26,13 @@ func CreateNamespace(ns string) error {
 
 /*****************************************************************************************************/
 
-// StoreRetryPacket for storing transaction failed packetes with current timestamp as its key.
+// StoreRetryPacket for storing transaction failed packetes with sequence number as its key.
 // i.e. Attestor sends transaction with packet as data in the field
 // and transaction fails.
 // namespace will collect packets that are destined to same bridge.
 func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
-	// Make sure each key in a bucket are unique.
-	// It also means that there should be single sender between src-destination configuration
-	time.Sleep(time.Nanosecond)
-	ts := time.Now().Nanosecond()
 	key := make([]byte, 8)
-	binary.BigEndian.PutUint64(key, uint64(ts))
+	binary.BigEndian.PutUint64(key, pkt.Sequence)
 	value, err := json.Marshal(pkt)
 	if err != nil {
 		return err
