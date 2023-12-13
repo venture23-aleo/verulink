@@ -9,10 +9,11 @@ import (
 )
 
 type Client struct {
-	eth            *ethclient.Client
-	finalizeHeight uint64
-	chainID        uint32
-	chainCfg       *relay.ChainConfig
+	eth               *ethclient.Client
+	minRequiredGasFee int
+	finalizeHeight    uint64
+	chainID           uint32
+	chainCfg          *relay.ChainConfig
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
@@ -51,6 +52,14 @@ func (cl *Client) GetDestChains() ([]string, error) {
 
 func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
 	return nil, nil
+}
+
+func (cl *Client) GetMinReqBalForMakingTxn() int {
+	return cl.minRequiredGasFee
+}
+
+func (cl *Client) GetWalletBalance(ctx context.Context) (int, error) {
+	return 0, nil
 }
 
 func (cl *Client) Name() string {
