@@ -14,6 +14,7 @@ var (
 func initDB(path string) error {
 	var err error
 	mu = sync.RWMutex{}
+	// todo: consider large mmap size while initializing boltdb
 	db, err = bbolt.Open(path, 0655, nil)
 	if err != nil {
 		return err
@@ -33,6 +34,20 @@ func createBucket(ns string) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(ns))
 		return err
+	})
+}
+
+func delete(bucket string, key []byte) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		return bkt.Delete(key)
+	})
+}
+
+func batchDelete(bucket string, key []byte) error {
+	return db.Batch(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		return bkt.Delete(key)
 	})
 }
 
@@ -59,6 +74,25 @@ func get(bucket string, key []byte) (value []byte) {
 		return nil
 	})
 
+	return
+}
+
+func exitsInGivenBuckets(bkts []string, key []byte) (exist bool) {
+	db.View(func(tx *bbolt.Tx) error {
+		for _, b := range bkts {
+			bkt := tx.Bucket([]byte(b))
+			if bkt == nil {
+				continue
+			}
+
+			value := bkt.Get(key)
+			if value != nil {
+				exist = true
+				break
+			}
+		}
+		return nil
+	})
 	return
 }
 

@@ -2,8 +2,10 @@ package relay
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
@@ -12,6 +14,7 @@ import (
 const (
 	retry = iota
 	transacted
+	baseSeqNum
 )
 
 type Relayer interface {
@@ -39,14 +42,16 @@ type relay struct {
 	destChain              chain.ISender
 	retryPktNameSpace      string
 	transactedPktNameSpace string
+	baseSeqNumNameSpace    string
 	sChainCond, dChainCond *sync.Cond
 	pktCh                  chan *chain.Packet
 	nextSeqNum             uint64
 	eventCh                <-chan *chain.ChainEvent
-
-	mu             sync.Mutex
-	initliazed     bool
-	panicRecovered chan struct{}
+	bSeqNumUpdateTime      time.Time
+	bSeqNum                uint64
+	mu                     sync.Mutex
+	initliazed             bool
+	panicRecovered         chan struct{}
 	/*
 		other fields if required
 	*/
@@ -63,27 +68,16 @@ func (r *relay) Init(ctx context.Context) {
 	defer r.mu.Unlock()
 
 	/* todo:
-	1. Check base sequence number in both contracts // think about Sabin dai's concern
+	1. Check base sequence number in source contracts // think about Sabin dai's concern
 	2. Check sequence number from database.
 	3. Consider max(baseSeqNum, dbSeqNum)
 	4. Start getting packets from contracts
-	5. Attest and relay the packets
+	5. Relay the packets
 	*/
 
 	//panic if any error
 	r.initliazed = true
 	r.panicRecovered = make(chan struct{}) // shall need bufferred channel equal to the number of goroutines that handles panic for panic context
-	r.retryPktNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), retry)
-	r.transactedPktNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), transacted)
-	err := store.CreateNamespace(r.retryPktNameSpace)
-	if err != nil {
-		panic(err)
-	}
-
-	err = store.CreateNamespace(r.transactedPktNameSpace)
-	if err != nil {
-		panic(err)
-	}
 
 	go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
 	go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
@@ -96,6 +90,21 @@ func (r *relay) Init(ctx context.Context) {
 	// todo: add appropriate waiters here or where Init is being called
 	// seems reasonable to use ctx.Done() call here and check if cancel error is due to panic
 	// and if so, uninitialize relay i.e. r.initialiazed = false
+}
+
+func (r *relay) createNamespaces() (err error) {
+	r.retryPktNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), retry)
+	err = store.CreateNamespace(r.retryPktNameSpace)
+	if err != nil {
+		return
+	}
+	r.transactedPktNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), transacted)
+	err = store.CreateNamespace(r.transactedPktNameSpace)
+	if err != nil {
+		return
+	}
+	r.baseSeqNumNameSpace = fmt.Sprintf("%s-%s-%d", r.srcChain.Name(), r.destChain.Name(), baseSeqNum)
+	return store.CreateNamespace(r.baseSeqNumNameSpace)
 }
 
 func (r *relay) startReceiving(ctx context.Context) {
@@ -158,6 +167,17 @@ func (r *relay) startSending(ctx context.Context) {
 
 		txnHash, err := r.destChain.SendPacket(ctx, pkt)
 		if err != nil {
+			switch {
+			case errors.Is(err, insufficientBalanceErr):
+				r.pollBalance(ctx)
+				go func() { r.pktCh <- pkt }() // immediately send it to the channel
+				continue
+				/*
+					case 2:
+					case 3:
+				*/
+
+			}
 			// todo: send to retry loop and handle according to error
 			// store packet to retry later
 			err = store.StoreRetryPacket(r.retryPktNameSpace, pkt)
@@ -181,27 +201,100 @@ func (r *relay) startSending(ctx context.Context) {
 // If we find that transaction is not going to be finalized then we shall send the packet
 // to retry namespace in database
 func (r *relay) pruneDB(ctx context.Context) {
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			ctxErr := ctx.Err()
 			_ = ctxErr
-			/*
-				if ctxErr == PanicErr{
-					1. handle panic for pruneDB
-					2. Notify r.panicRecovered or some other field
-
-				}
-			*/
-			// todo:
+		case <-ticker.C:
 		default:
 		}
 
-		/*
-			Store txnHash as value with key as orderable timestamp
+		ch := store.RetrieveNPackets(r.transactedPktNameSpace, 10)
+		seqNums := make([]uint64, 10)
+		txnPktKeys := make([][]byte, 10)
+		for txnPkt := range ch {
+			finalized, err := r.destChain.IsTxnFinalized(ctx, txnPkt.TxnHash)
+			// todo: if we can decide here that this txn is not going to be finalized
+			// then send packet to r.pktCh and delete its entry in db
+			// we can send this info in err variable above that the chain has forked
+			if err != nil {
+				//log error
+				continue
+			}
 
-			Get ordered hashes and check if txn is finalized
-		*/
+			if !finalized {
+				continue
+			}
+
+			txnPktKeys = append(txnPktKeys, txnPkt.SeqByte)
+			seqNums = append(seqNums, txnPkt.Pkt.Sequence)
+		}
+
+		store.RemoveTxnKeyAndStoreBaseSeqNum(
+			r.transactedPktNameSpace,
+			txnPktKeys,
+			r.baseSeqNumNameSpace,
+			seqNums,
+		)
+	}
+}
+
+func (r *relay) pruneBaseSeqNum(ctx context.Context) {
+	ticker := time.NewTicker(time.Hour * 24)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+		bSeqNum := store.PruneBaseSeqNum(r.baseSeqNumNameSpace)
+		if bSeqNum > 0 {
+			r.bSeqNum = bSeqNum
+			r.bSeqNumUpdateTime = time.Now()
+		}
+	}
+}
+
+func (r *relay) retryLeftOutPackets(ctx context.Context) {
+	ticker := time.NewTicker(time.Hour * 2)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		if !(time.Since(r.bSeqNumUpdateTime) > time.Hour*24) || !(r.bSeqNum < r.nextSeqNum-1) {
+			continue
+		}
+
+		curSeqNum := r.nextSeqNum - 1
+		for seqNum := r.bSeqNum + 1; seqNum < curSeqNum; seqNum++ {
+			if store.IsLocallyStored(
+				[]string{r.transactedPktNameSpace, r.retryPktNameSpace},
+				seqNum,
+			) {
+				continue
+			}
+
+			if r.bSeqNum >= seqNum {
+				continue
+			}
+
+			//Now get from blockchain and feed to the system
+			pkt, err := r.srcChain.GetPktWithSeq(ctx, seqNum)
+			if err != nil {
+				//todo: packet might have been pruned
+				continue
+			}
+
+			r.pktCh <- pkt
+		}
 	}
 }
 
