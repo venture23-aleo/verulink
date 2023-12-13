@@ -15,7 +15,7 @@ const (
 )
 
 var chainEventRWMu = sync.RWMutex{}
-var chainEvents = map[string]*chain.ChainEvent{}
+var chainEvents = map[string]*chain.ChainEvent{} // aleo:event, ethereum: event,
 var chainConds = map[string]*sync.Cond{}
 var chainCtxCncls = map[string]context.CancelCauseFunc{}
 var chainCtxs = map[string]context.Context{}
@@ -44,6 +44,7 @@ var (
 
 type Relays []Relayer
 
+// what if gas depletion?
 func MultiRelay(ctx context.Context, cfg *Config) Relays {
 	chains := map[string]IClient{}
 
@@ -87,34 +88,18 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 	return relays
 }
 
-func (r Relays) StartMultiRelay(ctx context.Context) {
-	relayCh := make(chan Relayer, len(r))
-
-	for _, relay := range r {
-		relayCh <- relay
-	}
-
+func (relays Relays) StartMultiRelay(ctx context.Context) {
 	// handle panicking case
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("context cancelled")
-			return
-		case re := <-relayCh:
-			go func(relay Relayer) {
-				relayCtx, relayCtxCncl := context.WithCancelCause(ctx)
-				defer relayCtxCncl(nil)
-				defer func() {
-					if r := recover(); r != nil {
-						relayCtxCncl(Panic)
-						// add wait condition to complete panic handeling
-						relayCh <- re
-					}
-				}()
-				re.Init(relayCtx)
-			}(re)
-		}
+	for _, re := range relays {
+		go func(relay Relayer) {
+			relayCtx, relayCtxCncl := context.WithCancelCause(ctx)
+			defer relayCtxCncl(nil)
+
+			relay.Init(relayCtx)
+		}(re)
 	}
+
+	<-ctx.Done()
 }
 
 // GetChainEvents will receive events of given chain and will insert into subscribing channels.
