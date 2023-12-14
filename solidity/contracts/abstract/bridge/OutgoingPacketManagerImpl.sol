@@ -20,10 +20,10 @@ abstract contract OutgoingPacketManagerImpl is PacketManager {
     }
 
     function sendMessage(PacketLibrary.OutPacket memory packet) external {
-        _beforeTokenBridge(packet.destination.chainId);
+        _beforeTokenBridge(packet.destTokenService.chainId);
 
         packet.version = 1;
-        packet.sequence = _incrementSequence(packet.destination.chainId);
+        packet.sequence = _incrementSequence(packet.destTokenService.chainId);
 
         _setOutgoingPacket(packet);
         emit PacketDispatched(packet);

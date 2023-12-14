@@ -54,8 +54,8 @@ contract ERC20TokenService is BlackListService,
         );
 
         PacketLibrary.OutPacket memory packet ;
-        packet.source = self;
-        packet.destination = supportedTokens[tokenAddress].destTokenService;
+        packet.sourceTokenService = self;
+        packet.destTokenService = supportedTokens[tokenAddress].destTokenService;
         packet.message = message;
         packet.height = block.number;
 
@@ -64,7 +64,7 @@ contract ERC20TokenService is BlackListService,
 
     function withdraw(PacketLibrary.InPacket memory packet) external {
         IERC20TokenBridge(erc20Bridge).consume(packet);
-        require(packet.destination.addr == address(this),"Packet not intended for this Token Service");
+        require(packet.destTokenService.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
         require(isSupportedToken(tokenAddress), "Token not supported");

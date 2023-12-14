@@ -12,19 +12,19 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
 
     function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override virtual {
         super._preValidateInPacket(packet);
-        require(!isPacketConsumed(packet.destination.chainId, packet.sequence), "Packet already consumed");
+        require(!isPacketConsumed(packet.destTokenService.chainId, packet.sequence), "Packet already consumed");
     }
 
     function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal override virtual {
         super._updateInPacketState(packet, action);
-        if(action != 2 || !incomingPacketExists(packet.destination.chainId, packet.sequence)) return; // 2 to represent consume operation, 1 to receive packet operation
-        _removeIncomingPacket(packet.destination.chainId, packet.sequence);
-        _setConsumedPacket(packet.destination.chainId, packet.sequence, _hash(packet));
+        if(action != 2 || !incomingPacketExists(packet.destTokenService.chainId, packet.sequence)) return; // 2 to represent consume operation, 1 to receive packet operation
+        _removeIncomingPacket(packet.destTokenService.chainId, packet.sequence);
+        _setConsumedPacket(packet.destTokenService.chainId, packet.sequence, _hash(packet));
     }
 
     function consume(PacketLibrary.InPacket memory packet) external {
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
-        bytes32 packetHash = getIncomingPacketHash(packet.destination.chainId, packet.sequence);
+        bytes32 packetHash = getIncomingPacketHash(packet.destTokenService.chainId, packet.sequence);
         require(packetHash == _hash(packet), "Unknown Packet");
         _preValidateInPacket(packet);
         _updateInPacketState(packet, 2);

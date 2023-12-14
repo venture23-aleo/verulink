@@ -29,8 +29,8 @@ library PacketLibrary {
     struct OutPacket {
         uint256 version;
         uint256 sequence;
-        InNetworkAddress source;
-        OutNetworkAddress destination;
+        InNetworkAddress sourceTokenService;
+        OutNetworkAddress destTokenService;
         OutTokenMessage message;
         uint256 height;
     }
@@ -38,8 +38,8 @@ library PacketLibrary {
     struct InPacket {
         uint256 version;
         uint256 sequence;
-        OutNetworkAddress source;
-        InNetworkAddress destination;
+        OutNetworkAddress sourceTokenService;
+        InNetworkAddress destTokenService;
         InTokenMessage message;
         uint256 height;
     }

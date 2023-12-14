@@ -118,7 +118,7 @@ contract ERC20TokenBridge is PacketManager,
     }
 
     function _setOutgoingPacket(PacketLibrary.OutPacket memory packet) internal override {
-        outgoingPackets[packet.destination.chainId][packet.sequence] = packet;
+        outgoingPackets[packet.destTokenService.chainId][packet.sequence] = packet;
     }
 
     function _validateConfig() internal view override {

@@ -66,7 +66,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         super._updateInPacketState(packet, action);
         
         if(action != 1) return; // 2 to represent consume operation, 1 to receive operation
-       if(incomingPacketExists(packet.source.chainId, packet.sequence)) return;
+       if(incomingPacketExists(packet.sourceTokenService.chainId, packet.sequence)) return;
         
         
         bytes32 packetHash = _hash(packet);
@@ -83,7 +83,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
 
         if(!hasQuorumReached(packetHash)) return;
 
-        _setIncomingPacket(packet.source.chainId, packet.sequence, packetHash);
+        _setIncomingPacket(packet.sourceTokenService.chainId, packet.sequence, packetHash);
         emit PacketArrived(packet);
     }
 
