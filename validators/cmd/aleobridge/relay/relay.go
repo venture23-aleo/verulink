@@ -230,7 +230,11 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 		case <-ticker.C:
 		}
 
-		if !(time.Since(r.bSeqNumUpdateTime) > time.Hour*24) || !(r.bSeqNum < r.nextSeqNum-1) {
+		// duration check will ensure that we gave enough time for another goroutine to check finalized transaction
+		// and update db.
+		// baseSeqNum < nextSeqNum -1, will ensure that we don't retry baseSeqNum and curSeqNum are equal as there is no
+		// packets to check for
+		if !(time.Since(r.bSeqNumUpdateTime) > time.Hour*24 && r.bSeqNum < r.nextSeqNum-1) {
 			continue
 		}
 
@@ -252,7 +256,7 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 			//Now get from blockchain and feed to the system
 			pkt, err := r.srcChain.GetPktWithSeq(ctx, seqNum)
 			if err != nil {
-				//todo: packet might have been pruned in source chain
+				//todo: we might decide that older packets be pruned in src chain
 				// and if it is pruned then r.bSeqNum can be updated to seqNum
 				// further handling is not required because r.bSeqNum won't be updated with missing in-between-packets
 				continue
