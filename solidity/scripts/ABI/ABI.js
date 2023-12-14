@@ -67,7 +67,7 @@ export const CreateCallAbi = [
 	}
 ];
 
-export const implementationABI = [
+export const TokenBridgeImplementationABI = [
     {
       "anonymous": false,
       "inputs": [
@@ -174,7 +174,7 @@ export const implementationABI = [
             }
           ],
           "indexed": false,
-          "internalType": "struct PacketManager.OutNetworkAddress",
+          "internalType": "struct PacketLibrary.OutNetworkAddress",
           "name": "chain",
           "type": "tuple"
         }
@@ -249,7 +249,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -266,7 +266,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -288,7 +288,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InTokenMessage",
+              "internalType": "struct PacketLibrary.InTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -299,7 +299,7 @@ export const implementationABI = [
             }
           ],
           "indexed": false,
-          "internalType": "struct PacketManager.InPacket",
+          "internalType": "struct PacketLibrary.InPacket",
           "name": "packet",
           "type": "tuple"
         }
@@ -335,7 +335,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -352,7 +352,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -374,7 +374,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutTokenMessage",
+              "internalType": "struct PacketLibrary.OutTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -385,7 +385,7 @@ export const implementationABI = [
             }
           ],
           "indexed": false,
-          "internalType": "struct PacketManager.OutPacket",
+          "internalType": "struct PacketLibrary.OutPacket",
           "name": "packet",
           "type": "tuple"
         }
@@ -551,7 +551,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -568,7 +568,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -590,7 +590,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InTokenMessage",
+              "internalType": "struct PacketLibrary.InTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -600,7 +600,7 @@ export const implementationABI = [
               "type": "uint256"
             }
           ],
-          "internalType": "struct PacketManager.InPacket",
+          "internalType": "struct PacketLibrary.InPacket",
           "name": "packet",
           "type": "tuple"
         }
@@ -632,6 +632,13 @@ export const implementationABI = [
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "doubleNum",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -752,11 +759,6 @@ export const implementationABI = [
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_chainId",
-          "type": "uint256"
-        },
-        {
           "internalType": "address",
           "name": "_owner",
           "type": "address"
@@ -849,6 +851,19 @@ export const implementationABI = [
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "num",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -886,7 +901,7 @@ export const implementationABI = [
               "type": "address"
             }
           ],
-          "internalType": "struct PacketManager.InNetworkAddress",
+          "internalType": "struct PacketLibrary.InNetworkAddress",
           "name": "source",
           "type": "tuple"
         },
@@ -903,7 +918,7 @@ export const implementationABI = [
               "type": "string"
             }
           ],
-          "internalType": "struct PacketManager.OutNetworkAddress",
+          "internalType": "struct PacketLibrary.OutNetworkAddress",
           "name": "destination",
           "type": "tuple"
         },
@@ -925,7 +940,7 @@ export const implementationABI = [
               "type": "string"
             }
           ],
-          "internalType": "struct PacketManager.OutTokenMessage",
+          "internalType": "struct PacketLibrary.OutTokenMessage",
           "name": "message",
           "type": "tuple"
         },
@@ -991,7 +1006,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -1008,7 +1023,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -1030,7 +1045,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InTokenMessage",
+              "internalType": "struct PacketLibrary.InTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -1040,7 +1055,7 @@ export const implementationABI = [
               "type": "uint256"
             }
           ],
-          "internalType": "struct PacketManager.InPacket",
+          "internalType": "struct PacketLibrary.InPacket",
           "name": "packet",
           "type": "tuple"
         }
@@ -1077,7 +1092,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -1094,7 +1109,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -1116,7 +1131,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InTokenMessage",
+              "internalType": "struct PacketLibrary.InTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -1126,7 +1141,7 @@ export const implementationABI = [
               "type": "uint256"
             }
           ],
-          "internalType": "struct PacketManager.InPacket[]",
+          "internalType": "struct PacketLibrary.InPacket[]",
           "name": "packets",
           "type": "tuple[]"
         }
@@ -1181,24 +1196,6 @@ export const implementationABI = [
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "self",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "chainId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "addr",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "components": [
@@ -1225,7 +1222,7 @@ export const implementationABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct PacketManager.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -1242,7 +1239,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -1264,7 +1261,7 @@ export const implementationABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct PacketManager.OutTokenMessage",
+              "internalType": "struct PacketLibrary.OutTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -1274,7 +1271,7 @@ export const implementationABI = [
               "type": "uint256"
             }
           ],
-          "internalType": "struct PacketManager.OutPacket",
+          "internalType": "struct PacketLibrary.OutPacket",
           "name": "packet",
           "type": "tuple"
         }
@@ -1349,230 +1346,7 @@ export const implementationABI = [
     }
 ];
 
-export const upgradedimplementationABI = [
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "previousAdmin",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "newAdmin",
-				"type": "address"
-			}
-		],
-		"name": "AdminChanged",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "beacon",
-				"type": "address"
-			}
-		],
-		"name": "BeaconUpgraded",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "version",
-				"type": "uint8"
-			}
-		],
-		"name": "Initialized",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "implementation",
-				"type": "address"
-			}
-		],
-		"name": "Upgraded",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "deployer",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "doubleNumber",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_initialValue",
-				"type": "uint256"
-			}
-		],
-		"name": "initialize",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "num",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "proxiableUUID",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newImplementation",
-				"type": "address"
-			}
-		],
-		"name": "upgradeTo",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newImplementation",
-				"type": "address"
-			},
-			{
-				"internalType": "bytes",
-				"name": "data",
-				"type": "bytes"
-			}
-		],
-		"name": "upgradeToAndCall",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	}
-];
-
-export const proxyABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_logic",
-				"type": "address"
-			},
-			{
-				"internalType": "bytes",
-				"name": "_data",
-				"type": "bytes"
-			}
-		],
-		"stateMutability": "payable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "previousAdmin",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "newAdmin",
-				"type": "address"
-			}
-		],
-		"name": "AdminChanged",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "beacon",
-				"type": "address"
-			}
-		],
-		"name": "BeaconUpgraded",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "implementation",
-				"type": "address"
-			}
-		],
-		"name": "Upgraded",
-		"type": "event"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "fallback"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	}
-];
-
-export const tokenServiceABI = [
+export const tokenServiceImplementationABI = [
     {
       "anonymous": false,
       "inputs": [
@@ -1667,7 +1441,7 @@ export const tokenServiceABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct IERC20TokenBridge.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "destTokenAddress",
               "type": "tuple"
             },
@@ -1684,7 +1458,7 @@ export const tokenServiceABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct IERC20TokenBridge.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "destTokenService",
               "type": "tuple"
             },
@@ -1778,15 +1552,17 @@ export const tokenServiceABI = [
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "doubleNum",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
           "name": "bridge",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_owner",
           "type": "address"
         },
         {
@@ -1802,6 +1578,11 @@ export const tokenServiceABI = [
         {
           "internalType": "address",
           "name": "_usdt",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_owner",
           "type": "address"
         }
       ],
@@ -1867,6 +1648,19 @@ export const tokenServiceABI = [
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "num",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -1983,7 +1777,7 @@ export const tokenServiceABI = [
               "type": "string"
             }
           ],
-          "internalType": "struct IERC20TokenBridge.OutNetworkAddress",
+          "internalType": "struct PacketLibrary.OutNetworkAddress",
           "name": "destTokenAddress",
           "type": "tuple"
         },
@@ -2000,7 +1794,7 @@ export const tokenServiceABI = [
               "type": "string"
             }
           ],
-          "internalType": "struct IERC20TokenBridge.OutNetworkAddress",
+          "internalType": "struct PacketLibrary.OutNetworkAddress",
           "name": "destTokenService",
           "type": "tuple"
         },
@@ -2122,7 +1916,7 @@ export const tokenServiceABI = [
                   "type": "string"
                 }
               ],
-              "internalType": "struct IERC20TokenBridge.OutNetworkAddress",
+              "internalType": "struct PacketLibrary.OutNetworkAddress",
               "name": "source",
               "type": "tuple"
             },
@@ -2139,7 +1933,7 @@ export const tokenServiceABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct IERC20TokenBridge.InNetworkAddress",
+              "internalType": "struct PacketLibrary.InNetworkAddress",
               "name": "destination",
               "type": "tuple"
             },
@@ -2161,7 +1955,7 @@ export const tokenServiceABI = [
                   "type": "address"
                 }
               ],
-              "internalType": "struct IERC20TokenBridge.InTokenMessage",
+              "internalType": "struct PacketLibrary.InTokenMessage",
               "name": "message",
               "type": "tuple"
             },
@@ -2171,7 +1965,7 @@ export const tokenServiceABI = [
               "type": "uint256"
             }
           ],
-          "internalType": "struct IERC20TokenBridge.InPacket",
+          "internalType": "struct PacketLibrary.InPacket",
           "name": "packet",
           "type": "tuple"
         }

@@ -2,7 +2,7 @@ import { ethers, Wallet } from "ethers";
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {tokenServiceABI} from "../ABI/ABI.js";
+import {tokenServiceImplementationABI} from "../ABI/ABI.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -13,7 +13,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 
 // const safeAddress = process.env.SAFE_ADDRESS;
 
-async function crossContractInteracton(safeAddress, senderAddress, signer) {
+async function addToken(safeAddress, senderAddress, signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -25,9 +25,9 @@ async function crossContractInteracton(safeAddress, senderAddress, signer) {
   });
 
 const tokenServiceProxyAddress = process.env.tokenServiceProxyAddress;
-const abi = tokenServiceABI;
+const abi = tokenServiceImplementationABI;
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("addToken", ["0x914d6560FF059Faa153201CBE73C95b6660085F1", "5", "0x914d6560FF059Faa153201CBE73C95b6660085F1", "0x914d6560FF059Faa153201CBE73C95b6660085F1", "10", "15"]);
+  const calldata = iface.encodeFunctionData("addToken", ["0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557", "5", "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557", "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557", "10", "15"]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -58,7 +58,7 @@ const abi = tokenServiceABI;
   await safeService.proposeTransaction(transactionConfig);
 }
 
-crossContractInteracton(
+addToken(
   process.env.SAFE_ADDRESS,
   process.env.SENDER_ADDRESS,
   new Wallet(process.env.secret_key1, provider)

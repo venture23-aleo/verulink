@@ -2,12 +2,14 @@
 pragma solidity ^0.8.19;
 
 import {PacketManager} from "./PacketManager.sol";
+import "../../common/libraries/Lib.sol";
 
 abstract contract OutgoingPacketManagerImpl is PacketManager {
-    event PacketDispatched(OutPacket packet);
+    
+    event PacketDispatched(PacketLibrary.OutPacket packet);
 
     function _beforeTokenBridge(uint256 destChainId) internal virtual {}
-    function _afterTokenBridge(OutPacket memory packet) internal virtual {}
+    function _afterTokenBridge(PacketLibrary.OutPacket memory packet) internal virtual {}
 
     // chainId => sequence number
     mapping(uint256 => uint256) public sequences;
@@ -17,7 +19,7 @@ abstract contract OutgoingPacketManagerImpl is PacketManager {
         return sequences[_chainId];
     }
 
-    function sendMessage(OutPacket memory packet) external {
+    function sendMessage(PacketLibrary.OutPacket memory packet) external {
         _beforeTokenBridge(packet.destination.chainId);
 
         packet.version = 1;

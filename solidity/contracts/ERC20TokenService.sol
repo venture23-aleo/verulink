@@ -4,27 +4,33 @@ pragma solidity ^0.8.19;
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {BlackListService} from "./abstract/tokenservice/BlackListService.sol";
 import {ERC20TokenSupport} from "./abstract/tokenservice/ERC20TokenSupport.sol";
-import {IERC20TokenBridge} from "./Common/Interface/bridge/IERC20TokenBridge.sol";
-import {IERC20} from "./Common/Interface/tokenservice/IERC20.sol";
+import {IERC20TokenBridge} from "./common/interface/bridge/IERC20TokenBridge.sol";
+import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import {Holding} from "./HoldingContract.sol";
+import "./common/libraries/Lib.sol";
 
 contract ERC20TokenService is BlackListService, 
     ERC20TokenSupport, 
     Upgradeable 
 {
     address erc20Bridge;
+    uint public num;
     Holding holding;
-    IERC20TokenBridge.InNetworkAddress public self;
+    PacketLibrary.InNetworkAddress public self;
+        
+    function doubleNum() external {
+        num *=2;
+    }
 
     function initialize(address bridge, 
-        address _owner, 
         uint256 _chainId, 
         address _usdc, 
-        address _usdt
+        address _usdt,
+        address _owner
     ) external initializer {
         owner = _owner;
         erc20Bridge = bridge;
-        self = IERC20TokenBridge.InNetworkAddress(
+        self = PacketLibrary.InNetworkAddress(
             _chainId, 
             address(this)
         );
@@ -45,13 +51,13 @@ contract ERC20TokenService is BlackListService,
 
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
 
-        IERC20TokenBridge.OutTokenMessage memory message = IERC20TokenBridge.OutTokenMessage(
+        PacketLibrary.OutTokenMessage memory message = PacketLibrary.OutTokenMessage(
             supportedTokens[tokenAddress].destTokenAddress.addr, 
             amount, 
             receiver
         );
 
-        IERC20TokenBridge.OutPacket memory packet ;
+        PacketLibrary.OutPacket memory packet ;
         packet.source = self;
         packet.destination = supportedTokens[tokenAddress].destTokenService;
         packet.message = message;
@@ -60,7 +66,7 @@ contract ERC20TokenService is BlackListService,
         IERC20TokenBridge(erc20Bridge).sendMessage(packet);
     }
 
-    function withdraw(IERC20TokenBridge.InPacket memory packet) external {
+    function withdraw(PacketLibrary.InPacket memory packet) external {
         IERC20TokenBridge(erc20Bridge).consume(packet);
         require(packet.destination.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;

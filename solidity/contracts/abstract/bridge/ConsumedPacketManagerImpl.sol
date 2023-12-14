@@ -2,25 +2,27 @@
 pragma solidity ^0.8.19;
 
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
+import "../../common/libraries/Lib.sol";
 
 abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
+
     event Consumed(bytes32 packetHash);
 
     function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
 
-    function _preValidateInPacket(InPacket memory packet) internal view override virtual {
+    function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override virtual {
         super._preValidateInPacket(packet);
         require(!isPacketConsumed(packet.destination.chainId, packet.sequence), "Packet already consumed");
     }
 
-    function _updateInPacketState(InPacket memory packet, uint256 action) internal override virtual {
+    function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal override virtual {
         super._updateInPacketState(packet, action);
         if(action != 2 || !incomingPacketExists(packet.destination.chainId, packet.sequence)) return; // 2 to represent consume operation, 1 to receive packet operation
         _removeIncomingPacket(packet.destination.chainId, packet.sequence);
         _setConsumedPacket(packet.destination.chainId, packet.sequence, _hash(packet));
     }
 
-    function consume(InPacket memory packet) external {
+    function consume(PacketLibrary.InPacket memory packet) external {
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         bytes32 packetHash = getIncomingPacketHash(packet.destination.chainId, packet.sequence);
         require(packetHash == _hash(packet), "Unknown Packet");

@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../Common/Ownable.sol";
-import {IERC20TokenBridge} from "../../Common/Interface/bridge/IERC20TokenBridge.sol";
+import {Ownable} from "../../common/Ownable.sol";
+import "../../common/libraries/Lib.sol";
+import {IERC20TokenBridge} from "../../common/interface/bridge/IERC20TokenBridge.sol";
 
 abstract contract ERC20TokenSupport is Ownable {
+
     struct Token {
         address tokenAddress;
-        IERC20TokenBridge.OutNetworkAddress destTokenAddress;
-        IERC20TokenBridge.OutNetworkAddress destTokenService;
+        PacketLibrary.OutNetworkAddress destTokenAddress;
+        PacketLibrary.OutNetworkAddress destTokenService;
         uint256 minValue;
         uint256 maxValue;
         bool enabled;
@@ -34,8 +36,8 @@ abstract contract ERC20TokenSupport is Ownable {
         uint256 min, 
         uint256 max) public onlyOwner {
             Token memory token = Token(tokenAddress,
-                                        IERC20TokenBridge.OutNetworkAddress(destChainId, destTokenAddress),
-                                        IERC20TokenBridge.OutNetworkAddress(destChainId, destTokenService),
+                                        PacketLibrary.OutNetworkAddress(destChainId, destTokenAddress),
+                                        PacketLibrary.OutNetworkAddress(destChainId, destTokenService),
                                         min,
                                         max,
                                         true);

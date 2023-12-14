@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
+import "../../common/libraries/Lib.sol";
 
 abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
-    event PacketArrived(InPacket packet);
+
+    event PacketArrived(PacketLibrary.InPacket packet);
     event Voted(bytes32 packetHash, address voter);
     event AlreadyVoted(bytes32 packetHash, address voter);
 
@@ -17,18 +19,18 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     // packetHash => attestor address => bool
     mapping(bytes32 => mapping(address => bool)) voted;
 
-    function _receivePacket(InPacket memory packet) internal {
+    function _receivePacket(PacketLibrary.InPacket memory packet) internal {
         _preValidateInPacket(packet);
         _updateInPacketState(packet, 1);
         _postValidateInPacket(packet);
     }
     
-    function receivePacket(InPacket memory packet) external {
+    function receivePacket(PacketLibrary.InPacket memory packet) external {
         _validateConfig();
         _receivePacket(packet);
     }
 
-    function receivePacketBatch(InPacket[] memory packets) external {
+    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) external {
         _validateConfig();
         for(uint256 i=0;i<packets.length;i++) {
             _receivePacket(packets[i]);
@@ -37,7 +39,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
 
     // function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
 
-    function _preValidateInPacket(InPacket memory packet) internal view override virtual {
+    function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override virtual {
         super._preValidateInPacket(packet);
         //if(incomingPacketExists(packet)) return;
         
@@ -60,7 +62,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     //     }
     // }
 
-    function _updateInPacketState(InPacket memory packet, uint256 action) internal override virtual {
+    function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal override virtual {
         super._updateInPacketState(packet, action);
         
         if(action != 1) return; // 2 to represent consume operation, 1 to receive operation

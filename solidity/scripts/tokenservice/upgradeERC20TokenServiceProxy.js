@@ -3,7 +3,7 @@ import { ethers, Wallet } from "ethers";
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {CreateCallAbi, implementationABI, proxyABI} from "../ABI/ABI.js";
+import {CreateCallAbi, tokenServiceImplementationABI} from "../ABI/ABI.js";
 
 dotenv.config();
 
@@ -17,7 +17,7 @@ const tokenservicenewImplementationAddress = process.env.tokenservicenewImplemen
 const tokenServiceProxyAddress = process.env.tokenServiceProxyAddress;
 
 // Encode deployment
-const deployerInterface = new ethers.utils.Interface(implementationABI);
+const deployerInterface = new ethers.utils.Interface(tokenServiceImplementationABI);
 const deployCallData = deployerInterface.encodeFunctionData("upgradeTo", [
     tokenservicenewImplementationAddress
 ]);
@@ -55,4 +55,4 @@ const transactionConfig = {
     senderSignature: signature.data,
 };
 
-await safeService.proposeTransaction(transactionConfig);
+// await safeService.proposeTransaction(transactionConfig);

@@ -13,7 +13,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 
 // const safeAddress = process.env.SAFE_ADDRESS;
 
-async function crossContractInteracton(safeAddress, senderAddress, signer) {
+async function addTokenService(safeAddress, senderAddress, signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -58,7 +58,7 @@ const abi = implementationABI;
   await safeService.proposeTransaction(transactionConfig);
 }
 
-crossContractInteracton(
+addTokenService(
   process.env.SAFE_ADDRESS,
   process.env.SENDER_ADDRESS,
   new Wallet(process.env.secret_key1, provider)

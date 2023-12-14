@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
-import {Ownable} from "../../Common/Ownable.sol";
+import {Ownable} from "../../common/Ownable.sol";
 
 abstract contract BridgeTokenServiceManager is Ownable {
     event TokenServiceAdded(address tokenService);

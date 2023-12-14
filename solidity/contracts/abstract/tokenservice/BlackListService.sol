@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {IERC20} from "../../Common/Interface/tokenservice/IERC20.sol";
-import {Ownable} from "../../Common/Ownable.sol";
+import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
+import {Ownable} from "../../common/Ownable.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 abstract contract BlackListService is Ownable, Initializable {

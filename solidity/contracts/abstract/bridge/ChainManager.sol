@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../Common/Ownable.sol";
-import {PacketManager} from "./PacketManager.sol";
+import {Ownable} from "../../common/Ownable.sol";
+// import {PacketManager} from "./PacketManager.sol";
+import "../../common/libraries/Lib.sol";
 
 abstract contract ChainManager is Ownable {
-    event ChainAdded(PacketManager.OutNetworkAddress chain);
+
+    event ChainAdded(PacketLibrary.OutNetworkAddress chain);
     event ChainRemoved(uint256 chainId);
 
-    mapping(uint256 => PacketManager.OutNetworkAddress) public chains;
+    mapping(uint256 => PacketLibrary.OutNetworkAddress) public chains;
 
     function isSupportedChain(uint256 chainId) public view returns (bool) {
         return chains[chainId].chainId != 0;
@@ -16,7 +18,7 @@ abstract contract ChainManager is Ownable {
 
     function addChain(uint256 chainId, string memory destBridgeAddress) public onlyOwner {
         require(!isSupportedChain(chainId), "Chain already supported");
-        chains[chainId] = PacketManager.OutNetworkAddress(chainId, destBridgeAddress);
+        chains[chainId] = PacketLibrary.OutNetworkAddress(chainId, destBridgeAddress);
         emit ChainAdded(chains[chainId]);
     }
 

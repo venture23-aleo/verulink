@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
+import "./common/libraries/Lib.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
@@ -8,11 +9,10 @@ import {PacketManager} from "./abstract/bridge/PacketManager.sol";
 import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
 import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "./abstract/bridge/OutgoingPacketManagerImpl.sol";
-import {Ownable} from "./Common/Ownable.sol";
+import {Ownable} from "./common/Ownable.sol";
 import {AttestorManager} from "./abstract/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "./abstract/bridge/BridgeTokenServiceManager.sol";
 import {ChainManager} from "./abstract/bridge/ChainManager.sol";
-
 
 contract ERC20TokenBridge is PacketManager, 
     IncomingPacketManagerImpl, 
@@ -28,35 +28,68 @@ contract ERC20TokenBridge is PacketManager,
     // chainId => sequence => Packet
     mapping(uint256 => mapping(uint256 => bytes32)) public incomingPackets;
     mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
-    mapping(uint256 => mapping(uint256 => OutPacket)) public outgoingPackets;
+    mapping(uint256 => mapping(uint256 => PacketLibrary.OutPacket)) public outgoingPackets;
+    uint public num;
 
     function isRegisteredTokenService(address tokenService) public view override(BridgeTokenServiceManager, ConsumedPacketManagerImpl) returns(bool) {
         return tokenServices[tokenService];
     }
     
-    function _preValidateInPacket(InPacket memory packet) internal view override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
+    function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
         // require(isSupportedChain(packet.source.chainId), "Unknown chainId");
         super._preValidateInPacket(packet);
     }
 
-    function _updateInPacketState(InPacket memory packet, uint256 action) internal override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
+    function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
         super._updateInPacketState(packet, action);
     }
     
     function initialize(
-        uint256 _chainId,
         address _owner
-    ) external initializer {
+    ) external initializer{
         owner = _owner;
+
         // addAttestor(msg.sender, 1);
         
         //addChain(2, "target");
-        //addChain(1, "self");
+        // addChain(1, "self");
 
-        self = InNetworkAddress(
-            _chainId, 
-            address(this)
-        );
+        // PacketLibrary.InNetworkAddress(
+        //     _chainId, 
+        //     address(this)
+        // );
+    }
+
+//     function test() external{
+    
+//     PacketLibrary.OutTokenMessage memory message = PacketLibrary.OutTokenMessage(
+//             "destTokenAddress", 
+//             112000000, 
+//             "receiverAddress"
+//         );
+//         PacketLibrary.InNetworkAddress memory self = PacketLibrary.InNetworkAddress(
+//             1, 
+//             address(this)
+//         );
+//         PacketLibrary.OutNetworkAddress memory target = PacketLibrary.OutNetworkAddress(
+//             2,
+//             "target"
+//         );
+
+//         PacketLibrary.OutPacket memory packet ;
+//         packet.version = 1;
+//         packet.sequence = 13;
+//         packet.source = self;
+//         packet.destination = target;
+//         packet.message = message;
+//         packet.height = block.number; 
+//         _setOutgoingPacket(packet);
+//         emit PacketDispatched(packet);
+   
+// }
+
+    function doubleNum() external {
+        num *=2;
     }
 
     function _authorizeUpgrade(address) internal view override {
@@ -89,7 +122,7 @@ contract ERC20TokenBridge is PacketManager,
         consumedPackets[_chainId][_sequence] = packetHash;
     }
 
-    function _setOutgoingPacket(OutPacket memory packet) internal override {
+    function _setOutgoingPacket(PacketLibrary.OutPacket memory packet) internal override {
         outgoingPackets[packet.destination.chainId][packet.sequence] = packet;
     }
 

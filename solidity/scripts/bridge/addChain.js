@@ -2,7 +2,7 @@ import { ethers, Wallet } from "ethers";
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {implementationABI} from "../ABI/ABI.js";
+import {TokenBridgeImplementationABI} from "../ABI/ABI.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -13,7 +13,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 
 // const safeAddress = process.env.SAFE_ADDRESS;
 
-async function crossContractInteracton(safeAddress, senderAddress, signer) {
+async function addChain(safeAddress, senderAddress, signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -25,9 +25,9 @@ async function crossContractInteracton(safeAddress, senderAddress, signer) {
   });
 
   const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
-  const abi = implementationABI;
+  const abi = TokenBridgeImplementationABI;
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("addChain", ["5", "abchello"]);
+  const calldata = iface.encodeFunctionData("addChain", [54, "ibrizhello123"]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -58,7 +58,7 @@ async function crossContractInteracton(safeAddress, senderAddress, signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-crossContractInteracton(
+addChain(
   process.env.SAFE_ADDRESS,
   process.env.SENDER_ADDRESS,
   new Wallet(process.env.secret_key1, provider)
