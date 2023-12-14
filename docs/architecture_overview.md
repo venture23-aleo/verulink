@@ -84,7 +84,8 @@ It is the message created by a token contract to transfer or withdraw assets.
 pub struct TokenMessage {
     pub denom: String,
     pub amount: u128,
-    pub receiver_address:String,
+    pub receiver_address: String,
+    pub sender_address: String
 }
 
 ```
@@ -94,6 +95,8 @@ pub struct TokenMessage {
 | Denom            | The field represents the address/id of token we are dealing with like “USDT” or “wUSDT” |
 | Amount           | The amount of fungibles to be transferred.                                        |
 | Receiver Address | Address of the receiver on the target chain.                                      |
+| Sender Address   | Address of the sender on the source chain.                                        |
+
 
 
 
