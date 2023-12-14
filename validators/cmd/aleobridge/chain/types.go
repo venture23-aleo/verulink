@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"time"
 )
 
 type ChainEvent struct {
@@ -42,6 +43,8 @@ type IReceiver interface {
 	GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*Packet, error)
 	// Returns current height of chain
 	CurHeight() uint64
+	// Return average duration to generate a block by blockchain
+	GetBlockGenTime() time.Duration
 }
 
 type NetworkAddress struct {
