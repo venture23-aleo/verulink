@@ -22,3 +22,19 @@ func getKeyByteForKeyConstraint[T keyConstraint](key T) (k []byte) {
 	}
 	return
 }
+
+func convertKey[T keyConstraint](returnType T, key []byte) T {
+	var i any = returnType
+	var v any
+	switch i.(type) {
+	case *int64:
+		v = int64(binary.BigEndian.Uint64(key))
+	case *uint64:
+		v = binary.BigEndian.Uint64(key)
+	case *string:
+		v = string(key)
+	case *[]byte:
+		v = key
+	}
+	return v.(T)
+}
