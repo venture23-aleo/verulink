@@ -2,7 +2,7 @@ import { ethers, Wallet } from "ethers";
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {implementationABI} from "../ABI/ABI.js";
+import {TokenBridgeImplementationABI} from "../ABI/ABI.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -25,7 +25,7 @@ async function addTokenService(safeAddress, senderAddress, signer) {
   });
 
 const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
-const abi = implementationABI;
+const abi = TokenBridgeImplementationABI;
   const iface = new ethers.utils.Interface(abi);
   const calldata = iface.encodeFunctionData("addTokenService", ["0x914d6560FF059Faa153201CBE73C95b6660085F1"]);
   const safeSdk = await Safe.default.create({
