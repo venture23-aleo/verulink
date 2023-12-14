@@ -60,6 +60,7 @@ func (r *relay) Init(ctx context.Context) {
 		r.initliazed = true
 		r.createNamespaces()
 		r.setBaseSeqNum()
+		r.nextSeqNum = r.bSeqNum + 1
 	}
 
 	/**********Not required now***********************/
