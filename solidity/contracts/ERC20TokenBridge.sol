@@ -29,7 +29,6 @@ contract ERC20TokenBridge is PacketManager,
     mapping(uint256 => mapping(uint256 => bytes32)) public incomingPackets;
     mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
     mapping(uint256 => mapping(uint256 => PacketLibrary.OutPacket)) public outgoingPackets;
-    uint public num;
 
     function isRegisteredTokenService(address tokenService) public view override(BridgeTokenServiceManager, ConsumedPacketManagerImpl) returns(bool) {
         return tokenServices[tokenService];
@@ -87,10 +86,6 @@ contract ERC20TokenBridge is PacketManager,
 //         emit PacketDispatched(packet);
    
 // }
-
-    function doubleNum() external {
-        num *=2;
-    }
 
     function _authorizeUpgrade(address) internal view override {
         require(msg.sender == owner);
