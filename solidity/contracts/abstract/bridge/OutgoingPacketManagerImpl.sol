@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {PacketManager} from "./PacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
-abstract contract OutgoingPacketManagerImpl is PacketManager {
+abstract contract OutgoingPacketManagerImpl  {
     
     event PacketDispatched(PacketLibrary.OutPacket packet);
 
-    function _beforeTokenBridge(uint256 destChainId) internal virtual {}
-    function _afterTokenBridge(PacketLibrary.OutPacket memory packet) internal virtual {}
+    function _setOutgoingPacket(PacketLibrary.OutPacket memory packet) internal virtual {}
 
+    // chainId => sequence => Packet
+    mapping(uint256 => mapping(uint256 => PacketLibrary.OutPacket)) public outgoingPackets;
     // chainId => sequence number
     mapping(uint256 => uint256) public sequences;
 
@@ -19,14 +19,11 @@ abstract contract OutgoingPacketManagerImpl is PacketManager {
         return sequences[_chainId];
     }
 
-    function sendMessage(PacketLibrary.OutPacket memory packet) external {
-        _beforeTokenBridge(packet.destTokenService.chainId);
-
+    function sendMessage(PacketLibrary.OutPacket memory packet) public virtual {
         packet.version = 1;
         packet.sequence = _incrementSequence(packet.destTokenService.chainId);
 
-        _setOutgoingPacket(packet);
+        outgoingPackets[packet.destTokenService.chainId][packet.sequence] = packet;
         emit PacketDispatched(packet);
-        _afterTokenBridge(packet);
     }    
 }

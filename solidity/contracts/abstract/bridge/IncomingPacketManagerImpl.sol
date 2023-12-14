@@ -14,10 +14,26 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     // chainId => sequence => attestor address => bool
     // mapping(uint256 => mapping(uint256 => mapping(address => bool))) private voted;
 
+    mapping(uint256 => mapping(uint256 => bytes32)) public incomingPackets;
+
     // packetHash => vote count
     mapping(bytes32 => uint256) votes;
     // packetHash => attestor address => bool
     mapping(bytes32 => mapping(address => bool)) voted;
+
+    function _getQuorumRequired() internal view virtual returns (uint256);
+
+    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override {
+        delete incomingPackets[_chainId][_sequence];
+    }
+
+    function getIncomingPacketHash(uint256 _chainId, uint256 _sequence) public view override returns (bytes32 packetHash) {
+        return incomingPackets[_chainId][_sequence];
+    }
+
+    function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override returns (bool) {
+        return incomingPackets[_chainId][_sequence] != bytes32(0);
+    }
 
     function _receivePacket(PacketLibrary.InPacket memory packet) internal {
         _preValidateInPacket(packet);
@@ -25,13 +41,11 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         _postValidateInPacket(packet);
     }
     
-    function receivePacket(PacketLibrary.InPacket memory packet) external {
-        _validateConfig();
+    function receivePacket(PacketLibrary.InPacket memory packet) public virtual {
         _receivePacket(packet);
     }
 
-    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) external {
-        _validateConfig();
+    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public virtual {
         for(uint256 i=0;i<packets.length;i++) {
             _receivePacket(packets[i]);
         }
@@ -66,7 +80,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         super._updateInPacketState(packet, action);
         
         if(action != 1) return; // 2 to represent consume operation, 1 to receive operation
-       if(incomingPacketExists(packet.sourceTokenService.chainId, packet.sequence)) return;
+        if(incomingPacketExists(packet.sourceTokenService.chainId, packet.sequence)) return;
         
         
         bytes32 packetHash = _hash(packet);
@@ -83,7 +97,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
 
         if(!hasQuorumReached(packetHash)) return;
 
-        _setIncomingPacket(packet.sourceTokenService.chainId, packet.sequence, packetHash);
+        incomingPackets[packet.sourceTokenService.chainId][packet.sequence] = packetHash;
         emit PacketArrived(packet);
     }
 

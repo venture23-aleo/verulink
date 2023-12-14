@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
-import {PacketManager} from "./PacketManager.sol";
+
 import "../../common/libraries/Lib.sol";
 
-abstract contract IncomingPacketManager is PacketManager {
+abstract contract IncomingPacketManager  {
 
     function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view virtual {}
     function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal virtual {}
     function _postValidateInPacket(PacketLibrary.InPacket memory packet) internal view virtual {}
+    
+    function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view virtual returns (bool);
+    function getIncomingPacketHash(uint256 chainId, uint256 sequence) public view virtual returns (bytes32 packetHash);
+    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal virtual;
 
     function _hash(PacketLibrary.InPacket memory packet) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(

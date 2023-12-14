@@ -16,16 +16,16 @@ abstract contract AttestorManager is Ownable{
 
     function addAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
         require(attestor != address(0), "Zero Address");
+        require(!attestors[attestor], "Attestor already exists");
         attestors[attestor] = true;
         quorumRequired = newQuorumRequired;
         emit AttestorAdded(attestor, newQuorumRequired);
     }
 
     function removeAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
-        if(isAttestor(attestor)) {
-            delete attestors[attestor];
-            quorumRequired = newQuorumRequired;
-            emit AttestorRemoved(attestor, newQuorumRequired);
-        }
+        require(attestors[attestor], "Unknown Attestor");
+        delete attestors[attestor];
+        quorumRequired = newQuorumRequired;
+        emit AttestorRemoved(attestor, newQuorumRequired);
     }
 }
