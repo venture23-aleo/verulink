@@ -77,19 +77,37 @@ func get(bucket string, key []byte) (value []byte) {
 	return
 }
 
-func exitsInGivenBuckets(bkts []string, key []byte) (exist bool) {
+func getFirstKey(bucket string) []byte {
+	var key []byte
 	db.View(func(tx *bbolt.Tx) error {
-		for _, b := range bkts {
-			bkt := tx.Bucket([]byte(b))
-			if bkt == nil {
-				continue
-			}
+		bkt := tx.Bucket([]byte(bucket))
+		if bkt == nil {
+			return nil
+		}
+		c := bkt.Cursor()
+		k, _ := c.First()
+		if k == nil {
+			return nil
+		}
 
-			value := bkt.Get(key)
-			if value != nil {
-				exist = true
-				break
-			}
+		key = make([]byte, len(k))
+		copy(key, k)
+		return nil
+	})
+
+	return key
+}
+
+func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
+	db.View(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bktName))
+		if bkt == nil {
+			return nil
+		}
+
+		value := bkt.Get(key)
+		if value != nil {
+			exist = true
 		}
 		return nil
 	})
