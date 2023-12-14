@@ -2,6 +2,7 @@ package aleo
 
 import (
 	"context"
+	"time"
 
 	aleoRpc "github.com/parajuliswopnil/aleo-go-sdk/rpc"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -16,6 +17,7 @@ type Client struct {
 	aleoClient        *aleoRpc.Client
 	finalizeHeight    uint64
 	chainID           uint32
+	blockGenTime      time.Duration
 	minRequiredGasFee int
 	chainCfg          *relay.ChainConfig
 }
@@ -48,6 +50,10 @@ func (cl *Client) CurHeight() uint64 {
 
 func (cl *Client) GetFinalityHeight() uint64 {
 	return cl.finalizeHeight
+}
+
+func (cl *Client) GetBlockGenTime() time.Duration {
+	return cl.blockGenTime
 }
 
 func (cl *Client) GetDestChains() ([]string, error) {

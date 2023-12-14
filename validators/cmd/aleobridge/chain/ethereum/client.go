@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -12,6 +13,7 @@ type Client struct {
 	eth               *ethclient.Client
 	minRequiredGasFee int
 	finalizeHeight    uint64
+	blockGenTime      time.Duration
 	chainID           uint32
 	chainCfg          *relay.ChainConfig
 }
@@ -44,6 +46,10 @@ func (cl *Client) CurHeight() uint64 {
 
 func (cl *Client) GetFinalityHeight() uint64 {
 	return cl.finalizeHeight
+}
+
+func (cl *Client) GetBlockGenTime() time.Duration {
+	return cl.blockGenTime
 }
 
 func (cl *Client) GetDestChains() ([]string, error) {
