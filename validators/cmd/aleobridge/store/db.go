@@ -116,9 +116,31 @@ func RemoveKey[T keyConstraint](namespace string, key T, batch bool) error {
 	return delete(namespace, k)
 }
 
-func IsLocallyStored[T keyConstraint](namespaces []string, key T) bool {
+func GetFirstKey[T keyConstraint](namespace string, keyType T) T {
+	key := getFirstKey(namespace)
+	if key == nil {
+		return keyType
+	}
+	return convertKey(keyType, key)
+}
+
+func GetPacket[T keyConstraint](namespace string, key T) *chain.Packet {
 	k := getKeyByteForKeyConstraint(key)
-	return exitsInGivenBuckets(namespaces, k)
+	v := get(namespace, k)
+	if v == nil {
+		return nil
+	}
+	pkt := new(chain.Packet)
+	if err := json.Unmarshal(v, pkt); err != nil {
+		//log error
+		return nil
+	}
+	return pkt
+}
+
+func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
+	k := getKeyByteForKeyConstraint(key)
+	return exitsInGivenBucket(namespace, k)
 }
 
 func RetrieveNRetryPackets(namespace string, n int) chan *chain.Packet {

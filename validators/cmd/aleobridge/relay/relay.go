@@ -51,45 +51,29 @@ type relay struct {
 	bSeqNum                uint64
 	mu                     sync.Mutex
 	initliazed             bool
-	panicRecovered         chan struct{}
-	/*
-		other fields if required
-	*/
-
 }
 
 func (r *relay) Init(ctx context.Context) {
-	if r.initliazed { //todo: might need to consider using sync.Once
-		return
-		//Reminder: context has changed. Take care of it.
-	}
-
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.initliazed {
+		r.initliazed = true
+		r.createNamespaces()
+		r.setBaseSeqNum()
+	}
 
-	/* todo:
-	1. Check base sequence number in source contracts // think about Sabin dai's concern
-	2. Check sequence number from database.
-	3. Consider max(baseSeqNum, dbSeqNum)
-	4. Start getting packets from contracts
-	5. Relay the packets
-	*/
-
-	//panic if any error
-	r.initliazed = true
-	r.panicRecovered = make(chan struct{}) // shall need bufferred channel equal to the number of goroutines that handles panic for panic context
-
-	go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
-	go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
+	/**********Not required now***********************/
+	// go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
+	// go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
 
 	go r.startReceiving(ctx)
 	go r.startSending(ctx)
 
 	go r.pruneDB(ctx)
+	go r.retryLeftOutPackets(ctx)
+	go r.pruneBaseSeqNum(ctx)
 
-	// todo: add appropriate waiters here or where Init is being called
-	// seems reasonable to use ctx.Done() call here and check if cancel error is due to panic
-	// and if so, uninitialize relay i.e. r.initialiazed = false
+	<-ctx.Done()
 }
 
 func (r *relay) createNamespaces() (err error) {
@@ -107,22 +91,14 @@ func (r *relay) createNamespaces() (err error) {
 	return store.CreateNamespace(r.baseSeqNumNameSpace)
 }
 
-func (r *relay) startReceiving(ctx context.Context) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (r *relay) setBaseSeqNum() {
+	r.bSeqNum = store.GetFirstKey(r.baseSeqNumNameSpace, uint64(0))
+}
 
+func (r *relay) startReceiving(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			ctxErr := ctx.Err()
-			_ = ctxErr
-			/*
-				if ctxErr == PanicErr{
-					1. handle panic for startReceiving, basically packet states
-					2. Notify r.panicRecovered or some other field
-
-				}
-			*/
 			return
 		default:
 		}
@@ -132,34 +108,26 @@ func (r *relay) startReceiving(ctx context.Context) {
 
 		}
 
-		if pkt.Height+r.srcChain.GetFinalityHeight() >= r.srcChain.CurHeight() {
-			// todo: wait according to difference between curHeight and packet height
+		curSrcHeight := r.srcChain.CurHeight()
+		if pkt.Height+r.srcChain.GetFinalityHeight() >= curSrcHeight {
+			heightDiff := curSrcHeight - pkt.Height
+			waitTime := r.srcChain.GetBlockGenTime() * time.Duration(heightDiff)
+			time.Sleep(waitTime)
 			continue
 		}
 
 		r.pktCh <- pkt
 		r.nextSeqNum++
-
 	}
-
 }
 
-// should not be run in multiple goroutine because timestamp is made key for storing packet
-// and multiple goroutine can cause loosing packet
 func (r *relay) startSending(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			ctxErr := ctx.Err()
 			_ = ctxErr
-			/*
-				if ctxErr == PanicErr{
-					1. handle panic for startSending
-					2. Notify r.panicRecovered or some other field
-
-				}
-			*/
-			//
+			return
 		default:
 		}
 
@@ -172,15 +140,11 @@ func (r *relay) startSending(ctx context.Context) {
 				r.pollBalance(ctx)
 				go func() { r.pktCh <- pkt }() // immediately send it to the channel
 				continue
-				/*
-					case 2:
-					case 3:
-				*/
-
 			}
-			// todo: send to retry loop and handle according to error
-			// store packet to retry later
 			err = store.StoreRetryPacket(r.retryPktNameSpace, pkt)
+			if err != nil {
+				// log error
+			}
 		}
 
 		txnPkt := &chain.TxnPacket{
@@ -191,10 +155,6 @@ func (r *relay) startSending(ctx context.Context) {
 		if err != nil {
 			//
 		}
-		// run a function that prunes db by checking if txn is finalized.
-		// if we can decide that txn is not going to finalize then we can resend packet to r.pktCh
-		//
-
 	}
 }
 
@@ -275,10 +235,12 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 
 		curSeqNum := r.nextSeqNum - 1
 		for seqNum := r.bSeqNum + 1; seqNum < curSeqNum; seqNum++ {
-			if store.IsLocallyStored(
-				[]string{r.transactedPktNameSpace, r.retryPktNameSpace},
-				seqNum,
-			) {
+			pkt := store.GetPacket[uint64](r.retryPktNameSpace, seqNum)
+			if pkt != nil {
+				r.pktCh <- pkt
+				continue
+			}
+			if store.ExistInGivenNamespace(r.transactedPktNameSpace, seqNum) {
 				continue
 			}
 
@@ -289,7 +251,9 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 			//Now get from blockchain and feed to the system
 			pkt, err := r.srcChain.GetPktWithSeq(ctx, seqNum)
 			if err != nil {
-				//todo: packet might have been pruned
+				//todo: packet might have been pruned in source chain
+				// and if it is pruned then r.bSeqNum can be updated to seqNum
+				// further handling is not required because r.bSeqNum won't be updated with missing in-between-packets
 				continue
 			}
 
