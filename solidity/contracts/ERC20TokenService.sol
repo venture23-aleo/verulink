@@ -14,13 +14,8 @@ contract ERC20TokenService is BlackListService,
     Upgradeable 
 {
     address erc20Bridge;
-    uint public num;
     Holding holding;
     PacketLibrary.InNetworkAddress public self;
-        
-    function doubleNum() external {
-        num *=2;
-    }
 
     function initialize(address bridge, 
         uint256 _chainId, 
