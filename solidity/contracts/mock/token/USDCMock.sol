@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract USDCMock is IERC20, ERC20 {
+contract USDCMock is ERC20 {
 
     mapping(address => bool) blackLists;
 
