@@ -40,12 +40,6 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 	return put(namespace, key, value)
 }
 
-func StoreBaseSeqNum(namespace string, seqNum uint64) error {
-	key := make([]byte, 8)
-	binary.BigEndian.PutUint64(key, seqNum)
-	return batchPut(namespace, key, nil)
-}
-
 func RemoveTxnKeyAndStoreBaseSeqNum(
 	txnNamespace string, txnKeys [][]byte,
 	seqNumNamespace string, seqNums []uint64,
