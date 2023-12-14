@@ -13,12 +13,14 @@ library PacketLibrary {
     }
 
     struct OutTokenMessage {
+        address senderAddress;
         string destTokenAddress;
         uint256 amount;
         string receiverAddress;
     }
 
     struct InTokenMessage {
+        address senderAddress;
         address destTokenAddress;
         uint256 amount;
         address receiverAddress;
