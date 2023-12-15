@@ -24,10 +24,11 @@ async function addTokenService(safeAddress, senderAddress, signer) {
     ethAdapter,
   });
 
+const tokenService = "0x914d6560FF059Faa153201CBE73C95b6660085F1";
 const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
 const abi = TokenBridgeImplementationABI;
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("addTokenService", ["0x914d6560FF059Faa153201CBE73C95b6660085F1"]);
+  const calldata = iface.encodeFunctionData("addTokenService", [tokenService]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,

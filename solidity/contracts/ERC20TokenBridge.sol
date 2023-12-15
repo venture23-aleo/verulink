@@ -33,9 +33,9 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
     
     function initialize(
         address _owner
-    ) external initializer{
+    ) external {
         owner = _owner;
-
+        
         // addAttestor(msg.sender, 1);
         
         //addChain(2, "target");
@@ -47,7 +47,7 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
         // );
     }
 
-//     function test() external{
+    //     function test() external{
     
 //     PacketLibrary.OutTokenMessage memory message = PacketLibrary.OutTokenMessage(
 //             "destTokenAddress", 
@@ -90,7 +90,7 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
 
     function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public override {
         super.receivePacketBatch(packets);
-       require(isAttestor(msg.sender), "Unknown Attestor");
+    require(isAttestor(msg.sender), "Unknown Attestor");
     }
 
     function consume(PacketLibrary.InPacket memory packet) public override {

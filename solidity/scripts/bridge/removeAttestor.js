@@ -22,10 +22,12 @@ async function addAttestor(safeAddress, senderAddress, signer) {
     ethAdapter,
   });
 
+const attestor = "0x914d6560FF059Faa153201CBE73C95b6660085F1";
+const newQuorumRequired = 2;
 const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
 const abi = TokenBridgeImplementationABI;
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("removeAttestor", ["0x914d6560FF059Faa153201CBE73C95b6660085F1", "2"]);
+  const calldata = iface.encodeFunctionData("removeAttestor", [attestor, newQuorumRequired]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,

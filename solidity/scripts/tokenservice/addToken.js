@@ -24,10 +24,18 @@ async function addToken(safeAddress, senderAddress, signer) {
     ethAdapter,
   });
 
-const tokenServiceProxyAddress = process.env.tokenServiceProxyAddress;
-const abi = tokenServiceImplementationABI;
+  const tokenAddress = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557"; 
+  const destChainId = 5; 
+  const destTokenAddress = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
+  const destTokenService = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
+  const min = 10;
+  const max = 15;
+
+  const tokenServiceProxyAddress = process.env.tokenServiceProxyAddress;
+  const abi = tokenServiceImplementationABI;
+  
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("addToken", ["0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557", "5", "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557", "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557", "10", "15"]);
+  const calldata = iface.encodeFunctionData("addToken", [tokenAddress, destChainId, destTokenAddress, destTokenService, min, max]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,

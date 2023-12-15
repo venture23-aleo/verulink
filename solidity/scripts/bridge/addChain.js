@@ -24,10 +24,13 @@ async function addChain(safeAddress, senderAddress, signer) {
     ethAdapter,
   });
 
+  const chainId = 54;
+  const destBridgeAddress = "ibrizhello123";
+  
   const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
   const abi = TokenBridgeImplementationABI;
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("addChain", [54, "ibrizhello123"]);
+  const calldata = iface.encodeFunctionData("addChain", [chainId, destBridgeAddress]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,

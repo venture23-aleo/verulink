@@ -24,10 +24,11 @@ async function addChain(safeAddress, senderAddress, signer) {
     ethAdapter,
   });
 
+  const chainId = 54;
   const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
   const abi = TokenBridgeImplementationABI;
   const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("removeChain", [54]);
+  const calldata = iface.encodeFunctionData("removeChain", [chainId]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
