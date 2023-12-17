@@ -137,23 +137,6 @@ func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 	return exitsInGivenBucket(namespace, k)
 }
 
-func RetrieveNRetryPackets(namespace string, n int) chan *chain.Packet {
-	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
-	ch := make(chan *chain.Packet)
-	go func() {
-		for kv := range pktCh {
-			key := kv[0]
-			value := kv[1]
-			pkt := new(chain.Packet)
-			pkt.TSByte = key
-			json.Unmarshal(value, pkt)
-			ch <- pkt
-		}
-		close(ch)
-	}()
-	return ch
-}
-
 func StoreTransactedPacket(namespace string, txnPkt *chain.TxnPacket) error {
 	data, err := json.Marshal(txnPkt)
 	if err != nil {

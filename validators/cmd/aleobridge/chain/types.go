@@ -17,10 +17,10 @@ type ICommon interface {
 type ISender interface {
 	ICommon
 	// TODO: optimization might be achieved if packets can be sent in single txn
+	// if the error is insufficient balance error, its better to send balance
+	// at which this error occurred so that balance polling can be done precisely
 	SendPacket(ctx context.Context, packet *Packet) (txnHash string, err error)
 
-	// seems not required
-	// GetLatestHeight(ctx context.Context) (uint64, error)
 	IsTxnFinalized(ctx context.Context, txnHash string) (bool, error)
 
 	// GetMinReqBalForMakingTxn returns minimum balance required to make a transaction.
@@ -53,10 +53,6 @@ type NetworkAddress struct {
 }
 
 type Packet struct {
-	// Ts is timestamp as byte which is used as key to store in key-value db.
-	// It is assigned by Storing function and will be populated in struct when retrieving from the db
-	TSByte []byte `json:"-"`
-	//
 	Version     uint64
 	Destination NetworkAddress
 	Source      NetworkAddress
