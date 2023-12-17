@@ -2,12 +2,16 @@ package relay
 
 import "context"
 
-type notification string
+type notfType int
 
 const (
-	insufficientBalance notification = "insufficient balance"
+	insufficientBalance notfType = iota
 )
 
-func (r *relay) notifyDelegator(ctx context.Context) {
-
+func (r *relay) notifyDelegator(ctx context.Context, nType notfType) error {
+	switch nType {
+	case insufficientBalance:
+		//
+	}
+	return nil
 }
