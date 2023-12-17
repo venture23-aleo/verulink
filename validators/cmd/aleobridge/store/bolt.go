@@ -14,7 +14,6 @@ var (
 func initDB(path string) error {
 	var err error
 	mu = sync.RWMutex{}
-	// todo: consider large mmap size while initializing boltdb
 	db, err = bbolt.Open(path, 0655, nil)
 	if err != nil {
 		return err
