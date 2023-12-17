@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
@@ -48,11 +49,11 @@ func main() {
 		fmt.Printf("Config validation failed. Error: %s\n", err.Error())
 		os.Exit(1)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	/*
-		trap any kill signal and cancel process gracefully
-	*/
-	defer cancel()
+
+	signal.Ignore(getIgnoreSignals()...)
+	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
+	defer stop()
 
 	multirelayer := relay.MultiRelay(ctx, cfg)
 	multirelayer.StartMultiRelay(ctx)
