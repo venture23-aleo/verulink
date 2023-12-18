@@ -7,7 +7,7 @@ module.exports = {
   networks: {
     goerli: {
       url: "https://eth-goerli.g.alchemy.com/v2/fLCeKO4GA9Gc3js8MUt9Djy7WHCFxATq",
-      accounts: [process.env.secret_key1]
+      accounts: [process.env.SECRET_KEY1]
     }
   }
 };
