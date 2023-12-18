@@ -20,7 +20,7 @@ const usdcAddress = "0x13ab54435913454568ee88021E39e8F029159f46";
 const usdtAddress = "0x694791a385243e222C94Fd4dd37568895Fcb7096";
 const ownerAddress = "0xA945a14FEdd138B52178C1B6dD83AC6c24474718";
 
-const tokenserviceimplementationAddress = process.env.tokenserviceimplementationAddress;
+const tokenserviceimplementationAddress = process.env.TOKENSERVICEIMPLEMENTATION_ADDRESS;
 const initializeData = new ethers.utils.Interface(tokenServiceImplementationABI).encodeFunctionData("initialize", [bridgeAddress, chainId, usdcAddress, usdtAddress, ownerAddress]);
 const _data  = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenserviceimplementationAddress, initializeData]);
 

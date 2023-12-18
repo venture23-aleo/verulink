@@ -25,7 +25,7 @@ async function addToken(safeAddress, senderAddress, signer) {
   });
 
   const accountTobeRemovedFromBlackListed = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
-  const tokenServiceProxyAddress = process.env.tokenServiceProxyAddress;
+  const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const abi = tokenServiceImplementationABI;
   const iface = new ethers.utils.Interface(abi);
   const calldata = iface.encodeFunctionData("removeFromBlackList", [accountTobeRemovedFromBlackListed]);
@@ -62,5 +62,5 @@ async function addToken(safeAddress, senderAddress, signer) {
 addToken(
   process.env.SAFE_ADDRESS,
   process.env.SENDER_ADDRESS,
-  new Wallet(process.env.secret_key1, provider)
+  new Wallet(process.env.SECRET_KEY1, provider)
 );

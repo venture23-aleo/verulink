@@ -11,10 +11,10 @@ const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(
     "https://eth-goerli.g.alchemy.com/v2/fLCeKO4GA9Gc3js8MUt9Djy7WHCFxATq"
 );
-const deployerSigner = new ethers.Wallet(process.env.secret_key1, provider);
+const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 
-const tokenbridgenewImplementationAddress = process.env.tokenbridgenewImplementationAddress;
-const tokenbridgeProxyAddress = process.env.tokenbridgeProxyAddress;
+const tokenbridgenewImplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
+const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
 
 // Encode deployment
 const deployerInterface = new ethers.utils.Interface(TokenBridgeImplementationABI);

@@ -11,6 +11,7 @@ async function main() {
     
     const Wallet = new ethers.Wallet(process.env.secret_key1, provider);
     const ContractInstance = new ethers.ContractFactory(MockUSDT, bytecode, Wallet);
+    console.log("Deploying MockUSDT...");
     const contractInstance = await ContractInstance.deploy();
     await contractInstance.deployed();
     console.log("MockUSDT Deployed to - ", contractInstance.address);
