@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import {Ownable} from "../../common/Ownable.sol";
-// import {PacketManager} from "./PacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
 abstract contract ChainManager is Ownable {
@@ -11,6 +10,12 @@ abstract contract ChainManager is Ownable {
     event ChainRemoved(uint256 chainId);
 
     mapping(uint256 => PacketLibrary.OutNetworkAddress) public chains;
+
+    function initialize(
+        address _owner
+    ) public virtual override {
+        super.initialize(_owner);
+    }
 
     function isSupportedChain(uint256 chainId) public view returns (bool) {
         return chains[chainId].chainId != 0;

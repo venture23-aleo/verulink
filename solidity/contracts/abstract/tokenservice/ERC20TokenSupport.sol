@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Ownable} from "../../common/Ownable.sol";
 import "../../common/libraries/Lib.sol";
-import {IERC20TokenBridge} from "../../common/interface/bridge/IERC20TokenBridge.sol";
 
 abstract contract ERC20TokenSupport is Ownable {
 
@@ -19,6 +18,12 @@ abstract contract ERC20TokenSupport is Ownable {
     mapping(address => Token) public supportedTokens;
 
     event TokenAdded(Token token);
+
+    function initialize(
+        address _owner
+    ) public virtual override {
+        super.initialize(_owner);
+    }
 
     function isSupportedToken(address token) public view returns (bool) {
         return supportedTokens[token].tokenAddress == token;

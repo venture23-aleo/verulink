@@ -4,9 +4,8 @@ pragma solidity ^0.8.19;
 import {Ownable} from "./common/Ownable.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
-contract Holding is Ownable, Upgradeable, Initializable {
+contract Holding is Ownable, Upgradeable {
     // user address => token address => amount
     mapping(address => mapping(address => uint256)) locked;
 
@@ -14,9 +13,9 @@ contract Holding is Ownable, Upgradeable, Initializable {
 
     address public tokenService;
 
-    function initialize(address _owner, address _tokenService) external initializer {
-        owner = _owner;
+    function initialize(address _owner, address _tokenService) public {
         tokenService = _tokenService;
+        Ownable.initialize(_owner);
     }
 
     function _authorizeUpgrade(address) internal view override {

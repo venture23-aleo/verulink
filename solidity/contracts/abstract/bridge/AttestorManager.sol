@@ -10,6 +10,12 @@ abstract contract AttestorManager is Ownable{
     mapping(address => bool) private attestors;
     uint256 quorumRequired;
 
+    function initialize(
+        address _owner
+    ) public virtual override {
+        super.initialize(_owner);
+    }
+
     function isAttestor(address attestor) public view returns (bool) {
         return attestors[attestor];
     }

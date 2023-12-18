@@ -8,8 +8,9 @@ import {IERC20TokenBridge} from "./common/interface/bridge/IERC20TokenBridge.sol
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import {Holding} from "./HoldingContract.sol";
 import "./common/libraries/Lib.sol";
+import {Ownable} from "./common/Ownable.sol";
 
-contract ERC20TokenService is BlackListService, 
+contract ERC20TokenService is Ownable, BlackListService, 
     ERC20TokenSupport, 
     Upgradeable 
 {
@@ -22,14 +23,17 @@ contract ERC20TokenService is BlackListService,
         address _usdc, 
         address _usdt,
         address _owner
-    ) external initializer {
-        owner = _owner;
+    ) public {
         erc20Bridge = bridge;
         self = PacketLibrary.InNetworkAddress(
             _chainId, 
             address(this)
         );
-        BlackListService.initialize(_usdc, _usdt);
+        BlackListService.initialize(_owner, _usdc, _usdt);
+    }
+
+    function initialize(address _owner) public override (Ownable, BlackListService, ERC20TokenSupport) {
+        super.initialize(_owner);
     }
 
     function _authorizeUpgrade(address) internal view override {

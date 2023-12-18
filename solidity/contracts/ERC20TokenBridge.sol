@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import "./common/libraries/Lib.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
 import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "./abstract/bridge/OutgoingPacketManagerImpl.sol";
@@ -19,8 +18,7 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
     AttestorManager,
     BridgeTokenServiceManager,
     ChainManager,
-    Upgradeable,
-    Initializable
+    Upgradeable
 {
     function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
         // require(isSupportedChain(packet.source.chainId), "Unknown chainId");
@@ -33,18 +31,8 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
     
     function initialize(
         address _owner
-    ) external {
-        owner = _owner;
-        
-        // addAttestor(msg.sender, 1);
-        
-        //addChain(2, "target");
-        // addChain(1, "self");
-
-        // PacketLibrary.InNetworkAddress(
-        //     _chainId, 
-        //     address(this)
-        // );
+    ) public override (Ownable, AttestorManager, BridgeTokenServiceManager, ChainManager) {
+        super.initialize(_owner);        
     }
 
     //     function test() external{

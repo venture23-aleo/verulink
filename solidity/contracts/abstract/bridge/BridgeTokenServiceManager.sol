@@ -8,6 +8,12 @@ abstract contract BridgeTokenServiceManager is Ownable {
 
     mapping(address => bool) internal tokenServices;
 
+    function initialize(
+        address _owner
+    ) public virtual override {
+        super.initialize(_owner);
+    }
+
     function isRegisteredTokenService(address tokenService) public view returns(bool) {
         return tokenServices[tokenService];
     }

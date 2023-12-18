@@ -3,9 +3,8 @@ pragma solidity ^0.8.19;
 
 import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
 import {Ownable} from "../../common/Ownable.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
-abstract contract BlackListService is Ownable, Initializable {
+abstract contract BlackListService is Ownable {
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
@@ -23,9 +22,16 @@ abstract contract BlackListService is Ownable, Initializable {
     */
     address internal usdt;
 
-    function initialize(address _usdc, address _usdt) internal initializer {
+    function initialize(address _owner, address _usdc, address _usdt) public {
         usdc = _usdc;
         usdt = _usdt;
+        initialize(_owner);
+    }
+
+    function initialize(
+        address _owner
+    ) public virtual override {
+        super.initialize(_owner);
     }
 
     function addToBlackList(address account) external onlyOwner {
