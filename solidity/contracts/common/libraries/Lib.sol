@@ -20,7 +20,7 @@ library PacketLibrary {
     }
 
     struct InTokenMessage {
-        address senderAddress;
+        string senderAddress;
         address destTokenAddress;
         uint256 amount;
         address receiverAddress;

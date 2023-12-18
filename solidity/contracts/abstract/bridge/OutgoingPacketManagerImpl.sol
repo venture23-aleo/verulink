@@ -6,9 +6,7 @@ import "../../common/libraries/Lib.sol";
 abstract contract OutgoingPacketManagerImpl  {
     
     event PacketDispatched(PacketLibrary.OutPacket packet);
-
-    function _setOutgoingPacket(PacketLibrary.OutPacket memory packet) internal virtual {}
-
+    
     // chainId => sequence => Packet
     mapping(uint256 => mapping(uint256 => PacketLibrary.OutPacket)) public outgoingPackets;
     // chainId => sequence number
