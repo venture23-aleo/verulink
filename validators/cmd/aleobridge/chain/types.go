@@ -26,9 +26,9 @@ type ISender interface {
 	// GetMinReqBalForMakingTxn returns minimum balance required to make a transaction.
 	// Since size of transaction is fixed, it should return same value which also means
 	// sender can store it in some struct field
-	GetMinReqBalForMakingTxn() int
+	GetMinReqBalForMakingTxn() uint64
 	// GetWalletBalance returns current balance of a wallet and error if encounters any
-	GetWalletBalance(ctx context.Context) (int, error)
+	GetWalletBalance(ctx context.Context) (uint64, error)
 }
 
 type IReceiver interface {

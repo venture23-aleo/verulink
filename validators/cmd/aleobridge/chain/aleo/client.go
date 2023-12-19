@@ -18,7 +18,7 @@ type Client struct {
 	finalizeHeight    uint64
 	chainID           uint32
 	blockGenTime      time.Duration
-	minRequiredGasFee int
+	minRequiredGasFee uint64
 	chainCfg          *relay.ChainConfig
 }
 
@@ -64,11 +64,11 @@ func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) 
 	return nil, nil
 }
 
-func (cl *Client) GetMinReqBalForMakingTxn() int {
+func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
 	return cl.minRequiredGasFee
 }
 
-func (cl *Client) GetWalletBalance(ctx context.Context) (int, error) {
+func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 

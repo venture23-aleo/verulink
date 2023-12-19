@@ -11,7 +11,7 @@ import (
 
 type Client struct {
 	eth               *ethclient.Client
-	minRequiredGasFee int
+	minRequiredGasFee uint64
 	finalizeHeight    uint64
 	blockGenTime      time.Duration
 	chainID           uint32
@@ -60,11 +60,11 @@ func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) 
 	return nil, nil
 }
 
-func (cl *Client) GetMinReqBalForMakingTxn() int {
+func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
 	return cl.minRequiredGasFee
 }
 
-func (cl *Client) GetWalletBalance(ctx context.Context) (int, error) {
+func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 
