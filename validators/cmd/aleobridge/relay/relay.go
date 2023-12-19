@@ -136,9 +136,10 @@ func (r *relay) startSending(ctx context.Context) {
 
 		txnHash, err := r.destChain.SendPacket(ctx, pkt)
 		if err != nil {
+			insufBalErr := chain.InsufficientBalanceErr{}
 			switch {
-			case errors.Is(err, insufficientBalanceErr):
-				r.pollBalance(ctx)
+			case errors.As(err, &insufBalErr):
+				r.pollBalance(ctx, insufBalErr.CurBalance)
 				go func() { r.pktCh <- pkt }() // immediately send it to the channel
 				continue
 			}
