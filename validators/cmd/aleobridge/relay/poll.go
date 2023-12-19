@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (r *relay) pollBalance(ctx context.Context) {
+func (r *relay) pollBalance(ctx context.Context, curBal uint64) {
 	if err := r.notifyDelegator(ctx, insufficientBalance); err != nil {
 		// log error
 	}
@@ -18,15 +18,13 @@ func (r *relay) pollBalance(ctx context.Context) {
 			return
 		case <-ticker.C:
 		}
-		curBal := uint64(100) // todo:
-		_ = curBal
 		balance, err := r.destChain.GetWalletBalance(ctx)
 		if err != nil {
 			// log error
 			continue
 		}
 
-		if balance > r.destChain.GetMinReqBalForMakingTxn() {
+		if balance > curBal && balance > r.destChain.GetMinReqBalForMakingTxn() {
 			break
 		}
 	}
