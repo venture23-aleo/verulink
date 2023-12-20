@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 import {Ownable} from "../../common/Ownable.sol";
 
-abstract contract BridgeTokenServiceManager is Ownable {
+contract BridgeTokenServiceManager is Ownable {
     event TokenServiceAdded(address tokenService);
     event TokenServiceRemoved(address tokenService);
 

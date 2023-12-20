@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Ownable} from "../../common/Ownable.sol";
 
-abstract contract AttestorManager is Ownable{
+contract AttestorManager is Ownable{
     event AttestorAdded(address attestor, uint256 quorum);
     event AttestorRemoved(address attestor, uint256 quorum);
 

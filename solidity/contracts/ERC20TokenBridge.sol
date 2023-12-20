@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import "./common/libraries/Lib.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
+import {IncomingPacketManager} from "./abstract/bridge/IncomingPacketManager.sol";
 import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
 import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "./abstract/bridge/OutgoingPacketManagerImpl.sol";
@@ -11,7 +12,8 @@ import {AttestorManager} from "./abstract/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "./abstract/bridge/BridgeTokenServiceManager.sol";
 import {ChainManager} from "./abstract/bridge/ChainManager.sol";
 
-contract ERC20TokenBridge is IncomingPacketManagerImpl, 
+contract ERC20TokenBridge is IncomingPacketManager,
+IncomingPacketManagerImpl, 
     ConsumedPacketManagerImpl, 
     OutgoingPacketManagerImpl, 
     Ownable,
@@ -20,15 +22,6 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
     ChainManager,
     Upgradeable
 {
-    function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
-        // require(isSupportedChain(packet.source.chainId), "Unknown chainId");
-        super._preValidateInPacket(packet);
-    }
-
-    function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal override (IncomingPacketManagerImpl, ConsumedPacketManagerImpl) {
-        super._updateInPacketState(packet, action);
-    }
-    
     function initialize(
         address _owner
     ) public override (Ownable, AttestorManager, BridgeTokenServiceManager, ChainManager) {
@@ -71,6 +64,17 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
         return quorumRequired;
     }
 
+    function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bool) {
+        return IncomingPacketManagerImpl.incomingPacketExists(_chainId, _sequence);
+    } 
+
+    function getIncomingPacketHash(uint256 chainId, uint256 sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bytes32 packetHash) {
+        return IncomingPacketManagerImpl.getIncomingPacketHash(chainId, sequence);
+    }
+    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override (IncomingPacketManager, IncomingPacketManagerImpl) {
+        IncomingPacketManagerImpl._removeIncomingPacket(_chainId, _sequence);
+    }
+
     function receivePacket(PacketLibrary.InPacket memory packet) public override {
         super.receivePacket(packet);
         require(isAttestor(msg.sender), "Unknown Attestor");
@@ -78,7 +82,7 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
 
     function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public override {
         super.receivePacketBatch(packets);
-    require(isAttestor(msg.sender), "Unknown Attestor");
+        require(isAttestor(msg.sender), "Unknown Attestor");
     }
 
     function consume(PacketLibrary.InPacket memory packet) public override {
@@ -90,5 +94,5 @@ contract ERC20TokenBridge is IncomingPacketManagerImpl,
         super.sendMessage(packet);
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
-    }  
+    } 
 }

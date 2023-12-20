@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Ownable} from "../../common/Ownable.sol";
 import "../../common/libraries/Lib.sol";
 
-abstract contract ERC20TokenSupport is Ownable {
+contract ERC20TokenSupport is Ownable {
 
     struct Token {
         address tokenAddress;

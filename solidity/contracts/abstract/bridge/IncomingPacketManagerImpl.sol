@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
-abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
+contract IncomingPacketManagerImpl is IncomingPacketManager {
 
     event PacketArrived(PacketLibrary.InPacket packet);
     event Voted(bytes32 packetHash, address voter);
@@ -21,24 +21,23 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     // packetHash => attestor address => bool
     mapping(bytes32 => mapping(address => bool)) voted;
 
-    function _getQuorumRequired() internal view virtual returns (uint256);
+    function _getQuorumRequired() internal view virtual returns (uint256) {}
 
-    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override {
+    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override virtual {
         delete incomingPackets[_chainId][_sequence];
     }
 
-    function getIncomingPacketHash(uint256 _chainId, uint256 _sequence) public view override returns (bytes32 packetHash) {
+    function getIncomingPacketHash(uint256 _chainId, uint256 _sequence) public view override virtual returns (bytes32 packetHash) {
         return incomingPackets[_chainId][_sequence];
     }
 
-    function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override returns (bool) {
+    function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override virtual returns (bool) {
         return incomingPackets[_chainId][_sequence] != bytes32(0);
     }
 
     function _receivePacket(PacketLibrary.InPacket memory packet) internal {
         _preValidateInPacket(packet);
-        _updateInPacketState(packet, 1);
-        _postValidateInPacket(packet);
+        _updateInPacketState(packet);
     }
     
     function receivePacket(PacketLibrary.InPacket memory packet) public virtual {
@@ -53,8 +52,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
 
     // function isRegisteredTokenService (address tokenService) public view virtual returns (bool);
 
-    function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view override virtual {
-        super._preValidateInPacket(packet);
+    function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view {
         //if(incomingPacketExists(packet)) return;
         
         // require(self.chainId == packet.destination.chainId, "Packet not intended for this Chain");
@@ -76,15 +74,11 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     //     }
     // }
 
-    function _updateInPacketState(PacketLibrary.InPacket memory packet, uint256 action) internal override virtual {
-        super._updateInPacketState(packet, action);
+    function _updateInPacketState(PacketLibrary.InPacket memory packet) internal {
         
-        if(action != 1) return; // 2 to represent consume operation, 1 to receive operation
         if(incomingPacketExists(packet.sourceTokenService.chainId, packet.sequence)) return;
         
-        
         bytes32 packetHash = _hash(packet);
-
         if(hasVoted(packetHash, msg.sender)) {
             emit AlreadyVoted(packetHash, msg.sender);
             return;

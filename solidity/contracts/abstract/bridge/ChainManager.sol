@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Ownable} from "../../common/Ownable.sol";
 import "../../common/libraries/Lib.sol";
 
-abstract contract ChainManager is Ownable {
+contract ChainManager is Ownable {
 
     event ChainAdded(PacketLibrary.OutNetworkAddress chain);
     event ChainRemoved(uint256 chainId);

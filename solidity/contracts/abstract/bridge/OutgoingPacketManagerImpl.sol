@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "../../common/libraries/Lib.sol";
 
-abstract contract OutgoingPacketManagerImpl  {
+contract OutgoingPacketManagerImpl  {
     
     event PacketDispatched(PacketLibrary.OutPacket packet);
     
