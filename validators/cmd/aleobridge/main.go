@@ -11,11 +11,16 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
 
-var configFile string
+// flags
+var (
+	configFile string
+	devMode    bool
+)
 
 type Receiver struct {
 	Src    string
@@ -29,6 +34,7 @@ type ReceiverFunc func(src string, dst []string, nodeAddress string) chain.IRece
 
 func init() {
 	flag.StringVar(&configFile, "config", "", "config file")
+	flag.BoolVar(&devMode, "mode", true, "Set mode. Especially useful for logging")
 }
 
 var (
@@ -50,12 +56,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	if devMode {
+		logger.InitLogging(logger.Development, cfg.LogConfig.OutputPath)
+	} else {
+		logger.InitLogging(logger.Production, cfg.LogConfig.OutputPath)
+	}
+
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
 
 	multirelayer := relay.MultiRelay(ctx, cfg)
+	logger.Logger.Info("Starting multi-relay")
 	multirelayer.StartMultiRelay(ctx)
 
 }

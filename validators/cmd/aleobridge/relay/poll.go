@@ -7,7 +7,7 @@ import (
 
 func (r *relay) pollBalance(ctx context.Context, curBal uint64) {
 	if err := r.notifyDelegator(ctx, insufficientBalance); err != nil {
-		// log error
+		r.logger.Error(err.Error())
 	}
 
 	ticker := time.NewTicker(time.Minute) // take from config
@@ -20,7 +20,7 @@ func (r *relay) pollBalance(ctx context.Context, curBal uint64) {
 		}
 		balance, err := r.destChain.GetWalletBalance(ctx)
 		if err != nil {
-			// log error
+			r.logger.Error(err.Error())
 			continue
 		}
 

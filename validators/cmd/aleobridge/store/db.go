@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"go.uber.org/zap"
 )
 
 func InitKVStore(path string) {
@@ -43,11 +44,14 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 func RemoveTxnKeyAndStoreBaseSeqNum(
 	txnNamespace string, txnKeys [][]byte,
 	seqNumNamespace string, seqNums []uint64,
+	logger *zap.Logger,
 ) {
 	for _, txnKey := range txnKeys {
 		go func(txnKey []byte) {
 			if err := batchDelete(txnNamespace, txnKey); err != nil {
-				// log error
+				if logger != nil {
+					logger.Error(err.Error())
+				}
 			}
 		}(txnKey)
 	}
@@ -57,13 +61,15 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 			key := make([]byte, 8)
 			binary.BigEndian.PutUint64(key, seqNum)
 			if err := batchPut(seqNumNamespace, key, nil); err != nil {
-				// log error
+				if logger != nil {
+					logger.Error(err.Error())
+				}
 			}
 		}(seqNum)
 	}
 }
 
-func PruneBaseSeqNum(namespace string) uint64 {
+func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
 	// todo: 1000 can be later on considered to be average number of packets in given time interval
 	// Also take care about the number of go-routines it is going to create below.
 
@@ -92,7 +98,9 @@ func PruneBaseSeqNum(namespace string) uint64 {
 	for _, key := range toDeleteKeys {
 		go func(key []byte) {
 			if err := batchDelete(namespace, key); err != nil {
-				// log error
+				if logger != nil {
+					logger.Error(err.Error())
+				}
 				// handling error is not necessary as delete can happen in next iteration.
 			}
 		}(key)
@@ -118,7 +126,7 @@ func GetFirstKey[T keyConstraint](namespace string, keyType T) T {
 	return convertKey(keyType, key)
 }
 
-func GetPacket[T keyConstraint](namespace string, key T) *chain.Packet {
+func GetPacket[T keyConstraint](namespace string, key T, logger *zap.Logger) *chain.Packet {
 	k := getKeyByteForKeyConstraint(key)
 	v := get(namespace, k)
 	if v == nil {
@@ -126,7 +134,9 @@ func GetPacket[T keyConstraint](namespace string, key T) *chain.Packet {
 	}
 	pkt := new(chain.Packet)
 	if err := json.Unmarshal(v, pkt); err != nil {
-		//log error
+		if logger != nil {
+			logger.Error(err.Error())
+		}
 		return nil
 	}
 	return pkt
@@ -148,17 +158,17 @@ func StoreTransactedPacket(namespace string, pkt *chain.Packet) error {
 	return batchPut(namespace, key, data)
 }
 
-func RetrieveNPackets(namespace string, n int) chan *chain.TxnPacket {
+func RetrieveNPackets(namespace string, n int) chan *chain.Packet {
 	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
-	ch := make(chan *chain.TxnPacket)
+	ch := make(chan *chain.Packet)
 	go func() {
 		for kv := range pktCh {
 			key := kv[0]
 			value := kv[1]
-			txnPkt := new(chain.TxnPacket)
-			json.Unmarshal(value, txnPkt)
-			txnPkt.SeqByte = key
-			ch <- txnPkt
+			pkt := new(chain.Packet)
+			json.Unmarshal(value, pkt)
+			pkt.SeqByte = key
+			ch <- pkt
 		}
 		close(ch)
 	}()

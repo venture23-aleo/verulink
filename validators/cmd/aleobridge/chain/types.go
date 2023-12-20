@@ -21,7 +21,7 @@ type ISender interface {
 	// at which this error occurred so that balance polling can be done precisely
 	SendPacket(ctx context.Context, packet *Packet) (err error)
 
-	IsPktTxnFinalized(ctx context.Context, txnHash string) (bool, error)
+	IsPktTxnFinalized(ctx context.Context, pkt *Packet) (bool, error)
 
 	// GetMinReqBalForMakingTxn returns minimum balance required to make a transaction.
 	// Since size of transaction is fixed, it should return same value which also means
@@ -53,20 +53,15 @@ type NetworkAddress struct {
 }
 
 type Packet struct {
+	// It is assigned by Storing function and will be populated in struct when retrieving from the db
+	SeqByte []byte `json:"-"`
+
 	Version     uint64
 	Destination NetworkAddress
 	Source      NetworkAddress
 	Sequence    uint64
 	Message     []byte
 	Height      uint64
-}
-
-type TxnPacket struct {
-	// Ts is timestamp as byte which is used as key to store in key-value db.
-	// It is assigned by Storing function and will be populated in struct when retrieving from the db
-	SeqByte []byte `json:"-"`
-	TxnHash string
-	Pkt     *Packet
 }
 
 type QueuedMessage struct {

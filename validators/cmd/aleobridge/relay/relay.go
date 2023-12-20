@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
+	"go.uber.org/zap"
 )
 
 const (
@@ -51,6 +53,7 @@ type relay struct {
 	bSeqNum                uint64
 	mu                     sync.Mutex
 	initliazed             bool
+	logger                 *zap.Logger
 }
 
 func (r *relay) Init(ctx context.Context) {
@@ -58,9 +61,12 @@ func (r *relay) Init(ctx context.Context) {
 	defer r.mu.Unlock()
 	if !r.initliazed {
 		r.initliazed = true
+		bridge := fmt.Sprintf("%s-%s", r.srcChain.Name(), r.destChain.Name())
+		r.logger = logger.Logger.With(zap.String("Bridge", bridge))
 		r.createNamespaces()
 		r.setBaseSeqNum()
 		r.nextSeqNum = r.bSeqNum + 1
+
 	}
 
 	/**********Not required now***********************/
@@ -97,6 +103,7 @@ func (r *relay) setBaseSeqNum() {
 }
 
 func (r *relay) startReceiving(ctx context.Context) {
+	r.logger.Info("Starting to receive packets from source chain")
 	for {
 		select {
 		case <-ctx.Done():
@@ -134,8 +141,15 @@ func (r *relay) startSending(ctx context.Context) {
 
 		pkt := <-r.pktCh
 
+		r.logger.Info("Sending packet", zap.Uint64("seq_num", pkt.Sequence), zap.Uint64("packet_height", pkt.Height))
+
 		err := r.destChain.SendPacket(ctx, pkt)
 		if err != nil {
+			r.logger.Error("Error while sending packet",
+				zap.Error(err),
+				zap.Uint64("packet_seq_num", pkt.Sequence),
+				zap.Uint64("packet_height", pkt.Height))
+
 			insufBalErr := chain.InsufficientBalanceErr{}
 			alreadySendPkt := chain.AlreadyRelayedPacket{}
 
@@ -158,17 +172,19 @@ func (r *relay) startSending(ctx context.Context) {
 				goto addTransactedPacket
 			}
 
+			r.logger.Info("storing packet for retry", zap.Uint64("seq_num", pkt.Sequence))
 			err = store.StoreRetryPacket(r.retryPktNameSpace, pkt)
 			if err != nil {
-				// log error
+				r.logger.DPanic(err.Error())
 			}
 			continue
 		}
 
 	addTransactedPacket:
+		r.logger.Info("storing sent packet", zap.Uint64("seq_num", pkt.Sequence))
 		err = store.StoreTransactedPacket(r.transactedPktNameSpace, pkt)
 		if err != nil {
-			//log error
+			r.logger.DPanic(err.Error())
 		}
 	}
 }
@@ -189,15 +205,16 @@ func (r *relay) pruneDB(ctx context.Context) {
 
 		ch := store.RetrieveNPackets(r.transactedPktNameSpace, 10)
 		seqNums := make([]uint64, 10)
-		txnPktKeys := make([][]byte, 10)
-		for txnPkt := range ch {
-			finalized, err := r.destChain.IsPktTxnFinalized(ctx, txnPkt.TxnHash)
+		pktKeys := make([][]byte, 10)
+		for pkt := range ch {
+			r.logger.Info("Checking packet finality", zap.Uint64("seq_num", pkt.Sequence))
+			finalized, err := r.destChain.IsPktTxnFinalized(ctx, pkt)
 			// todo: if we can decide here that this packet attestation is not going
 			// to be finalized due to fork then send packet to r.pktCh and delete its
 			// entry in db
 			// we can send this info in err variable above that the chain has forked
 			if err != nil {
-				//log error
+				r.logger.Error(err.Error())
 				continue
 			}
 
@@ -205,15 +222,16 @@ func (r *relay) pruneDB(ctx context.Context) {
 				continue
 			}
 
-			txnPktKeys = append(txnPktKeys, txnPkt.SeqByte)
-			seqNums = append(seqNums, txnPkt.Pkt.Sequence)
+			pktKeys = append(pktKeys, pkt.SeqByte)
+			seqNums = append(seqNums, pkt.Sequence)
 		}
 
 		store.RemoveTxnKeyAndStoreBaseSeqNum(
 			r.transactedPktNameSpace,
-			txnPktKeys,
+			pktKeys,
 			r.baseSeqNumNameSpace,
 			seqNums,
+			r.logger,
 		)
 	}
 }
@@ -227,7 +245,7 @@ func (r *relay) pruneBaseSeqNum(ctx context.Context) {
 			return
 		case <-ticker.C:
 		}
-		bSeqNum := store.PruneBaseSeqNum(r.baseSeqNumNameSpace)
+		bSeqNum := store.PruneBaseSeqNum(r.baseSeqNumNameSpace, r.logger)
 		if bSeqNum > 0 {
 			r.bSeqNum = bSeqNum
 			r.bSeqNumUpdateTime = time.Now()
@@ -255,7 +273,7 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 
 		curSeqNum := r.nextSeqNum - 1
 		for seqNum := r.bSeqNum + 1; seqNum < curSeqNum; seqNum++ {
-			pkt := store.GetPacket[uint64](r.retryPktNameSpace, seqNum)
+			pkt := store.GetPacket[uint64](r.retryPktNameSpace, seqNum, r.logger)
 			if pkt != nil {
 				r.pktCh <- pkt
 				continue
@@ -274,6 +292,7 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 				//todo: we might decide that older packets be pruned in src chain
 				// and if it is pruned then r.bSeqNum can be updated to seqNum
 				// further handling is not required because r.bSeqNum won't be updated with missing in-between-packets
+				r.logger.Debug(err.Error())
 				continue
 			}
 

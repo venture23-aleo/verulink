@@ -22,5 +22,9 @@
   "bridge_pair":{
     "ethereum": "aleo"
   },
-  "db_path" : "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store/retrydb"
+  "db_path" : "/tmp/relay/db",
+  "log":{
+    "encoding": "json",
+    "output_path": "/tmp/relays.log"
+  }
 }

@@ -36,7 +36,7 @@ func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 
-func (cl *Client) IsPktTxnFinalized(ctx context.Context, txnHash string) (bool, error) {
+func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (bool, error) {
 	return false, nil
 }
 

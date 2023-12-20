@@ -17,7 +17,13 @@ type Config struct {
 	// BridgePair is pairing between bridge contracts to communicate packets back and forth
 	BridgePairs map[string]string
 
+	LogConfig *LoggerConfig `json:"log"`
 	/*
 		other fields if required
 	*/
+}
+
+type LoggerConfig struct {
+	Encoding   string `json:"encoding"`
+	OutputPath string `json:"output_path"`
 }
