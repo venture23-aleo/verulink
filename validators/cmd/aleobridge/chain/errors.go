@@ -27,3 +27,12 @@ type InvalidSignatureErr struct {
 func (e InvalidSignatureErr) Error() string {
 	return fmt.Sprintf("signature %s is invalid for transaction %s", e.Signature, e.TxnHash)
 }
+
+type AlreadyRelayedPacket struct {
+	SeqNum         uint64
+	CurChainHeight uint64
+}
+
+func (e AlreadyRelayedPacket) Error() string {
+	return fmt.Sprintf("packet with id %d aleady sent", e.SeqNum)
+}

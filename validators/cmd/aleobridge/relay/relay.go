@@ -106,7 +106,7 @@ func (r *relay) startReceiving(ctx context.Context) {
 
 		pkt, err := r.srcChain.GetPktWithSeq(ctx, r.nextSeqNum)
 		if err != nil {
-
+			//todo: if not found sleep accordingly
 		}
 
 		curSrcHeight := r.srcChain.CurHeight()
@@ -134,28 +134,41 @@ func (r *relay) startSending(ctx context.Context) {
 
 		pkt := <-r.pktCh
 
-		txnHash, err := r.destChain.SendPacket(ctx, pkt)
+		err := r.destChain.SendPacket(ctx, pkt)
 		if err != nil {
 			insufBalErr := chain.InsufficientBalanceErr{}
+			alreadySendPkt := chain.AlreadyRelayedPacket{}
+
 			switch {
 			case errors.As(err, &insufBalErr):
 				r.pollBalance(ctx, insufBalErr.CurBalance)
 				go func() { r.pktCh <- pkt }() // immediately send it to the channel
 				continue
+			case errors.As(err, &alreadySendPkt):
+				// In the chain we cannot know at which height this packet was relayed to.
+				// Here the assignment incremented packet's height and is not the true height.
+				// However the whole point is that attestor wants to make sure that packet they relayed
+				// is finalized.
+				// To check packet finality, we simply check packet's height and current blockchain height.
+				// If the packet is already relayed by the attestor and has been finalized then we repeatedly
+				// get alreadySendPkt error thus packet height gets updated.
+				// It only requires single instance that chain don't fork and attestor is certain that it has
+				// delivered the packet.
+				pkt.Height = alreadySendPkt.CurChainHeight
+				goto addTransactedPacket
 			}
+
 			err = store.StoreRetryPacket(r.retryPktNameSpace, pkt)
 			if err != nil {
 				// log error
 			}
+			continue
 		}
 
-		txnPkt := &chain.TxnPacket{
-			TxnHash: txnHash,
-			Pkt:     pkt,
-		}
-		err = store.StoreTransactedPacket(r.transactedPktNameSpace, txnPkt)
+	addTransactedPacket:
+		err = store.StoreTransactedPacket(r.transactedPktNameSpace, pkt)
 		if err != nil {
-			//
+			//log error
 		}
 	}
 }
@@ -178,9 +191,10 @@ func (r *relay) pruneDB(ctx context.Context) {
 		seqNums := make([]uint64, 10)
 		txnPktKeys := make([][]byte, 10)
 		for txnPkt := range ch {
-			finalized, err := r.destChain.IsTxnFinalized(ctx, txnPkt.TxnHash)
-			// todo: if we can decide here that this txn is not going to be finalized
-			// then send packet to r.pktCh and delete its entry in db
+			finalized, err := r.destChain.IsPktTxnFinalized(ctx, txnPkt.TxnHash)
+			// todo: if we can decide here that this packet attestation is not going
+			// to be finalized due to fork then send packet to r.pktCh and delete its
+			// entry in db
 			// we can send this info in err variable above that the chain has forked
 			if err != nil {
 				//log error

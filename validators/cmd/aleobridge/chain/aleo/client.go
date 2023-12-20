@@ -32,15 +32,24 @@ func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
-func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) (string, error) {
-	return "", nil
+func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
+	if cl.isAlreadyExist() {
+		return chain.AlreadyRelayedPacket{
+			CurChainHeight: 0,
+		}
+	}
+	return nil
+}
+
+func (cl *Client) isAlreadyExist() bool {
+	return false
 }
 
 func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 
-func (cl *Client) IsTxnFinalized(ctx context.Context, txnHash string) (bool, error) {
+func (cl *Client) IsPktTxnFinalized(ctx context.Context, txnHash string) (bool, error) {
 	return false, nil
 }
 

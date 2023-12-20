@@ -19,9 +19,9 @@ type ISender interface {
 	// TODO: optimization might be achieved if packets can be sent in single txn
 	// if the error is insufficient balance error, its better to send balance
 	// at which this error occurred so that balance polling can be done precisely
-	SendPacket(ctx context.Context, packet *Packet) (txnHash string, err error)
+	SendPacket(ctx context.Context, packet *Packet) (err error)
 
-	IsTxnFinalized(ctx context.Context, txnHash string) (bool, error)
+	IsPktTxnFinalized(ctx context.Context, txnHash string) (bool, error)
 
 	// GetMinReqBalForMakingTxn returns minimum balance required to make a transaction.
 	// Since size of transaction is fixed, it should return same value which also means

@@ -137,14 +137,14 @@ func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 	return exitsInGivenBucket(namespace, k)
 }
 
-func StoreTransactedPacket(namespace string, txnPkt *chain.TxnPacket) error {
-	data, err := json.Marshal(txnPkt)
+func StoreTransactedPacket(namespace string, pkt *chain.Packet) error {
+	data, err := json.Marshal(pkt)
 	if err != nil {
 		return err
 	}
 
 	key := make([]byte, 8)
-	binary.NativeEndian.PutUint64(key, txnPkt.Pkt.Sequence)
+	binary.NativeEndian.PutUint64(key, pkt.Sequence)
 	return batchPut(namespace, key, data)
 }
 

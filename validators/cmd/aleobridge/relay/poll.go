@@ -16,7 +16,7 @@ func (r *relay) pollBalance(ctx context.Context, curBal uint64) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		default:
 		}
 		balance, err := r.destChain.GetWalletBalance(ctx)
 		if err != nil {
