@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/ethereum/go-ethereum v1.13.4
-	github.com/parajuliswopnil/aleo-go-sdk v1.0.22
+	github.com/parajuliswopnil/aleo-go-sdk v1.0.23
 	go.etcd.io/bbolt v1.3.8
 	go.uber.org/zap v1.26.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -41,3 +41,5 @@ require (
 	google.golang.org/protobuf v1.31.0 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+replace github.com/parajuliswopnil/aleo-go-sdk v1.0.23 => /home/sheldor/GoProjects/AleoBlockStreamer

@@ -18,7 +18,7 @@ type Client struct {
 	chainCfg          *relay.ChainConfig
 }
 
-func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
+func (cl *Client) GetPktWithSeq(ctx context.Context, dst string, seqNum uint64) (*chain.Packet, error) {
 	return &chain.Packet{}, nil
 }
 
