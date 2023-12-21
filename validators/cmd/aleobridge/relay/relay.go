@@ -296,5 +296,9 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 }
 
 func (r *relay) Name() string {
-	return fmt.Sprintf("%s-%s bridge", r.srcChain.Name(), r.destChain.Name())
+	return relayName(r.srcChain.Name(), r.destChain.Name())
+}
+
+func relayName(srcChain, destChain string) string {
+	return srcChain + "-" + destChain
 }

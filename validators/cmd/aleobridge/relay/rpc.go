@@ -144,15 +144,3 @@ func validateArgument(arg *Arg) error {
 
 	return nil
 }
-
-/******************************************rpc call handler*************************************/
-// stop action will cancel the context of all relays where given chain is part of
-// and removes chain registration from the map
-// Register action shall register chain into the map
-func chainHandler(name string, action ActionType) error {
-	return nil
-}
-
-func relaysHandler(relays []RelayArg, action ActionType) error {
-	return nil
-}
