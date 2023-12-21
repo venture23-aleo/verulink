@@ -27,14 +27,11 @@ type Relayer interface {
 func NewRelay(
 	srcChain chain.IReceiver,
 	destChain chain.ISender,
-	sChainCond, dChainCond *sync.Cond,
 
 ) Relayer {
 	return &relay{
-		srcChain:   srcChain,
-		destChain:  destChain,
-		sChainCond: sChainCond,
-		dChainCond: dChainCond,
+		srcChain:  srcChain,
+		destChain: destChain,
 	}
 }
 
@@ -45,10 +42,8 @@ type relay struct {
 	retryPktNameSpace      string
 	transactedPktNameSpace string
 	baseSeqNumNameSpace    string
-	sChainCond, dChainCond *sync.Cond
 	pktCh                  chan *chain.Packet
 	nextSeqNum             uint64
-	eventCh                <-chan *chain.ChainEvent
 	bSeqNumUpdateTime      time.Time
 	bSeqNum                uint64
 	mu                     sync.Mutex
@@ -197,8 +192,7 @@ func (r *relay) pruneDB(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			ctxErr := ctx.Err()
-			_ = ctxErr
+			return
 		case <-ticker.C:
 		default:
 		}
@@ -298,28 +292,6 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 
 			r.pktCh <- pkt
 		}
-	}
-}
-
-func (r *relay) pollChainEvents(ctx context.Context, name string, cond *sync.Cond) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		func() {
-			cond.L.Lock()
-			cond.Wait()
-			cond.L.Unlock()
-
-			chainEventRWMu.RLock()
-			event := chainEvents[name]
-			chainEventRWMu.RUnlock()
-
-			_ = event
-		}()
 	}
 }
 

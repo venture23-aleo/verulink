@@ -4,29 +4,23 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-const (
-	DefaultSendMessageTicker = 10 * time.Second
-	DefaultTxRetryCount      = 0
-)
-
-var chainEventRWMu = sync.RWMutex{}
-var chainEvents = map[string]*chain.ChainEvent{} // aleo:event, ethereum: event,
-var chainConds = map[string]*sync.Cond{}
+var chainCtxMu = sync.Mutex{}
 var chainCtxCncls = map[string]context.CancelCauseFunc{}
-var chainCtxs = map[string]context.Context{}
+var relayCh = make(chan Relayer)
 
 type Namer interface {
 	Name() string
 }
+
 type IChainEvent interface {
 	Namer
 	GetChainEvent(ctx context.Context) (*chain.ChainEvent, error)
 }
+
 type IClient interface {
 	chain.IReceiver
 	chain.ISender
@@ -54,33 +48,22 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 		}
 
 		chains[chainCfg.Name] = RegisteredClients[chainCfg.Name](chainCfg)
-		chainCtx, chainCtxCnclCause := context.WithCancelCause(ctx)
-		cond := &sync.Cond{
-			L: &sync.Mutex{},
-		}
-
-		chainConds[chainCfg.Name] = cond
-		chainCtxs[chainCfg.Name] = chainCtx
-		chainCtxCncls[chainCfg.Name] = chainCtxCnclCause
-
-		go GetChainEvents(chainCtx, chains[chainCfg.Name], cond)
-		go CancelCtxOnCnclEvent(chainCfg.Name, cond)
-
 	}
 
 	var relays Relays
 	for _, c := range chains {
 		destChains, err := c.GetDestChains()
 		if err != nil {
-			// todo: handle error and if it persists panic
+			destChains, err = c.GetDestChains()
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		for _, destChain := range destChains {
 			srcIClient := c
 			descIClient := chains[destChain]
-			srcCond := chainConds[c.Name()]
-			destCond := chainConds[destChain]
-			r := NewRelay(srcIClient, descIClient, srcCond, destCond)
+			r := NewRelay(srcIClient, descIClient)
 			relays = append(relays, r)
 		}
 	}
@@ -89,97 +72,24 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 }
 
 func (relays Relays) StartMultiRelay(ctx context.Context) {
-	// handle panicking case
-	for _, re := range relays {
+	go func() {
+		for _, re := range relays {
+			relayCh <- re
+		}
+	}()
+
+	for re := range relayCh {
 		go func(relay Relayer) {
 			relayCtx, relayCtxCncl := context.WithCancelCause(ctx)
 			defer relayCtxCncl(nil)
+
+			chainCtxMu.Lock()
+			chainCtxCncls[relay.Name()] = relayCtxCncl
+			chainCtxMu.Unlock()
 
 			relay.Init(relayCtx)
 		}(re)
 	}
 
 	<-ctx.Done()
-}
-
-// GetChainEvents will receive events of given chain and will insert into subscribing channels.
-// todo: need to take care that given channel might get closed or inserted value might not be consumed.
-
-/*
-
-relay1 --> ethereum - aleo --> eventChannels[ethCh]
-relay2 --> ethereum - solana --> eventChannels[ethCh]
-
-go GetChainEvents(ctx, ethereumChain, eventChannels)
-
-
-relay3 --> aleo - ethereum --> eventChannels[aleoCh]
-relay4 --> aleo - solana --> eventChannels[aleoCh]
-
-go GetChainEvents(ctx, aleoChain, eventChannels)
-
-*/
-
-func GetChainEvents(ctx context.Context, chain IChainEvent, cond *sync.Cond) {
-	// todo: initialize some ticker to poll the chain at regular interval
-	// It should also match the frequency of chain events.
-	ticker := time.NewTicker(time.Hour)
-
-	for {
-		select {
-		case <-ctx.Done():
-		//
-		case <-ticker.C:
-		}
-
-		event, err := chain.GetChainEvent(ctx)
-		if err != nil {
-			// log error
-			continue
-		}
-
-		if event == nil {
-			continue
-		}
-
-		chainEventRWMu.Lock()
-		chainEvents[chain.Name()] = event
-		chainEventRWMu.Unlock()
-
-		cond.L.Lock()
-		cond.Broadcast()
-		cond.L.Unlock()
-
-	}
-}
-
-func CancelCtxOnCnclEvent(name string, cond *sync.Cond) {
-	var breakFor bool
-	for {
-
-		func() {
-			cond.L.Lock()
-			cond.Wait()
-
-			chainEventRWMu.RLock()
-			event := chainEvents[name]
-
-			_ = event
-			// todo: manage event
-			/*
-				for example;
-				if event.Type == Cancel{
-					chainCtxCncls[name](errors.New("chain is cancelled"))
-				}
-				breakFor = true
-			*/
-
-			defer chainEventRWMu.RUnlock()
-			cond.L.Unlock()
-		}()
-
-		if breakFor {
-			break
-		}
-	}
 }
