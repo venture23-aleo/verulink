@@ -13,6 +13,11 @@ const (
 	AleoBlockFinality = 1
 )
 
+type destChain struct {
+	name    string
+	address string
+}
+
 type Client struct {
 	aleoClient        *aleoRpc.Client
 	finalizeHeight    uint64
@@ -20,10 +25,11 @@ type Client struct {
 	blockGenTime      time.Duration
 	minRequiredGasFee uint64
 	chainCfg          *relay.ChainConfig
+	destChains        map[string]interface{}
 }
 
-func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
-	return &chain.Packet{}, nil
+func (cl *Client) GetPktWithSeq(ctx context.Context, dest string, seqNum uint64) (*chain.Packet, error) {
+	return nil, nil
 }
 
 func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {

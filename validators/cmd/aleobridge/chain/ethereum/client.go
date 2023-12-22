@@ -9,6 +9,11 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 )
 
+type destChain struct {
+	name    string
+	address string
+}
+
 type Client struct {
 	eth               *ethclient.Client
 	minRequiredGasFee uint64
@@ -16,10 +21,11 @@ type Client struct {
 	blockGenTime      time.Duration
 	chainID           uint32
 	chainCfg          *relay.ChainConfig
+	destChains        map[string]*destChain
 }
 
-func (cl *Client) GetPktWithSeq(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
-	return &chain.Packet{}, nil
+func (cl *Client) GetPktWithSeq(ctx context.Context, dest string, seqNum uint64) (*chain.Packet, error) {
+	return nil, nil
 }
 
 func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {

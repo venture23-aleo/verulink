@@ -36,7 +36,7 @@ type IReceiver interface {
 
 	// GetPktWithSeqGT will be called periodically by subscriber. Thus it shall return packet
 	// which it shall put into the channel given by subscriber
-	GetPktWithSeq(ctx context.Context, seqNum uint64) (*Packet, error)
+	GetPktWithSeq(ctx context.Context, dest string, seqNum uint64) (*Packet, error)
 	// GetPktsWithSeqGTAndInSameHeight will return packets of same height of packet with given seqNum.
 	// This might make processing multiple packets that comes under same block efficient.
 	// But might as well be obsolete
