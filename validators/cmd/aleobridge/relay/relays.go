@@ -140,6 +140,12 @@ func relaysHandler(relays []RelayArg, action ActionType) error {
 			chainCtxCncls[name](errors.New("cancelled by owner"))
 			delete(chainCtxCncls, name)
 		}
+	case Register:
+		for _, re := range relays {
+			srcChain, destchain := chains[re.SrcChain], chains[re.DestChain]
+			relay := NewRelay(srcChain, destchain)
+			relayCh <- relay
+		}
 	}
 	return nil
 }
