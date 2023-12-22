@@ -5,8 +5,9 @@ import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
 contract ConsumedPacketManagerImpl is IncomingPacketManager {
+    using PacketLibrary for PacketLibrary.InPacket;
 
-    event Consumed(bytes32 packetHash);
+    event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash);
     
     mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
 
@@ -14,21 +15,20 @@ contract ConsumedPacketManagerImpl is IncomingPacketManager {
         require(!isPacketConsumed(packet.destTokenService.chainId, packet.sequence), "Packet already consumed");
     }
 
-    function isPacketConsumed(uint256 _chainId, uint256 _sequence) public view returns (bool) {
+    function isPacketConsumed(uint256 _chainId, uint256 _sequence) public view virtual override returns (bool) {
         return consumedPackets[_chainId][_sequence] != bytes32(0);
     }
 
     function _updateConsumePacketState(PacketLibrary.InPacket memory packet) internal virtual {
-        if(!incomingPacketExists(packet.destTokenService.chainId, packet.sequence)) return; // 2 to represent consume operation, 1 to receive packet operation
         _removeIncomingPacket(packet.destTokenService.chainId, packet.sequence);
-        consumedPackets[packet.destTokenService.chainId][packet.sequence] = _hash(packet);
+        consumedPackets[packet.destTokenService.chainId][packet.sequence] = packet.hash();
     }
 
     function consume(PacketLibrary.InPacket memory packet) public virtual {
         bytes32 packetHash = getIncomingPacketHash(packet.destTokenService.chainId, packet.sequence);
-        require(packetHash == _hash(packet), "Unknown Packet");
+        require(packet.hash() == packetHash, "Unknown Packet Hash");
         _preValidateConsumePacket(packet);
         _updateConsumePacketState(packet);
-        emit Consumed(packetHash);
+        emit Consumed(packet.destTokenService.chainId, packet.sequence, packetHash);
     }
 }

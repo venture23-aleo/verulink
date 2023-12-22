@@ -13,7 +13,7 @@ import {BridgeTokenServiceManager} from "./abstract/bridge/BridgeTokenServiceMan
 import {ChainManager} from "./abstract/bridge/ChainManager.sol";
 
 contract ERC20TokenBridge is IncomingPacketManager,
-IncomingPacketManagerImpl, 
+    IncomingPacketManagerImpl, 
     ConsumedPacketManagerImpl, 
     OutgoingPacketManagerImpl, 
     Ownable,
@@ -64,15 +64,20 @@ IncomingPacketManagerImpl,
         return quorumRequired;
     }
 
-    function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bool) {
-        return IncomingPacketManagerImpl.incomingPacketExists(_chainId, _sequence);
-    } 
+    // function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bool) {
+    //     return IncomingPacketManagerImpl.incomingPacketExists(_chainId, _sequence);
+    // } 
 
     function getIncomingPacketHash(uint256 chainId, uint256 sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bytes32 packetHash) {
         return IncomingPacketManagerImpl.getIncomingPacketHash(chainId, sequence);
     }
+
     function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override (IncomingPacketManager, IncomingPacketManagerImpl) {
         IncomingPacketManagerImpl._removeIncomingPacket(_chainId, _sequence);
+    }
+
+    function isPacketConsumed(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, ConsumedPacketManagerImpl) returns (bool) {
+        return ConsumedPacketManagerImpl.isPacketConsumed(_chainId, _sequence);
     }
 
     function receivePacket(PacketLibrary.InPacket memory packet) public override {

@@ -43,4 +43,36 @@ library PacketLibrary {
         InTokenMessage message;
         uint256 height;
     }
+
+    function hash(PacketLibrary.InPacket memory packet) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(
+            packet.version,
+            packet.sequence,
+            packet.sourceTokenService.chainId,
+            packet.sourceTokenService.addr,
+            packet.destTokenService.chainId,
+            packet.destTokenService.addr,
+            packet.message.senderAddress,
+            packet.message.destTokenAddress,
+            packet.message.amount,
+            packet.message.receiverAddress,
+            packet.height)
+        );
+    }
+
+    function hash(PacketLibrary.OutPacket memory packet) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(
+            packet.version,
+            packet.sequence,
+            packet.sourceTokenService.chainId,
+            packet.sourceTokenService.addr,
+            packet.destTokenService.chainId,
+            packet.destTokenService.addr,
+            packet.message.senderAddress,
+            packet.message.destTokenAddress,
+            packet.message.amount,
+            packet.message.receiverAddress,
+            packet.height)
+        );
+    }
 }
