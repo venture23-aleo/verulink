@@ -102,12 +102,14 @@ func (r *relay) startReceiving(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			close(r.pktCh)
 			return
 		default:
 		}
 
 		pkt, err := r.srcChain.GetPktWithSeq(ctx, r.destChain.Name(), r.nextSeqNum)
 		if err != nil {
+			r.logger.Error(err.Error())
 			time.Sleep(time.Minute)
 		}
 
