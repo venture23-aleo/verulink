@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitKVStore(path string) {
-	initDB(path)
+func InitKVStore(path string) error {
+	return initDB(path)
 }
 
 func CloseDB() error {
