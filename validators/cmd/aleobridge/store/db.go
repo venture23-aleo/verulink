@@ -162,9 +162,10 @@ func StoreTransactedPacket(namespace string, pkt *chain.Packet) error {
 
 	key := make([]byte, 8)
 	binary.NativeEndian.PutUint64(key, pkt.Sequence)
-	return batchPut(namespace, key, data)
+	return put(namespace, key, data)
 }
 
+// RetrieveNPackets retrieves n packets from first index
 func RetrieveNPackets(namespace string, n int) chan *chain.Packet {
 	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
 	ch := make(chan *chain.Packet)
