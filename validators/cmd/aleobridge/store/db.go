@@ -46,8 +46,11 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 	seqNumNamespace string, seqNums []uint64,
 	logger *zap.Logger,
 ) {
+	wg := sync.WaitGroup{}
+	wg.Add(len(txnKeys))
 	for _, txnKey := range txnKeys {
 		go func(txnKey []byte) {
+			defer wg.Done()
 			if err := batchDelete(txnNamespace, txnKey); err != nil {
 				if logger != nil {
 					logger.Error(err.Error())
@@ -56,8 +59,10 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 		}(txnKey)
 	}
 
+	wg.Add(len(seqNums))
 	for _, seqNum := range seqNums {
 		go func(seqNum uint64) {
+			defer wg.Done()
 			key := make([]byte, 8)
 			binary.BigEndian.PutUint64(key, seqNum)
 			if err := batchPut(seqNumNamespace, key, nil); err != nil {
@@ -67,6 +72,7 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 			}
 		}(seqNum)
 	}
+	wg.Wait()
 }
 
 func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
