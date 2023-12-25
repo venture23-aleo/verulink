@@ -81,12 +81,12 @@ func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
 
 	ch := retrieveNKeyValuesFromFirst(namespace, 1000)
 	v, closed := <-ch
-	if closed {
+	if closed && v[0] == nil {
 		return 0
 	}
 	key := v[0]
 	curBaseSeqNum := binary.BigEndian.Uint64(key)
-	var toDeleteKeys [][]byte
+	toDeleteKeys := [][]byte{key}
 
 	for v := range ch {
 		key := v[0]
@@ -103,6 +103,7 @@ func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
 	wg.Add(len(toDeleteKeys))
 	for _, key := range toDeleteKeys {
 		go func(key []byte) {
+			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
 				if logger != nil {
 					logger.Error(err.Error())
