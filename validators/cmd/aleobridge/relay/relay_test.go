@@ -42,7 +42,7 @@ func (m MockDestClient) GetWalletBalance(ctx context.Context) (uint64, error) {
 type MockSrcClient struct {
 	getname        func() string
 	getPkt         func() (*chain.Packet, error)
-	getCurHeight   func() uint64
+	curHeight      uint64
 	blockGenTime   time.Duration
 	finalityHeight uint64
 }
@@ -51,6 +51,9 @@ func (m MockSrcClient) Name() string {
 	return m.getname()
 }
 
+func (m *MockSrcClient) setHeight(h uint64) {
+	m.curHeight = h
+}
 func (m MockSrcClient) GetPktWithSeq(ctx context.Context, dest string, seqNum uint64) (*chain.Packet, error) {
 	return m.getPkt()
 }
@@ -61,7 +64,7 @@ func (MockSrcClient) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum u
 
 // Returns current height of chain
 func (m MockSrcClient) CurHeight() uint64 {
-	return m.getCurHeight()
+	return m.curHeight
 }
 
 // Return average duration to generate a block by blockchain
@@ -97,9 +100,7 @@ func TestReceivePacket(t *testing.T) {
 					Height: 1,
 				}, nil
 			},
-			getCurHeight: func() uint64 {
-				return 66
-			},
+			curHeight: 66,
 		}
 		re := &relay{
 			srcChain:   srcChain,
@@ -123,6 +124,49 @@ func TestReceivePacket(t *testing.T) {
 		<-re.pktCh
 		time.Sleep(time.Millisecond * 10)
 		require.EqualValues(t, re.nextSeqNum, 11)
+	})
+
+	t.Run("test_for_finality_height_not_reached", func(t *testing.T) {
+		yieldPacket := make(chan struct{})
+		srcChain := &MockSrcClient{
+			finalityHeight: 64,
+			getPkt: func() (*chain.Packet, error) {
+				<-yieldPacket
+				return &chain.Packet{
+					Height: 1,
+				}, nil
+			},
+			curHeight: 1,
+		}
+
+		re := &relay{
+			srcChain:   srcChain,
+			destChain:  MockDestClient{},
+			nextSeqNum: 10,
+			pktCh:      make(chan *chain.Packet),
+			logger: func() *zap.Logger {
+				l, err := zap.NewDevelopment()
+				require.NoError(t, err)
+				return l
+			}(),
+		}
+
+		ctx, cncl := context.WithCancel(context.Background())
+		defer cncl()
+
+		go re.startReceiving(ctx)
+		t.Log("Started to receive packets")
+		yieldPacket <- struct{}{}
+
+		require.EqualValues(t, 10, re.nextSeqNum)
+		srcChain.curHeight = 66
+		yieldPacket <- struct{}{}
+
+		t.Log("Waiting for packet")
+		<-re.pktCh
+		time.Sleep(time.Millisecond * 100)
+		require.EqualValues(t, 11, re.nextSeqNum)
+
 	})
 }
 
