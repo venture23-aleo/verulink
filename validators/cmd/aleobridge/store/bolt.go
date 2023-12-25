@@ -1,19 +1,13 @@
 package store
 
 import (
-	"sync"
-
 	"go.etcd.io/bbolt"
 )
 
-var (
-	db *bbolt.DB
-	mu sync.RWMutex
-)
+var db *bbolt.DB
 
 func initDB(path string) error {
 	var err error
-	mu = sync.RWMutex{}
 	db, err = bbolt.Open(path, 0655, nil)
 	if err != nil {
 		return err
@@ -68,6 +62,9 @@ func get(bucket string, key []byte) (value []byte) {
 	db.View(func(tx *bbolt.Tx) error {
 		bkt := tx.Bucket([]byte(bucket))
 		data := bkt.Get(key)
+		if data == nil {
+			return nil
+		}
 		value = make([]byte, len(data))
 		copy(value, data)
 		return nil
