@@ -7,9 +7,9 @@ import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 contract Holding is Ownable, Upgradeable {
     // user address => token address => amount
-    mapping(address => mapping(address => uint256)) locked;
+    mapping(address => mapping(address => uint256)) public locked;
 
-    mapping(address => mapping(address => uint256)) unlocked;
+    mapping(address => mapping(address => uint256)) public unlocked;
 
     address public tokenService;
 
@@ -27,11 +27,18 @@ contract Holding is Ownable, Upgradeable {
     }
 
     function lock(address user, address token, uint256 amount) public {
-        require(msg.sender == tokenService, "Caller is not registered Token Service");
+        require(
+            msg.sender == tokenService,
+            "Caller is not registered Token Service"
+        );
         locked[user][token] += amount;
     }
 
-    function unlock(address user, address token, uint256 amount) public onlyOwner {
+    function unlock(
+        address user,
+        address token,
+        uint256 amount
+    ) public onlyOwner {
         require(locked[user][token] >= amount, "Insufficient amount");
         locked[user][token] -= amount;
         unlocked[user][token] += amount;
@@ -39,6 +46,7 @@ contract Holding is Ownable, Upgradeable {
 
     function release(address user, address token, uint256 amount) public {
         require(unlocked[user][token] >= amount, "Insufficient amount");
+        unlocked[user][token] -= amount;
         IERC20(token).transfer(user, amount);
     }
 }

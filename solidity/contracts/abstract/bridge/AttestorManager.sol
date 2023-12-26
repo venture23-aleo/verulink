@@ -8,7 +8,7 @@ contract AttestorManager is Ownable{
     event AttestorRemoved(address attestor, uint256 quorum);
 
     mapping(address => bool) private attestors;
-    uint256 quorumRequired;
+    uint256 public quorumRequired;
 
     function initialize(
         address _owner
