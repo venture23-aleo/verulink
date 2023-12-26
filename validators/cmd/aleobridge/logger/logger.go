@@ -45,7 +45,7 @@ func initLog(mode logMode, outPath string) {
 	w := zapcore.AddSync(lumber)
 
 	var (
-		level zap.AtomicLevel
+		level = zap.NewAtomicLevel()
 		cfg   zapcore.EncoderConfig
 	)
 
