@@ -61,21 +61,21 @@ type AleoMessage struct {
 	Amount   string `json:"amount"`
 }
 
-func (cl *Client) GetPktWithSeq(ctx context.Context, dst string, seqNum uint64) (*chain.Packet, error) {
+func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	fmt.Println("reached in getting packet wth seq number in aleo")
 	seqNumber := strconv.Itoa(int(seqNum)) + "u32"
 	var message map[string]string
 	var err error
-	message, err = nil, nil 
+	message, err = nil, nil
 	// message, err := cl.aleoClient.GetMappingValue(ctx, dst, OUT_PACKET, seqNumber)
 	if err != nil {
 		return nil, err
 	}
 
 	if message == nil {
-		return nil, nil 
+		return nil, nil
 	}
-	
+
 	packet := parseMessage(message[seqNumber])
 	commonPacket := parseAleoPacket(packet)
 	return commonPacket, nil
@@ -176,6 +176,18 @@ func (cl *Client) GetSourceChain() (name, address string) {
 	return
 }
 
+func (cl *Client) GetChainID() uint32 {
+	return cl.chainID
+}
+
+func Wallet(path string) (common.Wallet, error) {
+	wallet, err := relay.LoadWalletConfig(path)
+	if err != nil {
+		return nil, err
+	}
+	return wallet, nil
+}
+
 func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
@@ -190,6 +202,11 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		return nil
 	}
 
+	wallet, err := Wallet(cfg.WalletPath)
+	if err != nil {
+		return nil
+	}
+
 	return &Client{
 		src: &source{
 			sourceName:    cfg.Name,
@@ -199,9 +216,10 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		network:        url[1],
 		aleoClient:     aleoClient,
 		finalizeHeight: DefaultFinalizingHeight,
-		chainID: cfg.ChainID,
-		blockGenTime: BlockGenerationTime,
-		chainCfg: cfg,
+		chainID:        cfg.ChainID,
+		blockGenTime:   BlockGenerationTime,
+		chainCfg:       cfg,
+		wallet:         wallet,
 	}
 }
 
