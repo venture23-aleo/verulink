@@ -11,7 +11,9 @@ type ChainEvent struct {
 
 type ICommon interface {
 	Name() string
+	GetSourceChain() (name, address string)
 	GetFinalityHeight() uint64
+	GetDestChains() ([]string, error)
 	// GetChainEvents(ctx context.Context, eventCh chan<- *ChainEvent)
 }
 
@@ -68,7 +70,7 @@ type Packet struct {
 	Source      *NetworkAddress
 	Sequence    uint64
 	Message     *Message
-	Height      string
+	Height      uint64
 }
 
 type QueuedMessage struct {

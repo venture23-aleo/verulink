@@ -36,16 +36,16 @@ func initLog(mode logMode, outPath string) {
 	lumber := &lumberjack.Logger{
 		Filename:   outPath,
 		MaxSize:    10,
-		MaxBackups: 100,
+		MaxBackups: 2,
 		MaxAge:     180,
-		Compress:   true,
+		Compress:   false,
 	}
 	lumber.Rotate()
 
 	w := zapcore.AddSync(lumber)
 
 	var (
-		level zap.AtomicLevel
+		level = zap.NewAtomicLevel()
 		cfg   zapcore.EncoderConfig
 	)
 

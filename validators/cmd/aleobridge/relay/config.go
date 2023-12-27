@@ -13,11 +13,11 @@ type ChainConfig struct {
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
-	ChainConfigs []*ChainConfig
+	ChainConfigs []*ChainConfig `json:"chains"`
 	// BridgePair is pairing between bridge contracts to communicate packets back and forth
-	BridgePairs map[string]string
 
 	LogConfig *LoggerConfig `json:"log"`
+	DBPath    string        `json:"db_path"`
 	/*
 		other fields if required
 	*/

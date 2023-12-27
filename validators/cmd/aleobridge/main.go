@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
 
@@ -50,7 +52,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = validateAndUpdateConfig(cfg)
 	if err != nil {
 		fmt.Printf("Config validation failed. Error: %s\n", err.Error())
 		os.Exit(1)
@@ -66,6 +67,10 @@ func main() {
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
+
+	fmt.Println("multirelay")
+
+	store.InitKVStore(cfg.DBPath)
 
 	multirelayer := relay.MultiRelay(ctx, cfg)
 	logger.Logger.Info("Starting multi-relay")
@@ -87,34 +92,57 @@ func loadConfig(file string) (*relay.Config, error) {
 }
 
 func validateAndUpdateConfig(cfg *relay.Config) error {
-	var chains map[string]struct{}
-	for _, chainCfg := range cfg.ChainConfigs {
-		chains[chainCfg.Name] = struct{}{}
-	}
+	// var chains map[string]struct{}
+	// for _, chainCfg := range cfg.ChainConfigs {
+	// 	chains[chainCfg.Name] = struct{}{}
+	// }
 
 	// bridge pair validation
-	bridgePairs := map[string]string{}
+	// bridgePairs := map[string]string{}
 
 	// bridge pair validation might be obsolete as destination chains shall be taken from contract
-	for chain1, chain2 := range cfg.BridgePairs {
-		if chain1 == chain2 {
-			return fmt.Errorf("cannot bridge packects within same chain")
-		}
-		if _, ok := chains[chain1]; !ok {
-			return fmt.Errorf("chain %s is not defined in chainConfig field", chain1)
-		}
-		if _, ok := chains[chain2]; !ok {
-			return fmt.Errorf("chain %s is not defined in chainConfig field", chain2)
-		}
+	// for chain1, chain2 := range cfg.BridgePairs {
+	// 	if chain1 == chain2 {
+	// 		return fmt.Errorf("cannot bridge packects within same chain")
+	// 	}
+	// 	if _, ok := chains[chain1]; !ok {
+	// 		return fmt.Errorf("chain %s is not defined in chainConfig field", chain1)
+	// 	}
+	// 	if _, ok := chains[chain2]; !ok {
+	// 		return fmt.Errorf("chain %s is not defined in chainConfig field", chain2)
+	// 	}
 
-		// Config might entail "ethereum": "aleo" or "aleo":"ethereum" or both
-		// but we should only take single pair
-		if bridgePairs[chain1] == chain2 || bridgePairs[chain2] == chain1 {
-			continue
-		}
-		bridgePairs[chain1] = chain2
-	}
+	// 	// Config might entail "ethereum": "aleo" or "aleo":"ethereum" or both
+	// 	// but we should only take single pair
+	// 	if bridgePairs[chain1] == chain2 || bridgePairs[chain2] == chain1 {
+	// 		continue
+	// 	}
+	// 	bridgePairs[chain1] = chain2
+	// }
 
-	cfg.BridgePairs = bridgePairs
+	// cfg.BridgePairs = bridgePairs
 	return nil
+}
+
+func getKillSignals() []os.Signal {
+	return []os.Signal{
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT,
+		syscall.SIGILL,
+		syscall.SIGTRAP,
+		syscall.SIGABRT,
+		syscall.SIGSTKFLT,
+		syscall.SIGSYS,
+	}
+}
+
+func getIgnoreSignals() []os.Signal {
+	return []os.Signal{
+		syscall.SIGHUP,
+		syscall.SIGALRM,
+		syscall.SIGVTALRM,
+		syscall.SIGUSR1,
+		syscall.SIGUSR2,
+	}
 }

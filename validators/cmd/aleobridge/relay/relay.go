@@ -111,9 +111,14 @@ func (r *relay) startReceiving(ctx context.Context) {
 		default:
 		}
 
-		pkt, err := r.srcChain.GetPktWithSeq(ctx, r.nextSeqNum)
+		_, dstAddr := r.destChain.GetSourceChain()
+		pkt, err := r.srcChain.GetPktWithSeq(ctx, dstAddr, r.nextSeqNum)
 		if err != nil {
 			//todo: if not found sleep accordingly
+		}
+
+		if pkt == nil {
+			time.Sleep(time.Second * 10)
 		}
 
 		curSrcHeight := r.srcChain.CurHeight()
@@ -286,8 +291,10 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 				continue
 			}
 
+			_, dstAddr := r.destChain.GetSourceChain()
+
 			//Now get from blockchain and feed to the system
-			pkt, err := r.srcChain.GetPktWithSeq(ctx, seqNum)
+			pkt, err := r.srcChain.GetPktWithSeq(ctx, dstAddr, seqNum)
 			if err != nil {
 				//todo: we might decide that older packets be pruned in src chain
 				// and if it is pruned then r.bSeqNum can be updated to seqNum

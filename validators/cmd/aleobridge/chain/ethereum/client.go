@@ -2,14 +2,27 @@ package ethereum
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 )
 
+const (
+	DefaultFinalizingHeight = 64
+	BlockGenerationTime     = time.Second * 12
+)
+
+type source struct {
+	sourceName    string
+	sourceAddress string
+}
+
 type Client struct {
+	src               *source
 	eth               *ethclient.Client
 	minRequiredGasFee uint64
 	finalizeHeight    uint64
@@ -19,7 +32,8 @@ type Client struct {
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst string, seqNum uint64) (*chain.Packet, error) {
-	return &chain.Packet{}, nil
+	fmt.Println("reached in getting packet wth seq number in ethereum")
+	return nil, nil
 }
 
 func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {
@@ -53,7 +67,7 @@ func (cl *Client) GetBlockGenTime() time.Duration {
 }
 
 func (cl *Client) GetDestChains() ([]string, error) {
-	return nil, nil
+	return []string{"aleo"}, nil
 }
 
 func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
@@ -72,10 +86,32 @@ func (cl *Client) Name() string {
 	return "Ethereum"
 }
 
+func (cl *Client) GetSourceChain() (name, address string) {
+	name, address = cl.src.sourceName, cl.src.sourceAddress
+	return
+}
+
 func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
 		nextSeq should start from 1
 	*/
-	return &Client{}
+
+	rpc, err := rpc.Dial(cfg.NodeUrl)
+	if err != nil {
+		return nil
+	}
+
+	ethclient := ethclient.NewClient(rpc)
+	return &Client{
+		src: &source{
+			sourceName:    cfg.Name,
+			sourceAddress: cfg.BridgeContract,
+		},
+		eth:            ethclient,
+		finalizeHeight: DefaultFinalizingHeight,
+		blockGenTime:   BlockGenerationTime,
+		chainID:        cfg.ChainID,
+		chainCfg:       cfg,
+	}
 }

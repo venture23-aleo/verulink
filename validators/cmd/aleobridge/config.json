@@ -4,7 +4,7 @@
       "name": "aleo",
       "chain_id": 1,
       "bridge_contract": "contract_address",
-      "node_url": "url",
+      "node_url": "url|network",
       "start_height": 5000,
       "finality_height": 1,
       "wallet_path": "path/to/wallet"
@@ -13,7 +13,7 @@
       "name": "ethereum",
       "chain_id": 2,
       "bridge_contract": "contract_address",
-      "node_url": "url",
+      "node_url": "https://rpc.sepolia.org",
       "start_height": 500000,
       "finality_height":64,
       "wallet_path": "path/to/wallet"
@@ -22,9 +22,9 @@
   "bridge_pair":{
     "ethereum": "aleo"
   },
-  "db_path" : "/tmp/relay/db",
+  "db_path" : "db",
   "log":{
-    "encoding": "json",
-    "output_path": "/tmp/relays.log"
+    "encoding": "console",
+    "output_path": "relays.log"
   }
 }

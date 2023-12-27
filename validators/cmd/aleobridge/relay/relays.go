@@ -32,7 +32,6 @@ type IClient interface {
 	chain.ISender
 	IChainEvent
 	Namer
-	GetDestChains() ([]string, error)
 }
 
 type ClientFunc func(cfg *ChainConfig) IClient
@@ -46,6 +45,7 @@ type Relays []Relayer
 
 // what if gas depletion?
 func MultiRelay(ctx context.Context, cfg *Config) Relays {
+	fmt.Println("multirelay called")
 	chains := map[string]IClient{}
 
 	for _, chainCfg := range cfg.ChainConfigs {
@@ -54,6 +54,7 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 		}
 
 		chains[chainCfg.Name] = RegisteredClients[chainCfg.Name](chainCfg)
+
 		chainCtx, chainCtxCnclCause := context.WithCancelCause(ctx)
 		cond := &sync.Cond{
 			L: &sync.Mutex{},
@@ -63,8 +64,8 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 		chainCtxs[chainCfg.Name] = chainCtx
 		chainCtxCncls[chainCfg.Name] = chainCtxCnclCause
 
-		go GetChainEvents(chainCtx, chains[chainCfg.Name], cond)
-		go CancelCtxOnCnclEvent(chainCfg.Name, cond)
+		// go GetChainEvents(chainCtx, chains[chainCfg.Name], cond)
+		// go CancelCtxOnCnclEvent(chainCfg.Name, cond)
 
 	}
 
@@ -84,7 +85,6 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 			relays = append(relays, r)
 		}
 	}
-
 	return relays
 }
 

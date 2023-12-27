@@ -17,12 +17,19 @@ import (
 )
 
 const (
-	AleoBlockFinality = 1
-	OUT_PACKET        = "out_packets"
-	PRIORITY_FEE      = "1000"
+	DefaultFinalizingHeight = 1
+	BlockGenerationTime     = time.Second * 5
+	OUT_PACKET              = "out_packets"
+	PRIORITY_FEE            = "1000"
 )
 
+type source struct {
+	sourceName    string
+	sourceAddress string
+}
+
 type Client struct {
+	src               *source
 	url, network      string
 	aleoClient        *aleoRpc.Client
 	finalizeHeight    uint64
@@ -55,12 +62,20 @@ type AleoMessage struct {
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst string, seqNum uint64) (*chain.Packet, error) {
+	fmt.Println("reached in getting packet wth seq number in aleo")
 	seqNumber := strconv.Itoa(int(seqNum)) + "u32"
-	message, err := cl.aleoClient.GetMappingValue(ctx, dst, OUT_PACKET, seqNumber)
+	var message map[string]string
+	var err error
+	message, err = nil, nil 
+	// message, err := cl.aleoClient.GetMappingValue(ctx, dst, OUT_PACKET, seqNumber)
 	if err != nil {
 		return nil, err
 	}
 
+	if message == nil {
+		return nil, nil 
+	}
+	
 	packet := parseMessage(message[seqNumber])
 	commonPacket := parseAleoPacket(packet)
 	return commonPacket, nil
@@ -136,7 +151,8 @@ func (cl *Client) GetBlockGenTime() time.Duration {
 }
 
 func (cl *Client) GetDestChains() ([]string, error) {
-	return nil, nil
+	fmt.Println("calling dest chains")
+	return []string{"ethereum"}, nil
 }
 
 func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
@@ -155,11 +171,38 @@ func (cl *Client) Name() string {
 	return "Aleo"
 }
 
+func (cl *Client) GetSourceChain() (name, address string) {
+	name, address = cl.src.sourceName, cl.src.sourceAddress
+	return
+}
+
 func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
 	*/
-	return &Client{}
+	url := strings.Split(cfg.NodeUrl, "|")
+	if len(url) != 2 {
+		panic("wrong newtork url for aleo. format url as:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
+	}
+
+	aleoClient, err := aleoRpc.NewClient(url[0], url[1])
+	if err != nil {
+		return nil
+	}
+
+	return &Client{
+		src: &source{
+			sourceName:    cfg.Name,
+			sourceAddress: cfg.BridgeContract,
+		},
+		url:            url[0],
+		network:        url[1],
+		aleoClient:     aleoClient,
+		finalizeHeight: DefaultFinalizingHeight,
+		chainID: cfg.ChainID,
+		blockGenTime: BlockGenerationTime,
+		chainCfg: cfg,
+	}
 }
 
 func parseMessage(m string) *AleoPacket {
@@ -264,7 +307,11 @@ func parseAleoPacket(packet *AleoPacket) (commonPacket *chain.Packet) {
 	amount := &big.Int{}
 	commonPacket.Message.Amount, _ = amount.SetString(strings.ReplaceAll(packet.Message.Amount, "u64", ""), 0)
 
-	commonPacket.Height = strings.ReplaceAll(packet.Height, "u32", "")
+	height, err := strconv.ParseUint(strings.ReplaceAll(packet.Height, "u32", ""), 0, 64)
+	if err != nil {
+		return
+	}
+	commonPacket.Height = height
 
 	return
 }
@@ -278,7 +325,7 @@ func (c *Client) ConstructAleoPacket(msg *chain.Packet) string {
 	denom := msg.Message.DestTokenAddress
 	receiver := msg.Message.ReceiverAddress
 	amount := msg.Message.Amount.String() + "u64"
-	height := msg.Height + "u32"
+	height := strconv.FormatUint(msg.Height, 0) + "u32"
 	// todo: fmt.Sprintf()
 	constructedPacket := "{ version: " + version + ", sequence_no: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", service_contract: " + ConstructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", service_program: " + dstserviceContract + " }, msg: { denom: " + denom + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
 
