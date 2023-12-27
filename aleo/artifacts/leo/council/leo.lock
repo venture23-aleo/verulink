@@ -1,0 +1,20 @@
+[[package]]
+name = "bridge"
+location = "local"
+path = "../bridge"
+checksum = "c3bad43546d6da55fb423586fece8204b11e0399045baf8ef5a1ad1ef52ce88c"
+dependencies = []
+
+[[package]]
+name = "wrapped_token"
+location = "local"
+path = "../wrapped_token"
+checksum = "5bd2de4ce39213175a12c9173b97791a676cf614c956b065cad1ed2b4f4b6719"
+dependencies = []
+
+[[package]]
+name = "token_service"
+location = "local"
+path = "../token_service"
+checksum = "577b37b8fbdc69173ddbb6d1880174d26786c5df842211a99e65ad3c0d2417e5"
+dependencies = ["bridge.aleo", "wrapped_token.aleo"]

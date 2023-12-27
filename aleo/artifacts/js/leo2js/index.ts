@@ -10,6 +10,10 @@ import {
   getInPacketFullAttestorKey
 } from './bridge';
 import {
+  getTSForeignContract,
+  getTokenOrigin
+} from './token_service';
+import {
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
@@ -17,9 +21,20 @@ import {
   getTokenAccount
 } from './wrapped_token';
 import {
-  getTSForeignContract,
-  getTokenOrigin
-} from './token_service';
+  getProposalSign,
+  getAddMemberProposal,
+  getRemoveMemberProposal,
+  getUpdateThresholdProposal,
+  getInitializeBridge,
+  getInitializeTokenService,
+  getInitializeWrappedToken,
+  getSupportToken,
+  getEnableToken,
+  getEnableService,
+  getApproveChainBridge,
+  getDisapproveChainBridge,
+  getSupportChainTS
+} from './council';
 
 export {
   getAleoProgram,
@@ -31,11 +46,24 @@ export {
   getOutPacket,
   getPacketId,
   getInPacketFullAttestorKey,
+  getTSForeignContract,
+  getTokenOrigin,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
   getWrappedTokenInfo,
   getTokenAccount,
-  getTSForeignContract,
-  getTokenOrigin,
+  getProposalSign,
+  getAddMemberProposal,
+  getRemoveMemberProposal,
+  getUpdateThresholdProposal,
+  getInitializeBridge,
+  getInitializeTokenService,
+  getInitializeWrappedToken,
+  getSupportToken,
+  getEnableToken,
+  getEnableService,
+  getApproveChainBridge,
+  getDisapproveChainBridge,
+  getSupportChainTS,
 };

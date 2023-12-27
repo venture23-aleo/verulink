@@ -3,56 +3,14 @@ import * as leo2js from './leo2js/common';
 import {
   TSForeignContract,
   TokenOrigin,
-  AleoProgram,
-  ForeignContract,
-  MsgTokenReceive,
-  MsgTokenSend,
-  InPacketFull,
-  InPacket,
-  OutPacket,
-  PacketId,
-  InPacketFullAttestorKey,
-  wrapped_token,
-  WTForeignContract,
-  TokenInfo,
-  WrappedTokenInfo,
-  TokenAccount,
 } from "./types";
 import {
   getTSForeignContractLeo,
   getTokenOriginLeo,
-  getAleoProgramLeo,
-  getForeignContractLeo,
-  getMsgTokenReceiveLeo,
-  getMsgTokenSendLeo,
-  getInPacketFullLeo,
-  getInPacketLeo,
-  getOutPacketLeo,
-  getPacketIdLeo,
-  getInPacketFullAttestorKeyLeo,
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo,
 } from './js2leo';
 import {
   getTSForeignContract,
   getTokenOrigin,
-  getAleoProgram,
-  getForeignContract,
-  getMsgTokenReceive,
-  getMsgTokenSend,
-  getInPacketFull,
-  getInPacket,
-  getOutPacket,
-  getPacketId,
-  getInPacketFullAttestorKey,
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount,
 } from './leo2js';
 import {
   zkRun,
@@ -69,8 +27,8 @@ export class Token_serviceContract {
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      privateKey: 'APrivateKey1zkp6bBuq22Uz1JYVX4m7saWNLDdDP3dcU7ZSsxXgY9WVWRS',
-      viewKey: 'APrivateKey1zkp6bBuq22Uz1JYVX4m7saWNLDdDP3dcU7ZSsxXgY9WVWRS',
+      privateKey: 'APrivateKey1zkpGMMcFuBc2nLdipz3zoD8AxER2n13LxYe4HH2LXzuXUfA',
+      viewKey: 'APrivateKey1zkpGMMcFuBc2nLdipz3zoD8AxER2n13LxYe4HH2LXzuXUfA',
       appName: 'token_service',
       contractPath: 'artifacts/leo/token_service',
       fee: '0.01'
