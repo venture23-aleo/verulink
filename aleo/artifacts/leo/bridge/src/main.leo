@@ -1,0 +1,566 @@
+// The 'bridge' program.
+program bridge.aleo {
+
+    // Default Aleo Program
+    struct AleoProgram {
+        // Chain Id of Aleo Network
+        chain_id: u32,
+        // Program Address of the Service Program
+        addr: address
+    }
+
+    // Contract on different (foreign) chain
+    struct ForeignContract {
+        // Chain Id of Other Network
+        chain_id: u32,
+        // Contract address of the service contract on other chain
+        // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+        // For EVM Chains, 20 bytes is formated as following:
+        // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
+        addr: [u8; 32]
+    }
+
+    struct MsgTokenReceive {
+        // Program Address of the wrapped asset on Aleo; Ex: wUSDC
+        token: address,
+        // Address of the sender on the origin chain
+        // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+        // For EVM Chains, 20 bytes is formated as following:
+        // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
+        sender: [u8; 32],
+        // Address of the receiver on Aleo
+        receiver: address,
+        // Amount to mint on Aleo
+        amount: u64
+    }
+
+    struct MsgTokenSend {
+        // Contract Address of the Asset on origin chain; Ex: USDC on Ethereum
+        // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+        // For EVM Chains, 20 bytes is formated as following:
+        // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
+        token: [u8; 32],
+        // Address of the sender on this chain
+        sender: address,
+        // Address of the receiver on origin chain
+        // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+        // For EVM Chains, 20 bytes is formated as following:
+        // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
+        receiver: [u8; 32],
+        // Amount to unlock on origin chain
+        amount: u64
+    }
+
+
+    struct InPacketFull {
+        // Packet versioning for future enhancements or changes
+        version: u8,
+        // Sequence no of the packet for this chain on source chain
+        sequence: u32,
+        // Service Contract where the packet originated
+        source: ForeignContract,
+        // Destination Program where the packet should be consumed
+        destination: AleoProgram,
+        // Full message token
+        message: MsgTokenReceive,
+        // Height on the source chain where the packet originated
+        height: u32
+    }
+
+    struct InPacket {
+        // Packet versioning for future enhancements or changes
+        version: u8,
+        // Sequence no of the packet for this chain on source chain
+        sequence: u32,
+        // Service Contract where the packet originated
+        source: ForeignContract,
+        // Destination Program where the packet should be consumed
+        destination: AleoProgram,
+        // Hash of the message
+        msg_hash: field,
+        // Height on the source chain where the packet originated
+        height: u32
+    }
+
+
+    struct OutPacket {
+        // Packet versioning for future enhancements or changes
+        version: u8,
+        // Sequence no of the packet for destination chain
+        sequence: u32,
+        // Service Program where the packet originated
+        source: AleoProgram,
+        // Service Contract where the packet should be consumed
+        destination: ForeignContract,
+        // Hash of the message. Message can be found in service program
+        message: MsgTokenSend,
+        // Height where the packet is published
+        height: u32
+    }
+
+    struct PacketId {
+        // Chain Id where the packet originated
+        chain_id: u32,
+        // Sequence no of when the packet emitted
+        sequence: u32
+    }
+
+    // keys setting index
+    // 0 -> | 0: not initialized | 1: initialized |
+    mapping bridge_settings: u8 => u8;
+
+    // mapping used as variable
+    // true: address of council 
+    // false: Null
+    mapping council_program: bool => address;
+
+    mapping attestors: address => bool;
+
+    // key is derived as hash(InPacket);
+    mapping in_packet_attestations: field => u8;
+
+    // key is derived as PacketId
+    mapping in_packet_consumed: PacketId => bool;
+    mapping in_packet_hash: PacketId => field;
+
+    mapping out_packets: PacketId => OutPacket;
+
+    // This is to prevent the malicious attestor from signing the packet more than once
+    // key is derived as hash(source_chain_id, sequence, validator_address);
+    mapping in_packet_signs: field => bool;
+
+    // key is chain_id
+    mapping supported_chains: u32 => bool;
+    mapping supported_services: address => bool;
+
+    // sequence no of the packet for the target (destination) chain
+    // key is chain_id
+    mapping sequences: u32 => u32;
+
+    // Used to receive the packet
+    // Can only be called by attestor
+    struct InPacketFullAttestorKey {
+        packet_hash: field,
+        attestor: address
+    }
+
+    // Returns the chain id of the network where this program is deployed
+    inline this_chain_id() -> u32 {
+        return 1u32;
+    }
+
+    // TODO: store as a variable
+    inline version() -> u8 {
+        return 0u8;
+    }
+
+    //////////////////////////////
+    /////// Initialization ///////
+    //////////////////////////////
+
+    /// Initialize can only be called once
+    /// Initialize must be called from council program
+    transition bridge_initialize(public threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address) {
+        // Assert that only a program can call this method
+        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
+        // self.signer = tx.origin
+        // self.caller = msg.sender
+        assert_neq(self.signer, self.caller);
+        return then finalize(threshold, a1, a2, a3, a4, a5, self.caller);
+    }
+
+    finalize bridge_initialize(threshold: u8, a1: address, a2: address, a3: address, a4: address, a5: address, council: address) {
+        // Assert bridge has not been initialized before
+        assert(!Mapping::contains(bridge_settings, 0u8));
+
+        // Setting threshold marks the bridge as initialized
+        Mapping::set(bridge_settings, 0u8, threshold);
+
+        // Set the initial attestors
+        Mapping::set(attestors, a1, true);
+        Mapping::set(attestors, a2, true);
+        Mapping::set(attestors, a3, true);
+        Mapping::set(attestors, a4, true);
+        Mapping::set(attestors, a5, true);
+
+        // Set the council program
+        Mapping::set(council_program, true, council);
+    }
+
+    //////////////////////////////
+    ///// Update Threshold ///////
+    //////////////////////////////
+
+    /// Update the existing threshold for a packet to be considered valid
+    /// Can only be called from council/governance program
+    transition update_bridge_threshold(public new_threshold: u8) {
+        return then finalize(self.caller, new_threshold);
+    }
+
+    finalize update_bridge_threshold(from: address, new_threshold: u8) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::set(bridge_settings, 0u8, new_threshold);
+    }
+
+
+    //////////////////////////////
+    //// Add/Remove Service //////
+    //////////////////////////////
+
+    /// Add a new supported service program to the bridge program
+    /// Only the supported service program can call publish/consume on bridge program
+    /// Can only be called from council/governance program
+    transition add_service(public service: address) {
+        return then finalize(self.caller, service);
+    }
+
+    finalize add_service(from: address, service: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        Mapping::set(supported_services, service, true);
+    }
+
+    /// Remove an existing service program from the bridge program
+    /// Removing the program program prevents it from calling publish/consume on bridge program
+    /// Can only be called from council/governance program
+    transition remove_service(public service: address) {
+        return then finalize(self.caller, service);
+    }
+
+    finalize remove_service(from: address, service: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        // If service does not exist, this is expected to fail
+        Mapping::remove(supported_services, service);
+    }
+
+    //////////////////////////////
+    ///// Add/Remove Attestor ////
+    //////////////////////////////
+
+    /// Add a new attestor to the bridge program
+    /// Only a valid attestor can `attest` to a packet
+    /// Can only be called from council/governance program
+    transition add_attestor(public attestor: address) {
+        return then finalize(self.caller, attestor);
+    }
+
+    finalize add_attestor(from: address, attestor: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        Mapping::set(attestors, attestor, true);
+
+    }
+
+    /// Remove an existing attestor from the bridge program
+    /// Can only be called from council/governance program
+    transition remove_attestor(public attestor: address) {
+        return then finalize(self.caller, attestor);
+    }
+
+    finalize remove_attestor(from: address, attestor: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::remove(attestors, attestor);
+    }
+
+
+    //////////////////////////////
+    ////// Add/Remove Chains /////
+    //////////////////////////////
+
+    /// Support a new chain by the bridge
+    transition approve_chain(public chain_id: u32) {
+        return then finalize(self.caller, chain_id);
+    }
+
+    finalize approve_chain(from: address, chain_id: u32) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        Mapping::set(supported_chains, chain_id, true);
+    }
+
+    /// Remove chain supported by the bridge
+    transition disapprove_chain(public chain_id: u32) {
+        return then finalize(self.caller, chain_id);
+    }
+
+    finalize disapprove_chain(from: address, chain_id: u32) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(council_program, true);
+        assert_eq(from, council);
+
+        // If the chain_id is not supported, this fails
+        Mapping::remove(supported_chains, chain_id);
+    }
+
+
+
+    /// Publishes a message to be picked up by attestors to forward to the destination chain.
+    /// This transition must be called from one of the service supported by the bridge.
+    ///
+    /// # Arguments:
+    /// * `destination_chain_id`: u32 - ChainId of the chain where the message is intended for
+    /// * `destination_service_contract`: u32 - Service contract on destination chain which can consume the message
+    /// * `msg_hash`: field - Hash of the message; Message is stored in the service program
+
+    transition publish(public destination_chain_id: u32, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u64) {
+        // Assert that only a program can call this method
+        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
+        // self.signer = tx.origin
+        // self.caller = msg.sender
+        assert_neq(self.signer, self.caller);
+
+        // Cannot directly pass struct as parameter in cross-contract call.
+        // So construct source struct on `finalize` instead
+        // Issue: https://github.com/AleoHQ/leo/issues/3269
+        // let source: AleoProgram = AleoProgram {
+        //     chain_id: this_chain_id(),
+        //     addr: self.caller
+        // };
+
+        return then finalize (this_chain_id(), self.caller, destination_chain_id, destination_service_contract, token, sender, receiver, amount);
+    }
+
+    finalize publish(source_chain_id: u32, source_service_program: address, destination_chain_id: u32, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u64) {
+        let source: AleoProgram = AleoProgram {
+            chain_id: source_chain_id,
+            addr: source_service_program
+        };
+
+        // Assert that the packet is being sent to supported chain.
+        assert(Mapping::get(supported_chains, destination_chain_id));
+
+        // Assert that the packet is being sent from one of the supported services
+        assert(Mapping::get(supported_services, source.addr));
+
+        // Get Sequence number of the service
+        let target_sequence_no: u32 = Mapping::get_or_use(sequences, destination_chain_id, 1u32);
+        
+        // Get Sequence number of the bridge
+        let bridge_sequence_no: u32 = Mapping::get_or_use(sequences, this_chain_id(), 1u32); 
+
+        let destination: ForeignContract = ForeignContract {
+            chain_id: destination_chain_id,
+            addr: destination_service_contract
+        };
+
+        let packet: OutPacket = OutPacket {
+            version: version(),
+            sequence: target_sequence_no,
+            source,
+            destination,
+            message: MsgTokenSend {
+                sender,
+                token,
+                receiver,
+                amount
+            },
+            height: block.height
+        };
+
+        // Update sequence no of the destination chain
+        Mapping::set(sequences, destination_chain_id, target_sequence_no + 1u32);
+
+        Mapping::set(sequences, source_chain_id, bridge_sequence_no + 1u32);
+
+        let packet_id: PacketId = PacketId {
+            chain_id: destination_chain_id,
+            sequence: target_sequence_no
+        };
+
+        // Set the outgoing packets
+        Mapping::set(out_packets, packet_id, packet);
+    }
+
+    /// Attest to a message published on some other chain.
+    /// This transition must be called only by the attestors.
+    ///
+    /// # Arguments:
+    /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
+    transition attest(public packet: InPacketFull) {
+
+        let msg_hash: field = BHP256::hash_to_field(packet.message);
+
+        let packet_hash: field = BHP256::hash_to_field(InPacket {
+            version: packet.version,
+            sequence: packet.sequence,
+            source: packet.source,
+            destination: packet.destination,
+            msg_hash,
+            height: packet.height
+        });
+
+        let packet_validator_mapping_key: field = BHP256::hash_to_field(InPacketFullAttestorKey {
+            packet_hash,
+            attestor: self.caller
+        });
+
+        return then finalize(packet.source.chain_id, packet.sequence, packet_hash, self.caller, packet_validator_mapping_key, packet);
+    }
+
+    finalize attest(chain_id: u32, sequence: u32, packet_hash: field, attestor: address, packet_validator_mapping_key: field, packet: InPacketFull) {
+
+        // Assert that the packet is being sent to this chain
+        assert_eq(packet.destination.chain_id, this_chain_id());
+
+        // Assert that the packet is being received from supported chain.
+        assert(Mapping::get(supported_chains, packet.source.chain_id));
+
+        // Assert that the attestors signing are valid
+        assert(Mapping::get(attestors, attestor));
+
+        // Assert that the attestor has not signed the same message previously
+        assert(!Mapping::contains(in_packet_signs, packet_validator_mapping_key));
+
+        // Mark the packet as signed by attestor
+        Mapping::set(in_packet_signs, packet_validator_mapping_key, true);
+
+        // Get the attestations for the packet
+        let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash, 0u8);
+
+        // Increase the attestation by 1
+        Mapping::set(in_packet_attestations, packet_hash, packet_attestation_count + 1u8);
+
+        // Get the threshold
+        // If bridge is not initialized, this should fail
+        let threshold: u8 = Mapping::get(bridge_settings, 0u8);
+
+        let packet_id: PacketId = PacketId {
+            chain_id,
+            sequence
+        };
+
+        // Check if the packet exists
+        let packet_id_exists: bool = Mapping::contains(in_packet_hash, packet_id);
+
+        if (!packet_id_exists && packet_attestation_count + 1u8 >= threshold) {
+            // If the threshold is met, set the packet_id
+            // Alternatively, store the entire packet
+            Mapping::set(in_packet_hash, packet_id, packet_hash);
+
+            // Mark the packet as not consumed
+            Mapping::set(in_packet_consumed, packet_id, false);
+        }
+
+    }
+
+
+    /// Receive a message published on some other chain.
+    /// This transition can be called by anyone with valid signature of the attestor.
+    ///
+    /// # Arguments:
+    /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
+    /// * `attestor`: address - Address of the attestor
+    /// * `sign`: signature - Signature of the attestor signing the packet
+    // transition receive(public packet: InPacketFull, public attestor: address, public sign: signature) { sign.verify(attestor, packet) // same as attest};
+
+    /// Consumes a packet available on bridge program.
+    /// This transition must be called from one of the service supported by the bridge.
+    ///
+    /// # Arguments:
+    /// * `source_chain_id`: u32 - Source Chain Id
+    /// * `source_service_contract`: [u8;32] - Service contract of the source service contract
+    /// * `token`: address - Address of the wrapped token on Aleo
+    /// * `sender`: address - Address of the sender on other chain
+    /// * `receiver`: address - Address of the receiver on Aleo
+    /// * `amount`: u64 - Amount to be minted on Aleo 
+    /// * `sequence`: u32 - Sequence no for this chain on the source chain
+    /// * `height`: u32 - Height of the source chain where the packet originated
+    transition consume(public source_chain_id: u32, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public amount: u64, public sequence: u32, public height: u32) {
+        // Assert that only a program can call this method
+        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
+        // self.signer = tx.origin
+        // self.caller = msg.sender
+        assert_neq(self.signer, self.caller);
+
+        let source: ForeignContract = ForeignContract {
+            chain_id: source_chain_id,
+            addr: source_service_contract
+        };
+
+        let destination: AleoProgram = AleoProgram {
+            chain_id: this_chain_id(),
+            addr: self.caller
+        };
+
+        let message: MsgTokenReceive = MsgTokenReceive {
+            token,
+            sender,
+            receiver,
+            amount
+        };
+
+        let msg_hash: field = BHP256::hash_to_field(message);
+
+        let in_packet: InPacket = InPacket {
+            version: version(),
+            sequence,
+            source,
+            destination,
+            msg_hash,
+            height
+        };
+
+        let packet_hash: field = BHP256::hash_to_field(in_packet);
+
+        return then finalize (self.caller, source_chain_id, sequence, packet_hash);
+    }
+
+    finalize consume(by: address, chain_id: u32, sequence: u32 , packet_hash: field) {
+        // Assert that the packet is being sent from one of the supported services
+        assert(Mapping::get(supported_services, by));
+
+        // Get the threshold
+        // If bridge is not initialized, this should fail
+        let threshold: u8 = Mapping::get(bridge_settings, 0u8);
+
+        // Ensure enough attestation for the packet
+        // Not required? since packet_id exists if enough attestations is reached
+        let packet_validation: u8 = Mapping::get(in_packet_attestations, packet_hash);
+        assert(packet_validation >= threshold);
+
+        let packet_id: PacketId = PacketId {
+            chain_id,
+            sequence
+        };
+
+        // Ensure that the packet has the right information
+        let stored_packet_hash: field = Mapping::get(in_packet_hash, packet_id);
+        assert_eq(stored_packet_hash, packet_hash);
+
+        // Ensure that the packet has not been consumed
+        let is_packet_consumed: bool = Mapping::get(in_packet_consumed, packet_id);
+        assert(!is_packet_consumed);
+
+        // Consume the packet
+        Mapping::set(in_packet_consumed, packet_id, true);
+
+
+    }
+
+}
+
+
