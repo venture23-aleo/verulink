@@ -65,7 +65,7 @@ describe("Aleo Bridge", () => {
       await bridge.publish(
         ethChainId, // destinationChainId
         evm2AleoArr(ethTsContract), // destinationServiceContract
-        evm2AleoArr(wUSDC), // token
+        evm2AleoArr(USDC), // token
         aleoUser, // sender
         evm2AleoArr(ethUser), // receiver
         BigInt(100) // amount
@@ -82,8 +82,8 @@ describe("Aleo Bridge", () => {
     let errorMsg = "";
     try {
       await bridge.consume(
-        ethChainId, // destinationChainId
-        evm2AleoArr(ethTsContract), // destinationServiceContract
+        ethChainId, // sourceChainId
+        evm2AleoArr(ethTsContract), // sourceServiceContract
         wUSDC, // token
         evm2AleoArr(ethUser), // sender
         aleoUser, // receiver
