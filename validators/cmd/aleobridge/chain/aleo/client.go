@@ -61,13 +61,27 @@ type AleoMessage struct {
 	Amount   string `json:"amount"`
 }
 
+type OutPacketKeyMap struct {
+	// http://localhost:3030/testnet3/program/bridge.aleo/mapping/in_packet_hash/{chain_id:1u32,sequence:3u32}
+	
+}
+
+func ConstructMappingKey(dst uint32, seqNum uint64) (mappingKey string){
+	chainID := strconv.FormatUint(uint64(dst), 10) + "u32"
+	sequenceNumber := strconv.FormatUint(uint64(seqNum), 10) + "u64"
+	mappingKey = fmt.Sprint("{chain_id:", chainID, ",", "sequence:", sequenceNumber, "}")
+	return 
+}
+
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
-	fmt.Println("reached in getting packet wth seq number in aleo")
-	seqNumber := strconv.Itoa(int(seqNum)) + "u32"
-	var message map[string]string
-	var err error
-	message, err = nil, nil
-	// message, err := cl.aleoClient.GetMappingValue(ctx, dst, OUT_PACKET, seqNumber)
+	fmt.Println("reached in getting packet wth seq number in aleo", dst, seqNum)
+	seqNumber := strconv.FormatUint(uint64(seqNum), 10)
+	_, programID := cl.GetSourceChain()
+	mappingKey := ConstructMappingKey(dst, seqNum)
+
+	fmt.Println("Program ID", programID, "mapping key", mappingKey)
+
+	message, err := cl.aleoClient.GetMappingValue(ctx, programID, OUT_PACKET, mappingKey)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +165,6 @@ func (cl *Client) GetBlockGenTime() time.Duration {
 }
 
 func (cl *Client) GetDestChains() ([]string, error) {
-	fmt.Println("calling dest chains")
 	return []string{"ethereum"}, nil
 }
 
@@ -325,7 +338,7 @@ func parseAleoPacket(packet *AleoPacket) (commonPacket *chain.Packet) {
 	amount := &big.Int{}
 	commonPacket.Message.Amount, _ = amount.SetString(strings.ReplaceAll(packet.Message.Amount, "u64", ""), 0)
 
-	height, err := strconv.ParseUint(strings.ReplaceAll(packet.Height, "u32", ""), 0, 64)
+	height, err := strconv.ParseUint(strings.ReplaceAll(packet.Height, "u32}", ""), 0, 64)
 	if err != nil {
 		return
 	}

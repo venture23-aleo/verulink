@@ -115,10 +115,13 @@ func (r *relay) startReceiving(ctx context.Context) {
 		pkt, err := r.srcChain.GetPktWithSeq(ctx, chainID, r.nextSeqNum)
 		if err != nil {
 			//todo: if not found sleep accordingly
+			time.Sleep(time.Second * 10)
+			continue
 		}
 
 		if pkt == nil {
 			time.Sleep(time.Second * 10)
+			continue
 		}
 
 		curSrcHeight := r.srcChain.CurHeight()

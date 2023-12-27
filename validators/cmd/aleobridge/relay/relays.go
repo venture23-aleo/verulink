@@ -45,7 +45,6 @@ type Relays []Relayer
 
 // what if gas depletion?
 func MultiRelay(ctx context.Context, cfg *Config) Relays {
-	fmt.Println("multirelay called")
 	chains := map[string]IClient{}
 
 	for _, chainCfg := range cfg.ChainConfigs {

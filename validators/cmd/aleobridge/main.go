@@ -68,12 +68,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
 
-	fmt.Println("multirelay")
-
 	store.InitKVStore(cfg.DBPath)
 
 	multirelayer := relay.MultiRelay(ctx, cfg)
-	logger.Logger.Info("Starting multi-relay")
 	multirelayer.StartMultiRelay(ctx)
 
 }

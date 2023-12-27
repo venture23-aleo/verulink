@@ -48,6 +48,7 @@ type Client struct {
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
+	fmt.Println("reached in getting packet with seq number ethereum", dst, seqNum)
 	chainID := &big.Int{}
 	chainID.SetUint64(uint64(dst))
 	sequenceNumber := &big.Int{}
