@@ -30,11 +30,13 @@ func NewRelay(
 	sChainCond, dChainCond *sync.Cond,
 
 ) Relayer {
+	pktCh := make(chan *chain.Packet)
 	return &relay{
 		srcChain:   srcChain,
 		destChain:  destChain,
 		sChainCond: sChainCond,
 		dChainCond: dChainCond,
+		pktCh: pktCh,
 	}
 }
 
@@ -125,8 +127,10 @@ func (r *relay) startReceiving(ctx context.Context) {
 		}
 
 		curSrcHeight := r.srcChain.CurHeight()
-		if pkt.Height+r.srcChain.GetFinalityHeight() >= curSrcHeight {
-			heightDiff := curSrcHeight - pkt.Height
+		finalityHeight := r.srcChain.GetFinalityHeight()
+		if pkt.Height + finalityHeight >= curSrcHeight {
+			fmt.Println(pkt.Height, finalityHeight, curSrcHeight)
+			heightDiff := pkt.Height + finalityHeight - curSrcHeight
 			waitTime := r.srcChain.GetBlockGenTime() * time.Duration(heightDiff)
 			time.Sleep(waitTime)
 			continue

@@ -59,30 +59,29 @@ type AleoMessage struct {
 	Denom    string `json:"denom"`
 	Receiver string `json:"receiver"`
 	Amount   string `json:"amount"`
+	Sender   string
 }
 
 type OutPacketKeyMap struct {
 	// http://localhost:3030/testnet3/program/bridge.aleo/mapping/in_packet_hash/{chain_id:1u32,sequence:3u32}
-	
+
 }
 
-func ConstructMappingKey(dst uint32, seqNum uint64) (mappingKey string){
+func ConstructMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
 	chainID := strconv.FormatUint(uint64(dst), 10) + "u32"
-	sequenceNumber := strconv.FormatUint(uint64(seqNum), 10) + "u64"
+	sequenceNumber := strconv.FormatUint(uint64(seqNum), 10) + "u32"
 	mappingKey = fmt.Sprint("{chain_id:", chainID, ",", "sequence:", sequenceNumber, "}")
-	return 
+	return
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	fmt.Println("reached in getting packet wth seq number in aleo", dst, seqNum)
-	seqNumber := strconv.FormatUint(uint64(seqNum), 10)
 	_, programID := cl.GetSourceChain()
 	mappingKey := ConstructMappingKey(dst, seqNum)
 
-	fmt.Println("Program ID", programID, "mapping key", mappingKey)
-
 	message, err := cl.aleoClient.GetMappingValue(ctx, programID, OUT_PACKET, mappingKey)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -90,7 +89,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		return nil, nil
 	}
 
-	packet := parseMessage(message[seqNumber])
+	packet := parseMessage(message[mappingKey])
 	commonPacket := parseAleoPacket(packet)
 	return commonPacket, nil
 }
@@ -113,7 +112,7 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 	}
 	aleoPacket := cl.ConstructAleoPacket(packet)
 	query, network := cl.GetNodeUrlAndNetwork()
-	privateKey := "" //call common.wallet.skey()
+	privateKey := cl.wallet.(*common.ALEOWallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
 		aleoPacket,
@@ -122,7 +121,8 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 		"--broadcast", query+"/"+network+"/transaction/broadcast",
 		"--priority-fee", PRIORITY_FEE)
 
-	fmt.Println("calling the contract")
+	fmt.Println("calling the contract", privateKey)
+	fmt.Println("aleo packet", aleoPacket)
 	output, err := cmd.Output()
 	if err != nil {
 		fmt.Println(err)
@@ -255,19 +255,19 @@ func parseMessage(m string) *AleoPacket {
 		switch v {
 		case "version:":
 			pkt.Version = msg[m+1]
-			// fmt.Println(pkt.Version)
-		case "sequence_no:":
+			// fmt.Println("version", pkt.Version)
+		case "sequence:":
 			pkt.Sequence = msg[m+1]
-			// fmt.Println(pkt.Sequence)
+			// fmt.Println("sequence", pkt.Sequence)
 		case "source:":
 			pkt.Source.Chain_id = msg[m+3]
-			// fmt.Println(pkt.Source.Chain_id)
+			// fmt.Println("source chain id", pkt.Source.Chain_id)
 			pkt.Source.ServiceContract = msg[m+5]
-			// fmt.Println(pkt.Source.ServiceContract)
+			// fmt.Println("source address", pkt.Source.ServiceContract)
 		case "destination:":
 			serviceProgram := ""
 			pkt.Destination.Chain_id = msg[m+3]
-			// fmt.Println(pkt.Destination.Chain_id)
+			// fmt.Println("dest chain id", pkt.Destination.Chain_id)
 			for i := m + 6; true; i++ {
 				if msg[i] == "]" {
 					break
@@ -275,8 +275,8 @@ func parseMessage(m string) *AleoPacket {
 				serviceProgram += msg[m+6] + " "
 			}
 			pkt.Destination.ServiceContract = serviceProgram
-			// fmt.Println(serviceProgram)
-		case "msg:":
+			// fmt.Println("dest address", serviceProgram)
+		case "message:":
 			denom := ""
 			i := 0
 			for i = m + 4; true; i++ {
@@ -286,16 +286,19 @@ func parseMessage(m string) *AleoPacket {
 				denom += msg[i] + " "
 			}
 			pkt.Message.Denom = denom
-			// fmt.Println(pkt.Message.Denom)
+			// fmt.Println("token", pkt.Message.Denom)
+			sender := msg[i+2]
+			pkt.Message.Sender = sender
+			// fmt.Println("sender", sender)
 			receiver := ""
-			for i = i + 3; true; i++ {
+			for i = i + 5; true; i++ {
 				if msg[i] == "]" {
 					break
 				}
 				receiver += msg[i] + " "
 			}
 			pkt.Message.Receiver = receiver
-			// fmt.Println(pkt.Message.Receiver)
+			// fmt.Println("message receiver", pkt.Message.Receiver)
 			pkt.Message.Amount = msg[i+2]
 			// fmt.Println(pkt.Message.Amount)
 		case "height:":
@@ -333,6 +336,7 @@ func parseAleoPacket(packet *AleoPacket) (commonPacket *chain.Packet) {
 	commonPacket.Destination.Address = ParseEthAddress(packet.Destination.ServiceContract)
 
 	commonPacket.Message.DestTokenAddress = ParseEthAddress(packet.Message.Denom)
+	commonPacket.Message.SenderAddress = packet.Message.Sender
 	commonPacket.Message.ReceiverAddress = ParseEthAddress(packet.Message.Receiver)
 
 	amount := &big.Int{}
@@ -354,11 +358,12 @@ func (c *Client) ConstructAleoPacket(msg *chain.Packet) string {
 	dstChainId, dstserviceContract := strconv.Itoa(int(msg.Destination.ChainID))+"u32", msg.Destination.Address
 	fmt.Println(srcServiceContract, dstserviceContract)
 	denom := msg.Message.DestTokenAddress
+	sender := msg.Message.SenderAddress
 	receiver := msg.Message.ReceiverAddress
 	amount := msg.Message.Amount.String() + "u64"
-	height := strconv.FormatUint(msg.Height, 0) + "u32"
+	height := strconv.FormatUint(msg.Height, 10) + "u32"
 	// todo: fmt.Sprintf()
-	constructedPacket := "{ version: " + version + ", sequence_no: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", service_contract: " + ConstructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", service_program: " + dstserviceContract + " }, msg: { denom: " + denom + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
+	constructedPacket := "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + ConstructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + ConstructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
 
 	return constructedPacket
 }
@@ -384,10 +389,8 @@ func ConstructServiceContractAddress(serviceContract string) string {
 
 func ParseEthAddress(addr string) string {
 	addr = strings.ReplaceAll(addr, "u8", "")
-	fmt.Println(addr)
 	addr = strings.Trim(addr, " ")
 	splittedAddress := strings.Split(addr, " ")
-	fmt.Println(len(splittedAddress))
 
 	var addrbt []byte
 

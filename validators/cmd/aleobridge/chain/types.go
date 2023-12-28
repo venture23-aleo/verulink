@@ -58,6 +58,7 @@ type NetworkAddress struct {
 
 type Message struct {
 	DestTokenAddress string
+	SenderAddress    string
 	Amount           *big.Int
 	ReceiverAddress  string
 }

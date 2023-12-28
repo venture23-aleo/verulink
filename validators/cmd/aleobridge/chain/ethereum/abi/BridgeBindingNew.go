@@ -47,7 +47,7 @@ type PacketLibraryInPacket struct {
 
 // PacketLibraryInTokenMessage is an auto generated low-level Go binding around an user-defined struct.
 type PacketLibraryInTokenMessage struct {
-	SenderAddress    common.Address
+	SenderAddress    string
 	DestTokenAddress common.Address
 	Amount           *big.Int
 	ReceiverAddress  common.Address
@@ -79,7 +79,7 @@ type PacketLibraryOutTokenMessage struct {
 
 // BridgeMetaData contains all meta data concerning the Bridge contract.
 var BridgeMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"AlreadyVoted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"quorum\",\"type\":\"uint256\"}],\"name\":\"AttestorAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"quorum\",\"type\":\"uint256\"}],\"name\":\"AttestorRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"indexed\":false,\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"chain\",\"type\":\"tuple\"}],\"name\":\"ChainAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"}],\"name\":\"ChainRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"}],\"name\":\"Consumed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"indexed\":false,\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"PacketArrived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"destTokenAddress\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"receiverAddress\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"indexed\":false,\"internalType\":\"structPacketLibrary.OutPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"PacketDispatched\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"TokenServiceAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"TokenServiceRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"Voted\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"newQuorumRequired\",\"type\":\"uint256\"}],\"name\":\"addAttestor\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"destBridgeAddress\",\"type\":\"string\"}],\"name\":\"addChain\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"addTokenService\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"chains\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"consume\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"consumedPackets\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_sequence\",\"type\":\"uint256\"}],\"name\":\"getIncomingPacketHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"}],\"name\":\"hasQuorumReached\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"hasVoted\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_sequence\",\"type\":\"uint256\"}],\"name\":\"incomingPacketExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"incomingPackets\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"}],\"name\":\"isAttestor\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_sequence\",\"type\":\"uint256\"}],\"name\":\"isPacketConsumed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"isRegisteredTokenService\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"}],\"name\":\"isSupportedChain\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"outgoingPackets\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"destTokenAddress\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"receiverAddress\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"receivePacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket[]\",\"name\":\"packets\",\"type\":\"tuple[]\"}],\"name\":\"receivePacketBatch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"newQuorumRequired\",\"type\":\"uint256\"}],\"name\":\"removeAttestor\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"}],\"name\":\"removeChain\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"removeTokenService\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"destTokenAddress\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"receiverAddress\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.OutPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"sendMessage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"sequences\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"AlreadyVoted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"quorum\",\"type\":\"uint256\"}],\"name\":\"AttestorAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"quorum\",\"type\":\"uint256\"}],\"name\":\"AttestorRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"indexed\":false,\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"chain\",\"type\":\"tuple\"}],\"name\":\"ChainAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"}],\"name\":\"ChainRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"}],\"name\":\"Consumed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"senderAddress\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"indexed\":false,\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"PacketArrived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"destTokenAddress\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"receiverAddress\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"indexed\":false,\"internalType\":\"structPacketLibrary.OutPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"PacketDispatched\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"TokenServiceAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"TokenServiceRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"Voted\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"newQuorumRequired\",\"type\":\"uint256\"}],\"name\":\"addAttestor\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"destBridgeAddress\",\"type\":\"string\"}],\"name\":\"addChain\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"addTokenService\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"chains\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"senderAddress\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"consume\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"consumedPackets\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"}],\"name\":\"getIncomingPacketHash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"}],\"name\":\"hasQuorumReached\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"}],\"name\":\"hasQuorumReached\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"hasVoted\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"packetHash\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"hasVoted\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"senderAddress\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"hash\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"incomingPackets\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"}],\"name\":\"isAttestor\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_chainId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_sequence\",\"type\":\"uint256\"}],\"name\":\"isPacketConsumed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"isRegisteredTokenService\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"}],\"name\":\"isSupportedChain\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"outgoingPackets\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"destTokenAddress\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"receiverAddress\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"quorumRequired\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"senderAddress\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"receivePacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"senderAddress\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"destTokenAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"receiverAddress\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.InPacket[]\",\"name\":\"packets\",\"type\":\"tuple[]\"}],\"name\":\"receivePacketBatch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"attestor\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"newQuorumRequired\",\"type\":\"uint256\"}],\"name\":\"removeAttestor\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"}],\"name\":\"removeChain\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"tokenService\",\"type\":\"address\"}],\"name\":\"removeTokenService\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"version\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"sequence\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"internalType\":\"structPacketLibrary.InNetworkAddress\",\"name\":\"sourceTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"chainId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"addr\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutNetworkAddress\",\"name\":\"destTokenService\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"address\",\"name\":\"senderAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"destTokenAddress\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"receiverAddress\",\"type\":\"string\"}],\"internalType\":\"structPacketLibrary.OutTokenMessage\",\"name\":\"message\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"height\",\"type\":\"uint256\"}],\"internalType\":\"structPacketLibrary.OutPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"sendMessage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"sequences\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // BridgeABI is the input ABI used to generate the binding from.
@@ -306,10 +306,10 @@ func (_Bridge *BridgeCallerSession) ConsumedPackets(arg0 *big.Int, arg1 *big.Int
 
 // GetIncomingPacketHash is a free data retrieval call binding the contract method 0x419eb411.
 //
-// Solidity: function getIncomingPacketHash(uint256 _chainId, uint256 _sequence) view returns(bytes32 packetHash)
-func (_Bridge *BridgeCaller) GetIncomingPacketHash(opts *bind.CallOpts, _chainId *big.Int, _sequence *big.Int) ([32]byte, error) {
+// Solidity: function getIncomingPacketHash(uint256 chainId, uint256 sequence) view returns(bytes32 packetHash)
+func (_Bridge *BridgeCaller) GetIncomingPacketHash(opts *bind.CallOpts, chainId *big.Int, sequence *big.Int) ([32]byte, error) {
 	var out []interface{}
-	err := _Bridge.contract.Call(opts, &out, "getIncomingPacketHash", _chainId, _sequence)
+	err := _Bridge.contract.Call(opts, &out, "getIncomingPacketHash", chainId, sequence)
 
 	if err != nil {
 		return *new([32]byte), err
@@ -323,24 +323,24 @@ func (_Bridge *BridgeCaller) GetIncomingPacketHash(opts *bind.CallOpts, _chainId
 
 // GetIncomingPacketHash is a free data retrieval call binding the contract method 0x419eb411.
 //
-// Solidity: function getIncomingPacketHash(uint256 _chainId, uint256 _sequence) view returns(bytes32 packetHash)
-func (_Bridge *BridgeSession) GetIncomingPacketHash(_chainId *big.Int, _sequence *big.Int) ([32]byte, error) {
-	return _Bridge.Contract.GetIncomingPacketHash(&_Bridge.CallOpts, _chainId, _sequence)
+// Solidity: function getIncomingPacketHash(uint256 chainId, uint256 sequence) view returns(bytes32 packetHash)
+func (_Bridge *BridgeSession) GetIncomingPacketHash(chainId *big.Int, sequence *big.Int) ([32]byte, error) {
+	return _Bridge.Contract.GetIncomingPacketHash(&_Bridge.CallOpts, chainId, sequence)
 }
 
 // GetIncomingPacketHash is a free data retrieval call binding the contract method 0x419eb411.
 //
-// Solidity: function getIncomingPacketHash(uint256 _chainId, uint256 _sequence) view returns(bytes32 packetHash)
-func (_Bridge *BridgeCallerSession) GetIncomingPacketHash(_chainId *big.Int, _sequence *big.Int) ([32]byte, error) {
-	return _Bridge.Contract.GetIncomingPacketHash(&_Bridge.CallOpts, _chainId, _sequence)
+// Solidity: function getIncomingPacketHash(uint256 chainId, uint256 sequence) view returns(bytes32 packetHash)
+func (_Bridge *BridgeCallerSession) GetIncomingPacketHash(chainId *big.Int, sequence *big.Int) ([32]byte, error) {
+	return _Bridge.Contract.GetIncomingPacketHash(&_Bridge.CallOpts, chainId, sequence)
 }
 
-// HasQuorumReached is a free data retrieval call binding the contract method 0xc0abe2fe.
+// HasQuorumReached is a free data retrieval call binding the contract method 0x314a529e.
 //
-// Solidity: function hasQuorumReached(bytes32 packetHash) view returns(bool)
-func (_Bridge *BridgeCaller) HasQuorumReached(opts *bind.CallOpts, packetHash [32]byte) (bool, error) {
+// Solidity: function hasQuorumReached(uint256 chainId, uint256 sequence) view returns(bool)
+func (_Bridge *BridgeCaller) HasQuorumReached(opts *bind.CallOpts, chainId *big.Int, sequence *big.Int) (bool, error) {
 	var out []interface{}
-	err := _Bridge.contract.Call(opts, &out, "hasQuorumReached", packetHash)
+	err := _Bridge.contract.Call(opts, &out, "hasQuorumReached", chainId, sequence)
 
 	if err != nil {
 		return *new(bool), err
@@ -352,26 +352,26 @@ func (_Bridge *BridgeCaller) HasQuorumReached(opts *bind.CallOpts, packetHash [3
 
 }
 
-// HasQuorumReached is a free data retrieval call binding the contract method 0xc0abe2fe.
+// HasQuorumReached is a free data retrieval call binding the contract method 0x314a529e.
 //
-// Solidity: function hasQuorumReached(bytes32 packetHash) view returns(bool)
-func (_Bridge *BridgeSession) HasQuorumReached(packetHash [32]byte) (bool, error) {
-	return _Bridge.Contract.HasQuorumReached(&_Bridge.CallOpts, packetHash)
+// Solidity: function hasQuorumReached(uint256 chainId, uint256 sequence) view returns(bool)
+func (_Bridge *BridgeSession) HasQuorumReached(chainId *big.Int, sequence *big.Int) (bool, error) {
+	return _Bridge.Contract.HasQuorumReached(&_Bridge.CallOpts, chainId, sequence)
 }
 
-// HasQuorumReached is a free data retrieval call binding the contract method 0xc0abe2fe.
+// HasQuorumReached is a free data retrieval call binding the contract method 0x314a529e.
 //
-// Solidity: function hasQuorumReached(bytes32 packetHash) view returns(bool)
-func (_Bridge *BridgeCallerSession) HasQuorumReached(packetHash [32]byte) (bool, error) {
-	return _Bridge.Contract.HasQuorumReached(&_Bridge.CallOpts, packetHash)
+// Solidity: function hasQuorumReached(uint256 chainId, uint256 sequence) view returns(bool)
+func (_Bridge *BridgeCallerSession) HasQuorumReached(chainId *big.Int, sequence *big.Int) (bool, error) {
+	return _Bridge.Contract.HasQuorumReached(&_Bridge.CallOpts, chainId, sequence)
 }
 
-// HasVoted is a free data retrieval call binding the contract method 0xaadc3b72.
+// HasQuorumReached0 is a free data retrieval call binding the contract method 0xc0abe2fe.
 //
-// Solidity: function hasVoted(bytes32 packetHash, address voter) view returns(bool)
-func (_Bridge *BridgeCaller) HasVoted(opts *bind.CallOpts, packetHash [32]byte, voter common.Address) (bool, error) {
+// Solidity: function hasQuorumReached(bytes32 packetHash) view returns(bool)
+func (_Bridge *BridgeCaller) HasQuorumReached0(opts *bind.CallOpts, packetHash [32]byte) (bool, error) {
 	var out []interface{}
-	err := _Bridge.contract.Call(opts, &out, "hasVoted", packetHash, voter)
+	err := _Bridge.contract.Call(opts, &out, "hasQuorumReached0", packetHash)
 
 	if err != nil {
 		return *new(bool), err
@@ -383,26 +383,26 @@ func (_Bridge *BridgeCaller) HasVoted(opts *bind.CallOpts, packetHash [32]byte, 
 
 }
 
-// HasVoted is a free data retrieval call binding the contract method 0xaadc3b72.
+// HasQuorumReached0 is a free data retrieval call binding the contract method 0xc0abe2fe.
 //
-// Solidity: function hasVoted(bytes32 packetHash, address voter) view returns(bool)
-func (_Bridge *BridgeSession) HasVoted(packetHash [32]byte, voter common.Address) (bool, error) {
-	return _Bridge.Contract.HasVoted(&_Bridge.CallOpts, packetHash, voter)
+// Solidity: function hasQuorumReached(bytes32 packetHash) view returns(bool)
+func (_Bridge *BridgeSession) HasQuorumReached0(packetHash [32]byte) (bool, error) {
+	return _Bridge.Contract.HasQuorumReached0(&_Bridge.CallOpts, packetHash)
 }
 
-// HasVoted is a free data retrieval call binding the contract method 0xaadc3b72.
+// HasQuorumReached0 is a free data retrieval call binding the contract method 0xc0abe2fe.
 //
-// Solidity: function hasVoted(bytes32 packetHash, address voter) view returns(bool)
-func (_Bridge *BridgeCallerSession) HasVoted(packetHash [32]byte, voter common.Address) (bool, error) {
-	return _Bridge.Contract.HasVoted(&_Bridge.CallOpts, packetHash, voter)
+// Solidity: function hasQuorumReached(bytes32 packetHash) view returns(bool)
+func (_Bridge *BridgeCallerSession) HasQuorumReached0(packetHash [32]byte) (bool, error) {
+	return _Bridge.Contract.HasQuorumReached0(&_Bridge.CallOpts, packetHash)
 }
 
-// IncomingPacketExists is a free data retrieval call binding the contract method 0xb8cc3eaa.
+// HasVoted is a free data retrieval call binding the contract method 0x0d39a1d3.
 //
-// Solidity: function incomingPacketExists(uint256 _chainId, uint256 _sequence) view returns(bool)
-func (_Bridge *BridgeCaller) IncomingPacketExists(opts *bind.CallOpts, _chainId *big.Int, _sequence *big.Int) (bool, error) {
+// Solidity: function hasVoted(uint256 chainId, uint256 sequence, address voter) view returns(bool)
+func (_Bridge *BridgeCaller) HasVoted(opts *bind.CallOpts, chainId *big.Int, sequence *big.Int, voter common.Address) (bool, error) {
 	var out []interface{}
-	err := _Bridge.contract.Call(opts, &out, "incomingPacketExists", _chainId, _sequence)
+	err := _Bridge.contract.Call(opts, &out, "hasVoted", chainId, sequence, voter)
 
 	if err != nil {
 		return *new(bool), err
@@ -414,18 +414,80 @@ func (_Bridge *BridgeCaller) IncomingPacketExists(opts *bind.CallOpts, _chainId 
 
 }
 
-// IncomingPacketExists is a free data retrieval call binding the contract method 0xb8cc3eaa.
+// HasVoted is a free data retrieval call binding the contract method 0x0d39a1d3.
 //
-// Solidity: function incomingPacketExists(uint256 _chainId, uint256 _sequence) view returns(bool)
-func (_Bridge *BridgeSession) IncomingPacketExists(_chainId *big.Int, _sequence *big.Int) (bool, error) {
-	return _Bridge.Contract.IncomingPacketExists(&_Bridge.CallOpts, _chainId, _sequence)
+// Solidity: function hasVoted(uint256 chainId, uint256 sequence, address voter) view returns(bool)
+func (_Bridge *BridgeSession) HasVoted(chainId *big.Int, sequence *big.Int, voter common.Address) (bool, error) {
+	return _Bridge.Contract.HasVoted(&_Bridge.CallOpts, chainId, sequence, voter)
 }
 
-// IncomingPacketExists is a free data retrieval call binding the contract method 0xb8cc3eaa.
+// HasVoted is a free data retrieval call binding the contract method 0x0d39a1d3.
 //
-// Solidity: function incomingPacketExists(uint256 _chainId, uint256 _sequence) view returns(bool)
-func (_Bridge *BridgeCallerSession) IncomingPacketExists(_chainId *big.Int, _sequence *big.Int) (bool, error) {
-	return _Bridge.Contract.IncomingPacketExists(&_Bridge.CallOpts, _chainId, _sequence)
+// Solidity: function hasVoted(uint256 chainId, uint256 sequence, address voter) view returns(bool)
+func (_Bridge *BridgeCallerSession) HasVoted(chainId *big.Int, sequence *big.Int, voter common.Address) (bool, error) {
+	return _Bridge.Contract.HasVoted(&_Bridge.CallOpts, chainId, sequence, voter)
+}
+
+// HasVoted0 is a free data retrieval call binding the contract method 0xaadc3b72.
+//
+// Solidity: function hasVoted(bytes32 packetHash, address voter) view returns(bool)
+func (_Bridge *BridgeCaller) HasVoted0(opts *bind.CallOpts, packetHash [32]byte, voter common.Address) (bool, error) {
+	var out []interface{}
+	err := _Bridge.contract.Call(opts, &out, "hasVoted0", packetHash, voter)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasVoted0 is a free data retrieval call binding the contract method 0xaadc3b72.
+//
+// Solidity: function hasVoted(bytes32 packetHash, address voter) view returns(bool)
+func (_Bridge *BridgeSession) HasVoted0(packetHash [32]byte, voter common.Address) (bool, error) {
+	return _Bridge.Contract.HasVoted0(&_Bridge.CallOpts, packetHash, voter)
+}
+
+// HasVoted0 is a free data retrieval call binding the contract method 0xaadc3b72.
+//
+// Solidity: function hasVoted(bytes32 packetHash, address voter) view returns(bool)
+func (_Bridge *BridgeCallerSession) HasVoted0(packetHash [32]byte, voter common.Address) (bool, error) {
+	return _Bridge.Contract.HasVoted0(&_Bridge.CallOpts, packetHash, voter)
+}
+
+// Hash is a free data retrieval call binding the contract method 0xe1fe7fdf.
+//
+// Solidity: function hash((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) pure returns(bytes32)
+func (_Bridge *BridgeCaller) Hash(opts *bind.CallOpts, packet PacketLibraryInPacket) ([32]byte, error) {
+	var out []interface{}
+	err := _Bridge.contract.Call(opts, &out, "hash", packet)
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// Hash is a free data retrieval call binding the contract method 0xe1fe7fdf.
+//
+// Solidity: function hash((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) pure returns(bytes32)
+func (_Bridge *BridgeSession) Hash(packet PacketLibraryInPacket) ([32]byte, error) {
+	return _Bridge.Contract.Hash(&_Bridge.CallOpts, packet)
+}
+
+// Hash is a free data retrieval call binding the contract method 0xe1fe7fdf.
+//
+// Solidity: function hash((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) pure returns(bytes32)
+func (_Bridge *BridgeCallerSession) Hash(packet PacketLibraryInPacket) ([32]byte, error) {
+	return _Bridge.Contract.Hash(&_Bridge.CallOpts, packet)
 }
 
 // IncomingPackets is a free data retrieval call binding the contract method 0x03d1d693.
@@ -679,6 +741,37 @@ func (_Bridge *BridgeCallerSession) Owner() (common.Address, error) {
 	return _Bridge.Contract.Owner(&_Bridge.CallOpts)
 }
 
+// QuorumRequired is a free data retrieval call binding the contract method 0x088868e8.
+//
+// Solidity: function quorumRequired() view returns(uint256)
+func (_Bridge *BridgeCaller) QuorumRequired(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Bridge.contract.Call(opts, &out, "quorumRequired")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// QuorumRequired is a free data retrieval call binding the contract method 0x088868e8.
+//
+// Solidity: function quorumRequired() view returns(uint256)
+func (_Bridge *BridgeSession) QuorumRequired() (*big.Int, error) {
+	return _Bridge.Contract.QuorumRequired(&_Bridge.CallOpts)
+}
+
+// QuorumRequired is a free data retrieval call binding the contract method 0x088868e8.
+//
+// Solidity: function quorumRequired() view returns(uint256)
+func (_Bridge *BridgeCallerSession) QuorumRequired() (*big.Int, error) {
+	return _Bridge.Contract.QuorumRequired(&_Bridge.CallOpts)
+}
+
 // Sequences is a free data retrieval call binding the contract method 0xc86a64f7.
 //
 // Solidity: function sequences(uint256 ) view returns(uint256)
@@ -773,23 +866,23 @@ func (_Bridge *BridgeTransactorSession) AddTokenService(tokenService common.Addr
 	return _Bridge.Contract.AddTokenService(&_Bridge.TransactOpts, tokenService)
 }
 
-// Consume is a paid mutator transaction binding the contract method 0x842dc8ac.
+// Consume is a paid mutator transaction binding the contract method 0x68829296.
 //
-// Solidity: function consume((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet) returns()
+// Solidity: function consume((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) returns()
 func (_Bridge *BridgeTransactor) Consume(opts *bind.TransactOpts, packet PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.contract.Transact(opts, "consume", packet)
 }
 
-// Consume is a paid mutator transaction binding the contract method 0x842dc8ac.
+// Consume is a paid mutator transaction binding the contract method 0x68829296.
 //
-// Solidity: function consume((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet) returns()
+// Solidity: function consume((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) returns()
 func (_Bridge *BridgeSession) Consume(packet PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.Contract.Consume(&_Bridge.TransactOpts, packet)
 }
 
-// Consume is a paid mutator transaction binding the contract method 0x842dc8ac.
+// Consume is a paid mutator transaction binding the contract method 0x68829296.
 //
-// Solidity: function consume((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet) returns()
+// Solidity: function consume((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) returns()
 func (_Bridge *BridgeTransactorSession) Consume(packet PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.Contract.Consume(&_Bridge.TransactOpts, packet)
 }
@@ -815,44 +908,44 @@ func (_Bridge *BridgeTransactorSession) Initialize(_owner common.Address) (*type
 	return _Bridge.Contract.Initialize(&_Bridge.TransactOpts, _owner)
 }
 
-// ReceivePacket is a paid mutator transaction binding the contract method 0x7c981f7d.
+// ReceivePacket is a paid mutator transaction binding the contract method 0xec4eef87.
 //
-// Solidity: function receivePacket((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet) returns()
+// Solidity: function receivePacket((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) returns()
 func (_Bridge *BridgeTransactor) ReceivePacket(opts *bind.TransactOpts, packet PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.contract.Transact(opts, "receivePacket", packet)
 }
 
-// ReceivePacket is a paid mutator transaction binding the contract method 0x7c981f7d.
+// ReceivePacket is a paid mutator transaction binding the contract method 0xec4eef87.
 //
-// Solidity: function receivePacket((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet) returns()
+// Solidity: function receivePacket((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) returns()
 func (_Bridge *BridgeSession) ReceivePacket(packet PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.Contract.ReceivePacket(&_Bridge.TransactOpts, packet)
 }
 
-// ReceivePacket is a paid mutator transaction binding the contract method 0x7c981f7d.
+// ReceivePacket is a paid mutator transaction binding the contract method 0xec4eef87.
 //
-// Solidity: function receivePacket((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet) returns()
+// Solidity: function receivePacket((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet) returns()
 func (_Bridge *BridgeTransactorSession) ReceivePacket(packet PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.Contract.ReceivePacket(&_Bridge.TransactOpts, packet)
 }
 
-// ReceivePacketBatch is a paid mutator transaction binding the contract method 0x7be0660c.
+// ReceivePacketBatch is a paid mutator transaction binding the contract method 0xd49efc6c.
 //
-// Solidity: function receivePacketBatch((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256)[] packets) returns()
+// Solidity: function receivePacketBatch((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256)[] packets) returns()
 func (_Bridge *BridgeTransactor) ReceivePacketBatch(opts *bind.TransactOpts, packets []PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.contract.Transact(opts, "receivePacketBatch", packets)
 }
 
-// ReceivePacketBatch is a paid mutator transaction binding the contract method 0x7be0660c.
+// ReceivePacketBatch is a paid mutator transaction binding the contract method 0xd49efc6c.
 //
-// Solidity: function receivePacketBatch((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256)[] packets) returns()
+// Solidity: function receivePacketBatch((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256)[] packets) returns()
 func (_Bridge *BridgeSession) ReceivePacketBatch(packets []PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.Contract.ReceivePacketBatch(&_Bridge.TransactOpts, packets)
 }
 
-// ReceivePacketBatch is a paid mutator transaction binding the contract method 0x7be0660c.
+// ReceivePacketBatch is a paid mutator transaction binding the contract method 0xd49efc6c.
 //
-// Solidity: function receivePacketBatch((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256)[] packets) returns()
+// Solidity: function receivePacketBatch((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256)[] packets) returns()
 func (_Bridge *BridgeTransactorSession) ReceivePacketBatch(packets []PacketLibraryInPacket) (*types.Transaction, error) {
 	return _Bridge.Contract.ReceivePacketBatch(&_Bridge.TransactOpts, packets)
 }
@@ -1704,13 +1797,15 @@ func (it *BridgeConsumedIterator) Close() error {
 
 // BridgeConsumed represents a Consumed event raised by the Bridge contract.
 type BridgeConsumed struct {
+	ChainId    *big.Int
+	Sequence   *big.Int
 	PacketHash [32]byte
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// FilterConsumed is a free log retrieval operation binding the contract event 0x636209b10d69c1917cd00a9dc825c2440aed804c54f2e9d9a3dddd2cf863c223.
+// FilterConsumed is a free log retrieval operation binding the contract event 0x4de00275c41d5791efd85ee6693384f774ad509f1c2c92197abf83526206245d.
 //
-// Solidity: event Consumed(bytes32 packetHash)
+// Solidity: event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash)
 func (_Bridge *BridgeFilterer) FilterConsumed(opts *bind.FilterOpts) (*BridgeConsumedIterator, error) {
 
 	logs, sub, err := _Bridge.contract.FilterLogs(opts, "Consumed")
@@ -1720,9 +1815,9 @@ func (_Bridge *BridgeFilterer) FilterConsumed(opts *bind.FilterOpts) (*BridgeCon
 	return &BridgeConsumedIterator{contract: _Bridge.contract, event: "Consumed", logs: logs, sub: sub}, nil
 }
 
-// WatchConsumed is a free log subscription operation binding the contract event 0x636209b10d69c1917cd00a9dc825c2440aed804c54f2e9d9a3dddd2cf863c223.
+// WatchConsumed is a free log subscription operation binding the contract event 0x4de00275c41d5791efd85ee6693384f774ad509f1c2c92197abf83526206245d.
 //
-// Solidity: event Consumed(bytes32 packetHash)
+// Solidity: event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash)
 func (_Bridge *BridgeFilterer) WatchConsumed(opts *bind.WatchOpts, sink chan<- *BridgeConsumed) (event.Subscription, error) {
 
 	logs, sub, err := _Bridge.contract.WatchLogs(opts, "Consumed")
@@ -1757,12 +1852,146 @@ func (_Bridge *BridgeFilterer) WatchConsumed(opts *bind.WatchOpts, sink chan<- *
 	}), nil
 }
 
-// ParseConsumed is a log parse operation binding the contract event 0x636209b10d69c1917cd00a9dc825c2440aed804c54f2e9d9a3dddd2cf863c223.
+// ParseConsumed is a log parse operation binding the contract event 0x4de00275c41d5791efd85ee6693384f774ad509f1c2c92197abf83526206245d.
 //
-// Solidity: event Consumed(bytes32 packetHash)
+// Solidity: event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash)
 func (_Bridge *BridgeFilterer) ParseConsumed(log types.Log) (*BridgeConsumed, error) {
 	event := new(BridgeConsumed)
 	if err := _Bridge.contract.UnpackLog(event, "Consumed", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// BridgeInitializedIterator is returned from FilterInitialized and is used to iterate over the raw logs and unpacked data for Initialized events raised by the Bridge contract.
+type BridgeInitializedIterator struct {
+	Event *BridgeInitialized // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *BridgeInitializedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(BridgeInitialized)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(BridgeInitialized)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *BridgeInitializedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *BridgeInitializedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// BridgeInitialized represents a Initialized event raised by the Bridge contract.
+type BridgeInitialized struct {
+	Version uint8
+	Raw     types.Log // Blockchain specific contextual infos
+}
+
+// FilterInitialized is a free log retrieval operation binding the contract event 0x7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb3847402498.
+//
+// Solidity: event Initialized(uint8 version)
+func (_Bridge *BridgeFilterer) FilterInitialized(opts *bind.FilterOpts) (*BridgeInitializedIterator, error) {
+
+	logs, sub, err := _Bridge.contract.FilterLogs(opts, "Initialized")
+	if err != nil {
+		return nil, err
+	}
+	return &BridgeInitializedIterator{contract: _Bridge.contract, event: "Initialized", logs: logs, sub: sub}, nil
+}
+
+// WatchInitialized is a free log subscription operation binding the contract event 0x7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb3847402498.
+//
+// Solidity: event Initialized(uint8 version)
+func (_Bridge *BridgeFilterer) WatchInitialized(opts *bind.WatchOpts, sink chan<- *BridgeInitialized) (event.Subscription, error) {
+
+	logs, sub, err := _Bridge.contract.WatchLogs(opts, "Initialized")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(BridgeInitialized)
+				if err := _Bridge.contract.UnpackLog(event, "Initialized", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseInitialized is a log parse operation binding the contract event 0x7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb3847402498.
+//
+// Solidity: event Initialized(uint8 version)
+func (_Bridge *BridgeFilterer) ParseInitialized(log types.Log) (*BridgeInitialized, error) {
+	event := new(BridgeInitialized)
+	if err := _Bridge.contract.UnpackLog(event, "Initialized", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -1842,9 +2071,9 @@ type BridgePacketArrived struct {
 	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterPacketArrived is a free log retrieval operation binding the contract event 0x8e74d35ba237f3bfb5e6191f17491ddfff2dd14682f463d1ebcb7302006162b5.
+// FilterPacketArrived is a free log retrieval operation binding the contract event 0x3d20a5484fc3b8af07f88f0149aaa1ce0ed6cc017d189d94dc7ddeb552c26c5b.
 //
-// Solidity: event PacketArrived((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet)
+// Solidity: event PacketArrived((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet)
 func (_Bridge *BridgeFilterer) FilterPacketArrived(opts *bind.FilterOpts) (*BridgePacketArrivedIterator, error) {
 
 	logs, sub, err := _Bridge.contract.FilterLogs(opts, "PacketArrived")
@@ -1854,9 +2083,9 @@ func (_Bridge *BridgeFilterer) FilterPacketArrived(opts *bind.FilterOpts) (*Brid
 	return &BridgePacketArrivedIterator{contract: _Bridge.contract, event: "PacketArrived", logs: logs, sub: sub}, nil
 }
 
-// WatchPacketArrived is a free log subscription operation binding the contract event 0x8e74d35ba237f3bfb5e6191f17491ddfff2dd14682f463d1ebcb7302006162b5.
+// WatchPacketArrived is a free log subscription operation binding the contract event 0x3d20a5484fc3b8af07f88f0149aaa1ce0ed6cc017d189d94dc7ddeb552c26c5b.
 //
-// Solidity: event PacketArrived((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet)
+// Solidity: event PacketArrived((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet)
 func (_Bridge *BridgeFilterer) WatchPacketArrived(opts *bind.WatchOpts, sink chan<- *BridgePacketArrived) (event.Subscription, error) {
 
 	logs, sub, err := _Bridge.contract.WatchLogs(opts, "PacketArrived")
@@ -1891,9 +2120,9 @@ func (_Bridge *BridgeFilterer) WatchPacketArrived(opts *bind.WatchOpts, sink cha
 	}), nil
 }
 
-// ParsePacketArrived is a log parse operation binding the contract event 0x8e74d35ba237f3bfb5e6191f17491ddfff2dd14682f463d1ebcb7302006162b5.
+// ParsePacketArrived is a log parse operation binding the contract event 0x3d20a5484fc3b8af07f88f0149aaa1ce0ed6cc017d189d94dc7ddeb552c26c5b.
 //
-// Solidity: event PacketArrived((uint256,uint256,(uint256,string),(uint256,address),(address,address,uint256,address),uint256) packet)
+// Solidity: event PacketArrived((uint256,uint256,(uint256,string),(uint256,address),(string,address,uint256,address),uint256) packet)
 func (_Bridge *BridgeFilterer) ParsePacketArrived(log types.Log) (*BridgePacketArrived, error) {
 	event := new(BridgePacketArrived)
 	if err := _Bridge.contract.UnpackLog(event, "PacketArrived", log); err != nil {

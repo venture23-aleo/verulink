@@ -3,8 +3,8 @@
     {
       "name": "aleo",
       "chain_id": 2,
-      "bridge_contract": "contract_address",
-      "node_url": "http://localhost:3030|testnet3",
+      "bridge_contract": "bridge.aleo",
+      "node_url": "http://52.91.48.169|testnet3",
       "start_height": 0,
       "finality_height": 1,
       "wallet_path": "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/aleo_wallet.json"
@@ -12,7 +12,7 @@
     {
       "name": "ethereum",
       "chain_id": 1,
-      "bridge_contract": "contract_address",
+      "bridge_contract": "0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758",
       "node_url": "https://rpc.sepolia.org",
       "start_height": 0,
       "finality_height":64,

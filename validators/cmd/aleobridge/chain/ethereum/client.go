@@ -20,14 +20,18 @@ import (
 )
 
 const (
-	DefaultFinalizingHeight = 64
+	DefaultFinalizingHeight = 2
 	BlockGenerationTime     = time.Second * 12
 	DefaultRetryCount       = 5
 	Ethereum                = "ethereum"
-	DefaultGasLimit         = 1200000
+	DefaultGasLimit         = 1500000
 	defaultGasPrice         = 130000000000
 	defaultSendTxTimeout    = time.Second * 15
 	defaultReadTimeout      = 50 * time.Second
+)
+
+var (
+	msgCh = make(chan *chain.Packet)
 )
 
 type source struct {
@@ -47,6 +51,14 @@ type Client struct {
 	wallet            common.Wallet
 }
 
+func (cl *Client) giveOutPackets(seq uint64) {
+	height := cl.CurHeight()
+	msgCh <- &chain.Packet{
+		Sequence: seq,
+		Height:   height - 5,
+	}
+}
+
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	fmt.Println("reached in getting packet with seq number ethereum", dst, seqNum)
 	chainID := &big.Int{}
@@ -55,6 +67,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 	sequenceNumber.SetUint64(seqNum)
 
 	ethpacket, err := cl.bridge.OutgoingPackets(&ethBind.CallOpts{Context: ctx}, chainID, sequenceNumber)
+	fmt.Println("message of seq", ethpacket.Sequence, ethpacket.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +76,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		Version: ethpacket.Version.Uint64(),
 		Destination: &chain.NetworkAddress{
 			ChainID: ethpacket.DestTokenService.ChainId.Uint64(),
-			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Address: ethpacket.DestTokenService.Addr,
 		},
 		Source: &chain.NetworkAddress{
 			ChainID: ethpacket.SourceTokenService.ChainId.Uint64(),
@@ -71,9 +84,10 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		},
 		Sequence: ethpacket.Sequence.Uint64(),
 		Message: &chain.Message{
-			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			DestTokenAddress: ethpacket.Message.DestTokenAddress,
 			Amount:           ethpacket.Message.Amount,
 			ReceiverAddress:  ethpacket.Message.ReceiverAddress,
+			SenderAddress: string(ethpacket.Message.SenderAddress.Bytes()),
 		},
 		Height: ethpacket.Height.Uint64(),
 	}
@@ -181,7 +195,13 @@ func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (boo
 }
 
 func (cl *Client) CurHeight() uint64 {
-	return 0
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	height, err := cl.eth.BlockNumber(ctx)
+	if err != nil {
+		return 0
+	}
+	return height
 }
 
 func (cl *Client) GetFinalityHeight() uint64 {
