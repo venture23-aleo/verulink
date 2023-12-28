@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import { BlackListServiceABI } from "../scripts/ABI/ABI.js"
 
 describe("BlackListService", () => {
     let owner, other, blackListServiceImpl, usdcMock, usdtMock, BlackListService, BlackListServiceProxy, initializeData, proxiedContract, attestor, otherAddress;

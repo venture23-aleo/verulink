@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import { BridgeTokenServiceManagerABI } from "../scripts/ABI/ABI.js"
 
 // Define the test suite
 describe('BridgeTokenServiceManager', () => {
@@ -13,6 +12,7 @@ describe('BridgeTokenServiceManager', () => {
         [owner, other] = await ethers.getSigners();
 
         BridgeTokenServiceManager = await ethers.getContractFactory("BridgeTokenServiceManager");
+        let BridgeTokenServiceManagerABI = BridgeTokenServiceManager.interface.formatJson();
 
         bridgeTokenServiceManagerImpl = await BridgeTokenServiceManager.deploy();
         BridgeTokenServiceManagerProxy = await ethers.getContractFactory('ProxyContract');

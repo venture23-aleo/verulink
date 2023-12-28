@@ -1,10 +1,7 @@
 // Import necessary libraries
-// const { expect } = require('chai');
-// const { ethers } = require('hardhat');
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import { AttestorManagerABI } from "../scripts/ABI/ABI.js"
 
 // Define the test suite
 describe('AttestorManager', () => {
@@ -15,18 +12,19 @@ describe('AttestorManager', () => {
         [owner, attestor, other, signer] = await ethers.getSigners();
 
         // Deploy ERC20TokenBridge
-        lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
+        lib = await ethers.getContractFactory("PacketLibrary");
         const libInstance = await lib.deploy();
-
         AttestorManager = await ethers.getContractFactory("ERC20TokenBridge", {
             libraries: {
                 PacketLibrary: libInstance.target,
             },
         });
+        let abi = AttestorManager.interface.format();
+        // console.log("ABI = ", abi);
 
         attestorManagerImpl = await AttestorManager.deploy();
         AttestorManagerProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.Interface(AttestorManagerABI).encodeFunctionData("initialize", [owner.address]);
+        initializeData = new ethers.Interface(abi).encodeFunctionData("initialize", [owner.address]);
         const proxy = await AttestorManagerProxy.deploy(attestorManagerImpl.target, initializeData);
         proxiedV1 = AttestorManager.attach(proxy.target);
     });

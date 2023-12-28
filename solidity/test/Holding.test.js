@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import { HoldingContractABI, HoldingContractV2ABI } from "../scripts/ABI/ABI.js";
 
 // Define the test suite
 describe('Holding', () => {
@@ -15,8 +14,9 @@ describe('Holding', () => {
         usdcMock = await USDCMock.deploy();
 
         Holding = await ethers.getContractFactory("Holding");
-
         holdingImpl = await Holding.deploy();
+        let HoldingContractABI = Holding.interface.formatJson();
+
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
         // initializeData = new ethers.Interface(BlackListServiceABI).encodeFunctionData(["initialize(address)"](owner.address));
         initializeData = new ethers.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
@@ -138,6 +138,8 @@ describe('Holding', () => {
 
             HoldingV1 = await ethers.getContractFactory("Holding");
             holdingV1Impl = await HoldingV1.deploy();
+            let HoldingContractABI = Holding.interface.formatJson();
+
             HoldingProxy = await ethers.getContractFactory('ProxyContract');
             initializeData = new ethers.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
             const proxy = await HoldingProxy.deploy(holdingV1Impl.target, initializeData);
@@ -145,6 +147,8 @@ describe('Holding', () => {
             
             HoldingV2 = await ethers.getContractFactory("HoldingV2");
             holdingV2Impl = await HoldingV2.deploy();
+            let HoldingContractV2ABI = HoldingV2.interface.formatJson();
+
             upgradeData = new ethers.Interface(HoldingContractV2ABI).encodeFunctionData("initializev2", [5]);
             await proxied.upgradeToAndCall(holdingV2Impl.target, upgradeData);
             proxied = HoldingV2.attach(proxy.target);

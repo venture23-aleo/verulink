@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import { ERC20TokenSupportABI } from "../scripts/ABI/ABI.js"
 
 // Define the test suite
 describe('ERC20TokenSupport', () => {
@@ -14,6 +13,8 @@ describe('ERC20TokenSupport', () => {
 
         ERC20TokenSupport = await ethers.getContractFactory("ERC20TokenSupport");
         tokenSupportImpl = await ERC20TokenSupport.deploy();
+        let ERC20TokenSupportABI = ERC20TokenSupport.interface.formatJson();
+
         ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(ERC20TokenSupportABI).encodeFunctionData("initialize", [owner.address]);
         const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.target, initializeData);

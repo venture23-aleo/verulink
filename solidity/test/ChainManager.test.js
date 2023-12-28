@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import { ChainManagerABI } from "../scripts/ABI/ABI.js"
 
 // Define the test suite
 describe('ChainManager', () => {
@@ -14,6 +13,8 @@ describe('ChainManager', () => {
 
         ChainManager = await ethers.getContractFactory("ChainManager");
         chainManagerImpl = await ChainManager.deploy();
+        let ChainManagerABI = ChainManager.interface.formatJson();
+
         ChainManagerProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(ChainManagerABI).encodeFunctionData("initialize", [owner.address]);
         const proxy = await ChainManagerProxy.deploy(chainManagerImpl.target, initializeData);
