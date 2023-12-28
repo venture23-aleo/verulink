@@ -87,22 +87,22 @@ export const snarkExecute = async ({
   let stringedParams = params.map(s => `"${s}"`).join(' ');
   // snarkos developer execute sample_program.aleo main  "1u32" "2u32" --private-key APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH --query "http://localhost:3030" --broadcast "http://localhost:3030/testnet3/transaction/broadcast"
   // const cmd = `cd ${config.contractPath} && snarkos developer execute  ${config.appName}.aleo ${transition} ${stringedParams} --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;
-  const cmd = `cd ${config.contractPath} && leo execute ${transition} ${stringedParams}`; /* --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;*/
+  const cmd = `snarkos developer execute ${config.appName}.aleo ${transition} ${stringedParams} --private-key ${config.privateKey} --query http://localhost:3030 --broadcast "http://localhost:3030/testnet3/transaction/broadcast"`;
   console.log(cmd);
   const { stdout } = await execute(cmd);
   console.log(stdout);
-  const output = stdout.match(/\{([^)]+)\}/);
-  const outArr = output[0].split('{');
-  const data = [
-    '',
-    ...outArr.slice(outArr.findIndex((v) => v.includes('"type":"execute"')))
-  ].join('{');
-  const parsedOutput = JSON.parse(data);
-  const outPuts = parsedOutput?.execution?.transitions?.map(
-    (transition) => transition.outputs
-  );
+  // const output = stdout.match(/\{([^)]+)\}/);
+  // const outArr = output[0].split('{');
+  // const data = [
+  //   '',
+  //   ...outArr.slice(outArr.findIndex((v) => v.includes('"type":"execute"')))
+  // ].join('{');
+  // const parsedOutput = JSON.parse(data);
+  // const outPuts = parsedOutput?.execution?.transitions?.map(
+  //   (transition) => transition.outputs
+  // );
 
-  return { data: outPuts };
+  return { data: stdout };
 };
 
 const checkDeployment = async (endpoint: string): Promise<boolean> => {

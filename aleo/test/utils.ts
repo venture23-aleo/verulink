@@ -23,8 +23,6 @@ const aleoArr2Evm = (decimalArray) => {
 const string2AleoArr = (input: string, length: number) => {
     const ascii = input.split("").map(char => char.charCodeAt(0));
     const paddedAscii = [...ascii, ...Array(length - ascii.length).fill(0)]
-    console.log(ascii)
-    console.log(paddedAscii)
     return paddedAscii
 }
 
