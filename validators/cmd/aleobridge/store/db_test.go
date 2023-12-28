@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -116,6 +115,7 @@ func TestStoreRetryPacket(t *testing.T) {
 		prevKey := arr[0]
 		for arr := range ch {
 			require.Equal(t, 1, bytes.Compare(arr[0], prevKey))
+			prevKey = arr[0]
 		}
 	})
 }
@@ -152,7 +152,7 @@ func TestRemoveTxnKeyAndStoreBaseSeqNum(t *testing.T) {
 
 	t.Log("txnkeys: ", txnKeys)
 	RemoveTxnKeyAndStoreBaseSeqNum(txnNamespace, txnKeys, seqNumNamespace, seqNums, nil)
-	time.Sleep(time.Millisecond * 200)
+
 	for _, seq := range seqNums {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, seq)
@@ -239,9 +239,10 @@ func TestGetFirstKey(t *testing.T) {
 	}
 
 	for i := 1; i < 100; i++ {
-		key := []byte(strconv.Itoa(i))
+		s := strconv.Itoa(i)
+		key := []byte(s)
 		keys = append(keys, key)
-		data[i] = nil
+		data[s] = nil
 	}
 
 	err = setupDB(namespace, data)
@@ -254,6 +255,7 @@ func TestGetFirstKey(t *testing.T) {
 		}
 	}
 
+	t.Logf("Min key: %s, Type: %T", minOrderedKey, minOrderedKey)
 	key := GetFirstKey[[]byte](namespace, []byte{})
 	require.Equal(t, minOrderedKey, key)
 
