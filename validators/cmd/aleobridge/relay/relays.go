@@ -14,11 +14,13 @@ const (
 	DefaultTxRetryCount      = 0
 )
 
-var chainEventRWMu = sync.RWMutex{}
-var chainEvents = map[string]*chain.ChainEvent{} // aleo:event, ethereum: event,
-var chainConds = map[string]*sync.Cond{}
-var chainCtxCncls = map[string]context.CancelCauseFunc{}
-var chainCtxs = map[string]context.Context{}
+var (
+	chainEventRWMu = sync.RWMutex{}
+	chainEvents    = map[string]*chain.ChainEvent{} // aleo:event, ethereum: event,
+	chainConds     = map[string]*sync.Cond{}
+	chainCtxCncls  = map[string]context.CancelCauseFunc{}
+	chainCtxs      = map[string]context.Context{}
+)
 
 type Namer interface {
 	Name() string
