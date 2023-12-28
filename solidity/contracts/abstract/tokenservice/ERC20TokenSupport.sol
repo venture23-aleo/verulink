@@ -18,12 +18,7 @@ contract ERC20TokenSupport is Ownable {
     mapping(address => Token) public supportedTokens;
 
     event TokenAdded(Token token);
-
-    function initialize(
-        address _owner
-    ) public virtual override {
-        super.initialize(_owner);
-    }
+    event TokenRemoved(address tokenAddress);
 
     function isSupportedToken(address token) public view returns (bool) {
         return supportedTokens[token].tokenAddress == token;
@@ -52,6 +47,7 @@ contract ERC20TokenSupport is Ownable {
 
     function removeToken(address tokenAddress) public onlyOwner {
         require(isSupportedToken(tokenAddress), "Token not supported");
+        emit TokenRemoved(tokenAddress);
         delete supportedTokens[tokenAddress];
     }
 }

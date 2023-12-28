@@ -13,9 +13,9 @@ contract Holding is Ownable, Upgradeable {
 
     address public tokenService;
 
-    function initialize(address _owner, address _tokenService) public {
+    function initialize(address _owner, address _tokenService) public initializer {
+        super.initialize(_owner);
         tokenService = _tokenService;
-        Ownable.initialize(_owner);
     }
 
     function _authorizeUpgrade(address) internal view override {

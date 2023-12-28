@@ -23,15 +23,9 @@ contract BlackListService is Ownable {
     address internal usdt;
 
     function initialize(address _owner, address _usdc, address _usdt) public {
+        super.initialize(_owner);
         usdc = _usdc;
         usdt = _usdt;
-        initialize(_owner);
-    }
-
-    function initialize(
-        address _owner
-    ) public virtual override {
-        super.initialize(_owner);
     }
 
     function addToBlackList(address account) external onlyOwner {

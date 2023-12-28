@@ -11,7 +11,7 @@ contract Ownable is Initializable {
 
     function initialize(
         address _owner
-    ) public virtual initializer {
+    ) public virtual {
         owner = _owner;
     }
 

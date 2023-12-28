@@ -24,7 +24,7 @@ contract ERC20TokenBridge is IncomingPacketManager,
 {
     function initialize(
         address _owner
-    ) public override (Ownable, AttestorManager, BridgeTokenServiceManager, ChainManager) {
+    ) public override {
         super.initialize(_owner);        
     }
 

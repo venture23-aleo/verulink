@@ -23,17 +23,13 @@ contract ERC20TokenService is Ownable, BlackListService,
         address _usdc, 
         address _usdt,
         address _owner
-    ) public {
+    ) public initializer {
         erc20Bridge = bridge;
         self = PacketLibrary.InNetworkAddress(
             _chainId, 
             address(this)
         );
         BlackListService.initialize(_owner, _usdc, _usdt);
-    }
-
-    function initialize(address _owner) public override (Ownable, BlackListService, ERC20TokenSupport) {
-        super.initialize(_owner);
     }
 
     function _authorizeUpgrade(address) internal view override {

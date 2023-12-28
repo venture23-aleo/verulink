@@ -11,12 +11,6 @@ contract ChainManager is Ownable {
 
     mapping(uint256 => PacketLibrary.OutNetworkAddress) public chains;
 
-    function initialize(
-        address _owner
-    ) public virtual override {
-        super.initialize(_owner);
-    }
-
     function isSupportedChain(uint256 chainId) public view returns (bool) {
         return chains[chainId].chainId != 0;
     }
