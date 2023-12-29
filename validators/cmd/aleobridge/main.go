@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
@@ -68,7 +67,11 @@ func main() {
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
 
-	store.InitKVStore(cfg.DBPath)
+	err = store.InitKVStore(cfg.DBPath)
+	if err != nil {
+		fmt.Printf("Error while initializing db store: %s\n", err.Error())
+		os.Exit(1)
+	}
 
 	multirelayer := relay.MultiRelay(ctx, cfg)
 	multirelayer.StartMultiRelay(ctx)
@@ -86,60 +89,4 @@ func loadConfig(file string) (*relay.Config, error) {
 		return nil, err
 	}
 	return cfg, nil
-}
-
-func validateAndUpdateConfig(cfg *relay.Config) error {
-	// var chains map[string]struct{}
-	// for _, chainCfg := range cfg.ChainConfigs {
-	// 	chains[chainCfg.Name] = struct{}{}
-	// }
-
-	// bridge pair validation
-	// bridgePairs := map[string]string{}
-
-	// bridge pair validation might be obsolete as destination chains shall be taken from contract
-	// for chain1, chain2 := range cfg.BridgePairs {
-	// 	if chain1 == chain2 {
-	// 		return fmt.Errorf("cannot bridge packects within same chain")
-	// 	}
-	// 	if _, ok := chains[chain1]; !ok {
-	// 		return fmt.Errorf("chain %s is not defined in chainConfig field", chain1)
-	// 	}
-	// 	if _, ok := chains[chain2]; !ok {
-	// 		return fmt.Errorf("chain %s is not defined in chainConfig field", chain2)
-	// 	}
-
-	// 	// Config might entail "ethereum": "aleo" or "aleo":"ethereum" or both
-	// 	// but we should only take single pair
-	// 	if bridgePairs[chain1] == chain2 || bridgePairs[chain2] == chain1 {
-	// 		continue
-	// 	}
-	// 	bridgePairs[chain1] = chain2
-	// }
-
-	// cfg.BridgePairs = bridgePairs
-	return nil
-}
-
-func getKillSignals() []os.Signal {
-	return []os.Signal{
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-		syscall.SIGILL,
-		syscall.SIGTRAP,
-		syscall.SIGABRT,
-		syscall.SIGSTKFLT,
-		syscall.SIGSYS,
-	}
-}
-
-func getIgnoreSignals() []os.Signal {
-	return []os.Signal{
-		syscall.SIGHUP,
-		syscall.SIGALRM,
-		syscall.SIGVTALRM,
-		syscall.SIGUSR1,
-		syscall.SIGUSR2,
-	}
 }
