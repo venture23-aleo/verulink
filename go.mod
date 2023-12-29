@@ -47,3 +47,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+replace github.com/parajuliswopnil/aleo-go-sdk v1.0.23 => /home/sheldor/GoProjects/AleoBlockStreamer

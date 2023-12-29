@@ -39,12 +39,21 @@ func (m MockDestClient) GetWalletBalance(ctx context.Context) (uint64, error) {
 	return 10, nil
 }
 
+func (m MockDestClient) GetChainID() uint32 {
+	return 0
+}
+
+func (m MockDestClient) GetDestChains() ([]string, error) {
+	return nil, nil
+}
+
 type MockSrcClient struct {
 	getname        func() string
 	getPkt         func() (*chain.Packet, error)
 	curHeight      uint64
 	blockGenTime   time.Duration
 	finalityHeight uint64
+	chainID        uint32
 }
 
 func (m MockSrcClient) Name() string {
@@ -54,16 +63,12 @@ func (m MockSrcClient) Name() string {
 func (m *MockSrcClient) setHeight(h uint64) {
 	m.curHeight = h
 }
-func (m MockSrcClient) GetPktWithSeq(ctx context.Context, dest string, seqNum uint64) (*chain.Packet, error) {
+func (m MockSrcClient) GetPktWithSeq(ctx context.Context, dest uint32, seqNum uint64) (*chain.Packet, error) {
 	return m.getPkt()
 }
 
-func (MockSrcClient) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {
-	return nil, nil
-}
-
 // Returns current height of chain
-func (m MockSrcClient) CurHeight() uint64 {
+func (m MockSrcClient) CurHeight(ctx context.Context) uint64 {
 	return m.curHeight
 }
 
@@ -74,6 +79,14 @@ func (m MockSrcClient) GetBlockGenTime() time.Duration {
 
 func (m MockSrcClient) GetFinalityHeight() uint64 {
 	return m.finalityHeight
+}
+
+func (m MockSrcClient) GetChainID() uint32 {
+	return m.chainID
+}
+
+func (m MockSrcClient) GetDestChains() ([]string, error) {
+	return nil, nil
 }
 
 func initDB() (func(), error) {
