@@ -58,15 +58,14 @@ func (r *relay) Init(ctx context.Context) {
 		r.initliazed = true
 		bridge := fmt.Sprintf("%s-%s", r.srcChain.Name(), r.destChain.Name())
 		r.logger = logger.Logger.With(zap.String("Bridge", bridge))
-		r.createNamespaces()
+		err := r.createNamespaces()
+		if err != nil {
+			panic(err)
+		}
 		r.setBaseSeqNum()
 		r.nextSeqNum = r.bSeqNum + 1
 		r.pktCh = make(chan *chain.Packet)
 	}
-
-	/**********Not required now***********************/
-	// go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
-	// go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
 
 	go r.startReceiving(ctx)
 	go r.startSending(ctx)
@@ -120,7 +119,7 @@ func (r *relay) startReceiving(ctx context.Context) {
 			continue
 		}
 
-		curSrcHeight := r.srcChain.CurHeight()
+		curSrcHeight := r.srcChain.CurHeight(ctx)
 		finalityHeight := r.srcChain.GetFinalityHeight()
 		if pkt.Height+finalityHeight >= curSrcHeight {
 			fmt.Println(pkt.Height, finalityHeight, curSrcHeight)
