@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	DefaultFinalizingHeight = 2
-	BlockGenerationTime     = time.Second * 12
-	DefaultRetryCount       = 5
-	Ethereum                = "ethereum"
-	DefaultGasLimit         = 1500000
+	defaultFinalizingHeight = 2
+	blockGenerationTime     = time.Second * 12
+	defaultRetryCount       = 5
+	ethereum                = "ethereum"
+	defaultGasLimit         = 1500000
 	defaultGasPrice         = 130000000000
 	defaultSendTxTimeout    = time.Second * 15
 	defaultReadTimeout      = 50 * time.Second
@@ -40,7 +40,8 @@ type source struct {
 }
 
 type Client struct {
-	src               *source
+	name              string
+	address           string
 	eth               *ethclient.Client
 	bridge            *abi.Bridge
 	minRequiredGasFee uint64
@@ -51,39 +52,29 @@ type Client struct {
 	wallet            common.Wallet
 }
 
-func (cl *Client) giveOutPackets(seq uint64) {
-	height := cl.CurHeight()
-	msgCh <- &chain.Packet{
-		Sequence: seq,
-		Height:   height - 5,
-	}
-}
-
-func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
-	fmt.Println("reached in getting packet with seq number ethereum", dst, seqNum)
+func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
 	chainID := &big.Int{}
-	chainID.SetUint64(uint64(dst))
+	chainID.SetUint64(uint64(dstChainID))
 	sequenceNumber := &big.Int{}
 	sequenceNumber.SetUint64(seqNum)
 
 	ethpacket, err := cl.bridge.OutgoingPackets(&ethBind.CallOpts{Context: ctx}, chainID, sequenceNumber)
-	fmt.Println("message of seq", ethpacket.Sequence, ethpacket.Height)
 	if err != nil {
 		return nil, err
 	}
 
 	packet := &chain.Packet{
 		Version: ethpacket.Version.Uint64(),
-		Destination: &chain.NetworkAddress{
+		Destination: chain.NetworkAddress{
 			ChainID: ethpacket.DestTokenService.ChainId.Uint64(),
 			Address: ethpacket.DestTokenService.Addr,
 		},
-		Source: &chain.NetworkAddress{
+		Source: chain.NetworkAddress{
 			ChainID: ethpacket.SourceTokenService.ChainId.Uint64(),
 			Address: string(ethpacket.SourceTokenService.Addr.Bytes()),
 		},
 		Sequence: ethpacket.Sequence.Uint64(),
-		Message: &chain.Message{
+		Message: chain.Message{
 			DestTokenAddress: ethpacket.Message.DestTokenAddress,
 			Amount:           ethpacket.Message.Amount,
 			ReceiverAddress:  ethpacket.Message.ReceiverAddress,
@@ -92,11 +83,6 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		Height: ethpacket.Height.Uint64(),
 	}
 	return packet, nil
-}
-
-func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {
-	packets := make([]*chain.Packet, 0)
-	return packets, nil
 }
 
 func (cl *Client) AttestMessages(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
@@ -116,7 +102,7 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultReadTimeout)
 		defer cancel()
 		txo.GasPrice, _ = cl.SuggestGasPrice(ctx)
-		txo.GasLimit = uint64(DefaultGasLimit)
+		txo.GasLimit = uint64(defaultGasLimit)
 		// txo.Nonce = big.NewInt(1)
 		return txo, nil
 	}
@@ -128,7 +114,7 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	}
 
 	txOpts.Context = context.Background()
-	txOpts.GasLimit = DefaultGasLimit
+	txOpts.GasLimit = defaultGasLimit
 
 	txOpts.GasPrice = big.NewInt(defaultGasPrice)
 	// send transaction here
@@ -194,9 +180,7 @@ func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (boo
 	return false, nil
 }
 
-func (cl *Client) CurHeight() uint64 {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func (cl *Client) CurHeight(ctx context.Context) uint64 {
 	height, err := cl.eth.BlockNumber(ctx)
 	if err != nil {
 		return 0
@@ -229,11 +213,11 @@ func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
 }
 
 func (cl *Client) Name() string {
-	return "Ethereum"
+	return cl.name
 }
 
 func (cl *Client) GetSourceChain() (name, address string) {
-	name, address = cl.src.sourceName, cl.src.sourceAddress
+	name, address = cl.name, cl.address
 	return
 }
 
@@ -259,6 +243,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		nextSeq should start from 1
 	*/
 
+	// todo: consider default values against config values
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		return nil
@@ -275,15 +260,17 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	if err != nil {
 		return nil
 	}
+	name := cfg.Name
+	if name == "" {
+		name = ethereum
+	}
 	return &Client{
-		src: &source{
-			sourceName:    cfg.Name,
-			sourceAddress: cfg.BridgeContract,
-		},
+		name:           name,
+		address:        cfg.BridgeContract,
 		eth:            ethclient,
 		bridge:         bridgeClient,
-		finalizeHeight: DefaultFinalizingHeight,
-		blockGenTime:   BlockGenerationTime,
+		finalizeHeight: defaultFinalizingHeight,
+		blockGenTime:   blockGenerationTime,
 		chainID:        cfg.ChainID,
 		chainCfg:       cfg,
 		wallet:         wallet,
