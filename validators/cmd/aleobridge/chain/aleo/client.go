@@ -3,13 +3,10 @@ package aleo
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
-	ethCommon "github.com/ethereum/go-ethereum/common"
 	aleoRpc "github.com/parajuliswopnil/aleo-go-sdk/rpc"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
@@ -75,8 +72,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 	if message == nil {
 		return nil, nil
 	}
-
-	pktStr := parseMessage(message[mappingKey].(string))
+	pktStr := parseMessage(message[mappingKey])
 	return parseAleoPacket(pktStr)
 }
 
@@ -189,183 +185,6 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		blockGenTime:   BlockGenerationTime,
 		chainCfg:       cfg,
 		wallet:         wallet,
+		programID:      cfg.BridgeContract,
 	}
-}
-
-// todo: Recheck
-func parseMessage(m string) *AleoPacket {
-	message := trim(m)
-	// fmt.Println(message)
-
-	splittedMessage := strings.Split(message, " ")
-
-	msg := []string{}
-	pkt := AleoPacket{}
-
-	for i := 0; i < len(splittedMessage); i++ {
-		if splittedMessage[i] == "" {
-			continue
-		}
-		msg = append(msg, splittedMessage[i])
-	}
-	for m, v := range msg {
-		switch v {
-		case "version:":
-			pkt.Version = msg[m+1]
-			// fmt.Println("version", pkt.Version)
-		case "sequence:":
-			pkt.Sequence = msg[m+1]
-			// fmt.Println("sequence", pkt.Sequence)
-		case "source:":
-			pkt.Source.Chain_id = msg[m+3]
-			// fmt.Println("source chain id", pkt.Source.Chain_id)
-			pkt.Source.ServiceContract = msg[m+5]
-			// fmt.Println("source address", pkt.Source.ServiceContract)
-		case "destination:":
-			serviceProgram := ""
-			pkt.Destination.Chain_id = msg[m+3]
-			// fmt.Println("dest chain id", pkt.Destination.Chain_id)
-			for i := m + 6; true; i++ {
-				if msg[i] == "]" {
-					break
-				}
-				serviceProgram += msg[m+6] + " "
-			}
-			pkt.Destination.ServiceContract = serviceProgram
-			// fmt.Println("dest address", serviceProgram)
-		case "message:":
-			denom := ""
-			i := 0
-			for i = m + 4; true; i++ {
-				if msg[i] == "]" {
-					break
-				}
-				denom += msg[i] + " "
-			}
-			pkt.Message.Denom = denom
-			// fmt.Println("token", pkt.Message.Denom)
-			sender := msg[i+2]
-			pkt.Message.Sender = sender
-			// fmt.Println("sender", sender)
-			receiver := ""
-			for i = i + 5; true; i++ {
-				if msg[i] == "]" {
-					break
-				}
-				receiver += msg[i] + " "
-			}
-			pkt.Message.Receiver = receiver
-			// fmt.Println("message receiver", pkt.Message.Receiver)
-			pkt.Message.Amount = msg[i+2]
-			// fmt.Println(pkt.Message.Amount)
-		case "height:":
-			pkt.Height = strings.Trim(msg[m+1], "}")
-			// fmt.Println(pkt.Height)
-		}
-
-	}
-	return &pkt
-}
-
-func trim(msg string) string {
-	str := strings.ReplaceAll(msg, "\\n", "")
-	return strings.ReplaceAll(str, ",", "")
-}
-
-func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
-	pkt := new(chain.Packet)
-	version, err := strconv.ParseUint(strings.ReplaceAll(packet.Version, "u8", ""), 0, 64)
-	if err != nil {
-		return nil, err
-	}
-	pkt.Version = version
-	sequence, err := strconv.ParseUint(strings.ReplaceAll(packet.Sequence, "u32", ""), 0, 64)
-	if err != nil {
-		return nil, err
-	}
-	pkt.Sequence = sequence
-
-	sourceChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Source.Chain_id, "u32", ""), 0, 64)
-	if err != nil {
-		return nil, &exec.Error{}
-	}
-	pkt.Source.ChainID = sourceChainID
-	pkt.Source.Address = packet.Source.ServiceContract
-
-	destChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Destination.Chain_id, "u32", ""), 0, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	pkt.Destination.ChainID = destChainID
-
-	pkt.Destination.Address = parseEthAddress(packet.Destination.ServiceContract)
-
-	pkt.Message.DestTokenAddress = parseEthAddress(packet.Message.Denom)
-	pkt.Message.SenderAddress = packet.Message.Sender
-	pkt.Message.ReceiverAddress = parseEthAddress(packet.Message.Receiver)
-
-	amount := &big.Int{}
-	pkt.Message.Amount, _ = amount.SetString(strings.ReplaceAll(packet.Message.Amount, "u64", ""), 0)
-
-	height, err := strconv.ParseUint(strings.ReplaceAll(packet.Height, "u32}", ""), 0, 64)
-	if err != nil {
-		return nil, err
-	}
-	pkt.Height = height
-
-	return pkt, nil
-}
-
-func (c *Client) constructAleoPacket(msg *chain.Packet) string {
-	version := strconv.Itoa(int(msg.Version)) + "u8"
-	sequenceNo := strconv.Itoa(int(msg.Sequence)) + "u32"
-	srcChainId, srcServiceContract := strconv.Itoa(int(msg.Source.ChainID))+"u32", msg.Source.Address
-	dstChainId, dstserviceContract := strconv.Itoa(int(msg.Destination.ChainID))+"u32", msg.Destination.Address
-	fmt.Println(srcServiceContract, dstserviceContract)
-	denom := msg.Message.DestTokenAddress
-	sender := msg.Message.SenderAddress
-	receiver := msg.Message.ReceiverAddress
-	amount := msg.Message.Amount.String() + "u64"
-	height := strconv.FormatUint(msg.Height, 10) + "u32"
-	// todo: fmt.Sprintf()
-	constructedPacket := "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + constructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + constructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
-
-	return constructedPacket
-}
-
-func constructServiceContractAddress(serviceContract string) string {
-	aleoAddress := "[ "
-	serviceContractByte := []byte(serviceContract)
-	lenDifference := 32 - len(serviceContractByte)
-	for i := 0; i < lenDifference; i++ { // left pad the return by 0 if the len of byte array of address is smaller than 32
-		aleoAddress += "0u8, "
-	}
-
-	for i := lenDifference; i < 32; i++ {
-		if i != 31 {
-			aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8, "
-		} else {
-			aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8 "
-		}
-	}
-	aleoAddress += "]"
-	return aleoAddress
-}
-
-func parseEthAddress(addr string) string {
-	addr = strings.ReplaceAll(addr, "u8", "")
-	addr = strings.Trim(addr, " ")
-	splittedAddress := strings.Split(addr, " ")
-
-	var addrbt []byte
-
-	for i := 12; i < len(splittedAddress)-1; i++ {
-		bt, _ := strconv.ParseUint(splittedAddress[i], 0, 8)
-
-		addrbt = append(addrbt, uint8(bt))
-	}
-
-	return ethCommon.Bytes2Hex(addrbt)
-
 }
