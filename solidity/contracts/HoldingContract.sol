@@ -6,6 +6,11 @@ import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 contract Holding is Ownable, Upgradeable {
+
+    event Locked(address account, address token, uint256 amount);
+    event Unlocked(address account, address token, uint256 amount);
+    event Released(address account, address token, uint256 amount);
+
     // user address => token address => amount
     mapping(address => mapping(address => uint256)) public locked;
 
@@ -32,6 +37,7 @@ contract Holding is Ownable, Upgradeable {
             "Caller is not registered Token Service"
         );
         locked[user][token] += amount;
+        emit Locked(user, token, amount);
     }
 
     function unlock(
@@ -42,11 +48,13 @@ contract Holding is Ownable, Upgradeable {
         require(locked[user][token] >= amount, "Insufficient amount");
         locked[user][token] -= amount;
         unlocked[user][token] += amount;
+        emit Unlocked(user, token, amount);
     }
 
     function release(address user, address token, uint256 amount) public {
         require(unlocked[user][token] >= amount, "Insufficient amount");
         unlocked[user][token] -= amount;
+        emit Released(user, token, amount);
         IERC20(token).transfer(user, amount);
     }
 }

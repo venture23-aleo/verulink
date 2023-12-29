@@ -17,7 +17,7 @@ contract IncomingPacketManagerImpl is IncomingPacketManager {
     // packetHash => attestor address => bool
     mapping(bytes32 => mapping(address => bool)) voted;
 
-    function _getQuorumRequired() internal view virtual returns (uint256) {
+    function _getQuorumRequired(uint256) internal view virtual returns (uint256) {
         return 0;
     }
 
@@ -32,16 +32,6 @@ contract IncomingPacketManagerImpl is IncomingPacketManager {
     function _receivePacket(PacketLibrary.InPacket memory packet) internal {
         _preValidateInPacket(packet);
         _updateInPacketState(packet);
-    }
-    
-    function receivePacket(PacketLibrary.InPacket memory packet) public virtual {
-        _receivePacket(packet);
-    }
-
-    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public virtual {
-        for(uint256 i=0;i<packets.length;i++) {
-            _receivePacket(packets[i]);
-        }
     }
 
     function _preValidateInPacket(PacketLibrary.InPacket memory packet) internal view {
@@ -60,18 +50,18 @@ contract IncomingPacketManagerImpl is IncomingPacketManager {
         voted[packetHash][msg.sender] = true;
         votes[packetHash] += 1;
 
-        if(!hasQuorumReached(packetHash)) return;
+        if(!hasQuorumReached(packetHash, packet.sourceTokenService.chainId)) return;
 
         incomingPackets[packet.sourceTokenService.chainId][packet.sequence] = packetHash;
         emit PacketArrived(packet);
     }
 
-    function hasQuorumReached(bytes32 packetHash) public view returns (bool) {
-        return votes[packetHash] >= _getQuorumRequired();
+    function hasQuorumReached(bytes32 packetHash, uint256 chainId) public view returns (bool) {
+        return votes[packetHash] >= _getQuorumRequired(chainId);
     }
 
     function hasQuorumReached(uint256 chainId, uint256 sequence) public view returns (bool) {
-        return hasQuorumReached(getIncomingPacketHash(chainId, sequence));
+        return hasQuorumReached(getIncomingPacketHash(chainId, sequence), chainId);
     }
 
     function hasVoted(bytes32 packetHash, address voter) public view returns (bool) {

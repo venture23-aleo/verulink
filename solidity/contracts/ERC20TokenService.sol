@@ -48,14 +48,14 @@ contract ERC20TokenService is Ownable, BlackListService,
 
         PacketLibrary.OutTokenMessage memory message = PacketLibrary.OutTokenMessage(
             msg.sender,
-            supportedTokens[tokenAddress].destTokenAddress.addr, 
+            supportedTokens[tokenAddress][destChainId].destTokenAddress.addr, 
             amount, 
             receiver
         );
 
         PacketLibrary.OutPacket memory packet ;
         packet.sourceTokenService = self;
-        packet.destTokenService = supportedTokens[tokenAddress].destTokenService;
+        packet.destTokenService = supportedTokens[tokenAddress][destChainId].destTokenService;
         packet.message = message;
         packet.height = block.number;
 
@@ -67,7 +67,7 @@ contract ERC20TokenService is Ownable, BlackListService,
         require(packet.destTokenService.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
-        require(isSupportedToken(tokenAddress), "Token not supported");
+        require(isSupportedToken(tokenAddress, packet.sourceTokenService.chainId), "Token not supported");
         if(isBlackListed(receiver)) {
             IERC20(tokenAddress).transfer(address(holding), packet.message.amount);
             holding.lock(receiver, tokenAddress, packet.message.amount);

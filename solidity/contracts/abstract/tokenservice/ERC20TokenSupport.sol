@@ -15,17 +15,20 @@ contract ERC20TokenSupport is Ownable {
         bool enabled;
     }
 
-    mapping(address => Token) public supportedTokens;
+    mapping(address => mapping(uint256 => Token)) public supportedTokens;
 
-    event TokenAdded(Token token);
-    event TokenRemoved(address tokenAddress);
+    event TokenAdded(Token token, uint256 destChainId);
+    event TokenRemoved(address token, uint256 destChainId);
+    event TokenEnabled(address token, uint256 destChainId);
+    event TokenDisabled(address token, uint256 destChainId);
 
-    function isSupportedToken(address token) public view returns (bool) {
-        return supportedTokens[token].tokenAddress == token;
-    }
 
     function isSupportedToken(address token, uint256 destChainId) public view returns (bool) {
-        return supportedTokens[token].destTokenAddress.chainId == destChainId;
+        return supportedTokens[token][destChainId].destTokenAddress.chainId == destChainId;
+    }
+
+    function isEnabledToken(address token, uint256 destChainId) public view returns (bool) {
+        return supportedTokens[token][destChainId].enabled && isSupportedToken(token,destChainId);
     }
 
     function addToken(
@@ -40,14 +43,28 @@ contract ERC20TokenSupport is Ownable {
                                         PacketLibrary.OutNetworkAddress(destChainId, destTokenService),
                                         min,
                                         max,
-                                        true);
-            supportedTokens[tokenAddress] = token;
-            emit TokenAdded(token);
+                                        true
+                                    );
+            supportedTokens[tokenAddress][destChainId] = token;
+            emit TokenAdded(token, destChainId);
     }
 
-    function removeToken(address tokenAddress) public onlyOwner {
-        require(isSupportedToken(tokenAddress), "Token not supported");
-        emit TokenRemoved(tokenAddress);
-        delete supportedTokens[tokenAddress];
+    function removeToken(address tokenAddress, uint256 destChainId) public onlyOwner {
+        require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
+        emit TokenRemoved(tokenAddress, destChainId);
+        delete supportedTokens[tokenAddress][destChainId];
     }
+
+    function enable(address tokenAddress, uint256 destChainId) public onlyOwner {
+        require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
+        supportedTokens[tokenAddress][destChainId].enabled = true;
+        emit TokenEnabled(tokenAddress, destChainId);
+    }
+
+    function disable(address tokenAddress, uint256 destChainId) public onlyOwner {
+        require(isEnabledToken(tokenAddress, destChainId), "Token not enabled");
+        supportedTokens[tokenAddress][destChainId].enabled = true;
+        emit TokenEnabled(tokenAddress, destChainId);
+    }
+
 }

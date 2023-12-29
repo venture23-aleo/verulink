@@ -4,28 +4,30 @@ pragma solidity ^0.8.19;
 import {Ownable} from "../../common/Ownable.sol";
 
 contract AttestorManager is Ownable{
-    event AttestorAdded(address attestor, uint256 quorum);
-    event AttestorRemoved(address attestor, uint256 quorum);
+    event AttestorAdded(address attestor, uint256 destChainId, uint256 quorum);
+    event AttestorRemoved(address attestor, uint256 destChainId, uint256 quorum);
 
-    mapping(address => bool) private attestors;
-    uint256 public quorumRequired;
+    mapping(address => mapping(uint256 => bool)) private attestors;
+    mapping(uint256 => uint256) quorumRequired;
 
-    function isAttestor(address attestor) public view returns (bool) {
-        return attestors[attestor];
+    function isAttestor(address attestor, uint256 destChainId) public view returns (bool) {
+        return attestors[attestor][destChainId];
     }
 
-    function addAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
+    function addAttestor(address attestor, uint256 destChainId, uint256 newQuorumRequired) public onlyOwner {
         require(attestor != address(0), "Zero Address");
-        require(!attestors[attestor], "Attestor already exists");
-        attestors[attestor] = true;
-        quorumRequired = newQuorumRequired;
-        emit AttestorAdded(attestor, newQuorumRequired);
+        require(!attestors[attestor][destChainId], "Attestor already exists");
+        attestors[attestor][destChainId] = true;
+        quorumRequired[destChainId] = newQuorumRequired;
+        emit AttestorAdded(attestor, destChainId, newQuorumRequired);
     }
 
-    function removeAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
-        require(attestors[attestor], "Unknown Attestor");
-        delete attestors[attestor];
-        quorumRequired = newQuorumRequired;
-        emit AttestorRemoved(attestor, newQuorumRequired);
+    function removeAttestor(address attestor, uint256 destChainId, uint256 newQuorumRequired) public onlyOwner {
+        require(attestors[attestor][destChainId], "Unknown Attestor");
+        delete attestors[attestor][destChainId];
+        quorumRequired[destChainId] = newQuorumRequired;
+        emit AttestorRemoved(attestor, destChainId, newQuorumRequired);
     }
+
+    // setter for quorum required
 }

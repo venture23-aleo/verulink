@@ -60,8 +60,8 @@ contract ERC20TokenBridge is IncomingPacketManager,
         require(msg.sender == owner);
     }
 
-    function _getQuorumRequired() internal view override returns (uint256) {
-        return quorumRequired;
+    function _getQuorumRequired(uint256 chainId) internal view override returns (uint256) {
+        return quorumRequired[chainId];
     }
 
     // function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bool) {
@@ -80,24 +80,26 @@ contract ERC20TokenBridge is IncomingPacketManager,
         return ConsumedPacketManagerImpl.isPacketConsumed(_chainId, _sequence);
     }
 
-    function receivePacket(PacketLibrary.InPacket memory packet) public override {
-        super.receivePacket(packet);
-        require(isAttestor(msg.sender), "Unknown Attestor");
+    function receivePacket(PacketLibrary.InPacket memory packet) public {
+        _receivePacket(packet);
+        require(isAttestor(msg.sender,packet.sourceTokenService.chainId), "Unknown Attestor");
     }
 
-    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public override {
-        super.receivePacketBatch(packets);
-        require(isAttestor(msg.sender), "Unknown Attestor");
+    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public {
+        for(uint256 i=0;i<packets.length;i++) {
+            _receivePacket(packets[i]);
+            require(isAttestor(msg.sender,packets[i].sourceTokenService.chainId), "Unknown Attestor");
+        }
     }
 
     function consume(PacketLibrary.InPacket memory packet) public override {
         super.consume(packet);
-        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        require(isRegisteredTokenService(msg.sender, packet.sourceTokenService.chainId), "Unknown Token Service");
     }
 
     function sendMessage(PacketLibrary.OutPacket memory packet) public override {
         super.sendMessage(packet);
-        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        require(isRegisteredTokenService(msg.sender, packet.destTokenService.chainId), "Unknown Token Service");
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
     } 
 }
