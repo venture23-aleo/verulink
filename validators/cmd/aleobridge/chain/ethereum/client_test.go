@@ -27,7 +27,7 @@ func TestGeneratePacket(t *testing.T) {
 	}
 	client := NewClient(cfg)
 
-	fmt.Println(client.CurHeight())
+	fmt.Println(client.CurHeight(context.Background()))
 	if true {
 		return
 	}
@@ -40,7 +40,7 @@ func TestGeneratePacket(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultReadTimeout)
 		defer cancel()
 		txo.GasPrice, _ = client.(*Client).eth.SuggestGasPrice(ctx)
-		txo.GasLimit = uint64(DefaultGasLimit)
+		txo.GasLimit = uint64(defaultGasLimit)
 		return txo, nil
 	}
 
@@ -48,7 +48,7 @@ func TestGeneratePacket(t *testing.T) {
 	assert.Nil(t, err)
 
 	txOpts.Context = context.Background()
-	txOpts.GasLimit = DefaultGasLimit
+	txOpts.GasLimit = defaultGasLimit
 
 	txOpts.GasPrice = big.NewInt(defaultGasPrice)
 	packet := abi.PacketLibraryOutPacket{

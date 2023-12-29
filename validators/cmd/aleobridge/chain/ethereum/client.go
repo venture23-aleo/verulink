@@ -30,15 +30,6 @@ const (
 	defaultReadTimeout      = 50 * time.Second
 )
 
-var (
-	msgCh = make(chan *chain.Packet)
-)
-
-type source struct {
-	sourceName    string
-	sourceAddress string
-}
-
 type Client struct {
 	name              string
 	address           string
@@ -95,7 +86,7 @@ func (cl *Client) AttestMessages(opts *ethBind.TransactOpts, packet abi.PacketLi
 func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	newTransactOpts := func() (*ethBind.TransactOpts, error) {
 		fmt.Println(cl.wallet.(*common.EVMWallet).SKey())
-		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*common.EVMWallet).SKey(), big.NewInt(11155111))
+		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*common.EVMWallet).SKey(), big.NewInt(11155111)) // todo: chainid is required here, handle this through config?
 		if err != nil {
 			return nil, err
 		}
@@ -242,8 +233,6 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		Initialize eth client and panic if any error occurs.
 		nextSeq should start from 1
 	*/
-
-	// todo: consider default values against config values
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		return nil
@@ -261,9 +250,14 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		return nil
 	}
 	name := cfg.Name
+	finalizeHeight := cfg.FinalityHeight
 	if name == "" {
 		name = ethereum
 	}
+	if finalizeHeight == 0 {
+		finalizeHeight = defaultFinalizingHeight
+	}
+	// todo: handle start height from stored height if start height in the config is 0
 	return &Client{
 		name:           name,
 		address:        cfg.BridgeContract,
