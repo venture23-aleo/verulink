@@ -87,7 +87,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 			DestTokenAddress: ethpacket.Message.DestTokenAddress,
 			Amount:           ethpacket.Message.Amount,
 			ReceiverAddress:  ethpacket.Message.ReceiverAddress,
-			SenderAddress: string(ethpacket.Message.SenderAddress.Bytes()),
+			SenderAddress:    string(ethpacket.Message.SenderAddress.Bytes()),
 		},
 		Height: ethpacket.Height.Uint64(),
 	}

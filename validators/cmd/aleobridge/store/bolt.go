@@ -1,26 +1,17 @@
 package store
 
 import (
-	"fmt"
-	"sync"
-
 	"go.etcd.io/bbolt"
 )
 
-var (
-	db *bbolt.DB
-	mu sync.RWMutex
-)
+var db *bbolt.DB
 
 func initDB(path string) error {
-	fmt.Println("db initialized")
 	var err error
-	mu = sync.RWMutex{}
 	db, err = bbolt.Open(path, 0655, nil)
 	if err != nil {
 		return err
 	}
-	fmt.Println("db from init db", db)
 	return nil
 }
 
@@ -33,7 +24,6 @@ func closeDB() error {
 }
 
 func createBucket(ns string) error {
-	fmt.Println("************* create bucket *************", db)
 	return db.Update(func(tx *bbolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(ns))
 		return err
@@ -72,6 +62,9 @@ func get(bucket string, key []byte) (value []byte) {
 	db.View(func(tx *bbolt.Tx) error {
 		bkt := tx.Bucket([]byte(bucket))
 		data := bkt.Get(key)
+		if data == nil {
+			return nil
+		}
 		value = make([]byte, len(data))
 		copy(value, data)
 		return nil

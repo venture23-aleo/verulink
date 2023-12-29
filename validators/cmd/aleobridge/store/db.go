@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitKVStore(path string) {
-	initDB(path)
+func InitKVStore(path string) error {
+	return initDB(path)
 }
 
 func CloseDB() error {
@@ -46,8 +46,11 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 	seqNumNamespace string, seqNums []uint64,
 	logger *zap.Logger,
 ) {
+	wg := sync.WaitGroup{}
+	wg.Add(len(txnKeys))
 	for _, txnKey := range txnKeys {
 		go func(txnKey []byte) {
+			defer wg.Done()
 			if err := batchDelete(txnNamespace, txnKey); err != nil {
 				if logger != nil {
 					logger.Error(err.Error())
@@ -56,8 +59,10 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 		}(txnKey)
 	}
 
+	wg.Add(len(seqNums))
 	for _, seqNum := range seqNums {
 		go func(seqNum uint64) {
+			defer wg.Done()
 			key := make([]byte, 8)
 			binary.BigEndian.PutUint64(key, seqNum)
 			if err := batchPut(seqNumNamespace, key, nil); err != nil {
@@ -67,6 +72,7 @@ func RemoveTxnKeyAndStoreBaseSeqNum(
 			}
 		}(seqNum)
 	}
+	wg.Wait()
 }
 
 func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
@@ -75,12 +81,12 @@ func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
 
 	ch := retrieveNKeyValuesFromFirst(namespace, 1000)
 	v, closed := <-ch
-	if closed {
+	if closed && v[0] == nil {
 		return 0
 	}
 	key := v[0]
 	curBaseSeqNum := binary.BigEndian.Uint64(key)
-	var toDeleteKeys [][]byte
+	toDeleteKeys := [][]byte{key}
 
 	for v := range ch {
 		key := v[0]
@@ -97,6 +103,7 @@ func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
 	wg.Add(len(toDeleteKeys))
 	for _, key := range toDeleteKeys {
 		go func(key []byte) {
+			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
 				if logger != nil {
 					logger.Error(err.Error())
@@ -155,9 +162,10 @@ func StoreTransactedPacket(namespace string, pkt *chain.Packet) error {
 
 	key := make([]byte, 8)
 	binary.NativeEndian.PutUint64(key, pkt.Sequence)
-	return batchPut(namespace, key, data)
+	return put(namespace, key, data)
 }
 
+// RetrieveNPackets retrieves n packets from first index
 func RetrieveNPackets(namespace string, n int) chan *chain.Packet {
 	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
 	ch := make(chan *chain.Packet)

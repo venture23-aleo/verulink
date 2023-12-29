@@ -27,16 +27,11 @@ type Relayer interface {
 func NewRelay(
 	srcChain chain.IReceiver,
 	destChain chain.ISender,
-	sChainCond, dChainCond *sync.Cond,
 
 ) Relayer {
-	pktCh := make(chan *chain.Packet)
 	return &relay{
-		srcChain:   srcChain,
-		destChain:  destChain,
-		sChainCond: sChainCond,
-		dChainCond: dChainCond,
-		pktCh: pktCh,
+		srcChain:  srcChain,
+		destChain: destChain,
 	}
 }
 
@@ -47,10 +42,8 @@ type relay struct {
 	retryPktNameSpace      string
 	transactedPktNameSpace string
 	baseSeqNumNameSpace    string
-	sChainCond, dChainCond *sync.Cond
 	pktCh                  chan *chain.Packet
 	nextSeqNum             uint64
-	eventCh                <-chan *chain.ChainEvent
 	bSeqNumUpdateTime      time.Time
 	bSeqNum                uint64
 	mu                     sync.Mutex
@@ -68,7 +61,7 @@ func (r *relay) Init(ctx context.Context) {
 		r.createNamespaces()
 		r.setBaseSeqNum()
 		r.nextSeqNum = r.bSeqNum + 1
-
+		r.pktCh = make(chan *chain.Packet)
 	}
 
 	/**********Not required now***********************/
@@ -109,6 +102,7 @@ func (r *relay) startReceiving(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			close(r.pktCh)
 			return
 		default:
 		}
@@ -116,8 +110,8 @@ func (r *relay) startReceiving(ctx context.Context) {
 		chainID := r.destChain.GetChainID()
 		pkt, err := r.srcChain.GetPktWithSeq(ctx, chainID, r.nextSeqNum)
 		if err != nil {
-			//todo: if not found sleep accordingly
-			time.Sleep(time.Second * 10)
+			r.logger.Error(err.Error())
+			time.Sleep(time.Minute)
 			continue
 		}
 
@@ -128,7 +122,7 @@ func (r *relay) startReceiving(ctx context.Context) {
 
 		curSrcHeight := r.srcChain.CurHeight()
 		finalityHeight := r.srcChain.GetFinalityHeight()
-		if pkt.Height + finalityHeight >= curSrcHeight {
+		if pkt.Height+finalityHeight >= curSrcHeight {
 			fmt.Println(pkt.Height, finalityHeight, curSrcHeight)
 			heightDiff := pkt.Height + finalityHeight - curSrcHeight
 			waitTime := r.srcChain.GetBlockGenTime() * time.Duration(heightDiff)
@@ -209,8 +203,7 @@ func (r *relay) pruneDB(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			ctxErr := ctx.Err()
-			_ = ctxErr
+			return
 		case <-ticker.C:
 		default:
 		}
@@ -315,28 +308,10 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 	}
 }
 
-func (r *relay) pollChainEvents(ctx context.Context, name string, cond *sync.Cond) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		func() {
-			cond.L.Lock()
-			cond.Wait()
-			cond.L.Unlock()
-
-			chainEventRWMu.RLock()
-			event := chainEvents[name]
-			chainEventRWMu.RUnlock()
-
-			_ = event
-		}()
-	}
+func (r *relay) Name() string {
+	return relayName(r.srcChain.Name(), r.destChain.Name())
 }
 
-func (r *relay) Name() string {
-	return fmt.Sprintf("%s-%s bridge", r.srcChain.Name(), r.destChain.Name())
+func relayName(srcChain, destChain string) string {
+	return srcChain + "-" + destChain
 }
