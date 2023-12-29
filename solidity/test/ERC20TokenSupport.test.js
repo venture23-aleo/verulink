@@ -40,11 +40,11 @@ describe('ERC20TokenSupport', () => {
         await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
 
         // Check if the token was added
-        const isSupported = await proxiedContract.isSupportedToken(tokenAddress);
+        const isSupported = await proxiedContract.isSupportedToken(tokenAddress,destChainId);
         expect(isSupported).to.be.true;
 
         // Check if the added token matches the expected values
-        const addedToken = await proxiedContract.supportedTokens(tokenAddress);
+        const addedToken = await proxiedContract.supportedTokens(tokenAddress,destChainId);
         expect(addedToken.tokenAddress).to.equal(tokenAddress);
         expect(addedToken.destTokenAddress.chainId).to.equal(destChainId);
         expect(addedToken.destTokenAddress.addr).to.equal(destTokenAddress);
@@ -69,7 +69,7 @@ describe('ERC20TokenSupport', () => {
     //     console.log("hello");
 
     //     // Attempt to add the same token again
-    //     await expect(proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max))
+    //     expect(proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max))
     //         .to.be.revertedWith('Token already supported');
     // });
 
@@ -86,10 +86,10 @@ describe('ERC20TokenSupport', () => {
         await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
 
         // Remove token
-        await proxiedContract.removeToken(tokenAddress);
+        await proxiedContract.removeToken(tokenAddress, destChainId);
 
         // Check if the token was removed
-        const isSupported = await proxiedContract.isSupportedToken(tokenAddress);
+        const isSupported = await proxiedContract.isSupportedToken(tokenAddress,destChainId);
         expect(isSupported).to.be.false;
     });
 
@@ -98,7 +98,7 @@ describe('ERC20TokenSupport', () => {
         const nonExistingToken = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing token
-        await expect(proxiedContract.removeToken(nonExistingToken)).to.be.revertedWith('Token not supported');
+        expect(proxiedContract.removeToken(nonExistingToken, 1)).to.be.revertedWith('Token not supported');
     });
 
     // ...
@@ -159,7 +159,7 @@ it('should return false for a non-existing token and any destChainId', async () 
         await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
 
         // Try to add token with another account and expect it to revert
-        await expect(
+        expect(
             proxiedContract.connect(otherAccount).addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)
         ).to.be.reverted;
     });
@@ -177,7 +177,7 @@ it('should return false for a non-existing token and any destChainId', async () 
         await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
 
         // Try to remove token with another account and expect it to revert
-        await expect(
+        expect(
             proxiedContract.connect(otherAccount).removeToken(tokenAddress)
         ).to.be.reverted;
     });

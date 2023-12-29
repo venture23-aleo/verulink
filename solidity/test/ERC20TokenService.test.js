@@ -94,10 +94,10 @@ describe('ERC20TokenService', () => {
         proxiedV1 = await ERC20TokenService.attach(proxy.target);
         await proxiedV1.connect(owner).addToken(usdcMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
 
-        await proxiedBridge.connect(owner).addTokenService(proxiedV1.target);
+        await proxiedBridge.connect(owner).addTokenService(proxiedV1.target, destchainID);
         await proxiedBridge.connect(owner).addChain(destchainID, "aleo.BridgeAddress");
 
-        await proxiedBridge.connect(owner).addAttestor(attestor.address, 1);
+        await proxiedBridge.connect(owner).addAttestor(attestor.address, destchainID, 1);
 
         inPacket = [
             1,
@@ -125,7 +125,7 @@ describe('ERC20TokenService', () => {
             await proxiedV1.setHolding(newHoldingContract);
     
             // Try to Holding contract with another account and expect it to revert
-            await expect(
+            expect(
                 proxiedV1.connect(other).setHolding(newHoldingContract)
             ).to.be.reverted;
     });
@@ -135,19 +135,19 @@ describe('ERC20TokenService', () => {
         // Mock USDC and USDT contracts to simulate blacklisting
         await usdcMock.addBlackList(other.address);
 
-        await expect(proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.revertedWith("Sender Blacklisted");
+        expect(proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.revertedWith("Sender Blacklisted");
     });
 
 
     // Test for unsupported tokens while transfer
     it('should not allow unsupported token for transfer', async () => {
-        await expect(proxiedV1.connect(other).transfer(unsupportedToken.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.revertedWith("Unknown token Address");
+        expect(proxiedV1.connect(other).transfer(unsupportedToken.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.revertedWith("Unknown token Address");
     });
 
 
     // Test for negative transfer
     it('should not transfer if he has less balance than inserted amount', async () => {
-        await expect(proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.reverted;
+        expect(proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.reverted;
     });
 
 
@@ -177,7 +177,7 @@ describe('ERC20TokenService', () => {
         ];
 
         await proxiedBridge.connect(attestor).receivePacket(wrongPacket);
-        await expect (proxiedV1.connect(other).withdraw(wrongPacket)).to.be.revertedWith('Packet not intended for this Token Service');
+        expect (proxiedV1.connect(other).withdraw(wrongPacket)).to.be.revertedWith('Packet not intended for this Token Service');
     });
 
         // Test for wrong destTokenAddress

@@ -40,9 +40,9 @@ describe('ERC20TokenBridge', () => {
         initializeData = new ethers.Interface(ERC20TokenbridgeImpl.interface.formatJson()).encodeFunctionData("initialize", [owner.address]);
         const proxy = await Proxy.deploy(bridgeImpl.target, initializeData);
         proxiedV1 = ERC20TokenbridgeImpl.attach(proxy.target);
-        await proxiedV1.addAttestor(attestor1.address, 2);
-        await proxiedV1.addAttestor(attestor2.address, 2);
-        await proxiedV1.addTokenService(tokenService.address);
+        await proxiedV1.addAttestor(attestor1.address, destinationChainId, 2);
+        await proxiedV1.addAttestor(attestor2.address, destinationChainId, 2);
+        await proxiedV1.addTokenService(tokenService.address,destinationChainId);
         await proxiedV1.addChain(destinationChainId, "aleo.bridge");
         // await proxiedV1.addChain(unknownChainId, "aleo.bridge");
         // console.log("bool = ", await proxiedV1.isSupportedChain(unknownChainId));
@@ -80,7 +80,7 @@ describe('ERC20TokenBridge', () => {
         ];
 
         // Use 'unknownAddress' as the caller, which is not an attester
-        await expect(proxiedV1.connect(unknownAttestor).receivePacket(packet))
+        expect(proxiedV1.connect(unknownAttestor).receivePacket(packet))
             .to.be.revertedWith("Unknown Attestor");
     });
 
@@ -133,7 +133,7 @@ describe('ERC20TokenBridge', () => {
         const packetsArray = [packet1, packet2];
 
         // Use 'unknownAddress' as the caller, which is not an attester
-        await expect(proxiedV1.connect(unknownAttestor).receivePacketBatch(packetsArray))
+        expect(proxiedV1.connect(unknownAttestor).receivePacketBatch(packetsArray))
             .to.be.revertedWith("Unknown Attestor");
     });
 

@@ -8,7 +8,7 @@ contract AttestorManager is Ownable{
     event AttestorRemoved(address attestor, uint256 destChainId, uint256 quorum);
 
     mapping(address => mapping(uint256 => bool)) private attestors;
-    mapping(uint256 => uint256) quorumRequired;
+    mapping(uint256 => uint256) public quorumRequired;
 
     function isAttestor(address attestor, uint256 destChainId) public view returns (bool) {
         return attestors[attestor][destChainId];

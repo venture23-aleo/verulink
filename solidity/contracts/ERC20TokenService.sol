@@ -32,6 +32,10 @@ contract ERC20TokenService is Ownable, BlackListService,
         BlackListService.initialize(_owner, _usdc, _usdt);
     }
 
+    function tokenType() public pure returns (string memory) {
+        return "ERC20";
+    }
+
     function _authorizeUpgrade(address) internal view override {
         msg.sender == owner;
     }
