@@ -89,7 +89,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		return nil, nil
 	}
 
-	packet := parseMessage(message[mappingKey])
+	packet := parseMessage(message[mappingKey].(string))
 	commonPacket := parseAleoPacket(packet)
 	return commonPacket, nil
 }
