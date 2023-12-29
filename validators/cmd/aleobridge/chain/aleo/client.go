@@ -23,21 +23,20 @@ const (
 	PRIORITY_FEE            = "1000"
 )
 
-type source struct {
-	sourceName    string
-	sourceAddress string
-}
-
 type Client struct {
-	src               *source
-	url, network      string
 	aleoClient        *aleoRpc.Client
-	finalizeHeight    uint64
+	name              string
+	programID         string
+	queryUrl          string
+	network           string
 	chainID           uint32
+	finalizeHeight    uint64
 	blockGenTime      time.Duration
 	minRequiredGasFee uint64
-	chainCfg          *relay.ChainConfig
-	wallet            common.Wallet
+
+	//
+	chainCfg *relay.ChainConfig
+	wallet   common.Wallet
 }
 
 type AleoPacket struct {
@@ -62,26 +61,14 @@ type AleoMessage struct {
 	Sender   string
 }
 
-type OutPacketKeyMap struct {
-	// http://localhost:3030/testnet3/program/bridge.aleo/mapping/in_packet_hash/{chain_id:1u32,sequence:3u32}
-
-}
-
-func ConstructMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
-	chainID := strconv.FormatUint(uint64(dst), 10) + "u32"
-	sequenceNumber := strconv.FormatUint(uint64(seqNum), 10) + "u32"
-	mappingKey = fmt.Sprint("{chain_id:", chainID, ",", "sequence:", sequenceNumber, "}")
-	return
+func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
+	return fmt.Sprintf("{chain_id:%du32,sequence:%du32}", dst, seqNum)
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
-	fmt.Println("reached in getting packet wth seq number in aleo", dst, seqNum)
-	_, programID := cl.GetSourceChain()
-	mappingKey := ConstructMappingKey(dst, seqNum)
-
-	message, err := cl.aleoClient.GetMappingValue(ctx, programID, OUT_PACKET, mappingKey)
+	mappingKey := constructOutMappingKey(dst, seqNum)
+	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, OUT_PACKET, mappingKey)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -89,18 +76,8 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		return nil, nil
 	}
 
-	packet := parseMessage(message[mappingKey].(string))
-	commonPacket := parseAleoPacket(packet)
-	return commonPacket, nil
-}
-
-func (cl *Client) GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*chain.Packet, error) {
-	packets := make([]*chain.Packet, 0)
-	return packets, nil
-}
-
-func (cl *Client) GetNodeUrlAndNetwork() (string, string) {
-	return cl.url, cl.network
+	pktStr := parseMessage(message[mappingKey].(string))
+	return parseAleoPacket(pktStr)
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
@@ -110,8 +87,8 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 			CurChainHeight: 0,
 		}
 	}
-	aleoPacket := cl.ConstructAleoPacket(packet)
-	query, network := cl.GetNodeUrlAndNetwork()
+	aleoPacket := cl.constructAleoPacket(packet)
+	query, network := cl.queryUrl, cl.network
 	privateKey := cl.wallet.(*common.ALEOWallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
@@ -136,24 +113,16 @@ func (cl *Client) isAlreadyExist() bool {
 	return false
 }
 
-func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
-	height, err := cl.aleoClient.GetLatestHeight(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return uint64(height), nil
-}
-
 func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (bool, error) {
 	return false, nil
 }
 
-func (cl *Client) CurHeight() (height uint64) {
-	var err error
-	if height, err = cl.GetLatestHeight(context.Background()); err != nil {
+func (cl *Client) CurHeight(ctx context.Context) uint64 {
+	height, err := cl.aleoClient.GetLatestHeight(ctx)
+	if err != nil {
 		return 0
 	}
-	return
+	return uint64(height)
 }
 
 func (cl *Client) GetFinalityHeight() uint64 {
@@ -168,10 +137,6 @@ func (cl *Client) GetDestChains() ([]string, error) {
 	return []string{"ethereum"}, nil
 }
 
-func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
-	return nil, nil
-}
-
 func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
 	return cl.minRequiredGasFee
 }
@@ -182,11 +147,6 @@ func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
 
 func (cl *Client) Name() string {
 	return "Aleo"
-}
-
-func (cl *Client) GetSourceChain() (name, address string) {
-	name, address = cl.src.sourceName, cl.src.sourceAddress
-	return
 }
 
 func (cl *Client) GetChainID() uint32 {
@@ -205,12 +165,12 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
 	*/
-	url := strings.Split(cfg.NodeUrl, "|")
-	if len(url) != 2 {
-		panic("wrong newtork url for aleo. format url as:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
+	urlSlice := strings.Split(cfg.NodeUrl, "|")
+	if len(urlSlice) != 2 {
+		panic("invalid format. Expected format:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
 	}
 
-	aleoClient, err := aleoRpc.NewClient(url[0], url[1])
+	aleoClient, err := aleoRpc.NewClient(urlSlice[0], urlSlice[1])
 	if err != nil {
 		return nil
 	}
@@ -221,12 +181,8 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	}
 
 	return &Client{
-		src: &source{
-			sourceName:    cfg.Name,
-			sourceAddress: cfg.BridgeContract,
-		},
-		url:            url[0],
-		network:        url[1],
+		queryUrl:       urlSlice[0],
+		network:        urlSlice[1],
 		aleoClient:     aleoClient,
 		finalizeHeight: DefaultFinalizingHeight,
 		chainID:        cfg.ChainID,
@@ -236,6 +192,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	}
 }
 
+// todo: Recheck
 func parseMessage(m string) *AleoPacket {
 	message := trim(m)
 	// fmt.Println(message)
@@ -315,43 +272,52 @@ func trim(msg string) string {
 	return strings.ReplaceAll(str, ",", "")
 }
 
-func parseAleoPacket(packet *AleoPacket) (commonPacket *chain.Packet) {
-	commonPacket = &chain.Packet{Source: &chain.NetworkAddress{}, Destination: &chain.NetworkAddress{}, Message: &chain.Message{}}
+func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
+	pkt := new(chain.Packet)
 	version, err := strconv.ParseUint(strings.ReplaceAll(packet.Version, "u8", ""), 0, 64)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	commonPacket.Version = version
-	sequence, _ := strconv.ParseUint(strings.ReplaceAll(packet.Sequence, "u32", ""), 0, 64)
-	commonPacket.Sequence = sequence
+	pkt.Version = version
+	sequence, err := strconv.ParseUint(strings.ReplaceAll(packet.Sequence, "u32", ""), 0, 64)
+	if err != nil {
+		return nil, err
+	}
+	pkt.Sequence = sequence
 
-	sourceChainID, _ := strconv.ParseUint(strings.ReplaceAll(packet.Source.Chain_id, "u32", ""), 0, 64)
-	commonPacket.Source.ChainID = sourceChainID
+	sourceChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Source.Chain_id, "u32", ""), 0, 64)
+	if err != nil {
+		return nil, &exec.Error{}
+	}
+	pkt.Source.ChainID = sourceChainID
+	pkt.Source.Address = packet.Source.ServiceContract
 
-	commonPacket.Source.Address = packet.Source.ServiceContract
+	destChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Destination.Chain_id, "u32", ""), 0, 64)
+	if err != nil {
+		return nil, err
+	}
 
-	destChainID, _ := strconv.ParseUint(strings.ReplaceAll(packet.Destination.Chain_id, "u32", ""), 0, 64)
-	commonPacket.Destination.ChainID = destChainID
+	pkt.Destination.ChainID = destChainID
 
-	commonPacket.Destination.Address = ParseEthAddress(packet.Destination.ServiceContract)
+	pkt.Destination.Address = parseEthAddress(packet.Destination.ServiceContract)
 
-	commonPacket.Message.DestTokenAddress = ParseEthAddress(packet.Message.Denom)
-	commonPacket.Message.SenderAddress = packet.Message.Sender
-	commonPacket.Message.ReceiverAddress = ParseEthAddress(packet.Message.Receiver)
+	pkt.Message.DestTokenAddress = parseEthAddress(packet.Message.Denom)
+	pkt.Message.SenderAddress = packet.Message.Sender
+	pkt.Message.ReceiverAddress = parseEthAddress(packet.Message.Receiver)
 
 	amount := &big.Int{}
-	commonPacket.Message.Amount, _ = amount.SetString(strings.ReplaceAll(packet.Message.Amount, "u64", ""), 0)
+	pkt.Message.Amount, _ = amount.SetString(strings.ReplaceAll(packet.Message.Amount, "u64", ""), 0)
 
 	height, err := strconv.ParseUint(strings.ReplaceAll(packet.Height, "u32}", ""), 0, 64)
 	if err != nil {
-		return
+		return nil, err
 	}
-	commonPacket.Height = height
+	pkt.Height = height
 
-	return
+	return pkt, nil
 }
 
-func (c *Client) ConstructAleoPacket(msg *chain.Packet) string {
+func (c *Client) constructAleoPacket(msg *chain.Packet) string {
 	version := strconv.Itoa(int(msg.Version)) + "u8"
 	sequenceNo := strconv.Itoa(int(msg.Sequence)) + "u32"
 	srcChainId, srcServiceContract := strconv.Itoa(int(msg.Source.ChainID))+"u32", msg.Source.Address
@@ -363,12 +329,12 @@ func (c *Client) ConstructAleoPacket(msg *chain.Packet) string {
 	amount := msg.Message.Amount.String() + "u64"
 	height := strconv.FormatUint(msg.Height, 10) + "u32"
 	// todo: fmt.Sprintf()
-	constructedPacket := "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + ConstructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + ConstructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
+	constructedPacket := "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + constructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + constructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
 
 	return constructedPacket
 }
 
-func ConstructServiceContractAddress(serviceContract string) string {
+func constructServiceContractAddress(serviceContract string) string {
 	aleoAddress := "[ "
 	serviceContractByte := []byte(serviceContract)
 	lenDifference := 32 - len(serviceContractByte)
@@ -387,7 +353,7 @@ func ConstructServiceContractAddress(serviceContract string) string {
 	return aleoAddress
 }
 
-func ParseEthAddress(addr string) string {
+func parseEthAddress(addr string) string {
 	addr = strings.ReplaceAll(addr, "u8", "")
 	addr = strings.Trim(addr, " ")
 	splittedAddress := strings.Split(addr, " ")
