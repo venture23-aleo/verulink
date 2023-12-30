@@ -46,7 +46,7 @@ contract ERC20TokenService is Ownable, BlackListService,
 
     function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
         require(!isBlackListed(msg.sender), "Sender Blacklisted");
-        require(isSupportedToken(tokenAddress,destChainId), "Unknown token Address");
+        require(isEnabledToken(tokenAddress,destChainId), "Token either disabled or not supported");
 
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
 
@@ -71,7 +71,7 @@ contract ERC20TokenService is Ownable, BlackListService,
         require(packet.destTokenService.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
-        require(isSupportedToken(tokenAddress, packet.sourceTokenService.chainId), "Token not supported");
+        require(isEnabledToken(tokenAddress, packet.sourceTokenService.chainId), "Token either disabled or not supported");
         if(isBlackListed(receiver)) {
             IERC20(tokenAddress).transfer(address(holding), packet.message.amount);
             holding.lock(receiver, tokenAddress, packet.message.amount);

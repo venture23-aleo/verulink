@@ -8,16 +8,8 @@ contract USDTMock is ERC20 {
 
     constructor() ERC20("USDT", "USDT") {}
 
-    function decimals() public pure override returns (uint8) {
-        return 6;
-    }
-
     function mint(address account, uint256 amount) external {
         _mint(account, amount);
-    }
-
-    function burn(address account, uint256 amount) external {
-        _burn(account, amount);
     }
 
     function getBlackListStatus(address account) public view returns (bool) {

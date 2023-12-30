@@ -8,17 +8,9 @@ contract USDCMock is ERC20 {
     mapping(address => bool) blackLists;
 
     constructor() ERC20("USDC", "USDC") {}
-
-    function decimals() public pure override returns (uint8) {
-        return 6;
-    }
-
+    
     function mint(address account, uint256 amount) external {
         _mint(account, amount);
-    }
-
-    function burn(address account, uint256 amount) external {
-        _burn(account, amount);
     }
 
     function isBlacklisted(address account) public view returns (bool) {
