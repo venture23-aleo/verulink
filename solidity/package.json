@@ -4,7 +4,8 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "hardhat": "^2.19.2"
+    "hardhat": "^2.19.2",
+    "hardhat-contract-sizer": "^2.10.0"
   },
   "scripts": {
     "test": "npx hardhat test"
