@@ -84,49 +84,121 @@ export const snarkExecute = async ({
   params = [],
   transition = 'main'
 }: LeoRunParams): Promise<Record<string, unknown>> => {
-  let stringedParams = params.map(s => `"${s}"`).join(' ');
+  const nodeEndPoint = config['network']?.node;
+  if (!nodeEndPoint) {
+    throw new Error('networkName missing in contract config for deployment');
+  }
+  const stringedParams = params.map((s) => `"${s}"`).join(' ');
   // snarkos developer execute sample_program.aleo main  "1u32" "2u32" --private-key APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH --query "http://localhost:3030" --broadcast "http://localhost:3030/testnet3/transaction/broadcast"
   // const cmd = `cd ${config.contractPath} && snarkos developer execute  ${config.appName}.aleo ${transition} ${stringedParams} --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;
-  const cmd = `snarkos developer execute ${config.appName}.aleo ${transition} ${stringedParams} --private-key ${config.privateKey} --query http://localhost:3030 --broadcast "http://localhost:3030/testnet3/transaction/broadcast"`;
+  const cmd = `cd ${config.contractPath} && snarkos developer execute ${config.appName}.aleo ${transition} ${stringedParams} --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;
   console.log(cmd);
   const { stdout } = await execute(cmd);
   console.log(stdout);
-  // const output = stdout.match(/\{([^)]+)\}/);
-  // const outArr = output[0].split('{');
-  // const data = [
-  //   '',
-  //   ...outArr.slice(outArr.findIndex((v) => v.includes('"type":"execute"')))
-  // ].join('{');
-  // const parsedOutput = JSON.parse(data);
-  // const outPuts = parsedOutput?.execution?.transitions?.map(
-  //   (transition) => transition.outputs
-  // );
+  return { wait: () => waitTransaction(stdout, nodeEndPoint), result: stdout };
+};
 
-  return { data: stdout };
+export const leoExecute = async ({
+  config,
+  params = [],
+  transition = 'main'
+}: LeoRunParams): Promise<Record<string, unknown>> => {
+  const stringedParams = params.map((s) => `"${s}"`).join(' ');
+  // snarkos developer execute sample_program.aleo main  "1u32" "2u32" --private-key APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH --query "http://localhost:3030" --broadcast "http://localhost:3030/testnet3/transaction/broadcast"
+  // const cmd = `cd ${config.contractPath} && snarkos developer execute  ${config.appName}.aleo ${transition} ${stringedParams} --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;
+  const cmd = `cd ${config.contractPath} && leo execute ${transition} ${stringedParams}`; /* --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;*/
+  console.log(cmd);
+  const { stdout } = await execute(cmd);
+  console.log(stdout);
+  const output = stdout.match(/\{([^)]+)\}/);
+  const outArr = output[0].split('{');
+  const data = [
+    '',
+    ...outArr.slice(outArr.findIndex((v) => v.includes('"type":"execute"')))
+  ].join('{');
+  const parsedOutput = JSON.parse(data);
+  const outPuts = parsedOutput?.execution?.transitions?.map(
+    (transition) => transition.outputs
+  );
+
+  return { data: outPuts };
 };
 
 const checkDeployment = async (endpoint: string): Promise<boolean> => {
   try {
     console.log(`Checking deployment: ${endpoint}`);
     await axios.get(endpoint);
-
     return true;
   } catch (e: any) {
+    // console.log(e);
     if (e?.response?.data?.includes('Missing program for ID')) {
       return false;
     }
 
     throw new Error(
-      `Failed to deploy program: ${e?.response?.data ?? 'Error occured while deploying program'
+      `Failed to deploy program: ${
+        e?.response?.data ?? 'Error occured while deploying program'
       }`
     );
   }
+};
+
+const validateBroadcast = async (
+  transactionId: string,
+  nodeEndpoint: string
+) => {
+  const pollUrl = `${nodeEndpoint}/testnet3/transaction/${transactionId}`;
+  const startTime = Date.now();
+  const timeoutMs = 60_000;
+  let response;
+
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      // console.log(`Validating deployment: ${pollUrl}`);
+      const { data } = await axios.get(pollUrl);
+      // console.log(data);
+
+      if (!(data.execution || data.deployment)) {
+        console.error('Transaction error');
+        data.error = true;
+      }
+      return data;
+    } catch (e: any) {
+      // console.log(e);
+    }
+  }
+
+  console.log('Timeout');
+};
+
+const getTransactionId = (stdOut) => {
+  const regex = /\b([a-z0-9]{61})\b/;
+  const match = stdOut.match(regex);
+  let transactionId = null;
+
+  if (match) {
+    transactionId = match[1];
+    console.log('Transaction ID:', transactionId);
+  } else {
+    console.log('Transaction ID not found in the input.');
+  }
+
+  return transactionId;
+};
+
+const waitTransaction = async (stdOut: string, endpoint: string) => {
+  const output = typeof stdOut === 'string' ? stdOut : JSON.stringify(stdOut);
+  const transactionId = getTransactionId(output);
+
+  if (transactionId) return await validateBroadcast(transactionId, endpoint);
+  return null;
 };
 
 export const snarkDeploy = async ({
   config
 }: LeoRunParams): Promise<Record<string, unknown>> => {
   const nodeEndPoint = config['network']?.node;
+
   if (!nodeEndPoint) {
     throw new Error('networkName missing in contract config for deployment');
   }
@@ -140,10 +212,14 @@ export const snarkDeploy = async ({
     throw new Error(`Program ${config.appName} is already deployed`);
   }
 
+  console.log(`Program ${config.appName} is not deployed.`);
+
   const cmd = `cd ${config.contractPath}/build && snarkos developer deploy "${config.appName}.aleo" --path . --priority-fee ${priorityFee}  --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;
+  console.log(cmd);
+
   const { stdout } = await execute(cmd);
   console.log(stdout);
-  return { data: stdout };
+  return { wait: () => waitTransaction(stdout, nodeEndPoint), result: stdout };
 };
 
 export const leoRun = async ({
@@ -151,7 +227,7 @@ export const leoRun = async ({
   params = [],
   transition = 'main'
 }: LeoRunParams): Promise<Record<string, unknown>> => {
-  let stringedParams = params.map(s => `"${s}"`).join(' ');
+  const stringedParams = params.map((s) => `"${s}"`).join(' ');
   const cmd = `cd ${config.contractPath} && leo run ${transition} ${stringedParams}`;
   console.log(cmd);
   const { stdout } = await execute(cmd);
@@ -169,14 +245,18 @@ export const zkRun = (
   return leoRun(params);
 };
 
-export const zkGetMapping = async (params: ExecuteZkLogicParams): Promise<any> => {
+export const zkGetMapping = async (
+  params: ExecuteZkLogicParams
+): Promise<any> => {
   const url = `${params.config.network.node}/${params.config.networkName}/program/${params.config.appName}.aleo/mapping/${params.transition}/${params.params[0]}`;
   console.log(url);
   const response = await fetch(url);
   let data = await response.json();
   if (data == null) {
-    throw new Error(`Mapping ${params.transition} doesn't have key ${params.params[0]}.[link: ${url}]`);
+    throw new Error(
+      `Mapping ${params.transition} doesn't have key ${params.params[0]}.[link: ${url}]`
+    );
   }
   data = (data as string).replace(/(['"])?([a-z0-9A-Z_.]+)(['"])?/g, '"$2" ');
   return JSON.parse(data as string);
-}
+};

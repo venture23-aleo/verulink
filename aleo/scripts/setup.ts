@@ -27,15 +27,16 @@ const setup = async () => {
     mode: "execute",
   });
 
+  let tx;
+
   // Deploy contracts
-  // await bridge.deploy();
-  // await wrappedToken.deploy();
-  // await tokenService.deploy();
-  // await council.deploy();
+  await bridge.deploy();
+  await wrappedToken.deploy();
+  await tokenService.deploy();
+  tx = await council.deploy();
+  await tx.wait();
 
-  // await sleep(30_000)
-
-  // // Initialize council program with a single council member and 1/5 threshold
+  // Initialize council program with a single council member and 1/5 threshold
   const councilMember =
     "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
   const councilThreshold = 1;
@@ -58,6 +59,7 @@ const setup = async () => {
     attestor,
     attestor
   );
+
   // Initialize bridge
   await council.exec_initialize_bridge(
     1,
@@ -109,7 +111,8 @@ const setup = async () => {
 
   const tsEthereum = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
   await council.support_chain_ts(ethChainId, evm2AleoArr(tsEthereum));
-  await council.exec_support_chain_ts(ethChainId, evm2AleoArr(tsEthereum));
+  tx = await council.exec_support_chain_ts(ethChainId, evm2AleoArr(tsEthereum));
+  tx.wait()
 
 };
 
