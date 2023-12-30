@@ -33,9 +33,25 @@ program token_service.aleo {
     // false: Null
     mapping council_program_TS: bool => address;
 
+    // tracks the total supply of the token
+    mapping total_supply: address => u64;
+
     // minimum amount that can be transferred via Token Service
+    // represented as actual value
     // key is token_id
     mapping minimum_transfers: address => u64;
+
+    // maximum percentage that can be transferred in the given timeframe
+    // represented in basis points
+    // timeframe is defined in terms of block height
+    // key is token_id
+    mapping max_outgoing_percentage: address => u16;
+    mapping timeframe: address => u32;
+
+    // tracks the last time the token was minted/burned
+    mapping last_token_update: address => u32;
+    // tracks the minimum supply that should be available after the token update
+    mapping last_min_supply: address => u64;
 
     // `this` returns the address of the program
     // TODO: replace the address with address of this program
@@ -44,6 +60,10 @@ program token_service.aleo {
     // hash_to_group_psd4(&[self.name().to_field(), self.network().to_field()]);
     inline this() -> address {
         return aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
+    }
+
+    inline max_basis_point() -> u16 {
+        return 10000u16;
     }
 
     //////////////////////////////
@@ -129,6 +149,41 @@ program token_service.aleo {
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
 
+        let current_supply: u64 = Mapping::get(total_supply, wrapped_addr);
+        // TODO: check if storing as u16 is actually better
+        // or if type conversion is better
+        
+        // Update only from council
+        let percentage_in_basis_points: u16 = Mapping::get(max_outgoing_percentage, wrapped_addr);
+        let token_timeframe: u32 = Mapping::get(timeframe, wrapped_addr);
+
+        // Updated on each token_send
+        let last_update: u32 = Mapping::get_or_use(last_token_update, wrapped_addr, 0u32);
+        let last_min_required_supply: u64 = Mapping::get_or_use(last_min_supply, wrapped_addr, 0u64);
+
+        let time_passed: u32 = block.height - last_update;
+
+        // If percentage = 10
+        // then min_required_supply = 90% of current_supply
+        let min_required_supply: u64 = (current_supply * ( max_basis_point() - percentage_in_basis_points) as u64) / (max_basis_point() as u64);
+
+        // If percentage = 10
+        // then max_withdraw = 10% of current_supply
+        let max_withdraw_in_timeframe: u64 = current_supply * (percentage_in_basis_points as u64) / (max_basis_point() as u64);
+        let max_withdraw_from_last_update: u64 = (max_withdraw_in_timeframe * time_passed as u64 ) / (token_timeframe as u64);
+        let new_min_required_supply: u64 = last_min_required_supply - max_withdraw_from_last_update;
+        
+        // Select the max
+        new_min_required_supply = new_min_required_supply > min_required_supply ? new_min_required_supply : min_required_supply;
+
+        assert(current_supply - amount >= new_min_required_supply);
+
+        Mapping::set(last_token_update, wrapped_addr, block.height);
+        Mapping::set(last_min_supply, wrapped_addr, new_min_required_supply);
+        
+        // Decrease the total supply
+        Mapping::set(total_supply, wrapped_addr, current_supply - amount);
+
     }
 
     /// Consumes msg from source at destination
@@ -140,6 +195,14 @@ program token_service.aleo {
 
         // call mint on wrapped token
         wrapped_token.leo/mint(receiver, amount, token_id, source.chain_id, source.token_address);
+
+        return then finalize(token_id, amount);
+    }
+
+    finalize token_receive(token_id: address, amount: u64) {
+        // Increase the total supply
+        let current_supply: u64 = Mapping::get_or_use(total_supply, token_id, 0u64);
+        Mapping::set(total_supply, token_id, current_supply + amount);
     }
 
 }
