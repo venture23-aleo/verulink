@@ -1,4 +1,3 @@
-// BlackListService.test.js
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;

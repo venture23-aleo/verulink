@@ -42,7 +42,7 @@ describe('ERC20TokenBridge', () => {
         proxiedV1 = ERC20TokenbridgeImpl.attach(proxy.target);
         await proxiedV1.addAttestor(attestor1.address, destinationChainId, 2);
         await proxiedV1.addAttestor(attestor2.address, destinationChainId, 2);
-        await proxiedV1.addTokenService(tokenService.address,destinationChainId);
+        await proxiedV1.addTokenService(tokenService.address, destinationChainId);
         await proxiedV1.addChain(destinationChainId, "aleo.bridge");
         // await proxiedV1.addChain(unknownChainId, "aleo.bridge");
         // console.log("bool = ", await proxiedV1.isSupportedChain(unknownChainId));
@@ -52,6 +52,11 @@ describe('ERC20TokenBridge', () => {
     it('should have the correct owner', async () => {
         const actualOwner = await proxiedV1.owner();
         expect(actualOwner).to.equal(owner.address);
+    });
+
+    it('reverts if the contract is already initialized', async function () {
+        // console.log("initializeData = ", initializeData);
+        expect(proxiedV1.initialize(owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should receive an incoming packet when receivePacket is called', async () => {
@@ -230,6 +235,42 @@ describe('ERC20TokenBridge', () => {
         await proxiedV1.connect(tokenService).consume(inPacket);
     });
 
+    it('should revert on consuming an incoming packet that is not stored in incomming map', async () => {
+        // Create an incoming packet
+        const inPacket = [
+            1,
+            1,
+            [2, "aleo.bridge"],
+            [1, ethers.Wallet.createRandom().address],
+            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            100
+        ];
+
+        // Consume the packet
+        expect(proxiedV1.connect(tokenService).consume(inPacket)).to.be.revertedWith("Unknown Packet Hash");
+    });
+
+    it('should revert consuming an incoming packet that is already', async () => {
+        // Create an incoming packet
+        const inPacket = [
+            1,
+            1,
+            [2, "aleo.bridge"],
+            [1, ethers.Wallet.createRandom().address],
+            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            100
+        ];
+
+        // Receive the incoming packet
+        await proxiedV1.connect(attestor1).receivePacket(inPacket);
+        await proxiedV1.connect(attestor2).receivePacket(inPacket);
+
+        // Consume the packet
+        await proxiedV1.connect(tokenService).consume(inPacket);
+        // await proxiedV1.connect(tokenService).consume(inPacket);
+        expect(proxiedV1.connect(tokenService).consume(inPacket)).to.be.revertedWith("Packet already consumed");
+    });
+
     it('only allow a registered token service to call the consume', async () => {
         // Create an incoming packet
         const inPacket = [
@@ -279,13 +320,13 @@ describe('ERC20TokenBridge', () => {
             [3, "aleo.bridge"], [ethers.Wallet.createRandom().address, "aleo.bridge", 10, "aleo.bridge"],
             100
         ];
-        expect (proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Unknown destination chain");
+        expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Unknown destination chain");
     });
 });
 
 // Define the test suite for ERC20TokenBridgeV2
 describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
-    let ERC20TokenBridgeV1Impl, initializeData, proxied, tokenService, ERC20TokenBridgeV1, upgradeData;
+    let ERC20TokenBridgeV1Impl, initializeData, proxied, ERC20TokenBridgeV1, upgradeData;
     let lib;
     let owner;
     let signer;
@@ -293,61 +334,62 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
     let ERC20TokenBridgeV2Impl;
     let ERC20TokenBridgeV2;
     let ERC20TokenBridgeProxy;
+    let tokenService;
 
     // Deploy a new HoldingV2 contract before each test
     beforeEach(async () => {
-            [owner, tokenService, signer, other] = await ethers.getSigners();
+        [owner, tokenService, signer, other] = await ethers.getSigners();
 
-            // Deploy ERC20TokenBridge
-            lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
-            const libInstance = await lib.deploy();
+        // Deploy ERC20TokenBridge
+        lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
+        const libInstance = await lib.deploy();
 
-            ERC20TokenBridgeV1 = await ethers.getContractFactory("ERC20TokenBridge", {
-                    libraries: {
-                            PacketLibrary: libInstance.target,
-                    },
-            });
+        ERC20TokenBridgeV1 = await ethers.getContractFactory("ERC20TokenBridge", {
+            libraries: {
+                PacketLibrary: libInstance.target,
+            },
+        });
 
-            // ERC20TokenBridgeV1 = await ethers.getContractFactory("ERC20TokenBridge");
-            ERC20TokenBridgeV1Impl = await ERC20TokenBridgeV1.deploy();
-            let ERC20TokenBridgeABI = ERC20TokenBridgeV1.interface.formatJson();
+        // ERC20TokenBridgeV1 = await ethers.getContractFactory("ERC20TokenBridge");
+        ERC20TokenBridgeV1Impl = await ERC20TokenBridgeV1.deploy();
+        let ERC20TokenBridgeABI = ERC20TokenBridgeV1.interface.formatJson();
 
-            ERC20TokenBridgeProxy = await ethers.getContractFactory('ProxyContract');
-            initializeData = new ethers.Interface(ERC20TokenBridgeABI).encodeFunctionData("initialize(address)", [owner.address]);
-            const proxy = await ERC20TokenBridgeProxy.deploy(ERC20TokenBridgeV1Impl.target, initializeData);
-            proxied = ERC20TokenBridgeV1.attach(proxy.target);
+        ERC20TokenBridgeProxy = await ethers.getContractFactory('ProxyContract');
+        initializeData = new ethers.Interface(ERC20TokenBridgeABI).encodeFunctionData("initialize(address)", [owner.address]);
+        const proxy = await ERC20TokenBridgeProxy.deploy(ERC20TokenBridgeV1Impl.target, initializeData);
+        proxied = ERC20TokenBridgeV1.attach(proxy.target);
 
-            ERC20TokenBridgeV2 = await ethers.getContractFactory("ERC20TokenBridgeV2", {
-                    libraries: {
-                            PacketLibrary: libInstance.target,
-                    },
-            });
+        ERC20TokenBridgeV2 = await ethers.getContractFactory("ERC20TokenBridgeV2", {
+            libraries: {
+                PacketLibrary: libInstance.target,
+            },
+        });
 
-            ERC20TokenBridgeV2Impl = await ERC20TokenBridgeV2.deploy();
-            let ERC20TokenBridgeV2ABI = ERC20TokenBridgeV2.interface.formatJson();
+        ERC20TokenBridgeV2Impl = await ERC20TokenBridgeV2.deploy();
+        let ERC20TokenBridgeV2ABI = ERC20TokenBridgeV2.interface.formatJson();
 
-            upgradeData = new ethers.Interface(ERC20TokenBridgeV2ABI).encodeFunctionData("initializev2", [5]);
-            await proxied.upgradeToAndCall(ERC20TokenBridgeV2Impl.target, upgradeData);
-            proxied = ERC20TokenBridgeV2.attach(proxy.target);
+        upgradeData = new ethers.Interface(ERC20TokenBridgeV2ABI).encodeFunctionData("initializev2", [5]);
+        await proxied.upgradeToAndCall(ERC20TokenBridgeV2Impl.target, upgradeData);
+        proxied = ERC20TokenBridgeV2.attach(proxy.target);
     });
 
     // Test deployment and initialization
     it('should give the correct owner', async () => {
-            const contractOwner = await proxied.owner();
-            expect(contractOwner).to.equal(owner.address);
+        const contractOwner = await proxied.owner();
+        expect(contractOwner).to.equal(owner.address);
     });
 
     // Test the value set by the multiply function
     it('should set the correct value', async () => {
-            const val = await proxied.val();
-            expect(val).to.equal(5);
+        const val = await proxied.val();
+        expect(val).to.equal(5);
     });
 
     it('only owner should be able to upgrade', async () => {
-            expect(proxied.connect(other).upgradeToAndCall(ERC20TokenBridgeV2Impl.target, upgradeData)).to.be.revertedWith("Only owner can upgrade");
+        expect(proxied.connect(other).upgradeToAndCall(ERC20TokenBridgeV2Impl.target, upgradeData)).to.be.revertedWith("Only owner can upgrade");
     });
 
-    // it('should prevent re-initializing the contract', async () => {
-    //     expect(await proxied.initializev2(5)).to.be.reverted;
-// });
+    it('reverts if the contract is initialized twice', async function () {
+        expect(proxied.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+    });
 });

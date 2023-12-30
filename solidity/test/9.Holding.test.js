@@ -26,10 +26,15 @@ describe('Holding', () => {
     });
 
     // Test deployment and initialization
-    it('should deploy and initialize with the correct owner', async () => {
+    it('should initialize contract with the correct owner', async () => {
         const contractOwner = await proxiedV1.owner();
         // console.log("contractOwner = ", contractOwner);
         expect(contractOwner).to.equal(owner.address);
+    });
+
+    it('reverts if the contract is already initialized', async function () {
+        // console.log("initializeData = ", initializeData);
+        expect(proxiedV1["initialize(address,address)"](owner.address, tokenService.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     // Test that only the owner can update the token service
@@ -128,46 +133,97 @@ describe('Holding', () => {
         await proxiedV1.release(user, token, amount);
     });
 
-    // Define the test suite for HoldingV2
-    describe('Upgradeabilty: HoldingV2', () => {
-        let owner, HoldingV2, holdingV1Impl, HoldingProxy, initializeData, proxied, tokenService, HoldingV1, holdingV2Impl, upgradeData;
+     // Test the 'Locked' event
+     it('should emit a Locked event when locking tokens', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.target;
+        const amount = 100;
 
-        // Deploy a new HoldingV2 contract before each test
-        beforeEach(async () => {
-            [owner, tokenService] = await ethers.getSigners();
+        // Lock tokens with the owner
+        const tx = await proxiedV1.connect(tokenService).lock(user, token, amount);
 
-            HoldingV1 = await ethers.getContractFactory("Holding");
-            holdingV1Impl = await HoldingV1.deploy();
-            let HoldingContractABI = Holding.interface.formatJson();
+        // Ensure the 'Locked' event is emitted with the correct values
+        await expect(tx)
+            .to.emit(proxiedV1, 'Locked')
+            .withArgs(user, token, amount);
+    });
 
-            HoldingProxy = await ethers.getContractFactory('ProxyContract');
-            initializeData = new ethers.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
-            const proxy = await HoldingProxy.deploy(holdingV1Impl.target, initializeData);
-            proxied = HoldingV1.attach(proxy.target);
-            
-            HoldingV2 = await ethers.getContractFactory("HoldingV2");
-            holdingV2Impl = await HoldingV2.deploy();
-            let HoldingContractV2ABI = HoldingV2.interface.formatJson();
+    // Test the 'Unlocked' event
+    it('should emit an Unlocked event when unlocking tokens', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.target;
+        const amount = 50;
 
-            upgradeData = new ethers.Interface(HoldingContractV2ABI).encodeFunctionData("initializev2", [5]);
-            await proxied.upgradeToAndCall(holdingV2Impl.target, upgradeData);
-            proxied = HoldingV2.attach(proxy.target);
-        });
+        // Lock tokens with the owner
+        await proxiedV1.connect(tokenService).lock(user, token, amount);
 
-        // Test deployment and initialization
-        it('should give the correct owner', async () => {
-            const contractOwner = await proxied.owner();
-            expect(contractOwner).to.equal(owner.address);
-        });
+        // Unlock tokens with the owner
+        const tx = await proxiedV1.unlock(user, token, amount);
 
-        // Test the value set by the multiply function
-        it('should set the correct value', async () => {
-            const val = await proxied.val(); 
-            expect(val).to.equal(5);
-        });
+        // Ensure the 'Unlocked' event is emitted with the correct values
+        await expect(tx)
+            .to.emit(proxiedV1, 'Unlocked')
+            .withArgs(user, token, amount);
+    });
 
-        // it('should prevent re-initializing the contract', async () => {
-        //     expect(await proxied.initializev2(5)).to.be.reverted;
-        // });
+    // Test the 'Released' event
+    it('should emit a Released event when releasing tokens', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.target;
+        const amount = 30;
+
+        // Lock tokens with the owner
+        await proxiedV1.connect(tokenService).lock(user, token, amount);
+
+        // Unlock and release tokens with the owner
+        await proxiedV1.unlock(user, token, amount);
+        const tx = await proxiedV1.release(user, token, amount);
+
+        // Ensure the 'Released' event is emitted with the correct values
+        await expect(tx)
+            .to.emit(proxiedV1, 'Released')
+            .withArgs(user, token, amount);
+    });
+});
+
+// Define the test suite for HoldingV2
+describe('Upgradeabilty: HoldingV2', () => {
+    let owner, HoldingV2, holdingV1Impl, HoldingProxy, initializeData, proxied, tokenService, HoldingV1, holdingV2Impl, upgradeData;
+
+    // Deploy a new HoldingV2 contract before each test
+    beforeEach(async () => {
+        [owner, tokenService] = await ethers.getSigners();
+        HoldingV1 = await ethers.getContractFactory("Holding");
+        holdingV1Impl = await HoldingV1.deploy();
+        let HoldingContractABI = HoldingV1.interface.formatJson();
+
+        HoldingProxy = await ethers.getContractFactory('ProxyContract');
+        initializeData = new ethers.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
+        const proxy = await HoldingProxy.deploy(holdingV1Impl.target, initializeData);
+        proxied = HoldingV1.attach(proxy.target);
+
+        HoldingV2 = await ethers.getContractFactory("HoldingV2");
+        holdingV2Impl = await HoldingV2.deploy();
+        let HoldingContractV2ABI = HoldingV2.interface.formatJson();
+
+        upgradeData = new ethers.Interface(HoldingContractV2ABI).encodeFunctionData("initializev2", [5]);
+        await proxied.upgradeToAndCall(holdingV2Impl.target, upgradeData);
+        proxied = HoldingV2.attach(proxy.target);
+    });
+
+    // Test deployment and initialization
+    it('should give the correct owner', async () => {
+        const contractOwner = await proxied.owner();
+        expect(contractOwner).to.equal(owner.address);
+    });
+
+    // Test the value set by the multiply function
+    it('should set the correct value', async () => {
+        const val = await proxied.val();
+        expect(val).to.equal(5);
+    });
+
+    it('reverts if the contract is initialized twice', async function () {
+        expect(proxied.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 });
