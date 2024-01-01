@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	aleoRpc "github.com/parajuliswopnil/aleo-go-sdk/rpc"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
