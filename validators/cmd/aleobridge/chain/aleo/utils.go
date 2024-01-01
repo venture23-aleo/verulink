@@ -11,71 +11,68 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-// todo: Recheck
 func parseMessage(m string) *AleoPacket {
 	message := trim(m)
-	splittedMessage := strings.Split(message, " ")
+	splittedMessage := strings.Split(message, ",")
+	_splittedMessage := splittedMessage
+	splittedMessage = []string{}
 
-	msg := []string{}
-	pkt := AleoPacket{}
-
-	for i := 0; i < len(splittedMessage); i++ {
-		if splittedMessage[i] == "" {
-			continue
-		}
-		msg = append(msg, splittedMessage[i])
+	for i := 0; i < len(_splittedMessage); i++ {
+		msg := _splittedMessage[i]
+		msplit := strings.Split(msg, ":")
+		splittedMessage = append(splittedMessage, msplit...)
 	}
-	for m, v := range msg {
+
+	pkt := &AleoPacket{}
+
+	for m, v := range splittedMessage {
 		switch v {
-		case "version:":
-			pkt.Version = msg[m+1]
-		case "sequence:":
-			pkt.Sequence = msg[m+1]
-		case "source:":
-			pkt.Source.Chain_id = msg[m+3]
-			pkt.Source.ServiceContract = msg[m+5]
-		case "destination:":
+		case "version":
+			pkt.Version = splittedMessage[m+1]
+		case "sequence":
+			pkt.Sequence = splittedMessage[m+1]
+		case "source":
+			pkt.Source.Chain_id = splittedMessage[m+2]
+			pkt.Source.ServiceContract = splittedMessage[m+4]
+		case "destination":
 			serviceProgram := ""
-			pkt.Destination.Chain_id = msg[m+3]
-			for i := m + 6; true; i++ {
-				if msg[i] == "]" {
-					break
-				}
-				serviceProgram += msg[m+6] + " "
+			pkt.Destination.Chain_id = splittedMessage[m+2]
+			for i := m + 4; i-m-4 != 32; i++ {
+				serviceProgram += splittedMessage[i] + " "
 			}
 			pkt.Destination.ServiceContract = serviceProgram
-		case "message:":
+		case "message":
 			denom := ""
 			i := 0
-			for i = m + 4; true; i++ {
-				if msg[i] == "]" {
+			for i = m + 2; true; i++ {
+				if splittedMessage[i] == "sender" {
 					break
 				}
-				denom += msg[i] + " "
+				denom += splittedMessage[i] + " "
 			}
 			pkt.Message.Denom = denom
-			sender := msg[i+2]
+			sender := splittedMessage[i+1]
 			pkt.Message.Sender = sender
 			receiver := ""
-			for i = i + 5; true; i++ {
-				if msg[i] == "]" {
+			for i = i + 3; true; i++ {
+				if splittedMessage[i] == "amount" {
 					break
 				}
-				receiver += msg[i] + " "
+				receiver += splittedMessage[i] + " "
 			}
 			pkt.Message.Receiver = receiver
-			pkt.Message.Amount = msg[i+2]
-		case "height:":
-			pkt.Height = strings.ReplaceAll(msg[m+1], "}\"", "")
+			pkt.Message.Amount = splittedMessage[i+1]
+		case "height":
+			pkt.Height = splittedMessage[m+1]
 		}
 
 	}
-	return &pkt
+	return pkt
 }
 
 func trim(msg string) string {
-	str := strings.ReplaceAll(msg, "\\n", "")
-	return strings.ReplaceAll(str, ",", "")
+	strReplacer := strings.NewReplacer("\\n", "", "{", "", "}", "", "[", "", "]", "", " ", "", "\"", "")
+	return strReplacer.Replace(msg)
 }
 
 func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
