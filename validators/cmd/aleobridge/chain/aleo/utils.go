@@ -37,7 +37,10 @@ func parseMessage(m string) *AleoPacket {
 		case "destination":
 			serviceProgram := ""
 			pkt.Destination.Chain_id = splittedMessage[m+2]
-			for i := m + 4; i-m-4 != 32; i++ {
+			for i := m + 4; true; i++ {
+				if splittedMessage[i] == "message" {
+					break
+				}
 				serviceProgram += splittedMessage[i] + " "
 			}
 			pkt.Destination.ServiceContract = serviceProgram
