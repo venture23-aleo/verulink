@@ -13,11 +13,13 @@ describe('ChainManager', () => {
 
         ChainManager = await ethers.getContractFactory("ChainManager");
         chainManagerImpl = await ChainManager.deploy();
+        await chainManagerImpl.waitForDeployment();
         let ChainManagerABI = ChainManager.interface.formatJson();
 
         ChainManagerProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(ChainManagerABI).encodeFunctionData("initialize", [owner.address]);
         const proxy = await ChainManagerProxy.deploy(chainManagerImpl.target, initializeData);
+        await proxy.waitForDeployment();
         proxiedV1 = ChainManager.attach(proxy.target);
     });
 
@@ -32,7 +34,7 @@ describe('ChainManager', () => {
         const chainId = 1;
         const destBridgeAddress = "aleo.bridge";
         // Add chain
-        await proxiedV1.addChain(chainId, destBridgeAddress);
+        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
         // Check if the chain was added
         const isSupported = await proxiedV1.isSupportedChain(chainId);
         expect(isSupported).to.be.true;
@@ -43,7 +45,7 @@ describe('ChainManager', () => {
         const chainId = 1;
         const destBridgeAddress = "aleo.bridge";
         // Add a chain
-        await proxiedV1.addChain(chainId, destBridgeAddress);
+        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
         // Attempt to add the same chain again
         expect(proxiedV1.addChain(chainId, destBridgeAddress)).to.be.revertedWith('Destination Chain already supported');
     });
@@ -61,9 +63,9 @@ describe('ChainManager', () => {
         const chainId = 1;
         const destBridgeAddress = "aleo.bridge";
         // Add chain
-        await proxiedV1.addChain(chainId, destBridgeAddress);
+        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
         // Remove chain
-        await proxiedV1.removeChain(chainId);
+        await (await proxiedV1.removeChain(chainId)).wait();
         // Check if the chain was removed
         const isSupported = await proxiedV1.isSupportedChain(chainId);
         expect(isSupported).to.be.false;
@@ -81,7 +83,7 @@ describe('ChainManager', () => {
         const destBridgeAddress = "aleo.bridge";
 
         // Add chain first
-        await proxiedV1.addChain(chainId, destBridgeAddress);
+        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
 
         // Call removeChain as a non-owner
         expect(proxiedV1.connect(other).removeChain(chainId)).to.be.reverted;
@@ -91,7 +93,7 @@ describe('ChainManager', () => {
         const newChainId = 123;
         const destBridgeAddress = "aleo.bridge";
         const params = [newChainId, destBridgeAddress];
-        const addChainTx = await proxiedV1.addChain(newChainId, destBridgeAddress);
+        const addChainTx = await (await proxiedV1.addChain(newChainId, destBridgeAddress)).wait();
         // Check event emission
         expect(addChainTx)
             .to.emit(proxiedV1, 'ChainAdded')
@@ -101,7 +103,7 @@ describe('ChainManager', () => {
     it('should emit ChainRemoved event when removing an existing chain', async () => {
         const existingChainId = 11155111;
         // Add chain first
-        await proxiedV1.addChain(existingChainId, "aleo.bridge");
+        await (await proxiedV1.addChain(existingChainId, "aleo.bridge")).wait();
         const removeChainTx = await proxiedV1.removeChain(existingChainId);
         // Check event emission
         expect(removeChainTx)

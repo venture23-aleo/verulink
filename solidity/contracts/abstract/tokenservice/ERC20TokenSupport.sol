@@ -47,6 +47,10 @@ contract ERC20TokenSupport is Ownable {
         uint256 min,
         uint256 max
     ) public onlyOwner {
+        require(
+            !isSupportedToken(tokenAddress, destChainId),
+            "Token already supported"
+        );
         Token memory token = Token(
             tokenAddress,
             PacketLibrary.OutNetworkAddress(destChainId, destTokenAddress),

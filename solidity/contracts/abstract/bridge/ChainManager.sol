@@ -12,7 +12,7 @@ contract ChainManager is Ownable {
     mapping(uint256 => PacketLibrary.OutNetworkAddress) public chains;
 
     function isSupportedChain(uint256 destChainId) public view returns (bool) {
-        return chains[destChainId].chainId != 0;
+        return chains[destChainId].chainId == destChainId;
     }
 
     function addChain(uint256 destChainId, string memory destBridgeAddress) public onlyOwner {

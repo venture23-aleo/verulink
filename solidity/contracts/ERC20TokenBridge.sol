@@ -99,7 +99,7 @@ contract ERC20TokenBridge is IncomingPacketManager,
 
     function sendMessage(PacketLibrary.OutPacket memory packet) public override {
         super.sendMessage(packet);
-        require(isRegisteredTokenService(msg.sender, packet.destTokenService.chainId), "Unknown Token Service");
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
+        require(isRegisteredTokenService(msg.sender, packet.destTokenService.chainId), "Unknown Token Service");
     } 
 }

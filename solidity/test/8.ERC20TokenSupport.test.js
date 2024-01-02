@@ -13,11 +13,13 @@ describe('ERC20TokenSupport', () => {
 
         ERC20TokenSupport = await ethers.getContractFactory("ERC20TokenSupport");
         tokenSupportImpl = await ERC20TokenSupport.deploy();
+        await tokenSupportImpl.waitForDeployment();
         let ERC20TokenSupportABI = ERC20TokenSupport.interface.formatJson();
 
         ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(ERC20TokenSupportABI).encodeFunctionData("initialize", [owner.address]);
         const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.target, initializeData);
+        await proxy.waitForDeployment();
         proxiedContract = ERC20TokenSupport.attach(proxy.target);
     });
 
@@ -37,7 +39,7 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Check if the token was added
         const isSupported = await proxiedContract.isSupportedToken(tokenAddress, destChainId);
@@ -56,22 +58,20 @@ describe('ERC20TokenSupport', () => {
     });
 
     // Test attempting to add an existing token
-    // it('should revert when trying to add an existing token', async () => {
-    //     const tokenAddress = ethers.Wallet.createRandom().address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "0x123";
-    //     const destTokenService = "aleo.bridge";
-    //     const min = 1;
-    //     const max = 100;
+    it('should revert when trying to add an existing token', async () => {
+        const tokenAddress = ethers.Wallet.createRandom().address;
+        const destChainId = 1;
+        const destTokenAddress = "0x123";
+        const destTokenService = "aleo.bridge";
+        const min = 1;
+        const max = 100;
 
-    //     // Add a token
-    //     await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
-    //     console.log("hello");
+        // Add a token
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
-    //     // Attempt to add the same token again
-    //     expect(proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max))
-    //         .to.be.revertedWith('Token already supported');
-    // });
+        // Attempt to add the same token again
+        expect(proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("Token already supported");
+    });
 
     // Test removing a token
     it('should remove a token', async () => {
@@ -83,10 +83,10 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Remove token
-        await proxiedContract.removeToken(tokenAddress, destChainId);
+        await (await proxiedContract.removeToken(tokenAddress, destChainId)).wait();
 
         // Check if the token was removed
         const isSupported = await proxiedContract.isSupportedToken(tokenAddress, destChainId);
@@ -113,7 +113,7 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Check if the token is supported for the specified destChainId
         const isSupported = await proxiedContract["isSupportedToken(address, uint256)"](tokenAddress, destChainId);
@@ -129,7 +129,7 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Check if the token is not supported for a different destChainId
         const nonMatchingDestChainId = 2;
@@ -156,7 +156,7 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token with the owner
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
     });
 
     it('should revert when non-owner tries to add a token', async () => {
@@ -181,10 +181,10 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token with the owner
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Owner tries to remove the token 
-        await proxiedContract.removeToken(tokenAddress, destChainId);
+        await (await proxiedContract.removeToken(tokenAddress, destChainId)).wait();
     });
 
     it('should revert when non-owner tries to remove a token', async () => {
@@ -196,7 +196,7 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token with the owner
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Try to remove token with another account and expect it to revert
         expect(
@@ -214,10 +214,10 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Enable the token
-        await proxiedContract.enable(tokenAddress, destChainId);
+        await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
 
         // Check if the token is enabled
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress, destChainId);
@@ -241,7 +241,7 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Enable the token
         expect(proxiedContract.connect(otherAccount).enable(tokenAddress, destChainId)).to.be.revertedWith("Not owner");
@@ -261,12 +261,12 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Enable the token
-        await proxiedContract.enable(tokenAddress, destChainId);
+        await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
         // Disable the token
-        await proxiedContract.disable(tokenAddress, destChainId);
+        await (await proxiedContract.disable(tokenAddress, destChainId)).wait();
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress, destChainId);
 
         // Check if the token is disabled
@@ -282,10 +282,10 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Disable the token
-        await proxiedContract.disable(tokenAddress, destChainId);
+        await (await proxiedContract.disable(tokenAddress, destChainId)).wait();
         expect(proxiedContract.disable(tokenAddress, destChainId)).to.be.revertedWith("Token not enabled");
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress, destChainId);
         // // Check if the token is disabled
@@ -301,10 +301,10 @@ describe('ERC20TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max)).wait();
 
         // Enable the token
-        await proxiedContract.enable(tokenAddress, destChainId);
+        await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
         // Disable the token
         expect(proxiedContract.connect(otherAccount).disable(tokenAddress, destChainId)).to.be.revertedWith("Not owner");
     });
@@ -315,7 +315,7 @@ describe('ERC20TokenSupport', () => {
         const destChainId = 2;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100)).wait();
 
         await expect(
             proxiedContract.removeToken(tokenAddress, destChainId)
@@ -329,7 +329,7 @@ describe('ERC20TokenSupport', () => {
         const destChainId = 2;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100)).wait();
 
         await expect(
             proxiedContract.enable(tokenAddress, destChainId)
@@ -343,10 +343,10 @@ describe('ERC20TokenSupport', () => {
         const destChainId = 2;
 
         // Add token
-        await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100);
+        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100)).wait();
 
         // Enable the token
-        await proxiedContract.enable(tokenAddress, destChainId);
+        await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
 
         await expect(
             proxiedContract.disable(tokenAddress, destChainId)

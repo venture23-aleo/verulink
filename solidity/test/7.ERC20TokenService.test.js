@@ -18,6 +18,7 @@ describe('ERC20TokenService', () => {
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
         const libInstance = await lib.deploy();
+        await libInstance.waitForDeployment();
 
         ERC20TokenBridge = await ethers.getContractFactory("ERC20TokenBridge", {
             libraries: {
@@ -25,7 +26,7 @@ describe('ERC20TokenService', () => {
             }
         });
         erc20TokenBridge = await ERC20TokenBridge.deploy();
-
+        await erc20TokenBridge.waitForDeployment();
         initializeData = new ethers.Interface([{
             "inputs": [
                 {
@@ -42,21 +43,26 @@ describe('ERC20TokenService', () => {
 
         Proxied = await ethers.getContractFactory('ProxyContract');
         proxy = await Proxied.deploy(erc20TokenBridge.target, initializeData);
+        await proxy.waitForDeployment();
         proxiedBridge = ERC20TokenBridge.attach(proxy.target);
 
 
         USDCMock = await ethers.getContractFactory("USDCMock");
         usdcMock = await USDCMock.deploy();
+        await usdcMock.waitForDeployment();
 
         USDTMock = await ethers.getContractFactory("USDTMock");
         usdTMock = await USDTMock.deploy();
+        await usdTMock.waitForDeployment();
 
         UnSupportedToken = await ethers.getContractFactory("USDCMock");
         unsupportedToken = await UnSupportedToken.deploy();
+        await unsupportedToken.waitForDeployment();
 
         ERC20TokenService = await ethers.getContractFactory("ERC20TokenService");
 
         ERC20TokenServiceImpl = await ERC20TokenService.deploy();
+        await ERC20TokenServiceImpl.waitForDeployment();
 
         initializeData = new ethers.Interface([{
             "inputs": [
@@ -93,15 +99,14 @@ describe('ERC20TokenService', () => {
         }]).encodeFunctionData("initialize", [proxiedBridge.target, chainId, usdcMock.target, usdTMock.target, owner.address]);
 
         proxy = await Proxied.deploy(ERC20TokenServiceImpl.target, initializeData);
+        await proxy.waitForDeployment();
         ERC20TokenServiceImplAddr = ERC20TokenServiceImpl.target;
         proxiedV1 = ERC20TokenService.attach(proxy.target);
-        await proxiedV1.connect(owner).addToken(usdcMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
-        await proxiedV1.connect(owner).addToken(usdTMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
-
-        await proxiedBridge.connect(owner).addTokenService(proxiedV1.target, destchainID);
-        await proxiedBridge.connect(owner).addChain(destchainID, "aleo.BridgeAddress");
-
-        await proxiedBridge.connect(owner).addAttestor(attestor.address, destchainID, 1);
+        await (await proxiedV1.connect(owner).addToken(usdcMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000)).wait();
+        await (await proxiedV1.connect(owner).addToken(usdTMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000)).wait();
+        await (await proxiedBridge.connect(owner).addTokenService(proxiedV1.target, destchainID)).wait();
+        await (await proxiedBridge.connect(owner).addChain(destchainID, "aleo.BridgeAddress")).wait();
+        await (await proxiedBridge.connect(owner).addAttestor(attestor.address, destchainID, 1)).wait();
 
         inPacket = [
             1,
@@ -112,7 +117,7 @@ describe('ERC20TokenService', () => {
             100
         ];
 
-        await proxiedBridge.connect(attestor).receivePacket(inPacket);
+        await (await proxiedBridge.connect(attestor).receivePacket(inPacket)).wait();
     });
 
     // Test deployment and initialization
@@ -136,7 +141,7 @@ describe('ERC20TokenService', () => {
         const newHoldingContract = ethers.Wallet.createRandom().address;
 
         // Update Holding contract with the owner
-        await proxiedV1.setHolding(newHoldingContract);
+        await (await proxiedV1.setHolding(newHoldingContract)).wait();
 
         // Try to Holding contract with another account and expect it to revert
         expect(
@@ -147,7 +152,7 @@ describe('ERC20TokenService', () => {
     //Test for transfer of blackListed address
     it('should not allow blackListed address for transfer', async () => {
         // Mock USDC and USDT contracts to simulate blacklisting
-        await usdcMock.addBlackList(other.address);
+        await (await usdcMock.addBlackList(other.address)).wait();
 
         expect(proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).to.be.revertedWith("Sender Blacklisted");
     });
@@ -167,26 +172,26 @@ describe('ERC20TokenService', () => {
 
     // Test for transfer
     it('should transfer USDC', async () => {
-        await usdcMock.mint(other.address, 150);
-        await usdcMock.connect(other).approve(proxiedV1.target, 100);
-        await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID);
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.target, 100)).wait();
+        await (await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).wait();
         expect(await usdcMock.balanceOf(proxiedV1)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
     });
 
     it('should transfer USDT', async () => {
-        await usdTMock.mint(other.address, 150);
-        await usdTMock.connect(other).approve(proxiedV1.target, 100);
-        await proxiedV1.connect(other).transfer(usdTMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID);
+        await (await usdTMock.mint(other.address, 150)).wait();
+        await (await usdTMock.connect(other).approve(proxiedV1.target, 100)).wait();
+        await (await proxiedV1.connect(other).transfer(usdTMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).wait();
         expect(await usdTMock.balanceOf(proxiedV1)).to.be.equal(100);
         expect(await usdTMock.balanceOf(other.address)).to.be.equal(50);
     });
 
     // Test for wrong destTokenService
     it('should not withdraw for false destTokenService', async () => {
-        await usdcMock.mint(other.address, 150);
-        await usdcMock.connect(other).approve(proxiedV1.target, 100);
-        await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID);
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.target, 100)).wait();
+        await (await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).wait();
 
         wrongPacket = [
             1,
@@ -197,15 +202,15 @@ describe('ERC20TokenService', () => {
             100
         ];
 
-        await proxiedBridge.connect(attestor).receivePacket(wrongPacket);
+        await (await proxiedBridge.connect(attestor).receivePacket(wrongPacket)).wait();
         expect(proxiedV1.connect(other).withdraw(wrongPacket)).to.be.revertedWith('Packet not intended for this Token Service');
     });
 
     // Test for wrong destTokenAddress
     it('should not withdraw for false destTokenAddress', async () => {
-        await usdcMock.mint(other.address, 150);
-        await usdcMock.connect(other).approve(proxiedV1.target, 100);
-        await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID);
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.target, 100)).wait();
+        await (await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).wait();
 
         wrongPacket = [
             1,
@@ -216,7 +221,7 @@ describe('ERC20TokenService', () => {
             100
         ];
 
-        await proxiedBridge.connect(attestor).receivePacket(wrongPacket);
+        await (await proxiedBridge.connect(attestor).receivePacket(wrongPacket)).wait();
         expect(proxiedV1.connect(other).withdraw(wrongPacket)).to.be.revertedWith('Token not supported');
     });
 
@@ -226,42 +231,42 @@ describe('ERC20TokenService', () => {
         //deploying Holding Contract
         const Holding = await ethers.getContractFactory("Holding");
         const holdingImpl = await Holding.deploy();
+        await holdingImpl.waitForDeployment();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(holdingImpl.interface.formatJson()).encodeFunctionData("initialize(address,address)", [owner.address, proxiedV1.target]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.target, initializeData);
+        await proxyHolding.waitForDeployment();
         proxiedHolding = Holding.attach(proxyHolding.target);
 
         //minting usdc
-        await usdcMock.mint(other.address, 150);
-        await usdcMock.connect(other).approve(proxiedV1.target, 100);
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.target, 100)).wait();
 
         //transferring some fund in aleo
-        await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID);
+        await (await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).wait();
 
 
         //set Holding contract in proxiedV1 which is TokenService 
-        await proxiedV1.setHolding(proxiedHolding.target);
+        await (await proxiedV1.setHolding(proxiedHolding.target)).wait();
 
         //add to blackList 
-        await usdcMock.addBlackList(other.address);
+        await (await usdcMock.addBlackList(other.address)).wait();
 
-        await proxiedV1.connect(other).withdraw(inPacket);
+        await (await proxiedV1.connect(other).withdraw(inPacket)).wait();
         expect(await usdcMock.balanceOf(proxiedHolding)).to.be.equal(100);
-
-
     });
 
     //Test for withdraw
     it('should withdraw', async () => {
-        await usdcMock.mint(other.address, 150);
-        await usdcMock.connect(other).approve(proxiedV1.target, 100);
-        await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID);
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.target, 100)).wait();
+        await (await proxiedV1.connect(other).transfer(usdcMock.target, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", destchainID)).wait();
 
         expect(await usdcMock.balanceOf(proxiedV1)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
 
 
-        await proxiedV1.connect(other).withdraw(inPacket);
+        await (await proxiedV1.connect(other).withdraw(inPacket)).wait();
         expect(await usdcMock.balanceOf(proxiedV1)).to.be.equal(0);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
     });
@@ -288,6 +293,7 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
 
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
         const libInstance = await lib.deploy();
+        await libInstance.waitForDeployment();
 
         ERC20TokenBridge = await ethers.getContractFactory("ERC20TokenBridge", {
             libraries: {
@@ -295,16 +301,20 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
             }
         });
         erc20TokenBridge = await ERC20TokenBridge.deploy();
+        await erc20TokenBridge.waitForDeployment();
         // console.log("erc20TokenBridge = ", erc20TokenBridge.target);
 
         USDCMock = await ethers.getContractFactory("USDCMock");
         usdcMock = await USDCMock.deploy();
+        await usdcMock.waitForDeployment();
 
         USDTMock = await ethers.getContractFactory("USDTMock");
         usdTMock = await USDTMock.deploy();
+        await usdTMock.waitForDeployment();
 
         ERC20TokenServiceV1 = await ethers.getContractFactory("ERC20TokenService");
         ERC20TokenServiceV1Impl = await ERC20TokenServiceV1.deploy();
+        await ERC20TokenServiceV1Impl.waitForDeployment();
 
         ERC20TokenServiceProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface([{
@@ -342,11 +352,13 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
         }]).encodeFunctionData("initialize(address,uint256,address,address,address)", [erc20TokenBridge.target, chainId, usdcMock.target, usdTMock.target, owner.address]);
 
         const proxy = await ERC20TokenServiceProxy.deploy(ERC20TokenServiceV1Impl.target, initializeData);
+        await proxy.waitForDeployment();
         proxied = ERC20TokenServiceV1.attach(proxy.target);
 
         ERC20TokenServiceV2 = await ethers.getContractFactory("ERC20TokenServiceV2");
 
         ERC20TokenServiceV2Impl = await ERC20TokenServiceV2.deploy();
+        await ERC20TokenServiceV2Impl.waitForDeployment();
         let ERC20TokenServiceV2ABI = ERC20TokenServiceV2.interface.formatJson();
 
         upgradeData = new ethers.Interface(ERC20TokenServiceV2ABI).encodeFunctionData("initializev2", [5]);

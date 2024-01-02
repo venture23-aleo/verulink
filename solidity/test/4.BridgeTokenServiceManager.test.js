@@ -15,9 +15,11 @@ describe('BridgeTokenServiceManager', () => {
         let BridgeTokenServiceManagerABI = BridgeTokenServiceManager.interface.formatJson();
 
         bridgeTokenServiceManagerImpl = await BridgeTokenServiceManager.deploy();
+        await bridgeTokenServiceManagerImpl.waitForDeployment();
         BridgeTokenServiceManagerProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(BridgeTokenServiceManagerABI).encodeFunctionData("initialize", [owner.address]);
         const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.target, initializeData);
+        await proxy.waitForDeployment();
         proxiedV1 = BridgeTokenServiceManager.attach(proxy.target);
     });
 
@@ -33,7 +35,7 @@ describe('BridgeTokenServiceManager', () => {
         const chainId = 5;
 
         // Add token service
-        await proxiedV1.addTokenService(newTokenService,chainId);
+        await (await proxiedV1.addTokenService(newTokenService, chainId)).wait();
 
         // Check if the token service was added
         const isRegistered = await proxiedV1.isRegisteredTokenService(newTokenService, chainId);
@@ -46,7 +48,7 @@ describe('BridgeTokenServiceManager', () => {
         const chainId = 5;
 
         // Add token service
-        await proxiedV1.addTokenService(newTokenService, chainId);
+        await (await proxiedV1.addTokenService(newTokenService, chainId)).wait();
         // Attempt to add an existing token service
         expect(proxiedV1.addTokenService(newTokenService, chainId)).to.be.revertedWith('Token Service already exists');
     });
@@ -54,7 +56,7 @@ describe('BridgeTokenServiceManager', () => {
     // Test attempting to add a token service with zero address
     it('should revert when trying to add a token service with zero address', async () => {
         // Attempt to add a token service with zero address
-        expect(proxiedV1.addTokenService(ethers.ZeroAddress,5)).to.be.revertedWith('Zero Address');
+        expect(proxiedV1.addTokenService(ethers.ZeroAddress, 5)).to.be.revertedWith('Zero Address');
     });
 
     // Test removing a token service
@@ -63,10 +65,10 @@ describe('BridgeTokenServiceManager', () => {
         const chainId = 5;
 
         // Add token service
-        await proxiedV1.addTokenService(newTokenService, chainId);
+        await (await proxiedV1.addTokenService(newTokenService, chainId)).wait();
 
         // Remove token service
-        await proxiedV1.removeTokenService(newTokenService, chainId);
+        await (await proxiedV1.removeTokenService(newTokenService, chainId)).wait();
 
         // Check if the token service was removed
         const isRegistered = await proxiedV1.isRegisteredTokenService(newTokenService, chainId);
@@ -91,7 +93,7 @@ describe('BridgeTokenServiceManager', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
         const chainId = 5;
 
-        const addTokenServiceTx = await proxiedV1.addTokenService(newTokenService, chainId);
+        const addTokenServiceTx = await (await proxiedV1.addTokenService(newTokenService, chainId)).wait();
 
         // Check event emission
         expect(addTokenServiceTx)
@@ -104,9 +106,9 @@ describe('BridgeTokenServiceManager', () => {
         const chainId = 5;
 
         // Add token service first
-        await proxiedV1.addTokenService(existingTokenService, chainId);
+        await (await proxiedV1.addTokenService(existingTokenService, chainId)).wait();
 
-        const removeTokenServiceTx = await proxiedV1.removeTokenService(existingTokenService, chainId);
+        const removeTokenServiceTx = await (await proxiedV1.removeTokenService(existingTokenService, chainId)).wait();
 
         // Check event emission
         expect(removeTokenServiceTx)
@@ -120,7 +122,7 @@ describe('BridgeTokenServiceManager', () => {
         const chainId = 5;
 
         // Add token service with the owner
-        await proxiedV1.addTokenService(newTokenService, chainId);
+        await (await proxiedV1.addTokenService(newTokenService, chainId)).wait();
 
         // Try to add token service with another account and expect it to revert
         expect(
@@ -134,7 +136,7 @@ describe('BridgeTokenServiceManager', () => {
         const chainId = 5;
 
         // Add token service with the owner
-        await proxiedV1.addTokenService(newTokenService, chainId);
+        await (await proxiedV1.addTokenService(newTokenService, chainId)).wait();
 
         // Try to remove token service with another account and expect it to revert
         expect(

@@ -11,21 +11,16 @@ describe('AttestorManager', () => {
     beforeEach(async () => {
         [owner, attestor, other, signer] = await ethers.getSigners();
 
-        // Deploy ERC20TokenBridge
-        lib = await ethers.getContractFactory("PacketLibrary");
-        const libInstance = await lib.deploy();
-        AttestorManager = await ethers.getContractFactory("ERC20TokenBridge", {
-            libraries: {
-                PacketLibrary: libInstance.target,
-            },
-        });
+        // Deploy AttestorManager
+        AttestorManager = await ethers.getContractFactory("AttestorManager");
         let abi = AttestorManager.interface.format();
-        // console.log("ABI = ", abi);
 
         attestorManagerImpl = await AttestorManager.deploy();
+        await attestorManagerImpl.waitForDeployment();
         AttestorManagerProxy = await ethers.getContractFactory('ProxyContract');
         initializeData = new ethers.Interface(abi).encodeFunctionData("initialize", [owner.address]);
         const proxy = await AttestorManagerProxy.deploy(attestorManagerImpl.target, initializeData);
+        await proxy.waitForDeployment();
         proxiedV1 = AttestorManager.attach(proxy.target);
     });
 
@@ -42,7 +37,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired);
+        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
 
         // Check if the attestor was added
         const isAttestor = await proxiedV1.isAttestor(newAttestor, chainId);
@@ -59,7 +54,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired);
+        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
         const isAttestor = await proxiedV1.isAttestor(newAttestor, chainId);
         expect(isAttestor).to.be.true;
         const newQuorum = await proxiedV1.quorumRequired(chainId);
@@ -81,10 +76,10 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired);
+        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
 
         // Remove attestor
-        await proxiedV1.removeAttestor(newAttestor, chainId, quorumRequired);
+        await (await proxiedV1.removeAttestor(newAttestor, chainId, quorumRequired)).wait();
 
         // Check if the attestor was removed
         const isAttestor = await proxiedV1.isAttestor(newAttestor, chainId);
@@ -116,7 +111,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor with the owner
-        await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired);
+        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
 
         // Try to add attestor with another account and expect it to revert
         expect(
@@ -131,7 +126,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor with the owner
-        await proxiedV1.addAttestor(existingAttestor, chainId, quorumRequired);
+        await (await proxiedV1.addAttestor(existingAttestor, chainId, quorumRequired)).wait();
 
         // Try to remove attestor with another account and expect it to revert
         expect(
@@ -144,7 +139,7 @@ describe('AttestorManager', () => {
         const chainId = 5;
         const quorumRequired = 2;
 
-        const addAttestorTx = await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired);
+        const addAttestorTx = await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
 
         // Check event emission
         expect(addAttestorTx)
@@ -158,9 +153,9 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor first
-        proxiedV1.addAttestor(existingAttestor, chainId, quorumRequired);
+        await (await proxiedV1.addAttestor(existingAttestor, chainId, quorumRequired)).wait();
 
-        const removeAttestorTx = await proxiedV1.removeAttestor(existingAttestor, chainId, quorumRequired);
+        const removeAttestorTx = await (await proxiedV1.removeAttestor(existingAttestor, chainId, quorumRequired)).wait();
 
         // Check event emission
         expect(removeAttestorTx)
