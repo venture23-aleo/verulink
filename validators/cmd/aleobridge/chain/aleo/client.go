@@ -84,7 +84,7 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 		}
 	}
 	aleoPacket := cl.constructAleoPacket(packet)
-	privateKey := cl.wallet.(*common.ALEOWallet).PrivateKey
+	privateKey := cl.wallet.(*ALEOWallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
 		aleoPacket,
