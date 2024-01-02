@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
+	"gopkg.in/yaml.v3"
 )
 
 // flags
@@ -84,7 +84,7 @@ func loadConfig(file string) (*relay.Config, error) {
 		return nil, err
 	}
 	cfg := &relay.Config{}
-	err = json.NewDecoder(f).Decode(cfg)
+	err = yaml.NewDecoder(f).Decode(cfg)
 	if err != nil {
 		return nil, err
 	}
