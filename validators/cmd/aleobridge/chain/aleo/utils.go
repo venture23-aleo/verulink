@@ -11,62 +11,62 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-func parseMessage(m string) *AleoPacket {
+func parseMessage(m string) *aleoPacket {
 	message := trim(m)
-	splittedMessage := strings.Split(message, ",")
-	_splittedMessage := splittedMessage
-	splittedMessage = []string{}
+	sMessages := strings.Split(message, ",") // after splitting we get the message in the form [key1:value1,key2:value2, ...]
+	_sMessages := sMessages                  // temporarily store sMessages
+	sMessages = []string{}                   // empty sMessages
 
-	for i := 0; i < len(_splittedMessage); i++ {
-		msg := _splittedMessage[i]
+	for i := 0; i < len(_sMessages); i++ {
+		msg := _sMessages[i]
 		msplit := strings.Split(msg, ":")
-		splittedMessage = append(splittedMessage, msplit...)
+		sMessages = append(sMessages, msplit...) // now we get message in the form []string{key1, value1, key2, value2, ...}
 	}
 
-	pkt := &AleoPacket{}
+	pkt := new(aleoPacket)
 
-	for m, v := range splittedMessage {
+	for m, v := range sMessages {
 		switch v {
 		case "version":
-			pkt.Version = splittedMessage[m+1]
+			pkt.version = sMessages[m+1]
 		case "sequence":
-			pkt.Sequence = splittedMessage[m+1]
+			pkt.sequence = sMessages[m+1]
 		case "source":
-			pkt.Source.Chain_id = splittedMessage[m+2]
-			pkt.Source.ServiceContract = splittedMessage[m+4]
+			pkt.source.chain_id = sMessages[m+2]
+			pkt.source.address = sMessages[m+4]
 		case "destination":
 			serviceProgram := ""
-			pkt.Destination.Chain_id = splittedMessage[m+2]
+			pkt.destination.chain_id = sMessages[m+2]
 			for i := m + 4; true; i++ {
-				if splittedMessage[i] == "message" {
+				if sMessages[i] == "message" {
 					break
 				}
-				serviceProgram += splittedMessage[i] + " "
+				serviceProgram += sMessages[i] + " "
 			}
-			pkt.Destination.ServiceContract = serviceProgram
+			pkt.destination.address = serviceProgram
 		case "message":
 			denom := ""
 			i := 0
 			for i = m + 2; true; i++ {
-				if splittedMessage[i] == "sender" {
+				if sMessages[i] == "sender" {
 					break
 				}
-				denom += splittedMessage[i] + " "
+				denom += sMessages[i] + " "
 			}
-			pkt.Message.Denom = denom
-			sender := splittedMessage[i+1]
-			pkt.Message.Sender = sender
+			pkt.message.token = denom
+			sender := sMessages[i+1]
+			pkt.message.sender = sender
 			receiver := ""
 			for i = i + 3; true; i++ {
-				if splittedMessage[i] == "amount" {
+				if sMessages[i] == "amount" {
 					break
 				}
-				receiver += splittedMessage[i] + " "
+				receiver += sMessages[i] + " "
 			}
-			pkt.Message.Receiver = receiver
-			pkt.Message.Amount = splittedMessage[i+1]
+			pkt.message.receiver = receiver
+			pkt.message.amount = sMessages[i+1]
 		case "height":
-			pkt.Height = splittedMessage[m+1]
+			pkt.height = sMessages[m+1]
 		}
 
 	}
@@ -78,43 +78,43 @@ func trim(msg string) string {
 	return strReplacer.Replace(msg)
 }
 
-func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
+func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt := new(chain.Packet)
-	version, err := strconv.ParseUint(strings.ReplaceAll(packet.Version, "u8", ""), 0, 64)
+	version, err := strconv.ParseUint(strings.Replace(packet.version, "u8", "", 1), 0, 64)
 	if err != nil {
 		return nil, err
 	}
 	pkt.Version = version
-	sequence, err := strconv.ParseUint(strings.ReplaceAll(packet.Sequence, "u32", ""), 0, 64)
+	sequence, err := strconv.ParseUint(strings.Replace(packet.sequence, "u32", "", 1), 0, 64)
 	if err != nil {
 		return nil, err
 	}
 	pkt.Sequence = sequence
 
-	sourceChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Source.Chain_id, "u32", ""), 0, 64)
+	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chain_id, "u32", "", 1), 0, 64)
 	if err != nil {
 		return nil, &exec.Error{}
 	}
 	pkt.Source.ChainID = sourceChainID
-	pkt.Source.Address = packet.Source.ServiceContract
+	pkt.Source.Address = packet.source.address
 
-	destChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Destination.Chain_id, "u32", ""), 0, 64)
+	destChainID, err := strconv.ParseUint(strings.Replace(packet.destination.chain_id, "u32", "", 1), 0, 64)
 	if err != nil {
 		return nil, err
 	}
 
 	pkt.Destination.ChainID = destChainID
 
-	pkt.Destination.Address = parseEthAddress(packet.Destination.ServiceContract)
+	pkt.Destination.Address = parseAleoEthAddrToHexString(packet.destination.address)
 
-	pkt.Message.DestTokenAddress = parseEthAddress(packet.Message.Denom)
-	pkt.Message.SenderAddress = packet.Message.Sender
-	pkt.Message.ReceiverAddress = parseEthAddress(packet.Message.Receiver)
+	pkt.Message.DestTokenAddress = parseAleoEthAddrToHexString(packet.message.token)
+	pkt.Message.SenderAddress = packet.message.sender
+	pkt.Message.ReceiverAddress = parseAleoEthAddrToHexString(packet.message.receiver)
 
 	amount := &big.Int{}
-	pkt.Message.Amount, _ = amount.SetString(strings.ReplaceAll(packet.Message.Amount, "u64", ""), 0)
+	pkt.Message.Amount, _ = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
 
-	height, err := strconv.ParseUint(strings.ReplaceAll(packet.Height, "u32", ""), 0, 64)
+	height, err := strconv.ParseUint(strings.Replace(packet.height, "u32", "", 1), 0, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -123,15 +123,21 @@ func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
 	return pkt, nil
 }
 
+// constructs "packet" parameter in bridge contract "receive_message" entrypoint.
+// return: string :: example ::
+// "{version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: <source contract address in the form of 32 byte long byte array in which eth address is represented by the last 20 bytes>}....}
 func (c *Client) constructAleoPacket(msg *chain.Packet) string {
-	// "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + constructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + constructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
 	constructedPacket := fmt.Sprintf("{ version: %du8, sequence: %du32, source: { chain_id: %du32, addr: %s }, destination: { chain_id: %du32, addr: %s }, message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, height: %du32 }",
-		msg.Version, msg.Sequence, msg.Source.ChainID, constructServiceContractAddress(msg.Source.Address), msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress, constructServiceContractAddress(msg.Message.SenderAddress), msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
+		msg.Version, msg.Sequence, msg.Source.ChainID, constructEthAddressForAleoParameter(msg.Source.Address), msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress, constructEthAddressForAleoParameter(msg.Message.SenderAddress),
+		msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
 
 	return constructedPacket
 }
 
-func constructServiceContractAddress(serviceContract string) string {
+// constructs ethereum address in the format of 32 len byte array string, appending "u8" in every
+// array element. The eth address is represented by the last 20 elements in the array and the
+// first 12 fields are padded with "0u8"
+func constructEthAddressForAleoParameter(serviceContract string) string {
 	aleoAddress := "[ "
 	serviceContractByte := []byte(serviceContract)
 	lenDifference := 32 - len(serviceContractByte)
@@ -140,17 +146,18 @@ func constructServiceContractAddress(serviceContract string) string {
 	}
 
 	for i := lenDifference; i < 32; i++ {
+		aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8 "
 		if i != 31 {
-			aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8, "
-		} else {
-			aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8 "
+			aleoAddress += ","
 		}
 	}
 	aleoAddress += "]"
 	return aleoAddress
 }
 
-func parseEthAddress(addr string) string {
+// parses the eth addr in the form [ 0u8, 0u8, ..., 0u8] received from aleo to hex string
+// example [0u8, ... * 32]: aleo[u8, 32] -> 0x0.....0 eth:string
+func parseAleoEthAddrToHexString(addr string) string {
 	addr = strings.ReplaceAll(addr, "u8", "")
 	addr = strings.Trim(addr, " ")
 	splittedAddress := strings.Split(addr, " ")

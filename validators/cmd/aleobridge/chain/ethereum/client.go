@@ -2,14 +2,17 @@ package ethereum
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"math/big"
+	"os"
 	"time"
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"go.uber.org/zap/zapcore"
 
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -26,7 +29,7 @@ const (
 	ethereum                = "ethereum"
 	defaultGasLimit         = 1500000
 	defaultGasPrice         = 130000000000
-	defaultSendTxTimeout    = time.Second * 15
+	defaultSendTxTimeout    = time.Second * 30
 	defaultReadTimeout      = 50 * time.Second
 )
 
@@ -36,7 +39,7 @@ type Client struct {
 	eth               *ethclient.Client
 	bridge            *abi.Bridge
 	minRequiredGasFee uint64
-	finalizeHeight    uint64
+	finalityHeight    uint64
 	blockGenTime      time.Duration
 	chainID           uint32
 	chainCfg          *relay.ChainConfig
@@ -44,12 +47,12 @@ type Client struct {
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
-	chainID := &big.Int{}
-	chainID.SetUint64(uint64(dstChainID))
+	destChainIDBig := &big.Int{}
+	destChainIDBig.SetUint64(uint64(dstChainID))
 	sequenceNumber := &big.Int{}
 	sequenceNumber.SetUint64(seqNum)
 
-	ethpacket, err := cl.bridge.OutgoingPackets(&ethBind.CallOpts{Context: ctx}, chainID, sequenceNumber)
+	ethpacket, err := cl.bridge.OutgoingPackets(&ethBind.CallOpts{Context: ctx}, destChainIDBig, sequenceNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +79,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum u
 	return packet, nil
 }
 
-func (cl *Client) AttestMessages(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
-	fmt.Println("attestation")
+func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
 	tx, err = cl.bridge.ReceivePacket(opts, packet)
 	return
 }
@@ -85,7 +87,6 @@ func (cl *Client) AttestMessages(opts *ethBind.TransactOpts, packet abi.PacketLi
 // SendAttestedPacket sends packet from source chain to target chain
 func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	newTransactOpts := func() (*ethBind.TransactOpts, error) {
-		fmt.Println(cl.wallet.(*common.EVMWallet).SKey())
 		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*common.EVMWallet).SKey(), big.NewInt(11155111)) // todo: chainid is required here, handle this through config?
 		if err != nil {
 			return nil, err
@@ -94,17 +95,18 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		defer cancel()
 		txo.GasPrice, _ = cl.SuggestGasPrice(ctx)
 		txo.GasLimit = uint64(defaultGasLimit)
-		// txo.Nonce = big.NewInt(1)
 		return txo, nil
 	}
 
 	txOpts, err := newTransactOpts()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
-	txOpts.Context = context.Background()
+	_ctx, cancel := context.WithTimeout(ctx, defaultSendTxTimeout)
+	defer cancel()
+
+	txOpts.Context = _ctx
 	txOpts.GasLimit = defaultGasLimit
 
 	txOpts.GasPrice = big.NewInt(defaultGasPrice)
@@ -128,38 +130,11 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		Height: big.NewInt(int64(m.Height)),
 	}
 
-	transacton, err := cl.AttestMessages(txOpts, *packet)
+	transacton, err := cl.attestMessage(txOpts, *packet)
 	if err != nil {
-		fmt.Println(err)
 		return err
-		// panic("err")
-		// m.RetryCount++
-		// if m.RetryCount < DefaultRetryCount {
-		// 	fmt.Println("putting the block in state retry block", m.DepartureBlock)
-		// 	if _, ok := s.RetryQueue[m.DepartureBlock]; !ok {
-		// 		s.RetryQueue[m.DepartureBlock] = m
-		// 	}
-		// } else {
-		// 	depBlock := strconv.Itoa(int(m.DepartureBlock))
-		// 	fmt.Println("putting the block in the db", m.DepartureBlock)
-		// 	packet, _ := store.GetRetryPacket(Ethereum, depBlock)
-		// 	if packet != nil {
-		// 		return nil
-		// 	}
-		// 	err := store.StoreRetryPacket(Ethereum, depBlock, m)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// 	delete(s.RetryQueue, m.DepartureBlock)
-		// }
-		// fmt.Println("couldnot send ", m.DepartureBlock, m.RetryCount)
 	}
-	fmt.Println(transacton.Hash())
-	// store.DeleteRetryPacket(Ethereum, strconv.Itoa(int(m.DepartureBlock)))
-	// delete(s.RetryQueue, m.DepartureBlock)
-	// time.Sleep(5 * time.Second)
-	// s.SentPackets = append(s.SentPackets, m.DepartureBlock)
-	fmt.Println("sent packets from eth", transacton.Hash())
+	logger.Logger.Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
 	return nil
 }
 
@@ -180,7 +155,7 @@ func (cl *Client) CurHeight(ctx context.Context) uint64 {
 }
 
 func (cl *Client) GetFinalityHeight() uint64 {
-	return cl.finalizeHeight
+	return cl.finalityHeight
 }
 
 func (cl *Client) GetBlockGenTime() time.Duration {
@@ -189,10 +164,6 @@ func (cl *Client) GetBlockGenTime() time.Duration {
 
 func (cl *Client) GetDestChains() ([]string, error) {
 	return []string{"aleo"}, nil
-}
-
-func (cl *Client) GetChainEvent(ctx context.Context) (*chain.ChainEvent, error) {
-	return nil, nil
 }
 
 func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
@@ -207,9 +178,8 @@ func (cl *Client) Name() string {
 	return cl.name
 }
 
-func (cl *Client) GetSourceChain() (name, address string) {
-	name, address = cl.name, cl.address
-	return
+func (cl *Client) GetSourceChain() (string, string) {
+	return cl.name, cl.address
 }
 
 func (cl *Client) GetChainID() uint32 {
@@ -220,12 +190,18 @@ func (cl *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return cl.eth.SuggestGasPrice(ctx)
 }
 
-func Wallet(path string) (common.Wallet, error) {
-	wallet, err := relay.LoadWalletConfig(path)
+func loadWalletConfig(file string) (common.Wallet, error) {
+	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
-	return wallet, nil
+	evmWallet := &EVMWallet{}
+	err = json.NewDecoder(f).Decode(evmWallet)
+	if err != nil {
+		return nil, err
+	}
+	return evmWallet, nil
+
 }
 
 func NewClient(cfg *relay.ChainConfig) relay.IClient {
@@ -235,19 +211,19 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	*/
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
-		return nil
+		panic("failed to create ethereum rpc client")
 	}
 
 	ethclient := ethclient.NewClient(rpc)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
 	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
 	if err != nil {
-		return nil
+		panic("failed to create ethereum bridge client")
 	}
 
-	wallet, err := Wallet(cfg.WalletPath)
+	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
-		return nil
+		panic("failed to load ethereum wallet")
 	}
 	name := cfg.Name
 	finalizeHeight := cfg.FinalityHeight
@@ -263,7 +239,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		address:        cfg.BridgeContract,
 		eth:            ethclient,
 		bridge:         bridgeClient,
-		finalizeHeight: defaultFinalizingHeight,
+		finalityHeight: defaultFinalizingHeight,
 		blockGenTime:   blockGenerationTime,
 		chainID:        cfg.ChainID,
 		chainCfg:       cfg,

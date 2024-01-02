@@ -35,10 +35,10 @@ func InitLogging(mode logMode, outputPath string) {
 func initLog(mode logMode, outPath string) {
 	lumber := &lumberjack.Logger{
 		Filename:   outPath,
-		MaxSize:    10,
+		MaxSize:    10, // for prod, MaxSize = 100
 		MaxBackups: 2,
 		MaxAge:     180,
-		Compress:   false,
+		Compress:   false, // for prod: Compress = true
 	}
 	lumber.Rotate()
 

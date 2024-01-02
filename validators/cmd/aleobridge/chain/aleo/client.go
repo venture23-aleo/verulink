@@ -2,15 +2,19 @@ package aleo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -36,26 +40,25 @@ type Client struct {
 	wallet   common.Wallet
 }
 
-type AleoPacket struct {
-	Version     string                   `json:"version"`
-	Source      AleoPacketNetworkAddress `json:"source"`
-	Sequence    string                   `json:"sequence_no"`
-	Destination AleoPacketNetworkAddress `json:"destination"`
-	Message     AleoMessage              `json:"msg"`
-	Height      string                   `json:""`
+type aleoPacket struct {
+	version     string
+	source      aleoPacketNetworkAddress
+	sequence    string
+	destination aleoPacketNetworkAddress
+	message     aleoMessage
+	height      string
 }
 
-type AleoPacketNetworkAddress struct {
-	Chain_id        string `json:"chain_id"`
-	ServiceContract string `json:"service_contract"`
-	ServiceProgram  string `json:"service_program"`
+type aleoPacketNetworkAddress struct {
+	chain_id string
+	address  string
 }
 
-type AleoMessage struct {
-	Denom    string `json:"denom"`
-	Receiver string `json:"receiver"`
-	Amount   string `json:"amount"`
-	Sender   string
+type aleoMessage struct {
+	token    string
+	receiver string
+	amount   string
+	sender   string
 }
 
 func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
@@ -69,9 +72,6 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		return nil, err
 	}
 
-	if message == nil {
-		return nil, nil
-	}
 	pktStr := parseMessage(message[mappingKey])
 	return parseAleoPacket(pktStr)
 }
@@ -84,24 +84,20 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 		}
 	}
 	aleoPacket := cl.constructAleoPacket(packet)
-	query, network := cl.queryUrl, cl.network
 	privateKey := cl.wallet.(*common.ALEOWallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
 		aleoPacket,
 		"--private-key", privateKey,
-		"--query", query,
-		"--broadcast", query+"/"+network+"/transaction/broadcast",
+		"--query", cl.queryUrl,
+		"--broadcast", cl.queryUrl+"/"+cl.network+"/transaction/broadcast",
 		"--priority-fee", PRIORITY_FEE)
 
-	fmt.Println("calling the contract", privateKey)
-	fmt.Println("aleo packet", aleoPacket)
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
-	fmt.Println(string(output))
+	logger.Logger.Info("packet sent to aleo::output::", zapcore.Field{String: string(output)})
 	return nil
 }
 
@@ -149,12 +145,18 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func Wallet(path string) (common.Wallet, error) {
-	wallet, err := relay.LoadWalletConfig(path)
+func loadWalletConfig(file string) (common.Wallet, error) {
+	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
 	}
-	return wallet, nil
+	aleoWallet := &ALEOWallet{}
+	err = json.NewDecoder(f).Decode(aleoWallet)
+	if err != nil {
+		return nil, err
+	}
+	return aleoWallet, nil
+
 }
 
 func NewClient(cfg *relay.ChainConfig) relay.IClient {
@@ -171,7 +173,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		return nil
 	}
 
-	wallet, err := Wallet(cfg.WalletPath)
+	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
 		return nil
 	}
