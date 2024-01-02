@@ -7,7 +7,7 @@
       "node_url": "http://52.91.48.169|testnet3",
       "start_height": 0,
       "finality_height": 1,
-      "wallet_path": "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/aleo_wallet.json"
+      "wallet_path": "/aleo_wallet.json"
     },
     {
       "name": "ethereum",
@@ -16,7 +16,7 @@
       "node_url": "https://rpc.sepolia.org",
       "start_height": 0,
       "finality_height":64,
-      "wallet_path": "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/eth_wallet.json"
+      "wallet_path": "/eth_wallet.json"
     }
   ], 
   "bridge_pair":{

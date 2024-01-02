@@ -46,9 +46,8 @@ type AleoPacket struct {
 }
 
 type AleoPacketNetworkAddress struct {
-	Chain_id        string `json:"chain_id"`
-	ServiceContract string `json:"service_contract"`
-	ServiceProgram  string `json:"service_program"`
+	Chain_id string `json:"chain_id"`
+	Address  string
 }
 
 type AleoMessage struct {

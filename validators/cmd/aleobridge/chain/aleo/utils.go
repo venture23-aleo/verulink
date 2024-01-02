@@ -33,7 +33,7 @@ func parseMessage(m string) *AleoPacket {
 			pkt.Sequence = splittedMessage[m+1]
 		case "source":
 			pkt.Source.Chain_id = splittedMessage[m+2]
-			pkt.Source.ServiceContract = splittedMessage[m+4]
+			pkt.Source.Address = splittedMessage[m+4]
 		case "destination":
 			serviceProgram := ""
 			pkt.Destination.Chain_id = splittedMessage[m+2]
@@ -43,7 +43,7 @@ func parseMessage(m string) *AleoPacket {
 				}
 				serviceProgram += splittedMessage[i] + " "
 			}
-			pkt.Destination.ServiceContract = serviceProgram
+			pkt.Destination.Address = serviceProgram
 		case "message":
 			denom := ""
 			i := 0
@@ -96,7 +96,7 @@ func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
 		return nil, &exec.Error{}
 	}
 	pkt.Source.ChainID = sourceChainID
-	pkt.Source.Address = packet.Source.ServiceContract
+	pkt.Source.Address = packet.Source.Address
 
 	destChainID, err := strconv.ParseUint(strings.ReplaceAll(packet.Destination.Chain_id, "u32", ""), 0, 64)
 	if err != nil {
@@ -105,7 +105,7 @@ func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
 
 	pkt.Destination.ChainID = destChainID
 
-	pkt.Destination.Address = parseEthAddress(packet.Destination.ServiceContract)
+	pkt.Destination.Address = parseEthAddress(packet.Destination.Address)
 
 	pkt.Message.DestTokenAddress = parseEthAddress(packet.Message.Denom)
 	pkt.Message.SenderAddress = packet.Message.Sender
