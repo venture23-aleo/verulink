@@ -122,7 +122,6 @@ func (r *relay) startReceiving(ctx context.Context) {
 		curSrcHeight := r.srcChain.CurHeight(ctx)
 		finalityHeight := r.srcChain.GetFinalityHeight()
 		if pkt.Height+finalityHeight >= curSrcHeight {
-			fmt.Println(pkt.Height, finalityHeight, curSrcHeight)
 			heightDiff := pkt.Height + finalityHeight - curSrcHeight
 			waitTime := r.srcChain.GetBlockGenTime() * time.Duration(heightDiff)
 			time.Sleep(waitTime)

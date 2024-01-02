@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -107,7 +106,6 @@ func (c *Client) GetMappingNames(ctx context.Context, programId string) ([]strin
 		return nil, err
 	}
 
-	fmt.Println(mapping)
 	return mapping, nil
 }
 
