@@ -87,7 +87,7 @@ func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLib
 // SendAttestedPacket sends packet from source chain to target chain
 func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	newTransactOpts := func() (*ethBind.TransactOpts, error) {
-		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*EVMWallet).SKey(), big.NewInt(11155111)) // todo: chainid is required here, handle this through config?
+		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*wallet).SKey(), big.NewInt(11155111)) // todo: chainid is required here, handle this through config?
 		if err != nil {
 			return nil, err
 		}
@@ -191,16 +191,17 @@ func (cl *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 }
 
 func loadWalletConfig(file string) (common.Wallet, error) {
-	f, err := os.Open(file)
+	walletBt, err := os.ReadFile(file) // wallet byte
 	if err != nil {
 		return nil, err
 	}
-	evmWallet := &EVMWallet{}
-	err = json.NewDecoder(f).Decode(evmWallet)
+
+	w := &wallet{}
+	err = json.Unmarshal(walletBt, w)
 	if err != nil {
 		return nil, err
 	}
-	return evmWallet, nil
+	return w, nil
 
 }
 

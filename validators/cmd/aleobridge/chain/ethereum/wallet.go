@@ -8,22 +8,22 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 )
 
-type EVMWallet struct {
+type wallet struct {
 	PrivateKey string `json:"private_key"`
 	KSPath     string `json:"ks_path"`
 	ViewKey    string `json:"view_key"`
 	CoinType   string `json:"coin_type"`
 }
 
-func (w *EVMWallet) Sign(data []byte) ([]byte, error) {
+func (w *wallet) Sign(data []byte) ([]byte, error) {
 	return nil, nil
 }
 
-func (w *EVMWallet) PubKey() string {
+func (w *wallet) PubKey() string {
 	return ""
 }
 
-func (w *EVMWallet) SKey() *ecdsa.PrivateKey {
+func (w *wallet) SKey() *ecdsa.PrivateKey {
 	ksFile, err := os.Open(w.KSPath)
 	if err != nil {
 		return nil

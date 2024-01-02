@@ -84,7 +84,7 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 		}
 	}
 	aleoPacket := cl.constructAleoPacket(packet)
-	privateKey := cl.wallet.(*ALEOWallet).PrivateKey
+	privateKey := cl.wallet.(*wallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
 		aleoPacket,
@@ -146,16 +146,16 @@ func (cl *Client) GetChainID() uint32 {
 }
 
 func loadWalletConfig(file string) (common.Wallet, error) {
-	f, err := os.Open(file)
+	walletBt, err := os.ReadFile(file) // wallet byte
 	if err != nil {
 		return nil, err
 	}
-	aleoWallet := &ALEOWallet{}
-	err = json.NewDecoder(f).Decode(aleoWallet)
+	w := &wallet{}
+	err = json.Unmarshal(walletBt, w)
 	if err != nil {
 		return nil, err
 	}
-	return aleoWallet, nil
+	return w, nil
 
 }
 
