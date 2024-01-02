@@ -11,62 +11,62 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-func parseMessage(m string) *aleoPacket {
-	message := trim(m)
-	sMessages := strings.Split(message, ",") // after splitting we get the message in the form [key1:value1,key2:value2, ...]
-	_sMessages := sMessages                  // temporarily store sMessages
-	sMessages = []string{}                   // empty sMessages
+// after splitting we get the message in the form [key1:value1,key2:value2, ...]
+// now we get message in the form []string{key1, value1, key2, value2, ...}
+func parseMessage(s string) *aleoPacket {
+	sMessages := strings.Split(trim(s), ",")
+	var messages []string
 
-	for i := 0; i < len(_sMessages); i++ {
-		msg := _sMessages[i]
+	for i := 0; i < len(sMessages); i++ {
+		msg := sMessages[i]
 		msplit := strings.Split(msg, ":")
-		sMessages = append(sMessages, msplit...) // now we get message in the form []string{key1, value1, key2, value2, ...}
+		messages = append(messages, msplit...)
 	}
 
 	pkt := new(aleoPacket)
 
-	for m, v := range sMessages {
+	for m, v := range messages {
 		switch v {
 		case "version":
-			pkt.version = sMessages[m+1]
+			pkt.version = messages[m+1]
 		case "sequence":
-			pkt.sequence = sMessages[m+1]
+			pkt.sequence = messages[m+1]
 		case "source":
-			pkt.source.chain_id = sMessages[m+2]
-			pkt.source.address = sMessages[m+4]
+			pkt.source.chain_id = messages[m+2]
+			pkt.source.address = messages[m+4]
 		case "destination":
 			serviceProgram := ""
-			pkt.destination.chain_id = sMessages[m+2]
+			pkt.destination.chain_id = messages[m+2]
 			for i := m + 4; true; i++ {
-				if sMessages[i] == "message" {
+				if messages[i] == "message" {
 					break
 				}
-				serviceProgram += sMessages[i] + " "
+				serviceProgram += messages[i] + " "
 			}
 			pkt.destination.address = serviceProgram
 		case "message":
 			denom := ""
 			i := 0
 			for i = m + 2; true; i++ {
-				if sMessages[i] == "sender" {
+				if messages[i] == "sender" {
 					break
 				}
-				denom += sMessages[i] + " "
+				denom += messages[i] + " "
 			}
 			pkt.message.token = denom
-			sender := sMessages[i+1]
+			sender := messages[i+1]
 			pkt.message.sender = sender
 			receiver := ""
 			for i = i + 3; true; i++ {
-				if sMessages[i] == "amount" {
+				if messages[i] == "amount" {
 					break
 				}
-				receiver += sMessages[i] + " "
+				receiver += messages[i] + " "
 			}
 			pkt.message.receiver = receiver
-			pkt.message.amount = sMessages[i+1]
+			pkt.message.amount = messages[i+1]
 		case "height":
-			pkt.height = sMessages[m+1]
+			pkt.height = messages[m+1]
 		}
 
 	}
@@ -123,15 +123,21 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	return pkt, nil
 }
 
-// constructs "packet" parameter in bridge contract "receive_message" entrypoint.
+// formats packet for aleo bridge contract
 // return: string :: example ::
-// "{version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: <source contract address in the form of 32 byte long byte array in which eth address is represented by the last 20 bytes>}....}
+// "{version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: <source contract address in the form of len 32 long byte array in which eth address is represented by the last 20 bytes>}....}
 func (c *Client) constructAleoPacket(msg *chain.Packet) string {
-	constructedPacket := fmt.Sprintf("{ version: %du8, sequence: %du32, source: { chain_id: %du32, addr: %s }, destination: { chain_id: %du32, addr: %s }, message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, height: %du32 }",
-		msg.Version, msg.Sequence, msg.Source.ChainID, constructEthAddressForAleoParameter(msg.Source.Address), msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress, constructEthAddressForAleoParameter(msg.Message.SenderAddress),
+	return fmt.Sprintf(
+		"{ version: %du8, sequence: %du32, "+
+			"source: { chain_id: %du32, addr: %s }, "+
+			"destination: { chain_id: %du32, addr: %s }, "+
+			"message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, "+
+			"height: %du32 }",
+		msg.Version, msg.Sequence, msg.Source.ChainID,
+		constructEthAddressForAleoParameter(msg.Source.Address),
+		msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress,
+		constructEthAddressForAleoParameter(msg.Message.SenderAddress),
 		msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
-
-	return constructedPacket
 }
 
 // constructs ethereum address in the format of 32 len byte array string, appending "u8" in every
@@ -145,14 +151,12 @@ func constructEthAddressForAleoParameter(serviceContract string) string {
 		aleoAddress += "0u8, "
 	}
 
+	appendString := "u8, "
 	for i := lenDifference; i < 32; i++ {
-		aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8 "
-		if i != 31 {
-			aleoAddress += ","
-		}
+		aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8, "
 	}
-	aleoAddress += "]"
-	return aleoAddress
+
+	return aleoAddress[:len(appendString)-len("u8")] + "]"
 }
 
 // parses the eth addr in the form [ 0u8, 0u8, ..., 0u8] received from aleo to hex string
