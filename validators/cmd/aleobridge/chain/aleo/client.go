@@ -3,7 +3,6 @@ package aleo
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"strings"
 	"time"
@@ -17,10 +16,11 @@ import (
 )
 
 const (
-	DefaultFinalizingHeight = 1
-	BlockGenerationTime     = time.Second * 5
-	OUT_PACKET              = "out_packets"
-	PRIORITY_FEE            = "1000"
+	defaultFinalizingHeight = 1
+	blockGenerationTime     = time.Second * 5
+	out_packet              = "out_packets"
+	priorityFee             = "1000"
+	aleo                    = "aleo"
 )
 
 type Client struct {
@@ -62,7 +62,7 @@ type aleoMessage struct {
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	mappingKey := constructOutMappingKey(dst, seqNum)
-	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, OUT_PACKET, mappingKey)
+	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, out_packet, mappingKey)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +72,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
+// todo output parser
 func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 	if cl.isAlreadyExist() {
 		return chain.AlreadyRelayedPacket{
@@ -81,23 +82,23 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 	aleoPacket := constructAleoPacket(packet)
 	privateKey := cl.wallet.(*wallet).PrivateKey
 
-	_ctx, cancel := context.WithTimeout(ctx, time.Minute*2)
+	_ctx, cancel := context.WithTimeout(ctx, time.Second*25)
 	defer cancel()
-	cmd := cl.aleoClient.Send(_ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, PRIORITY_FEE)
+	cmd := cl.aleoClient.Send(_ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
+	defer cmd.Cancel()
 	for {
 		select {
 		case <-_ctx.Done():
-			cmd.Cancel()
-			return errors.New("timeout")
+			return ctx.Err()
 		default:
+			output, err := cmd.Output()
+			if err != nil {
+				logger.Logger.Error("error while sending packet", zapcore.Field{Interface: err})
+				return err
+			}
+			logger.Logger.Info("packet sent to aleo::output::", zapcore.Field{String: string(output)})
+			return nil
 		}
-		output, err := cmd.Output()
-		if err != nil {
-			logger.Logger.Error("error while sending packet", zapcore.Field{Interface: err})
-			continue
-		}
-		logger.Logger.Info("packet sent to aleo::output::", zapcore.Field{String: string(output)})
-		return nil
 	}
 }
 
@@ -138,7 +139,7 @@ func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
 }
 
 func (cl *Client) Name() string {
-	return "Aleo"
+	return cl.name
 }
 
 func (cl *Client) GetChainID() uint32 {
@@ -168,7 +169,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		panic("invalid format. Expected format:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
 	}
 
-	aleoClient, err := aleoRpc.NewClient(urlSlice[0], urlSlice[1])
+	aleoClient, err := aleoRpc.NewRPC(urlSlice[0], urlSlice[1])
 	if err != nil {
 		return nil
 	}
@@ -178,15 +179,25 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		return nil
 	}
 
+	name := cfg.Name
+	finalizeHeight := cfg.FinalityHeight
+	if name == "" {
+		name = aleo
+	}
+	if finalizeHeight == 0 {
+		finalizeHeight = defaultFinalizingHeight
+	}
+
 	return &Client{
 		queryUrl:       urlSlice[0],
 		network:        urlSlice[1],
 		aleoClient:     aleoClient,
-		finalizeHeight: DefaultFinalizingHeight,
+		finalizeHeight: uint64(finalizeHeight),
 		chainID:        cfg.ChainID,
-		blockGenTime:   BlockGenerationTime,
+		blockGenTime:   blockGenerationTime,
 		chainCfg:       cfg,
 		wallet:         wallet,
 		programID:      cfg.BridgeContract,
+		name: name,
 	}
 }
