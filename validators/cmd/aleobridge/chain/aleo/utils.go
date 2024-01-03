@@ -1,6 +1,7 @@
 package aleo
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"os/exec"
@@ -105,11 +106,19 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 
 	pkt.Destination.ChainID = destChainID
 
-	pkt.Destination.Address = parseAleoEthAddrToHexString(packet.destination.address)
-
-	pkt.Message.DestTokenAddress = parseAleoEthAddrToHexString(packet.message.token)
+	pkt.Destination.Address, err = parseAleoEthAddrToHexString(packet.destination.address)
+	if err != nil {
+		return nil, err
+	}
+	pkt.Message.DestTokenAddress, err = parseAleoEthAddrToHexString(packet.message.token)
+	if err != nil {
+		return nil, err
+	}
+	pkt.Message.ReceiverAddress, err = parseAleoEthAddrToHexString(packet.message.receiver)
+	if err != nil {
+		return nil, err
+	}
 	pkt.Message.SenderAddress = packet.message.sender
-	pkt.Message.ReceiverAddress = parseAleoEthAddrToHexString(packet.message.receiver)
 
 	amount := &big.Int{}
 	pkt.Message.Amount, _ = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
@@ -126,7 +135,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 // formats packet for aleo bridge contract
 // return: string :: example ::
 // "{version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: <source contract address in the form of len 32 long byte array in which eth address is represented by the last 20 bytes>}....}
-func (c *Client) constructAleoPacket(msg *chain.Packet) string {
+func constructAleoPacket(msg *chain.Packet) string {
 	return fmt.Sprintf(
 		"{ version: %du8, sequence: %du32, "+
 			"source: { chain_id: %du32, addr: %s }, "+
@@ -156,24 +165,29 @@ func constructEthAddressForAleoParameter(serviceContract string) string {
 		aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8, "
 	}
 
-	return aleoAddress[:len(appendString)-len("u8")] + "]"
+	return aleoAddress[:len(aleoAddress)-(len(appendString)-len("u8"))] + " ]"
 }
 
 // parses the eth addr in the form [ 0u8, 0u8, ..., 0u8] received from aleo to hex string
 // example [0u8, ... * 32]: aleo[u8, 32] -> 0x0.....0 eth:string
-func parseAleoEthAddrToHexString(addr string) string {
+func parseAleoEthAddrToHexString(addr string) (string, error) {
+	if strings.Count(addr, "u8") != 32 {
+		return "", errors.New("invalid address string")
+	}
 	addr = strings.ReplaceAll(addr, "u8", "")
 	addr = strings.Trim(addr, " ")
 	splittedAddress := strings.Split(addr, " ")
 
 	var addrbt []byte
 
-	for i := 12; i < len(splittedAddress)-1; i++ {
-		bt, _ := strconv.ParseUint(splittedAddress[i], 0, 8)
-
+	for i := 12; i < len(splittedAddress); i++ {
+		bt, err := strconv.ParseUint(splittedAddress[i], 0, 8) // todo do not ignore
+		if err != nil {
+			return "", err
+		}
 		addrbt = append(addrbt, uint8(bt))
 	}
 
-	return ethCommon.Bytes2Hex(addrbt)
+	return ethCommon.BytesToAddress(addrbt).String(), nil
 
 }
