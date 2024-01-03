@@ -123,14 +123,6 @@ func parseAleoPacket(packet *AleoPacket) (*chain.Packet, error) {
 	return pkt, nil
 }
 
-func (c *Client) constructAleoPacket(msg *chain.Packet) string {
-	// "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + constructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + constructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
-	constructedPacket := fmt.Sprintf("{ version: %du8, sequence: %du32, source: { chain_id: %du32, addr: %s }, destination: { chain_id: %du32, addr: %s }, message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, height: %du32 }",
-		msg.Version, msg.Sequence, msg.Source.ChainID, constructServiceContractAddress(msg.Source.Address), msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress, constructServiceContractAddress(msg.Message.SenderAddress), msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
-
-	return constructedPacket
-}
-
 func constructServiceContractAddress(serviceContract string) string {
 	aleoAddress := "[ "
 	serviceContractByte := []byte(serviceContract)
@@ -157,12 +149,20 @@ func parseEthAddress(addr string) string {
 
 	var addrbt []byte
 
-	for i := 12; i < len(splittedAddress)-1; i++ {
+	for i := 12; i < len(splittedAddress); i++ {
 		bt, _ := strconv.ParseUint(splittedAddress[i], 0, 8)
 
 		addrbt = append(addrbt, uint8(bt))
 	}
 
-	return ethCommon.Bytes2Hex(addrbt)
+	return ethCommon.BytesToAddress(addrbt).String()
 
+}
+
+func constructAleoPacket(msg *chain.Packet) string {
+	// "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + constructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + constructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
+	constructedPacket := fmt.Sprintf("{ version: %du8, sequence: %du32, source: { chain_id: %du32, addr: %s }, destination: { chain_id: %du32, addr: %s }, message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, height: %du32 }",
+		msg.Version, msg.Sequence, msg.Source.ChainID, constructServiceContractAddress(msg.Source.Address), msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress, constructServiceContractAddress(msg.Message.SenderAddress), msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
+
+	return constructedPacket
 }

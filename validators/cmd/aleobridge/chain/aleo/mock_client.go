@@ -50,14 +50,6 @@ func (cl *MockClient) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint
 	return parseAleoPacket(pktStr)
 }
 
-func (c *MockClient) constructAleoPacket(msg *chain.Packet) string {
-	// "{ version: " + version + ", sequence: " + sequenceNo + ", source: { chain_id: " + srcChainId + ", addr: " + constructServiceContractAddress(srcServiceContract) + " }, destination: { chain_id: " + dstChainId + ", addr: " + dstserviceContract + " }, message: { token: " + denom + ", sender: " + constructServiceContractAddress(sender) + ", receiver: " + receiver + ", amount: " + amount + " }" + ", height: " + height + " }"
-	constructedPacket := fmt.Sprintf("{ version: %du8, sequence: %du32, source: { chain_id: %du32, addr: %s }, destination: { chain_id: %du32, addr: %s }, message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, height: %du32 }",
-		msg.Version, msg.Sequence, msg.Source.ChainID, constructServiceContractAddress(msg.Source.Address), msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress, constructServiceContractAddress(msg.Message.SenderAddress), msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
-
-	return constructedPacket
-}
-
 // SendAttestedPacket sends packet from source chain to target chain
 func (cl *MockClient) SendPacket(ctx context.Context, packet *chain.Packet) error {
 	if cl.isAlreadyExist() {
@@ -65,7 +57,7 @@ func (cl *MockClient) SendPacket(ctx context.Context, packet *chain.Packet) erro
 			CurChainHeight: 0,
 		}
 	}
-	aleoPacket := cl.constructAleoPacket(packet)
+	aleoPacket := constructAleoPacket(packet)
 	query, network := cl.queryUrl, cl.network
 	privateKey := cl.wallet.(*common.ALEOWallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
