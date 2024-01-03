@@ -52,9 +52,10 @@ export class Token_serviceContract {
 
     return result;
   }
-  async token_service_initialize() {
+  async token_service_initialize(r0: string) {
+    const r0Leo = js2leo.address(r0);
 
-    const params = []
+    const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_service_initialize',

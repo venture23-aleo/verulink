@@ -118,9 +118,9 @@ function bridge_initialize:
     input r3 as address.public;
     input r4 as address.public;
     input r5 as address.public;
-    assert.neq self.signer self.caller;
-    async bridge_initialize r0 r1 r2 r3 r4 r5 self.caller into r6;
-    output r6 as bridge.aleo/bridge_initialize.future;
+    input r6 as address.public;
+    async bridge_initialize r0 r1 r2 r3 r4 r5 r6 into r7;
+    output r7 as bridge.aleo/bridge_initialize.future;
 
 finalize bridge_initialize:
     input r0 as u8.public;

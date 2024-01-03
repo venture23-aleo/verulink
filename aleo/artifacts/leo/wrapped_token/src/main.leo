@@ -84,13 +84,8 @@ program wrapped_token.aleo {
 
     // Initialize can only be called once
     // Initialize must be called from council program
-    transition wrapped_token_initialize() {
-        // Assert that only a program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-        return then finalize(self.caller);
+    transition wrapped_token_initialize(council: address) {
+        return then finalize(council);
     }
 
     finalize wrapped_token_initialize(council: address) {

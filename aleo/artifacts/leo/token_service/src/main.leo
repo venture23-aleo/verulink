@@ -71,14 +71,8 @@ program token_service.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    // Initialize must be called from council program
-    transition token_service_initialize() {
-        // Assert that only a program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-        return then finalize(self.caller);
+    transition token_service_initialize(council: address) {
+        return then finalize(council);
     }
 
     finalize token_service_initialize(council: address) {

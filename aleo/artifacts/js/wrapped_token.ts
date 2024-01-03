@@ -61,9 +61,10 @@ export class Wrapped_tokenContract {
 
     return result;
   }
-  async wrapped_token_initialize() {
+  async wrapped_token_initialize(r0: string) {
+    const r0Leo = js2leo.address(r0);
 
-    const params = []
+    const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'wrapped_token_initialize',

@@ -160,13 +160,8 @@ program bridge.aleo {
 
     /// Initialize can only be called once
     /// Initialize must be called from council program
-    transition bridge_initialize(public threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address) {
-        // Assert that only a program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-        return then finalize(threshold, a1, a2, a3, a4, a5, self.caller);
+    transition bridge_initialize(public threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address, public council: address) {
+        return then finalize(threshold, a1, a2, a3, a4, a5, council);
     }
 
     finalize bridge_initialize(threshold: u8, a1: address, a2: address, a3: address, a4: address, a5: address, council: address) {
