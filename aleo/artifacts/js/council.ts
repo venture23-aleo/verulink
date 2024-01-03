@@ -5,15 +5,12 @@ import {
   AddMemberProposal,
   RemoveMemberProposal,
   UpdateThresholdProposal,
-  InitializeBridge,
-  InitializeTokenService,
-  InitializeWrappedToken,
-  SupportToken,
-  EnableToken,
-  EnableService,
-  ApproveChainBridge,
+  ApproveChainBridgeProposal,
+  EnableServiceProposal,
   DisapproveChainBridge,
   SupportChainTS,
+  SupportToken,
+  EnableToken,
   AleoProgram,
   ForeignContract,
   MsgTokenReceive,
@@ -36,15 +33,12 @@ import {
   getAddMemberProposalLeo,
   getRemoveMemberProposalLeo,
   getUpdateThresholdProposalLeo,
-  getInitializeBridgeLeo,
-  getInitializeTokenServiceLeo,
-  getInitializeWrappedTokenLeo,
-  getSupportTokenLeo,
-  getEnableTokenLeo,
-  getEnableServiceLeo,
-  getApproveChainBridgeLeo,
+  getApproveChainBridgeProposalLeo,
+  getEnableServiceProposalLeo,
   getDisapproveChainBridgeLeo,
   getSupportChainTSLeo,
+  getSupportTokenLeo,
+  getEnableTokenLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -67,15 +61,12 @@ import {
   getAddMemberProposal,
   getRemoveMemberProposal,
   getUpdateThresholdProposal,
-  getInitializeBridge,
-  getInitializeTokenService,
-  getInitializeWrappedToken,
-  getSupportToken,
-  getEnableToken,
-  getEnableService,
-  getApproveChainBridge,
+  getApproveChainBridgeProposal,
+  getEnableServiceProposal,
   getDisapproveChainBridge,
   getSupportChainTS,
+  getSupportToken,
+  getEnableToken,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -150,24 +141,40 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async add_member(r0: string, r1: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u8(r1);
+  async prop_add_member(r0: number, r1: string, r2: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u8(r2);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'add_member',
+      transition: 'prop_add_member',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_add_member(r0: string, r1: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u8(r1);
+  async vote_add_member(r0: number, r1: string, r2: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u8(r2);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_add_member',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_add_member(r0: number, r1: string, r2: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u8(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_add_member',
@@ -176,24 +183,40 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async remove_member(r0: string, r1: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u8(r1);
+  async prop_remove_member(r0: number, r1: string, r2: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u8(r2);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'remove_member',
+      transition: 'prop_remove_member',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_remove_member(r0: string, r1: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u8(r1);
+  async vote_remove_member(r0: number, r1: string, r2: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u8(r2);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_remove_member',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_remove_member(r0: number, r1: string, r2: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u8(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_remove_member',
@@ -202,22 +225,37 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_threshold(r0: number) {
-    const r0Leo = js2leo.u8(r0);
+  async prop_update_threshold(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_threshold',
+      transition: 'prop_update_threshold',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_update_threshold(r0: number) {
-    const r0Leo = js2leo.u8(r0);
+  async vote_update_threshold(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_update_threshold',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_update_threshold(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u8(r1);
+
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_update_threshold',
@@ -226,182 +264,37 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async initialize_bridge(r0: number, r1: string, r2: string, r3: string, r4: string, r5: string) {
-    const r0Leo = js2leo.u8(r0);
-    const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.address(r3);
-    const r4Leo = js2leo.address(r4);
-    const r5Leo = js2leo.address(r5);
-
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'initialize_bridge',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async exec_initialize_bridge(r0: number, r1: string, r2: string, r3: string, r4: string, r5: string) {
-    const r0Leo = js2leo.u8(r0);
-    const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.address(r3);
-    const r4Leo = js2leo.address(r4);
-    const r5Leo = js2leo.address(r5);
-
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'exec_initialize_bridge',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async initialize_token_service() {
-
-    const params = []
-    const result = await zkRun({
-      config: this.config,
-      transition: 'initialize_token_service',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async exec_initialize_token_service() {
-
-    const params = []
-    const result = await zkRun({
-      config: this.config,
-      transition: 'exec_initialize_token_service',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async initialize_wrapped_token() {
-
-    const params = []
-    const result = await zkRun({
-      config: this.config,
-      transition: 'initialize_wrapped_token',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async exec_initialize_wrapped_token() {
-
-    const params = []
-    const result = await zkRun({
-      config: this.config,
-      transition: 'exec_initialize_wrapped_token',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async add_new_token(r0: Array < number > , r1: Array < number > , r2: number, r3: number, r4: Array < number > ) {
-    const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
-    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
-    const r2Leo = js2leo.u8(r2);
-    const r3Leo = js2leo.u32(r3);
-    const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
-
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'add_new_token',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async exec_add_new_token(r0: Array < number > , r1: Array < number > , r2: number, r3: number, r4: Array < number > ) {
-    const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
-    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
-    const r2Leo = js2leo.u8(r2);
-    const r3Leo = js2leo.u32(r3);
-    const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
-
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'exec_add_new_token',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async enable_new_token(r0: string, r1: BigInt) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+  async prop_approve_chain_bridge(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'enable_new_token',
+      transition: 'prop_approve_chain_bridge',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_enable_new_token(r0: string, r1: BigInt) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+  async vote_approve_chain_bridge(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'exec_enable_new_token',
+      transition: 'vote_approve_chain_bridge',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async enable_service(r0: string) {
-    const r0Leo = js2leo.address(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'enable_service',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async exec_enable_service(r0: string) {
-    const r0Leo = js2leo.address(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'exec_enable_service',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async approve_chain_bridge(r0: number) {
+  async exec_approve_chain_bridge(r0: number, r1: number) {
     const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
 
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'approve_chain_bridge',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async exec_approve_chain_bridge(r0: number) {
-    const r0Leo = js2leo.u32(r0);
-
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_approve_chain_bridge',
@@ -410,22 +303,76 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async disapprove_chain_bridge(r0: number) {
+  async prop_enable_service(r0: number, r1: string) {
     const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'disapprove_chain_bridge',
+      transition: 'prop_enable_service',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_disapprove_chain_bridge(r0: number) {
+  async vote_enable_service(r0: number, r1: string) {
     const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_enable_service',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_enable_service(r0: number, r1: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'exec_enable_service',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async prop_disapprove_chain_bridge(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'prop_disapprove_chain_bridge',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async vote_disapprove_chain_bridge(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_disapprove_chain_bridge',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_disapprove_chain_bridge(r0: number, r1: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
+
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_disapprove_chain_bridge',
@@ -434,27 +381,136 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async support_chain_ts(r0: number, r1: Array < number > ) {
+  async prop_support_chain_ts(r0: number, r1: number, r2: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
+    const r1Leo = js2leo.u32(r1);
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'support_chain_ts',
+      transition: 'prop_support_chain_ts',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_support_chain_ts(r0: number, r1: Array < number > ) {
+  async vote_support_chain_ts(r0: number, r1: number, r2: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
+    const r1Leo = js2leo.u32(r1);
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_support_chain_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_support_chain_ts(r0: number, r1: number, r2: Array < number > ) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.u32(r1);
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
+
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_support_chain_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async prop_add_new_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: number, r5: Array < number > ) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
+    const r3Leo = js2leo.u8(r3);
+    const r4Leo = js2leo.u32(r4);
+    const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'prop_add_new_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async vote_add_new_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: number, r5: Array < number > ) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
+    const r3Leo = js2leo.u8(r3);
+    const r4Leo = js2leo.u32(r4);
+    const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_add_new_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_add_new_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: number, r5: Array < number > ) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
+    const r3Leo = js2leo.u8(r3);
+    const r4Leo = js2leo.u32(r4);
+    const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'exec_add_new_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async prop_enable_new_token(r0: number, r1: string, r2: BigInt) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u64(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'prop_enable_new_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async vote_enable_new_token(r0: number, r1: string, r2: BigInt) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u64(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'vote_enable_new_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async exec_enable_new_token(r0: number, r1: string, r2: BigInt) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u64(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'exec_enable_new_token',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -470,6 +526,18 @@ export class CouncilContract {
       params,
     });
     return leo2js.boolean(result);
+  }
+
+  async settings(key: number): Promise < number > {
+    const keyLeo = js2leo.u8(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'settings',
+      params,
+    });
+    return leo2js.u8(result);
   }
 
   async proposal_vote_counts(key: BigInt): Promise < number > {
@@ -508,16 +576,124 @@ export class CouncilContract {
     return leo2js.boolean(result);
   }
 
-  async settings(key: number): Promise < number > {
+  async proposal_counts(key: number): Promise < number > {
     const keyLeo = js2leo.u8(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'settings',
+      transition: 'proposal_counts',
       params,
     });
-    return leo2js.u8(result);
+    return leo2js.u32(result);
+  }
+
+  async add_member_proposals(key: number): Promise < AddMemberProposal > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'add_member_proposals',
+      params,
+    });
+    return getAddMemberProposal(result);
+  }
+
+  async remove_member_proposals(key: number): Promise < RemoveMemberProposal > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'remove_member_proposals',
+      params,
+    });
+    return getRemoveMemberProposal(result);
+  }
+
+  async update_threshold_proposals(key: number): Promise < UpdateThresholdProposal > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'update_threshold_proposals',
+      params,
+    });
+    return getUpdateThresholdProposal(result);
+  }
+
+  async approve_chain_bridge_proposals(key: number): Promise < ApproveChainBridgeProposal > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'approve_chain_bridge_proposals',
+      params,
+    });
+    return getApproveChainBridgeProposal(result);
+  }
+
+  async enable_service_proposals(key: number): Promise < EnableServiceProposal > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'enable_service_proposals',
+      params,
+    });
+    return getEnableServiceProposal(result);
+  }
+
+  async disapprove_chain_proposals(key: number): Promise < DisapproveChainBridge > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'disapprove_chain_proposals',
+      params,
+    });
+    return getDisapproveChainBridge(result);
+  }
+
+  async support_chain_ts_proposals(key: number): Promise < SupportChainTS > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'support_chain_ts_proposals',
+      params,
+    });
+    return getSupportChainTS(result);
+  }
+
+  async support_token_proposals(key: number): Promise < SupportToken > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'support_token_proposals',
+      params,
+    });
+    return getSupportToken(result);
+  }
+
+  async enable_token_proposals(key: number): Promise < EnableToken > {
+    const keyLeo = js2leo.u32(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'enable_token_proposals',
+      params,
+    });
+    return getEnableToken(result);
   }
 
 

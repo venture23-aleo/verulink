@@ -7,24 +7,18 @@ import {
   RemoveMemberProposalLeo,
   UpdateThresholdProposal,
   UpdateThresholdProposalLeo,
-  InitializeBridge,
-  InitializeBridgeLeo,
-  InitializeTokenService,
-  InitializeTokenServiceLeo,
-  InitializeWrappedToken,
-  InitializeWrappedTokenLeo,
-  SupportToken,
-  SupportTokenLeo,
-  EnableToken,
-  EnableTokenLeo,
-  EnableService,
-  EnableServiceLeo,
-  ApproveChainBridge,
-  ApproveChainBridgeLeo,
+  ApproveChainBridgeProposal,
+  ApproveChainBridgeProposalLeo,
+  EnableServiceProposal,
+  EnableServiceProposalLeo,
   DisapproveChainBridge,
   DisapproveChainBridgeLeo,
   SupportChainTS,
   SupportChainTSLeo,
+  SupportToken,
+  SupportTokenLeo,
+  EnableToken,
+  EnableTokenLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -38,6 +32,7 @@ export function getProposalSign(proposalSign: ProposalSignLeo): ProposalSign {
 
 export function getAddMemberProposal(addMemberProposal: AddMemberProposalLeo): AddMemberProposal {
   const result: AddMemberProposal = {
+    id: leo2js.u32(addMemberProposal.id),
     new_member: leo2js.address(addMemberProposal.new_member),
     new_threshold: leo2js.u8(addMemberProposal.new_threshold),
   }
@@ -46,6 +41,7 @@ export function getAddMemberProposal(addMemberProposal: AddMemberProposalLeo): A
 
 export function getRemoveMemberProposal(removeMemberProposal: RemoveMemberProposalLeo): RemoveMemberProposal {
   const result: RemoveMemberProposal = {
+    id: leo2js.u32(removeMemberProposal.id),
     existing_member: leo2js.address(removeMemberProposal.existing_member),
     new_threshold: leo2js.u8(removeMemberProposal.new_threshold),
   }
@@ -54,39 +50,48 @@ export function getRemoveMemberProposal(removeMemberProposal: RemoveMemberPropos
 
 export function getUpdateThresholdProposal(updateThresholdProposal: UpdateThresholdProposalLeo): UpdateThresholdProposal {
   const result: UpdateThresholdProposal = {
-    threshold: leo2js.u8(updateThresholdProposal.threshold),
+    id: leo2js.u32(updateThresholdProposal.id),
+    new_threshold: leo2js.u8(updateThresholdProposal.new_threshold),
   }
   return result;
 }
 
-export function getInitializeBridge(initializeBridge: InitializeBridgeLeo): InitializeBridge {
-  const result: InitializeBridge = {
-    bridge_threshold: leo2js.u8(initializeBridge.bridge_threshold),
-    a1: leo2js.address(initializeBridge.a1),
-    a2: leo2js.address(initializeBridge.a2),
-    a3: leo2js.address(initializeBridge.a3),
-    a4: leo2js.address(initializeBridge.a4),
-    a5: leo2js.address(initializeBridge.a5),
+export function getApproveChainBridgeProposal(approveChainBridgeProposal: ApproveChainBridgeProposalLeo): ApproveChainBridgeProposal {
+  const result: ApproveChainBridgeProposal = {
+    id: leo2js.u32(approveChainBridgeProposal.id),
+    chain_id: leo2js.u32(approveChainBridgeProposal.chain_id),
   }
   return result;
 }
 
-export function getInitializeTokenService(initializeTokenService: InitializeTokenServiceLeo): InitializeTokenService {
-  const result: InitializeTokenService = {
-    token_service: leo2js.boolean(initializeTokenService.token_service),
+export function getEnableServiceProposal(enableServiceProposal: EnableServiceProposalLeo): EnableServiceProposal {
+  const result: EnableServiceProposal = {
+    id: leo2js.u32(enableServiceProposal.id),
+    service: leo2js.address(enableServiceProposal.service),
   }
   return result;
 }
 
-export function getInitializeWrappedToken(initializeWrappedToken: InitializeWrappedTokenLeo): InitializeWrappedToken {
-  const result: InitializeWrappedToken = {
-    wrapped_token: leo2js.boolean(initializeWrappedToken.wrapped_token),
+export function getDisapproveChainBridge(disapproveChainBridge: DisapproveChainBridgeLeo): DisapproveChainBridge {
+  const result: DisapproveChainBridge = {
+    id: leo2js.u32(disapproveChainBridge.id),
+    chain_id: leo2js.u32(disapproveChainBridge.chain_id),
+  }
+  return result;
+}
+
+export function getSupportChainTS(supportChainTS: SupportChainTSLeo): SupportChainTS {
+  const result: SupportChainTS = {
+    id: leo2js.u32(supportChainTS.id),
+    chain_id: leo2js.u32(supportChainTS.chain_id),
+    token_service: leo2js.array(supportChainTS.token_service, leo2js.u8),
   }
   return result;
 }
 
 export function getSupportToken(supportToken: SupportTokenLeo): SupportToken {
   const result: SupportToken = {
+    id: leo2js.u32(supportToken.id),
     name: leo2js.array(supportToken.name, leo2js.u8),
     symbol: leo2js.array(supportToken.symbol, leo2js.u8),
     decimals: leo2js.u8(supportToken.decimals),
@@ -98,37 +103,9 @@ export function getSupportToken(supportToken: SupportTokenLeo): SupportToken {
 
 export function getEnableToken(enableToken: EnableTokenLeo): EnableToken {
   const result: EnableToken = {
+    id: leo2js.u32(enableToken.id),
     token_id: leo2js.address(enableToken.token_id),
     min_amount: leo2js.u64(enableToken.min_amount),
-  }
-  return result;
-}
-
-export function getEnableService(enableService: EnableServiceLeo): EnableService {
-  const result: EnableService = {
-    service: leo2js.address(enableService.service),
-  }
-  return result;
-}
-
-export function getApproveChainBridge(approveChainBridge: ApproveChainBridgeLeo): ApproveChainBridge {
-  const result: ApproveChainBridge = {
-    chain_id: leo2js.u32(approveChainBridge.chain_id),
-  }
-  return result;
-}
-
-export function getDisapproveChainBridge(disapproveChainBridge: DisapproveChainBridgeLeo): DisapproveChainBridge {
-  const result: DisapproveChainBridge = {
-    chain_id: leo2js.u32(disapproveChainBridge.chain_id),
-  }
-  return result;
-}
-
-export function getSupportChainTS(supportChainTS: SupportChainTSLeo): SupportChainTS {
-  const result: SupportChainTS = {
-    chain_id: leo2js.u32(supportChainTS.chain_id),
-    token_service: leo2js.array(supportChainTS.token_service, leo2js.u8),
   }
   return result;
 }

@@ -70,9 +70,9 @@ mapping last_min_supply:
 
 
 function token_service_initialize:
-    assert.neq self.signer self.caller;
-    async token_service_initialize self.caller into r0;
-    output r0 as token_service.aleo/token_service_initialize.future;
+    input r0 as address.private;
+    async token_service_initialize r0 into r1;
+    output r1 as token_service.aleo/token_service_initialize.future;
 
 finalize token_service_initialize:
     input r0 as address.public;

@@ -50,9 +50,9 @@ mapping council_program_WT:
 
 
 function wrapped_token_initialize:
-    assert.neq self.signer self.caller;
-    async wrapped_token_initialize self.caller into r0;
-    output r0 as wrapped_token.aleo/wrapped_token_initialize.future;
+    input r0 as address.private;
+    async wrapped_token_initialize r0 into r1;
+    output r1 as wrapped_token.aleo/wrapped_token_initialize.future;
 
 finalize wrapped_token_initialize:
     input r0 as address.public;

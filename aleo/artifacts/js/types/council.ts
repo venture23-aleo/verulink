@@ -33,74 +33,90 @@ export const leoProposalSignSchema = z.object({
 export type ProposalSignLeo = z.infer < typeof leoProposalSignSchema > ;
 
 export interface AddMemberProposal {
+  id: number;
   new_member: string;
   new_threshold: number;
 }
 
 export const leoAddMemberProposalSchema = z.object({
+  id: leoU32Schema,
   new_member: leoAddressSchema,
   new_threshold: leoU8Schema,
 });
 export type AddMemberProposalLeo = z.infer < typeof leoAddMemberProposalSchema > ;
 
 export interface RemoveMemberProposal {
+  id: number;
   existing_member: string;
   new_threshold: number;
 }
 
 export const leoRemoveMemberProposalSchema = z.object({
+  id: leoU32Schema,
   existing_member: leoAddressSchema,
   new_threshold: leoU8Schema,
 });
 export type RemoveMemberProposalLeo = z.infer < typeof leoRemoveMemberProposalSchema > ;
 
 export interface UpdateThresholdProposal {
-  threshold: number;
+  id: number;
+  new_threshold: number;
 }
 
 export const leoUpdateThresholdProposalSchema = z.object({
-  threshold: leoU8Schema,
+  id: leoU32Schema,
+  new_threshold: leoU8Schema,
 });
 export type UpdateThresholdProposalLeo = z.infer < typeof leoUpdateThresholdProposalSchema > ;
 
-export interface InitializeBridge {
-  bridge_threshold: number;
-  a1: string;
-  a2: string;
-  a3: string;
-  a4: string;
-  a5: string;
+export interface ApproveChainBridgeProposal {
+  id: number;
+  chain_id: number;
 }
 
-export const leoInitializeBridgeSchema = z.object({
-  bridge_threshold: leoU8Schema,
-  a1: leoAddressSchema,
-  a2: leoAddressSchema,
-  a3: leoAddressSchema,
-  a4: leoAddressSchema,
-  a5: leoAddressSchema,
+export const leoApproveChainBridgeProposalSchema = z.object({
+  id: leoU32Schema,
+  chain_id: leoU32Schema,
 });
-export type InitializeBridgeLeo = z.infer < typeof leoInitializeBridgeSchema > ;
+export type ApproveChainBridgeProposalLeo = z.infer < typeof leoApproveChainBridgeProposalSchema > ;
 
-export interface InitializeTokenService {
-  token_service: boolean;
+export interface EnableServiceProposal {
+  id: number;
+  service: string;
 }
 
-export const leoInitializeTokenServiceSchema = z.object({
-  token_service: leoBooleanSchema,
+export const leoEnableServiceProposalSchema = z.object({
+  id: leoU32Schema,
+  service: leoAddressSchema,
 });
-export type InitializeTokenServiceLeo = z.infer < typeof leoInitializeTokenServiceSchema > ;
+export type EnableServiceProposalLeo = z.infer < typeof leoEnableServiceProposalSchema > ;
 
-export interface InitializeWrappedToken {
-  wrapped_token: boolean;
+export interface DisapproveChainBridge {
+  id: number;
+  chain_id: number;
 }
 
-export const leoInitializeWrappedTokenSchema = z.object({
-  wrapped_token: leoBooleanSchema,
+export const leoDisapproveChainBridgeSchema = z.object({
+  id: leoU32Schema,
+  chain_id: leoU32Schema,
 });
-export type InitializeWrappedTokenLeo = z.infer < typeof leoInitializeWrappedTokenSchema > ;
+export type DisapproveChainBridgeLeo = z.infer < typeof leoDisapproveChainBridgeSchema > ;
+
+export interface SupportChainTS {
+  id: number;
+  chain_id: number;
+  token_service: Array < number > ;
+}
+
+export const leoSupportChainTSSchema = z.object({
+  id: leoU32Schema,
+  chain_id: leoU32Schema,
+  token_service: z.array(leoU8Schema).length(32),
+});
+export type SupportChainTSLeo = z.infer < typeof leoSupportChainTSSchema > ;
 
 export interface SupportToken {
+  id: number;
   name: Array < number > ;
   symbol: Array < number > ;
   decimals: number;
@@ -109,6 +125,7 @@ export interface SupportToken {
 }
 
 export const leoSupportTokenSchema = z.object({
+  id: leoU32Schema,
   name: z.array(leoU8Schema).length(32),
   symbol: z.array(leoU8Schema).length(16),
   decimals: leoU8Schema,
@@ -118,50 +135,14 @@ export const leoSupportTokenSchema = z.object({
 export type SupportTokenLeo = z.infer < typeof leoSupportTokenSchema > ;
 
 export interface EnableToken {
+  id: number;
   token_id: string;
   min_amount: BigInt;
 }
 
 export const leoEnableTokenSchema = z.object({
+  id: leoU32Schema,
   token_id: leoAddressSchema,
   min_amount: leoU64Schema,
 });
 export type EnableTokenLeo = z.infer < typeof leoEnableTokenSchema > ;
-
-export interface EnableService {
-  service: string;
-}
-
-export const leoEnableServiceSchema = z.object({
-  service: leoAddressSchema,
-});
-export type EnableServiceLeo = z.infer < typeof leoEnableServiceSchema > ;
-
-export interface ApproveChainBridge {
-  chain_id: number;
-}
-
-export const leoApproveChainBridgeSchema = z.object({
-  chain_id: leoU32Schema,
-});
-export type ApproveChainBridgeLeo = z.infer < typeof leoApproveChainBridgeSchema > ;
-
-export interface DisapproveChainBridge {
-  chain_id: number;
-}
-
-export const leoDisapproveChainBridgeSchema = z.object({
-  chain_id: leoU32Schema,
-});
-export type DisapproveChainBridgeLeo = z.infer < typeof leoDisapproveChainBridgeSchema > ;
-
-export interface SupportChainTS {
-  chain_id: number;
-  token_service: Array < number > ;
-}
-
-export const leoSupportChainTSSchema = z.object({
-  chain_id: leoU32Schema,
-  token_service: z.array(leoU8Schema).length(32),
-});
-export type SupportChainTSLeo = z.infer < typeof leoSupportChainTSSchema > ;

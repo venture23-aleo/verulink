@@ -8,6 +8,13 @@ program council.aleo {
     // Members of the Council
     mapping members: address => bool;
 
+    // TODO: if only two keys
+    // bool => u8 can be used; alt only 1 key can be used
+    // keys setting index
+    // 0 -> | 0: not initialized | 1: initialized |
+    // 1 -> threshold required for execution
+    mapping settings: u8 => u8;
+
     // key is hash(proposal)
     mapping proposal_vote_counts: field => u8;
     mapping proposal_executed: field => bool;
@@ -19,12 +26,12 @@ program council.aleo {
     // key is hash(hash(proposal), member)
     mapping proposal_vote_signs: field => bool;
 
-    // TODO: if only two keys
-    // bool => u8 can be used; alt only 1 key can be used
-    // keys setting index
-    // 0 -> | 0: not initialized | 1: initialized |
-    // 1 -> threshold required for execution
-    mapping settings: u8 => u8;
+    // key is ProposalType
+    // 1. Add New Member
+    // 2. Remove Existing Member
+    // 3. Update Threshold
+    // ...
+    mapping proposal_counts: u8 => u32;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -52,25 +59,77 @@ program council.aleo {
         Mapping::set(settings, 1u8, threshold);
     }
 
-    //////////////////////////////
-    /////// Add New Member //////
-    //////////////////////////////
+    ////////////////////////////////
+    /////// 1. Add New Member //////
+    ////////////////////////////////
     // Note: This fails if we are trying to add the same member for the second time
     // But no need to add the same member again. New address can be used.
     // TODO: Fix this
 
     struct AddMemberProposal {
+        id: u32,
         new_member: address,
         new_threshold: u8
     }
+    mapping add_member_proposals: u32 => AddMemberProposal;
 
-    transition add_member(public new_member: address, public new_threshold: u8) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            AddMemberProposal {
-                new_member,
-                new_threshold
+    inline add_member_type() -> u8 {
+        return 1u8;
+    }
+
+    // 1. Propose
+    transition prop_add_member(public id: u32, public new_member: address, public new_threshold: u8) {
+        let proposal: AddMemberProposal = AddMemberProposal {
+            id,
+            new_member,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_add_member(from: address, proposal: AddMemberProposal, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, add_member_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(add_member_proposals, id, proposal);
+        Mapping::set(proposal_counts, add_member_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    // 2. Vote
+    transition vote_add_member(public id: u32, public new_member: address, public new_threshold: u8) {
+        let proposal: AddMemberProposal = AddMemberProposal {
+            id,
+            new_member,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -84,7 +143,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize add_member(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_add_member(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -102,13 +161,15 @@ program council.aleo {
 
     }
 
-    transition exec_add_member(public new_member: address, public new_threshold: u8) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            AddMemberProposal {
-                new_member,
-                new_threshold
-            }
-        );
+    // 3. Execute
+    transition exec_add_member(public id: u32, public new_member: address, public new_threshold: u8) {
+        let proposal: AddMemberProposal = AddMemberProposal {
+            id,
+            new_member,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
         return then finalize(proposal_hash, new_member, new_threshold);
     }
 
@@ -132,24 +193,76 @@ program council.aleo {
         Mapping::set(settings, 1u8, new_threshold);
     }
 
-    //////////////////////////////
-    /////// Remove A Member //////
-    //////////////////////////////
-    // Note: This fails if we are trying to remove the same member if we have added it again
-    // But we cannot add a member again. So, no need of fixing.
-
+    /////////////////////////////////
+    /////// 2. Remove A Member //////
+    /////////////////////////////////
+    
     struct RemoveMemberProposal {
+        id: u32,
         existing_member: address,
         new_threshold: u8
     }
 
-    transition remove_member(public existing_member: address, new_threshold: u8) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            RemoveMemberProposal {
-                existing_member,
-                new_threshold
+    mapping remove_member_proposals: u32 => RemoveMemberProposal;
+
+    inline remove_member_type() -> u8 {
+        return 2u8;
+    }
+
+    // 1. Propose
+    transition prop_remove_member(public id: u32, public existing_member: address, new_threshold: u8) {
+        let proposal: RemoveMemberProposal = RemoveMemberProposal {
+            id,
+            existing_member,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_remove_member(from: address, proposal: RemoveMemberProposal, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, remove_member_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(remove_member_proposals, id, proposal);
+        Mapping::set(proposal_counts, remove_member_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    // 2. Vote
+    transition vote_remove_member(public id: u32, public existing_member: address, new_threshold: u8) {
+        let proposal: RemoveMemberProposal = RemoveMemberProposal {
+            id,
+            existing_member,
+            new_threshold
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -163,7 +276,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize remove_member(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_remove_member(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -181,13 +294,16 @@ program council.aleo {
 
     }
 
-    transition exec_remove_member(public existing_member: address, new_threshold: u8) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            RemoveMemberProposal {
-                existing_member,
-                new_threshold
-            }
-        );
+    // 3. Execute
+    transition exec_remove_member(public id: u32, public existing_member: address, new_threshold: u8) {
+        let proposal: RemoveMemberProposal = RemoveMemberProposal {
+            id,
+            existing_member,
+            new_threshold
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
         return then finalize(proposal_hash, existing_member, new_threshold);
     }
 
@@ -211,22 +327,72 @@ program council.aleo {
         Mapping::set(settings, 1u8, new_threshold);
     }
 
-    //////////////////////////////
-    /////// Update Threshold //////
-    //////////////////////////////
-    // Note: This fails if we are trying update back to the same threshold
-    // TODO: Fix this
+    //////////////////////////////////
+    /////// 3. Update Threshold //////
+    //////////////////////////////////
 
     struct UpdateThresholdProposal {
-        threshold: u8
+        id: u32,
+        new_threshold: u8
     }
 
-    transition update_threshold(public new_threshold: u8) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            UpdateThresholdProposal {
-                threshold: new_threshold
+    mapping update_threshold_proposals: u32 => UpdateThresholdProposal;
+
+    inline update_threshold_type() -> u8 {
+        return 3u8;
+    }
+
+    // 1. Propose
+    transition prop_update_threshold(public id: u32, public new_threshold: u8) {
+        let proposal: UpdateThresholdProposal = UpdateThresholdProposal {
+            id,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_update_threshold(from: address, proposal: UpdateThresholdProposal, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, update_threshold_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(update_threshold_proposals, id, proposal);
+        Mapping::set(proposal_counts, update_threshold_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    // 2. Vote
+    transition vote_update_threshold(public id: u32, public new_threshold: u8) {
+        let proposal: UpdateThresholdProposal = UpdateThresholdProposal {
+            id,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -240,7 +406,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize update_threshold(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_update_threshold(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -255,15 +421,16 @@ program council.aleo {
 
         // Increase the votes by 1
         Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-
     }
 
-    transition exec_update_threshold(public new_threshold: u8) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            UpdateThresholdProposal {
-                threshold : new_threshold
-            }
-        );
+    // 3. Execute
+    transition exec_update_threshold(public id: u32, public new_threshold: u8) {
+        let proposal: UpdateThresholdProposal = UpdateThresholdProposal {
+            id,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
         return then finalize(proposal_hash, new_threshold);
     }
 
@@ -286,30 +453,70 @@ program council.aleo {
         Mapping::set(settings, 1u8, new_threshold);
     }
 
-    //////////////////////////////
-    ////// Initialize Bridge /////
-    //////////////////////////////
+    ////////////////////////////////////////////
+    /////// 4. Approve Chain on Bridge ////////
+    ///////////////////////////////////////////
 
-    struct InitializeBridge {
-        bridge_threshold: u8, // threshold to consider a packet valid in bridge
-        a1: address,
-        a2: address,
-        a3: address,
-        a4: address,
-        a5: address
+    struct ApproveChainBridgeProposal {
+        id: u32,
+        chain_id: u32
     }
 
-    transition initialize_bridge(public bridge_threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            InitializeBridge {
-                bridge_threshold,
-                a1,
-                a2,
-                a3,
-                a4,
-                a5
+    mapping approve_chain_bridge_proposals: u32 => ApproveChainBridgeProposal;
+
+    inline approve_chain_on_bridge_type() -> u8 {
+        return 4u8;
+    }
+
+    transition prop_approve_chain_bridge(public id: u32, public chain_id: u32) {
+        let proposal: ApproveChainBridgeProposal = ApproveChainBridgeProposal {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_approve_chain_bridge(from: address, proposal: ApproveChainBridgeProposal, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, approve_chain_on_bridge_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(approve_chain_bridge_proposals, id, proposal);
+        Mapping::set(proposal_counts, approve_chain_on_bridge_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition vote_approve_chain_bridge(public id: u32, public chain_id: u32) {
+        let proposal: ApproveChainBridgeProposal = ApproveChainBridgeProposal {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -323,7 +530,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize initialize_bridge(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_approve_chain_bridge(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -341,103 +548,20 @@ program council.aleo {
 
     }
 
-    transition exec_initialize_bridge(public bridge_threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            InitializeBridge {
-                bridge_threshold,
-                a1,
-                a2,
-                a3,
-                a4,
-                a5
-            }
-        );
+    transition exec_approve_chain_bridge(public id: u32, public chain_id: u32) {
+        let proposal: ApproveChainBridgeProposal = ApproveChainBridgeProposal {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        bridge.aleo/bridge_initialize(bridge_threshold, a1, a2, a3, a4, a5);
-
-        return then finalize(proposal_hash, bridge_threshold, a1, a2, a3, a4, a5);
-    }
-
-    finalize exec_initialize_bridge(proposal_hash: field, bridge_threshold: u8, a1: address, a2: address, a3: address, a4: address, a5: address) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, 1u8);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-
-    }
-
-    //////////////////////////////
-    // Initialize Token Service //
-    //////////////////////////////
-
-    struct InitializeTokenService {
-        token_service: bool // created because struct cannot be empty
-    }
-
-    transition initialize_token_service() {
-        let proposal_hash: field = BHP256::hash_to_field(
-            InitializeTokenService {
-                token_service: true
-            }
-        );
-
-        let from: address = self.caller;
-
-        let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
-                proposal: proposal_hash,
-                member: from
-            }
-        );
-
-        return then finalize(from, proposal_hash, proposal_sign);
-    }
-
-    finalize initialize_token_service(from: address, proposal_hash: field, proposal_sign: field) {
-        // Assert that the proposal/vote is from valid member
-        assert(Mapping::get(members, from));
-
-        // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
-
-        // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        // Increase the votes by 1
-        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-
-    }
-
-    // The function identifier needs to be <= 32 bytes
-    // So used exec_ instead of exec_
-    // TODO: use a common prefix for all functions
-    transition exec_initialize_token_service() {
-        let proposal_hash: field = BHP256::hash_to_field(
-            InitializeTokenService {
-                token_service: true
-            }
-        );
-
-        // Execute the proposal
-        token_service.aleo/token_service_initialize();
+        bridge.aleo/approve_chain(chain_id);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_initialize_token_service(proposal_hash: field) {
+    finalize exec_approve_chain_bridge(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, 1u8);
 
@@ -451,267 +575,75 @@ program council.aleo {
 
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
-
-    }
-
-    //////////////////////////////
-    // Initialize Wrapped Token //
-    //////////////////////////////
-
-    struct InitializeWrappedToken {
-        wrapped_token: bool // created because struct cannot be empty
-    }
-
-    transition initialize_wrapped_token() {
-        let proposal_hash: field = BHP256::hash_to_field(
-            InitializeWrappedToken {
-                wrapped_token: true
-            }
-        );
-
-        let from: address = self.caller;
-
-        let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
-                proposal: proposal_hash,
-                member: from
-            }
-        );
-
-        return then finalize(from, proposal_hash, proposal_sign);
-    }
-
-    finalize initialize_wrapped_token(from: address, proposal_hash: field, proposal_sign: field) {
-        // Assert that the proposal/vote is from valid member
-        assert(Mapping::get(members, from));
-
-        // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
-
-        // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        // Increase the votes by 1
-        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-
-    }
-
-    // The function identifier needs to be <= 32 bytes
-    // So used exec_ instead of exec_
-    // TODO: use a common prefix for all functions
-    transition exec_initialize_wrapped_token() {
-        let proposal_hash: field = BHP256::hash_to_field(
-            InitializeWrappedToken {
-                wrapped_token: true
-            }
-        );
-
-        // Execute the proposal
-        wrapped_token.aleo/wrapped_token_initialize();
-
-        return then finalize(proposal_hash);
-    }
-
-    finalize exec_initialize_wrapped_token(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, 1u8);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-
     }
 
 
-    //////////////////////////////
-    ////// Add New Token //////
-    //////////////////////////////
+    //////////////////////////////////
+    /////// 5. Enable Service ////////
+    //////////////////////////////////
 
-    struct SupportToken {
-        name: [u8; 32],
-        symbol: [u8; 16],
-        decimals: u8,
-        origin_chain_id: u32,
-        origin_contract_address: [u8; 32]
-    }
-
-    transition add_new_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            SupportToken {
-                name,
-                symbol,
-                decimals,
-                origin_chain_id,
-                origin_contract_address
-            }
-        );
-
-        let from: address = self.caller;
-
-        let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
-                proposal: proposal_hash,
-                member: from
-            }
-        );
-
-        return then finalize(from, proposal_hash, proposal_sign);
-    }
-
-    finalize add_new_token(from: address, proposal_hash: field, proposal_sign: field) {
-        // Assert that the proposal/vote is from valid member
-        assert(Mapping::get(members, from));
-
-        // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
-
-        // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        // Increase the votes by 1
-        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-
-    }
-
-    transition exec_add_new_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            SupportToken {
-                name,
-                symbol,
-                decimals,
-                origin_chain_id,
-                origin_contract_address
-            }
-        );
-
-        // Execute the proposal
-        wrapped_token.aleo/add_token(name, symbol, decimals, origin_chain_id, origin_contract_address);
-
-        return then finalize(proposal_hash);
-    }
-
-    finalize exec_add_new_token(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, 1u8);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-
-    }
-
-    //////////////////////////////
-    ///////  Enable Token ////////
-    //////////////////////////////
-
-    struct EnableToken {
-        token_id: address,
-        min_amount: u64
-    }
-
-    transition enable_new_token(public token_id: address, public min_amount: u64) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            EnableToken {
-                token_id,
-                min_amount
-            }
-        );
-
-        let from: address = self.caller;
-
-        let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
-                proposal: proposal_hash,
-                member: from
-            }
-        );
-
-        return then finalize(from, proposal_hash, proposal_sign);
-    }
-
-    finalize enable_new_token(from: address, proposal_hash: field, proposal_sign: field) {
-        // Assert that the proposal/vote is from valid member
-        assert(Mapping::get(members, from));
-
-        // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
-
-        // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        // Increase the votes by 1
-        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-
-    }
-
-    transition exec_enable_new_token(public token_id: address, public min_amount: u64) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            EnableToken {
-                token_id,
-                min_amount
-            }
-        );
-
-        // Execute the proposal
-        token_service.aleo/enable_token(token_id, min_amount);
-
-        return then finalize(proposal_hash);
-    }
-
-    finalize exec_enable_new_token(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, 1u8);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-
-    }
-
-    //////////////////////////////
-    /////// Enable Service ////////
-    //////////////////////////////
-
-    struct EnableService {
+    struct EnableServiceProposal {
+        id: u32,
         service: address
     }
 
-    transition enable_service(public service: address) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            EnableService {
-                service,
+    mapping enable_service_proposals: u32 => EnableServiceProposal;
+
+    inline enable_service_type() -> u8 {
+        return 5u8;
+    }
+
+    transition prop_enable_service(public id: u32, public service: address) {
+        let proposal: EnableServiceProposal = EnableServiceProposal {
+            id,
+            service
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_enable_service(from: address, proposal: EnableServiceProposal, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, enable_service_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(enable_service_proposals, id, proposal);
+        Mapping::set(proposal_counts, enable_service_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition vote_enable_service(public id: u32, public service: address) {
+        let proposal: EnableServiceProposal = EnableServiceProposal {
+            id,
+            service
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -725,7 +657,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize enable_service(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_enable_service(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -743,12 +675,12 @@ program council.aleo {
 
     }
 
-    transition exec_enable_service(public service: address) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            EnableService {
-                service,
-            }
-        );
+    transition exec_enable_service(public id: u32, public service: address) {
+        let proposal: EnableServiceProposal = EnableServiceProposal {
+            id,
+            service
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
         bridge.aleo/add_service(service);
@@ -773,94 +705,70 @@ program council.aleo {
 
     }
 
-    ////////////////////////////////////////
-    /////// Approve Chain on Bridge ////////
-    ///////////////////////////////////////
-
-    struct ApproveChainBridge {
-        chain_id: u32
-    }
-
-    transition approve_chain_bridge(public chain_id: u32) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            ApproveChainBridge {
-                chain_id,
-            }
-        );
-
-        let from: address = self.caller;
-
-        let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
-                proposal: proposal_hash,
-                member: from
-            }
-        );
-
-        return then finalize(from, proposal_hash, proposal_sign);
-    }
-
-    finalize approve_chain_bridge(from: address, proposal_hash: field, proposal_sign: field) {
-        // Assert that the proposal/vote is from valid member
-        assert(Mapping::get(members, from));
-
-        // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
-
-        // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        // Increase the votes by 1
-        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-
-    }
-
-    transition exec_approve_chain_bridge(public chain_id: u32) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            ApproveChainBridge {
-                chain_id,
-            }
-        );
-
-        // Execute the proposal
-        bridge.aleo/approve_chain(chain_id);
-
-        return then finalize(proposal_hash);
-    }
-
-    finalize exec_approve_chain_bridge(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, 1u8);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
-
-    ///////////////////////////////
-    /////// Withdraw Chain ////////
-    ///////////////////////////////
+    //////////////////////////////////
+    /////// 6. Withdraw Chain ////////
+    /////////////////////////////////
 
     struct DisapproveChainBridge {
+        id: u32,
         chain_id: u32
     }
 
-    transition disapprove_chain_bridge(public chain_id: u32) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            DisapproveChainBridge {
-                chain_id,
+    mapping disapprove_chain_proposals: u32 => DisapproveChainBridge;
+
+    inline disapprove_chain_type() -> u8 {
+        return 6u8;
+    }
+
+    transition prop_disapprove_chain_bridge(public id: u32, public chain_id: u32) {
+        let proposal: DisapproveChainBridge = DisapproveChainBridge {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_disapprove_chain_bridge(from: address, proposal: DisapproveChainBridge, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, disapprove_chain_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(disapprove_chain_proposals, id, proposal);
+        Mapping::set(proposal_counts, enable_service_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition vote_disapprove_chain_bridge(public id: u32, public chain_id: u32) {
+        let proposal: DisapproveChainBridge = DisapproveChainBridge {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -874,7 +782,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize disapprove_chain_bridge(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_disapprove_chain_bridge(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -892,12 +800,13 @@ program council.aleo {
 
     }
 
-    transition exec_disapprove_chain_bridge(public chain_id: u32) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            DisapproveChainBridge {
-                chain_id,
-            }
-        );
+
+    transition exec_disapprove_chain_bridge(public id: u32, public chain_id: u32) {
+        let proposal: DisapproveChainBridge = DisapproveChainBridge {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
         bridge.aleo/disapprove_chain(chain_id);
@@ -921,22 +830,74 @@ program council.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
     }
 
-    ///////////////////////////////////////////
-    /////// Support Chain on Token Service ////
-    ///////////////////////////////////////////
+    //////////////////////////////////////////////
+    /////// 7. Support Chain on Token Service ////
+    //////////////////////////////////////////////
 
     struct SupportChainTS {
+        id: u32,
         chain_id: u32,
         token_service: [u8; 32]
     }
 
-    transition support_chain_ts(public chain_id: u32, public token_service: [u8; 32]) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            SupportChainTS {
-                chain_id,
-                token_service
+    mapping support_chain_ts_proposals: u32 => SupportChainTS;
+
+    inline support_chain_ts_type() -> u8 {
+        return 7u8;
+    }
+
+    transition prop_support_chain_ts(public id: u32, public chain_id: u32, public token_service: [u8; 32]) {
+        let proposal: SupportChainTS = SupportChainTS {
+            id,
+            chain_id,
+            token_service
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
             }
         );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_support_chain_ts(from: address, proposal: SupportChainTS, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, support_chain_ts_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(support_chain_ts_proposals, id, proposal);
+        Mapping::set(proposal_counts, support_chain_ts_type(), id + 1u32);
+
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition vote_support_chain_ts(public id: u32, public chain_id: u32, public token_service: [u8; 32]) {
+        let proposal: SupportChainTS = SupportChainTS {
+            id,
+            chain_id,
+            token_service
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let from: address = self.caller;
 
@@ -950,7 +911,7 @@ program council.aleo {
         return then finalize(from, proposal_hash, proposal_sign);
     }
 
-    finalize support_chain_ts(from: address, proposal_hash: field, proposal_sign: field) {
+    finalize vote_support_chain_ts(from: address, proposal_hash: field, proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -968,13 +929,13 @@ program council.aleo {
 
     }
 
-    transition exec_support_chain_ts(public chain_id: u32, public token_service: [u8; 32]) {
-        let proposal_hash: field = BHP256::hash_to_field(
-            SupportChainTS {
-                chain_id,
-                token_service
-            }
-        );
+    transition exec_support_chain_ts(public id: u32, public chain_id: u32, public token_service: [u8; 32]) {
+        let proposal: SupportChainTS = SupportChainTS {
+            id,
+            chain_id,
+            token_service
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
         token_service.aleo/support_chain(chain_id, token_service);
@@ -997,5 +958,282 @@ program council.aleo {
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
     }
+
+    //////////////////////////////
+    ////// 8. Add New Token //////
+    //////////////////////////////
+
+    struct SupportToken {
+        id: u32,
+        name: [u8; 32],
+        symbol: [u8; 16],
+        decimals: u8,
+        origin_chain_id: u32,
+        origin_contract_address: [u8; 32]
+    }
+
+    mapping support_token_proposals: u32 => SupportToken;
+
+    inline support_token_type() -> u8 {
+        return 8u8;
+    }
+
+    transition prop_add_new_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
+        
+        let proposal: SupportToken = SupportToken {
+            id,
+            name,
+            symbol,
+            decimals,
+            origin_chain_id,
+            origin_contract_address
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
+            }
+        );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_add_new_token(from: address, proposal: SupportToken, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, support_token_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(support_token_proposals, id, proposal);
+        Mapping::set(proposal_counts, support_token_type(), id + 1u32);
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition vote_add_new_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
+        let proposal: SupportToken = SupportToken {
+            id,
+            name,
+            symbol,
+            decimals,
+            origin_chain_id,
+            origin_contract_address
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
+            }
+        );
+
+        return then finalize(from, proposal_hash, proposal_sign);
+    }
+
+    finalize vote_add_new_token(from: address, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+
+    transition exec_add_new_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
+        let proposal: SupportToken = SupportToken {
+            id,
+            name,
+            symbol,
+            decimals,
+            origin_chain_id,
+            origin_contract_address
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        wrapped_token.aleo/add_token(name, symbol, decimals, origin_chain_id, origin_contract_address);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize exec_add_new_token(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, 1u8);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+
+    }
+
+    /////////////////////////////////
+    ///////  9. Enable Token ////////
+    /////////////////////////////////
+
+    struct EnableToken {
+        id: u32,
+        token_id: address,
+        min_amount: u64
+    }
+
+    mapping enable_token_proposals: u32 => EnableToken;
+
+    inline enable_token_proposal_type() -> u8 {
+        return 9u8;
+    }
+
+    transition prop_enable_new_token(public id: u32, public token_id: address, public min_amount: u64) {
+        let proposal: EnableToken  = EnableToken {
+            id,
+            token_id,
+            min_amount
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
+            }
+        );
+
+        return then finalize(from, proposal, proposal_hash, proposal_sign);
+    }
+
+    finalize prop_enable_new_token(from: address, proposal: EnableToken, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Assert proposal.id is the current proposal count
+        let id: u32 = Mapping::get_or_use(proposal_counts, enable_token_proposal_type(), 1u32);
+        assert_eq(proposal.id, id);
+        Mapping::set(enable_token_proposals, id, proposal);
+        Mapping::set(proposal_counts, enable_token_proposal_type(), id + 1u32);
+
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition vote_enable_new_token(public id: u32, public token_id: address, public min_amount: u64) {
+        let proposal: EnableToken  = EnableToken {
+            id,
+            token_id,
+            min_amount
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let from: address = self.caller;
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalSign {
+                proposal: proposal_hash,
+                member: from
+            }
+        );
+
+        return then finalize(from, proposal_hash, proposal_sign);
+    }
+
+    finalize vote_enable_new_token(from: address, proposal_hash: field, proposal_sign: field) {
+        // Assert that the proposal/vote is from valid member
+        assert(Mapping::get(members, from));
+
+        // Assert that the member has not signed the same proposal earlier
+        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+
+        // Set that the member has signed the packet
+        Mapping::set(proposal_vote_signs, proposal_sign, true);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        // Increase the votes by 1
+        Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
+
+    }
+
+    transition exec_enable_new_token(public id: u32, public token_id: address, public min_amount: u64) {
+        let proposal: EnableToken  = EnableToken {
+            id,
+            token_id,
+            min_amount
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/enable_token(token_id, min_amount);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize exec_enable_new_token(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, 1u8);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+
+    }
+
 
 }
