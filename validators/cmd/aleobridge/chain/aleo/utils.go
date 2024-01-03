@@ -12,6 +12,10 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
+func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
+	return fmt.Sprintf("{chain_id:%du32,sequence:%du32}", dst, seqNum)
+}
+
 // after splitting we get the message in the form [key1:value1,key2:value2, ...]
 // now we get message in the form []string{key1, value1, key2, value2, ...}
 func parseMessage(s string) *aleoPacket {
