@@ -87,7 +87,7 @@ func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLib
 // SendAttestedPacket sends packet from source chain to target chain
 func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	newTransactOpts := func() (*ethBind.TransactOpts, error) {
-		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*wallet).SKey(), big.NewInt(11155111)) // todo: chainid is required here, handle this through config?
+		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*wallet).SKey(), big.NewInt(int64(cl.chainID)))
 		if err != nil {
 			return nil, err
 		}
