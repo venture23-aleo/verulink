@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"time"
 )
@@ -14,11 +15,20 @@ const (
 	GET                = "GET"
 )
 
+type IAleoRPC interface {
+	FindTransactionIDByProgramID(ctx context.Context, programId string) (string, error)
+	GetMappingValue(ctx context.Context, programId, mappingName, mappingKey string) (map[string]string, error)
+	GetMappingNames(ctx context.Context, programId string) ([]string, error)
+	GetTransactionById(ctx context.Context, transactionId string) (*Transaction, error)
+	GetLatestHeight(ctx context.Context) (int64, error)
+	Send(_ctx context.Context, aleoPacket, privateKey, queryUrl, network, priorityFee string) *exec.Cmd
+}
+
 type Client struct {
 	url string
 }
 
-func NewClient(RpcEndPoint, Network string) (*Client, error) {
+func NewClient(RpcEndPoint, Network string) (IAleoRPC, error) {
 	client := &Client{
 		url: RpcEndPoint + "/" + Network,
 	}
@@ -157,4 +167,14 @@ func (c *Client) FindTransactionIDByProgramID(ctx context.Context, programId str
 		transactionId = transactionId[1 : lengthOfRootState-1]
 	}
 	return transactionId, err
+}
+
+func (c *Client) Send(_ctx context.Context, aleoPacket, privateKey, queryUrl, network, priorityFee string) *exec.Cmd {
+	return exec.CommandContext(_ctx,
+		"snarkos", "developer", "execute", "bridge.aleo", "attest",
+		aleoPacket,
+		"--private-key", privateKey,
+		"--query", queryUrl,
+		"--broadcast", queryUrl+"/"+network+"/transaction/broadcast",
+		"--priority-fee", priorityFee)
 }
