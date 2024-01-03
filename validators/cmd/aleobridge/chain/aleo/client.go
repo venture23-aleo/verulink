@@ -83,7 +83,7 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 			CurChainHeight: 0,
 		}
 	}
-	aleoPacket := cl.constructAleoPacket(packet)
+	aleoPacket := constructAleoPacket(packet)
 	privateKey := cl.wallet.(*wallet).PrivateKey
 	cmd := exec.CommandContext(context.Background(),
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
