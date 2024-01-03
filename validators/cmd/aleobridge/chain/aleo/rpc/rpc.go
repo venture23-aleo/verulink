@@ -28,7 +28,7 @@ type Client struct {
 	url string
 }
 
-func NewClient(RpcEndPoint, Network string) (IAleoRPC, error) {
+func NewRPC(RpcEndPoint, Network string) (IAleoRPC, error) {
 	client := &Client{
 		url: RpcEndPoint + "/" + Network,
 	}
