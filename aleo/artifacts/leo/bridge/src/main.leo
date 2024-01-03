@@ -252,27 +252,27 @@ program bridge.aleo {
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
     /// Can only be called from council/governance program
-    transition add_attestor(public attestor: address) {
-        return then finalize(self.caller, attestor);
+    transition add_attestor(public attestor: address, new_threshold: u8) {
+        return then finalize(self.caller, attestor, new_threshold);
     }
 
-    finalize add_attestor(from: address, attestor: address) {
+    finalize add_attestor(from: address, attestor: address, new_threshold: u8) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(council_program, true);
         assert_eq(from, council);
 
         Mapping::set(attestors, attestor, true);
-
+        Mapping::set(bridge_settings, 0u8, new_threshold);
     }
 
     /// Remove an existing attestor from the bridge program
     /// Can only be called from council/governance program
-    transition remove_attestor(public attestor: address) {
-        return then finalize(self.caller, attestor);
+    transition remove_attestor(public attestor: address, new_threshold: u8) {
+        return then finalize(self.caller, attestor, new_threshold);
     }
 
-    finalize remove_attestor(from: address, attestor: address) {
+    finalize remove_attestor(from: address, attestor: address, new_threshold: u8) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(council_program, true);
@@ -280,6 +280,7 @@ program bridge.aleo {
 
         // If attestor does not exist, this is expected to fail
         Mapping::remove(attestors, attestor);
+        Mapping::set(bridge_settings, 0u8, new_threshold);
     }
 
 

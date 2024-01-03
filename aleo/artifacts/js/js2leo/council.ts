@@ -38,14 +38,16 @@ export function getProposalSignLeo(proposalSign: ProposalSign): ProposalSignLeo 
 
 export function getAddMemberProposalLeo(addMemberProposal: AddMemberProposal): AddMemberProposalLeo {
   const result: AddMemberProposalLeo = {
-    member: js2leo.address(addMemberProposal.member),
+    new_member: js2leo.address(addMemberProposal.new_member),
+    new_threshold: js2leo.u8(addMemberProposal.new_threshold),
   }
   return result;
 }
 
 export function getRemoveMemberProposalLeo(removeMemberProposal: RemoveMemberProposal): RemoveMemberProposalLeo {
   const result: RemoveMemberProposalLeo = {
-    member: js2leo.address(removeMemberProposal.member),
+    existing_member: js2leo.address(removeMemberProposal.existing_member),
+    new_threshold: js2leo.u8(removeMemberProposal.new_threshold),
   }
   return result;
 }

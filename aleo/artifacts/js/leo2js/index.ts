@@ -10,16 +10,16 @@ import {
   getInPacketFullAttestorKey
 } from './bridge';
 import {
-  getTSForeignContract,
-  getTokenOrigin
-} from './token_service';
-import {
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
   getWrappedTokenInfo,
   getTokenAccount
 } from './wrapped_token';
+import {
+  getTSForeignContract,
+  getTokenOrigin
+} from './token_service';
 import {
   getProposalSign,
   getAddMemberProposal,
@@ -46,13 +46,13 @@ export {
   getOutPacket,
   getPacketId,
   getInPacketFullAttestorKey,
-  getTSForeignContract,
-  getTokenOrigin,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
   getWrappedTokenInfo,
   getTokenAccount,
+  getTSForeignContract,
+  getTokenOrigin,
   getProposalSign,
   getAddMemberProposal,
   getRemoveMemberProposal,

@@ -24,10 +24,12 @@ struct ProposalSign:
     member as address;
 
 struct AddMemberProposal:
-    member as address;
+    new_member as address;
+    new_threshold as u8;
 
 struct RemoveMemberProposal:
-    member as address;
+    existing_member as address;
+    new_threshold as u8;
 
 struct UpdateThresholdProposal:
     threshold as u8;
@@ -126,12 +128,13 @@ finalize initialize:
 
 function add_member:
     input r0 as address.public;
-    cast r0 into r1 as AddMemberProposal;
-    hash.bhp256 r1 into r2 as field;
-    cast r2 self.caller into r3 as ProposalSign;
-    hash.bhp256 r3 into r4 as field;
-    async add_member self.caller r2 r4 into r5;
-    output r5 as council.aleo/add_member.future;
+    input r1 as u8.public;
+    cast r0 r1 into r2 as AddMemberProposal;
+    hash.bhp256 r2 into r3 as field;
+    cast r3 self.caller into r4 as ProposalSign;
+    hash.bhp256 r4 into r5 as field;
+    async add_member self.caller r3 r5 into r6;
+    output r6 as council.aleo/add_member.future;
 
 finalize add_member:
     input r0 as address.public;
@@ -150,33 +153,37 @@ finalize add_member:
 
 function exec_add_member:
     input r0 as address.public;
-    cast r0 into r1 as AddMemberProposal;
-    hash.bhp256 r1 into r2 as field;
-    async exec_add_member r2 r0 into r3;
-    output r3 as council.aleo/exec_add_member.future;
+    input r1 as u8.public;
+    cast r0 r1 into r2 as AddMemberProposal;
+    hash.bhp256 r2 into r3 as field;
+    async exec_add_member r3 r0 r1 into r4;
+    output r4 as council.aleo/exec_add_member.future;
 
 finalize exec_add_member:
     input r0 as field.public;
     input r1 as address.public;
-    get settings[1u8] into r2;
-    get.or_use proposal_vote_counts[r0] 0u8 into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r0] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
+    input r2 as u8.public;
+    get settings[1u8] into r3;
+    get.or_use proposal_vote_counts[r0] 0u8 into r4;
+    gte r4 r3 into r5;
+    assert.eq r5 true;
+    contains proposal_executed[r0] into r6;
+    not r6 into r7;
+    assert.eq r7 true;
     set true into proposal_executed[r0];
     set true into members[r1];
+    set r2 into settings[1u8];
 
 
 function remove_member:
     input r0 as address.public;
-    cast r0 into r1 as RemoveMemberProposal;
-    hash.bhp256 r1 into r2 as field;
-    cast r2 self.caller into r3 as ProposalSign;
-    hash.bhp256 r3 into r4 as field;
-    async remove_member self.caller r2 r4 into r5;
-    output r5 as council.aleo/remove_member.future;
+    input r1 as u8.private;
+    cast r0 r1 into r2 as RemoveMemberProposal;
+    hash.bhp256 r2 into r3 as field;
+    cast r3 self.caller into r4 as ProposalSign;
+    hash.bhp256 r4 into r5 as field;
+    async remove_member self.caller r3 r5 into r6;
+    output r6 as council.aleo/remove_member.future;
 
 finalize remove_member:
     input r0 as address.public;
@@ -195,23 +202,26 @@ finalize remove_member:
 
 function exec_remove_member:
     input r0 as address.public;
-    cast r0 into r1 as AddMemberProposal;
-    hash.bhp256 r1 into r2 as field;
-    async exec_remove_member r2 r0 into r3;
-    output r3 as council.aleo/exec_remove_member.future;
+    input r1 as u8.private;
+    cast r0 r1 into r2 as RemoveMemberProposal;
+    hash.bhp256 r2 into r3 as field;
+    async exec_remove_member r3 r0 r1 into r4;
+    output r4 as council.aleo/exec_remove_member.future;
 
 finalize exec_remove_member:
     input r0 as field.public;
     input r1 as address.public;
-    get settings[1u8] into r2;
-    get.or_use proposal_vote_counts[r0] 0u8 into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r0] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
+    input r2 as u8.public;
+    get settings[1u8] into r3;
+    get.or_use proposal_vote_counts[r0] 0u8 into r4;
+    gte r4 r3 into r5;
+    assert.eq r5 true;
+    contains proposal_executed[r0] into r6;
+    not r6 into r7;
+    assert.eq r7 true;
     set true into proposal_executed[r0];
     remove members[r1];
+    set r2 into settings[1u8];
 
 
 function update_threshold:

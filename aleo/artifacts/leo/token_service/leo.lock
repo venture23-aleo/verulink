@@ -9,5 +9,5 @@ dependencies = []
 name = "bridge"
 location = "local"
 path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/bridge"
-checksum = "c3bad43546d6da55fb423586fece8204b11e0399045baf8ef5a1ad1ef52ce88c"
+checksum = "6715c7c2efd285d431f085d464645d347bbf8e840dee730b61cb1485ce6a2117"
 dependencies = []

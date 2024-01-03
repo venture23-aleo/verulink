@@ -183,28 +183,34 @@ finalize remove_service:
 
 function add_attestor:
     input r0 as address.public;
-    async add_attestor self.caller r0 into r1;
-    output r1 as bridge.aleo/add_attestor.future;
+    input r1 as u8.private;
+    async add_attestor self.caller r0 r1 into r2;
+    output r2 as bridge.aleo/add_attestor.future;
 
 finalize add_attestor:
     input r0 as address.public;
     input r1 as address.public;
-    get council_program[true] into r2;
-    assert.eq r0 r2;
+    input r2 as u8.public;
+    get council_program[true] into r3;
+    assert.eq r0 r3;
     set true into attestors[r1];
+    set r2 into bridge_settings[0u8];
 
 
 function remove_attestor:
     input r0 as address.public;
-    async remove_attestor self.caller r0 into r1;
-    output r1 as bridge.aleo/remove_attestor.future;
+    input r1 as u8.private;
+    async remove_attestor self.caller r0 r1 into r2;
+    output r2 as bridge.aleo/remove_attestor.future;
 
 finalize remove_attestor:
     input r0 as address.public;
     input r1 as address.public;
-    get council_program[true] into r2;
-    assert.eq r0 r2;
+    input r2 as u8.public;
+    get council_program[true] into r3;
+    assert.eq r0 r3;
     remove attestors[r1];
+    set r2 into bridge_settings[0u8];
 
 
 function approve_chain:

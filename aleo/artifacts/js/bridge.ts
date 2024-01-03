@@ -126,10 +126,11 @@ export class BridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async add_attestor(r0: string) {
+  async add_attestor(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'add_attestor',
@@ -138,10 +139,11 @@ export class BridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async remove_attestor(r0: string) {
+  async remove_attestor(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'remove_attestor',

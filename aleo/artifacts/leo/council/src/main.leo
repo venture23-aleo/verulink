@@ -60,13 +60,15 @@ program council.aleo {
     // TODO: Fix this
 
     struct AddMemberProposal {
-        member: address
+        new_member: address,
+        new_threshold: u8
     }
 
-    transition add_member(public new_member: address) {
+    transition add_member(public new_member: address, public new_threshold: u8) {
         let proposal_hash: field = BHP256::hash_to_field(
             AddMemberProposal {
-                member: new_member
+                new_member,
+                new_threshold
             }
         );
 
@@ -100,16 +102,17 @@ program council.aleo {
 
     }
 
-    transition exec_add_member(public new_member: address) {
+    transition exec_add_member(public new_member: address, public new_threshold: u8) {
         let proposal_hash: field = BHP256::hash_to_field(
             AddMemberProposal {
-                member: new_member
+                new_member,
+                new_threshold
             }
         );
-        return then finalize(proposal_hash, new_member);
+        return then finalize(proposal_hash, new_member, new_threshold);
     }
 
-    finalize exec_add_member(proposal_hash: field, new_member: address) {
+    finalize exec_add_member(proposal_hash: field, new_member: address, new_threshold: u8) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, 1u8);
 
@@ -126,6 +129,7 @@ program council.aleo {
 
         // Execute the proposal
         Mapping::set(members, new_member, true);
+        Mapping::set(settings, 1u8, new_threshold);
     }
 
     //////////////////////////////
@@ -135,13 +139,15 @@ program council.aleo {
     // But we cannot add a member again. So, no need of fixing.
 
     struct RemoveMemberProposal {
-        member: address
+        existing_member: address,
+        new_threshold: u8
     }
 
-    transition remove_member(public existing_member: address) {
+    transition remove_member(public existing_member: address, new_threshold: u8) {
         let proposal_hash: field = BHP256::hash_to_field(
             RemoveMemberProposal {
-                member: existing_member
+                existing_member,
+                new_threshold
             }
         );
 
@@ -175,16 +181,17 @@ program council.aleo {
 
     }
 
-    transition exec_remove_member(public existing_member: address) {
+    transition exec_remove_member(public existing_member: address, new_threshold: u8) {
         let proposal_hash: field = BHP256::hash_to_field(
-            AddMemberProposal {
-                member: existing_member
+            RemoveMemberProposal {
+                existing_member,
+                new_threshold
             }
         );
-        return then finalize(proposal_hash, existing_member );
+        return then finalize(proposal_hash, existing_member, new_threshold);
     }
 
-    finalize exec_remove_member(proposal_hash: field, existing_member: address) {
+    finalize exec_remove_member(proposal_hash: field, existing_member: address, new_threshold: u8) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, 1u8);
 
@@ -201,6 +208,7 @@ program council.aleo {
 
         // Execute the proposal
         Mapping::remove(members, existing_member);
+        Mapping::set(settings, 1u8, new_threshold);
     }
 
     //////////////////////////////

@@ -33,20 +33,24 @@ export const leoProposalSignSchema = z.object({
 export type ProposalSignLeo = z.infer < typeof leoProposalSignSchema > ;
 
 export interface AddMemberProposal {
-  member: string;
+  new_member: string;
+  new_threshold: number;
 }
 
 export const leoAddMemberProposalSchema = z.object({
-  member: leoAddressSchema,
+  new_member: leoAddressSchema,
+  new_threshold: leoU8Schema,
 });
 export type AddMemberProposalLeo = z.infer < typeof leoAddMemberProposalSchema > ;
 
 export interface RemoveMemberProposal {
-  member: string;
+  existing_member: string;
+  new_threshold: number;
 }
 
 export const leoRemoveMemberProposalSchema = z.object({
-  member: leoAddressSchema,
+  existing_member: leoAddressSchema,
+  new_threshold: leoU8Schema,
 });
 export type RemoveMemberProposalLeo = z.infer < typeof leoRemoveMemberProposalSchema > ;
 

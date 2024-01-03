@@ -150,10 +150,11 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async add_member(r0: string) {
+  async add_member(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'add_member',
@@ -162,10 +163,11 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_add_member(r0: string) {
+  async exec_add_member(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_add_member',
@@ -174,10 +176,11 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async remove_member(r0: string) {
+  async remove_member(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'remove_member',
@@ -186,10 +189,11 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_remove_member(r0: string) {
+  async exec_remove_member(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_remove_member',
