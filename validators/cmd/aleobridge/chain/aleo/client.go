@@ -3,9 +3,8 @@ package aleo
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -25,7 +24,7 @@ const (
 )
 
 type Client struct {
-	aleoClient        *aleoRpc.Client
+	aleoClient        aleoRpc.IAleoRPC
 	name              string
 	programID         string
 	queryUrl          string
@@ -61,10 +60,6 @@ type aleoMessage struct {
 	sender   string
 }
 
-func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
-	return fmt.Sprintf("{chain_id:%du32,sequence:%du32}", dst, seqNum)
-}
-
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	mappingKey := constructOutMappingKey(dst, seqNum)
 	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, OUT_PACKET, mappingKey)
@@ -85,20 +80,25 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
 	}
 	aleoPacket := constructAleoPacket(packet)
 	privateKey := cl.wallet.(*wallet).PrivateKey
-	cmd := exec.CommandContext(context.Background(),
-		"snarkos", "developer", "execute", "bridge.aleo", "attest",
-		aleoPacket,
-		"--private-key", privateKey,
-		"--query", cl.queryUrl,
-		"--broadcast", cl.queryUrl+"/"+cl.network+"/transaction/broadcast",
-		"--priority-fee", PRIORITY_FEE)
 
-	output, err := cmd.Output()
-	if err != nil {
-		return err
+	_ctx, cancel := context.WithTimeout(ctx, time.Minute*2)
+	defer cancel()
+	cmd := cl.aleoClient.Send(_ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, PRIORITY_FEE)
+	for {
+		select {
+		case <-_ctx.Done():
+			cmd.Cancel()
+			return errors.New("timeout")
+		default:
+		}
+		output, err := cmd.Output()
+		if err != nil {
+			logger.Logger.Error("error while sending packet", zapcore.Field{Interface: err})
+			continue
+		}
+		logger.Logger.Info("packet sent to aleo::output::", zapcore.Field{String: string(output)})
+		return nil
 	}
-	logger.Logger.Info("packet sent to aleo::output::", zapcore.Field{String: string(output)})
-	return nil
 }
 
 func (cl *Client) isAlreadyExist() bool {
