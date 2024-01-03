@@ -48,8 +48,6 @@ export class BridgeContract {
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      privateKey: 'APrivateKey1zkp26P44yaJPoZmPJCJQiEsVXcxKXYiyr3jcD5wymmHga4Y',
-      viewKey: 'APrivateKey1zkp26P44yaJPoZmPJCJQiEsVXcxKXYiyr3jcD5wymmHga4Y',
       appName: 'bridge',
       contractPath: 'artifacts/leo/bridge',
       fee: '0.01'

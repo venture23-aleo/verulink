@@ -36,8 +36,6 @@ export class Wrapped_tokenContract {
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      privateKey: 'APrivateKey1zkpBGGvQ4ghKoCEeQwySZwkZgUvJ5qZDZgxvSNCuPuh5anF',
-      viewKey: 'APrivateKey1zkpBGGvQ4ghKoCEeQwySZwkZgUvJ5qZDZgxvSNCuPuh5anF',
       appName: 'wrapped_token',
       contractPath: 'artifacts/leo/wrapped_token',
       fee: '0.01'

@@ -108,8 +108,6 @@ export class CouncilContract {
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      privateKey: 'APrivateKey1zkp6b6pMgSnHrMfoWa2GhsmgQV14h3Da49ZcjDGMdiDya2J',
-      viewKey: 'APrivateKey1zkp6b6pMgSnHrMfoWa2GhsmgQV14h3Da49ZcjDGMdiDya2J',
       appName: 'council',
       contractPath: 'artifacts/leo/council',
       fee: '0.01'

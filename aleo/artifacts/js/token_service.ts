@@ -27,8 +27,6 @@ export class Token_serviceContract {
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      privateKey: 'APrivateKey1zkpGMMcFuBc2nLdipz3zoD8AxER2n13LxYe4HH2LXzuXUfA',
-      viewKey: 'APrivateKey1zkpGMMcFuBc2nLdipz3zoD8AxER2n13LxYe4HH2LXzuXUfA',
       appName: 'token_service',
       contractPath: 'artifacts/leo/token_service',
       fee: '0.01'
@@ -148,6 +146,18 @@ export class Token_serviceContract {
     return leo2js.address(result);
   }
 
+  async total_supply(key: string): Promise < BigInt > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'total_supply',
+      params,
+    });
+    return leo2js.u64(result);
+  }
+
   async minimum_transfers(key: string): Promise < BigInt > {
     const keyLeo = js2leo.address(key);
 
@@ -155,6 +165,54 @@ export class Token_serviceContract {
     const result = await zkGetMapping({
       config: this.config,
       transition: 'minimum_transfers',
+      params,
+    });
+    return leo2js.u64(result);
+  }
+
+  async max_outgoing_percentage(key: string): Promise < number > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'max_outgoing_percentage',
+      params,
+    });
+    return leo2js.u16(result);
+  }
+
+  async timeframe(key: string): Promise < number > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'timeframe',
+      params,
+    });
+    return leo2js.u32(result);
+  }
+
+  async last_token_update(key: string): Promise < number > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'last_token_update',
+      params,
+    });
+    return leo2js.u32(result);
+  }
+
+  async last_min_supply(key: string): Promise < BigInt > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'last_min_supply',
       params,
     });
     return leo2js.u64(result);

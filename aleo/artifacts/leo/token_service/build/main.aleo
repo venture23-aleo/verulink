@@ -1,5 +1,5 @@
-import bridge.aleo;
 import wrapped_token.aleo;
+import bridge.aleo;
 program token_service.aleo;
 
 
@@ -36,9 +36,36 @@ mapping council_program_TS:
 	value as address.public;
 
 
+mapping total_supply:
+	key as address.public;
+	value as u64.public;
+
+
 mapping minimum_transfers:
 	key as address.public;
 	value as u64.public;
+
+
+mapping max_outgoing_percentage:
+	key as address.public;
+	value as u16.public;
+
+
+mapping timeframe:
+	key as address.public;
+	value as u32.public;
+
+
+mapping last_token_update:
+	key as address.public;
+	value as u32.public;
+
+
+mapping last_min_supply:
+	key as address.public;
+	value as u64.public;
+
+
 
 
 
@@ -108,6 +135,35 @@ finalize token_send:
     get minimum_transfers[r2] into r6;
     gte r4 r6 into r7;
     assert.eq r7 true;
+    get total_supply[r2] into r8;
+    get max_outgoing_percentage[r2] into r9;
+    get timeframe[r2] into r10;
+    get.or_use last_token_update[r2] 0u32 into r11;
+    get.or_use last_min_supply[r2] 0u64 into r12;
+    sub block.height r11 into r13;
+    sub 10000u16 r9 into r14;
+    cast r14 into r15 as u64;
+    mul r8 r15 into r16;
+    cast 10000u16 into r17 as u64;
+    div r16 r17 into r18;
+    cast r9 into r19 as u64;
+    mul r8 r19 into r20;
+    cast 10000u16 into r21 as u64;
+    div r20 r21 into r22;
+    cast r13 into r23 as u64;
+    mul r22 r23 into r24;
+    cast r10 into r25 as u64;
+    div r24 r25 into r26;
+    sub r12 r26 into r27;
+    gt r27 r18 into r28;
+    ternary r28 r27 r18 into r29;
+    sub r8 r4 into r30;
+    gte r30 r29 into r31;
+    assert.eq r31 true;
+    set block.height into last_token_update[r2];
+    set r29 into last_min_supply[r2];
+    sub r8 r4 into r32;
+    set r32 into total_supply[r2];
 
 
 function token_receive:
@@ -120,11 +176,16 @@ function token_receive:
     input r6 as u32.public;
     call bridge.aleo/consume r0.chain_id r0.token_service_address r1 r2 r3 r4 r5 r6 into r7;
     call wrapped_token.aleo/mint r3 r4 r1 r0.chain_id r0.token_address into r8;
-    async token_receive r7 r8 into r9;
+    async token_receive r7 r8 r1 r4 into r9;
     output r9 as token_service.aleo/token_receive.future;
 
 finalize token_receive:
     input r0 as bridge.aleo/consume.future;
     input r1 as wrapped_token.aleo/mint.future;
+    input r2 as address.public;
+    input r3 as u64.public;
     await r0;
     await r1;
+    get.or_use total_supply[r2] 0u64 into r4;
+    add r4 r3 into r5;
+    set r5 into total_supply[r2];

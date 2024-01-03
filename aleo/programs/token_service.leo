@@ -1,7 +1,7 @@
 // The 'token_service' program.
 
-import wrapped_token.leo;
-import bridge.leo;
+import wrapped_token.aleo;
+import bridge.aleo;
 
 program token_service.aleo {
 
@@ -124,10 +124,10 @@ program token_service.aleo {
         // If fee is set require credits token for publishing
 
         // call burn on wrapped token
-        wrapped_token.leo/burn(amount, token_id, origin.chain_id, origin.token_address);
+        wrapped_token.aleo/burn(amount, token_id, origin.chain_id, origin.token_address);
 
         // call publish on bridge contract
-        bridge.leo/publish(origin.chain_id, origin.token_service_address, origin.token_address, self.caller, receiver, amount);
+        bridge.aleo/publish(origin.chain_id, origin.token_service_address, origin.token_address, self.caller, receiver, amount);
 
         // return then finalize (self.caller, origin, msg, msg_hash);
         return then finalize (token_id, origin, amount);
@@ -191,10 +191,10 @@ program token_service.aleo {
     transition token_receive(public source: TokenOrigin, public token_id: address, public sender: [u8; 32], public receiver: address, public amount: u64, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
 
         // call consume on bridge
-        bridge.leo/consume(source.chain_id, source.token_service_address, token_id, sender, receiver, amount, sequence_no_of_source_network, height_of_source_network);
+        bridge.aleo/consume(source.chain_id, source.token_service_address, token_id, sender, receiver, amount, sequence_no_of_source_network, height_of_source_network);
 
         // call mint on wrapped token
-        wrapped_token.leo/mint(receiver, amount, token_id, source.chain_id, source.token_address);
+        wrapped_token.aleo/mint(receiver, amount, token_id, source.chain_id, source.token_address);
 
         return then finalize(token_id, amount);
     }
