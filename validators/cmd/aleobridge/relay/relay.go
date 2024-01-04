@@ -57,7 +57,7 @@ func (r *relay) Init(ctx context.Context) {
 	if !r.initliazed {
 		r.initliazed = true
 		bridge := fmt.Sprintf("%s-%s", r.srcChain.Name(), r.destChain.Name())
-		r.logger = logger.Logger.With(zap.String("Bridge", bridge))
+		r.logger = logger.GetLogger().With(zap.String("Bridge", bridge))
 		err := r.createNamespaces()
 		if err != nil {
 			panic(err)

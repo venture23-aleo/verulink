@@ -48,9 +48,9 @@ func main() {
 	config.LoadConfig(configFile)
 
 	if devMode {
-		logger.InitLogging(logger.Development, config.GetConfig().LogConfig.OutputPath)
+		logger.InitLogging(logger.Development, config.GetConfig().LogConfig)
 	} else {
-		logger.InitLogging(logger.Production, config.GetConfig().LogConfig.OutputPath)
+		logger.InitLogging(logger.Production, config.GetConfig().LogConfig)
 	}
 
 	signal.Ignore(getIgnoreSignals()...)

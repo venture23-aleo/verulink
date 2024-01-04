@@ -135,7 +135,7 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	if err != nil {
 		return err
 	}
-	logger.Logger.Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
+	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
 	return nil
 }
 
