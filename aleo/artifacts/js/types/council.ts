@@ -137,12 +137,16 @@ export type SupportTokenLeo = z.infer < typeof leoSupportTokenSchema > ;
 export interface EnableToken {
   id: number;
   token_id: string;
-  min_amount: BigInt;
+  minimum_transfer: BigInt;
+  outgoing_percentage: number;
+  time: number;
 }
 
 export const leoEnableTokenSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
-  min_amount: leoU64Schema,
+  minimum_transfer: leoU64Schema,
+  outgoing_percentage: leoU16Schema,
+  time: leoU32Schema,
 });
 export type EnableTokenLeo = z.infer < typeof leoEnableTokenSchema > ;

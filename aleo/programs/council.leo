@@ -1112,7 +1112,9 @@ program council.aleo {
     struct EnableToken {
         id: u32,
         token_id: address,
-        min_amount: u64
+        minimum_transfer: u64,
+        outgoing_percentage: u16,
+        time: u32
     }
 
     mapping enable_token_proposals: u32 => EnableToken;
@@ -1121,11 +1123,13 @@ program council.aleo {
         return 9u8;
     }
 
-    transition prop_enable_new_token(public id: u32, public token_id: address, public min_amount: u64) {
+    transition prop_enable_new_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
         let proposal: EnableToken  = EnableToken {
             id,
             token_id,
-            min_amount
+            minimum_transfer,
+            outgoing_percentage,
+            time
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
@@ -1166,11 +1170,13 @@ program council.aleo {
 
     }
 
-    transition vote_enable_new_token(public id: u32, public token_id: address, public min_amount: u64) {
+    transition vote_enable_new_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
         let proposal: EnableToken  = EnableToken {
             id,
             token_id,
-            min_amount
+            minimum_transfer,
+            outgoing_percentage,
+            time
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
@@ -1204,16 +1210,18 @@ program council.aleo {
 
     }
 
-    transition exec_enable_new_token(public id: u32, public token_id: address, public min_amount: u64) {
+    transition exec_enable_new_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
         let proposal: EnableToken  = EnableToken {
             id,
             token_id,
-            min_amount
+            minimum_transfer,
+            outgoing_percentage,
+            time
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service.aleo/enable_token(token_id, min_amount);
+        token_service.aleo/enable_token(token_id, minimum_transfer, outgoing_percentage, time);
 
         return then finalize(proposal_hash);
     }

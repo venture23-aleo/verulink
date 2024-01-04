@@ -65,7 +65,9 @@ struct SupportToken:
 struct EnableToken:
     id as u32;
     token_id as address;
-    min_amount as u64;
+    minimum_transfer as u64;
+    outgoing_percentage as u16;
+    time as u32;
 
 
 mapping members:
@@ -847,12 +849,14 @@ function prop_enable_new_token:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u64.public;
-    cast r0 r1 r2 into r3 as EnableToken;
-    hash.bhp256 r3 into r4 as field;
-    cast r4 self.caller into r5 as ProposalSign;
+    input r3 as u16.public;
+    input r4 as u32.public;
+    cast r0 r1 r2 r3 r4 into r5 as EnableToken;
     hash.bhp256 r5 into r6 as field;
-    async prop_enable_new_token self.caller r3 r4 r6 into r7;
-    output r7 as council.aleo/prop_enable_new_token.future;
+    cast r6 self.caller into r7 as ProposalSign;
+    hash.bhp256 r7 into r8 as field;
+    async prop_enable_new_token self.caller r5 r6 r8 into r9;
+    output r9 as council.aleo/prop_enable_new_token.future;
 
 finalize prop_enable_new_token:
     input r0 as address.public;
@@ -879,12 +883,14 @@ function vote_enable_new_token:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u64.public;
-    cast r0 r1 r2 into r3 as EnableToken;
-    hash.bhp256 r3 into r4 as field;
-    cast r4 self.caller into r5 as ProposalSign;
+    input r3 as u16.public;
+    input r4 as u32.public;
+    cast r0 r1 r2 r3 r4 into r5 as EnableToken;
     hash.bhp256 r5 into r6 as field;
-    async vote_enable_new_token self.caller r4 r6 into r7;
-    output r7 as council.aleo/vote_enable_new_token.future;
+    cast r6 self.caller into r7 as ProposalSign;
+    hash.bhp256 r7 into r8 as field;
+    async vote_enable_new_token self.caller r6 r8 into r9;
+    output r9 as council.aleo/vote_enable_new_token.future;
 
 finalize vote_enable_new_token:
     input r0 as address.public;
@@ -905,11 +911,13 @@ function exec_enable_new_token:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u64.public;
-    cast r0 r1 r2 into r3 as EnableToken;
-    hash.bhp256 r3 into r4 as field;
-    call token_service.aleo/enable_token r1 r2 into r5;
-    async exec_enable_new_token r5 r4 into r6;
-    output r6 as council.aleo/exec_enable_new_token.future;
+    input r3 as u16.public;
+    input r4 as u32.public;
+    cast r0 r1 r2 r3 r4 into r5 as EnableToken;
+    hash.bhp256 r5 into r6 as field;
+    call token_service.aleo/enable_token r1 r2 r3 r4 into r7;
+    async exec_enable_new_token r7 r6 into r8;
+    output r8 as council.aleo/exec_enable_new_token.future;
 
 finalize exec_enable_new_token:
     input r0 as token_service.aleo/enable_token.future;

@@ -77,11 +77,13 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async enable_token(r0: string, r1: BigInt) {
+  async enable_token(r0: string, r1: BigInt, r2: number, r3: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
+    const r2Leo = js2leo.u16(r2);
+    const r3Leo = js2leo.u32(r3);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'enable_token',
@@ -190,6 +192,18 @@ export class Token_serviceContract {
     const result = await zkGetMapping({
       config: this.config,
       transition: 'timeframe',
+      params,
+    });
+    return leo2js.u32(result);
+  }
+
+  async maximum_liquidity_for_no_cap(key: string): Promise < number > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'maximum_liquidity_for_no_cap',
       params,
     });
     return leo2js.u32(result);

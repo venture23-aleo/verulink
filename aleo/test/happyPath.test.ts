@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { BridgeContract } from "../artifacts/js/bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { InPacketFull, TokenAccount, TokenOrigin } from "../artifacts/js/types";
@@ -17,13 +18,13 @@ describe("Happy Path", () => {
   const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
   // Token Service Contract Address on Ethereum
-  const ethTsContract = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+  const ethTsContract = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
   // Token Service Contract on Aleo
   const aleoTsContract =
     "aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3";
 
-  // Wrapped USDC Contract Addrpublishess
+  // Wrapped USDC Contract 
   const wUSDC =
     "aleo1zzy2c66uf46wvtxd0uck965mzj2cn7fn7dl9tgftw7tedl9f3cgsqhsgdz";
 
@@ -40,8 +41,8 @@ describe("Happy Path", () => {
 
   test("Receive A Packet", async () => {
 
-    const sequence = 4;
-    const amount = BigInt(100);
+    const sequence = 3;
+    const amount = BigInt(10000);
     const height = 10;
 
     // Create a packet
@@ -83,6 +84,22 @@ describe("Happy Path", () => {
       token_id: wUSDC
     }
     let balance = await wrappedToken.token_balances(key)
+    console.log(balance)
+
+    // Send the packet to ethereum
+    tx = await tokenService.token_send(
+      wUSDC,
+      evm2AleoArr(ethUser),
+      BigInt(101),
+      {
+        chain_id: ethChainId,
+        token_service_address: evm2AleoArr(ethTsContract),
+        token_address: evm2AleoArr(USDC)
+      }
+    )
+    await tx.wait()
+
+    balance = await wrappedToken.token_balances(key)
     console.log(balance)
 
   }, 200_000);

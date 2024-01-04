@@ -16,5 +16,5 @@ dependencies = []
 name = "token_service"
 location = "local"
 path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/token_service"
-checksum = "82154bd75da0693e0402a02b61bec3f0f16c15ebb452abfc2e34e03cd7d964e6"
+checksum = "e04b225ebebfdec9286c483f866a96c343df43f40ff4c5121e244bde1a148764"
 dependencies = ["wrapped_token.aleo", "bridge.aleo"]

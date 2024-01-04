@@ -26,8 +26,6 @@ program token_service.aleo {
     // value is address of the token service contract on chain (with chain_id)
     mapping token_service_contracts: u32 => [u8; 32];
 
-    // mapping outgoing_messages: field => MsgTokenSend;
-
     // mapping used as variable
     // true: address of council 
     // false: Null
@@ -41,12 +39,17 @@ program token_service.aleo {
     // key is token_id
     mapping minimum_transfers: address => u64;
 
+    // TODO: Check if this makes sense as global variable instead of per_token basis
     // maximum percentage that can be transferred in the given timeframe
     // represented in basis points
     // timeframe is defined in terms of block height
     // key is token_id
     mapping max_outgoing_percentage: address => u16;
     mapping timeframe: address => u32;
+    
+    // maximum liquidity after which we do not care about max_outgoing_percentage
+    // key is token_id
+    mapping maximum_liquidity_for_no_cap: address => u32;
 
     // tracks the last time the token was minted/burned
     mapping last_token_update: address => u32;
@@ -97,18 +100,21 @@ program token_service.aleo {
         Mapping::set(token_service_contracts, chain_id, token_service_address);
     }
 
-    transition enable_token(public token_id: address, public minimum_transfer: u64) {
+    transition enable_token(public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
-        return then finalize(self.caller, token_id, minimum_transfer);
+        return then finalize(self.caller, token_id, minimum_transfer, outgoing_percentage, time);
     }
 
-    finalize enable_token(from: address, token_id: address, minimum_transfer: u64) {
+    finalize enable_token(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, time: u32) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(council_program_TS, true);
         assert_eq(from, council);
+
+        Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage);
+        Mapping::set(timeframe, token_id, time);
 
         Mapping::set(minimum_transfers, token_id, minimum_transfer);
     }
@@ -137,11 +143,8 @@ program token_service.aleo {
         let min_amount: u64 = Mapping::get(minimum_transfers, wrapped_addr);
         assert(amount >= min_amount);
 
-        // Mapping::set(outgoing_messages, msg_hash, msg);
-
         // TODO: 
-        // 1. handle limits - max amounts that can be withdrawn in given time
-        // 2. handle fees
+        // 1. handle fees
 
         let current_supply: u64 = Mapping::get(total_supply, wrapped_addr);
         // TODO: check if storing as u16 is actually better
@@ -151,21 +154,21 @@ program token_service.aleo {
         let percentage_in_basis_points: u16 = Mapping::get(max_outgoing_percentage, wrapped_addr);
         let token_timeframe: u32 = Mapping::get(timeframe, wrapped_addr);
 
-        // Updated on each token_send
-        let last_update: u32 = Mapping::get_or_use(last_token_update, wrapped_addr, 0u32);
-        let last_min_required_supply: u64 = Mapping::get_or_use(last_min_supply, wrapped_addr, 0u64);
-
-        let time_passed: u32 = block.height - last_update;
-
         // If percentage = 10
         // then min_required_supply = 90% of current_supply
         let min_required_supply: u64 = (current_supply * ( max_basis_point() - percentage_in_basis_points) as u64) / (max_basis_point() as u64);
+        
+        // Updated on each token_send
+        let last_update: u32 = Mapping::get_or_use(last_token_update, wrapped_addr, 0u32);
+        let last_min_required_supply: u64 = Mapping::get_or_use(last_min_supply, wrapped_addr, min_required_supply);
+
+        let time_passed: u32 = block.height - last_update;
 
         // If percentage = 10
         // then max_withdraw = 10% of current_supply
         let max_withdraw_in_timeframe: u64 = current_supply * (percentage_in_basis_points as u64) / (max_basis_point() as u64);
         let max_withdraw_from_last_update: u64 = (max_withdraw_in_timeframe * time_passed as u64 ) / (token_timeframe as u64);
-        let new_min_required_supply: u64 = last_min_required_supply - max_withdraw_from_last_update;
+        let new_min_required_supply: u64 = last_min_required_supply > max_withdraw_from_last_update? last_min_required_supply.sub_wrapped(max_withdraw_from_last_update) : 0u64;
         
         // Select the max
         new_min_required_supply = new_min_required_supply > min_required_supply ? new_min_required_supply : min_required_supply;

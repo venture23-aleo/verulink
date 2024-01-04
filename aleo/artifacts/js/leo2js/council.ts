@@ -105,7 +105,9 @@ export function getEnableToken(enableToken: EnableTokenLeo): EnableToken {
   const result: EnableToken = {
     id: leo2js.u32(enableToken.id),
     token_id: leo2js.address(enableToken.token_id),
-    min_amount: leo2js.u64(enableToken.min_amount),
+    minimum_transfer: leo2js.u64(enableToken.minimum_transfer),
+    outgoing_percentage: leo2js.u16(enableToken.outgoing_percentage),
+    time: leo2js.u32(enableToken.time),
   }
   return result;
 }

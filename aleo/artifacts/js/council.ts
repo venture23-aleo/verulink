@@ -474,12 +474,14 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async prop_enable_new_token(r0: number, r1: string, r2: BigInt) {
+  async prop_enable_new_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
+    const r3Leo = js2leo.u16(r3);
+    const r4Leo = js2leo.u32(r4);
 
-    const params = [r0Leo, r1Leo, r2Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'prop_enable_new_token',
@@ -488,12 +490,14 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async vote_enable_new_token(r0: number, r1: string, r2: BigInt) {
+  async vote_enable_new_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
+    const r3Leo = js2leo.u16(r3);
+    const r4Leo = js2leo.u32(r4);
 
-    const params = [r0Leo, r1Leo, r2Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'vote_enable_new_token',
@@ -502,12 +506,14 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_enable_new_token(r0: number, r1: string, r2: BigInt) {
+  async exec_enable_new_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
+    const r3Leo = js2leo.u16(r3);
+    const r4Leo = js2leo.u32(r4);
 
-    const params = [r0Leo, r1Leo, r2Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'exec_enable_new_token',
