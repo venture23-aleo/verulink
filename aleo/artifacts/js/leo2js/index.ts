@@ -11,16 +11,16 @@ import {
   getInPacketFullScreeningKey
 } from './bridge';
 import {
+  getTSForeignContract,
+  getTokenOrigin
+} from './token_service';
+import {
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
   getWrappedTokenInfo,
   getTokenAccount
 } from './wrapped_token';
-import {
-  getTSForeignContract,
-  getTokenOrigin
-} from './token_service';
 import {
   getProposalSign,
   getAddMemberProposal,
@@ -33,6 +33,9 @@ import {
   getSupportToken,
   getEnableToken
 } from './council';
+import {
+  getTokenAccount
+} from './holding';
 
 export {
   getAleoProgram,
@@ -45,13 +48,13 @@ export {
   getPacketId,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
+  getTSForeignContract,
+  getTokenOrigin,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
   getWrappedTokenInfo,
   getTokenAccount,
-  getTSForeignContract,
-  getTokenOrigin,
   getProposalSign,
   getAddMemberProposal,
   getRemoveMemberProposal,
@@ -62,4 +65,5 @@ export {
   getSupportChainTS,
   getSupportToken,
   getEnableToken,
+  getTokenAccount,
 };
