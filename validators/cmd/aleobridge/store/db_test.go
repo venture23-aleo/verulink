@@ -183,12 +183,17 @@ func TestPruneBaseSeqNum(t *testing.T) {
 	curBaseSeqNum := PruneBaseSeqNum(namespace, nil)
 	require.Equal(t, skipSeqNum-1, curBaseSeqNum)
 
-	for i := uint64(0); i < skipSeqNum; i++ {
+	for i := uint64(0); i < skipSeqNum-1; i++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, i)
 		value := get(namespace, key)
 		require.Nil(t, value, "key: ", i)
 	}
+
+	key := make([]byte, 8)
+	binary.BigEndian.PutUint64(key, skipSeqNum-1)
+	value := get(namespace, key)
+	require.NotNil(t, value)
 
 	for i := skipSeqNum + 1; i < totSeqNums; i++ {
 		key := make([]byte, 8)
