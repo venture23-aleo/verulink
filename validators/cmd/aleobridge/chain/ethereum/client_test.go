@@ -17,6 +17,16 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 )
 
+var (
+	cfg = &relay.ChainConfig{
+		ChainID:        1,
+		NodeUrl:        "https://rpc.sepolia.org",
+		BridgeContract: "0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758",
+		StartHeight:    1,
+		WalletPath:     "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/eth_wallet.json",
+	}
+)
+
 func TestGeneratePacket(t *testing.T) {
 	cfg := &relay.ChainConfig{
 		ChainID:        1,
@@ -94,3 +104,47 @@ func TestGetPacket(t *testing.T) {
 	assert.Nil(t, err)
 	fmt.Println(ethpacket)
 }
+
+func TestNewClientCreation(t *testing.T) {
+	t.Run("case: providing name and finality height in config.yaml", func(t *testing.T) {
+		cfgNewCl := *cfg
+		cfgNewCl.FinalityHeight = 64
+		cfgNewCl.Name = "ethereumChain"
+
+		client := NewClient(&cfgNewCl)
+		assert.Equal(t, cfgNewCl.Name, client.Name())
+		assert.Equal(t, 64, int(client.GetFinalityHeight()))
+	})
+
+	t.Run("case: ommitting name and finality height in config.yaml", func(t *testing.T) {
+		client := NewClient(cfg)
+		assert.Equal(t, ethereum, client.Name())
+		assert.Equal(t, defaultFinalityHeight, int(client.GetFinalityHeight()))
+	})
+
+	t.Run("case: invalid wallet path", func(t *testing.T) {
+		cfgNewCl := *cfg
+		cfgNewCl.WalletPath = "ethereumChain"
+
+		assert.Panics(t, func() {NewClient(&cfgNewCl)})
+	})
+
+	t.Run("case: invalid node url", func(t *testing.T) {
+		cfgNewCl := *cfg
+		cfgNewCl.NodeUrl = "ethereumChain"
+
+		assert.Panics(t, func() {NewClient(&cfgNewCl)})
+	})
+}
+
+func TestGepPktWithSeq(t *testing.T) {
+	mockClient := NewMockClient(cfg)
+
+	pkt, err := mockClient.GetPktWithSeq(context.Background(), uint32(2), uint64(1))
+	assert.Nil(t, err)
+	assert.NotNil(t, pkt)
+	assert.Equal(t, common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes(), []byte(pkt.Source.Address))
+}
+
+
+

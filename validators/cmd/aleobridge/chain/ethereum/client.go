@@ -23,14 +23,14 @@ import (
 )
 
 const (
-	defaultFinalizingHeight = 2
-	blockGenerationTime     = time.Second * 12
-	defaultRetryCount       = 5
-	ethereum                = "ethereum"
-	defaultGasLimit         = 1500000
-	defaultGasPrice         = 130000000000
-	defaultSendTxTimeout    = time.Second * 30
-	defaultReadTimeout      = 50 * time.Second
+	defaultFinalityHeight = 2
+	blockGenerationTime   = time.Second * 12
+	defaultRetryCount     = 5
+	ethereum              = "ethereum"
+	defaultGasLimit       = 1500000
+	defaultGasPrice       = 130000000000
+	defaultSendTxTimeout  = time.Second * 30
+	defaultReadTimeout    = 50 * time.Second
 )
 
 type Client struct {
@@ -232,7 +232,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		name = ethereum
 	}
 	if finalizeHeight == 0 {
-		finalizeHeight = defaultFinalizingHeight
+		finalizeHeight = defaultFinalityHeight
 	}
 	// todo: handle start height from stored height if start height in the config is 0
 	return &Client{
@@ -240,7 +240,7 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		address:        cfg.BridgeContract,
 		eth:            ethclient,
 		bridge:         bridgeClient,
-		finalityHeight: defaultFinalizingHeight,
+		finalityHeight: uint64(finalizeHeight),
 		blockGenTime:   blockGenerationTime,
 		chainID:        cfg.ChainID,
 		chainCfg:       cfg,
