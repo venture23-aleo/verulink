@@ -9,18 +9,17 @@ import (
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
-	"go.uber.org/zap/zapcore"
 )
 
 const (
-	defaultFinalizingHeight = 1
-	blockGenerationTime     = time.Second * 5
-	out_packet              = "out_packets"
-	priorityFee             = "1000"
-	aleo                    = "aleo"
+	defaultFinalityHeight = 1
+	blockGenerationTime   = time.Second * 5
+	outPacket             = "out_packets"
+	priorityFee           = "1000"
+	aleo                  = "aleo"
 )
 
 type Client struct {
@@ -30,12 +29,12 @@ type Client struct {
 	queryUrl          string
 	network           string
 	chainID           uint32
-	finalizeHeight    uint64
+	finalityHeight    uint64
 	blockGenTime      time.Duration
 	minRequiredGasFee uint64
 
 	//
-	chainCfg *relay.ChainConfig
+	chainCfg *config.ChainConfig
 	wallet   common.Wallet
 }
 
@@ -62,7 +61,7 @@ type aleoMessage struct {
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	mappingKey := constructOutMappingKey(dst, seqNum)
-	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, out_packet, mappingKey)
+	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, outPacket, mappingKey)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +73,7 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 // SendAttestedPacket sends packet from source chain to target chain
 // TODO: output parser
 func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { //TODO: seems to panic at misformed packet so need to handle that
-	if cl.isAlreadyExist() {
+	if cl.isAlreadyExist(ctx, packet) {
 		return chain.AlreadyRelayedPacket{
 			CurChainHeight: 0,
 		}
@@ -82,27 +81,25 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { 
 	aleoPacket := constructAleoPacket(packet)
 	privateKey := cl.wallet.(*wallet).PrivateKey
 
-	_ctx, cancel := context.WithTimeout(ctx, time.Second*25)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*25)
 	defer cancel()
-	cmd := cl.aleoClient.Send(_ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
+	cmd := cl.aleoClient.Send(ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
 	defer cmd.Cancel()
 	for {
 		select {
-		case <-_ctx.Done():
+		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			output, err := cmd.Output()
+			_, err := cmd.Output()
 			if err != nil {
-				logger.Logger.Error("error while sending packet", zapcore.Field{Interface: err})
 				return err
 			}
-			logger.Logger.Info("packet sent to aleo::output::", zapcore.Field{String: string(output)})
 			return nil
 		}
 	}
 }
 
-func (cl *Client) isAlreadyExist() bool {
+func (cl *Client) isAlreadyExist(ctx context.Context, pkt *chain.Packet) bool {
 	return false
 }
 
@@ -119,7 +116,7 @@ func (cl *Client) CurHeight(ctx context.Context) uint64 {
 }
 
 func (cl *Client) GetFinalityHeight() uint64 {
-	return cl.finalizeHeight
+	return cl.finalityHeight
 }
 
 func (cl *Client) GetBlockGenTime() time.Duration {
@@ -160,7 +157,7 @@ func loadWalletConfig(file string) (common.Wallet, error) {
 
 }
 
-func NewClient(cfg *relay.ChainConfig) relay.IClient {
+func NewClient(cfg *config.ChainConfig) relay.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
 	*/
@@ -180,19 +177,20 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 	}
 
 	name := cfg.Name
-	finalizeHeight := cfg.FinalityHeight
 	if name == "" {
 		name = aleo
 	}
-	if finalizeHeight == 0 {
-		finalizeHeight = defaultFinalizingHeight
+
+	finalityHeight := cfg.FinalityHeight
+	if finalityHeight == 0 {
+		finalityHeight = defaultFinalityHeight
 	}
 
 	return &Client{
 		queryUrl:       urlSlice[0],
 		network:        urlSlice[1],
 		aleoClient:     aleoClient,
-		finalizeHeight: uint64(finalizeHeight),
+		finalityHeight: uint64(finalityHeight),
 		chainID:        cfg.ChainID,
 		blockGenTime:   blockGenerationTime,
 		chainCfg:       cfg,
