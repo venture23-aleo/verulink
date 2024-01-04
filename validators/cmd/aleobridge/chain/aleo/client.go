@@ -72,8 +72,8 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
-// todo output parser
-func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
+// TODO: output parser
+func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { //TODO: seems to panic at misformed packet so need to handle that
 	if cl.isAlreadyExist() {
 		return chain.AlreadyRelayedPacket{
 			CurChainHeight: 0,
@@ -198,6 +198,6 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		chainCfg:       cfg,
 		wallet:         wallet,
 		programID:      cfg.BridgeContract,
-		name: name,
+		name:           name,
 	}
 }

@@ -2,7 +2,6 @@ package aleo
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -43,7 +42,7 @@ func TestNewClientCreation(t *testing.T) {
 		cfgNewCl := *cfg
 		cfgNewCl.WalletPath = "aleoChain"
 
-		assert.Panics(t, func() {NewClient(cfg)})
+		assert.Panics(t, func() { NewClient(cfg) })
 	})
 
 }
@@ -153,9 +152,10 @@ func TestSendPacket(t *testing.T) {
 		assert.ErrorContains(t, err, "signal: killed")
 	})
 
-	t.Run("case: misformed/invalid command", func(t *testing.T) {
+	t.Run("case: misformed/invalid command parameter", func(t *testing.T) {
 		logger.InitLogging(logger.Development, ".")
 		client := NewClient(cfg)
+		client.(*Client).network = "invalidparam"
 		mockRpc, _ := aleoRpc.NewMockRPC("nodeurl", "network")
 		client.(*Client).aleoClient = mockRpc
 
@@ -180,8 +180,35 @@ func TestSendPacket(t *testing.T) {
 		}
 
 		err := client.SendPacket(context.Background(), pktToSend)
-		fmt.Println(err)
 		assert.NotNil(t, err)
+	})
+
+	t.Run("case: invalid command", func(t *testing.T) {
+		logger.InitLogging(logger.Development, ".")
+		client := NewClient(cfg)
+		mockRpc, _ := aleoRpc.NewMockRPC("nodeurl", "network")
+		client.(*Client).aleoClient = mockRpc
+
+		pktToSend := &chain.Packet{
+			Version:  uint64(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: uint64(2),
+				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: uint64(1),
+				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			},
+			Message: chain.Message{
+				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				Amount:           big.NewInt(102),
+				ReceiverAddress:  "0x0000000000000000000000000000000000000000",
+			},
+			Height: uint64(55),
+		}
+		assert.Panics(t, func() { client.SendPacket(context.Background(), pktToSend) })
 	})
 
 }

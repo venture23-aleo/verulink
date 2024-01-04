@@ -139,6 +139,9 @@ func (c *MockClient) Send(_ctx context.Context, aleoPacket, privateKey, queryUrl
 	} else if (network == "timeout") {
 		cmd := exec.CommandContext(_ctx, "sleep", "30")
 		return cmd
+	} else if network == "invalidparam" {
+		cmd := exec.CommandContext(_ctx, "sleep", "5op")
+		return cmd
 	} else {
 		cmd := exec.CommandContext(_ctx, "snarkoss", "5")
 		return cmd
