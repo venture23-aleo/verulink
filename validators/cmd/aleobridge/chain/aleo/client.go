@@ -84,19 +84,15 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*25)
 	defer cancel()
 	cmd := cl.aleoClient.Send(ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
-	defer cmd.Cancel()
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			_, err := cmd.Output()
-			if err != nil {
-				return err
-			}
-			return nil
-		}
+	output, err := cmd.Output()
+	if err != nil {
+		return err
 	}
+
+	// todo: Add transaction confirmation code
+	_ = output
+	//
+	return nil
 }
 
 func (cl *Client) isAlreadyExist(ctx context.Context, pkt *chain.Packet) bool {
