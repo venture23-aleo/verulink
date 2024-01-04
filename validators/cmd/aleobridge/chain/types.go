@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"math/big"
 	"time"
 )
 
@@ -11,7 +12,8 @@ type ChainEvent struct {
 type ICommon interface {
 	Name() string
 	GetFinalityHeight() uint64
-	// GetChainEvents(ctx context.Context, eventCh chan<- *ChainEvent)
+	GetDestChains() ([]string, error)
+	GetChainID() uint32
 }
 
 type ISender interface {
@@ -36,20 +38,23 @@ type IReceiver interface {
 
 	// GetPktWithSeqGT will be called periodically by subscriber. Thus it shall return packet
 	// which it shall put into the channel given by subscriber
-	GetPktWithSeq(ctx context.Context, dest string, seqNum uint64) (*Packet, error)
-	// GetPktsWithSeqGTAndInSameHeight will return packets of same height of packet with given seqNum.
-	// This might make processing multiple packets that comes under same block efficient.
-	// But might as well be obsolete
-	GetPktsWithSeqAndInSameHeight(ctx context.Context, seqNum uint64) ([]*Packet, error)
+	GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*Packet, error)
 	// Returns current height of chain
-	CurHeight() uint64
+	CurHeight(ctx context.Context) uint64
 	// Return average duration to generate a block by blockchain
 	GetBlockGenTime() time.Duration
 }
 
 type NetworkAddress struct {
-	ChainID string
+	ChainID uint64
 	Address string
+}
+
+type Message struct {
+	DestTokenAddress string
+	SenderAddress    string
+	Amount           *big.Int
+	ReceiverAddress  string
 }
 
 type Packet struct {
@@ -60,7 +65,7 @@ type Packet struct {
 	Destination NetworkAddress
 	Source      NetworkAddress
 	Sequence    uint64
-	Message     []byte
+	Message     Message
 	Height      uint64
 }
 

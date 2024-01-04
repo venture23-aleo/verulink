@@ -57,16 +57,15 @@ func (r *relay) Init(ctx context.Context) {
 	if !r.initliazed {
 		r.initliazed = true
 		bridge := fmt.Sprintf("%s-%s", r.srcChain.Name(), r.destChain.Name())
-		r.logger = logger.Logger.With(zap.String("Bridge", bridge))
-		r.createNamespaces()
+		r.logger = logger.GetLogger().With(zap.String("Bridge", bridge))
+		err := r.createNamespaces()
+		if err != nil {
+			panic(err)
+		}
 		r.setBaseSeqNum()
 		r.nextSeqNum = r.bSeqNum + 1
-
+		r.pktCh = make(chan *chain.Packet)
 	}
-
-	/**********Not required now***********************/
-	// go r.pollChainEvents(ctx, r.srcChain.Name(), chainConds[r.srcChain.Name()])
-	// go r.pollChainEvents(ctx, r.destChain.Name(), chainConds[r.destChain.Name()])
 
 	go r.startReceiving(ctx)
 	go r.startSending(ctx)
@@ -107,15 +106,23 @@ func (r *relay) startReceiving(ctx context.Context) {
 		default:
 		}
 
-		pkt, err := r.srcChain.GetPktWithSeq(ctx, r.destChain.Name(), r.nextSeqNum)
+		chainID := r.destChain.GetChainID()
+		pkt, err := r.srcChain.GetPktWithSeq(ctx, chainID, r.nextSeqNum)
 		if err != nil {
 			r.logger.Error(err.Error())
 			time.Sleep(time.Minute)
+			continue
 		}
 
-		curSrcHeight := r.srcChain.CurHeight()
-		if pkt.Height+r.srcChain.GetFinalityHeight() >= curSrcHeight {
-			heightDiff := curSrcHeight - pkt.Height
+		if pkt == nil {
+			time.Sleep(time.Second * 10)
+			continue
+		}
+
+		curSrcHeight := r.srcChain.CurHeight(ctx)
+		finalityHeight := r.srcChain.GetFinalityHeight()
+		if pkt.Height+finalityHeight >= curSrcHeight {
+			heightDiff := pkt.Height + finalityHeight - curSrcHeight
 			waitTime := r.srcChain.GetBlockGenTime() * time.Duration(heightDiff)
 			time.Sleep(waitTime)
 			continue
@@ -282,8 +289,10 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 				continue
 			}
 
+			chainID := r.destChain.GetChainID()
+
 			//Now get from blockchain and feed to the system
-			pkt, err := r.srcChain.GetPktWithSeq(ctx, r.destChain.Name(), seqNum)
+			pkt, err := r.srcChain.GetPktWithSeq(ctx, chainID, seqNum)
 			if err != nil {
 				//todo: we might decide that older packets be pruned in src chain
 				// and if it is pruned then r.bSeqNum can be updated to seqNum

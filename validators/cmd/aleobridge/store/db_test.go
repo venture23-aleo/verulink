@@ -83,7 +83,6 @@ func TestStoreRetryPacket(t *testing.T) {
 	for i := 1; i <= totNum; i++ {
 		var p interface{} = chain.Packet{
 			Sequence: uint64(i),
-			Message:  []byte("my message"),
 			Height:   uint64(i),
 		}
 		packets[uint64(i)] = p

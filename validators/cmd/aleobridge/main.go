@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -11,8 +10,10 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
 
@@ -44,22 +45,12 @@ var (
 
 func main() {
 	flag.Parse()
-	cfg, err := loadConfig(configFile)
-	if err != nil {
-		fmt.Printf("Load config failed. Error: %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	err = validateAndUpdateConfig(cfg)
-	if err != nil {
-		fmt.Printf("Config validation failed. Error: %s\n", err.Error())
-		os.Exit(1)
-	}
+	config.LoadConfig(configFile)
 
 	if devMode {
-		logger.InitLogging(logger.Development, cfg.LogConfig.OutputPath)
+		logger.InitLogging(logger.Development, config.GetConfig().LogConfig)
 	} else {
-		logger.InitLogging(logger.Production, cfg.LogConfig.OutputPath)
+		logger.InitLogging(logger.Production, config.GetConfig().LogConfig)
 	}
 
 	signal.Ignore(getIgnoreSignals()...)
@@ -67,54 +58,13 @@ func main() {
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
 
-	multirelayer := relay.MultiRelay(ctx, cfg)
-	logger.Logger.Info("Starting multi-relay")
+	err := store.InitKVStore(config.GetConfig().DBPath)
+	if err != nil {
+		fmt.Printf("Error while initializing db store: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	multirelayer := relay.MultiRelay(ctx, config.GetConfig().ChainConfigs)
 	multirelayer.StartMultiRelay(ctx)
 
-}
-
-func loadConfig(file string) (*relay.Config, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	cfg := &relay.Config{}
-	err = json.NewDecoder(f).Decode(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
-}
-
-func validateAndUpdateConfig(cfg *relay.Config) error {
-	var chains map[string]struct{}
-	for _, chainCfg := range cfg.ChainConfigs {
-		chains[chainCfg.Name] = struct{}{}
-	}
-
-	// bridge pair validation
-	bridgePairs := map[string]string{}
-
-	// bridge pair validation might be obsolete as destination chains shall be taken from contract
-	for chain1, chain2 := range cfg.BridgePairs {
-		if chain1 == chain2 {
-			return fmt.Errorf("cannot bridge packects within same chain")
-		}
-		if _, ok := chains[chain1]; !ok {
-			return fmt.Errorf("chain %s is not defined in chainConfig field", chain1)
-		}
-		if _, ok := chains[chain2]; !ok {
-			return fmt.Errorf("chain %s is not defined in chainConfig field", chain2)
-		}
-
-		// Config might entail "ethereum": "aleo" or "aleo":"ethereum" or both
-		// but we should only take single pair
-		if bridgePairs[chain1] == chain2 || bridgePairs[chain2] == chain1 {
-			continue
-		}
-		bridgePairs[chain1] = chain2
-	}
-
-	cfg.BridgePairs = bridgePairs
-	return nil
 }

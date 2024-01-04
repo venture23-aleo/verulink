@@ -1,4 +1,10 @@
-package relay
+package config
+
+import (
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
 
 type ChainConfig struct {
 	Name           string   `json:"name"`
@@ -13,17 +19,29 @@ type ChainConfig struct {
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
-	ChainConfigs []*ChainConfig
-	// BridgePair is pairing between bridge contracts to communicate packets back and forth
-	BridgePairs map[string]string
-
-	LogConfig *LoggerConfig `json:"log"`
-	/*
-		other fields if required
-	*/
+	ChainConfigs []*ChainConfig `json:"chains"`
+	LogConfig    *LoggerConfig  `json:"log"`
+	DBPath       string         `json:"db_path"`
 }
 
 type LoggerConfig struct {
 	Encoding   string `json:"encoding"`
 	OutputPath string `json:"output_path"`
+}
+
+var config *Config
+
+func GetConfig() *Config {
+	return config
+}
+
+func LoadConfig(file string) {
+	f, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.NewDecoder(f).Decode(config)
+	if err != nil {
+		panic(err)
+	}
 }

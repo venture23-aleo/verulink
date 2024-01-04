@@ -8,42 +8,33 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 )
 
-var chainCtxMu = sync.Mutex{}
-var chainCtxCncls = map[string]context.CancelCauseFunc{}
-var relayCh = make(chan Relayer)
-var chains = map[string]IClient{}
+var (
+	chainCtxMu        = sync.Mutex{}
+	chainCtxCncls     = map[string]context.CancelCauseFunc{}
+	relayCh           = make(chan Relayer)
+	chains            = map[string]IClient{}
+	RegisteredClients = map[string]ClientFunc{}
+)
 
 type Namer interface {
 	Name() string
 }
 
-type IChainEvent interface {
-	Namer
-	GetChainEvent(ctx context.Context) (*chain.ChainEvent, error)
-}
-
 type IClient interface {
 	chain.IReceiver
 	chain.ISender
-	IChainEvent
 	Namer
-	GetDestChains() ([]string, error)
 }
 
-type ClientFunc func(cfg *ChainConfig) IClient
-
-var (
-	RegisteredClients = map[string]ClientFunc{}
-	EventChanMap      = map[string][]chan<- *chain.ChainEvent{}
-)
+type ClientFunc func(cfg *config.ChainConfig) IClient
 
 type Relays []Relayer
 
-// what if gas depletion?
-func MultiRelay(ctx context.Context, cfg *Config) Relays {
-	for _, chainCfg := range cfg.ChainConfigs {
+func MultiRelay(ctx context.Context, cfgs []*config.ChainConfig) Relays {
+	for _, chainCfg := range cfgs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
 		}
@@ -68,7 +59,6 @@ func MultiRelay(ctx context.Context, cfg *Config) Relays {
 			relays = append(relays, r)
 		}
 	}
-
 	return relays
 }
 
