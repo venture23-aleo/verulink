@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os/exec"
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
@@ -176,6 +179,17 @@ func TestMessagePublish(t *testing.T) {
 	fmt.Println(output)
 }
 
+func TestConstructEthAddressForAleo(t *testing.T) {
+	modelEthAddress := "[ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ]"
+	ethAddress := common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0")
+	ethAddrBt := ethAddress.Bytes()
+	ethAddrStr := string(ethAddrBt)
+
+	ethAddressForAleo := constructServiceContractAddress(ethAddrStr)
+	assert.Equal(t, modelEthAddress, ethAddressForAleo)
+
+}
+
 func TestParseMessage(t *testing.T) {
 	var dst, seqNum uint64 = 1, 1
 	key := constructOutMappingKey(uint32(dst), seqNum)
@@ -211,9 +225,7 @@ func TestParseAleoPacket(t *testing.T) {
 	assert.Nil(t, err)
 	parsedAleoPacket := parseMessage(packet[key])
 	commonPacket, err := parseAleoPacket(parsedAleoPacket)
-	assert.Nil(t, err)
-	fmt.Println(commonPacket)
-	
+	assert.Nil(t, err)	
 	expectedPacket := &chain.Packet{
 		Version: uint64(0),
 		Sequence: uint64(1),
@@ -223,13 +235,45 @@ func TestParseAleoPacket(t *testing.T) {
 		},
 		Destination: chain.NetworkAddress{
 			ChainID: uint64(1),
-			// Address: ,
+			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
 		},
+		Message: chain.Message{
+			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			SenderAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount: big.NewInt(102),
+			ReceiverAddress: "0x0000000000000000000000000000000000000000",
+		},
+		Height: uint64(55),
 	}
-	_ = expectedPacket
+
+	assert.Equal(t, commonPacket, expectedPacket)
 }
 
-// func TestGetPktWithSeq(t *testing.T) {
-// 	client := NewMockClient(cfg)
+func TestConstructAleoPacket(t *testing.T) {
+	modelAleoPacket := "{ version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ] }, destination: { chain_id: 2u32, addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px }, message: { token: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, sender: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ], receiver: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, amount: 102u64 }, height: 55u32 }"
+	commonPacket := &chain.Packet{
+		Version: uint64(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: uint64(1),
+			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: uint64(2),
+			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px", // converting address of form [0u8, 0u8, ..., 176u8] to str
+		},
+		Message: chain.Message{
+			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			Amount: big.NewInt(102),
+			ReceiverAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Height: uint64(55),
+	}
 
-// }
+	aleoPacket := constructAleoPacket(commonPacket)
+	assert.Equal(t, modelAleoPacket, aleoPacket)
+}
+
+
+
