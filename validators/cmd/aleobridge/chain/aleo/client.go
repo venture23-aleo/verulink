@@ -34,8 +34,9 @@ type Client struct {
 	minRequiredGasFee uint64
 
 	//
-	chainCfg *config.ChainConfig
-	wallet   common.Wallet
+	chainCfg   *config.ChainConfig
+	wallet     common.Wallet
+	sendPktDur time.Duration
 }
 
 type aleoPacket struct {
@@ -48,8 +49,8 @@ type aleoPacket struct {
 }
 
 type aleoPacketNetworkAddress struct {
-	chain_id string
-	address  string
+	chainID string
+	address string
 }
 
 type aleoMessage struct {
@@ -81,7 +82,7 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { 
 	aleoPacket := constructAleoPacket(packet)
 	privateKey := cl.wallet.(*wallet).PrivateKey
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*25)
+	ctx, cancel := context.WithTimeout(ctx, cl.sendPktDur)
 	defer cancel()
 	cmd := cl.aleoClient.Send(ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
 	output, err := cmd.Output()
@@ -193,5 +194,6 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 		wallet:         wallet,
 		programID:      cfg.BridgeContract,
 		name:           name,
+		sendPktDur:     time.Minute * 3,
 	}
 }
