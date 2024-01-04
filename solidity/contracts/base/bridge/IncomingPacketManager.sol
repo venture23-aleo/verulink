@@ -8,19 +8,16 @@ abstract contract IncomingPacketManager {
     function getIncomingPacketHash(
         uint256 chainId,
         uint256 sequence
-    ) public view virtual returns (bytes32 packetHash) {}
+    ) public view virtual returns (bytes32 packetHash);
 
-    function _removeIncomingPacket(
-        uint256 _chainId,
-        uint256 _sequence
-    ) internal virtual {}
+    function _removeIncomingPacket(uint256, uint256) internal virtual;
 
     function isPacketConsumed(
         uint256 _chainId,
         uint256 _sequence
-    ) public view virtual returns (bool) {}
+    ) public view virtual returns (bool);
 
     function _getQuorumRequired(
         uint256
-    ) internal view virtual returns (uint256) {}
+    ) internal view virtual returns (uint256);
 }

@@ -34,7 +34,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -62,7 +62,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -78,7 +78,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -108,7 +108,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -124,7 +124,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -151,7 +151,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = '0x123';
-        const destTokenService = 'aleo.bridge';
+        const destTokenService = 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27';
         const min = 1;
         const max = 100;
 
@@ -163,7 +163,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = '0x123';
-        const destTokenService = 'aleo.bridge';
+        const destTokenService = 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27';
         const min = 1;
         const max = 100;
 
@@ -176,7 +176,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 2;
         const destTokenAddress = '0x123';
-        const destTokenService = 'aleo.bridge';
+        const destTokenService = 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27';
         const min = 1;
         const max = 100;
 
@@ -191,7 +191,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 2;
         const destTokenAddress = '0x123';
-        const destTokenService = 'aleo.bridge';
+        const destTokenService = 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27';
         const min = 1;
         const max = 100;
 
@@ -209,7 +209,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -236,7 +236,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -256,7 +256,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -277,7 +277,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 2;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -296,7 +296,7 @@ describe('ERC20TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
         const destChainId = 1;
         const destTokenAddress = "0x123";
-        const destTokenService = "aleo.bridge";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
 
@@ -315,7 +315,7 @@ describe('ERC20TokenSupport', () => {
         const destChainId = 2;
 
         // Add token
-        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100)).wait();
+        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 1, 100)).wait();
 
         await expect(
             proxiedContract.removeToken(tokenAddress, destChainId)
@@ -329,7 +329,7 @@ describe('ERC20TokenSupport', () => {
         const destChainId = 2;
 
         // Add token
-        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100)).wait();
+        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 1, 100)).wait();
 
         await expect(
             proxiedContract.enable(tokenAddress, destChainId)
@@ -343,7 +343,7 @@ describe('ERC20TokenSupport', () => {
         const destChainId = 2;
 
         // Add token
-        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo.bridge", 1, 100)).wait();
+        await (await proxiedContract.addToken(tokenAddress, destChainId, "0x123", "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 1, 100)).wait();
 
         // Enable the token
         await (await proxiedContract.enable(tokenAddress, destChainId)).wait();

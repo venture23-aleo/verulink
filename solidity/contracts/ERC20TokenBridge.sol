@@ -3,14 +3,15 @@ pragma solidity ^0.8.19;
 
 import "./common/libraries/Lib.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-import {IncomingPacketManager} from "./abstract/bridge/IncomingPacketManager.sol";
-import {IncomingPacketManagerImpl} from "./abstract/bridge/IncomingPacketManagerImpl.sol";
-import {ConsumedPacketManagerImpl} from "./abstract/bridge/ConsumedPacketManagerImpl.sol";
-import {OutgoingPacketManagerImpl} from "./abstract/bridge/OutgoingPacketManagerImpl.sol";
+import "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {IncomingPacketManager} from "./base/bridge/IncomingPacketManager.sol";
+import {IncomingPacketManagerImpl} from "./base/bridge/IncomingPacketManagerImpl.sol";
+import {ConsumedPacketManagerImpl} from "./base/bridge/ConsumedPacketManagerImpl.sol";
+import {OutgoingPacketManagerImpl} from "./base/bridge/OutgoingPacketManagerImpl.sol";
 import {Ownable} from "./common/Ownable.sol";
-import {AttestorManager} from "./abstract/bridge/AttestorManager.sol";
-import {BridgeERC20TokenServiceManager} from "./abstract/bridge/BridgeERC20TokenServiceManager.sol";
-import {ChainManager} from "./abstract/bridge/ChainManager.sol";
+import {AttestorManager} from "./base/bridge/AttestorManager.sol";
+import {BridgeERC20TokenServiceManager} from "./base/bridge/BridgeERC20TokenServiceManager.sol";
+import {ChainManager} from "./base/bridge/ChainManager.sol";
 
 contract ERC20TokenBridge is IncomingPacketManager,
     IncomingPacketManagerImpl, 
@@ -20,6 +21,7 @@ contract ERC20TokenBridge is IncomingPacketManager,
     AttestorManager,
     BridgeERC20TokenServiceManager,
     ChainManager,
+    Initializable,
     Upgradeable
 {
     function initialize(

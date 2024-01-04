@@ -13,7 +13,7 @@ describe('Ownable', () => {
         Ownable = await ethers.getContractFactory('Ownable');
         ownableInstance = await Ownable.deploy();
         await ownableInstance.waitForDeployment();
-        await(await ownableInstance.initialize(owner.address)).wait();
+        await (await ownableInstance.initialize(owner.address)).wait();
     });
 
     // Test deployment and initialization
@@ -30,7 +30,7 @@ describe('Ownable', () => {
         ).to.be.revertedWith('Not owner');
 
         // Transfer ownership with the owner
-        await(await ownableInstance.transferOwnership(newOwner.address)).wait();
+        await (await ownableInstance.transferOwnership(newOwner.address)).wait();
 
         // Check if ownership transfer was successful
         const updatedOwner = await ownableInstance.owner();

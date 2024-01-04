@@ -55,13 +55,13 @@ describe("BlackListService", () => {
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
 
         // Add to the black list
-        await(await proxiedContract.addToBlackList(other.address)).wait();
+        await (await proxiedContract.addToBlackList(other.address)).wait();
 
         // Check if added
         expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
 
         // Remove from the black list
-        await(await proxiedContract.removeFromBlackList(other.address)).wait();
+        await (await proxiedContract.removeFromBlackList(other.address)).wait();
 
         // Check if removed
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
@@ -72,13 +72,13 @@ describe("BlackListService", () => {
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
 
         // Add to the black list
-        await(await usdcMock.addBlackList(other.address)).wait();
+        await (await usdcMock.addBlackList(other.address)).wait();
 
         // Check if added
         expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
 
         // Remove from the black list
-        await(await usdcMock.removeBlackList(other.address)).wait();
+        await (await usdcMock.removeBlackList(other.address)).wait();
 
         // Check if removed
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
@@ -89,13 +89,13 @@ describe("BlackListService", () => {
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
 
         // Add to the black list
-        await(await usdtMock.addBlackList(other.address)).wait();
+        await (await usdtMock.addBlackList(other.address)).wait();
 
         // Check if added
         expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
 
         // Remove from the black list
-        await(await usdtMock.removeBlackList(other.address)).wait();
+        await (await usdtMock.removeBlackList(other.address)).wait();
 
         // Check if removed
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
@@ -103,7 +103,7 @@ describe("BlackListService", () => {
 
     it("should allow only owner to add to the black list", async () => {
         // Try to add to the black list with the owner
-        await(await proxiedContract.connect(owner).addToBlackList(other.address)).wait();
+        await (await proxiedContract.connect(owner).addToBlackList(other.address)).wait();
 
         // Check if the account is added to the black list
         expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
@@ -116,10 +116,10 @@ describe("BlackListService", () => {
 
     it("should allow only owner to remove from the black list", async () => {
         // Add to the black list with the owner
-        await(await proxiedContract.connect(owner).addToBlackList(other.address)).wait();
+        await (await proxiedContract.connect(owner).addToBlackList(other.address)).wait();
 
         // Try to remove from the black list with the owner
-        await(await proxiedContract.connect(owner).removeFromBlackList(other.address)).wait();
+        await (await proxiedContract.connect(owner).removeFromBlackList(other.address)).wait();
 
         // Check if the account is removed from the black list
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
@@ -132,13 +132,13 @@ describe("BlackListService", () => {
 
     it("should include USDC and USDT blacklists", async () => {
         // Mock USDC and USDT contracts to simulate blacklisting
-        await(await usdcMock.addBlackList(other.address)).wait();
+        await (await usdcMock.addBlackList(other.address)).wait();
 
         // Check if blacklisted in BlackListService
         expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
 
         // Remove from blacklists
-        await(await usdcMock.removeBlackList(other.address)).wait();
+        await (await usdcMock.removeBlackList(other.address)).wait();
 
         // Check if removed from BlackListService
         expect(await proxiedContract.isBlackListed(other.address)).to.be.false;

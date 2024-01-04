@@ -3,9 +3,10 @@ pragma solidity ^0.8.19;
 
 import {Ownable} from "./common/Ownable.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
+import "@thirdweb-dev/contracts/extension/Initializable.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Holding is Ownable, Upgradeable {
+contract Holding is Ownable, Initializable, Upgradeable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);

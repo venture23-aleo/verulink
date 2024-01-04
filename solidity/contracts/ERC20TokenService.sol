@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
+import "@thirdweb-dev/contracts/extension/Initializable.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-import {BlackListService} from "./abstract/tokenservice/BlackListService.sol";
-import {ERC20TokenSupport} from "./abstract/tokenservice/ERC20TokenSupport.sol";
+import {BlackListService} from "./base/tokenservice/BlackListService.sol";
+import {ERC20TokenSupport} from "./base/tokenservice/ERC20TokenSupport.sol";
 import {IERC20TokenBridge} from "./common/interface/bridge/IERC20TokenBridge.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import {Holding} from "./HoldingContract.sol";
@@ -12,6 +13,7 @@ import {Ownable} from "./common/Ownable.sol";
 
 contract ERC20TokenService is Ownable, BlackListService, 
     ERC20TokenSupport, 
+    Initializable,
     Upgradeable 
 {
     address erc20Bridge;

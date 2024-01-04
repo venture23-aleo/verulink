@@ -44,7 +44,7 @@ describe('ERC20TokenBridge', () => {
         await (await proxiedV1.addAttestor(attestor1.address, destinationChainId, 2)).wait();
         await (await proxiedV1.addAttestor(attestor2.address, destinationChainId, 2)).wait();
         await (await proxiedV1.addTokenService(tokenService.address, destinationChainId)).wait();
-        await (await proxiedV1.addChain(destinationChainId, "aleo.bridge")).wait();
+        await (await proxiedV1.addChain(destinationChainId, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
     });
 
     it('should have the correct owner', async () => {
@@ -61,14 +61,14 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
         const incomingPacketHash_ = await proxiedV1.incomingPackets(inPacket[2][0], inPacket[1]);
         const getIncomingPacketHash_ = await proxiedV1.getIncomingPacketHash(inPacket[2][0], inPacket[1]);
         expect(incomingPacketHash_).to.equal(getIncomingPacketHash_);
@@ -78,9 +78,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
@@ -97,9 +97,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
@@ -113,9 +113,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket1 = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
@@ -123,17 +123,17 @@ describe('ERC20TokenBridge', () => {
         const inPacket2 = [
             1,
             2,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
             150
         ];
 
         // Organize both packets into an array
         const packetsArray = [inPacket1, inPacket2];
-        await(await proxiedV1.connect(attestor1).receivePacketBatch(packetsArray)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacketBatch(packetsArray)).wait();
-        await(await proxiedV1.connect(tokenService).consume(packetsArray[0])).wait();
+        await (await proxiedV1.connect(attestor1).receivePacketBatch(packetsArray)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacketBatch(packetsArray)).wait();
+        await (await proxiedV1.connect(tokenService).consume(packetsArray[0])).wait();
         expect(await proxiedV1.isPacketConsumed(packetsArray[0][2][0], packetsArray[0][1])).to.be.true;
     });
     it('should revert when an unknown attester tries to receive a packet with receivePacketBatch', async () => {
@@ -141,9 +141,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket1 = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
@@ -151,9 +151,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket2 = [
             1,
             2,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
             150
         ];
         const packetsArray = [inPacket1, inPacket2];
@@ -168,15 +168,15 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Vote on the packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
 
         const result = await proxiedV1["hasVoted(uint256,uint256,address)"](inPacket[2][0], inPacket[1], attestor1.address);
 
@@ -188,14 +188,14 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Vote on the packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
 
         const result = await proxiedV1["hasVoted(uint256,uint256,address)"](inPacket[2][0], inPacket[1], attestor2.address);
 
@@ -207,12 +207,12 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
-        const tx = await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        const tx = await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
         const { eventName } = tx.logs[0];
         expect(eventName).to.equal('Voted');
     });
@@ -222,31 +222,31 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        const tx = await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        const tx = await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
         const { eventName } = tx.logs[0];
         expect(eventName).to.equal('AlreadyVoted');
-    });    
+    });
 
     it('should return true when quorum is reached for hasQuorumReached(uint256 chainId, uint256 sequence)', async () => {
         // Create an inPacket 
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Vote on the packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
         const result = await proxiedV1["hasQuorumReached(uint256,uint256)"](inPacket[2][0], inPacket[1]);
         expect(result).to.be.true;
     });
@@ -256,9 +256,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
@@ -270,14 +270,14 @@ describe('ERC20TokenBridge', () => {
         expect(initialQuorumReached).to.be.false;
 
         // Vote on the packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
 
         // Check if quorum has reached after one vote
         const quorumAfterOneVote = await proxiedV1["hasQuorumReached(bytes32,uint256)"](initialPacketHash, inPacket[2][0]);
         expect(quorumAfterOneVote).to.be.false;
 
         // Vote again to reach the quorum
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
         const packetHashAfterVoting = await proxiedV1.getIncomingPacketHash(inPacket[2][0], inPacket[1]);
         // Check if quorum has reached after two votes
         const quorumAfterTwoVotes = await proxiedV1["hasQuorumReached(bytes32,uint256)"](packetHashAfterVoting, inPacket[2][0]);
@@ -290,14 +290,14 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Vote on the packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
         const result = await proxiedV1["hasQuorumReached(uint256,uint256)"](inPacket[2][0], inPacket[1]);
         expect(result).to.be.false;
     });
@@ -307,18 +307,18 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Receive the incoming packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
 
         // Consume the packet
-        await(await proxiedV1.connect(tokenService).consume(inPacket)).wait();
+        await (await proxiedV1.connect(tokenService).consume(inPacket)).wait();
     });
 
     it('should revert on consuming an incoming packet that is not stored in incomming map', async () => {
@@ -326,9 +326,9 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
@@ -336,23 +336,23 @@ describe('ERC20TokenBridge', () => {
         expect(proxiedV1.connect(tokenService).consume(inPacket)).to.be.revertedWith("Unknown Packet Hash");
     });
 
-    it('should revert consuming an incoming packet that is already', async () => {
+    it('should revert on consuming an incoming packet that is already consumed', async () => {
         // Create an inPacket
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Receive the incoming packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
 
         // Consume the packet
-        await(await proxiedV1.connect(tokenService).consume(inPacket)).wait();
+        await (await proxiedV1.connect(tokenService).consume(inPacket)).wait();
         expect(proxiedV1.connect(tokenService).consume(inPacket)).to.be.revertedWith("Packet already consumed");
     });
 
@@ -361,15 +361,15 @@ describe('ERC20TokenBridge', () => {
         const inPacket = [
             1,
             1,
-            [2, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             [1, ethers.Wallet.createRandom().address],
-            ["aleo.bridge", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
             100
         ];
 
         // Receive the incoming packet
-        await(await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await(await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
 
         // Consume the packet
         expect(proxiedV1.connect(other).consume(inPacket)).to.be.revertedWith("Unknown Token Service");
@@ -380,10 +380,10 @@ describe('ERC20TokenBridge', () => {
             1,
             1,
             [1, ethers.Wallet.createRandom().address],
-            [2, "aleo.bridge"], [ethers.Wallet.createRandom().address, "aleo.bridge", 10, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             100
         ];
-        await(await proxiedV1.connect(tokenService).sendMessage(outPacket)).wait();
+        await (await proxiedV1.connect(tokenService).sendMessage(outPacket)).wait();
     });
 
     it('should revert when calling sendMessage with unknown token service', async () => {
@@ -391,7 +391,7 @@ describe('ERC20TokenBridge', () => {
             1,
             1,
             [1, ethers.Wallet.createRandom().address],
-            [2, "aleo.bridge"], [ethers.Wallet.createRandom().address, "aleo.bridge", 10, "aleo.bridge"],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             100
         ];
         expect(proxiedV1.connect(other).sendMessage(outPacket)).to.be.revertedWith("Unknown Token Service");
@@ -403,7 +403,7 @@ describe('ERC20TokenBridge', () => {
             1,
             1,
             [1, ethers.Wallet.createRandom().address],
-            [unknowndestChainId, "aleo.bridge"], [ethers.Wallet.createRandom().address, "aleo.bridge", 10, "aleo.bridge"],
+            [unknowndestChainId, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             100
         ];
         expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Unknown destination chain");

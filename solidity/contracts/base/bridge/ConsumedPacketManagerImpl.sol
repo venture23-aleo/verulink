@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
-contract ConsumedPacketManagerImpl is IncomingPacketManager {
+abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
     using PacketLibrary for PacketLibrary.InPacket;
 
     event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash);

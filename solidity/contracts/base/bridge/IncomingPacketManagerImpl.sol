@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
-contract IncomingPacketManagerImpl is IncomingPacketManager {
+abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     using PacketLibrary for PacketLibrary.InPacket;
 
     event PacketArrived(PacketLibrary.InPacket packet);
