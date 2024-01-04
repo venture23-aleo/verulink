@@ -25,16 +25,11 @@ import {
   PacketIdLeo,
   InPacketFullAttestorKey,
   leoInPacketFullAttestorKeySchema,
-  InPacketFullAttestorKeyLeo
+  InPacketFullAttestorKeyLeo,
+  InPacketFullScreeningKey,
+  leoInPacketFullScreeningKeySchema,
+  InPacketFullScreeningKeyLeo
 } from './bridge';
-import {
-  TSForeignContract,
-  leoTSForeignContractSchema,
-  TSForeignContractLeo,
-  TokenOrigin,
-  leoTokenOriginSchema,
-  TokenOriginLeo
-} from './token_service';
 import {
   wrapped_token,
   leoWrapped_tokenSchema,
@@ -52,6 +47,14 @@ import {
   leoTokenAccountSchema,
   TokenAccountLeo
 } from './wrapped_token';
+import {
+  TSForeignContract,
+  leoTSForeignContractSchema,
+  TSForeignContractLeo,
+  TokenOrigin,
+  leoTokenOriginSchema,
+  TokenOriginLeo
+} from './token_service';
 import {
   ProposalSign,
   leoProposalSignSchema,
@@ -113,12 +116,9 @@ export {
   InPacketFullAttestorKey,
   leoInPacketFullAttestorKeySchema,
   InPacketFullAttestorKeyLeo,
-  TSForeignContract,
-  leoTSForeignContractSchema,
-  TSForeignContractLeo,
-  TokenOrigin,
-  leoTokenOriginSchema,
-  TokenOriginLeo,
+  InPacketFullScreeningKey,
+  leoInPacketFullScreeningKeySchema,
+  InPacketFullScreeningKeyLeo,
   wrapped_token,
   leoWrapped_tokenSchema,
   wrapped_tokenLeo,
@@ -134,6 +134,12 @@ export {
   TokenAccount,
   leoTokenAccountSchema,
   TokenAccountLeo,
+  TSForeignContract,
+  leoTSForeignContractSchema,
+  TSForeignContractLeo,
+  TokenOrigin,
+  leoTokenOriginSchema,
+  TokenOriginLeo,
   ProposalSign,
   leoProposalSignSchema,
   ProposalSignLeo,

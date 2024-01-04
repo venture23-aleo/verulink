@@ -149,7 +149,7 @@ const validateBroadcast = async (
 ) => {
   const pollUrl = `${nodeEndpoint}/testnet3/transaction/${transactionId}`;
   const startTime = Date.now();
-  const timeoutMs = 60_000;
+  const timeoutMs = 600_000;
   let response;
 
   while (Date.now() - startTime < timeoutMs) {

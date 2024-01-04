@@ -151,3 +151,14 @@ export const leoInPacketFullAttestorKeySchema = z.object({
   attestor: leoAddressSchema,
 });
 export type InPacketFullAttestorKeyLeo = z.infer < typeof leoInPacketFullAttestorKeySchema > ;
+
+export interface InPacketFullScreeningKey {
+  packet_hash: BigInt;
+  screening_passed: boolean;
+}
+
+export const leoInPacketFullScreeningKeySchema = z.object({
+  packet_hash: leoFieldSchema,
+  screening_passed: leoBooleanSchema,
+});
+export type InPacketFullScreeningKeyLeo = z.infer < typeof leoInPacketFullScreeningKeySchema > ;

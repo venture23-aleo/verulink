@@ -52,10 +52,11 @@ export class Token_serviceContract {
 
     return result;
   }
-  async token_service_initialize(r0: string) {
+  async token_service_initialize(r0: string, r1: string) {
     const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.address(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_service_initialize',
@@ -107,16 +108,17 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_receive(r0: TokenOrigin, r1: string, r2: Array < number > , r3: string, r4: BigInt, r5: number, r6: number) {
+  async token_receive(r0: TokenOrigin, r1: string, r2: Array < number > , r3: string, r4: string, r5: BigInt, r6: number, r7: number) {
     const r0Leo = js2leo.json(getTokenOriginLeo(r0));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
     const r3Leo = js2leo.address(r3);
-    const r4Leo = js2leo.u64(r4);
-    const r5Leo = js2leo.u32(r5);
+    const r4Leo = js2leo.address(r4);
+    const r5Leo = js2leo.u64(r5);
     const r6Leo = js2leo.u32(r6);
+    const r7Leo = js2leo.u32(r7);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_receive',
@@ -144,6 +146,18 @@ export class Token_serviceContract {
     const result = await zkGetMapping({
       config: this.config,
       transition: 'council_program_TS',
+      params,
+    });
+    return leo2js.address(result);
+  }
+
+  async holding_program_TS(key: boolean): Promise < string > {
+    const keyLeo = js2leo.boolean(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'holding_program_TS',
       params,
     });
     return leo2js.address(result);

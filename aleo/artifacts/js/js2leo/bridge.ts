@@ -17,6 +17,8 @@ import {
   PacketIdLeo,
   InPacketFullAttestorKey,
   InPacketFullAttestorKeyLeo,
+  InPacketFullScreeningKey,
+  InPacketFullScreeningKeyLeo,
 } from "../types";
 
 import * as js2leo from "./common";
@@ -104,6 +106,14 @@ export function getInPacketFullAttestorKeyLeo(inPacketFullAttestorKey: InPacketF
   const result: InPacketFullAttestorKeyLeo = {
     packet_hash: js2leo.field(inPacketFullAttestorKey.packet_hash),
     attestor: js2leo.address(inPacketFullAttestorKey.attestor),
+  }
+  return result;
+}
+
+export function getInPacketFullScreeningKeyLeo(inPacketFullScreeningKey: InPacketFullScreeningKey): InPacketFullScreeningKeyLeo {
+  const result: InPacketFullScreeningKeyLeo = {
+    packet_hash: js2leo.field(inPacketFullScreeningKey.packet_hash),
+    screening_passed: js2leo.boolean(inPacketFullScreeningKey.screening_passed),
   }
   return result;
 }

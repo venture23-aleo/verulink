@@ -144,6 +144,12 @@ program bridge.aleo {
         attestor: address
     }
 
+    struct InPacketFullScreeningKey {
+        packet_hash: field,
+        screening_passed: bool
+    }
+
+
     // Returns the chain id of the network where this program is deployed
     inline this_chain_id() -> u32 {
         return 1u32;
@@ -396,7 +402,8 @@ program bridge.aleo {
     ///
     /// # Arguments:
     /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
-    transition attest(public packet: InPacketFull) {
+    /// * `screening_passed`: bool - true if the receiver/sender pass the screening; false otherwise
+    transition attest(public packet: InPacketFull, public screening_passed: bool) {
 
         let msg_hash: field = BHP256::hash_to_field(packet.message);
 
@@ -414,10 +421,15 @@ program bridge.aleo {
             attestor: self.caller
         });
 
-        return then finalize(packet.source.chain_id, packet.sequence, packet_hash, self.caller, packet_validator_mapping_key, packet);
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
+            packet_hash,
+            screening_passed
+        });
+
+        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, self.caller, packet_validator_mapping_key, packet);
     }
 
-    finalize attest(chain_id: u32, sequence: u32, packet_hash: field, attestor: address, packet_validator_mapping_key: field, packet: InPacketFull) {
+    finalize attest(chain_id: u32, sequence: u32, packet_hash_with_screening: field, attestor: address, packet_validator_mapping_key: field, packet: InPacketFull) {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, this_chain_id());
@@ -435,10 +447,10 @@ program bridge.aleo {
         Mapping::set(in_packet_signs, packet_validator_mapping_key, true);
 
         // Get the attestations for the packet
-        let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash, 0u8);
+        let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8);
 
         // Increase the attestation by 1
-        Mapping::set(in_packet_attestations, packet_hash, packet_attestation_count + 1u8);
+        Mapping::set(in_packet_attestations, packet_hash_with_screening, packet_attestation_count + 1u8);
 
         // Get the threshold
         // If bridge is not initialized, this should fail
@@ -455,7 +467,7 @@ program bridge.aleo {
         if (!packet_id_exists && packet_attestation_count + 1u8 >= threshold) {
             // If the threshold is met, set the packet_id
             // Alternatively, store the entire packet
-            Mapping::set(in_packet_hash, packet_id, packet_hash);
+            Mapping::set(in_packet_hash, packet_id, packet_hash_with_screening);
 
             // Mark the packet as not consumed
             Mapping::set(in_packet_consumed, packet_id, false);
@@ -485,7 +497,7 @@ program bridge.aleo {
     /// * `amount`: u64 - Amount to be minted on Aleo 
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition consume(public source_chain_id: u32, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public amount: u64, public sequence: u32, public height: u32) {
+    transition consume(public source_chain_id: u32, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence: u32, public height: u32) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -522,10 +534,18 @@ program bridge.aleo {
 
         let packet_hash: field = BHP256::hash_to_field(in_packet);
 
-        return then finalize (self.caller, source_chain_id, sequence, packet_hash);
+        let screening_passed: bool = receiver == actual_receiver;
+
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
+            packet_hash,
+            screening_passed
+        });
+
+
+        return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening);
     }
 
-    finalize consume(by: address, chain_id: u32, sequence: u32 , packet_hash: field) {
+    finalize consume(by: address, chain_id: u32, sequence: u32 , packet_hash_with_screening: field) {
         // Assert that the packet is being sent from one of the supported services
         assert(Mapping::get(supported_services, by));
 
@@ -535,7 +555,7 @@ program bridge.aleo {
 
         // Ensure enough attestation for the packet
         // Not required? since packet_id exists if enough attestations is reached
-        let packet_validation: u8 = Mapping::get(in_packet_attestations, packet_hash);
+        let packet_validation: u8 = Mapping::get(in_packet_attestations, packet_hash_with_screening);
         assert(packet_validation >= threshold);
 
         let packet_id: PacketId = PacketId {
@@ -545,7 +565,7 @@ program bridge.aleo {
 
         // Ensure that the packet has the right information
         let stored_packet_hash: field = Mapping::get(in_packet_hash, packet_id);
-        assert_eq(stored_packet_hash, packet_hash);
+        assert_eq(stored_packet_hash, packet_hash_with_screening);
 
         // Ensure that the packet has not been consumed
         let is_packet_consumed: bool = Mapping::get(in_packet_consumed, packet_id);

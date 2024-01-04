@@ -2,7 +2,7 @@
 name = "bridge"
 location = "local"
 path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/bridge"
-checksum = "861da91844c752eca653d5e9deea91c622a91032aea6c66740bcc121e9bd6a7d"
+checksum = "730c0d7802a7d1d3159581b838717d3da168b907ce131918c73e117179c1a89c"
 dependencies = []
 
 [[package]]
@@ -16,5 +16,5 @@ dependencies = []
 name = "token_service"
 location = "local"
 path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/token_service"
-checksum = "e04b225ebebfdec9286c483f866a96c343df43f40ff4c5121e244bde1a148764"
+checksum = "6669357fe9da0fd53268aaabfb02acebdd4c4732b1d5f8e5f5086d8f3e2c134c"
 dependencies = ["wrapped_token.aleo", "bridge.aleo"]

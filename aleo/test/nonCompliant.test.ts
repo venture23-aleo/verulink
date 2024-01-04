@@ -32,6 +32,8 @@ describe("Happy Path", () => {
   const aleoUser =
     "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
 
+  const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
+
   const aleoChainId = 101;
   const ethChainId = 1;
 
@@ -41,7 +43,7 @@ describe("Happy Path", () => {
 
   test("Receive A Packet", async () => {
 
-    const sequence = 3;
+    const sequence = 101;
     const amount = BigInt(10000);
     const height = 10;
 
@@ -67,7 +69,7 @@ describe("Happy Path", () => {
     };
 
     // Attest to a packet
-    let tx = await bridge.attest(packet, true);
+    let tx = await bridge.attest(packet, false);
     await tx.wait()
 
     // Consume the packet
@@ -76,30 +78,14 @@ describe("Happy Path", () => {
       token_service_address: evm2AleoArr(ethTsContract),
       token_address: evm2AleoArr(USDC)
     };
-    tx = await tokenService.token_receive(origin, wUSDC, evm2AleoArr(ethUser), aleoUser, aleoUser, amount, sequence, height);
+    tx = await tokenService.token_receive(origin, wUSDC, evm2AleoArr(ethUser), aleoUser, councilAddress, amount, sequence, height);
     await tx.wait()
 
     let key: TokenAccount = {
-      user: aleoUser,
+      user: councilAddress,
       token_id: wUSDC
     }
     let balance = await wrappedToken.token_balances(key)
-    console.log(balance)
-
-    // Send the packet to ethereum
-    tx = await tokenService.token_send(
-      wUSDC,
-      evm2AleoArr(ethUser),
-      BigInt(101),
-      {
-        chain_id: ethChainId,
-        token_service_address: evm2AleoArr(ethTsContract),
-        token_address: evm2AleoArr(USDC)
-      }
-    )
-    await tx.wait()
-
-    balance = await wrappedToken.token_balances(key)
     console.log(balance)
 
   }, 200_000);

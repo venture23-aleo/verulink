@@ -31,6 +31,12 @@ program token_service.aleo {
     // false: Null
     mapping council_program_TS: bool => address;
 
+    // mapping used as variable
+    // true: address of holding program
+    // false: Null
+    mapping holding_program_TS: bool => address;
+
+
     // tracks the total supply of the token
     mapping total_supply: address => u64;
 
@@ -74,16 +80,19 @@ program token_service.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition token_service_initialize(council: address) {
-        return then finalize(council);
+    transition token_service_initialize(council: address, holding: address) {
+        return then finalize(council, holding);
     }
 
-    finalize token_service_initialize(council: address) {
+    finalize token_service_initialize(council: address, holding: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(council_program_TS, true));
 
         // Set the council program
         Mapping::set(council_program_TS, true, council);
+
+        // Set the holding program
+        Mapping::set(holding_program_TS, true, holding);
     }
 
 
@@ -185,21 +194,31 @@ program token_service.aleo {
 
     /// Consumes msg from source at destination
     /// Requires sequence no of the source network
-    transition token_receive(public source: TokenOrigin, public token_id: address, public sender: [u8; 32], public receiver: address, public amount: u64, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
+    transition token_receive(public source: TokenOrigin, public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
 
         // call consume on bridge
-        bridge.aleo/consume(source.chain_id, source.token_service_address, token_id, sender, receiver, amount, sequence_no_of_source_network, height_of_source_network);
+        bridge.aleo/consume(source.chain_id, source.token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);
 
         // call mint on wrapped token
-        wrapped_token.aleo/mint(receiver, amount, token_id, source.chain_id, source.token_address);
+        wrapped_token.aleo/mint(actual_receiver, amount, token_id, source.chain_id, source.token_address);
 
-        return then finalize(token_id, amount);
+        // If the packet did not pass the screening, the `actual_receiver` must be the holding program
+        // In case the packet passed the screening, the receiver and the actual receiver are the same address.
+        // And additional checks are not required
+        let check_required: bool = !(receiver == actual_receiver);
+
+        return then finalize(token_id, amount, actual_receiver, check_required);
     }
 
-    finalize token_receive(token_id: address, amount: u64) {
+    finalize token_receive(token_id: address, amount: u64, actual_receiver: address, check_required: bool) {
         // Increase the total supply
         let current_supply: u64 = Mapping::get_or_use(total_supply, token_id, 0u64);
         Mapping::set(total_supply, token_id, current_supply + amount);
+
+        if check_required {
+            let holding_program: address = Mapping::get(holding_program_TS, true);
+            assert_eq(holding_program, actual_receiver);
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import {
   OutPacket,
   PacketId,
   InPacketFullAttestorKey,
+  InPacketFullScreeningKey,
 } from "./types";
 import {
   getAleoProgramLeo,
@@ -21,6 +22,7 @@ import {
   getOutPacketLeo,
   getPacketIdLeo,
   getInPacketFullAttestorKeyLeo,
+  getInPacketFullScreeningKeyLeo,
 } from './js2leo';
 import {
   getAleoProgram,
@@ -32,6 +34,7 @@ import {
   getOutPacket,
   getPacketId,
   getInPacketFullAttestorKey,
+  getInPacketFullScreeningKey,
 } from './leo2js';
 import {
   zkRun,
@@ -194,10 +197,11 @@ export class BridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async attest(r0: InPacketFull) {
+  async attest(r0: InPacketFull, r1: boolean) {
     const r0Leo = js2leo.json(getInPacketFullLeo(r0));
+    const r1Leo = js2leo.boolean(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'attest',
@@ -206,17 +210,18 @@ export class BridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async consume(r0: number, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: BigInt, r6: number, r7: number) {
+  async consume(r0: number, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: BigInt, r7: number, r8: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.address(r2);
     const r3Leo = js2leo.arr2string(js2leo.array(r3, js2leo.u8));
     const r4Leo = js2leo.address(r4);
-    const r5Leo = js2leo.u64(r5);
-    const r6Leo = js2leo.u32(r6);
+    const r5Leo = js2leo.address(r5);
+    const r6Leo = js2leo.u64(r6);
     const r7Leo = js2leo.u32(r7);
+    const r8Leo = js2leo.u32(r8);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'consume',

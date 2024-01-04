@@ -16,6 +16,7 @@ program token_service.aleo;
 
 
 
+
 struct TSForeignContract:
     chain_id as u32;
     contract_address as [u8; 32u32];
@@ -32,6 +33,11 @@ mapping token_service_contracts:
 
 
 mapping council_program_TS:
+	key as boolean.public;
+	value as address.public;
+
+
+mapping holding_program_TS:
 	key as boolean.public;
 	value as address.public;
 
@@ -76,15 +82,18 @@ mapping last_min_supply:
 
 function token_service_initialize:
     input r0 as address.private;
-    async token_service_initialize r0 into r1;
-    output r1 as token_service.aleo/token_service_initialize.future;
+    input r1 as address.private;
+    async token_service_initialize r0 r1 into r2;
+    output r2 as token_service.aleo/token_service_initialize.future;
 
 finalize token_service_initialize:
     input r0 as address.public;
-    contains council_program_TS[true] into r1;
-    not r1 into r2;
-    assert.eq r2 true;
+    input r1 as address.public;
+    contains council_program_TS[true] into r2;
+    not r2 into r3;
+    assert.eq r3 true;
     set r0 into council_program_TS[true];
+    set r1 into holding_program_TS[true];
 
 
 function support_chain:
@@ -184,21 +193,31 @@ function token_receive:
     input r1 as address.public;
     input r2 as [u8; 32u32].public;
     input r3 as address.public;
-    input r4 as u64.public;
-    input r5 as u32.public;
+    input r4 as address.public;
+    input r5 as u64.public;
     input r6 as u32.public;
-    call bridge.aleo/consume r0.chain_id r0.token_service_address r1 r2 r3 r4 r5 r6 into r7;
-    call wrapped_token.aleo/mint r3 r4 r1 r0.chain_id r0.token_address into r8;
-    async token_receive r7 r8 r1 r4 into r9;
-    output r9 as token_service.aleo/token_receive.future;
+    input r7 as u32.public;
+    call bridge.aleo/consume r0.chain_id r0.token_service_address r1 r2 r3 r4 r5 r6 r7 into r8;
+    call wrapped_token.aleo/mint r4 r5 r1 r0.chain_id r0.token_address into r9;
+    is.eq r3 r4 into r10;
+    not r10 into r11;
+    async token_receive r8 r9 r1 r5 r4 r11 into r12;
+    output r12 as token_service.aleo/token_receive.future;
 
 finalize token_receive:
     input r0 as bridge.aleo/consume.future;
     input r1 as wrapped_token.aleo/mint.future;
     input r2 as address.public;
     input r3 as u64.public;
+    input r4 as address.public;
+    input r5 as boolean.public;
     await r0;
     await r1;
-    get.or_use total_supply[r2] 0u64 into r4;
-    add r4 r3 into r5;
-    set r5 into total_supply[r2];
+    get.or_use total_supply[r2] 0u64 into r6;
+    add r6 r3 into r7;
+    set r7 into total_supply[r2];
+    get holding_program_TS[true] into r8;
+    not r5 into r9;
+    is.eq r8 r4 into r10;
+    or r9 r10 into r11;
+    assert.eq r11 true;

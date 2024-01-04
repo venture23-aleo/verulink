@@ -53,10 +53,9 @@ const setup = async () => {
   const aleoUser =
     "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
 
-
   // Deploy contracts
-  // await bridge.deploy();
-  // await wrappedToken.deploy();
+  await bridge.deploy();
+  await wrappedToken.deploy();
   await tokenService.deploy();
   tx = await council.deploy();
   await tx.wait();
@@ -87,7 +86,7 @@ const setup = async () => {
     councilAddress
   );
   await wrappedToken.wrapped_token_initialize(councilAddress);
-  await tokenService.token_service_initialize(councilAddress);
+  await tokenService.token_service_initialize(councilAddress, councilAddress);
 
   const ethChainId = 1
   await council.prop_add_new_token(
