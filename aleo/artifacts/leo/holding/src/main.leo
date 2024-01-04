@@ -7,12 +7,12 @@ program holding.aleo {
     // false: Null
     mapping council_program_holding: bool => address;
 
-    struct TokenAccount {
+    struct TokenAcc {
         user: address,
         token_id: address
     }
 
-    mapping holdings: TokenAccount => u64;
+    mapping holdings: TokenAcc => u64;
 
     inline token_service_program() -> address {
         return aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
@@ -23,11 +23,11 @@ program holding.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition token_service_initialize(public council: address) {
+    transition holding_initialize(public council: address) {
         return then finalize(council);
     }
 
-    finalize token_service_initialize(council: address) {
+    finalize holding_initialize(council: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(council_program_holding, true));
 
@@ -47,7 +47,7 @@ program holding.aleo {
     }
 
     finalize hold_fund(token_id: address, user: address, amount: u64) {
-        let token_user: TokenAccount = TokenAccount {
+        let token_user: TokenAcc = TokenAcc {
             user,
             token_id
         };
@@ -67,7 +67,7 @@ program holding.aleo {
         let council: address = Mapping::get(council_program_holding, true);
         assert_eq(council, caller);
 
-        let token_user: TokenAccount = TokenAccount {
+        let token_user: TokenAcc = TokenAcc {
             user,
             token_id
         };

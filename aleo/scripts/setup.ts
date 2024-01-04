@@ -1,5 +1,6 @@
 import { BridgeContract } from "../artifacts/js/bridge";
 import { CouncilContract } from "../artifacts/js/council";
+import { HoldingContract } from "../artifacts/js/holding";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
 import { evm2AleoArr, string2AleoArr } from "../test/utils";
@@ -29,6 +30,11 @@ const setup = async () => {
     privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
     mode: "execute",
   });
+  const holding = new HoldingContract({
+    networkName: "testnet3",
+    privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
+    mode: "execute",
+  });
 
   let tx;
 
@@ -54,11 +60,12 @@ const setup = async () => {
     "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
 
   // Deploy contracts
-  await bridge.deploy();
-  await wrappedToken.deploy();
-  await tokenService.deploy();
-  tx = await council.deploy();
-  await tx.wait();
+  // await bridge.deploy();
+  // await wrappedToken.deploy();
+  // await holding.deploy();
+  // await tokenService.deploy();
+  // tx = await council.deploy();
+  // await tx.wait();
 
   // Initialize council program with a single council member and 1/5 threshold
   const councilMember =
@@ -86,6 +93,7 @@ const setup = async () => {
     councilAddress
   );
   await wrappedToken.wrapped_token_initialize(councilAddress);
+  await holding.holding_initialize(councilAddress);
   await tokenService.token_service_initialize(councilAddress, councilAddress);
 
   const ethChainId = 1

@@ -21,13 +21,13 @@ import {
   LeoArray
 } from "./leo-types";
 
-export interface TokenAccount {
+export interface TokenAcc {
   user: string;
   token_id: string;
 }
 
-export const leoTokenAccountSchema = z.object({
+export const leoTokenAccSchema = z.object({
   user: leoAddressSchema,
   token_id: leoAddressSchema,
 });
-export type TokenAccountLeo = z.infer < typeof leoTokenAccountSchema > ;
+export type TokenAccLeo = z.infer < typeof leoTokenAccSchema > ;

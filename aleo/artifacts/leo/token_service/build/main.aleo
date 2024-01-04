@@ -1,6 +1,8 @@
 import wrapped_token.aleo;
+import holding.aleo;
 import bridge.aleo;
 program token_service.aleo;
+
 
 
 
@@ -201,23 +203,26 @@ function token_receive:
     call wrapped_token.aleo/mint r4 r5 r1 r0.chain_id r0.token_address into r9;
     is.eq r3 r4 into r10;
     not r10 into r11;
-    async token_receive r8 r9 r1 r5 r4 r11 into r12;
-    output r12 as token_service.aleo/token_receive.future;
+    call holding.aleo/hold_fund r1 r3 r5 into r12;
+    async token_receive r8 r9 r12 r1 r5 r4 r11 into r13;
+    output r13 as token_service.aleo/token_receive.future;
 
 finalize token_receive:
     input r0 as bridge.aleo/consume.future;
     input r1 as wrapped_token.aleo/mint.future;
-    input r2 as address.public;
-    input r3 as u64.public;
-    input r4 as address.public;
-    input r5 as boolean.public;
+    input r2 as holding.aleo/hold_fund.future;
+    input r3 as address.public;
+    input r4 as u64.public;
+    input r5 as address.public;
+    input r6 as boolean.public;
     await r0;
     await r1;
-    get.or_use total_supply[r2] 0u64 into r6;
-    add r6 r3 into r7;
-    set r7 into total_supply[r2];
-    get holding_program_TS[true] into r8;
-    not r5 into r9;
-    is.eq r8 r4 into r10;
-    or r9 r10 into r11;
-    assert.eq r11 true;
+    await r2;
+    get.or_use total_supply[r3] 0u64 into r7;
+    add r7 r4 into r8;
+    set r8 into total_supply[r3];
+    get holding_program_TS[true] into r9;
+    not r6 into r10;
+    is.eq r9 r5 into r11;
+    or r10 r11 into r12;
+    assert.eq r12 true;

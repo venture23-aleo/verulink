@@ -15,6 +15,9 @@ import {
   getTokenOrigin
 } from './token_service';
 import {
+  getTokenAcc
+} from './holding';
+import {
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
@@ -33,9 +36,6 @@ import {
   getSupportToken,
   getEnableToken
 } from './council';
-import {
-  getTokenAccount
-} from './holding';
 
 export {
   getAleoProgram,
@@ -50,6 +50,7 @@ export {
   getInPacketFullScreeningKey,
   getTSForeignContract,
   getTokenOrigin,
+  getTokenAcc,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
@@ -65,5 +66,4 @@ export {
   getSupportChainTS,
   getSupportToken,
   getEnableToken,
-  getTokenAccount,
 };

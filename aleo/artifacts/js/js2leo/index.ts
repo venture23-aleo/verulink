@@ -15,6 +15,9 @@ import {
   getTokenOriginLeo
 } from './token_service';
 import {
+  getTokenAccLeo
+} from './holding';
+import {
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
   getTokenInfoLeo,
@@ -33,9 +36,6 @@ import {
   getSupportTokenLeo,
   getEnableTokenLeo
 } from './council';
-import {
-  getTokenAccountLeo
-} from './holding';
 
 export {
   getAleoProgramLeo,
@@ -50,6 +50,7 @@ export {
   getInPacketFullScreeningKeyLeo,
   getTSForeignContractLeo,
   getTokenOriginLeo,
+  getTokenAccLeo,
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
   getTokenInfoLeo,
@@ -65,5 +66,4 @@ export {
   getSupportChainTSLeo,
   getSupportTokenLeo,
   getEnableTokenLeo,
-  getTokenAccountLeo,
 };

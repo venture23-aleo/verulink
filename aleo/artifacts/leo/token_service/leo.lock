@@ -6,6 +6,13 @@ checksum = "ed1e5f8fa272d85fd5d847f818a6b59f48b3deefa91225955f517af37745ce7c"
 dependencies = []
 
 [[package]]
+name = "holding"
+location = "local"
+path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/holding"
+checksum = "7ea1f496558aa9c68dbb7a47f13e8a11aa205e15f56849c3edeb7738924e7634"
+dependencies = ["wrapped_token.aleo"]
+
+[[package]]
 name = "bridge"
 location = "local"
 path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/bridge"

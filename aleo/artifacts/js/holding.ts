@@ -1,28 +1,13 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  TokenAccount,
-  wrapped_token,
-  WTForeignContract,
-  TokenInfo,
-  WrappedTokenInfo,
-  TokenAccount,
+  TokenAcc,
 } from "./types";
 import {
-  getTokenAccountLeo,
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo,
+  getTokenAccLeo,
 } from './js2leo';
 import {
-  getTokenAccount,
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount,
+  getTokenAcc,
 } from './leo2js';
 import {
   zkRun,
@@ -64,13 +49,13 @@ export class HoldingContract {
 
     return result;
   }
-  async token_service_initialize(r0: string) {
+  async holding_initialize(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'token_service_initialize',
+      transition: 'holding_initialize',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -116,8 +101,8 @@ export class HoldingContract {
     return leo2js.address(result);
   }
 
-  async holdings(key: TokenAccount): Promise < BigInt > {
-    const keyLeo = js2leo.json(getTokenAccountLeo(key));
+  async holdings(key: TokenAcc): Promise < BigInt > {
+    const keyLeo = js2leo.json(getTokenAccLeo(key));
 
     const params = [keyLeo]
     const result = await zkGetMapping({

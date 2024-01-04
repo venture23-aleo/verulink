@@ -2,6 +2,7 @@
 
 import wrapped_token.aleo;
 import bridge.aleo;
+import holding.aleo;
 
 program token_service.aleo {
 
@@ -206,6 +207,10 @@ program token_service.aleo {
         // In case the packet passed the screening, the receiver and the actual receiver are the same address.
         // And additional checks are not required
         let check_required: bool = !(receiver == actual_receiver);
+
+        if check_required {
+            holding.aleo/hold_fund(token_id, receiver, amount);
+        }
 
         return then finalize(token_id, amount, actual_receiver, check_required);
     }

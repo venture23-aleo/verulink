@@ -1,13 +1,13 @@
 import {
-  TokenAccount,
-  TokenAccountLeo,
+  TokenAcc,
+  TokenAccLeo,
 } from "../types";
 
 import * as leo2js from "./common";
-export function getTokenAccount(tokenAccount: TokenAccountLeo): TokenAccount {
-  const result: TokenAccount = {
-    user: leo2js.address(tokenAccount.user),
-    token_id: leo2js.address(tokenAccount.token_id),
+export function getTokenAcc(tokenAcc: TokenAccLeo): TokenAcc {
+  const result: TokenAcc = {
+    user: leo2js.address(tokenAcc.user),
+    token_id: leo2js.address(tokenAcc.token_id),
   }
   return result;
 }

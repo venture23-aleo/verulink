@@ -39,6 +39,11 @@ import {
   TokenOriginLeo
 } from './token_service';
 import {
+  TokenAcc,
+  leoTokenAccSchema,
+  TokenAccLeo
+} from './holding';
+import {
   wrapped_token,
   leoWrapped_tokenSchema,
   wrapped_tokenLeo,
@@ -87,11 +92,6 @@ import {
   leoEnableTokenSchema,
   EnableTokenLeo
 } from './council';
-import {
-  TokenAccount,
-  leoTokenAccountSchema,
-  TokenAccountLeo
-} from './holding';
 
 export {
   AleoProgram,
@@ -130,6 +130,9 @@ export {
   TokenOrigin,
   leoTokenOriginSchema,
   TokenOriginLeo,
+  TokenAcc,
+  leoTokenAccSchema,
+  TokenAccLeo,
   wrapped_token,
   leoWrapped_tokenSchema,
   wrapped_tokenLeo,
@@ -175,7 +178,4 @@ export {
   EnableToken,
   leoEnableTokenSchema,
   EnableTokenLeo,
-  TokenAccount,
-  leoTokenAccountSchema,
-  TokenAccountLeo,
 };
