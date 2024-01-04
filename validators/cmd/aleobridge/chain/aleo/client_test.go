@@ -9,7 +9,6 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 )
 
 var (
@@ -91,7 +90,6 @@ func TestGetPktWithSeq(t *testing.T) {
 
 func TestSendPacket(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
-		logger.InitLogging(logger.Development, ".")
 		client := NewClient(cfg)
 		client.(*Client).network = "happynetwork"
 		mockRpc, _ := aleoRpc.NewMockRPC("nodeurl", "network")
@@ -122,7 +120,6 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: context time out", func(t *testing.T) {
-		logger.InitLogging(logger.Development, ".")
 		client := NewClient(cfg)
 		client.(*Client).network = "timeout"
 		mockRpc, _ := aleoRpc.NewMockRPC("nodeurl", "network")
@@ -153,7 +150,6 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: misformed/invalid command parameter", func(t *testing.T) {
-		logger.InitLogging(logger.Development, ".")
 		client := NewClient(cfg)
 		client.(*Client).network = "invalidparam"
 		mockRpc, _ := aleoRpc.NewMockRPC("nodeurl", "network")
@@ -184,7 +180,6 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: invalid command", func(t *testing.T) {
-		logger.InitLogging(logger.Development, ".")
 		client := NewClient(cfg)
 		mockRpc, _ := aleoRpc.NewMockRPC("nodeurl", "network")
 		client.(*Client).aleoClient = mockRpc
