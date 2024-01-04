@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 )
 
 func TestGeneratePacket(t *testing.T) {
-	cfg := &relay.ChainConfig{
+	cfg := &config.ChainConfig{
 		ChainID:        1,
 		NodeUrl:        "https://rpc.sepolia.org",
 		BridgeContract: "0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758",
@@ -91,7 +91,7 @@ func getPrivateKey() *ecdsa.PrivateKey {
 }
 
 func TestGetPacket(t *testing.T) {
-	cfg := &relay.ChainConfig{
+	cfg := &config.ChainConfig{
 		ChainID:        1,
 		NodeUrl:        "https://rpc.sepolia.org",
 		BridgeContract: "0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758",

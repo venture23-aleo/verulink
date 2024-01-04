@@ -9,6 +9,7 @@ import (
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
@@ -25,7 +26,7 @@ type MockClient struct {
 	minRequiredGasFee uint64
 
 	//
-	chainCfg *relay.ChainConfig
+	chainCfg *config.ChainConfig
 	wallet   common.Wallet
 }
 
@@ -114,7 +115,7 @@ func (cl *MockClient) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func NewMockClient(cfg *relay.ChainConfig) relay.IClient {
+func NewMockClient(cfg *config.ChainConfig) relay.IClient {
 	/*
 		Initialize aleo MockClient and panic if any error occurs.
 	*/
@@ -137,7 +138,7 @@ func NewMockClient(cfg *relay.ChainConfig) relay.IClient {
 		queryUrl:       urlSlice[0],
 		network:        urlSlice[1],
 		aleoClient:     aleoMockClient,
-		finalizeHeight: defaultFinalizingHeight,
+		finalizeHeight: defaultFinalityHeight,
 		chainID:        cfg.ChainID,
 		blockGenTime:   blockGenerationTime,
 		chainCfg:       cfg,

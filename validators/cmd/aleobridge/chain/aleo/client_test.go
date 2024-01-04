@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 )
 
 var (
-	cfg = &relay.ChainConfig{
+	cfg = &config.ChainConfig{
 		ChainID:        2,
 		NodeUrl:        "http://" + RpcEndpoint + "|testnet3",
 		BridgeContract: "bridge.aleo",

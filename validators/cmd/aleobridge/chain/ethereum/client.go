@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -42,7 +43,7 @@ type Client struct {
 	finalityHeight    uint64
 	blockGenTime      time.Duration
 	chainID           uint32
-	chainCfg          *relay.ChainConfig
+	chainCfg          *config.ChainConfig
 	wallet            common.Wallet
 }
 
@@ -205,7 +206,7 @@ func loadWalletConfig(file string) (common.Wallet, error) {
 
 }
 
-func NewClient(cfg *relay.ChainConfig) relay.IClient {
+func NewClient(cfg *config.ChainConfig) relay.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
 		nextSeq should start from 1

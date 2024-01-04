@@ -1,8 +1,9 @@
-package relay
+package config
 
-const (
-	EVM  = "ETH"
-	ALEO = "ALEO"
+import (
+	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type ChainConfig struct {
@@ -19,16 +20,28 @@ type ChainConfig struct {
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
 	ChainConfigs []*ChainConfig `json:"chains"`
-	// BridgePair is pairing between bridge contracts to communicate packets back and forth
-
-	LogConfig *LoggerConfig `json:"log"`
-	DBPath    string        `json:"db_path"`
-	/*
-		other fields if required
-	*/
+	LogConfig    *LoggerConfig  `json:"log"`
+	DBPath       string         `json:"db_path"`
 }
 
 type LoggerConfig struct {
 	Encoding   string `json:"encoding"`
 	OutputPath string `json:"output_path"`
+}
+
+var config *Config
+
+func GetConfig() *Config {
+	return config
+}
+
+func LoadConfig(file string) {
+	f, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.NewDecoder(f).Decode(config)
+	if err != nil {
+		panic(err)
+	}
 }
