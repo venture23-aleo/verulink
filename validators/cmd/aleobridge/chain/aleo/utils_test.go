@@ -2,6 +2,7 @@ package aleo
 
 import (
 	"math/big"
+	"strconv"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -12,6 +13,12 @@ import (
 const (
 	RpcEndpoint = "3.84.49.97"
 )
+
+func giveOutPackets(key string, seqNum uint64) (map[string]string, error) {
+	packetString := "{\\n  version: 0u8,\\n  sequence: " + strconv.Itoa(int(seqNum)) + "u32,\\n  source: {\\n    chain_id: 2u32,\\n    addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px\\n  },\\n  destination: {\\n    chain_id: 1u32,\\n    addr: [\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      20u8,\\n      119u8,\\n      159u8,\\n      153u8,\\n      43u8,\\n      47u8,\\n      44u8,\\n      66u8,\\n      184u8,\\n      102u8,\\n      15u8,\\n      250u8,\\n      66u8,\\n      219u8,\\n      203u8,\\n      60u8,\\n      124u8,\\n      153u8,\\n      48u8,\\n      176u8\\n    ]\\n  },\\n  message: {\\n    token: [\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      20u8,\\n      119u8,\\n      159u8,\\n      153u8,\\n      43u8,\\n      47u8,\\n      44u8,\\n      66u8,\\n      184u8,\\n      102u8,\\n      15u8,\\n      250u8,\\n      66u8,\\n      219u8,\\n      203u8,\\n      60u8,\\n      124u8,\\n      153u8,\\n      48u8,\\n      176u8\\n    ],\\n    sender: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn,\\n    receiver: [\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8\\n    ],\\n    amount: 102u64\\n  },\\n  height: 55u32\\n}"
+	return map[string]string{key: packetString}, nil
+
+}
 
 func TestConstructEthAddressForAleo(t *testing.T) {
 	t.Run("happy path construction", func(t *testing.T) {
@@ -72,12 +79,12 @@ func TestParseMessage(t *testing.T) {
 		version:  "0u8",
 		sequence: "1u32",
 		source: aleoPacketNetworkAddress{
-			chain_id: "2u32",
-			address:  "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			chainID: "2u32",
+			address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 		},
 		destination: aleoPacketNetworkAddress{
-			chain_id: "1u32",
-			address:  "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
+			chainID: "1u32",
+			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
 		},
 		message: aleoMessage{
 			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",

@@ -94,7 +94,10 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), defaultReadTimeout)
 		defer cancel()
-		txo.GasPrice, _ = cl.SuggestGasPrice(ctx)
+		txo.GasPrice, err = cl.SuggestGasPrice(ctx)
+		if err != nil {
+			return nil, err
+		}
 		txo.GasLimit = uint64(defaultGasLimit)
 		return txo, nil
 	}
@@ -104,10 +107,10 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		return err
 	}
 
-	_ctx, cancel := context.WithTimeout(ctx, defaultSendTxTimeout)
+	ctx, cancel := context.WithTimeout(ctx, defaultSendTxTimeout)
 	defer cancel()
 
-	txOpts.Context = _ctx
+	txOpts.Context = ctx
 	txOpts.GasLimit = defaultGasLimit
 
 	txOpts.GasPrice = big.NewInt(defaultGasPrice)
@@ -131,11 +134,11 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		Height: big.NewInt(int64(m.Height)),
 	}
 
-	transacton, err := cl.attestMessage(txOpts, *packet)
+	transaction, err := cl.attestMessage(txOpts, *packet)
 	if err != nil {
 		return err
 	}
-	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
+	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transaction.Hash().String()})
 	return nil
 }
 

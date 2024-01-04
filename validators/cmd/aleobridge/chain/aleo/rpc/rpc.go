@@ -21,7 +21,7 @@ type IAleoRPC interface {
 	GetMappingNames(ctx context.Context, programId string) ([]string, error)
 	GetTransactionById(ctx context.Context, transactionId string) (*Transaction, error)
 	GetLatestHeight(ctx context.Context) (int64, error)
-	Send(_ctx context.Context, aleoPacket, privateKey, queryUrl, network, priorityFee string) *exec.Cmd
+	Send(ctx context.Context, aleoPacket, privateKey, queryUrl, network, priorityFee string) *exec.Cmd
 }
 
 type Client struct {
@@ -169,8 +169,8 @@ func (c *Client) FindTransactionIDByProgramID(ctx context.Context, programId str
 	return transactionId, err
 }
 
-func (c *Client) Send(_ctx context.Context, aleoPacket, privateKey, queryUrl, network, priorityFee string) *exec.Cmd {
-	return exec.CommandContext(_ctx,
+func (c *Client) Send(ctx context.Context, aleoPacket, privateKey, queryUrl, network, priorityFee string) *exec.Cmd {
+	return exec.CommandContext(ctx,
 		"snarkos", "developer", "execute", "bridge.aleo", "attest",
 		aleoPacket,
 		"--private-key", privateKey,

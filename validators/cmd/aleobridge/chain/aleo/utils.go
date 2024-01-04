@@ -37,11 +37,11 @@ func parseMessage(s string) *aleoPacket {
 		case "sequence":
 			pkt.sequence = messages[m+1]
 		case "source":
-			pkt.source.chain_id = messages[m+2]
+			pkt.source.chainID = messages[m+2]
 			pkt.source.address = messages[m+4]
 		case "destination":
 			serviceProgram := ""
-			pkt.destination.chain_id = messages[m+2]
+			pkt.destination.chainID = messages[m+2]
 			for i := m + 4; true; i++ {
 				if messages[i] == "message" {
 					break
@@ -96,14 +96,14 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	}
 	pkt.Sequence = sequence
 
-	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chain_id, "u32", "", 1), 0, 64)
+	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chainID, "u32", "", 1), 0, 64)
 	if err != nil {
 		return nil, &exec.Error{}
 	}
 	pkt.Source.ChainID = sourceChainID
 	pkt.Source.Address = packet.source.address
 
-	destChainID, err := strconv.ParseUint(strings.Replace(packet.destination.chain_id, "u32", "", 1), 0, 64)
+	destChainID, err := strconv.ParseUint(strings.Replace(packet.destination.chainID, "u32", "", 1), 0, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -166,10 +166,11 @@ func constructEthAddressForAleoParameter(serviceContract string) string {
 
 	appendString := "u8, "
 	for i := lenDifference; i < 32; i++ {
-		aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + "u8, "
+		aleoAddress += strconv.Itoa(int(serviceContractByte[i-lenDifference])) + appendString
 	}
 
-	return aleoAddress[:len(aleoAddress)-(len(appendString)-len("u8"))] + " ]"
+	l := len(appendString) - len("u8")
+	return aleoAddress[:len(aleoAddress)-l] + " ]"
 }
 
 // parses the eth addr in the form [ 0u8, 0u8, ..., 0u8] received from aleo to hex string
