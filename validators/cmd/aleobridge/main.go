@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
@@ -45,21 +45,12 @@ var (
 
 func main() {
 	flag.Parse()
-	cfg, err := loadConfig(configFile)
-	if err != nil {
-		fmt.Printf("Load config failed. Error: %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	if err != nil {
-		fmt.Printf("Config validation failed. Error: %s\n", err.Error())
-		os.Exit(1)
-	}
+	config.LoadConfig(configFile)
 
 	if devMode {
-		logger.InitLogging(logger.Development, cfg.LogConfig.OutputPath)
+		logger.InitLogging(logger.Development, config.GetConfig().LogConfig)
 	} else {
-		logger.InitLogging(logger.Production, cfg.LogConfig.OutputPath)
+		logger.InitLogging(logger.Production, config.GetConfig().LogConfig)
 	}
 
 	signal.Ignore(getIgnoreSignals()...)
@@ -67,26 +58,13 @@ func main() {
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
 
-	err = store.InitKVStore(cfg.DBPath)
+	err := store.InitKVStore(config.GetConfig().DBPath)
 	if err != nil {
 		fmt.Printf("Error while initializing db store: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	multirelayer := relay.MultiRelay(ctx, cfg)
+	multirelayer := relay.MultiRelay(ctx, config.GetConfig().ChainConfigs)
 	multirelayer.StartMultiRelay(ctx)
 
-}
-
-func loadConfig(file string) (*relay.Config, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	cfg := &relay.Config{}
-	err = json.NewDecoder(f).Decode(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
 }

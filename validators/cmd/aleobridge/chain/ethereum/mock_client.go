@@ -2,9 +2,7 @@ package ethereum
 
 import (
 	"context"
-	"encoding/json"
 	"math/big"
-	"os"
 	"time"
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -12,7 +10,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -23,18 +20,7 @@ import (
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
 
-const (
-	defaultFinalityHeight = 2
-	blockGenerationTime   = time.Second * 12
-	defaultRetryCount     = 5
-	ethereum              = "ethereum"
-	defaultGasLimit       = 1500000
-	defaultGasPrice       = 130000000000
-	defaultSendTxTimeout  = time.Second * 30
-	defaultReadTimeout    = 50 * time.Second
-)
-
-type Client struct {
+type MockClient struct {
 	name              string
 	address           string
 	eth               *ethclient.Client
@@ -43,17 +29,39 @@ type Client struct {
 	finalityHeight    uint64
 	blockGenTime      time.Duration
 	chainID           uint32
-	chainCfg          *config.ChainConfig
+	chainCfg          *relay.ChainConfig
 	wallet            common.Wallet
 }
 
-func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
+func giveOutPackets(destChainID, seqNumber *big.Int) (*abi.PacketLibraryOutPacket, error) {
+	return &abi.PacketLibraryOutPacket{
+		Version: ethCommon.Big0,
+		DestTokenService: abi.PacketLibraryOutNetworkAddress{
+			ChainId: destChainID,
+			Addr:    "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		SourceTokenService: abi.PacketLibraryInNetworkAddress{
+			ChainId: ethCommon.Big1,
+			Addr:    ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"),
+		},
+		Sequence: seqNumber,
+		Message: abi.PacketLibraryOutTokenMessage{
+			SenderAddress: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"),
+			DestTokenAddress: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			Amount: big.NewInt(102),
+			ReceiverAddress: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		Height: big.NewInt(110),
+	}, nil
+}
+
+func (cl *MockClient) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
 	destChainIDBig := &big.Int{}
 	destChainIDBig.SetUint64(uint64(dstChainID))
 	sequenceNumber := &big.Int{}
 	sequenceNumber.SetUint64(seqNum)
 
-	ethpacket, err := cl.bridge.OutgoingPackets(&ethBind.CallOpts{Context: ctx}, destChainIDBig, sequenceNumber)
+	ethpacket, err := giveOutPackets(destChainIDBig, sequenceNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -80,13 +88,13 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum u
 	return packet, nil
 }
 
-func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
+func (cl *MockClient) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
 	tx, err = cl.bridge.ReceivePacket(opts, packet)
 	return
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
-func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
+func (cl *MockClient) SendPacket(ctx context.Context, m *chain.Packet) error {
 	newTransactOpts := func() (*ethBind.TransactOpts, error) {
 		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*wallet).SKey(), big.NewInt(int64(cl.chainID)))
 		if err != nil {
@@ -135,19 +143,19 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	if err != nil {
 		return err
 	}
-	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
+	logger.Logger.Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
 	return nil
 }
 
-func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
+func (cl *MockClient) GetLatestHeight(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 
-func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (bool, error) {
+func (cl *MockClient) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (bool, error) {
 	return false, nil
 }
 
-func (cl *Client) CurHeight(ctx context.Context) uint64 {
+func (cl *MockClient) CurHeight(ctx context.Context) uint64 {
 	height, err := cl.eth.BlockNumber(ctx)
 	if err != nil {
 		return 0
@@ -155,58 +163,43 @@ func (cl *Client) CurHeight(ctx context.Context) uint64 {
 	return height
 }
 
-func (cl *Client) GetFinalityHeight() uint64 {
+func (cl *MockClient) GetFinalityHeight() uint64 {
 	return cl.finalityHeight
 }
 
-func (cl *Client) GetBlockGenTime() time.Duration {
+func (cl *MockClient) GetBlockGenTime() time.Duration {
 	return cl.blockGenTime
 }
 
-func (cl *Client) GetDestChains() ([]string, error) {
+func (cl *MockClient) GetDestChains() ([]string, error) {
 	return []string{"aleo"}, nil
 }
 
-func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
+func (cl *MockClient) GetMinReqBalForMakingTxn() uint64 {
 	return cl.minRequiredGasFee
 }
 
-func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
+func (cl *MockClient) GetWalletBalance(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
 
-func (cl *Client) Name() string {
+func (cl *MockClient) Name() string {
 	return cl.name
 }
 
-func (cl *Client) GetSourceChain() (string, string) {
+func (cl *MockClient) GetSourceChain() (string, string) {
 	return cl.name, cl.address
 }
 
-func (cl *Client) GetChainID() uint32 {
+func (cl *MockClient) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func (cl *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
+func (cl *MockClient) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return cl.eth.SuggestGasPrice(ctx)
 }
 
-func loadWalletConfig(file string) (common.Wallet, error) {
-	walletBt, err := os.ReadFile(file) // wallet byte
-	if err != nil {
-		return nil, err
-	}
-
-	w := &wallet{}
-	err = json.Unmarshal(walletBt, w)
-	if err != nil {
-		return nil, err
-	}
-	return w, nil
-
-}
-
-func NewClient(cfg *config.ChainConfig) relay.IClient {
+func NewMockClient(cfg *relay.ChainConfig) relay.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
 		nextSeq should start from 1

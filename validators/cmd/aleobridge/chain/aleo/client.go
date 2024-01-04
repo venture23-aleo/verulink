@@ -2,109 +2,100 @@ package aleo
 
 import (
 	"context"
-	"fmt"
-	"os/exec"
+	"encoding/json"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
 	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
 )
 
 const (
-	DefaultFinalizingHeight = 1
-	BlockGenerationTime     = time.Second * 5
-	OUT_PACKET              = "out_packets"
-	PRIORITY_FEE            = "1000"
+	defaultFinalityHeight = 1
+	blockGenerationTime   = time.Second * 5
+	outPacket             = "out_packets"
+	priorityFee           = "1000"
+	aleo                  = "aleo"
 )
 
 type Client struct {
-	aleoClient        *aleoRpc.Client
+	aleoClient        aleoRpc.IAleoRPC
 	name              string
 	programID         string
 	queryUrl          string
 	network           string
 	chainID           uint32
-	finalizeHeight    uint64
+	finalityHeight    uint64
 	blockGenTime      time.Duration
 	minRequiredGasFee uint64
 
 	//
-	chainCfg *relay.ChainConfig
+	chainCfg *config.ChainConfig
 	wallet   common.Wallet
 }
 
-type AleoPacket struct {
-	Version     string                   `json:"version"`
-	Source      AleoPacketNetworkAddress `json:"source"`
-	Sequence    string                   `json:"sequence_no"`
-	Destination AleoPacketNetworkAddress `json:"destination"`
-	Message     AleoMessage              `json:"msg"`
-	Height      string                   `json:""`
+type aleoPacket struct {
+	version     string
+	source      aleoPacketNetworkAddress
+	sequence    string
+	destination aleoPacketNetworkAddress
+	message     aleoMessage
+	height      string
 }
 
-type AleoPacketNetworkAddress struct {
-	Chain_id string `json:"chain_id"`
-	Address  string
+type aleoPacketNetworkAddress struct {
+	chain_id string
+	address  string
 }
 
-type AleoMessage struct {
-	Denom    string `json:"denom"`
-	Receiver string `json:"receiver"`
-	Amount   string `json:"amount"`
-	Sender   string
-}
-
-func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
-	return fmt.Sprintf("{chain_id:%du32,sequence:%du32}", dst, seqNum)
+type aleoMessage struct {
+	token    string
+	receiver string
+	amount   string
+	sender   string
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
 	mappingKey := constructOutMappingKey(dst, seqNum)
-	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, OUT_PACKET, mappingKey)
+	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, outPacket, mappingKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if message == nil {
-		return nil, nil
-	}
 	pktStr := parseMessage(message[mappingKey])
 	return parseAleoPacket(pktStr)
 }
 
 // SendAttestedPacket sends packet from source chain to target chain
-func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error {
-	if cl.isAlreadyExist() {
+// TODO: output parser
+func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { //TODO: seems to panic at misformed packet so need to handle that
+	if cl.isAlreadyExist(ctx, packet) {
 		return chain.AlreadyRelayedPacket{
 			CurChainHeight: 0,
 		}
 	}
 	aleoPacket := constructAleoPacket(packet)
-	query, network := cl.queryUrl, cl.network
-	privateKey := cl.wallet.(*common.ALEOWallet).PrivateKey
-	cmd := exec.CommandContext(context.Background(),
-		"snarkos", "developer", "execute", "bridge.aleo", "attest",
-		aleoPacket,
-		"--private-key", privateKey,
-		"--query", query,
-		"--broadcast", query+"/"+network+"/transaction/broadcast",
-		"--priority-fee", PRIORITY_FEE)
+	privateKey := cl.wallet.(*wallet).PrivateKey
 
-	fmt.Println("calling the contract", privateKey)
-	fmt.Println("aleo packet", aleoPacket)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*25)
+	defer cancel()
+	cmd := cl.aleoClient.Send(ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
-	fmt.Println(string(output))
+
+	// todo: Add transaction confirmation code
+	_ = output
+	//
 	return nil
 }
 
-func (cl *Client) isAlreadyExist() bool {
+func (cl *Client) isAlreadyExist(ctx context.Context, pkt *chain.Packet) bool {
 	return false
 }
 
@@ -121,7 +112,7 @@ func (cl *Client) CurHeight(ctx context.Context) uint64 {
 }
 
 func (cl *Client) GetFinalityHeight() uint64 {
-	return cl.finalizeHeight
+	return cl.finalityHeight
 }
 
 func (cl *Client) GetBlockGenTime() time.Duration {
@@ -141,22 +132,28 @@ func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
 }
 
 func (cl *Client) Name() string {
-	return "Aleo"
+	return cl.name
 }
 
 func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func Wallet(path string) (common.Wallet, error) {
-	wallet, err := relay.LoadWalletConfig(path)
+func loadWalletConfig(file string) (common.Wallet, error) {
+	walletBt, err := os.ReadFile(file) // wallet byte
 	if err != nil {
 		return nil, err
 	}
-	return wallet, nil
+	w := &wallet{}
+	err = json.Unmarshal(walletBt, w)
+	if err != nil {
+		return nil, err
+	}
+	return w, nil
+
 }
 
-func NewClient(cfg *relay.ChainConfig) relay.IClient {
+func NewClient(cfg *config.ChainConfig) relay.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
 	*/
@@ -165,25 +162,36 @@ func NewClient(cfg *relay.ChainConfig) relay.IClient {
 		panic("invalid format. Expected format:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
 	}
 
-	aleoClient, err := aleoRpc.NewClient(urlSlice[0], urlSlice[1])
+	aleoClient, err := aleoRpc.NewRPC(urlSlice[0], urlSlice[1])
 	if err != nil {
 		return nil
 	}
 
-	wallet, err := Wallet(cfg.WalletPath)
+	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
 		return nil
+	}
+
+	name := cfg.Name
+	if name == "" {
+		name = aleo
+	}
+
+	finalityHeight := cfg.FinalityHeight
+	if finalityHeight == 0 {
+		finalityHeight = defaultFinalityHeight
 	}
 
 	return &Client{
 		queryUrl:       urlSlice[0],
 		network:        urlSlice[1],
 		aleoClient:     aleoClient,
-		finalizeHeight: DefaultFinalizingHeight,
+		finalityHeight: uint64(finalityHeight),
 		chainID:        cfg.ChainID,
-		blockGenTime:   BlockGenerationTime,
+		blockGenTime:   blockGenerationTime,
 		chainCfg:       cfg,
 		wallet:         wallet,
 		programID:      cfg.BridgeContract,
+		name:           name,
 	}
 }

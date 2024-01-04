@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 )
 
 var (
@@ -28,12 +29,12 @@ type IClient interface {
 	Namer
 }
 
-type ClientFunc func(cfg *ChainConfig) IClient
+type ClientFunc func(cfg *config.ChainConfig) IClient
 
 type Relays []Relayer
 
-func MultiRelay(ctx context.Context, cfg *Config) Relays {
-	for _, chainCfg := range cfg.ChainConfigs {
+func MultiRelay(ctx context.Context, cfgs []*config.ChainConfig) Relays {
+	for _, chainCfg := range cfgs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
 		}
