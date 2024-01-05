@@ -26,7 +26,9 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		}
 	}()
 
+	fmt.Println("message: ", s)
 	sMessages := strings.Split(trim(s), ",")
+	fmt.Printf("\nSplitted: %v\n\n", sMessages)
 	var messages []string
 
 	for i := 0; i < len(sMessages); i++ {
@@ -34,6 +36,8 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		msplit := strings.Split(msg, ":")
 		messages = append(messages, msplit...)
 	}
+
+	fmt.Printf("Messages: %v\n\n", messages)
 
 	requiredFields := map[string]bool{
 		"version":     false,
@@ -60,10 +64,7 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		case "destination":
 			serviceProgram := ""
 			pkt.destination.chainID = messages[m+2]
-			for i := m + 4; true; i++ {
-				if messages[i] == "message" {
-					break
-				}
+			for i := m + 4; i < m+4+32; i++ {
 				serviceProgram += messages[i] + " "
 			}
 			pkt.destination.address = serviceProgram
@@ -71,22 +72,17 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		case "message":
 			denom := ""
 			i := 0
-			for i = m + 2; true; i++ {
-				if messages[i] == "sender" {
-					break
-				}
+			for i = m + 2; i < m+2+32; i++ {
 				denom += messages[i] + " "
 			}
 			pkt.message.token = denom
 			sender := messages[i+1]
 			pkt.message.sender = sender
 			receiver := ""
-			for i = i + 3; true; i++ {
-				if messages[i] == "amount" {
-					break
-				}
-				receiver += messages[i] + " "
+			for j := i + 3; j < i+3+32; j++ {
+				receiver += messages[j] + " "
 			}
+			i = i + 3 + 32
 			pkt.message.receiver = receiver
 			pkt.message.amount = messages[i+1]
 			requiredFields["message"] = true
@@ -94,7 +90,6 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 			pkt.height = messages[m+1]
 			requiredFields["height"] = true
 		}
-
 	}
 
 	var errs []error
