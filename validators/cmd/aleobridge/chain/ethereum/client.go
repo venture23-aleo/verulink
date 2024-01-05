@@ -38,7 +38,7 @@ type Client struct {
 	name              string
 	address           string
 	eth               *ethclient.Client
-	bridge            *abi.Bridge
+	bridge            abi.ABIInterface
 	minRequiredGasFee uint64
 	finalityHeight    uint64
 	blockGenTime      time.Duration
@@ -221,7 +221,7 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 
 	ethclient := ethclient.NewClient(rpc)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
-	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
+	bridgeClient, err := abi.NewBridgeInterface(contractAddress, ethclient)
 	if err != nil {
 		panic("failed to create ethereum bridge client")
 	}
