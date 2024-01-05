@@ -93,7 +93,8 @@ func TestParseMessage(t *testing.T) {
 		},
 		height: "55u32",
 	}
-	aleoPacket := parseMessage(packet[key])
+	aleoPacket, err := parseMessage(packet[key])
+	require.NoError(t, err)
 	assert.Equal(t, expectedPacket, aleoPacket)
 }
 
@@ -102,7 +103,8 @@ func TestParseAleoPacket(t *testing.T) {
 	key := constructOutMappingKey(uint32(dst), seqNum)
 	packet, err := giveOutPackets(key, 1)
 	assert.Nil(t, err)
-	parsedAleoPacket := parseMessage(packet[key])
+	parsedAleoPacket, err := parseMessage(packet[key])
+	require.NoError(t, err)
 	commonPacket, err := parseAleoPacket(parsedAleoPacket)
 	assert.Nil(t, err)
 	expectedPacket := &chain.Packet{

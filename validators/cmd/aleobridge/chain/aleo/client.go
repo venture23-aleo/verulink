@@ -67,7 +67,10 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		return nil, err
 	}
 
-	pktStr := parseMessage(message[mappingKey])
+	pktStr, err := parseMessage(message[mappingKey])
+	if err != nil {
+		return nil, err
+	}
 	return parseAleoPacket(pktStr)
 }
 
