@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	cfg = &relay.ChainConfig{
+	cfg = &config.ChainConfig{
 		ChainID:        1,
 		NodeUrl:        "https://rpc.sepolia.org",
 		BridgeContract: "0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758",

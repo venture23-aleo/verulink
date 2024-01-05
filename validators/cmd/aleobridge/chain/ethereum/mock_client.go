@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
+	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -29,7 +30,7 @@ type MockClient struct {
 	finalityHeight    uint64
 	blockGenTime      time.Duration
 	chainID           uint32
-	chainCfg          *relay.ChainConfig
+	chainCfg          *config.ChainConfig
 	wallet            common.Wallet
 }
 
@@ -46,10 +47,10 @@ func giveOutPackets(destChainID, seqNumber *big.Int) (*abi.PacketLibraryOutPacke
 		},
 		Sequence: seqNumber,
 		Message: abi.PacketLibraryOutTokenMessage{
-			SenderAddress: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"),
+			SenderAddress:    ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"),
 			DestTokenAddress: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
-			Amount: big.NewInt(102),
-			ReceiverAddress: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 		},
 		Height: big.NewInt(110),
 	}, nil
@@ -143,7 +144,7 @@ func (cl *MockClient) SendPacket(ctx context.Context, m *chain.Packet) error {
 	if err != nil {
 		return err
 	}
-	logger.Logger.Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
+	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transacton.Hash().String()})
 	return nil
 }
 
@@ -199,7 +200,7 @@ func (cl *MockClient) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return cl.eth.SuggestGasPrice(ctx)
 }
 
-func NewMockClient(cfg *relay.ChainConfig) relay.IClient {
+func NewMockClient(cfg *config.ChainConfig) relay.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
 		nextSeq should start from 1
