@@ -196,4 +196,3 @@ func parseAleoEthAddrToHexString(addr string) (string, error) {
 	return ethCommon.BytesToAddress(addrbt).String(), nil
 
 }
-
