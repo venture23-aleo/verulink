@@ -165,12 +165,12 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 
 	aleoClient, err := aleoRpc.NewRPC(urlSlice[0], urlSlice[1])
 	if err != nil {
-		return nil
+		panic("failed to create aleoclient")
 	}
 
 	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
-		return nil
+		panic("invalid address path")
 	}
 
 	name := cfg.Name
