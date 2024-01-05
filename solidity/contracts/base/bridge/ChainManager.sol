@@ -6,24 +6,24 @@ import "../../common/libraries/Lib.sol";
 
 contract ChainManager is Ownable {
 
-    event ChainAdded(PacketLibrary.OutNetworkAddress chain);
+    event ChainAdded(uint256 destChainId);
     event ChainRemoved(uint256 destChainId);
 
-    mapping(uint256 => PacketLibrary.OutNetworkAddress) public chains;
+    uint256 public chainId;
 
     function isSupportedChain(uint256 destChainId) public view returns (bool) {
-        return chains[destChainId].chainId == destChainId;
+        return chainId == destChainId;
     }
 
-    function addChain(uint256 destChainId, string memory destBridgeAddress) public onlyOwner {
+    function addChain(uint256 destChainId) public onlyOwner {
         require(!isSupportedChain(destChainId), "Destination Chain already supported");
-        chains[destChainId] = PacketLibrary.OutNetworkAddress(destChainId, destBridgeAddress);
-        emit ChainAdded(chains[destChainId]);
+        chainId = destChainId;
+        emit ChainAdded(destChainId);
     }
 
     function removeChain(uint256 destChainId) public onlyOwner {
         require(isSupportedChain(destChainId), "Unknown destination ChainId");
-        delete chains[destChainId];
+        chainId = 0;
         emit ChainRemoved(destChainId);
     }
 }

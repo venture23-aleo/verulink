@@ -101,9 +101,9 @@ describe('ERC20TokenService', () => {
                 proxiedV1 = ERC20TokenService.attach(proxy.target);
                 await (await proxiedV1.connect(owner).addToken(usdcMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000)).wait();
                 await (await proxiedV1.connect(owner).addToken(usdTMock.target, destchainID, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000)).wait();
-                await (await proxiedBridge.connect(owner).addTokenService(proxiedV1.target, destchainID)).wait();
-                await (await proxiedBridge.connect(owner).addChain(destchainID, "aleo.BridgeAddress")).wait();
-                await (await proxiedBridge.connect(owner).addAttestor(attestor.address, destchainID, 1)).wait();
+                await (await proxiedBridge.connect(owner).updateTokenService(proxiedV1.target)).wait();
+                await (await proxiedBridge.connect(owner).addChain(destchainID)).wait();
+                await (await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)).wait();
 
                 inPacket = [
                         1,

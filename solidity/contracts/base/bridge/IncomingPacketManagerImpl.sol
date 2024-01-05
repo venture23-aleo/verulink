@@ -62,7 +62,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         voted[packetHash][msg.sender] = true;
         votes[packetHash] += 1;
 
-        if (!hasQuorumReached(packetHash, packet.sourceTokenService.chainId))
+        if (!hasQuorumReached(packetHash))
             return;
 
         incomingPackets[packet.sourceTokenService.chainId][
@@ -72,10 +72,9 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     }
 
     function hasQuorumReached(
-        bytes32 packetHash,
-        uint256 chainId
+        bytes32 packetHash
     ) public view returns (bool) {
-        return votes[packetHash] >= _getQuorumRequired(chainId);
+        return votes[packetHash] >= _getQuorumRequired();
     }
 
     function hasQuorumReached(
@@ -83,7 +82,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         uint256 sequence
     ) public view returns (bool) {
         return
-            hasQuorumReached(getIncomingPacketHash(chainId, sequence), chainId);
+            hasQuorumReached(getIncomingPacketHash(chainId, sequence));
     }
 
     function hasVoted(

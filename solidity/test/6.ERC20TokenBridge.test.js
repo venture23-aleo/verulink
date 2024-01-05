@@ -41,10 +41,10 @@ describe('ERC20TokenBridge', () => {
         const proxy = await Proxy.deploy(bridgeImpl.target, initializeData);
         await proxy.waitForDeployment();
         proxiedV1 = ERC20TokenbridgeImpl.attach(proxy.target);
-        await (await proxiedV1.addAttestor(attestor1.address, destinationChainId, 2)).wait();
-        await (await proxiedV1.addAttestor(attestor2.address, destinationChainId, 2)).wait();
-        await (await proxiedV1.addTokenService(tokenService.address, destinationChainId)).wait();
-        await (await proxiedV1.addChain(destinationChainId, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        await (await proxiedV1.addAttestor(attestor1.address, 2)).wait();
+        await (await proxiedV1.addAttestor(attestor2.address, 2)).wait();
+        await (await proxiedV1.updateTokenService(tokenService.address)).wait();
+        await (await proxiedV1.addChain(destinationChainId)).wait();
     });
 
     it('should have the correct owner', async () => {
@@ -266,21 +266,21 @@ describe('ERC20TokenBridge', () => {
         const initialPacketHash = await proxiedV1.getIncomingPacketHash(inPacket[2][0], inPacket[1]);
 
         // Ensure that the initial quorum is not reached
-        const initialQuorumReached = await proxiedV1["hasQuorumReached(bytes32,uint256)"](initialPacketHash, inPacket[2][0]);
+        const initialQuorumReached = await proxiedV1["hasQuorumReached(bytes32)"](initialPacketHash,);
         expect(initialQuorumReached).to.be.false;
 
         // Vote on the packet
         await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
 
         // Check if quorum has reached after one vote
-        const quorumAfterOneVote = await proxiedV1["hasQuorumReached(bytes32,uint256)"](initialPacketHash, inPacket[2][0]);
+        const quorumAfterOneVote = await proxiedV1["hasQuorumReached(bytes32)"](initialPacketHash);
         expect(quorumAfterOneVote).to.be.false;
 
         // Vote again to reach the quorum
         await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
         const packetHashAfterVoting = await proxiedV1.getIncomingPacketHash(inPacket[2][0], inPacket[1]);
         // Check if quorum has reached after two votes
-        const quorumAfterTwoVotes = await proxiedV1["hasQuorumReached(bytes32,uint256)"](packetHashAfterVoting, inPacket[2][0]);
+        const quorumAfterTwoVotes = await proxiedV1["hasQuorumReached(bytes32)"](packetHashAfterVoting);
         expect(quorumAfterTwoVotes).to.be.true;
     });
 

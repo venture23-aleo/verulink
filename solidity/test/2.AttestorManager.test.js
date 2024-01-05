@@ -33,60 +33,95 @@ describe('AttestorManager', () => {
     // Test adding an attestor
     it('should add an attestor', async () => {
         const newAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
+        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
 
         // Check if the attestor was added
-        const isAttestor = await proxiedV1.isAttestor(newAttestor, chainId);
+        const isAttestor = await proxiedV1.isAttestor(newAttestor);
         expect(isAttestor).to.be.true;
         // Check if the quorum was updated
-        const newQuorum = await proxiedV1.quorumRequired(chainId);
+        const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
+    });
+
+    it('should add attestors in batch by Owner', async () => {
+        const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
+        const quorumRequired = 2;
+
+        // Add attestors
+        await (await proxiedV1.addAttestors(attestors, quorumRequired)).wait();
+
+        // Check if the attestor was added
+        const isAttestor0 = await proxiedV1.isAttestor(attestors[0]);
+        expect(isAttestor0).to.be.true;
+        const isAttestor1 = await proxiedV1.isAttestor(attestors[1]);
+        expect(isAttestor1).to.be.true;
+        const isAttestor2 = await proxiedV1.isAttestor(attestors[2]);
+        expect(isAttestor2).to.be.true;
+        // Check if the quorum was updated
+        const newQuorum = await proxiedV1.quorumRequired();
+        expect(newQuorum).to.equal(quorumRequired);
+    });
+
+    it('should add attestors in batch by a non-owner', async () => {
+        const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
+        const quorumRequired = 2;
+
+        // Add attestors
+        expect(proxiedV1.connect(other).addAttestors(attestors, quorumRequired)).to.be.reverted;
+
+        // Check if the attestor was added
+        const isAttestor0 = await proxiedV1.isAttestor(attestors[0]);
+        expect(isAttestor0).to.be.false;
+        const isAttestor1 = await proxiedV1.isAttestor(attestors[1]);
+        expect(isAttestor1).to.be.false;
+        const isAttestor2 = await proxiedV1.isAttestor(attestors[2]);
+        expect(isAttestor2).to.be.false;
+        // Check if the quorum was updated
+        const newQuorum = await proxiedV1.quorumRequired();
+        expect(newQuorum).to.equal(0);
     });
 
     // Test attempting to add an existing attestor
     it('should revert when trying to add an existing attestor', async () => {
         const newAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
-        const isAttestor = await proxiedV1.isAttestor(newAttestor, chainId);
+        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+        const isAttestor = await proxiedV1.isAttestor(newAttestor);
         expect(isAttestor).to.be.true;
-        const newQuorum = await proxiedV1.quorumRequired(chainId);
+        const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
         // Attempt to add an existing attestor
-        expect(proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).to.be.revertedWith('Attestor already exists');
+        expect(proxiedV1.addAttestor(newAttestor, quorumRequired)).to.be.revertedWith('Attestor already exists');
     });
 
     // Test attempting to add an attestor with zero address
     it('should revert when trying to add an attestor with zero address', async () => {
         // Attempt to add an attestor with zero address
-        expect(proxiedV1.addAttestor(ethers.ZeroAddress, 5, 2)).to.be.revertedWith('Zero Address');
+        expect(proxiedV1.addAttestor(ethers.ZeroAddress, 2)).to.be.revertedWith('Zero Address');
     });
 
     // Test removing an attestor
     it('should remove an attestor', async () => {
         const newAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
+        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
 
         // Remove attestor
-        await (await proxiedV1.removeAttestor(newAttestor, chainId, quorumRequired)).wait();
+        await (await proxiedV1.removeAttestor(newAttestor, quorumRequired)).wait();
 
         // Check if the attestor was removed
-        const isAttestor = await proxiedV1.isAttestor(newAttestor, chainId);
+        const isAttestor = await proxiedV1.isAttestor(newAttestor);
         expect(isAttestor).to.be.false;
 
         // Check if the quorum was updated
-        const newQuorum = await proxiedV1.quorumRequired(chainId);
+        const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
     });
 
@@ -95,71 +130,67 @@ describe('AttestorManager', () => {
         const nonExistingAttestor = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing attestor
-        expect(proxiedV1.removeAttestor(nonExistingAttestor, 5, 2)).to.be.revertedWith('Unknown Attestor');
+        expect(proxiedV1.removeAttestor(nonExistingAttestor, 2)).to.be.revertedWith('Unknown Attestor');
     });
 
     // Test attempting to remove an attestor with zero address
     it('should revert when trying to remove an attestor with zero address', async () => {
         // Attempt to remove an attestor with zero address
-        expect(proxiedV1.removeAttestor(ethers.ZeroAddress, 5, 2)).to.be.revertedWith('Unknown Attestor');
+        expect(proxiedV1.removeAttestor(ethers.ZeroAddress, 2)).to.be.revertedWith('Unknown Attestor');
     });
 
     // Test onlyOwner modifier for addAttestor function
     it('should allow only owner to add an attestor', async () => {
         const newAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
         // Add attestor with the owner
-        await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
+        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
 
         // Try to add attestor with another account and expect it to revert
         expect(
-            proxiedV1.connect(other).addAttestor(newAttestor, chainId, quorumRequired)
+            proxiedV1.connect(other).addAttestor(newAttestor, quorumRequired)
         ).to.be.reverted;
     });
 
     // Test onlyOwner modifier for removeAttestor function
     it('should allow only owner to remove an attestor', async () => {
         const existingAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
         // Add attestor with the owner
-        await (await proxiedV1.addAttestor(existingAttestor, chainId, quorumRequired)).wait();
+        await (await proxiedV1.addAttestor(existingAttestor, quorumRequired)).wait();
 
         // Try to remove attestor with another account and expect it to revert
         expect(
-            proxiedV1.connect(other).removeAttestor(existingAttestor, chainId, quorumRequired)
+            proxiedV1.connect(other).removeAttestor(existingAttestor, quorumRequired)
         ).to.be.reverted;
     });
 
     it('should emit AttestorAdded event when adding a new attestor', async () => {
         const newAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
-        const addAttestorTx = await (await proxiedV1.addAttestor(newAttestor, chainId, quorumRequired)).wait();
+        const addAttestorTx = await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
 
         // Check event emission
         expect(addAttestorTx)
             .to.emit(proxiedV1, 'AttestorAdded')
-            .withArgs(newAttestor, chainId, quorumRequired);
+            .withArgs(newAttestor, quorumRequired);
     });
 
     it('should emit AttestorRemoved event when removing an existing attestor', async () => {
         const existingAttestor = ethers.Wallet.createRandom().address;
-        const chainId = 5;
         const quorumRequired = 2;
 
         // Add attestor first
-        await (await proxiedV1.addAttestor(existingAttestor, chainId, quorumRequired)).wait();
+        await (await proxiedV1.addAttestor(existingAttestor, quorumRequired)).wait();
 
-        const removeAttestorTx = await (await proxiedV1.removeAttestor(existingAttestor, chainId, quorumRequired)).wait();
+        const removeAttestorTx = await (await proxiedV1.removeAttestor(existingAttestor, quorumRequired)).wait();
 
         // Check event emission
         expect(removeAttestorTx)
             .to.emit(proxiedV1, 'AttestorRemoved')
-            .withArgs(existingAttestor, chainId, quorumRequired);
+            .withArgs(existingAttestor, quorumRequired);
     });
 });

@@ -17,7 +17,5 @@ abstract contract IncomingPacketManager {
         uint256 _sequence
     ) public view virtual returns (bool);
 
-    function _getQuorumRequired(
-        uint256
-    ) internal view virtual returns (uint256);
+    function _getQuorumRequired() internal view virtual returns (uint256);
 }

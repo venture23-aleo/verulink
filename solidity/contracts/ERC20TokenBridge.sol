@@ -30,46 +30,14 @@ contract ERC20TokenBridge is IncomingPacketManager,
         super.initialize(_owner);        
     }
 
-    //     function test() external{
-    
-//     PacketLibrary.OutTokenMessage memory message = PacketLibrary.OutTokenMessage(
-//             "destTokenAddress", 
-//             112000000, 
-//             "receiverAddress"
-//         );
-//         PacketLibrary.InNetworkAddress memory self = PacketLibrary.InNetworkAddress(
-//             1, 
-//             address(this)
-//         );
-//         PacketLibrary.OutNetworkAddress memory target = PacketLibrary.OutNetworkAddress(
-//             2,
-//             "target"
-//         );
-
-//         PacketLibrary.OutPacket memory packet ;
-//         packet.version = 1;
-//         packet.sequence = 13;
-//         packet.source = self;
-//         packet.destination = target;
-//         packet.message = message;
-//         packet.height = block.number; 
-//         _setOutgoingPacket(packet);
-//         emit PacketDispatched(packet);
-   
-// }
-
     function _authorizeUpgrade(address) internal view override {
         require(msg.sender == owner);
     }
 
-    function _getQuorumRequired(uint256 chainId) internal view override returns (uint256) {
-        return quorumRequired[chainId];
+    function _getQuorumRequired() internal view override returns (uint256) {
+        return quorumRequired;
     }
-
-    // function incomingPacketExists(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bool) {
-    //     return IncomingPacketManagerImpl.incomingPacketExists(_chainId, _sequence);
-    // } 
-
+    
     function getIncomingPacketHash(uint256 chainId, uint256 sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bytes32 packetHash) {
         return IncomingPacketManagerImpl.getIncomingPacketHash(chainId, sequence);
     }
@@ -84,24 +52,24 @@ contract ERC20TokenBridge is IncomingPacketManager,
 
     function receivePacket(PacketLibrary.InPacket memory packet) public {
         _receivePacket(packet);
-        require(isAttestor(msg.sender,packet.sourceTokenService.chainId), "Unknown Attestor");
+        require(isAttestor(msg.sender), "Unknown Attestor");
     }
 
     function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public {
         for(uint256 i=0;i<packets.length;i++) {
             _receivePacket(packets[i]);
-            require(isAttestor(msg.sender,packets[i].sourceTokenService.chainId), "Unknown Attestor");
+            require(isAttestor(msg.sender), "Unknown Attestor");
         }
     }
 
     function consume(PacketLibrary.InPacket memory packet) public override {
         super.consume(packet);
-        require(isRegisteredTokenService(msg.sender, packet.sourceTokenService.chainId), "Unknown Token Service");
+        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
     }
 
     function sendMessage(PacketLibrary.OutPacket memory packet) public override {
         super.sendMessage(packet);
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
-        require(isRegisteredTokenService(msg.sender, packet.destTokenService.chainId), "Unknown Token Service");
+        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
     } 
 }

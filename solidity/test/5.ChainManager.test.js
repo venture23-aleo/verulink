@@ -32,9 +32,8 @@ describe('ChainManager', () => {
     // Test adding a chain
     it('should add a chain', async () => {
         const chainId = 1;
-        const destBridgeAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         // Add chain
-        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
+        await (await proxiedV1.addChain(chainId)).wait();
         // Check if the chain was added
         const isSupported = await proxiedV1.isSupportedChain(chainId);
         expect(isSupported).to.be.true;
@@ -43,27 +42,24 @@ describe('ChainManager', () => {
     // Test attempting to add an existing chain
     it('should revert when trying to add an existing chain', async () => {
         const chainId = 1;
-        const destBridgeAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         // Add a chain
-        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
+        await (await proxiedV1.addChain(chainId)).wait();
         // Attempt to add the same chain again
-        expect(proxiedV1.addChain(chainId, destBridgeAddress)).to.be.revertedWith('Destination Chain already supported');
+        expect(proxiedV1.addChain(chainId)).to.be.revertedWith('Destination Chain already supported');
     });
 
     it('should revert when a non-owner tries to add a chain', async () => {
         const chainId = 1;
-        const destBridgeAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
 
         // Call addChain as a non-owner
-        expect(proxiedV1.connect(other).addChain(chainId, destBridgeAddress)).to.be.reverted;
+        expect(proxiedV1.connect(other).addChain(chainId)).to.be.reverted;
     });
 
     // Test removing a chain
     it('should remove a chain', async () => {
         const chainId = 1;
-        const destBridgeAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         // Add chain
-        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
+        await (await proxiedV1.addChain(chainId)).wait();
         // Remove chain
         await (await proxiedV1.removeChain(chainId)).wait();
         // Check if the chain was removed
@@ -80,10 +76,9 @@ describe('ChainManager', () => {
 
     it('should revert when a non-owner tries to remove a chain', async () => {
         const chainId = 1;
-        const destBridgeAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
 
         // Add chain first
-        await (await proxiedV1.addChain(chainId, destBridgeAddress)).wait();
+        await (await proxiedV1.addChain(chainId)).wait();
 
         // Call removeChain as a non-owner
         expect(proxiedV1.connect(other).removeChain(chainId)).to.be.reverted;
@@ -91,19 +86,17 @@ describe('ChainManager', () => {
 
     it('should emit ChainAdded event when adding a new chain', async () => {
         const newChainId = 123;
-        const destBridgeAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const params = [newChainId, destBridgeAddress];
-        const addChainTx = await (await proxiedV1.addChain(newChainId, destBridgeAddress)).wait();
+        const addChainTx = await (await proxiedV1.addChain(newChainId)).wait();
         // Check event emission
         expect(addChainTx)
             .to.emit(proxiedV1, 'ChainAdded')
-            .withArgs(params);
+            .withArgs(newChainId);
     });
 
     it('should emit ChainRemoved event when removing an existing chain', async () => {
         const existingChainId = 11155111;
         // Add chain first
-        await (await proxiedV1.addChain(existingChainId, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        await (await proxiedV1.addChain(existingChainId)).wait();
         const removeChainTx = await proxiedV1.removeChain(existingChainId);
         // Check event emission
         expect(removeChainTx)
