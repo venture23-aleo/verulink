@@ -3,6 +3,7 @@ package aleo
 import (
 	"fmt"
 	"math/big"
+	"strings"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -10,6 +11,24 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
+
+func dumpAleoPacket(pkt *aleoPacket) string {
+	destAddr := strings.Trim(pkt.destination.address, " ")
+	destAddr = "[" + strings.ReplaceAll(destAddr, " ", ", ") + "]"
+	msgToken := strings.Trim(pkt.message.token, " ")
+	msgToken = "[" + strings.ReplaceAll(msgToken, " ", ", ") + "]"
+	msgReceiver := strings.Trim(pkt.message.receiver, " ")
+	msgReceiver = "[" + strings.ReplaceAll(msgReceiver, " ", ", ") + "]"
+
+	return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
+		"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
+		"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
+		"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+		"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
+		pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
+		msgReceiver, pkt.message.amount, pkt.height,
+	)
+}
 
 func TestConstructOutMappingKey(t *testing.T) {
 	d := uint32(23)
@@ -70,10 +89,6 @@ func TestParseEthAleoAddress(t *testing.T) {
 }
 
 func TestParseMessage(t *testing.T) {
-	var dst, seqNum uint64 = 1, 1
-	key := constructOutMappingKey(uint32(dst), seqNum)
-	packet, err := giveOutPackets(key, 1)
-	assert.Nil(t, err)
 	expectedPacket := &aleoPacket{
 		version:  "0u8",
 		sequence: "1u32",
@@ -93,7 +108,8 @@ func TestParseMessage(t *testing.T) {
 		},
 		height: "55u32",
 	}
-	aleoPacket, err := parseMessage(packet[key])
+
+	aleoPacket, err := parseMessage(dumpAleoPacket(expectedPacket))
 	require.NoError(t, err)
 	assert.Equal(t, expectedPacket, aleoPacket)
 }
