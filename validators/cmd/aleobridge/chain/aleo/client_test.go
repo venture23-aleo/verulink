@@ -16,6 +16,10 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 )
 
+const (
+	RpcEndpoint = "3.84.49.97"
+)
+
 var (
 	cfg = &config.ChainConfig{
 		ChainID:        2,

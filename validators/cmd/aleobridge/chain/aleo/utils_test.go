@@ -1,17 +1,23 @@
 package aleo
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-const (
-	RpcEndpoint = "3.84.49.97"
-)
+func TestConstructOutMappingKey(t *testing.T) {
+	d := uint32(23)
+	seqNum := uint64(32)
+	expectedString := fmt.Sprintf("{chain_id:%du32,sequence:%du32}", d, seqNum)
+	actual := constructOutMappingKey(d, seqNum)
+	require.Equal(t, expectedString, actual)
+}
 
 func TestConstructEthAddressForAleo(t *testing.T) {
 	t.Run("happy path construction", func(t *testing.T) {
