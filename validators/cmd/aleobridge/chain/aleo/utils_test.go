@@ -1,17 +1,23 @@
 package aleo
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-const (
-	RpcEndpoint = "3.84.49.97"
-)
+func TestConstructOutMappingKey(t *testing.T) {
+	d := uint32(23)
+	seqNum := uint64(32)
+	expectedString := fmt.Sprintf("{chain_id:%du32,sequence:%du32}", d, seqNum)
+	actual := constructOutMappingKey(d, seqNum)
+	require.Equal(t, expectedString, actual)
+}
 
 func TestConstructEthAddressForAleo(t *testing.T) {
 	t.Run("happy path construction", func(t *testing.T) {
@@ -87,7 +93,8 @@ func TestParseMessage(t *testing.T) {
 		},
 		height: "55u32",
 	}
-	aleoPacket := parseMessage(packet[key])
+	aleoPacket, err := parseMessage(packet[key])
+	require.NoError(t, err)
 	assert.Equal(t, expectedPacket, aleoPacket)
 }
 
@@ -96,7 +103,8 @@ func TestParseAleoPacket(t *testing.T) {
 	key := constructOutMappingKey(uint32(dst), seqNum)
 	packet, err := giveOutPackets(key, 1)
 	assert.Nil(t, err)
-	parsedAleoPacket := parseMessage(packet[key])
+	parsedAleoPacket, err := parseMessage(packet[key])
+	require.NoError(t, err)
 	commonPacket, err := parseAleoPacket(parsedAleoPacket)
 	assert.Nil(t, err)
 	expectedPacket := &chain.Packet{

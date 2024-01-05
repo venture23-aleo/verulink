@@ -74,12 +74,14 @@ func TestNewClientCreation(t *testing.T) {
 		cfgNewCl.WalletPath = "ethereumChain"
 
 		assert.Panics(t, func() { NewClient(&cfgNewCl) })
+		assert.Panics(t, func() { NewClient(&cfgNewCl) })
 	})
 
 	t.Run("case: invalid node url", func(t *testing.T) {
 		cfgNewCl := *cfg
 		cfgNewCl.NodeUrl = "ethereumChain"
 
+		assert.Panics(t, func() { NewClient(&cfgNewCl) })
 		assert.Panics(t, func() { NewClient(&cfgNewCl) })
 	})
 }

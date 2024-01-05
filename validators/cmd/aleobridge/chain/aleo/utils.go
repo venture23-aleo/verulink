@@ -18,7 +18,14 @@ func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
 
 // after splitting we get the message in the form [key1:value1,key2:value2, ...]
 // now we get message in the form []string{key1, value1, key2, value2, ...}
-func parseMessage(s string) *aleoPacket {
+func parseMessage(s string) (pkt *aleoPacket, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			pkt = nil
+			err = fmt.Errorf("error %v while parsing message", r)
+		}
+	}()
+
 	sMessages := strings.Split(trim(s), ",")
 	var messages []string
 
@@ -28,17 +35,28 @@ func parseMessage(s string) *aleoPacket {
 		messages = append(messages, msplit...)
 	}
 
-	pkt := new(aleoPacket)
+	requiredFields := map[string]bool{
+		"version":     false,
+		"sequence":    false,
+		"source":      false,
+		"destination": false,
+		"message":     false,
+		"height":      false,
+	}
 
+	pkt = new(aleoPacket)
 	for m, v := range messages {
 		switch v {
 		case "version":
 			pkt.version = messages[m+1]
+			requiredFields["version"] = true
 		case "sequence":
 			pkt.sequence = messages[m+1]
+			requiredFields["sequence"] = true
 		case "source":
 			pkt.source.chainID = messages[m+2]
 			pkt.source.address = messages[m+4]
+			requiredFields["source"] = true
 		case "destination":
 			serviceProgram := ""
 			pkt.destination.chainID = messages[m+2]
@@ -49,6 +67,7 @@ func parseMessage(s string) *aleoPacket {
 				serviceProgram += messages[i] + " "
 			}
 			pkt.destination.address = serviceProgram
+			requiredFields["destination"] = true
 		case "message":
 			denom := ""
 			i := 0
@@ -70,12 +89,24 @@ func parseMessage(s string) *aleoPacket {
 			}
 			pkt.message.receiver = receiver
 			pkt.message.amount = messages[i+1]
+			requiredFields["message"] = true
 		case "height":
 			pkt.height = messages[m+1]
+			requiredFields["height"] = true
 		}
 
 	}
-	return pkt
+
+	var errs []error
+	for field, ok := range requiredFields {
+		if !ok {
+			errs = append(errs, fmt.Errorf("could not find %s field", field))
+		}
+	}
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+	return pkt, nil
 }
 
 func trim(msg string) string {
@@ -196,4 +227,3 @@ func parseAleoEthAddrToHexString(addr string) (string, error) {
 	return ethCommon.BytesToAddress(addrbt).String(), nil
 
 }
-
