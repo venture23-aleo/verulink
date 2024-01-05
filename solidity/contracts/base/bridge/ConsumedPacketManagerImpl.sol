@@ -7,7 +7,7 @@ import "../../common/libraries/Lib.sol";
 abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
     using PacketLibrary for PacketLibrary.InPacket;
 
-    event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash);
+    event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash, PacketLibrary.Vote _quorum);
 
     mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
 
@@ -18,7 +18,7 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
         return consumedPackets[_chainId][_sequence] != bytes32(0);
     }
 
-    function consume(PacketLibrary.InPacket memory packet) public virtual {
+    function consume(PacketLibrary.InPacket memory packet) public virtual returns (PacketLibrary.Vote _quorum) {
         bytes32 packetHash = packet.hash();
         uint256 sourceChainId = packet.sourceTokenService.chainId;
         uint256 sequence = packet.sequence;
@@ -50,7 +50,10 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
         emit Consumed(
             sourceChainId,
             sequence,
-            packetHash
+            packetHash,
+            _quorum
         );
+
+        return quorum(packetHash);
     }
 }

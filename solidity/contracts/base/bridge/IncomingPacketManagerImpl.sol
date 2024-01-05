@@ -7,21 +7,31 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     using PacketLibrary for PacketLibrary.InPacket;
 
     event PacketArrived(PacketLibrary.InPacket packet);
-    event Voted(bytes32 packetHash, address voter);
+    event Voted(bytes32 packetHash, PacketLibrary.Vote vote, address voter);
     event AlreadyVoted(bytes32 packetHash, address voter);
 
     mapping(uint256 => mapping(uint256 => bytes32)) public incomingPackets;
 
     // packetHash => vote count
-    mapping(bytes32 => uint256) votes;
+    mapping(bytes32 => mapping(PacketLibrary.Vote => uint256)) totalVotes;
     // packetHash => attestor address => bool
-    mapping(bytes32 => mapping(address => bool)) voted;
+    mapping(bytes32 => mapping(address => PacketLibrary.Vote)) vote;
+    mapping(uint256 => mapping(uint256 => bytes32)) beforeQuorumPacketHash;
+
+    function voteCount(bytes32 packetHash, PacketLibrary.Vote _vote) public view returns (uint256 count) {
+        return totalVotes[packetHash][_vote];
+    }
+
+    function voteCount(uint256 _chainId, uint256 _sequence, PacketLibrary.Vote _vote) public view returns (uint256 count) {
+        return totalVotes[getIncomingPacketHash(_chainId, _sequence)][_vote];
+    }
 
     function _removeIncomingPacket(
         uint256 _chainId,
         uint256 _sequence
     ) internal virtual override {
         delete incomingPackets[_chainId][_sequence];
+        delete beforeQuorumPacketHash[_chainId][_sequence];
     }
 
     function getIncomingPacketHash(
@@ -31,60 +41,75 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
         return incomingPackets[_chainId][_sequence];
     }
 
-    function _receivePacket(PacketLibrary.InPacket memory packet) internal {
+    function _receivePacket(PacketLibrary.InPacket memory packet, bool chainAlysisOk) internal {
+        uint256 sourceChainId = packet.sourceTokenService.chainId;
+        uint256 sequence = packet.sequence;
         require(
             !isPacketConsumed(
-                packet.sourceTokenService.chainId,
-                packet.sequence
+                sourceChainId,
+                sequence
             ),
             "Packet already consumed"
         );
         bytes32 packetHash = packet.hash();
-        if (hasVoted(packetHash, msg.sender)) {
+        if (hasVoted(packetHash, msg.sender) != PacketLibrary.Vote.NULL) {
             emit AlreadyVoted(packetHash, msg.sender);
             return;
         }
 
-        emit Voted(packetHash, msg.sender);
+        PacketLibrary.Vote attesterVote = chainAlysisOk? PacketLibrary.Vote.YEA: PacketLibrary.Vote.NAY;
 
-        voted[packetHash][msg.sender] = true;
-        votes[packetHash] += 1;
+        emit Voted(packetHash, attesterVote, msg.sender);
+
+        vote[packetHash][msg.sender] = attesterVote;
+        totalVotes[packetHash][attesterVote] += 1;
+        beforeQuorumPacketHash[sourceChainId][sequence] = packetHash;
 
         if (!hasQuorumReached(packetHash))
             return;
 
-        incomingPackets[packet.sourceTokenService.chainId][
-            packet.sequence
+        incomingPackets[sourceChainId][
+            sequence
         ] = packetHash;
         emit PacketArrived(packet);
+    }
+
+    function quorum(bytes32 packetHash) public view override returns (PacketLibrary.Vote) {
+        if(voteCount(packetHash, PacketLibrary.Vote.YEA) >= _getQuorumRequired()) return PacketLibrary.Vote.YEA;
+        if(voteCount(packetHash, PacketLibrary.Vote.NAY) >= _getQuorumRequired()) return PacketLibrary.Vote.NAY;
+        return PacketLibrary.Vote.NULL;
+    }
+
+    function quorum(uint256 _chainId, uint256 _sequence) public view returns (PacketLibrary.Vote) {
+        return quorum(beforeQuorumPacketHash[_chainId][_sequence]);
     }
 
     function hasQuorumReached(
         bytes32 packetHash
     ) public view returns (bool) {
-        return votes[packetHash] >= _getQuorumRequired();
+        return (quorum(packetHash) != PacketLibrary.Vote.NULL);
     }
 
     function hasQuorumReached(
-        uint256 chainId,
-        uint256 sequence
+        uint256 _chainId,
+        uint256 _sequence
     ) public view returns (bool) {
         return
-            hasQuorumReached(getIncomingPacketHash(chainId, sequence));
+            hasQuorumReached(beforeQuorumPacketHash[_chainId][_sequence]);
     }
 
     function hasVoted(
         bytes32 packetHash,
         address voter
-    ) public view returns (bool) {
-        return voted[packetHash][voter];
+    ) public view returns (PacketLibrary.Vote) {
+        return vote[packetHash][voter];
     }
 
     function hasVoted(
-        uint256 chainId,
-        uint256 sequence,
-        address voter
-    ) public view returns (bool) {
-        return voted[getIncomingPacketHash(chainId, sequence)][voter];
+        uint256 _chainId,
+        uint256 _sequence,
+        address _voter
+    ) public view returns (PacketLibrary.Vote) {
+        return vote[beforeQuorumPacketHash[_chainId][_sequence]][_voter];
     }
 }

@@ -2,6 +2,12 @@
 pragma solidity ^0.8.19;
 
 library PacketLibrary {
+    enum Vote {
+        NULL,
+        YEA,
+        NAY
+    }
+    
     struct OutNetworkAddress {
         uint256 chainId;
         string addr;
@@ -54,8 +60,8 @@ library PacketLibrary {
             packet.destTokenService.addr,
             packet.message.senderAddress,
             packet.message.destTokenAddress,
-            packet.message.amount,
-            packet.message.receiverAddress,
+                packet.message.amount, 
+                packet.message.receiverAddress,
             packet.height)
         );
     }

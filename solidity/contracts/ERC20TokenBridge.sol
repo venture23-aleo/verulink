@@ -37,34 +37,38 @@ contract ERC20TokenBridge is IncomingPacketManager,
     function _getQuorumRequired() internal view override returns (uint256) {
         return quorumRequired;
     }
-    
-    function getIncomingPacketHash(uint256 chainId, uint256 sequence) public view override (IncomingPacketManager, IncomingPacketManagerImpl) returns (bytes32 packetHash) {
-        return IncomingPacketManagerImpl.getIncomingPacketHash(chainId, sequence);
-    }
 
-    function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override (IncomingPacketManager, IncomingPacketManagerImpl) {
-        IncomingPacketManagerImpl._removeIncomingPacket(_chainId, _sequence);
-    }
+    // function getIncomingPacketHash(uint256 chainId, uint256 sequence) public view override  returns (bytes32 packetHash) {
+    //     return IncomingPacketManagerImpl.getIncomingPacketHash(chainId, sequence);
+    // }
 
-    function isPacketConsumed(uint256 _chainId, uint256 _sequence) public view override (IncomingPacketManager, ConsumedPacketManagerImpl) returns (bool) {
-        return ConsumedPacketManagerImpl.isPacketConsumed(_chainId, _sequence);
-    }
+    // function _removeIncomingPacket(uint256 _chainId, uint256 _sequence) internal override {
+    //     IncomingPacketManagerImpl._removeIncomingPacket(_chainId, _sequence);
+    // }
 
-    function receivePacket(PacketLibrary.InPacket memory packet) public {
-        _receivePacket(packet);
+    // function isPacketConsumed(uint256 _chainId, uint256 _sequence) public view override returns (bool) {
+    //     return ConsumedPacketManagerImpl.isPacketConsumed(_chainId, _sequence);
+    // }
+
+    function receivePacket(PacketLibrary.InPacket memory packet, bool chainAlysisOk) public {
+        _receivePacket(packet, chainAlysisOk);
         require(isAttestor(msg.sender), "Unknown Attestor");
     }
 
-    function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public {
-        for(uint256 i=0;i<packets.length;i++) {
-            _receivePacket(packets[i]);
-            require(isAttestor(msg.sender), "Unknown Attestor");
-        }
+    function receivePacket(PacketLibrary.InPacket memory packet) public {
+        receivePacket(packet, true);
     }
 
-    function consume(PacketLibrary.InPacket memory packet) public override {
-        super.consume(packet);
+    // function receivePacketBatch(PacketLibrary.InPacket[] memory packets) public {
+    //     for(uint256 i=0;i<packets.length;i++) {
+    //         _receivePacket(packets[i]);
+    //         require(isAttestor(msg.sender), "Unknown Attestor");
+    //     }
+    // }
+
+    function consume(PacketLibrary.InPacket memory packet) public override returns (PacketLibrary.Vote) {
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        return super.consume(packet);
     }
 
     function sendMessage(PacketLibrary.OutPacket memory packet) public override {

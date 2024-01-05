@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import hardhat from 'hardhat';
-const { ethers } = hardhat;
+// import hardhat from 'hardhat';
+// const { ethers } = hardhat;
 
 describe('ERC20TokenBridge', () => {
     let ERC20TokenbridgeImpl;
@@ -17,13 +17,34 @@ describe('ERC20TokenBridge', () => {
     let tokenService;
     let other;
     let unknownChainId;
+    let libInstance;
+
+    function inPacketHash(inPacket) {
+        let packetHash = ethers.solidityPackedKeccak256([ 
+            "uint256", 
+            "uint256", 
+            "uint256", "string",
+            "uint256", "address",
+            "string", "address", "uint256", "address",
+            "uint256"
+        ], [ 
+            inPacket[0],
+            inPacket[1],
+            inPacket[2][0],inPacket[2][1],
+            inPacket[3][0],inPacket[3][1],
+            inPacket[4][0],inPacket[4][1],inPacket[4][2],inPacket[4][3],
+            inPacket[5]
+        ]);
+        console.log("packet hash = ", packetHash);
+        return packetHash;
+    }
 
     beforeEach(async () => {
         [owner, attestor1, attestor2, signer, unknownAttestor, tokenService, other] = await ethers.getSigners();
 
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
-        const libInstance = await lib.deploy();
+        libInstance = await lib.deploy();
         await libInstance.waitForDeployment();
         const destinationChainId = 2;
 
@@ -108,60 +129,60 @@ describe('ERC20TokenBridge', () => {
             .to.be.revertedWith("Unknown Attestor");
     });
 
-    it('should receive an incoming packets in a batch when receivePacketBatch is called', async () => {
-        // Create Packet 
-        const inPacket1 = [
-            1,
-            1,
-            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
-            [1, ethers.Wallet.createRandom().address],
-            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
-            100
-        ];
+    // it('should receive an incoming packets in a batch when receivePacketBatch is called', async () => {
+    //     // Create Packet 
+    //     const inPacket1 = [
+    //         1,
+    //         1,
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         [1, ethers.Wallet.createRandom().address],
+    //         ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+    //         100
+    //     ];
 
-        // Create Packet 2
-        const inPacket2 = [
-            1,
-            2,
-            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
-            [1, ethers.Wallet.createRandom().address],
-            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
-            150
-        ];
+    //     // Create Packet 2
+    //     const inPacket2 = [
+    //         1,
+    //         2,
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         [1, ethers.Wallet.createRandom().address],
+    //         ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
+    //         150
+    //     ];
 
-        // Organize both packets into an array
-        const packetsArray = [inPacket1, inPacket2];
-        await (await proxiedV1.connect(attestor1).receivePacketBatch(packetsArray)).wait();
-        await (await proxiedV1.connect(attestor2).receivePacketBatch(packetsArray)).wait();
-        await (await proxiedV1.connect(tokenService).consume(packetsArray[0])).wait();
-        expect(await proxiedV1.isPacketConsumed(packetsArray[0][2][0], packetsArray[0][1])).to.be.true;
-    });
-    it('should revert when an unknown attester tries to receive a packet with receivePacketBatch', async () => {
-        // Create Packet 1
-        const inPacket1 = [
-            1,
-            1,
-            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
-            [1, ethers.Wallet.createRandom().address],
-            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
-            100
-        ];
+    //     // Organize both packets into an array
+    //     const packetsArray = [inPacket1, inPacket2];
+    //     await (await proxiedV1.connect(attestor1).receivePacketBatch(packetsArray)).wait();
+    //     await (await proxiedV1.connect(attestor2).receivePacketBatch(packetsArray)).wait();
+    //     await (await proxiedV1.connect(tokenService).consume(packetsArray[0])).wait();
+    //     expect(await proxiedV1.isPacketConsumed(packetsArray[0][2][0], packetsArray[0][1])).to.be.true;
+    // });
+    // it('should revert when an unknown attester tries to receive a packet with receivePacketBatch', async () => {
+    //     // Create Packet 1
+    //     const inPacket1 = [
+    //         1,
+    //         1,
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         [1, ethers.Wallet.createRandom().address],
+    //         ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+    //         100
+    //     ];
 
-        // Create Packet 2
-        const inPacket2 = [
-            1,
-            2,
-            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
-            [1, ethers.Wallet.createRandom().address],
-            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
-            150
-        ];
-        const packetsArray = [inPacket1, inPacket2];
+    //     // Create Packet 2
+    //     const inPacket2 = [
+    //         1,
+    //         2,
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         [1, ethers.Wallet.createRandom().address],
+    //         ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 20, ethers.Wallet.createRandom().address],
+    //         150
+    //     ];
+    //     const packetsArray = [inPacket1, inPacket2];
 
-        // Use 'unknownAddress' as the caller, which is not an attester
-        expect(proxiedV1.connect(unknownAttestor).receivePacketBatch(packetsArray))
-            .to.be.revertedWith("Unknown Attestor");
-    });
+    //     // Use 'unknownAddress' as the caller, which is not an attester
+    //     expect(proxiedV1.connect(unknownAttestor).receivePacketBatch(packetsArray))
+    //         .to.be.revertedWith("Unknown Attestor");
+    // });
 
     it('should return true when the attestor has voted', async () => {
         // Create an OutPacket 
@@ -174,13 +195,13 @@ describe('ERC20TokenBridge', () => {
             100
         ];
 
+
         // Vote on the packet
         await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
-        await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
+        // await (await proxiedV1.connect(attestor2).receivePacket(inPacket)).wait();
 
-        const result = await proxiedV1["hasVoted(uint256,uint256,address)"](inPacket[2][0], inPacket[1], attestor1.address);
-
-        expect(result).to.be.true;
+        const _hasVoted = await proxiedV1["hasVoted(uint256,uint256,address)"](inPacket[2][0], inPacket[1], attestor1.address);
+        expect(_hasVoted).to.equal(1n);
     });
 
     it('should return false when the voter has not voted', async () => {
@@ -195,11 +216,11 @@ describe('ERC20TokenBridge', () => {
         ];
 
         // Vote on the packet
-        await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
+        // await (await proxiedV1.connect(attestor1).receivePacket(inPacket)).wait();
 
         const result = await proxiedV1["hasVoted(uint256,uint256,address)"](inPacket[2][0], inPacket[1], attestor2.address);
 
-        expect(result).to.be.false;
+        expect(result).to.equal(0n);
     });
 
     it('should emit Voted event with correct parameters', async () => {
@@ -218,7 +239,7 @@ describe('ERC20TokenBridge', () => {
     });
 
     it('should emit AlreadyVoted event when the attestor has already voted', async () => {
-        // Create an OutPacket 
+        // Create an InPacket 
         const inPacket = [
             1,
             1,

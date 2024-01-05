@@ -69,12 +69,12 @@ contract ERC20TokenService is Ownable, BlackListService,
     }
 
     function withdraw(PacketLibrary.InPacket memory packet) external {
-        IERC20TokenBridge(erc20Bridge).consume(packet);
+        PacketLibrary.Vote quorum = IERC20TokenBridge(erc20Bridge).consume(packet);
         require(packet.destTokenService.addr == address(this),"Packet not intended for this Token Service");
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
         require(isEnabledToken(tokenAddress, packet.sourceTokenService.chainId), "Token either disabled or not supported");
-        if(isBlackListed(receiver)) {
+        if(isBlackListed(receiver) || quorum == PacketLibrary.Vote.NAY) {
             IERC20(tokenAddress).transfer(address(holding), packet.message.amount);
             holding.lock(receiver, tokenAddress, packet.message.amount);
         }else {

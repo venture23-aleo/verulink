@@ -9,5 +9,5 @@ abstract contract IERC20TokenBridge {
     event PacketArrived(PacketLibrary.InPacket packet);
 
     function sendMessage(PacketLibrary.OutPacket memory packet) external virtual;
-    function consume(PacketLibrary.InPacket memory packet) external virtual;
+    function consume(PacketLibrary.InPacket memory packet) external virtual returns (PacketLibrary.Vote);
 }

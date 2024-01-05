@@ -18,4 +18,5 @@ abstract contract IncomingPacketManager {
     ) public view virtual returns (bool);
 
     function _getQuorumRequired() internal view virtual returns (uint256);
+    function quorum(bytes32 packetHash) public view virtual returns (PacketLibrary.Vote);
 }
