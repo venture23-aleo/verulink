@@ -11,27 +11,6 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
 
     mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
 
-    function _preValidateConsumePacket(
-        PacketLibrary.InPacket memory packet,
-        bytes32 packetHash
-    ) internal view {
-        require(
-            !isPacketConsumed(
-                packet.sourceTokenService.chainId,
-                packet.sequence
-            ),
-            "Packet already consumed"
-        );
-        require(
-            packetHash ==
-                getIncomingPacketHash(
-                    packet.sourceTokenService.chainId,
-                    packet.sequence
-                ),
-            "Unknown Packet Hash"
-        );
-    }
-
     function isPacketConsumed(
         uint256 _chainId,
         uint256 _sequence
@@ -39,26 +18,38 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
         return consumedPackets[_chainId][_sequence] != bytes32(0);
     }
 
-    function _updateConsumePacketState(
-        PacketLibrary.InPacket memory packet,
-        bytes32 packetHash
-    ) internal virtual {
-        _removeIncomingPacket(
-            packet.sourceTokenService.chainId,
-            packet.sequence
-        );
-        consumedPackets[packet.sourceTokenService.chainId][
-            packet.sequence
-        ] = packetHash;
-    }
-
     function consume(PacketLibrary.InPacket memory packet) public virtual {
         bytes32 packetHash = packet.hash();
-        _preValidateConsumePacket(packet, packetHash);
-        _updateConsumePacketState(packet, packetHash);
+        uint256 sourceChainId = packet.sourceTokenService.chainId;
+        uint256 sequence = packet.sequence;
+        require(
+            !isPacketConsumed(
+                sourceChainId,
+                sequence
+            ),
+            "Packet already consumed"
+        );
+        require(
+            packetHash ==
+                getIncomingPacketHash(
+                    sourceChainId,
+                    sequence
+                ),
+            "Unknown Packet Hash"
+        );
+
+       _removeIncomingPacket(
+            sourceChainId,
+            sequence
+        );
+
+        consumedPackets[sourceChainId][
+            sequence
+        ] = packetHash;
+
         emit Consumed(
-            packet.sourceTokenService.chainId,
-            packet.sequence,
+            sourceChainId,
+            sequence,
             packetHash
         );
     }

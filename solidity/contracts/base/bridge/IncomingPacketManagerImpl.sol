@@ -32,13 +32,6 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     }
 
     function _receivePacket(PacketLibrary.InPacket memory packet) internal {
-        _preValidateInPacket(packet);
-        _updateInPacketState(packet);
-    }
-
-    function _preValidateInPacket(
-        PacketLibrary.InPacket memory packet
-    ) internal view {
         require(
             !isPacketConsumed(
                 packet.sourceTokenService.chainId,
@@ -46,11 +39,6 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
             ),
             "Packet already consumed"
         );
-    }
-
-    function _updateInPacketState(
-        PacketLibrary.InPacket memory packet
-    ) internal {
         bytes32 packetHash = packet.hash();
         if (hasVoted(packetHash, msg.sender)) {
             emit AlreadyVoted(packetHash, msg.sender);
