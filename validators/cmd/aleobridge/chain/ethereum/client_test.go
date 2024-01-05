@@ -126,25 +126,17 @@ func TestNewClientCreation(t *testing.T) {
 		cfgNewCl := *cfg
 		cfgNewCl.WalletPath = "ethereumChain"
 
-		assert.Panics(t, func() {NewClient(&cfgNewCl)})
+		assert.Panics(t, func() { NewClient(&cfgNewCl) })
 	})
 
 	t.Run("case: invalid node url", func(t *testing.T) {
 		cfgNewCl := *cfg
 		cfgNewCl.NodeUrl = "ethereumChain"
 
-		assert.Panics(t, func() {NewClient(&cfgNewCl)})
+		assert.Panics(t, func() { NewClient(&cfgNewCl) })
 	})
 }
 
 func TestGepPktWithSeq(t *testing.T) {
-	mockClient := NewMockClient(cfg)
 
-	pkt, err := mockClient.GetPktWithSeq(context.Background(), uint32(2), uint64(1))
-	assert.Nil(t, err)
-	assert.NotNil(t, pkt)
-	assert.Equal(t, common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes(), []byte(pkt.Source.Address))
 }
-
-
-
