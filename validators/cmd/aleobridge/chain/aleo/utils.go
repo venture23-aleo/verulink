@@ -26,9 +26,7 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		}
 	}()
 
-	fmt.Println("message: ", s)
 	sMessages := strings.Split(trim(s), ",")
-	fmt.Printf("\nSplitted: %v\n\n", sMessages)
 	var messages []string
 
 	for i := 0; i < len(sMessages); i++ {
@@ -36,8 +34,6 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		msplit := strings.Split(msg, ":")
 		messages = append(messages, msplit...)
 	}
-
-	fmt.Printf("Messages: %v\n\n", messages)
 
 	requiredFields := map[string]bool{
 		"version":     false,
