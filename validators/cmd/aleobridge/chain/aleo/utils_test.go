@@ -145,15 +145,7 @@ func TestParseMessage(t *testing.T) {
 }
 
 func TestParseAleoPacket(t *testing.T) {
-	var dst, seqNum uint64 = 1, 1
-	key := constructOutMappingKey(uint32(dst), seqNum)
-	packet, err := giveOutPackets(key, 1)
-	assert.Nil(t, err)
-	parsedAleoPacket, err := parseMessage(packet[key])
-	require.NoError(t, err)
-	commonPacket, err := parseAleoPacket(parsedAleoPacket)
-	assert.Nil(t, err)
-	expectedPacket := &chain.Packet{
+	expectedPacket := chain.Packet{
 		Version:  uint64(0),
 		Sequence: uint64(1),
 		Source: chain.NetworkAddress{
@@ -172,8 +164,12 @@ func TestParseAleoPacket(t *testing.T) {
 		},
 		Height: uint64(55),
 	}
-
-	assert.Equal(t, commonPacket, expectedPacket)
+	s := dumpToAleoPacketString(expectedPacket)
+	a, err := parseMessage(s)
+	require.NoError(t, err)
+	commonPacket, err := parseAleoPacket(a)
+	require.Nil(t, err)
+	require.Equal(t, &expectedPacket, commonPacket)
 }
 
 func TestConstructAleoPacket(t *testing.T) {

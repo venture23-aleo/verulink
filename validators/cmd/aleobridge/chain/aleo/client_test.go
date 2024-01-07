@@ -38,19 +38,23 @@ var (
 		},
 		Destination: chain.NetworkAddress{
 			ChainID: uint64(1),
-			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
 		},
 		Message: chain.Message{
-			DestTokenAddress: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
 			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 			Amount:           big.NewInt(102),
-			ReceiverAddress:  string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
 		},
 		Height: uint64(55),
 	}
 )
 
-func dumpToAleoPacketString(pkt *chain.Packet) string {
+func dumpToAleoPacketString(pkt chain.Packet) string {
+	pkt.Destination.Address = string(ethCommon.HexToAddress(pkt.Destination.Address).Bytes())
+	pkt.Message.DestTokenAddress = string(ethCommon.HexToAddress(pkt.Message.DestTokenAddress).Bytes())
+	pkt.Message.ReceiverAddress = string(ethCommon.HexToAddress(pkt.Message.ReceiverAddress).Bytes())
+
 	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du32 ,\\n  "+
 		"source: {\\n    chain_id: %du32,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %du32,\\n    addr: %s},\\n  "+
@@ -63,7 +67,7 @@ func dumpToAleoPacketString(pkt *chain.Packet) string {
 }
 
 func giveOutPackets(key string, seq uint64) (map[string]string, error) {
-	packetString := dumpToAleoPacketString(modelPacket)
+	packetString := dumpToAleoPacketString(*modelPacket)
 	return map[string]string{key: packetString}, nil
 }
 
@@ -136,9 +140,6 @@ func TestGetPktWithSeq(t *testing.T) {
 		assert.Nil(t, err)
 
 		expectedPacket := *modelPacket
-		expectedPacket.Destination.Address = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		expectedPacket.Message.DestTokenAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		expectedPacket.Message.ReceiverAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
 		assert.Equal(t, &expectedPacket, pkt)
 	})
 
@@ -167,10 +168,6 @@ func TestSendPacket(t *testing.T) {
 			sendPktDur: time.Minute,
 		}
 		pktToSend := *modelPacket
-		pktToSend.Destination.Address = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.DestTokenAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.ReceiverAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-
 		err := client.SendPacket(context.Background(), &pktToSend)
 		assert.Nil(t, err)
 	})
@@ -189,10 +186,6 @@ func TestSendPacket(t *testing.T) {
 		}
 
 		pktToSend := *modelPacket
-		pktToSend.Destination.Address = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.DestTokenAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.ReceiverAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-
 		err := client.SendPacket(context.Background(), &pktToSend)
 		assert.ErrorContains(t, err, "signal: killed")
 	})
@@ -211,10 +204,6 @@ func TestSendPacket(t *testing.T) {
 		}
 
 		pktToSend := *modelPacket
-		pktToSend.Destination.Address = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.DestTokenAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.ReceiverAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-
 		err := client.SendPacket(context.Background(), &pktToSend)
 		assert.NotNil(t, err)
 	})
@@ -233,10 +222,6 @@ func TestSendPacket(t *testing.T) {
 		}
 
 		pktToSend := *modelPacket
-		pktToSend.Destination.Address = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.DestTokenAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-		pktToSend.Message.ReceiverAddress = "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0"
-
 		err := client.SendPacket(context.Background(), &pktToSend)
 		assert.NotNil(t, err)
 	})
