@@ -27,12 +27,12 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 	}()
 
 	sMessages := strings.Split(trim(s), ",")
-	var messages []string
+	var msgs []string
 
 	for i := 0; i < len(sMessages); i++ {
 		msg := sMessages[i]
 		msplit := strings.Split(msg, ":")
-		messages = append(messages, msplit...)
+		msgs = append(msgs, msplit...)
 	}
 
 	requiredFields := map[string]bool{
@@ -44,6 +44,8 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		"height":      false,
 	}
 
+	messages := make([]string, len(msgs))
+	copy(messages, msgs)
 	pkt = new(aleoPacket)
 	for m, v := range messages {
 		switch v {
@@ -54,33 +56,41 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 			pkt.sequence = messages[m+1]
 			requiredFields["sequence"] = true
 		case "source":
-			pkt.source.chainID = messages[m+2]
-			pkt.source.address = messages[m+4]
+			sourceSlice := messages[m+1 : m+5]
+			for i, v := range sourceSlice {
+				switch v {
+				case "chain_id":
+					pkt.source.chainID = sourceSlice[i+1]
+				case "addr":
+					pkt.source.address = sourceSlice[i+1]
+				}
+			}
 			requiredFields["source"] = true
 		case "destination":
-			serviceProgram := ""
-			pkt.destination.chainID = messages[m+2]
-			for i := m + 4; i < m+4+32; i++ {
-				serviceProgram += messages[i] + " "
+			sl := messages[m+1 : m+1+35]
+			for i, v := range sl {
+				switch v {
+				case "chain_id":
+					pkt.destination.chainID = sl[i+1]
+				case "addr":
+					pkt.destination.address = strings.Join(sl[i+1:i+1+32], " ")
+				}
 			}
-			pkt.destination.address = serviceProgram
 			requiredFields["destination"] = true
 		case "message":
-			denom := ""
-			i := 0
-			for i = m + 2; i < m+2+32; i++ {
-				denom += messages[i] + " "
+			sl := messages[m+1 : m+1+70]
+			for i, v := range sl {
+				switch v {
+				case "token":
+					pkt.message.token = strings.Join(sl[i+1:i+1+32], " ")
+				case "sender":
+					pkt.message.sender = sl[i+1]
+				case "receiver":
+					pkt.message.receiver = strings.Join(sl[i+1:i+1+32], " ")
+				case "amount":
+					pkt.message.amount = sl[i+1]
+				}
 			}
-			pkt.message.token = denom
-			sender := messages[i+1]
-			pkt.message.sender = sender
-			receiver := ""
-			for j := i + 3; j < i+3+32; j++ {
-				receiver += messages[j] + " "
-			}
-			i = i + 3 + 32
-			pkt.message.receiver = receiver
-			pkt.message.amount = messages[i+1]
 			requiredFields["message"] = true
 		case "height":
 			pkt.height = messages[m+1]
