@@ -3,6 +3,7 @@ package aleo
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-func dumpAleoPacket(pkt *aleoPacket) string {
+func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 	destAddr := strings.Trim(pkt.destination.address, " ")
 	destAddr = "[" + strings.ReplaceAll(destAddr, " ", ", ") + "]"
 	msgToken := strings.Trim(pkt.message.token, " ")
@@ -20,13 +21,36 @@ func dumpAleoPacket(pkt *aleoPacket) string {
 	msgReceiver := strings.Trim(pkt.message.receiver, " ")
 	msgReceiver = "[" + strings.ReplaceAll(msgReceiver, " ", ", ") + "]"
 
+	if !malform {
+		return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
+			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
+			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
+			"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+			"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
+			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
+			msgReceiver, pkt.message.amount, pkt.height,
+		)
+	}
+
+	i := rand.Intn(100)
+	if i%2 == 0 { // remove version field
+		return fmt.Sprintf("{\\n  sequence: %s ,\\n  "+
+			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
+			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
+			"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+			"height: %s\\n}", pkt.sequence, pkt.source.chainID, pkt.source.address,
+			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
+			msgReceiver, pkt.message.amount, pkt.height,
+		)
+	}
+	// empty address: expected to get index error panic catched by
 	return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
 		"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
 		"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
 		"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
 		pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
-		msgReceiver, pkt.message.amount, pkt.height,
+		"", pkt.message.amount, pkt.height,
 	)
 }
 
@@ -98,20 +122,26 @@ func TestParseMessage(t *testing.T) {
 		},
 		destination: aleoPacketNetworkAddress{
 			chainID: "1u32",
-			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
+			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 		},
 		message: aleoMessage{
-			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
+			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 			sender:   "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 			amount:   "102u64",
-			receiver: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
+			receiver: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 		},
 		height: "55u32",
 	}
 
-	aleoPacket, err := parseMessage(dumpAleoPacket(expectedPacket))
+	aleoPacket, err := parseMessage(dumpAleoPacket(expectedPacket, false))
 	require.NoError(t, err)
-	assert.Equal(t, expectedPacket, aleoPacket)
+	require.Equal(t, expectedPacket, aleoPacket)
+
+	for i := 0; i < 10; i++ {
+		aleoPacket, err := parseMessage(dumpAleoPacket(expectedPacket, true))
+		require.Error(t, err)
+		require.Nil(t, aleoPacket)
+	}
 }
 
 func TestParseAleoPacket(t *testing.T) {

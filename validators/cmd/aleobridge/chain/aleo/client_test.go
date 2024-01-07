@@ -50,7 +50,7 @@ var (
 	}
 )
 
-func dumpToAleoPacket(pkt *chain.Packet) string {
+func dumpToAleoPacketString(pkt *chain.Packet) string {
 	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du32 ,\\n  "+
 		"source: {\\n    chain_id: %du32,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %du32,\\n    addr: %s},\\n  "+
@@ -63,7 +63,7 @@ func dumpToAleoPacket(pkt *chain.Packet) string {
 }
 
 func giveOutPackets(key string, seq uint64) (map[string]string, error) {
-	packetString := dumpToAleoPacket(modelPacket)
+	packetString := dumpToAleoPacketString(modelPacket)
 	return map[string]string{key: packetString}, nil
 }
 
