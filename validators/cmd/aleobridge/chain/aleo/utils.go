@@ -44,7 +44,7 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 		"height":      false,
 	}
 
-	messages := make([]string, len(msgs))
+	messages := make([]string, len(msgs)) // shrink slice to length of msgs
 	copy(messages, msgs)
 	pkt = new(aleoPacket)
 	for m, v := range messages {
