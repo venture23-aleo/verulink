@@ -46,7 +46,7 @@ describe('ERC20TokenSupport', () => {
         expect(isSupported).to.be.true;
 
         // Check if the added token matches the expected values
-        const addedToken = await proxiedContract.supportedTokens(tokenAddress, destChainId);
+        const addedToken = await proxiedContract.supportedTokens(tokenAddress);
         expect(addedToken.tokenAddress).to.equal(tokenAddress);
         expect(addedToken.destTokenAddress.chainId).to.equal(destChainId);
         expect(addedToken.destTokenAddress.addr).to.equal(destTokenAddress);

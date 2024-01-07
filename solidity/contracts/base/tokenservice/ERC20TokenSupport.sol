@@ -14,19 +14,22 @@ contract ERC20TokenSupport is Ownable {
         bool enabled;
     }
 
-    mapping(address => mapping(uint256 => Token)) public supportedTokens;
+    mapping(address => Token) public supportedTokens;
 
     event TokenAdded(Token token, uint256 destChainId);
     event TokenRemoved(address token, uint256 destChainId);
     event TokenEnabled(address token, uint256 destChainId);
     event TokenDisabled(address token, uint256 destChainId);
+    event TokenMinValueUpdated(address token, uint256 destChainId, uint256 oldMinValue, uint256 newMinValue);
+    event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
+
 
     function isSupportedToken(
         address token,
         uint256 destChainId
     ) public view returns (bool) {
         return
-            supportedTokens[token][destChainId].destTokenAddress.chainId ==
+            supportedTokens[token].destTokenAddress.chainId ==
             destChainId;
     }
 
@@ -35,8 +38,12 @@ contract ERC20TokenSupport is Ownable {
         uint256 destChainId
     ) public view returns (bool) {
         return
-            supportedTokens[token][destChainId].enabled &&
-            isSupportedToken(token, destChainId);
+            supportedTokens[token].enabled && isSupportedToken(token, destChainId);
+    }
+
+    function isAmountInRange(address tokenAddress, uint256 amount) public view returns (bool) {
+        Token memory token = supportedTokens[tokenAddress];
+        return amount >= token.minValue && amount <= token.maxValue;
     }
 
     function addToken(
@@ -59,7 +66,7 @@ contract ERC20TokenSupport is Ownable {
             max,
             true
         );
-        supportedTokens[tokenAddress][destChainId] = token;
+        supportedTokens[tokenAddress] = token;
         emit TokenAdded(token, destChainId);
     }
 
@@ -72,7 +79,7 @@ contract ERC20TokenSupport is Ownable {
             "Token not supported"
         );
         emit TokenRemoved(tokenAddress, destChainId);
-        delete supportedTokens[tokenAddress][destChainId];
+        delete supportedTokens[tokenAddress];
     }
 
     function enable(
@@ -80,10 +87,10 @@ contract ERC20TokenSupport is Ownable {
         uint256 destChainId
     ) public onlyOwner {
         require(
-            isSupportedToken(tokenAddress, destChainId),
-            "Token not supported"
+            isEnabledToken(tokenAddress, destChainId),
+            "Token not enabled"
         );
-        supportedTokens[tokenAddress][destChainId].enabled = true;
+        supportedTokens[tokenAddress].enabled = true;
         emit TokenEnabled(tokenAddress, destChainId);
     }
 
@@ -92,7 +99,19 @@ contract ERC20TokenSupport is Ownable {
         uint256 destChainId
     ) public onlyOwner {
         require(isEnabledToken(tokenAddress, destChainId), "Token not enabled");
-        supportedTokens[tokenAddress][destChainId].enabled = false;
+        supportedTokens[tokenAddress].enabled = false;
         emit TokenDisabled(tokenAddress, destChainId);
+    }
+
+    function updateMinValue(address tokenAddress, uint256 destChainId, uint256 minValue) public onlyOwner {
+        require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
+        emit TokenMinValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].minValue, minValue);
+        supportedTokens[tokenAddress].minValue = minValue;
+    }
+
+    function updateMaxValue(address tokenAddress, uint256 destChainId, uint256 maxValue) public onlyOwner {
+        require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
+        emit TokenMaxValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].maxValue, maxValue);
+        supportedTokens[tokenAddress].maxValue = maxValue;
     }
 }
