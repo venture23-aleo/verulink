@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
@@ -49,6 +50,26 @@ var (
 			ReceiverAddress:  "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 		},
 		Height: big.NewInt(55),
+	}
+
+	modelSendPacket = &chain.Packet{
+		Version:  uint64(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: uint64(2),
+			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: uint64(1),
+			Address: string(common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+		},
+		Message: chain.Message{
+			DestTokenAddress: string(common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  string(common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+		},
+		Height: uint64(55),
 	}
 )
 
@@ -95,6 +116,7 @@ type mockBridge struct {
 		Message            abi.PacketLibraryOutTokenMessage
 		Height             *big.Int
 	}, error)
+	sendPkt func() (*types.Transaction, error)
 }
 
 func (b *mockBridge) OutgoingPackets(opts *bind.CallOpts, arg0 *big.Int, arg1 *big.Int) (struct {
@@ -119,38 +141,98 @@ func (b *mockBridge) OutgoingPackets(opts *bind.CallOpts, arg0 *big.Int, arg1 *b
 }
 
 func (b *mockBridge) ReceivePacket(opts *bind.TransactOpts, packet abi.PacketLibraryInPacket) (*types.Transaction, error) {
-	return nil, nil
+	if b.sendPkt != nil {
+		return b.sendPkt()
+	}
+	return nil, errors.New("error in sending packet")
 }
 
-func TestGepPktWithSeq(t *testing.T) {
-	client := &Client{
-		bridge: &mockBridge{
-			getPkt: func() (struct {
-				Version            *big.Int
-				Sequence           *big.Int
-				SourceTokenService abi.PacketLibraryInNetworkAddress
-				DestTokenService   abi.PacketLibraryOutNetworkAddress
-				Message            abi.PacketLibraryOutTokenMessage
-				Height             *big.Int
-			}, error) {
-				return modelPacket, nil
+func TestGetPktWithSeq(t *testing.T) {
+	t.Run("case: happy path", func(t *testing.T) {
+		client := &Client{
+			bridge: &mockBridge{
+				getPkt: func() (struct {
+					Version            *big.Int
+					Sequence           *big.Int
+					SourceTokenService abi.PacketLibraryInNetworkAddress
+					DestTokenService   abi.PacketLibraryOutNetworkAddress
+					Message            abi.PacketLibraryOutTokenMessage
+					Height             *big.Int
+				}, error) {
+					return modelPacket, nil
+				},
 			},
-		},
-	}
-	pkt, err := client.GetPktWithSeq(context.Background(), uint32(1), uint64(1))
-	assert.Nil(t, err)
-	assert.NotNil(t, pkt)
-	assert.Equal(t, pkt.Source.Address, string(modelPacket.SourceTokenService.Addr.Bytes()))
-	assert.Equal(t, pkt.Message.SenderAddress, string(modelPacket.Message.SenderAddress.Bytes()))
-	assert.Equal(t, pkt.Version, modelPacket.Version.Uint64())
-	assert.Equal(t, pkt.Sequence, modelPacket.Sequence.Uint64())
-	assert.Equal(t, pkt.Source.ChainID, modelPacket.SourceTokenService.ChainId.Uint64())
-	assert.Equal(t, pkt.Destination.ChainID, modelPacket.DestTokenService.ChainId.Uint64())
-	assert.Equal(t, pkt.Destination.Address, modelPacket.DestTokenService.Addr)
-	assert.Equal(t, chain.Message{
-		DestTokenAddress: modelPacket.Message.DestTokenAddress,
-		SenderAddress:    string(modelPacket.Message.SenderAddress.Bytes()),
-		Amount:           modelPacket.Message.Amount,
-		ReceiverAddress:  modelPacket.Message.ReceiverAddress,
-	}, pkt.Message)
+		}
+		pkt, err := client.GetPktWithSeq(context.Background(), uint32(1), uint64(1))
+		assert.Nil(t, err)
+		assert.NotNil(t, pkt)
+		assert.Equal(t, pkt.Source.Address, string(modelPacket.SourceTokenService.Addr.Bytes()))
+		assert.Equal(t, pkt.Message.SenderAddress, string(modelPacket.Message.SenderAddress.Bytes()))
+		assert.Equal(t, pkt.Version, modelPacket.Version.Uint64())
+		assert.Equal(t, pkt.Sequence, modelPacket.Sequence.Uint64())
+		assert.Equal(t, pkt.Source.ChainID, modelPacket.SourceTokenService.ChainId.Uint64())
+		assert.Equal(t, pkt.Destination.ChainID, modelPacket.DestTokenService.ChainId.Uint64())
+		assert.Equal(t, pkt.Destination.Address, modelPacket.DestTokenService.Addr)
+		assert.Equal(t, chain.Message{
+			DestTokenAddress: modelPacket.Message.DestTokenAddress,
+			SenderAddress:    string(modelPacket.Message.SenderAddress.Bytes()),
+			Amount:           modelPacket.Message.Amount,
+			ReceiverAddress:  modelPacket.Message.ReceiverAddress,
+		}, pkt.Message)
+	})
+
+	t.Run("case: error while receiving packet", func(t *testing.T) {
+		client := &Client{
+			bridge: &mockBridge{
+				getPkt: func() (struct {
+					Version            *big.Int
+					Sequence           *big.Int
+					SourceTokenService abi.PacketLibraryInNetworkAddress
+					DestTokenService   abi.PacketLibraryOutNetworkAddress
+					Message            abi.PacketLibraryOutTokenMessage
+					Height             *big.Int
+				}, error) {
+					return struct {
+						Version            *big.Int
+						Sequence           *big.Int
+						SourceTokenService abi.PacketLibraryInNetworkAddress
+						DestTokenService   abi.PacketLibraryOutNetworkAddress
+						Message            abi.PacketLibraryOutTokenMessage
+						Height             *big.Int
+					}{}, errors.New("emptyPacket")
+				},
+			},
+		}
+		pkt, err := client.GetPktWithSeq(context.Background(), uint32(1), uint64(1))
+		assert.NotNil(t, err)
+		assert.Nil(t, pkt)
+	})
+}
+
+func TestSendPacket(t *testing.T) {
+	wallet, _ := loadWalletConfig(cfg.WalletPath)
+	ethcl, _ := ethclient.Dial(cfg.NodeUrl)
+	t.Run("case: happy send", func(t *testing.T) {
+		client := &Client{
+			bridge: &mockBridge{
+				sendPkt: func() (t *types.Transaction, err error) {
+					address := common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0")
+					baseTx := &types.LegacyTx{
+						To:       &address,
+						Nonce:    0,
+						GasPrice: big.NewInt(defaultGasPrice),
+						Gas:      defaultGasLimit,
+						Value:    common.Big0,
+						Data:     []byte{},
+					}
+					return types.NewTx(baseTx), nil
+				},
+			},
+			wallet: wallet,
+			eth: ethcl,
+		}
+		
+		err := client.SendPacket(context.Background(), modelSendPacket)
+		assert.Nil(t, err)
+	})
 }
