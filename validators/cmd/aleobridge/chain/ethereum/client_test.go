@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"os"
 	"testing"
 	"time"
 
@@ -17,15 +18,35 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 )
 
-var (
-	cfg = &config.ChainConfig{
-		ChainID:        1,
-		NodeUrl:        "https://rpc.sepolia.org",
-		BridgeContract: "0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758",
-		StartHeight:    1,
-		WalletPath:     "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/eth_wallet.json",
-	}
+const (
+	rpcEndpoint = "https://rpc.sepolia.org"
+	walletConfigFile = "ethWallet.json"
+	ethWalletName = "eth_wallet.json"
+)
 
+func getConfig(name, nodeURL string, finalityHeight uint8) *config.ChainConfig {
+	return &config.ChainConfig{
+		ChainID:        2,
+		NodeUrl:        nodeURL,
+		StartHeight:    1,
+		WalletPath:     "eth_wallet.json",
+		BridgeContract: "bridge.aleo",
+		Name:           name,
+		FinalityHeight: finalityHeight,
+	}
+}
+
+func createEthereumWallet() (string, string) {
+	os.WriteFile(walletConfigFile, []byte(`{
+		"private_key": "hello",
+		"ks_path": "eth_wallet.json",
+		"coin_type": "ETH"
+	}`), 0660)
+	os.WriteFile(ethWalletName, []byte(`{"address":"3bbe4b23aafa2a8cd3b89c6aa5298d02681a99d4","crypto":{"cipher":"aes-128-ctr","ciphertext":"dca9be12d96dd6d0c107d917585613807110e06ce4cb42720d5fb05c211d6c6b","cipherparams":{"iv":"208b124ccd5963cff6ed4c245c97f205"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"023fdeed8823d375146fcefb60dfe02723a8ec58278d14888b9e2fb17e8954a2"},"mac":"94af4320cfba7d95ce7286ac86129be016a3d184f377971bd489827b170acad1"},"id":"aea8d006-cdd7-4e56-b5e4-da32aad315a2","version":3}`), 0660)
+	return walletConfigFile, ethWalletName
+}
+
+var (
 	modelPacket = struct {
 		Version            *big.Int
 		Sequence           *big.Int
@@ -76,35 +97,54 @@ var (
 
 func TestNewClientCreation(t *testing.T) {
 	t.Run("case: providing name and finality height in config.yaml", func(t *testing.T) {
-		cfgNewCl := *cfg
-		cfgNewCl.FinalityHeight = 64
-		cfgNewCl.Name = "ethereumChain"
+		walletConfig, ethWallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(walletConfig)
+			assert.Nil(t, err)
+			err = os.Remove(ethWallet)
+			assert.Nil(t, err)
+		}()
+		cfgNewCl := getConfig("ethereumchain", rpcEndpoint, 64)
 
-		client := NewClient(&cfgNewCl)
+		client := NewClient(cfgNewCl)
 		assert.Equal(t, cfgNewCl.Name, client.Name())
 		assert.Equal(t, 64, int(client.GetFinalityHeight()))
 	})
 
 	t.Run("case: ommitting name and finality height in config.yaml", func(t *testing.T) {
-		client := NewClient(cfg)
+		walletConfig, ethWallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(walletConfig)
+			assert.Nil(t, err)
+			err = os.Remove(ethWallet)
+			assert.Nil(t, err)
+		}()
+		cfgNewCl := getConfig("", rpcEndpoint, 0)
+
+		client := NewClient(cfgNewCl)
 		assert.Equal(t, ethereum, client.Name())
 		assert.Equal(t, defaultFinalityHeight, int(client.GetFinalityHeight()))
 	})
 
 	t.Run("case: invalid wallet path", func(t *testing.T) {
-		cfgNewCl := *cfg
-		cfgNewCl.WalletPath = "ethereumChain"
+		cfgNewCl := getConfig("ethereumchain", rpcEndpoint, 64)
 
-		assert.Panics(t, func() { NewClient(&cfgNewCl) })
-		assert.Panics(t, func() { NewClient(&cfgNewCl) })
+		assert.Panics(t, func() { NewClient(cfgNewCl) })
+		assert.Panics(t, func() { NewClient(cfgNewCl) })
 	})
 
 	t.Run("case: invalid node url", func(t *testing.T) {
-		cfgNewCl := *cfg
-		cfgNewCl.NodeUrl = "ethereumChain"
+		walletConfig, ethWallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(walletConfig)
+			assert.Nil(t, err)
+			err = os.Remove(ethWallet)
+			assert.Nil(t, err)
+		}()
+		cfgNewCl := getConfig("ethereumchain", rpcEndpoint+"invalid string", 64)
 
-		assert.Panics(t, func() { NewClient(&cfgNewCl) })
-		assert.Panics(t, func() { NewClient(&cfgNewCl) })
+		assert.Panics(t, func() { NewClient(cfgNewCl) })
+		assert.Panics(t, func() { NewClient(cfgNewCl) })
 	})
 }
 
@@ -211,8 +251,15 @@ func TestGetPktWithSeq(t *testing.T) {
 }
 
 func TestSendPacket(t *testing.T) {
-	wallet, _ := loadWalletConfig(cfg.WalletPath)
-	ethcl, _ := ethclient.Dial(cfg.NodeUrl)
+	walletConfig, ethWallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(walletConfig)
+			assert.Nil(t, err)
+			err = os.Remove(ethWallet)
+			assert.Nil(t, err)
+		}()
+	wallet, _ := loadWalletConfig(walletConfig)
+	ethcl, _ := ethclient.Dial(rpcEndpoint)
 	t.Run("case: happy send", func(t *testing.T) {
 		client := &Client{
 			bridge: &mockBridge{
@@ -238,16 +285,16 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: context times out", func(t *testing.T) {
-		wallet, _ := loadWalletConfig(cfg.WalletPath)
-		ethcl, _ := ethclient.Dial(cfg.NodeUrl)
+		wallet, _ := loadWalletConfig(walletConfig)
+		ethcl, _ := ethclient.Dial(rpcEndpoint)
 		client := &Client{
 			bridge: &mockBridge{
 				sendPkt: func(ctx context.Context) (*types.Transaction, error) {
 					return nil, errors.New("context cancelled")
 				},
 			},
-			wallet: wallet,
-			eth: ethcl,
+			wallet:          wallet,
+			eth:             ethcl,
 			sendPktDuration: time.Second * 5,
 		}
 		err := client.SendPacket(context.Background(), modelSendPacket)

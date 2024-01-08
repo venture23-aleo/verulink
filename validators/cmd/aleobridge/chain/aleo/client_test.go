@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -18,17 +19,30 @@ import (
 
 const (
 	RpcEndpoint = "3.84.49.97"
+	walletName = "aleo_wallet.json"
 )
 
-var (
-	cfg = &config.ChainConfig{
+func getConfig(name, nodeURL string) *config.ChainConfig {
+	return &config.ChainConfig{
 		ChainID:        2,
-		NodeUrl:        "http://" + RpcEndpoint + "|testnet3",
-		BridgeContract: "bridge.aleo",
+		NodeUrl:        nodeURL,
 		StartHeight:    1,
-		WalletPath:     "/home/sheldor/github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/aleo_wallet.json",
+		WalletPath:     walletName,
+		BridgeContract: "bridge.aleo",
+		Name:           name,
 	}
+}
 
+func createEthereumWallet() string {
+	os.WriteFile(walletName, []byte(`{
+		"private_key": "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
+		"public_key": "aleoPublicKey",
+		"coin_type": "ALEO"
+	}`), 0660)
+	return walletName
+}
+
+var (
 	modelPacket = &chain.Packet{
 		Version:  uint64(0),
 		Sequence: uint64(1),
@@ -103,25 +117,33 @@ func (r *mockRpc) Send(ctx context.Context, aleoPacket, privateKey, queryUrl, ne
 
 func TestNewClientCreation(t *testing.T) {
 	t.Run("case: providing all the fields in config.yaml", func(t *testing.T) {
-		cfgNewCl := *cfg
-		cfgNewCl.Name = "aleoChain"
+		cfgNewCl := getConfig("aleoChain", "http://"+RpcEndpoint+"|testnet3")
+		wallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(wallet)
+			assert.Nil(t, err)
+		}()
 		cfgNewCl.FinalityHeight = uint8(64)
-		client := NewClient(&cfgNewCl)
+		client := NewClient(cfgNewCl)
 
 		assert.Equal(t, "aleoChain", client.Name())
 		assert.Equal(t, uint64(64), client.GetFinalityHeight())
 	})
 	t.Run("case: omitting name and finality height in config.yaml", func(t *testing.T) {
-		client := NewClient(cfg)
+		wallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(wallet)
+			assert.Nil(t, err)
+		}()
+		client := NewClient(getConfig("", "http://"+RpcEndpoint+"|testnet3"))
 		assert.Equal(t, aleo, client.Name())
 		assert.Equal(t, uint64(1), client.GetFinalityHeight())
 	})
 
 	t.Run("case: invalid address path", func(t *testing.T) {
-		cfgNewCl := *cfg
-		cfgNewCl.WalletPath = "aleoChain"
+		cfgNewCl := getConfig("", "http://"+RpcEndpoint+"|testnet3")
 
-		assert.Panics(t, func() { NewClient(&cfgNewCl) })
+		assert.Panics(t, func() { NewClient(cfgNewCl) })
 	})
 
 }
@@ -155,8 +177,13 @@ func TestGetPktWithSeq(t *testing.T) {
 }
 
 func TestSendPacket(t *testing.T) {
+	wallet := createEthereumWallet()
+		defer func() {
+			err := os.Remove(wallet)
+			assert.Nil(t, err)
+		}()
 	t.Run("happy path", func(t *testing.T) {
-		wallet, _ := loadWalletConfig(cfg.WalletPath)
+		wallet, _ := loadWalletConfig(wallet)
 		client := &Client{
 			wallet: wallet,
 			aleoClient: &mockRpc{
@@ -173,7 +200,7 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: context time out", func(t *testing.T) {
-		wallet, _ := loadWalletConfig(cfg.WalletPath)
+		wallet, _ := loadWalletConfig(wallet)
 		client := &Client{
 			wallet: wallet,
 			aleoClient: &mockRpc{
@@ -191,7 +218,7 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: misformed/invalid command parameter", func(t *testing.T) {
-		wallet, _ := loadWalletConfig(cfg.WalletPath)
+		wallet, _ := loadWalletConfig(wallet)
 		client := &Client{
 			wallet: wallet,
 			aleoClient: &mockRpc{
@@ -209,7 +236,7 @@ func TestSendPacket(t *testing.T) {
 	})
 
 	t.Run("case: invalid command", func(t *testing.T) {
-		wallet, _ := loadWalletConfig(cfg.WalletPath)
+		wallet, _ := loadWalletConfig(wallet)
 		client := &Client{
 			wallet: wallet,
 			aleoClient: &mockRpc{
