@@ -9,7 +9,7 @@ import (
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap"
 
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
@@ -138,7 +138,7 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	if err != nil {
 		return err
 	}
-	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transaction.Hash().String()})
+	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zap.Any("key", transaction.Hash().String()))
 	return nil
 }
 
