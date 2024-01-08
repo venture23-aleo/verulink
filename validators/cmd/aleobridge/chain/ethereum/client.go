@@ -45,6 +45,7 @@ type Client struct {
 	chainID           uint32
 	chainCfg          *config.ChainConfig
 	wallet            common.Wallet
+	sendPktDuration   time.Duration
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
@@ -107,7 +108,7 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, defaultSendTxTimeout)
+	ctx, cancel := context.WithTimeout(ctx, cl.sendPktDuration)
 	defer cancel()
 
 	txOpts.Context = ctx
@@ -249,5 +250,6 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 		chainID:        cfg.ChainID,
 		chainCfg:       cfg,
 		wallet:         wallet,
+		sendPktDuration: defaultSendTxTimeout,
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -116,7 +117,7 @@ type mockBridge struct {
 		Message            abi.PacketLibraryOutTokenMessage
 		Height             *big.Int
 	}, error)
-	sendPkt func() (*types.Transaction, error)
+	sendPkt func(ctx context.Context) (*types.Transaction, error)
 }
 
 func (b *mockBridge) OutgoingPackets(opts *bind.CallOpts, arg0 *big.Int, arg1 *big.Int) (struct {
@@ -142,7 +143,7 @@ func (b *mockBridge) OutgoingPackets(opts *bind.CallOpts, arg0 *big.Int, arg1 *b
 
 func (b *mockBridge) ReceivePacket(opts *bind.TransactOpts, packet abi.PacketLibraryInPacket) (*types.Transaction, error) {
 	if b.sendPkt != nil {
-		return b.sendPkt()
+		return b.sendPkt(opts.Context)
 	}
 	return nil, errors.New("error in sending packet")
 }
@@ -215,7 +216,7 @@ func TestSendPacket(t *testing.T) {
 	t.Run("case: happy send", func(t *testing.T) {
 		client := &Client{
 			bridge: &mockBridge{
-				sendPkt: func() (t *types.Transaction, err error) {
+				sendPkt: func(ctx context.Context) (t *types.Transaction, err error) {
 					address := common.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0")
 					baseTx := &types.LegacyTx{
 						To:       &address,
@@ -229,10 +230,28 @@ func TestSendPacket(t *testing.T) {
 				},
 			},
 			wallet: wallet,
-			eth: ethcl,
+			eth:    ethcl,
 		}
-		
+
 		err := client.SendPacket(context.Background(), modelSendPacket)
 		assert.Nil(t, err)
+	})
+
+	t.Run("case: context times out", func(t *testing.T) {
+		wallet, _ := loadWalletConfig(cfg.WalletPath)
+		ethcl, _ := ethclient.Dial(cfg.NodeUrl)
+		client := &Client{
+			bridge: &mockBridge{
+				sendPkt: func(ctx context.Context) (*types.Transaction, error) {
+					return nil, errors.New("context cancelled")
+				},
+			},
+			wallet: wallet,
+			eth: ethcl,
+			sendPktDuration: time.Second * 5,
+		}
+		err := client.SendPacket(context.Background(), modelSendPacket)
+		assert.NotNil(t, err)
+
 	})
 }
