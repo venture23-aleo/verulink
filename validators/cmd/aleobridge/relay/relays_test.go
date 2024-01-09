@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -137,7 +138,25 @@ type mockRelay struct {
 	getName func() string
 }
 
-func (mr *mockRelay) Init(ctx context.Context) {}
+var (
+	cancelled = 0
+)
+
+func consumeContext(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			cancelled++
+			return
+		default:
+			continue
+		}
+	}
+}
+
+func (mr *mockRelay) Init(ctx context.Context) {
+	go consumeContext(ctx)
+}
 func (mr *mockRelay) Name() string {
 	if mr.getName != nil {
 		return mr.getName()
@@ -192,4 +211,54 @@ func newMockClient(cfg *config.ChainConfig) IClient {
 	} else {
 		return &mockClient{}
 	}
+}
+
+func TestChainHandler(t *testing.T) {
+	chainCtxMu = sync.Mutex{}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	relays := Relays{newMockRelay("aleo-ethereum"), newMockRelay("ethereum-aleo")}
+
+	go relays.StartMultiRelay(ctx)
+
+	time.Sleep(time.Second)
+	assert.NotNil(t, chainCtxCncls["aleo-ethereum"])
+	assert.NotNil(t, chainCtxCncls["ethereum-aleo"])
+
+	go chainHandler("aleo-ethereum", ActionType(2))
+	go chainHandler("ethereum-aleo", ActionType(2))
+
+	time.Sleep(time.Second)
+	assert.Equal(t, cancelled, 2)
+	assert.Nil(t, chainCtxCncls["aleo-ethereum"])
+	assert.Nil(t, chainCtxCncls["ethereum-aleo"])
+}
+
+func TestRelaysHandler(t *testing.T) {
+	chainCtxMu = sync.Mutex{}
+	ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
+	aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
+	chains["aleo"] = newMockClient(aleoConfig)
+	chains["ethereum"] = newMockClient(ethConfig)
+
+	relArg := []RelayArg{RelayArg{"aleo", "ethereum"}, RelayArg{"ethereum", "aleo"}}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	relays := Relays{newMockRelay("aleo-ethereum"), newMockRelay("ethereum-aleo")}
+
+	go relays.StartMultiRelay(ctx)
+
+	time.Sleep(time.Second)
+	assert.NotNil(t, chainCtxCncls["aleo-ethereum"])
+	assert.NotNil(t, chainCtxCncls["ethereum-aleo"])
+
+	go relaysHandler(relArg, ActionType(2))
+	time.Sleep(time.Second)
+	assert.Equal(t, cancelled, 2)
+	assert.Nil(t, chainCtxCncls["aleo-ethereum"])
+	assert.Nil(t, chainCtxCncls["ethereum-aleo"])
 }
