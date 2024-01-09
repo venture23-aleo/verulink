@@ -1,20 +1,20 @@
 [[package]]
 name = "wrapped_token"
-location = "local"
-path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/wrapped_token"
+network = "testnet3"
+location = "network"
 checksum = "ed1e5f8fa272d85fd5d847f818a6b59f48b3deefa91225955f517af37745ce7c"
 dependencies = []
 
 [[package]]
-name = "holding"
-location = "local"
-path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/holding"
-checksum = "7ea1f496558aa9c68dbb7a47f13e8a11aa205e15f56849c3edeb7738924e7634"
-dependencies = ["wrapped_token.aleo"]
+name = "token_bridge"
+network = "testnet3"
+location = "network"
+checksum = "c073dc1783bc6206220a8dc8e605cf30ed32066de5541bf46e9b433b62f3f400"
+dependencies = []
 
 [[package]]
-name = "bridge"
-location = "local"
-path = "/Users/prajwolgyawali/github/venture23-aleo/aleo-bridge/aleo/artifacts/leo/bridge"
-checksum = "730c0d7802a7d1d3159581b838717d3da168b907ce131918c73e117179c1a89c"
-dependencies = []
+name = "holding"
+network = "testnet3"
+location = "network"
+checksum = "7ea1f496558aa9c68dbb7a47f13e8a11aa205e15f56849c3edeb7738924e7634"
+dependencies = ["wrapped_token.aleo"]

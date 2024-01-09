@@ -71,7 +71,7 @@ program wrapped_token.aleo {
 
     // function hello:
     //     input r0 as u32.public;
-    //     cast bridge.aleo into r1 as address;
+    //     cast token_bridge.aleo into r1 as address;
     //     output r1 as address.private;
 
     inline token_service_program() -> address {

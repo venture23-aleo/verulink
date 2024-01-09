@@ -1,4 +1,4 @@
-program bridge.aleo;
+program token_bridge.aleo;
 
 struct AleoProgram:
     chain_id as u32;
@@ -62,7 +62,7 @@ mapping bridge_settings:
 	value as u8.public;
 
 
-mapping council_program:
+mapping governance_TB:
 	key as boolean.public;
 	value as address.public;
 
@@ -124,7 +124,7 @@ function bridge_initialize:
     input r5 as address.public;
     input r6 as address.public;
     async bridge_initialize r0 r1 r2 r3 r4 r5 r6 into r7;
-    output r7 as bridge.aleo/bridge_initialize.future;
+    output r7 as token_bridge.aleo/bridge_initialize.future;
 
 finalize bridge_initialize:
     input r0 as u8.public;
@@ -143,18 +143,18 @@ finalize bridge_initialize:
     set true into attestors[r3];
     set true into attestors[r4];
     set true into attestors[r5];
-    set r6 into council_program[true];
+    set r6 into governance_TB[true];
 
 
 function update_bridge_threshold:
     input r0 as u8.public;
     async update_bridge_threshold self.caller r0 into r1;
-    output r1 as bridge.aleo/update_bridge_threshold.future;
+    output r1 as token_bridge.aleo/update_bridge_threshold.future;
 
 finalize update_bridge_threshold:
     input r0 as address.public;
     input r1 as u8.public;
-    get council_program[true] into r2;
+    get governance_TB[true] into r2;
     assert.eq r0 r2;
     set r1 into bridge_settings[0u8];
 
@@ -162,12 +162,12 @@ finalize update_bridge_threshold:
 function add_service:
     input r0 as address.public;
     async add_service self.caller r0 into r1;
-    output r1 as bridge.aleo/add_service.future;
+    output r1 as token_bridge.aleo/add_service.future;
 
 finalize add_service:
     input r0 as address.public;
     input r1 as address.public;
-    get council_program[true] into r2;
+    get governance_TB[true] into r2;
     assert.eq r0 r2;
     set true into supported_services[r1];
 
@@ -175,12 +175,12 @@ finalize add_service:
 function remove_service:
     input r0 as address.public;
     async remove_service self.caller r0 into r1;
-    output r1 as bridge.aleo/remove_service.future;
+    output r1 as token_bridge.aleo/remove_service.future;
 
 finalize remove_service:
     input r0 as address.public;
     input r1 as address.public;
-    get council_program[true] into r2;
+    get governance_TB[true] into r2;
     assert.eq r0 r2;
     remove supported_services[r1];
 
@@ -189,13 +189,13 @@ function add_attestor:
     input r0 as address.public;
     input r1 as u8.private;
     async add_attestor self.caller r0 r1 into r2;
-    output r2 as bridge.aleo/add_attestor.future;
+    output r2 as token_bridge.aleo/add_attestor.future;
 
 finalize add_attestor:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u8.public;
-    get council_program[true] into r3;
+    get governance_TB[true] into r3;
     assert.eq r0 r3;
     set true into attestors[r1];
     set r2 into bridge_settings[0u8];
@@ -205,13 +205,13 @@ function remove_attestor:
     input r0 as address.public;
     input r1 as u8.private;
     async remove_attestor self.caller r0 r1 into r2;
-    output r2 as bridge.aleo/remove_attestor.future;
+    output r2 as token_bridge.aleo/remove_attestor.future;
 
 finalize remove_attestor:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u8.public;
-    get council_program[true] into r3;
+    get governance_TB[true] into r3;
     assert.eq r0 r3;
     remove attestors[r1];
     set r2 into bridge_settings[0u8];
@@ -220,12 +220,12 @@ finalize remove_attestor:
 function approve_chain:
     input r0 as u32.public;
     async approve_chain self.caller r0 into r1;
-    output r1 as bridge.aleo/approve_chain.future;
+    output r1 as token_bridge.aleo/approve_chain.future;
 
 finalize approve_chain:
     input r0 as address.public;
     input r1 as u32.public;
-    get council_program[true] into r2;
+    get governance_TB[true] into r2;
     assert.eq r0 r2;
     set true into supported_chains[r1];
 
@@ -233,12 +233,12 @@ finalize approve_chain:
 function disapprove_chain:
     input r0 as u32.public;
     async disapprove_chain self.caller r0 into r1;
-    output r1 as bridge.aleo/disapprove_chain.future;
+    output r1 as token_bridge.aleo/disapprove_chain.future;
 
 finalize disapprove_chain:
     input r0 as address.public;
     input r1 as u32.public;
-    get council_program[true] into r2;
+    get governance_TB[true] into r2;
     assert.eq r0 r2;
     remove supported_chains[r1];
 
@@ -252,7 +252,7 @@ function publish:
     input r5 as u64.public;
     assert.neq self.signer self.caller;
     async publish 1u32 self.caller r0 r1 r2 r3 r4 r5 into r6;
-    output r6 as bridge.aleo/publish.future;
+    output r6 as token_bridge.aleo/publish.future;
 
 finalize publish:
     input r0 as u32.public;
@@ -292,7 +292,7 @@ function attest:
     cast r4 r1 into r7 as InPacketFullScreeningKey;
     hash.bhp256 r7 into r8 as field;
     async attest r0.source.chain_id r0.sequence r8 self.caller r6 r0 into r9;
-    output r9 as bridge.aleo/attest.future;
+    output r9 as token_bridge.aleo/attest.future;
 
 finalize attest:
     input r0 as u32.public;
@@ -345,7 +345,7 @@ function consume:
     cast r14 r15 into r16 as InPacketFullScreeningKey;
     hash.bhp256 r16 into r17 as field;
     async consume self.caller r0 r7 r17 into r18;
-    output r18 as bridge.aleo/consume.future;
+    output r18 as token_bridge.aleo/consume.future;
 
 finalize consume:
     input r0 as address.public;

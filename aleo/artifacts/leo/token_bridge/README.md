@@ -1,4 +1,4 @@
-# bridge.aleo
+# token_bridge.aleo
 
 ## Build Guide
 

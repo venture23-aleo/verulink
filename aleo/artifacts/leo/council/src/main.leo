@@ -1,5 +1,5 @@
 // The 'council' program.
-import bridge.aleo;
+import token_bridge.aleo;
 import token_service.aleo;
 import wrapped_token.aleo;
 
@@ -556,7 +556,7 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        bridge.aleo/approve_chain(chain_id);
+        token_bridge.aleo/approve_chain(chain_id);
 
         return then finalize(proposal_hash);
     }
@@ -683,7 +683,7 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        bridge.aleo/add_service(service);
+        token_bridge.aleo/add_service(service);
 
         return then finalize(proposal_hash);
     }
@@ -809,7 +809,7 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        bridge.aleo/disapprove_chain(chain_id);
+        token_bridge.aleo/disapprove_chain(chain_id);
 
         return then finalize(proposal_hash);
     }

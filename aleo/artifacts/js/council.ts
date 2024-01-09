@@ -11,6 +11,7 @@ import {
   SupportChainTS,
   SupportToken,
   EnableToken,
+  TokenAcc,
   AleoProgram,
   ForeignContract,
   MsgTokenReceive,
@@ -21,7 +22,6 @@ import {
   PacketId,
   InPacketFullAttestorKey,
   InPacketFullScreeningKey,
-  TokenAcc,
   TSForeignContract,
   TokenOrigin,
   wrapped_token,
@@ -41,6 +41,7 @@ import {
   getSupportChainTSLeo,
   getSupportTokenLeo,
   getEnableTokenLeo,
+  getTokenAccLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -51,7 +52,6 @@ import {
   getPacketIdLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
-  getTokenAccLeo,
   getTSForeignContractLeo,
   getTokenOriginLeo,
   getwrapped_tokenLeo,
@@ -71,6 +71,7 @@ import {
   getSupportChainTS,
   getSupportToken,
   getEnableToken,
+  getTokenAcc,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -81,7 +82,6 @@ import {
   getPacketId,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
-  getTokenAcc,
   getTSForeignContract,
   getTokenOrigin,
   getwrapped_token,
@@ -114,11 +114,11 @@ export class CouncilContract {
       ...config
     };
     if (config.networkName) {
-      if (!networkConfig?.[config.networkName])
+      if (!networkConfig?.networks[config.networkName])
         throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
       this.config = {
         ...this.config,
-        network: networkConfig[config.networkName]
+        network: networkConfig.networks[config.networkName]
       };
     }
   }

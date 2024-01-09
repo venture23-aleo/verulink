@@ -1,4 +1,4 @@
-import bridge.aleo;
+import token_bridge.aleo;
 import wrapped_token.aleo;
 import holding.aleo;
 import token_service.aleo;
@@ -489,12 +489,12 @@ function exec_approve_chain_bridge:
     input r1 as u32.public;
     cast r0 r1 into r2 as ApproveChainBridgeProposal;
     hash.bhp256 r2 into r3 as field;
-    call bridge.aleo/approve_chain r1 into r4;
+    call token_bridge.aleo/approve_chain r1 into r4;
     async exec_approve_chain_bridge r4 r3 into r5;
     output r5 as council.aleo/exec_approve_chain_bridge.future;
 
 finalize exec_approve_chain_bridge:
-    input r0 as bridge.aleo/approve_chain.future;
+    input r0 as token_bridge.aleo/approve_chain.future;
     input r1 as field.public;
     await r0;
     get settings[1u8] into r2;
@@ -570,12 +570,12 @@ function exec_enable_service:
     input r1 as address.public;
     cast r0 r1 into r2 as EnableServiceProposal;
     hash.bhp256 r2 into r3 as field;
-    call bridge.aleo/add_service r1 into r4;
+    call token_bridge.aleo/add_service r1 into r4;
     async exec_enable_service r4 r3 into r5;
     output r5 as council.aleo/exec_enable_service.future;
 
 finalize exec_enable_service:
-    input r0 as bridge.aleo/add_service.future;
+    input r0 as token_bridge.aleo/add_service.future;
     input r1 as field.public;
     await r0;
     get settings[1u8] into r2;
@@ -651,12 +651,12 @@ function exec_disapprove_chain_bridge:
     input r1 as u32.public;
     cast r0 r1 into r2 as DisapproveChainBridge;
     hash.bhp256 r2 into r3 as field;
-    call bridge.aleo/disapprove_chain r1 into r4;
+    call token_bridge.aleo/disapprove_chain r1 into r4;
     async exec_disapprove_chain_bridge r4 r3 into r5;
     output r5 as council.aleo/exec_disapprove_chain_bridge.future;
 
 finalize exec_disapprove_chain_bridge:
-    input r0 as bridge.aleo/disapprove_chain.future;
+    input r0 as token_bridge.aleo/disapprove_chain.future;
     input r1 as field.public;
     await r0;
     get settings[1u8] into r2;

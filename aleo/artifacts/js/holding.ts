@@ -33,11 +33,11 @@ export class HoldingContract {
       ...config
     };
     if (config.networkName) {
-      if (!networkConfig?.[config.networkName])
+      if (!networkConfig?.networks[config.networkName])
         throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
       this.config = {
         ...this.config,
-        network: networkConfig[config.networkName]
+        network: networkConfig.networks[config.networkName]
       };
     }
   }

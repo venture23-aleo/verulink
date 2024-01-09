@@ -1,5 +1,5 @@
 {
-    "program": "bridge.aleo",
+    "program": "token_bridge.aleo",
     "version": "0.0.0",
     "description": "",
     "license": "MIT"

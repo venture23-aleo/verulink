@@ -1,6 +1,6 @@
 import wrapped_token.aleo;
+import token_bridge.aleo;
 import holding.aleo;
-import bridge.aleo;
 program token_service.aleo;
 
 
@@ -140,13 +140,13 @@ function token_send:
     input r2 as u64.public;
     input r3 as TokenOrigin.public;
     call wrapped_token.aleo/burn r2 r0 r3.chain_id r3.token_address into r4;
-    call bridge.aleo/publish r3.chain_id r3.token_service_address r3.token_address self.caller r1 r2 into r5;
+    call token_bridge.aleo/publish r3.chain_id r3.token_service_address r3.token_address self.caller r1 r2 into r5;
     async token_send r4 r5 r0 r3 r2 into r6;
     output r6 as token_service.aleo/token_send.future;
 
 finalize token_send:
     input r0 as wrapped_token.aleo/burn.future;
-    input r1 as bridge.aleo/publish.future;
+    input r1 as token_bridge.aleo/publish.future;
     input r2 as address.public;
     input r3 as TokenOrigin.public;
     input r4 as u64.public;
@@ -199,7 +199,7 @@ function token_receive:
     input r5 as u64.public;
     input r6 as u32.public;
     input r7 as u32.public;
-    call bridge.aleo/consume r0.chain_id r0.token_service_address r1 r2 r3 r4 r5 r6 r7 into r8;
+    call token_bridge.aleo/consume r0.chain_id r0.token_service_address r1 r2 r3 r4 r5 r6 r7 into r8;
     call wrapped_token.aleo/mint r4 r5 r1 r0.chain_id r0.token_address into r9;
     is.eq r3 r4 into r10;
     not r10 into r11;
@@ -208,7 +208,7 @@ function token_receive:
     output r13 as token_service.aleo/token_receive.future;
 
 finalize token_receive:
-    input r0 as bridge.aleo/consume.future;
+    input r0 as token_bridge.aleo/consume.future;
     input r1 as wrapped_token.aleo/mint.future;
     input r2 as holding.aleo/hold_fund.future;
     input r3 as address.public;

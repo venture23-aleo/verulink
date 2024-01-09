@@ -45,14 +45,14 @@ import {
 
 const networkConfig = require('../../aleo-config');
 
-export class BridgeContract {
+export class Token_bridgeContract {
 
   config: ContractConfig;
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      appName: 'bridge',
-      contractPath: 'artifacts/leo/bridge',
+      appName: 'token_bridge',
+      contractPath: 'artifacts/leo/token_bridge',
       fee: '0.01'
     };
     this.config = {
@@ -242,13 +242,13 @@ export class BridgeContract {
     return leo2js.u8(result);
   }
 
-  async council_program(key: boolean): Promise < string > {
+  async governance_TB(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'council_program',
+      transition: 'governance_TB',
       params,
     });
     return leo2js.address(result);
