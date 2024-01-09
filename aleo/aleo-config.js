@@ -5,7 +5,7 @@ module.exports = {
   networks: {
     testnet3: {
       endpoint: "http://localhost:3030",
-      accounts: [process.env.ALEO_PRIVATE_KEY_TESTNET3],
+      accounts: [process.env.ALEO_TESTNET_PRIVATE_KEY],
       priorityFee: 0.01,
     },
     mainnet: {

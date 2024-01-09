@@ -1,6 +1,6 @@
-import { BridgeContract } from "../artifacts/js/bridge";
 import { CouncilContract } from "../artifacts/js/council";
 import { HoldingContract } from "../artifacts/js/holding";
+import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
 import { evm2AleoArr, string2AleoArr } from "../test/utils";
@@ -10,7 +10,7 @@ function sleep(ms) {
 }
 
 const setup = async () => {
-  const bridge = new BridgeContract({
+  const bridge = new Token_bridgeContract({
     networkName: "testnet3",
     privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
     mode: "execute"
@@ -62,10 +62,10 @@ const setup = async () => {
   // Deploy contracts
   // await bridge.deploy();
   // await wrappedToken.deploy();
-  // await holding.deploy();
-  // await tokenService.deploy();
-  // tx = await council.deploy();
-  // await tx.wait();
+  await holding.deploy();
+  await tokenService.deploy();
+  tx = await council.deploy();
+  await tx.wait();
 
   // Initialize council program with a single council member and 1/5 threshold
   const councilMember =

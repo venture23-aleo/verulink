@@ -1,7 +1,5 @@
-import { BridgeContract } from "../artifacts/js/bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { InPacketFull, TokenOrigin, wrapped_tokenLeo } from "../artifacts/js/types";
-import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
 
 import { evm2AleoArr, string2AleoArr } from "./utils";
 
@@ -64,6 +62,7 @@ describe("Token Service", () => {
       source,
       wUSDC,
       evm2AleoArr(ethUser),
+      aleoUser,
       aleoUser,
       BigInt(100),
       1,

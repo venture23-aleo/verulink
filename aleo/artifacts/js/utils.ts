@@ -6,14 +6,8 @@ import { promisify } from 'util';
 //import { LeoTx, LeoRecord, LeoViewKey } from './types/leo-types';
 //import { ViewKey } from '@aleohq/sdk';
 
-interface ServerConfig {
-  host: string;
-  port: number;
-}
-
 interface NetworkConfig {
-  node: string;
-  server: ServerConfig;
+  endpoint: string;
 }
 export interface ContractConfig {
   privateKey?: string;
@@ -79,12 +73,16 @@ interface LeoRunParams {
   mode?: string;
 }
 
+const withReceipt = (stdout, nodeEndPoint) => {
+  return { wait: () => waitTransaction(stdout, nodeEndPoint), result: stdout };
+};
+
 export const snarkExecute = async ({
   config,
   params = [],
   transition = 'main'
 }: LeoRunParams): Promise<Record<string, unknown>> => {
-  const nodeEndPoint = config['network']?.node;
+  const nodeEndPoint = config['network']?.endpoint;
   if (!nodeEndPoint) {
     throw new Error('networkName missing in contract config for deployment');
   }
@@ -95,7 +93,7 @@ export const snarkExecute = async ({
   console.log(cmd);
   const { stdout } = await execute(cmd);
   console.log(stdout);
-  return { wait: () => waitTransaction(stdout, nodeEndPoint), result: stdout };
+  return withReceipt(stdout, nodeEndPoint);
 };
 
 export const leoExecute = async ({
@@ -128,6 +126,7 @@ const checkDeployment = async (endpoint: string): Promise<boolean> => {
   try {
     console.log(`Checking deployment: ${endpoint}`);
     await axios.get(endpoint);
+
     return true;
   } catch (e: any) {
     // console.log(e);
@@ -136,8 +135,7 @@ const checkDeployment = async (endpoint: string): Promise<boolean> => {
     }
 
     throw new Error(
-      `Failed to deploy program: ${
-        e?.response?.data ?? 'Error occured while deploying program'
+      `Failed to deploy program: ${e?.response?.data ?? 'Error occured while deploying program'
       }`
     );
   }
@@ -148,15 +146,14 @@ const validateBroadcast = async (
   nodeEndpoint: string
 ) => {
   const pollUrl = `${nodeEndpoint}/testnet3/transaction/${transactionId}`;
+  const timeoutMs = 60_000;
+  const pollInterval = 1000; // 1 second
   const startTime = Date.now();
-  const timeoutMs = 600_000;
-  let response;
 
+  console.log(`Validating deployment: ${pollUrl}`);
   while (Date.now() - startTime < timeoutMs) {
     try {
-      // console.log(`Validating deployment: ${pollUrl}`);
       const { data } = await axios.get(pollUrl);
-      // console.log(data);
 
       if (!(data.execution || data.deployment)) {
         console.error('Transaction error');
@@ -164,7 +161,9 @@ const validateBroadcast = async (
       }
       return data;
     } catch (e: any) {
-      // console.log(e);
+      console.log(e.response.data);
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      console.log('Retrying');
     }
   }
 
@@ -197,7 +196,7 @@ const waitTransaction = async (stdOut: string, endpoint: string) => {
 export const snarkDeploy = async ({
   config
 }: LeoRunParams): Promise<Record<string, unknown>> => {
-  const nodeEndPoint = config['network']?.node;
+  const nodeEndPoint = config['network']?.endpoint;
 
   if (!nodeEndPoint) {
     throw new Error('networkName missing in contract config for deployment');
@@ -212,14 +211,11 @@ export const snarkDeploy = async ({
     throw new Error(`Program ${config.appName} is already deployed`);
   }
 
-  console.log(`Program ${config.appName} is not deployed.`);
-
   const cmd = `cd ${config.contractPath}/build && snarkos developer deploy "${config.appName}.aleo" --path . --priority-fee ${priorityFee}  --private-key ${config.privateKey} --query ${nodeEndPoint} --broadcast "${nodeEndPoint}/testnet3/transaction/broadcast"`;
-  console.log(cmd);
-
   const { stdout } = await execute(cmd);
   console.log(stdout);
-  return { wait: () => waitTransaction(stdout, nodeEndPoint), result: stdout };
+
+  return withReceipt(stdout, nodeEndPoint);
 };
 
 export const leoRun = async ({
@@ -242,21 +238,31 @@ export const zkRun = (
   params: ExecuteZkLogicParams
 ): Promise<Record<string, unknown>> => {
   if (params.config.mode === 'execute') return snarkExecute(params);
+  if (params.config.mode === 'leo_execute') return leoExecute(params);
   return leoRun(params);
 };
 
 export const zkGetMapping = async (
   params: ExecuteZkLogicParams
 ): Promise<any> => {
-  const url = `${params.config.network.node}/${params.config.networkName}/program/${params.config.appName}.aleo/mapping/${params.transition}/${params.params[0]}`;
+  const url = `${params.config.network.endpoint}/${params.config.networkName}/program/${params.config.appName}.aleo/mapping/${params.transition}/${params.params[0]}`;
   console.log(url);
-  const response = await fetch(url);
-  let data = await response.json();
-  if (data == null) {
-    throw new Error(
-      `Mapping ${params.transition} doesn't have key ${params.params[0]}.[link: ${url}]`
-    );
+  try {
+    const response = await fetch(url);
+    let data = await response.json();
+    if (data == null) {
+      return null;
+    }
+    data = (data as string).replace(/(['"])?([a-z0-9A-Z_.]+)(['"])?/g, '"$2" ');
+    return JSON.parse(data as string);
+  } catch (err) {
+    console.log(err);
   }
-  data = (data as string).replace(/(['"])?([a-z0-9A-Z_.]+)(['"])?/g, '"$2" ');
-  return JSON.parse(data as string);
 };
+
+export const leoGetContractAddress = async (contractName: string) => {
+  const cmd = `leo account program ${contractName}`;
+  const { stdout } = await execute(cmd);
+  console.log(stdout);
+  return stdout;
+}

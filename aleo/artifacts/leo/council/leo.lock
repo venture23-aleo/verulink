@@ -1,27 +1,27 @@
 [[package]]
 name = "token_bridge"
-network = "testnet3"
-location = "network"
+location = "local"
+path = "../token_bridge"
 checksum = "c073dc1783bc6206220a8dc8e605cf30ed32066de5541bf46e9b433b62f3f400"
 dependencies = []
 
 [[package]]
 name = "wrapped_token"
-network = "testnet3"
-location = "network"
+location = "local"
+path = "../wrapped_token"
 checksum = "ed1e5f8fa272d85fd5d847f818a6b59f48b3deefa91225955f517af37745ce7c"
 dependencies = []
 
 [[package]]
 name = "holding"
-network = "testnet3"
-location = "network"
+location = "local"
+path = "../holding"
 checksum = "7ea1f496558aa9c68dbb7a47f13e8a11aa205e15f56849c3edeb7738924e7634"
 dependencies = ["wrapped_token.aleo"]
 
 [[package]]
 name = "token_service"
-network = "testnet3"
-location = "network"
-checksum = "695c70b09210e55ed0e4bad6f16d1c5d514721ea394b9cb29ac330435f489867"
+location = "local"
+path = "../token_service"
+checksum = "583eeec19d9bac25651bf560091c977e366afd216519bb49a729331154c8c9b0"
 dependencies = ["wrapped_token.aleo", "token_bridge.aleo", "holding.aleo"]

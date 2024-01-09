@@ -70,6 +70,7 @@ export class Token_bridgeContract {
   }
 
   async deploy(): Promise < any > {
+    console.log(this.config)
     const result = await snarkDeploy({
       config: this.config,
     });

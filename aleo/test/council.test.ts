@@ -1,12 +1,6 @@
-import { BridgeContract } from "../artifacts/js/bridge";
 import { CouncilContract } from "../artifacts/js/council";
-import { Token_serviceContract } from "../artifacts/js/token_service";
-import { InPacketFull, TokenOrigin, wrapped_tokenLeo } from "../artifacts/js/types";
-import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
 
-import { evm2AleoArr, string2AleoArr } from "./utils";
-
-const council = new CouncilContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH" });
+const council = new CouncilContract();
 
 describe("Council", () => {
 

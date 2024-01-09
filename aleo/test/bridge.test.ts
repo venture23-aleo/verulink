@@ -1,9 +1,9 @@
-import { BridgeContract } from "../artifacts/js/bridge";
+import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { InPacketFull } from "../artifacts/js/types";
 
 import { evm2AleoArr } from "./utils";
 
-const bridge = new BridgeContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH" });
+const bridge = new Token_bridgeContract();
 
 describe("Aleo Bridge", () => {
   // USDC Contract Address on Ethereum
@@ -54,12 +54,12 @@ describe("Aleo Bridge", () => {
       },
       height: 10,
     };
-    await bridge.attest(packet);
+    await bridge.attest(packet, true);
   });
 
   test("Publish", async () => {
     const expectedErrorMsg =
-      "SnarkVM Error: 'bridge.aleo/publish' is not satisfied on the given inputs";
+      "SnarkVM Error: 'token_bridge.aleo/publish' is not satisfied on the given inputs";
     let errorMsg = "";
     try {
       await bridge.publish(
@@ -78,7 +78,7 @@ describe("Aleo Bridge", () => {
 
   test("Consume", async () => {
     const expectedErrorMsg =
-      "SnarkVM Error: 'bridge.aleo/consume' is not satisfied on the given inputs";
+      "SnarkVM Error: 'token_bridge.aleo/consume' is not satisfied on the given inputs";
     let errorMsg = "";
     try {
       await bridge.consume(
@@ -87,6 +87,7 @@ describe("Aleo Bridge", () => {
         wUSDC, // token
         evm2AleoArr(ethUser), // sender
         aleoUser, // receiver
+        aleoUser, // actual_receiver
         BigInt(100), // amount
         1,
         1

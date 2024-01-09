@@ -1,5 +1,3 @@
-import { BridgeContract } from "../artifacts/js/bridge";
-import { InPacketFull, wrapped_tokenLeo } from "../artifacts/js/types";
 import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
 
 import { evm2AleoArr, string2AleoArr } from "./utils";
