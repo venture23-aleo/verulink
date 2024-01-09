@@ -135,6 +135,10 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		Height: big.NewInt(int64(m.Height)),
 	}
 
+	// TODO: Add transaction confirmation code
+	// TODO: has consumed before voting 
+	// TODO: has voted 
+	
 	transaction, err := cl.attestMessage(txOpts, *packet)
 	if err != nil {
 		return err

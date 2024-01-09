@@ -93,7 +93,10 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { 
 		return err
 	}
 
-	// todo: Add transaction confirmation code
+	// TODO: Add transaction confirmation code
+	// TODO: has consumed before voting 
+	// TODO: has voted 
+
 	_ = output
 	//
 	return nil
@@ -197,6 +200,6 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 		wallet:         wallet,
 		programID:      cfg.BridgeContract,
 		name:           name,
-		sendPktDur:     time.Minute * 3,
+		sendPktDur:     time.Minute * 3, // TODO: packet send timeout
 	}
 }
