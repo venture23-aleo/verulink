@@ -97,7 +97,7 @@ func chainHandler(name string, action ActionType) error {
 	case Stop:
 		for key, cncl := range chainCtxCncls {
 			if strings.Contains(key, name) {
-				cncl(errors.New("Cancelled by owner"))
+				cncl(errors.New("cancelled by owner"))
 				delete(chainCtxCncls, name)
 				// delete(chains, name) only allow delete after Registration is provided
 			}
