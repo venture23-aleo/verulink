@@ -34,6 +34,7 @@ program council.aleo {
 
     // Initialize can only be called once
     transition initialize(public m1: address, public m2: address, public m3: address, public m4: address, public m5: address, public threshold: u32) {
+        // TODO: Assert that the members are different
         return then finalize(m1, m2, m3, m4, m5, threshold);
     }
 
@@ -47,8 +48,10 @@ program council.aleo {
         Mapping::set(members, m4, true);
         Mapping::set(members, m5, true);
 
-        // Set the intial initial threshold
+        // Set the initial initial values
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, 5u32);
+        Mapping::set(settings, TOTAL_PROPOSALS_INDEX, 1u32);
     }
 
     transition propose(public id: u32, public proposal_hash: field) {
@@ -144,6 +147,8 @@ program council.aleo {
         // Get the threshold
         let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
 
+        assert(new_threshold >= threshold as u8);
+
         // Get the votes for the proposal
         let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
 
@@ -211,7 +216,6 @@ program council.aleo {
         new_threshold: u8
     }
 
-    // 3. Execute
     transition exec_update_threshold(public id: u32, public new_threshold: u8) {
         let proposal: UpdateThresholdProposal = UpdateThresholdProposal {
             id,

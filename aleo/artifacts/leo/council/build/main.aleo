@@ -128,6 +128,8 @@ finalize initialize:
     set true into members[r3];
     set true into members[r4];
     set r5 into settings[1u8];
+    set 5u32 into settings[2u8];
+    set 1u32 into settings[3u8];
 
 
 function propose:
@@ -194,17 +196,20 @@ finalize exec_add_member:
     input r1 as address.public;
     input r2 as u8.public;
     get settings[1u8] into r3;
-    get.or_use proposal_vote_counts[r0] 0u8 into r4;
-    cast r3 into r5 as u8;
-    gte r4 r5 into r6;
-    assert.eq r6 true;
-    contains proposal_executed[r0] into r7;
-    not r7 into r8;
+    cast r3 into r4 as u8;
+    gte r2 r4 into r5;
+    assert.eq r5 true;
+    get.or_use proposal_vote_counts[r0] 0u8 into r6;
+    cast r3 into r7 as u8;
+    gte r6 r7 into r8;
     assert.eq r8 true;
+    contains proposal_executed[r0] into r9;
+    not r9 into r10;
+    assert.eq r10 true;
     set true into proposal_executed[r0];
     set true into members[r1];
-    cast r2 into r9 as u32;
-    set r9 into settings[1u8];
+    cast r2 into r11 as u32;
+    set r11 into settings[1u8];
 
 
 function exec_remove_member:

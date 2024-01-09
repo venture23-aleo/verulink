@@ -20,6 +20,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "aleo-hasher": "^0.1.2",
     "axios": "^1.6.3",
     "zod": "^3.22.4"
   }
