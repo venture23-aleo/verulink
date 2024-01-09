@@ -19,7 +19,7 @@ import (
 
 const (
 	RpcEndpoint = "3.84.49.97"
-	walletName = "aleo_wallet.json"
+	walletName  = "aleo_wallet.json"
 )
 
 func getConfig(name, nodeURL string) *config.ChainConfig {
@@ -178,10 +178,10 @@ func TestGetPktWithSeq(t *testing.T) {
 
 func TestSendPacket(t *testing.T) {
 	wallet := createEthereumWallet()
-		defer func() {
-			err := os.Remove(wallet)
-			assert.Nil(t, err)
-		}()
+	defer func() {
+		err := os.Remove(wallet)
+		assert.Nil(t, err)
+	}()
 	t.Run("happy path", func(t *testing.T) {
 		wallet, _ := loadWalletConfig(wallet)
 		client := &Client{
@@ -252,5 +252,4 @@ func TestSendPacket(t *testing.T) {
 		err := client.SendPacket(context.Background(), &pktToSend)
 		assert.NotNil(t, err)
 	})
-
 }
