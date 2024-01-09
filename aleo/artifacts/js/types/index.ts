@@ -1,9 +1,4 @@
 import {
-  TokenAcc,
-  leoTokenAccSchema,
-  TokenAccLeo
-} from './holding';
-import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -36,14 +31,6 @@ import {
   InPacketFullScreeningKeyLeo
 } from './token_bridge';
 import {
-  TSForeignContract,
-  leoTSForeignContractSchema,
-  TSForeignContractLeo,
-  TokenOrigin,
-  leoTokenOriginSchema,
-  TokenOriginLeo
-} from './token_service';
-import {
   wrapped_token,
   leoWrapped_tokenSchema,
   wrapped_tokenLeo,
@@ -60,6 +47,19 @@ import {
   leoTokenAccountSchema,
   TokenAccountLeo
 } from './wrapped_token';
+import {
+  TSForeignContract,
+  leoTSForeignContractSchema,
+  TSForeignContractLeo,
+  TokenOrigin,
+  leoTokenOriginSchema,
+  TokenOriginLeo
+} from './token_service';
+import {
+  TokenAcc,
+  leoTokenAccSchema,
+  TokenAccLeo
+} from './holding';
 import {
   ProposalSign,
   leoProposalSignSchema,
@@ -92,43 +92,8 @@ import {
   leoEnableTokenSchema,
   EnableTokenLeo
 } from './council';
-import {
-  ProposalSign,
-  leoProposalSignSchema,
-  ProposalSignLeo,
-  AddMemberProposal,
-  leoAddMemberProposalSchema,
-  AddMemberProposalLeo,
-  RemoveMemberProposal,
-  leoRemoveMemberProposalSchema,
-  RemoveMemberProposalLeo,
-  UpdateThresholdProposal,
-  leoUpdateThresholdProposalSchema,
-  UpdateThresholdProposalLeo,
-  ApproveChainBridgeProposal,
-  leoApproveChainBridgeProposalSchema,
-  ApproveChainBridgeProposalLeo,
-  EnableServiceProposal,
-  leoEnableServiceProposalSchema,
-  EnableServiceProposalLeo,
-  DisapproveChainBridge,
-  leoDisapproveChainBridgeSchema,
-  DisapproveChainBridgeLeo,
-  SupportChainTS,
-  leoSupportChainTSSchema,
-  SupportChainTSLeo,
-  SupportToken,
-  leoSupportTokenSchema,
-  SupportTokenLeo,
-  EnableToken,
-  leoEnableTokenSchema,
-  EnableTokenLeo
-} from './council_v2';
 
 export {
-  TokenAcc,
-  leoTokenAccSchema,
-  TokenAccLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -159,12 +124,6 @@ export {
   InPacketFullScreeningKey,
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo,
-  TSForeignContract,
-  leoTSForeignContractSchema,
-  TSForeignContractLeo,
-  TokenOrigin,
-  leoTokenOriginSchema,
-  TokenOriginLeo,
   wrapped_token,
   leoWrapped_tokenSchema,
   wrapped_tokenLeo,
@@ -180,36 +139,15 @@ export {
   TokenAccount,
   leoTokenAccountSchema,
   TokenAccountLeo,
-  ProposalSign,
-  leoProposalSignSchema,
-  ProposalSignLeo,
-  AddMemberProposal,
-  leoAddMemberProposalSchema,
-  AddMemberProposalLeo,
-  RemoveMemberProposal,
-  leoRemoveMemberProposalSchema,
-  RemoveMemberProposalLeo,
-  UpdateThresholdProposal,
-  leoUpdateThresholdProposalSchema,
-  UpdateThresholdProposalLeo,
-  ApproveChainBridgeProposal,
-  leoApproveChainBridgeProposalSchema,
-  ApproveChainBridgeProposalLeo,
-  EnableServiceProposal,
-  leoEnableServiceProposalSchema,
-  EnableServiceProposalLeo,
-  DisapproveChainBridge,
-  leoDisapproveChainBridgeSchema,
-  DisapproveChainBridgeLeo,
-  SupportChainTS,
-  leoSupportChainTSSchema,
-  SupportChainTSLeo,
-  SupportToken,
-  leoSupportTokenSchema,
-  SupportTokenLeo,
-  EnableToken,
-  leoEnableTokenSchema,
-  EnableTokenLeo,
+  TSForeignContract,
+  leoTSForeignContractSchema,
+  TSForeignContractLeo,
+  TokenOrigin,
+  leoTokenOriginSchema,
+  TokenOriginLeo,
+  TokenAcc,
+  leoTokenAccSchema,
+  TokenAccLeo,
   ProposalSign,
   leoProposalSignSchema,
   ProposalSignLeo,

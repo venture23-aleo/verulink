@@ -60,8 +60,9 @@ const setup = async () => {
     "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
 
   // Deploy contracts
-  // await bridge.deploy();
-  // await wrappedToken.deploy();
+  await bridge.deploy();
+  tx = await wrappedToken.deploy();
+  await tx.wait();
   await holding.deploy();
   await tokenService.deploy();
   tx = await council.deploy();
