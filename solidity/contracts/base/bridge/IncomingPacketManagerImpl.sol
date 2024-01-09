@@ -53,7 +53,7 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
             "Packet already consumed"
         );
         bytes32 packetHash = packet.hash();
-        if (hasVoted(packetHash, sender) != PacketLibrary.Vote.NULL) {
+        if (hasVoted(sourceChainId, sequence, sender) != PacketLibrary.Vote.NULL) {
             emit AlreadyVoted(packetHash, sender);
             return;
         }
