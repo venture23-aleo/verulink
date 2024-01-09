@@ -1,6 +1,6 @@
 [[package]]
 name = "wrapped_token"
-location = "local"
-path = "../wrapped_token"
+network = "testnet3"
+location = "network"
 checksum = "ed1e5f8fa272d85fd5d847f818a6b59f48b3deefa91225955f517af37745ce7c"
 dependencies = []

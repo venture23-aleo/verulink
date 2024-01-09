@@ -437,6 +437,8 @@ program token_bridge.aleo {
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, packet.source.chain_id));
 
+        // TODO: Ensure attestor can only vote once for given (chain_id, sequence)
+
         // Assert that the attestors signing are valid
         assert(Mapping::get(attestors, attestor));
 
