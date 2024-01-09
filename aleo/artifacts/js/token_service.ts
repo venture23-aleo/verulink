@@ -139,13 +139,13 @@ export class Token_serviceContract {
     return leo2js.array(result, leo2js.u8);
   }
 
-  async council_program_TS(key: boolean): Promise < string > {
+  async governance_TS(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'council_program_TS',
+      transition: 'governance_TS',
       params,
     });
     return leo2js.address(result);

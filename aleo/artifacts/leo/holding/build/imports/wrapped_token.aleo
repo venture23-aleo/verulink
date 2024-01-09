@@ -43,7 +43,7 @@ mapping token_balances:
 	value as u64.public;
 
 
-mapping council_program_WT:
+mapping governance_WT:
 	key as boolean.public;
 	value as address.public;
 
@@ -56,10 +56,23 @@ function wrapped_token_initialize:
 
 finalize wrapped_token_initialize:
     input r0 as address.public;
-    contains council_program_WT[true] into r1;
+    contains governance_WT[true] into r1;
     not r1 into r2;
     assert.eq r2 true;
-    set r0 into council_program_WT[true];
+    set r0 into governance_WT[true];
+
+
+function update_wrapped_token_governance:
+    input r0 as address.public;
+    async update_wrapped_token_governance self.caller r0 into r1;
+    output r1 as wrapped_token.aleo/update_wrapped_token_governance.future;
+
+finalize update_wrapped_token_governance:
+    input r0 as address.public;
+    input r1 as address.public;
+    get governance_WT[true] into r2;
+    assert.eq r0 r2;
+    set r1 into governance_WT[true];
 
 
 function add_token:
@@ -83,7 +96,7 @@ finalize add_token:
     input r4 as u8.public;
     input r5 as u32.public;
     input r6 as [u8; 32u32].public;
-    get council_program_WT[true] into r7;
+    get governance_WT[true] into r7;
     assert.eq r0 r7;
     contains token_info[r1] into r8;
     not r8 into r9;

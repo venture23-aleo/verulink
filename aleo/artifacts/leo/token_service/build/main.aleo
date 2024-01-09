@@ -34,7 +34,7 @@ mapping token_service_contracts:
 	value as [u8; 32u32].public;
 
 
-mapping council_program_TS:
+mapping governance_TS:
 	key as boolean.public;
 	value as address.public;
 
@@ -91,10 +91,10 @@ function token_service_initialize:
 finalize token_service_initialize:
     input r0 as address.public;
     input r1 as address.public;
-    contains council_program_TS[true] into r2;
+    contains governance_TS[true] into r2;
     not r2 into r3;
     assert.eq r3 true;
-    set r0 into council_program_TS[true];
+    set r0 into governance_TS[true];
     set r1 into holding_program_TS[true];
 
 
@@ -108,7 +108,7 @@ finalize support_chain:
     input r0 as address.public;
     input r1 as u32.public;
     input r2 as [u8; 32u32].public;
-    get council_program_TS[true] into r3;
+    get governance_TS[true] into r3;
     assert.eq r0 r3;
     set r2 into token_service_contracts[r1];
 
@@ -127,7 +127,7 @@ finalize enable_token:
     input r2 as u64.public;
     input r3 as u16.public;
     input r4 as u32.public;
-    get council_program_TS[true] into r5;
+    get governance_TS[true] into r5;
     assert.eq r0 r5;
     set r3 into max_outgoing_percentage[r1];
     set r4 into timeframe[r1];

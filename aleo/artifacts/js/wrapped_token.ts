@@ -73,6 +73,18 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
+  async update_wrapped_token_governance(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_wrapped_token_governance',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
   async add_token(r0: Array < number > , r1: Array < number > , r2: number, r3: number, r4: Array < number > ) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
@@ -231,13 +243,13 @@ export class Wrapped_tokenContract {
     return leo2js.u64(result);
   }
 
-  async council_program_WT(key: boolean): Promise < string > {
+  async governance_WT(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'council_program_WT',
+      transition: 'governance_WT',
       params,
     });
     return leo2js.address(result);

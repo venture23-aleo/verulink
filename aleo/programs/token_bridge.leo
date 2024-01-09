@@ -184,9 +184,30 @@ program token_bridge.aleo {
         Mapping::set(attestors, a4, true);
         Mapping::set(attestors, a5, true);
 
-        // Set the council program
+        // Set the governance program
         Mapping::set(governance_TB, true, council);
     }
+
+    ///////////////////////////////
+    ///// Update Governance ///////
+    ///////////////////////////////
+
+    /// Update the existing governance program
+    /// Can only be called from council/governance program
+    transition update_bridge_governance(public new_governance: address) {
+        return then finalize(self.caller, new_governance);
+    }
+
+    finalize update_bridge_governance(from: address, new_governance: address) {
+        // Get the governance address
+        // If program not initialized, this fails
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::set(governance_TB, true, new_governance);
+    }
+
 
     //////////////////////////////
     ///// Update Threshold ///////
@@ -199,10 +220,10 @@ program token_bridge.aleo {
     }
 
     finalize update_bridge_threshold(from: address, new_threshold: u8) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         // If attestor does not exist, this is expected to fail
         Mapping::set(bridge_settings, 0u8, new_threshold);
@@ -221,10 +242,10 @@ program token_bridge.aleo {
     }
 
     finalize add_service(from: address, service: address) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         Mapping::set(supported_services, service, true);
     }
@@ -237,10 +258,10 @@ program token_bridge.aleo {
     }
 
     finalize remove_service(from: address, service: address) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         // If service does not exist, this is expected to fail
         Mapping::remove(supported_services, service);
@@ -258,10 +279,10 @@ program token_bridge.aleo {
     }
 
     finalize add_attestor(from: address, attestor: address, new_threshold: u8) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         Mapping::set(attestors, attestor, true);
         Mapping::set(bridge_settings, 0u8, new_threshold);
@@ -274,10 +295,10 @@ program token_bridge.aleo {
     }
 
     finalize remove_attestor(from: address, attestor: address, new_threshold: u8) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         // If attestor does not exist, this is expected to fail
         Mapping::remove(attestors, attestor);
@@ -295,10 +316,10 @@ program token_bridge.aleo {
     }
 
     finalize approve_chain(from: address, chain_id: u32) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         Mapping::set(supported_chains, chain_id, true);
     }
@@ -309,10 +330,10 @@ program token_bridge.aleo {
     }
 
     finalize disapprove_chain(from: address, chain_id: u32) {
-        // Get the council address
+        // Get the governance address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TB, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_TB, true);
+        assert_eq(from, governance);
 
         // If the chain_id is not supported, this fails
         Mapping::remove(supported_chains, chain_id);

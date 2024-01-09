@@ -2,10 +2,6 @@ import {
   getTokenAccLeo
 } from './holding';
 import {
-  getTSForeignContractLeo,
-  getTokenOriginLeo
-} from './token_service';
-import {
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -17,6 +13,10 @@ import {
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo
 } from './token_bridge';
+import {
+  getTSForeignContractLeo,
+  getTokenOriginLeo
+} from './token_service';
 import {
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
@@ -51,8 +51,6 @@ import {
 
 export {
   getTokenAccLeo,
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -63,6 +61,8 @@ export {
   getPacketIdLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
+  getTSForeignContractLeo,
+  getTokenOriginLeo,
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
   getTokenInfoLeo,

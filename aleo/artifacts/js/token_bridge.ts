@@ -94,6 +94,18 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
+  async update_bridge_governance(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_bridge_governance',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
   async update_bridge_threshold(r0: number) {
     const r0Leo = js2leo.u8(r0);
 

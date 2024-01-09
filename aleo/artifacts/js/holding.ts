@@ -89,13 +89,13 @@ export class HoldingContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async council_program_holding(key: boolean): Promise < string > {
+  async governance_holding(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'council_program_holding',
+      transition: 'governance_holding',
       params,
     });
     return leo2js.address(result);

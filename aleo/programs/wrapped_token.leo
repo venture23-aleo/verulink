@@ -57,7 +57,7 @@ program wrapped_token.aleo {
     // mapping used as variable
     // true: address of council 
     // false: Null
-    mapping council_program_WT: bool => address;
+    mapping governance_WT: bool => address;
 
     // Referencing: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/program/src/id/to_address.rs
     // Address of the program is computed as:
@@ -84,17 +84,38 @@ program wrapped_token.aleo {
 
     // Initialize can only be called once
     // Initialize must be called from council program
-    transition wrapped_token_initialize(council: address) {
-        return then finalize(council);
+    transition wrapped_token_initialize(governance: address) {
+        return then finalize(governance);
     }
 
-    finalize wrapped_token_initialize(council: address) {
+    finalize wrapped_token_initialize(governance: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(council_program_WT, true));
+        assert(!Mapping::contains(governance_WT, true));
 
         // Set the council program
-        Mapping::set(council_program_WT, true, council);
+        Mapping::set(governance_WT, true, governance);
     }
+
+    ///////////////////////////////
+    ///// Update Governance ///////
+    ///////////////////////////////
+
+    /// Update the existing governance program
+    /// Can only be called from council/governance program
+    transition update_wrapped_token_governance(public new_governance: address) {
+        return then finalize(self.caller, new_governance);
+    }
+
+    finalize update_wrapped_token_governance(from: address, new_governance: address) {
+        // Get the governance address
+        // If program not initialized, this fails
+        let governance: address = Mapping::get(governance_WT, true);
+        assert_eq(from, governance);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::set(governance_WT, true, new_governance);
+    }
+
 
 
     transition add_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
@@ -115,8 +136,8 @@ program wrapped_token.aleo {
     finalize add_token(from: address, token_id: address, name: [u8; 32], symbol: [u8; 16], decimals: u8, origin_chain_id: u32, origin_contract_address: [u8; 32]) {
         // Get the council address
         // If program not initialized, this fails
-        let council: address = Mapping::get(council_program_WT, true);
-        assert_eq(from, council);
+        let governance: address = Mapping::get(governance_WT, true);
+        assert_eq(from, governance);
 
         // Ensure the same token has not been added
         assert(!Mapping::contains(token_info, token_id));

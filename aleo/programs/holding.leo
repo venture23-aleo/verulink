@@ -5,7 +5,7 @@ program holding.aleo {
     // mapping used as variable
     // true: address of council 
     // false: Null
-    mapping council_program_holding: bool => address;
+    mapping governance_holding: bool => address;
 
     struct TokenAcc {
         user: address,
@@ -29,10 +29,10 @@ program holding.aleo {
 
     finalize holding_initialize(council: address) {
         // Assert holding program has not been initialized before
-        assert(!Mapping::contains(council_program_holding, true));
+        assert(!Mapping::contains(governance_holding, true));
 
         // Set the council program
-        Mapping::set(council_program_holding, true, council);
+        Mapping::set(governance_holding, true, council);
     }
 
     transition hold_fund(public token_id: address, public user: address, public amount: u64) {
@@ -63,9 +63,9 @@ program holding.aleo {
     }
 
     finalize release_fund(token_id: address, user: address, amount: u64, caller: address) {
-        // Assert only council can release fund
-        let council: address = Mapping::get(council_program_holding, true);
-        assert_eq(council, caller);
+        // Assert only governance can release fund
+        let governance: address = Mapping::get(governance_holding, true);
+        assert_eq(governance, caller);
 
         let token_user: TokenAcc = TokenAcc {
             user,

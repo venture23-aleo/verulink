@@ -146,6 +146,19 @@ finalize bridge_initialize:
     set r6 into governance_TB[true];
 
 
+function update_bridge_governance:
+    input r0 as address.public;
+    async update_bridge_governance self.caller r0 into r1;
+    output r1 as token_bridge.aleo/update_bridge_governance.future;
+
+finalize update_bridge_governance:
+    input r0 as address.public;
+    input r1 as address.public;
+    get governance_TB[true] into r2;
+    assert.eq r0 r2;
+    set r1 into governance_TB[true];
+
+
 function update_bridge_threshold:
     input r0 as u8.public;
     async update_bridge_threshold self.caller r0 into r1;

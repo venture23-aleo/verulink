@@ -11,7 +11,7 @@ struct TokenAcc:
     token_id as address;
 
 
-mapping council_program_holding:
+mapping governance_holding:
 	key as boolean.public;
 	value as address.public;
 
@@ -29,10 +29,10 @@ function holding_initialize:
 
 finalize holding_initialize:
     input r0 as address.public;
-    contains council_program_holding[true] into r1;
+    contains governance_holding[true] into r1;
     not r1 into r2;
     assert.eq r2 true;
-    set r0 into council_program_holding[true];
+    set r0 into governance_holding[true];
 
 
 function hold_fund:
@@ -69,7 +69,7 @@ finalize release_fund:
     input r3 as u64.public;
     input r4 as address.public;
     await r0;
-    get council_program_holding[true] into r5;
+    get governance_holding[true] into r5;
     assert.eq r5 r4;
     cast r2 r1 into r6 as TokenAcc;
     get holdings[r6] into r7;

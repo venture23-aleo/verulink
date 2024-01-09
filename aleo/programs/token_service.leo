@@ -28,9 +28,9 @@ program token_service.aleo {
     mapping token_service_contracts: u32 => [u8; 32];
 
     // mapping used as variable
-    // true: address of council 
+    // true: address of governance program
     // false: Null
-    mapping council_program_TS: bool => address;
+    mapping governance_TS: bool => address;
 
     // mapping used as variable
     // true: address of holding program
@@ -87,10 +87,10 @@ program token_service.aleo {
 
     finalize token_service_initialize(council: address, holding: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(council_program_TS, true));
+        assert(!Mapping::contains(governance_TS, true));
 
         // Set the council program
-        Mapping::set(council_program_TS, true, council);
+        Mapping::set(governance_TS, true, council);
 
         // Set the holding program
         Mapping::set(holding_program_TS, true, holding);
@@ -104,7 +104,7 @@ program token_service.aleo {
     finalize support_chain(from: address, chain_id: u32, token_service_address: [u8; 32]) {
         // Get the council address
         // If program not initialized, this fails
-        let council: address = Mapping::get(council_program_TS, true);
+        let council: address = Mapping::get(governance_TS, true);
         assert_eq(from, council);
 
         Mapping::set(token_service_contracts, chain_id, token_service_address);
@@ -120,7 +120,7 @@ program token_service.aleo {
     finalize enable_token(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, time: u32) {
         // Get the council address
         // If program not initialized, this fails
-        let council: address = Mapping::get(council_program_TS, true);
+        let council: address = Mapping::get(governance_TS, true);
         assert_eq(from, council);
 
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage);
