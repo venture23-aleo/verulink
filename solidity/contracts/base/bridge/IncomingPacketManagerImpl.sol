@@ -76,8 +76,8 @@ abstract contract IncomingPacketManagerImpl is IncomingPacketManager {
     }
 
     function quorum(bytes32 packetHash) public view override returns (PacketLibrary.Vote) {
-        if(voteCount(packetHash, PacketLibrary.Vote.YEA) >= _getQuorumRequired()) return PacketLibrary.Vote.YEA;
         if(voteCount(packetHash, PacketLibrary.Vote.NAY) >= _getQuorumRequired()) return PacketLibrary.Vote.NAY;
+        if(voteCount(packetHash, PacketLibrary.Vote.YEA) >= _getQuorumRequired()) return PacketLibrary.Vote.YEA;
         return PacketLibrary.Vote.NULL;
     }
 
