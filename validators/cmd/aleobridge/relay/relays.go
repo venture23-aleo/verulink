@@ -2,9 +2,7 @@ package relay
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
@@ -81,59 +79,4 @@ func (relays Relays) StartMultiRelay(ctx context.Context) {
 			relay.Init(relayCtx)
 		}(re)
 	}
-}
-
-/******************************************rpc call handler*************************************/
-// stop action will cancel the context of all relays where given chain is part of
-// and removes chain registration from the map
-// Register action shall register chain into the map
-func chainHandler(name string, action ActionType) error {
-	chainCtxMu.Lock()
-	defer chainCtxMu.Unlock()
-
-	switch action {
-	case Stop:
-		for key, cncl := range chainCtxCncls {
-			if strings.Contains(key, name) {
-				cncl(errors.New("cancelled by owner"))
-				delete(chainCtxCncls, name)
-				// delete(chains, name) only allow delete after Registration is provided
-			}
-		}
-	case Register:
-		// todo: Shall allow owner to pass chain params through rpc call
-
-	}
-
-	return nil
-}
-
-func relaysHandler(relays []RelayArg, action ActionType) error {
-	for _, re := range relays {
-		if _, ok := chains[re.SrcChain]; !ok {
-			return fmt.Errorf("chain %s is not yet registered", re.SrcChain)
-		}
-		if _, ok := chains[re.DestChain]; !ok {
-			return fmt.Errorf("chain %s is not yet registered", re.DestChain)
-		}
-	}
-
-	chainCtxMu.Lock()
-	defer chainCtxMu.Unlock()
-
-	switch action {
-	case Stop:
-		for _, re := range relays {
-			name := relayName(re.SrcChain, re.DestChain)
-			chainCtxCncls[name](errors.New("cancelled by owner"))
-			delete(chainCtxCncls, name)
-		}
-	case Register:
-		for _, re := range relays {
-			srcChain, destchain := chains[re.SrcChain], chains[re.DestChain]
-			relay := NewRelay(srcChain, destchain)
-			relayCh <- relay
-		}
-	}
-	return nil
 }
