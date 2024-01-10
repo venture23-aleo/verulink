@@ -145,31 +145,98 @@ func TestParseMessage(t *testing.T) {
 }
 
 func TestParseAleoPacket(t *testing.T) {
-	expectedPacket := chain.Packet{
-		Version:  uint64(0),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: uint64(2),
-			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: uint64(1),
-			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
-		},
-		Message: chain.Message{
-			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
-			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			Amount:           big.NewInt(102),
-			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
-		},
-		Height: uint64(55),
-	}
-	s := dumpToAleoPacketString(expectedPacket)
-	a, err := parseMessage(s)
-	require.NoError(t, err)
-	commonPacket, err := parseAleoPacket(a)
-	require.Nil(t, err)
-	require.Equal(t, &expectedPacket, commonPacket)
+	t.Run("case: happy test", func(t *testing.T) {
+		expectedPacket := chain.Packet{
+			Version:  uint64(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: uint64(2),
+				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: uint64(1),
+				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
+			},
+			Message: chain.Message{
+				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				Amount:           big.NewInt(102),
+				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			},
+			Height: uint64(55),
+		}
+		s := dumpToAleoPacketString(expectedPacket)
+		a, err := parseMessage(s)
+		require.NoError(t, err)
+		commonPacket, err := parseAleoPacket(a)
+		require.Nil(t, err)
+		require.Equal(t, &expectedPacket, commonPacket)
+	})
+
+	t.Run("case: error in parsing", func(t *testing.T) {
+		expectedPacket := chain.Packet{
+			Version:  uint64(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: uint64(2),
+				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: uint64(1),
+				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
+			},
+			Message: chain.Message{
+				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				Amount:           big.NewInt(102),
+				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			},
+			Height: uint64(55),
+		}
+		s := dumpToAleoPacketString(expectedPacket)
+		a, err := parseMessage(s)
+		assert.NoError(t, err)
+		errorPackets := []aleoPacket{}
+		for i := 0; i < 9; i++ {
+			tmp := *a
+			switch i {
+			case 0:
+				tmp.version = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 1:
+				tmp.sequence = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 2:
+				tmp.source.chainID = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 3:
+				tmp.destination.chainID = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 4:
+				tmp.destination.address += "u8"
+				errorPackets = append(errorPackets, tmp)
+			case 5:
+				tmp.message.token += "u8"
+				errorPackets = append(errorPackets, tmp)
+			case 6:
+				tmp.message.receiver += "u8"
+				errorPackets = append(errorPackets, tmp)
+			case 7:
+				tmp.message.amount = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 8:
+				tmp.height = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			}
+
+		}
+		for _, v := range errorPackets {
+			commonPacket, err := parseAleoPacket(&v)
+			require.NotNil(t, err)
+			require.Nil(t, commonPacket)
+		}
+
+	})
 }
 
 func TestConstructAleoPacket(t *testing.T) {
