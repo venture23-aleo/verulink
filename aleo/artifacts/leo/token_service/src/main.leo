@@ -9,14 +9,14 @@ program token_service.aleo {
     // Contract on different (foreign) chain
     struct TSForeignContract {
         // Chain Id other network where the `contract_address` exists
-        chain_id: u32,
+        chain_id: u128,
         // Address of the contract on the other chain
         contract_address: [u8; 32]
     }
 
     struct TokenOrigin {
         // Chain Id of the origin network
-        chain_id: u32,
+        chain_id: u128,
         // Address of the token service contract on the origin network
         token_service_address: [u8; 32],
         // Address of the token contract on the origin network; Ex: USDC on Ethereum
@@ -25,7 +25,7 @@ program token_service.aleo {
 
     // key is chain_id
     // value is address of the token service contract on chain (with chain_id)
-    mapping token_service_contracts: u32 => [u8; 32];
+    mapping token_service_contracts: u128 => [u8; 32];
 
     // mapping used as variable
     // true: address of governance program
@@ -97,11 +97,11 @@ program token_service.aleo {
     }
 
 
-    transition support_chain(public chain_id: u32, public token_service_address: [u8; 32]) {
+    transition support_chain(public chain_id: u128, public token_service_address: [u8; 32]) {
         return then finalize(self.caller, chain_id, token_service_address);
     }
 
-    finalize support_chain(from: address, chain_id: u32, token_service_address: [u8; 32]) {
+    finalize support_chain(from: address, chain_id: u128, token_service_address: [u8; 32]) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(governance_TS, true);

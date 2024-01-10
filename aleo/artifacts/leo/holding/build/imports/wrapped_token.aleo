@@ -6,7 +6,7 @@ record wrapped_token:
     amount as u64.private;
 
 struct WTForeignContract:
-    chain_id as u32;
+    chain_id as u128;
     contract_address as [u8; 32u32];
 
 struct TokenInfo:
@@ -79,7 +79,7 @@ function add_token:
     input r0 as [u8; 32u32].public;
     input r1 as [u8; 16u32].public;
     input r2 as u8.public;
-    input r3 as u32.public;
+    input r3 as u128.public;
     input r4 as [u8; 32u32].public;
     cast r0 r1 r2 into r5 as TokenInfo;
     cast r3 r4 into r6 as WTForeignContract;
@@ -94,7 +94,7 @@ finalize add_token:
     input r2 as [u8; 32u32].public;
     input r3 as [u8; 16u32].public;
     input r4 as u8.public;
-    input r5 as u32.public;
+    input r5 as u128.public;
     input r6 as [u8; 32u32].public;
     get governance_WT[true] into r7;
     assert.eq r0 r7;
@@ -187,7 +187,7 @@ function mint:
     input r0 as address.private;
     input r1 as u64.private;
     input r2 as address.private;
-    input r3 as u32.private;
+    input r3 as u128.private;
     input r4 as [u8; 32u32].private;
     assert.neq self.signer self.caller;
     assert.eq self.caller aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
@@ -198,7 +198,7 @@ finalize mint:
     input r0 as address.public;
     input r1 as u64.public;
     input r2 as address.public;
-    input r3 as u32.public;
+    input r3 as u128.public;
     input r4 as [u8; 32u32].public;
     cast r3 r4 into r5 as WTForeignContract;
     get token_origin[r2] into r6;
@@ -215,7 +215,7 @@ finalize mint:
 function burn:
     input r0 as u64.private;
     input r1 as address.private;
-    input r2 as u32.private;
+    input r2 as u128.private;
     input r3 as [u8; 32u32].private;
     assert.neq self.signer self.caller;
     assert.eq self.caller aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
@@ -226,7 +226,7 @@ finalize burn:
     input r0 as address.public;
     input r1 as u64.public;
     input r2 as address.public;
-    input r3 as u32.public;
+    input r3 as u128.public;
     input r4 as [u8; 32u32].public;
     cast r3 r4 into r5 as WTForeignContract;
     get token_origin[r2] into r6;

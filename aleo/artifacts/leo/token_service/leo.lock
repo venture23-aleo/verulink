@@ -2,14 +2,14 @@
 name = "wrapped_token"
 network = "testnet3"
 location = "network"
-checksum = "baf256e080821a87b63184b7471eeb6812f74625b6da8d4f5006beb085a64229"
+checksum = "ea13f2209b7b09803018af9d1d1003ad9005cf217cb0e6a6cf6794f342116072"
 dependencies = []
 
 [[package]]
 name = "token_bridge"
 network = "testnet3"
 location = "network"
-checksum = "b25c833707797b045238650e5f41dda720644beb5640c15dc8dd6e2f3e89b0d2"
+checksum = "02e3fc8420e72b06d60d46376c5e935c67e74684ca66055c2d0412fae1515b92"
 dependencies = []
 
 [[package]]

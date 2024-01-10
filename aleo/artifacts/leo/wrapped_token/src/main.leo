@@ -12,7 +12,7 @@ program wrapped_token.aleo {
     // Used prefix to fix Error [EAST0372007]: struct `ForeignContract` shadowed by bridge.leo on TokenService
     struct WTForeignContract {
         // Chain Id of Other Network
-        chain_id: u32,
+        chain_id: u128,
         // Contract Address of the Service Program
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
         // For EVM Chains, 20 bytes is formated as following:
@@ -118,7 +118,7 @@ program wrapped_token.aleo {
 
 
 
-    transition add_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
+    transition add_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
         let new_token_id: address = BHP256::hash_to_address(WrappedTokenInfo {
             token_info: TokenInfo {
                 name, 
@@ -133,7 +133,7 @@ program wrapped_token.aleo {
         return then finalize(self.caller, new_token_id, name, symbol, decimals, origin_chain_id, origin_contract_address);
     }
 
-    finalize add_token(from: address, token_id: address, name: [u8; 32], symbol: [u8; 16], decimals: u8, origin_chain_id: u32, origin_contract_address: [u8; 32]) {
+    finalize add_token(from: address, token_id: address, name: [u8; 32], symbol: [u8; 16], decimals: u8, origin_chain_id: u128, origin_contract_address: [u8; 32]) {
         // Get the council address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_WT, true);
@@ -241,7 +241,7 @@ program wrapped_token.aleo {
         Mapping::set(token_balances, token_sender, sender_balance - amount);
     }
 
-    transition mint(receiver: address, amount: u64, token_id: address, from_chain_id: u32, from_contract_address: [u8;32]) {
+    transition mint(receiver: address, amount: u64, token_id: address, from_chain_id: u128, from_contract_address: [u8;32]) {
         // Assert that only token service program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -260,7 +260,7 @@ program wrapped_token.aleo {
         return then finalize(receiver, amount, token_id, from_chain_id, from_contract_address);
     }
 
-    finalize mint(receiver: address, amount: u64, token_id: address, from_chain_id: u32, from_contract_address: [u8;32]) {
+    finalize mint(receiver: address, amount: u64, token_id: address, from_chain_id: u128, from_contract_address: [u8;32]) {
         // Assert the token is minted from the origin
         let from: WTForeignContract = WTForeignContract {
             chain_id: from_chain_id,
@@ -282,7 +282,7 @@ program wrapped_token.aleo {
         Mapping::set(token_supply, token_id, existing_supply + amount);
     }
 
-    transition burn(amount: u64, token_id: address, to_chain_id: u32, to_contract_address: [u8; 32]) {
+    transition burn(amount: u64, token_id: address, to_chain_id: u128, to_contract_address: [u8; 32]) {
         // Assert that only token service program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -302,7 +302,7 @@ program wrapped_token.aleo {
 
     }
 
-    finalize burn(sender: address, amount: u64, token_id: address, to_chain_id: u32, to_contract_address: [u8; 32]) {
+    finalize burn(sender: address, amount: u64, token_id: address, to_chain_id: u128, to_contract_address: [u8; 32]) {
         // Assert the token is burned to the origin
         let to: WTForeignContract = WTForeignContract {
             chain_id: to_chain_id,

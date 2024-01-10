@@ -24,7 +24,7 @@ import {
 import * as leo2js from "./common";
 export function getAleoProgram(aleoProgram: AleoProgramLeo): AleoProgram {
   const result: AleoProgram = {
-    chain_id: leo2js.u32(aleoProgram.chain_id),
+    chain_id: leo2js.u128(aleoProgram.chain_id),
     addr: leo2js.address(aleoProgram.addr),
   }
   return result;
@@ -32,7 +32,7 @@ export function getAleoProgram(aleoProgram: AleoProgramLeo): AleoProgram {
 
 export function getForeignContract(foreignContract: ForeignContractLeo): ForeignContract {
   const result: ForeignContract = {
-    chain_id: leo2js.u32(foreignContract.chain_id),
+    chain_id: leo2js.u128(foreignContract.chain_id),
     addr: leo2js.array(foreignContract.addr, leo2js.u8),
   }
   return result;
@@ -96,7 +96,7 @@ export function getOutPacket(outPacket: OutPacketLeo): OutPacket {
 
 export function getPacketId(packetId: PacketIdLeo): PacketId {
   const result: PacketId = {
-    chain_id: leo2js.u32(packetId.chain_id),
+    chain_id: leo2js.u128(packetId.chain_id),
     sequence: leo2js.u32(packetId.sequence),
   }
   return result;

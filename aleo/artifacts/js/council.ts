@@ -214,9 +214,9 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_approve_chain_bridge(r0: number, r1: number) {
+  async exec_approve_chain_bridge(r0: number, r1: BigInt) {
     const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.u32(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -240,9 +240,9 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_disapprove_chain_bridge(r0: number, r1: number) {
+  async exec_disapprove_chain_bridge(r0: number, r1: BigInt) {
     const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.u32(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -253,9 +253,9 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_support_chain_ts(r0: number, r1: number, r2: Array < number > ) {
+  async exec_support_chain_ts(r0: number, r1: BigInt, r2: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.u32(r1);
+    const r1Leo = js2leo.u128(r1);
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
 
     const params = [r0Leo, r1Leo, r2Leo]
@@ -267,12 +267,12 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_add_new_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: number, r5: Array < number > ) {
+  async exec_add_new_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: BigInt, r5: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
     const r3Leo = js2leo.u8(r3);
-    const r4Leo = js2leo.u32(r4);
+    const r4Leo = js2leo.u128(r4);
     const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]

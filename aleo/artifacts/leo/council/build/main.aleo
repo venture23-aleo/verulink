@@ -42,7 +42,7 @@ struct UpdateThresholdProposal:
 
 struct ApproveChainBridgeProposal:
     id as u32;
-    chain_id as u32;
+    chain_id as u128;
 
 struct EnableServiceProposal:
     id as u32;
@@ -50,11 +50,11 @@ struct EnableServiceProposal:
 
 struct DisapproveChainBridge:
     id as u32;
-    chain_id as u32;
+    chain_id as u128;
 
 struct SupportChainTS:
     id as u32;
-    chain_id as u32;
+    chain_id as u128;
     token_service as [u8; 32u32];
 
 struct SupportToken:
@@ -62,7 +62,7 @@ struct SupportToken:
     name as [u8; 32u32];
     symbol as [u8; 16u32];
     decimals as u8;
-    origin_chain_id as u32;
+    origin_chain_id as u128;
     origin_contract_address as [u8; 32u32];
 
 struct EnableToken:
@@ -265,7 +265,7 @@ finalize exec_update_threshold:
 
 function exec_approve_chain_bridge:
     input r0 as u32.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     cast r0 r1 into r2 as ApproveChainBridgeProposal;
     hash.bhp256 r2 into r3 as field;
     call token_bridge.aleo/approve_chain r1 into r4;
@@ -313,7 +313,7 @@ finalize exec_enable_service:
 
 function exec_disapprove_chain_bridge:
     input r0 as u32.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     cast r0 r1 into r2 as DisapproveChainBridge;
     hash.bhp256 r2 into r3 as field;
     call token_bridge.aleo/disapprove_chain r1 into r4;
@@ -337,7 +337,7 @@ finalize exec_disapprove_chain_bridge:
 
 function exec_support_chain_ts:
     input r0 as u32.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     input r2 as [u8; 32u32].public;
     cast r0 r1 r2 into r3 as SupportChainTS;
     hash.bhp256 r3 into r4 as field;
@@ -365,7 +365,7 @@ function exec_add_new_token:
     input r1 as [u8; 32u32].public;
     input r2 as [u8; 16u32].public;
     input r3 as u8.public;
-    input r4 as u32.public;
+    input r4 as u128.public;
     input r5 as [u8; 32u32].public;
     cast r0 r1 r2 r3 r4 r5 into r6 as SupportToken;
     hash.bhp256 r6 into r7 as field;

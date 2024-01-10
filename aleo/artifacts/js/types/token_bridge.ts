@@ -22,23 +22,23 @@ import {
 } from "./leo-types";
 
 export interface AleoProgram {
-  chain_id: number;
+  chain_id: BigInt;
   addr: string;
 }
 
 export const leoAleoProgramSchema = z.object({
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
   addr: leoAddressSchema,
 });
 export type AleoProgramLeo = z.infer < typeof leoAleoProgramSchema > ;
 
 export interface ForeignContract {
-  chain_id: number;
+  chain_id: BigInt;
   addr: Array < number > ;
 }
 
 export const leoForeignContractSchema = z.object({
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
   addr: z.array(leoU8Schema).length(32),
 });
 export type ForeignContractLeo = z.infer < typeof leoForeignContractSchema > ;
@@ -131,12 +131,12 @@ export const leoOutPacketSchema = z.object({
 export type OutPacketLeo = z.infer < typeof leoOutPacketSchema > ;
 
 export interface PacketId {
-  chain_id: number;
+  chain_id: BigInt;
   sequence: number;
 }
 
 export const leoPacketIdSchema = z.object({
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
   sequence: leoU32Schema,
 });
 export type PacketIdLeo = z.infer < typeof leoPacketIdSchema > ;

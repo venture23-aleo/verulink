@@ -168,8 +168,8 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async approve_chain(r0: number) {
-    const r0Leo = js2leo.u32(r0);
+  async approve_chain(r0: BigInt) {
+    const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
@@ -180,8 +180,8 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async disapprove_chain(r0: number) {
-    const r0Leo = js2leo.u32(r0);
+  async disapprove_chain(r0: BigInt) {
+    const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
@@ -192,8 +192,8 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async publish(r0: number, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: BigInt) {
-    const r0Leo = js2leo.u32(r0);
+  async publish(r0: BigInt, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: BigInt) {
+    const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
     const r3Leo = js2leo.address(r3);
@@ -222,8 +222,8 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async consume(r0: number, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: BigInt, r7: number, r8: number) {
-    const r0Leo = js2leo.u32(r0);
+  async consume(r0: BigInt, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: BigInt, r7: number, r8: number) {
+    const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.address(r2);
     const r3Leo = js2leo.arr2string(js2leo.array(r3, js2leo.u8));
@@ -338,8 +338,8 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async supported_chains(key: number): Promise < boolean > {
-    const keyLeo = js2leo.u32(key);
+  async supported_chains(key: BigInt): Promise < boolean > {
+    const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
@@ -362,8 +362,8 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async sequences(key: number): Promise < number > {
-    const keyLeo = js2leo.u32(key);
+  async sequences(key: BigInt): Promise < number > {
+    const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({

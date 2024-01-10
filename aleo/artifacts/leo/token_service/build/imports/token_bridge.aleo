@@ -1,11 +1,11 @@
 program token_bridge.aleo;
 
 struct AleoProgram:
-    chain_id as u32;
+    chain_id as u128;
     addr as address;
 
 struct ForeignContract:
-    chain_id as u32;
+    chain_id as u128;
     addr as [u8; 32u32];
 
 struct MsgTokenReceive:
@@ -45,7 +45,7 @@ struct OutPacket:
     height as u32;
 
 struct PacketId:
-    chain_id as u32;
+    chain_id as u128;
     sequence as u32;
 
 struct InPacketFullAttestorKey:
@@ -98,7 +98,7 @@ mapping in_packet_signs:
 
 
 mapping supported_chains:
-	key as u32.public;
+	key as u128.public;
 	value as boolean.public;
 
 
@@ -108,7 +108,7 @@ mapping supported_services:
 
 
 mapping sequences:
-	key as u32.public;
+	key as u128.public;
 	value as u32.public;
 
 
@@ -231,46 +231,46 @@ finalize remove_attestor:
 
 
 function approve_chain:
-    input r0 as u32.public;
+    input r0 as u128.public;
     async approve_chain self.caller r0 into r1;
     output r1 as token_bridge.aleo/approve_chain.future;
 
 finalize approve_chain:
     input r0 as address.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     get governance_TB[true] into r2;
     assert.eq r0 r2;
     set true into supported_chains[r1];
 
 
 function disapprove_chain:
-    input r0 as u32.public;
+    input r0 as u128.public;
     async disapprove_chain self.caller r0 into r1;
     output r1 as token_bridge.aleo/disapprove_chain.future;
 
 finalize disapprove_chain:
     input r0 as address.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     get governance_TB[true] into r2;
     assert.eq r0 r2;
     remove supported_chains[r1];
 
 
 function publish:
-    input r0 as u32.public;
+    input r0 as u128.public;
     input r1 as [u8; 32u32].public;
     input r2 as [u8; 32u32].public;
     input r3 as address.public;
     input r4 as [u8; 32u32].public;
     input r5 as u64.public;
     assert.neq self.signer self.caller;
-    async publish 1u32 self.caller r0 r1 r2 r3 r4 r5 into r6;
+    async publish 6694886634401u128 self.caller r0 r1 r2 r3 r4 r5 into r6;
     output r6 as token_bridge.aleo/publish.future;
 
 finalize publish:
-    input r0 as u32.public;
+    input r0 as u128.public;
     input r1 as address.public;
-    input r2 as u32.public;
+    input r2 as u128.public;
     input r3 as [u8; 32u32].public;
     input r4 as [u8; 32u32].public;
     input r5 as address.public;
@@ -282,7 +282,7 @@ finalize publish:
     get supported_services[r8.addr] into r10;
     assert.eq r10 true;
     get.or_use sequences[r2] 1u32 into r11;
-    get.or_use sequences[1u32] 1u32 into r12;
+    get.or_use sequences[6694886634401u128] 1u32 into r12;
     cast r2 r3 into r13 as ForeignContract;
     cast r4 r5 r6 r7 into r14 as MsgTokenSend;
     cast 0u8 r11 r8 r13 r14 block.height into r15 as OutPacket;
@@ -308,13 +308,13 @@ function attest:
     output r9 as token_bridge.aleo/attest.future;
 
 finalize attest:
-    input r0 as u32.public;
+    input r0 as u128.public;
     input r1 as u32.public;
     input r2 as field.public;
     input r3 as address.public;
     input r4 as field.public;
     input r5 as InPacketFull.public;
-    assert.eq r5.destination.chain_id 1u32;
+    assert.eq r5.destination.chain_id 6694886634401u128;
     get supported_chains[r5.source.chain_id] into r6;
     assert.eq r6 true;
     get attestors[r3] into r7;
@@ -338,7 +338,7 @@ finalize attest:
 
 
 function consume:
-    input r0 as u32.public;
+    input r0 as u128.public;
     input r1 as [u8; 32u32].public;
     input r2 as address.public;
     input r3 as [u8; 32u32].public;
@@ -349,7 +349,7 @@ function consume:
     input r8 as u32.public;
     assert.neq self.signer self.caller;
     cast r0 r1 into r9 as ForeignContract;
-    cast 1u32 self.caller into r10 as AleoProgram;
+    cast 6694886634401u128 self.caller into r10 as AleoProgram;
     cast r2 r3 r4 r6 into r11 as MsgTokenReceive;
     hash.bhp256 r11 into r12 as field;
     cast 0u8 r7 r9 r10 r12 r8 into r13 as InPacket;
@@ -362,7 +362,7 @@ function consume:
 
 finalize consume:
     input r0 as address.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     input r2 as u32.public;
     input r3 as field.public;
     get supported_services[r0] into r4;

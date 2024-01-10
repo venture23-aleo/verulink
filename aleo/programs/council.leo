@@ -251,10 +251,10 @@ program council.aleo {
 
     struct ApproveChainBridgeProposal {
         id: u32,
-        chain_id: u32
+        chain_id: u128
     }
 
-    transition exec_approve_chain_bridge(public id: u32, public chain_id: u32) {
+    transition exec_approve_chain_bridge(public id: u32, public chain_id: u128) {
         let proposal: ApproveChainBridgeProposal = ApproveChainBridgeProposal {
             id,
             chain_id
@@ -329,10 +329,10 @@ program council.aleo {
 
     struct DisapproveChainBridge {
         id: u32,
-        chain_id: u32
+        chain_id: u128
     }
 
-    transition exec_disapprove_chain_bridge(public id: u32, public chain_id: u32) {
+    transition exec_disapprove_chain_bridge(public id: u32, public chain_id: u128) {
         let proposal: DisapproveChainBridge = DisapproveChainBridge {
             id,
             chain_id
@@ -367,11 +367,11 @@ program council.aleo {
 
     struct SupportChainTS {
         id: u32,
-        chain_id: u32,
+        chain_id: u128,
         token_service: [u8; 32]
     }
 
-    transition exec_support_chain_ts(public id: u32, public chain_id: u32, public token_service: [u8; 32]) {
+    transition exec_support_chain_ts(public id: u32, public chain_id: u128, public token_service: [u8; 32]) {
         let proposal: SupportChainTS = SupportChainTS {
             id,
             chain_id,
@@ -410,11 +410,11 @@ program council.aleo {
         name: [u8; 32],
         symbol: [u8; 16],
         decimals: u8,
-        origin_chain_id: u32,
+        origin_chain_id: u128,
         origin_contract_address: [u8; 32]
     }
 
-    transition exec_add_new_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u32, public origin_contract_address: [u8; 32]) {
+    transition exec_add_new_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
         let proposal: SupportToken = SupportToken {
             id,
             name,

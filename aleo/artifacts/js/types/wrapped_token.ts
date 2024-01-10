@@ -37,12 +37,12 @@ export const leoWrapped_tokenSchema = z.object({
 export type wrapped_tokenLeo = z.infer < typeof leoWrapped_tokenSchema > ;
 
 export interface WTForeignContract {
-  chain_id: number;
+  chain_id: BigInt;
   contract_address: Array < number > ;
 }
 
 export const leoWTForeignContractSchema = z.object({
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
   contract_address: z.array(leoU8Schema).length(32),
 });
 export type WTForeignContractLeo = z.infer < typeof leoWTForeignContractSchema > ;

@@ -85,11 +85,11 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async add_token(r0: Array < number > , r1: Array < number > , r2: number, r3: number, r4: Array < number > ) {
+  async add_token(r0: Array < number > , r1: Array < number > , r2: number, r3: BigInt, r4: Array < number > ) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.u8(r2);
-    const r3Leo = js2leo.u32(r3);
+    const r3Leo = js2leo.u128(r3);
     const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
@@ -164,11 +164,11 @@ export class Wrapped_tokenContract {
     return out0;
   }
 
-  async mint(r0: string, r1: BigInt, r2: string, r3: number, r4: Array < number > ) {
+  async mint(r0: string, r1: BigInt, r2: string, r3: BigInt, r4: Array < number > ) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.u32(r3);
+    const r3Leo = js2leo.u128(r3);
     const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
@@ -180,10 +180,10 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async burn(r0: BigInt, r1: string, r2: number, r3: Array < number > ) {
+  async burn(r0: BigInt, r1: string, r2: BigInt, r3: Array < number > ) {
     const r0Leo = js2leo.u64(r0);
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u32(r2);
+    const r2Leo = js2leo.u128(r2);
     const r3Leo = js2leo.arr2string(js2leo.array(r3, js2leo.u8));
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo]

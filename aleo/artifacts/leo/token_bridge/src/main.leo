@@ -4,7 +4,7 @@ program token_bridge.aleo {
     // Default Aleo Program
     struct AleoProgram {
         // Chain Id of Aleo Network
-        chain_id: u32,
+        chain_id: u128,
         // Program Address of the Service Program
         addr: address
     }
@@ -12,7 +12,7 @@ program token_bridge.aleo {
     // Contract on different (foreign) chain
     struct ForeignContract {
         // Chain Id of Other Network
-        chain_id: u32,
+        chain_id: u128,
         // Contract address of the service contract on other chain
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
         // For EVM Chains, 20 bytes is formated as following:
@@ -100,7 +100,7 @@ program token_bridge.aleo {
 
     struct PacketId {
         // Chain Id where the packet originated
-        chain_id: u32,
+        chain_id: u128,
         // Sequence no of when the packet emitted
         sequence: u32
     }
@@ -130,12 +130,12 @@ program token_bridge.aleo {
     mapping in_packet_signs: field => bool;
 
     // key is chain_id
-    mapping supported_chains: u32 => bool;
+    mapping supported_chains: u128 => bool;
     mapping supported_services: address => bool;
 
     // sequence no of the packet for the target (destination) chain
     // key is chain_id
-    mapping sequences: u32 => u32;
+    mapping sequences: u128 => u32;
 
     // Used to receive the packet
     // Can only be called by attestor
@@ -151,8 +151,8 @@ program token_bridge.aleo {
 
 
     // Returns the chain id of the network where this program is deployed
-    inline this_chain_id() -> u32 {
-        return 1u32;
+    inline this_chain_id() -> u128 {
+        return 6694886634401u128;
     }
 
     // TODO: store as a variable
@@ -311,11 +311,11 @@ program token_bridge.aleo {
     //////////////////////////////
 
     /// Support a new chain by the bridge
-    transition approve_chain(public chain_id: u32) {
+    transition approve_chain(public chain_id: u128) {
         return then finalize(self.caller, chain_id);
     }
 
-    finalize approve_chain(from: address, chain_id: u32) {
+    finalize approve_chain(from: address, chain_id: u128) {
         // Get the governance address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_TB, true);
@@ -325,11 +325,11 @@ program token_bridge.aleo {
     }
 
     /// Remove chain supported by the bridge
-    transition disapprove_chain(public chain_id: u32) {
+    transition disapprove_chain(public chain_id: u128) {
         return then finalize(self.caller, chain_id);
     }
 
-    finalize disapprove_chain(from: address, chain_id: u32) {
+    finalize disapprove_chain(from: address, chain_id: u128) {
         // Get the governance address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_TB, true);
@@ -349,7 +349,7 @@ program token_bridge.aleo {
     /// * `destination_service_contract`: u32 - Service contract on destination chain which can consume the message
     /// * `msg_hash`: field - Hash of the message; Message is stored in the service program
 
-    transition publish(public destination_chain_id: u32, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u64) {
+    transition publish(public destination_chain_id: u128, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u64) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -367,7 +367,7 @@ program token_bridge.aleo {
         return then finalize (this_chain_id(), self.caller, destination_chain_id, destination_service_contract, token, sender, receiver, amount);
     }
 
-    finalize publish(source_chain_id: u32, source_service_program: address, destination_chain_id: u32, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u64) {
+    finalize publish(source_chain_id: u128, source_service_program: address, destination_chain_id: u128, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u64) {
         let source: AleoProgram = AleoProgram {
             chain_id: source_chain_id,
             addr: source_service_program
@@ -450,7 +450,7 @@ program token_bridge.aleo {
         return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, self.caller, packet_validator_mapping_key, packet);
     }
 
-    finalize attest(chain_id: u32, sequence: u32, packet_hash_with_screening: field, attestor: address, packet_validator_mapping_key: field, packet: InPacketFull) {
+    finalize attest(chain_id: u128, sequence: u32, packet_hash_with_screening: field, attestor: address, packet_validator_mapping_key: field, packet: InPacketFull) {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, this_chain_id());
@@ -520,7 +520,7 @@ program token_bridge.aleo {
     /// * `amount`: u64 - Amount to be minted on Aleo 
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition consume(public source_chain_id: u32, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence: u32, public height: u32) {
+    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence: u32, public height: u32) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -568,7 +568,7 @@ program token_bridge.aleo {
         return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening);
     }
 
-    finalize consume(by: address, chain_id: u32, sequence: u32 , packet_hash_with_screening: field) {
+    finalize consume(by: address, chain_id: u128, sequence: u32 , packet_hash_with_screening: field) {
         // Assert that the packet is being sent from one of the supported services
         assert(Mapping::get(supported_services, by));
 

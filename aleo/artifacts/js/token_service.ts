@@ -65,8 +65,8 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async support_chain(r0: number, r1: Array < number > ) {
-    const r0Leo = js2leo.u32(r0);
+  async support_chain(r0: BigInt, r1: Array < number > ) {
+    const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
 
     const params = [r0Leo, r1Leo]
@@ -127,8 +127,8 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_service_contracts(key: number): Promise < Array < number >> {
-    const keyLeo = js2leo.u32(key);
+  async token_service_contracts(key: BigInt): Promise < Array < number >> {
+    const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({

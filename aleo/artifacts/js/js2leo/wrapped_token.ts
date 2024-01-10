@@ -24,7 +24,7 @@ export function getwrapped_tokenLeo(wrapped_token: wrapped_token): wrapped_token
 
 export function getWTForeignContractLeo(wTForeignContract: WTForeignContract): WTForeignContractLeo {
   const result: WTForeignContractLeo = {
-    chain_id: js2leo.u32(wTForeignContract.chain_id),
+    chain_id: js2leo.u128(wTForeignContract.chain_id),
     contract_address: js2leo.array(wTForeignContract.contract_address, js2leo.u8),
   }
   return result;

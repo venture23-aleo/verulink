@@ -2,5 +2,5 @@
 name = "wrapped_token"
 network = "testnet3"
 location = "network"
-checksum = "baf256e080821a87b63184b7471eeb6812f74625b6da8d4f5006beb085a64229"
+checksum = "ea13f2209b7b09803018af9d1d1003ad9005cf217cb0e6a6cf6794f342116072"
 dependencies = []

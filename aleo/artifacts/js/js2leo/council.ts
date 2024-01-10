@@ -59,7 +59,7 @@ export function getUpdateThresholdProposalLeo(updateThresholdProposal: UpdateThr
 export function getApproveChainBridgeProposalLeo(approveChainBridgeProposal: ApproveChainBridgeProposal): ApproveChainBridgeProposalLeo {
   const result: ApproveChainBridgeProposalLeo = {
     id: js2leo.u32(approveChainBridgeProposal.id),
-    chain_id: js2leo.u32(approveChainBridgeProposal.chain_id),
+    chain_id: js2leo.u128(approveChainBridgeProposal.chain_id),
   }
   return result;
 }
@@ -75,7 +75,7 @@ export function getEnableServiceProposalLeo(enableServiceProposal: EnableService
 export function getDisapproveChainBridgeLeo(disapproveChainBridge: DisapproveChainBridge): DisapproveChainBridgeLeo {
   const result: DisapproveChainBridgeLeo = {
     id: js2leo.u32(disapproveChainBridge.id),
-    chain_id: js2leo.u32(disapproveChainBridge.chain_id),
+    chain_id: js2leo.u128(disapproveChainBridge.chain_id),
   }
   return result;
 }
@@ -83,7 +83,7 @@ export function getDisapproveChainBridgeLeo(disapproveChainBridge: DisapproveCha
 export function getSupportChainTSLeo(supportChainTS: SupportChainTS): SupportChainTSLeo {
   const result: SupportChainTSLeo = {
     id: js2leo.u32(supportChainTS.id),
-    chain_id: js2leo.u32(supportChainTS.chain_id),
+    chain_id: js2leo.u128(supportChainTS.chain_id),
     token_service: js2leo.array(supportChainTS.token_service, js2leo.u8),
   }
   return result;
@@ -95,7 +95,7 @@ export function getSupportTokenLeo(supportToken: SupportToken): SupportTokenLeo 
     name: js2leo.array(supportToken.name, js2leo.u8),
     symbol: js2leo.array(supportToken.symbol, js2leo.u8),
     decimals: js2leo.u8(supportToken.decimals),
-    origin_chain_id: js2leo.u32(supportToken.origin_chain_id),
+    origin_chain_id: js2leo.u128(supportToken.origin_chain_id),
     origin_contract_address: js2leo.array(supportToken.origin_contract_address, js2leo.u8),
   }
   return result;

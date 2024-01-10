@@ -71,12 +71,12 @@ export type UpdateThresholdProposalLeo = z.infer < typeof leoUpdateThresholdProp
 
 export interface ApproveChainBridgeProposal {
   id: number;
-  chain_id: number;
+  chain_id: BigInt;
 }
 
 export const leoApproveChainBridgeProposalSchema = z.object({
   id: leoU32Schema,
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
 });
 export type ApproveChainBridgeProposalLeo = z.infer < typeof leoApproveChainBridgeProposalSchema > ;
 
@@ -93,24 +93,24 @@ export type EnableServiceProposalLeo = z.infer < typeof leoEnableServiceProposal
 
 export interface DisapproveChainBridge {
   id: number;
-  chain_id: number;
+  chain_id: BigInt;
 }
 
 export const leoDisapproveChainBridgeSchema = z.object({
   id: leoU32Schema,
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
 });
 export type DisapproveChainBridgeLeo = z.infer < typeof leoDisapproveChainBridgeSchema > ;
 
 export interface SupportChainTS {
   id: number;
-  chain_id: number;
+  chain_id: BigInt;
   token_service: Array < number > ;
 }
 
 export const leoSupportChainTSSchema = z.object({
   id: leoU32Schema,
-  chain_id: leoU32Schema,
+  chain_id: leoU128Schema,
   token_service: z.array(leoU8Schema).length(32),
 });
 export type SupportChainTSLeo = z.infer < typeof leoSupportChainTSSchema > ;
@@ -120,7 +120,7 @@ export interface SupportToken {
   name: Array < number > ;
   symbol: Array < number > ;
   decimals: number;
-  origin_chain_id: number;
+  origin_chain_id: BigInt;
   origin_contract_address: Array < number > ;
 }
 
@@ -129,7 +129,7 @@ export const leoSupportTokenSchema = z.object({
   name: z.array(leoU8Schema).length(32),
   symbol: z.array(leoU8Schema).length(16),
   decimals: leoU8Schema,
-  origin_chain_id: leoU32Schema,
+  origin_chain_id: leoU128Schema,
   origin_contract_address: z.array(leoU8Schema).length(32),
 });
 export type SupportTokenLeo = z.infer < typeof leoSupportTokenSchema > ;

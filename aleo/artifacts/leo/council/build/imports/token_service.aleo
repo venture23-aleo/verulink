@@ -20,17 +20,17 @@ program token_service.aleo;
 
 
 struct TSForeignContract:
-    chain_id as u32;
+    chain_id as u128;
     contract_address as [u8; 32u32];
 
 struct TokenOrigin:
-    chain_id as u32;
+    chain_id as u128;
     token_service_address as [u8; 32u32];
     token_address as [u8; 32u32];
 
 
 mapping token_service_contracts:
-	key as u32.public;
+	key as u128.public;
 	value as [u8; 32u32].public;
 
 
@@ -99,14 +99,14 @@ finalize token_service_initialize:
 
 
 function support_chain:
-    input r0 as u32.public;
+    input r0 as u128.public;
     input r1 as [u8; 32u32].public;
     async support_chain self.caller r0 r1 into r2;
     output r2 as token_service.aleo/support_chain.future;
 
 finalize support_chain:
     input r0 as address.public;
-    input r1 as u32.public;
+    input r1 as u128.public;
     input r2 as [u8; 32u32].public;
     get governance_TS[true] into r3;
     assert.eq r0 r3;
