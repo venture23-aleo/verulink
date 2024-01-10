@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -130,7 +129,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 
 	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chainID, "u32", "", 1), 0, 64)
 	if err != nil {
-		return nil, &exec.Error{}
+		return nil, err
 	}
 	pkt.Source.ChainID = sourceChainID
 	pkt.Source.Address = packet.source.address
