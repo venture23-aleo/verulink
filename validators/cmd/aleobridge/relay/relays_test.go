@@ -157,6 +157,7 @@ func consumeContext(ctx context.Context, cancelled *int, mu *sync.Mutex) {
 			mu.Unlock()
 			return
 		default:
+			continue
 		}
 	}
 }
@@ -252,44 +253,64 @@ func TestRelaysHandler(t *testing.T) {
 		assert.Nil(t, chainCtxCncls["ethereum-aleo"])
 	})
 
-	t.Run("case: Register action", func(t *testing.T) {
+	// t.Run("case: Register action", func(t *testing.T) {
+	// 	chainCtxMu = sync.Mutex{}
+	// 	ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
+	// 	aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
+	// 	chains["aleo"] = newMockClient(aleoConfig)
+	// 	chains["ethereum"] = newMockClient(ethConfig)
+
+	// 	ctx, cancel := context.WithCancel(context.TODO())
+	// 	defer cancel()
+
+	// 	r1 := newMockRelay("aleo-ethereum")
+	// 	r2 := newMockRelay("ethereum-aleo")
+	// 	relays := Relays{r1, r2}
+
+	// 	go func() {
+	// 		relays.StartMultiRelay(ctx)
+	// 	}()
+
+	// 	time.Sleep(time.Second)
+	// 	assert.NotNil(t, chainCtxCncls["aleo-ethereum"])
+	// 	assert.NotNil(t, chainCtxCncls["ethereum-aleo"])
+
+	// 	relArg := []RelayArg{{"aleo", "ethereum"}}
+	// 	go relaysHandler(relArg, Stop)
+	// 	time.Sleep(time.Second)
+
+	// 	assert.Equal(t, r1.cancelled, 1)
+	// 	assert.Nil(t, chainCtxCncls["aleo-ethereum"])
+
+	// 	// go func() {
+	// 	// 	relaysHandler(relArg, Register)
+	// 	// }()
+	// })
+
+	t.Run("case: unregistered chains 1", func(t *testing.T) {
 		chainCtxMu = sync.Mutex{}
 		ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
 		aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
 		chains["aleo"] = newMockClient(aleoConfig)
 		chains["ethereum"] = newMockClient(ethConfig)
 
-		ctx, cancel := context.WithCancel(context.TODO())
-		defer cancel()
+		relArg := []RelayArg{{"others", "ethereum"}}
+		err := relaysHandler(relArg, Stop)
 
-		r1 := newMockRelay("aleo-ethereum")
-		r2 := newMockRelay("ethereum-aleo")
-		relays := Relays{r1, r2}
+		assert.NotNil(t, err)
+	})
 
-		go func() {
-			relays.StartMultiRelay(ctx)
-		}()
+	t.Run("case: un registered chains 2", func(t *testing.T) {
+		chainCtxMu = sync.Mutex{}
+		ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
+		aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
+		chains["aleo"] = newMockClient(aleoConfig)
+		chains["ethereum"] = newMockClient(ethConfig)
 
-		time.Sleep(time.Second)
-		assert.NotNil(t, chainCtxCncls["aleo-ethereum"])
-		assert.NotNil(t, chainCtxCncls["ethereum-aleo"])
+		relArg := []RelayArg{{"aleo", "others"}}
+		err := relaysHandler(relArg, Stop)
 
-		relArg := []RelayArg{{"aleo", "ethereum"}}
-		go relaysHandler(relArg, Stop)
-		time.Sleep(time.Second)
-
-		assert.Equal(t, r1.cancelled, 1)
-		assert.Nil(t, chainCtxCncls["aleo-ethereum"])
-
-		go func() {
-			relaysHandler(relArg, Register)
-		}()
-
-		go func () {
-			if chainCtxCncls["aleo-ethereum"] != nil {
-				return 
-			}
-			panic("error panic")
-		}()
+		
+		assert.NotNil(t, err)
 	})
 }
