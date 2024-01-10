@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
 )
@@ -21,6 +22,33 @@ func getConfig(name, nodeURL, walletPath, contractAddress string, chainID uint32
 		BridgeContract: contractAddress,
 		Name:           name,
 		FinalityHeight: finalityHeight,
+	}
+}
+
+func newMockClient(cfg *config.ChainConfig) IClient {
+	if cfg.Name == "ethereum" {
+		return &mockClient{
+			name: cfg.Name,
+			getChains: func() ([]string, error) {
+				return []string{"aleo", "other"}, nil
+			},
+		}
+	} else if cfg.Name == "aleo" {
+		return &mockClient{
+			name: cfg.Name,
+			getChains: func() ([]string, error) {
+				return []string{"ethereum", "other"}, nil
+			},
+		}
+	} else if cfg.Name == "other" {
+		return &mockClient{
+			name: cfg.Name,
+			getChains: func() ([]string, error) {
+				return []string{"aleo", "ethereum"}, nil
+			},
+		}
+	} else {
+		return &mockClient{}
 	}
 }
 
@@ -77,6 +105,7 @@ func TestMultiRelay(t *testing.T) {
 
 		assert.Panics(t, func() { MultiRelay(context.Background(), configs) })
 	})
+
 	t.Run("case: multiple destinations", func(t *testing.T) {
 		ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
 		aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
@@ -89,74 +118,53 @@ func TestMultiRelay(t *testing.T) {
 		configs := []*config.ChainConfig{ethConfig, aleoConfig, otherCOnfig}
 
 		relays := MultiRelay(context.Background(), configs)
-		assert.NotNil(t, relays)
 		assert.Equal(t, len(relays), 6)
-		chains := makeRelays([]string{"aleo", "ethereum", "other"})
+		chains := map[string]bool{
+			"aleo-ethereum":  true,
+			"aleo-other":     true,
+			"ethereum-other": true,
+			"ethereum-aleo":  true,
+			"other-aleo":     true,
+			"other-ethereum": true,
+		}
 		for _, v := range relays {
-			assert.True(t, containsInArray(v.Name(), chains))
+			require.Contains(t, chains, v.Name())
 		}
 	})
+
 	t.Run("case: error while getting dest chains", func(t *testing.T) {
 		aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
-		cfg := getConfig("error", "error.nodeURL.suf", "error_wallet.json", "errorContract", uint32(3), uint8(1))
+		cfgWithNoDestChains := getConfig("error", "error.nodeURL.suf", "error_wallet.json", "errorContract", uint32(3), uint8(1))
 
-		configs := []*config.ChainConfig{aleoConfig, cfg}
+		configs := []*config.ChainConfig{aleoConfig, cfgWithNoDestChains}
 
 		assert.Panics(t, func() { MultiRelay(context.Background(), configs) })
 	})
 }
 
-func containsInArray(str string, arr []string) bool {
-	contains := false
-	for _, v := range arr {
-		if v == str {
-			contains = true
-			return contains
-		}
-	}
-	return contains
-}
-
-func makeRelays(chain []string) []string {
-	chains := []string{}
-	sourceRelay := chain[0]
-	length := len(chain)
-	for i := 0; i < length; i++ {
-		for j := 1; j < length; j++ {
-			chains = append(chains, sourceRelay+"-"+chain[j])
-		}
-		if i < length-1 {
-			sourceRelay = chain[i+1]
-			chain[i+1] = chain[0]
-			chain[0] = sourceRelay
-		}
-	}
-	return chains
-}
-
 type mockRelay struct {
-	getName func() string
+	cancelled int
+	mu        sync.Mutex
+	getName   func() string
 }
 
-var (
-	cancelled = 0
-)
-
-func consumeContext(ctx context.Context) {
+func consumeContext(ctx context.Context, cancelled *int, mu *sync.Mutex) {
 	for {
 		select {
 		case <-ctx.Done():
-			cancelled++
+			mu.Lock()
+			*cancelled++
+			mu.Unlock()
 			return
 		default:
-			continue
 		}
 	}
 }
 
 func (mr *mockRelay) Init(ctx context.Context) {
-	go consumeContext(ctx)
+	go consumeContext(ctx, &mr.cancelled, &mr.mu)
 }
+
 func (mr *mockRelay) Name() string {
 	if mr.getName != nil {
 		return mr.getName()
@@ -164,7 +172,7 @@ func (mr *mockRelay) Name() string {
 	return ""
 }
 
-func newMockRelay(name string) Relayer {
+func newMockRelay(name string) *mockRelay {
 	return &mockRelay{
 		getName: func() string {
 			return name
@@ -186,40 +194,15 @@ func TestStartMultiRelay(t *testing.T) {
 	assert.NotNil(t, chainCtxCncls["ethereum-aleo"])
 }
 
-func newMockClient(cfg *config.ChainConfig) IClient {
-	if cfg.Name == "ethereum" {
-		return &mockClient{
-			name: cfg.Name,
-			getChains: func() ([]string, error) {
-				return []string{"aleo", "other"}, nil
-			},
-		}
-	} else if cfg.Name == "aleo" {
-		return &mockClient{
-			name: cfg.Name,
-			getChains: func() ([]string, error) {
-				return []string{"ethereum", "other"}, nil
-			},
-		}
-	} else if cfg.Name == "other" {
-		return &mockClient{
-			name: cfg.Name,
-			getChains: func() ([]string, error) {
-				return []string{"aleo", "ethereum"}, nil
-			},
-		}
-	} else {
-		return &mockClient{}
-	}
-}
-
 func TestChainHandler(t *testing.T) {
 	chainCtxMu = sync.Mutex{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	relays := Relays{newMockRelay("aleo-ethereum"), newMockRelay("ethereum-aleo")}
+	r1 := newMockRelay("aleo-ethereum")
+	r2 := newMockRelay("ethereum-aleo")
+	relays := Relays{r1, r2}
 
 	go relays.StartMultiRelay(ctx)
 
@@ -231,24 +214,19 @@ func TestChainHandler(t *testing.T) {
 	go chainHandler("ethereum-aleo", ActionType(2))
 
 	time.Sleep(time.Second)
-	assert.Equal(t, cancelled, 2)
+	assert.Equal(t, r1.cancelled, 1)
+	assert.Equal(t, r2.cancelled, 1)
 	assert.Nil(t, chainCtxCncls["aleo-ethereum"])
 	assert.Nil(t, chainCtxCncls["ethereum-aleo"])
 }
 
 func TestRelaysHandler(t *testing.T) {
-	chainCtxMu = sync.Mutex{}
-	ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
-	aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
-	chains["aleo"] = newMockClient(aleoConfig)
-	chains["ethereum"] = newMockClient(ethConfig)
-
-	relArg := []RelayArg{{"aleo", "ethereum"}, {"ethereum", "aleo"}}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 
-	relays := Relays{newMockRelay("aleo-ethereum"), newMockRelay("ethereum-aleo")}
+	r1 := newMockRelay("aleo-ethereum")
+	r2 := newMockRelay("ethereum-aleo")
+	relays := Relays{r1, r2}
 
 	go relays.StartMultiRelay(ctx)
 
@@ -256,9 +234,12 @@ func TestRelaysHandler(t *testing.T) {
 	assert.NotNil(t, chainCtxCncls["aleo-ethereum"])
 	assert.NotNil(t, chainCtxCncls["ethereum-aleo"])
 
+	relArg := []RelayArg{{"aleo", "ethereum"}, {"ethereum", "aleo"}}
 	go relaysHandler(relArg, ActionType(2))
 	time.Sleep(time.Second)
-	assert.Equal(t, cancelled, 2)
+
+	assert.Equal(t, r1.cancelled, 1)
+	assert.Equal(t, r2.cancelled, 1)
 	assert.Nil(t, chainCtxCncls["aleo-ethereum"])
 	assert.Nil(t, chainCtxCncls["ethereum-aleo"])
 }
