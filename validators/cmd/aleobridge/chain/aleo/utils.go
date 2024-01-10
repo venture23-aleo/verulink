@@ -156,7 +156,11 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt.Message.SenderAddress = packet.message.sender
 
 	amount := &big.Int{}
-	pkt.Message.Amount, _ = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	var ok bool
+	pkt.Message.Amount, ok = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	if !ok {
+		return nil, errors.New("failed in parsing amount")
+	}
 
 	height, err := strconv.ParseUint(strings.Replace(packet.height, "u32", "", 1), 0, 64)
 	if err != nil {
