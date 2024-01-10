@@ -31,8 +31,8 @@ type ClientFunc func(cfg *config.ChainConfig) IClient
 
 type Relays []Relayer
 
-func MultiRelay(ctx context.Context, cfgs []*config.ChainConfig) Relays {
-	for _, chainCfg := range cfgs {
+func MultiRelay(ctx context.Context, cfg *config.Config) Relays {
+	for _, chainCfg := range cfg.ChainConfigs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
 		}
@@ -51,6 +51,12 @@ func MultiRelay(ctx context.Context, cfgs []*config.ChainConfig) Relays {
 		}
 
 		for _, destChain := range destChains {
+			if _, ok := cfg.BridgePairMap[c.Name()][destChain]; !ok {
+				continue
+			}
+			if _, ok := chains[destChain]; !ok {
+				panic(fmt.Errorf("chain %s is not registered", destChain))
+			}
 			srcIClient := c
 			descIClient := chains[destChain]
 			r := NewRelay(srcIClient, descIClient)

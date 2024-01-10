@@ -4,8 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
+)
+
+const (
+	pairDelimiter = "->"
 )
 
 type ChainConfig struct {
@@ -21,10 +26,11 @@ type ChainConfig struct {
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
-	ChainConfigs []*ChainConfig    `yaml:"chains"`
-	LogConfig    *LoggerConfig     `yaml:"log"`
-	DBPath       string            `yaml:"db_path"`
-	BridgePair   map[string]string `yaml:"bridge_pair"`
+	ChainConfigs  []*ChainConfig                 `yaml:"chains"`
+	LogConfig     *LoggerConfig                  `yaml:"log"`
+	DBPath        string                         `yaml:"db_path"`
+	BridgePair    []string                       `yaml:"bridge_pair"`
+	BridgePairMap map[string]map[string]struct{} `yaml:"-"`
 }
 
 type LoggerConfig struct {
@@ -62,18 +68,27 @@ func validateBridgePair(cfg *Config) error {
 		chains[chain.Name] = struct{}{}
 	}
 
+	bridgeM := make(map[string]map[string]struct{})
 	var errs []error
-	for src, dest := range cfg.BridgePair {
+	for _, pair := range cfg.BridgePair {
+		s := strings.Split(pair, pairDelimiter)
+		src, dest := s[0], s[1]
 		if _, ok := chains[src]; !ok {
 			errs = append(errs, fmt.Errorf("chain %s is not defined", src))
 		}
 		if _, ok := chains[dest]; !ok {
 			errs = append(errs, fmt.Errorf("chain %s is not defined", dest))
 		}
+
+		if _, ok := bridgeM[src]; !ok {
+			bridgeM[src] = make(map[string]struct{})
+		}
+		bridgeM[src][dest] = struct{}{}
 	}
 
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
+	cfg.BridgePairMap = bridgeM
 	return nil
 }
