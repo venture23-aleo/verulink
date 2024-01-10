@@ -243,7 +243,7 @@ func TestRelaysHandler(t *testing.T) {
 	chains["aleo"] = newMockClient(aleoConfig)
 	chains["ethereum"] = newMockClient(ethConfig)
 
-	relArg := []RelayArg{RelayArg{"aleo", "ethereum"}, RelayArg{"ethereum", "aleo"}}
+	relArg := []RelayArg{{"aleo", "ethereum"}, {"ethereum", "aleo"}}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
