@@ -81,8 +81,6 @@ func (relays Relays) StartMultiRelay(ctx context.Context) {
 			relay.Init(relayCtx)
 		}(re)
 	}
-
-	<-ctx.Done()
 }
 
 /******************************************rpc call handler*************************************/
