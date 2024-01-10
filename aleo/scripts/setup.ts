@@ -12,6 +12,7 @@ import * as js2leoCommon from '../artifacts/js/js2leo/common';
 import * as leo2jsCommon from '../artifacts/js/leo2js/common';
 
 import { hash } from "aleo-hasher";
+import { TOTAL_PROPOSALS_INDEX, aleoTsContract, attestor, councilMember, councilThreshold, ethChainId, usdcInfo, usdcOrigin, wUSDCProgramAddr } from "../test/mockData";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -53,23 +54,6 @@ const setup = async () => {
 
   let tx;
 
-  // USDC Contract Address on Ethereum
-  const USDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
-
-  // User Address on Ethereum
-  const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-
-  // Token Service Contract Address on Ethereum
-  const ethTsContract = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
-
-  // Token Service Contract on Aleo
-  const aleoTsContract =
-    "aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3";
-
-  // User address on Aleo
-  const aleoUser =
-    "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
-
   // Deploy contracts
   await bridge.deploy();
   tx = await wrappedToken.deploy();
@@ -80,9 +64,6 @@ const setup = async () => {
   await tx.wait();
 
   // Initialize council program with a single council member and 1/5 threshold
-  const councilMember =
-    "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
-  const councilThreshold = 1;
   await council.initialize(
     councilMember,
     councilMember,
@@ -92,9 +73,8 @@ const setup = async () => {
     councilThreshold
   );
 
-  const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
   // Initialize bridge
-  const attestor = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px"
+  const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
   await bridge.bridge_initialize(
     1,
     attestor,
@@ -108,26 +88,15 @@ const setup = async () => {
   await holding.holding_initialize(councilAddress);
   await tokenService.token_service_initialize(councilAddress, councilAddress);
 
-  // Add new token
-  const TOTAL_PROPOSALS_INDEX = 3;
-  const ethChainId = 1
+  // // Add new token
   let proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
-  const tokenInfo: TokenInfo = {
-    name: string2AleoArr("Wrapped USDC", 32),
-    symbol: string2AleoArr("USDC", 16),
-    decimals: 18
-  }
-  const tokenOrigin: WTForeignContract = {
-    chain_id: ethChainId,
-    contract_address: evm2AleoArr(USDC)
-  };
   const addNewTokenProposal: SupportToken = {
     id: proposalId,
-    name: tokenInfo.name,
-    symbol: tokenInfo.symbol,
-    decimals: tokenInfo.decimals,
-    origin_chain_id: tokenOrigin.chain_id,
-    origin_contract_address: tokenOrigin.contract_address
+    name: usdcInfo.name,
+    symbol: usdcInfo.symbol,
+    decimals: usdcInfo.decimals,
+    origin_chain_id: usdcOrigin.chain_id,
+    origin_contract_address: usdcOrigin.contract_address
   };
   const addNewProposalHash = hashStruct(js2leo.getSupportTokenLeo(addNewTokenProposal))
   tx = await council.propose(proposalId, addNewProposalHash)
@@ -142,19 +111,11 @@ const setup = async () => {
     addNewTokenProposal.origin_contract_address
   );
 
-  const wUSDCInfo: WrappedTokenInfo = {
-    token_info: tokenInfo,
-    origin: tokenOrigin
-  };
-  const wUSDCInfoLeo = js2leo.getWrappedTokenInfoLeo(wUSDCInfo);
-  const wUSDCInfoLeoString = js2leoCommon.json(wUSDCInfoLeo);
-  const wUSDC = hash("bhp256", wUSDCInfoLeoString, "address")
-
   // Enable new token
   proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
   const enableTokenProposal: EnableToken = {
     id: proposalId,
-    token_id: wUSDC,
+    token_id: wUSDCProgramAddr,
     minimum_transfer: BigInt(100),
     outgoing_percentage: 100_00,
     time: 1
