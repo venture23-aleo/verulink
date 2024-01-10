@@ -141,6 +141,19 @@ export const leoPacketIdSchema = z.object({
 });
 export type PacketIdLeo = z.infer < typeof leoPacketIdSchema > ;
 
+export interface PacketIdWithAttestor {
+  chain_id: BigInt;
+  sequence: number;
+  attestor: string;
+}
+
+export const leoPacketIdWithAttestorSchema = z.object({
+  chain_id: leoU128Schema,
+  sequence: leoU32Schema,
+  attestor: leoAddressSchema,
+});
+export type PacketIdWithAttestorLeo = z.infer < typeof leoPacketIdWithAttestorSchema > ;
+
 export interface InPacketFullAttestorKey {
   packet_hash: BigInt;
   attestor: string;

@@ -15,6 +15,8 @@ import {
   OutPacketLeo,
   PacketId,
   PacketIdLeo,
+  PacketIdWithAttestor,
+  PacketIdWithAttestorLeo,
   InPacketFullAttestorKey,
   InPacketFullAttestorKeyLeo,
   InPacketFullScreeningKey,
@@ -98,6 +100,15 @@ export function getPacketId(packetId: PacketIdLeo): PacketId {
   const result: PacketId = {
     chain_id: leo2js.u128(packetId.chain_id),
     sequence: leo2js.u32(packetId.sequence),
+  }
+  return result;
+}
+
+export function getPacketIdWithAttestor(packetIdWithAttestor: PacketIdWithAttestorLeo): PacketIdWithAttestor {
+  const result: PacketIdWithAttestor = {
+    chain_id: leo2js.u128(packetIdWithAttestor.chain_id),
+    sequence: leo2js.u32(packetIdWithAttestor.sequence),
+    attestor: leo2js.address(packetIdWithAttestor.attestor),
   }
   return result;
 }

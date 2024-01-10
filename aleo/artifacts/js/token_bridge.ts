@@ -9,6 +9,7 @@ import {
   InPacket,
   OutPacket,
   PacketId,
+  PacketIdWithAttestor,
   InPacketFullAttestorKey,
   InPacketFullScreeningKey,
 } from "./types";
@@ -21,6 +22,7 @@ import {
   getInPacketLeo,
   getOutPacketLeo,
   getPacketIdLeo,
+  getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
 } from './js2leo';
@@ -33,6 +35,7 @@ import {
   getInPacket,
   getOutPacket,
   getPacketId,
+  getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
 } from './leo2js';
@@ -326,13 +329,13 @@ export class Token_bridgeContract {
     return getOutPacket(result);
   }
 
-  async in_packet_signs(key: BigInt): Promise < boolean > {
-    const keyLeo = js2leo.field(key);
+  async in_packet_attestors(key: PacketIdWithAttestor): Promise < boolean > {
+    const keyLeo = js2leo.json(getPacketIdWithAttestorLeo(key));
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'in_packet_signs',
+      transition: 'in_packet_attestors',
       params,
     });
     return leo2js.boolean(result);

@@ -22,6 +22,7 @@ program council.aleo;
 
 
 
+
 struct ProposalSign:
     proposal as field;
     member as address;

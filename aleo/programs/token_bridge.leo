@@ -105,6 +105,15 @@ program token_bridge.aleo {
         sequence: u32
     }
 
+    struct PacketIdWithAttestor {
+        // Chain Id where the packet originated
+        chain_id: u128,
+        // Sequence no of when the packet emitted
+        sequence: u32,
+        // Address of the attestor
+        attestor: address
+    }
+
     // keys setting index
     // 0 -> | 0: not initialized | 1: initialized |
     mapping bridge_settings: u8 => u8;
@@ -125,9 +134,7 @@ program token_bridge.aleo {
 
     mapping out_packets: PacketId => OutPacket;
 
-    // This is to prevent the malicious attestor from signing the packet more than once
-    // key is derived as hash(source_chain_id, sequence, validator_address);
-    mapping in_packet_signs: field => bool;
+    mapping in_packet_attestors: PacketIdWithAttestor => bool;
 
     // key is chain_id
     mapping supported_chains: u128 => bool;
@@ -437,20 +444,22 @@ program token_bridge.aleo {
             height: packet.height
         });
 
-        let packet_validator_mapping_key: field = BHP256::hash_to_field(InPacketFullAttestorKey {
-            packet_hash,
-            attestor: self.caller
-        });
+        let attestor: address = self.caller;
+        let packet_attestor_key: PacketIdWithAttestor = PacketIdWithAttestor {
+            chain_id: packet.source.chain_id,
+            sequence: packet.sequence,
+            attestor
+        };
 
         let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
             packet_hash,
             screening_passed
         });
 
-        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, self.caller, packet_validator_mapping_key, packet);
+        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, attestor, screening_passed, packet_attestor_key, packet);
     }
 
-    finalize attest(chain_id: u128, sequence: u32, packet_hash_with_screening: field, attestor: address, packet_validator_mapping_key: field, packet: InPacketFull) {
+    finalize attest(chain_id: u128, sequence: u32, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: PacketIdWithAttestor, packet: InPacketFull) {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, this_chain_id());
@@ -458,16 +467,14 @@ program token_bridge.aleo {
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, packet.source.chain_id));
 
-        // TODO: Ensure attestor can only vote once for given (chain_id, sequence)
-
         // Assert that the attestors signing are valid
         assert(Mapping::get(attestors, attestor));
-
-        // Assert that the attestor has not signed the same message previously
-        assert(!Mapping::contains(in_packet_signs, packet_validator_mapping_key));
+        
+        // TODO: Ensure attestor can only vote once for given (chain_id, sequence)
+        assert(!Mapping::contains(in_packet_attestors, packet_attestor_key));
 
         // Mark the packet as signed by attestor
-        Mapping::set(in_packet_signs, packet_validator_mapping_key, true);
+        Mapping::set(in_packet_attestors, packet_attestor_key, screening_passed);
 
         // Get the attestations for the packet
         let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8);

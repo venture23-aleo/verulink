@@ -38,6 +38,7 @@ const verifyNumber = (num: number) => {
 };
 
 const ASCII_SEPARATOR = ":".charCodeAt(0).toString(16);
+
 export const encodeNetworkChainId = (
   networkType: string,
   chainId: number | BigInt

@@ -48,6 +48,11 @@ struct PacketId:
     chain_id as u128;
     sequence as u32;
 
+struct PacketIdWithAttestor:
+    chain_id as u128;
+    sequence as u32;
+    attestor as address;
+
 struct InPacketFullAttestorKey:
     packet_hash as field;
     attestor as address;
@@ -92,8 +97,8 @@ mapping out_packets:
 	value as OutPacket.public;
 
 
-mapping in_packet_signs:
-	key as field.public;
+mapping in_packet_attestors:
+	key as PacketIdWithAttestor.public;
 	value as boolean.public;
 
 
@@ -300,41 +305,41 @@ function attest:
     hash.bhp256 r0.message into r2 as field;
     cast r0.version r0.sequence r0.source r0.destination r2 r0.height into r3 as InPacket;
     hash.bhp256 r3 into r4 as field;
-    cast r4 self.caller into r5 as InPacketFullAttestorKey;
-    hash.bhp256 r5 into r6 as field;
-    cast r4 r1 into r7 as InPacketFullScreeningKey;
-    hash.bhp256 r7 into r8 as field;
-    async attest r0.source.chain_id r0.sequence r8 self.caller r6 r0 into r9;
-    output r9 as token_bridge.aleo/attest.future;
+    cast r0.source.chain_id r0.sequence self.caller into r5 as PacketIdWithAttestor;
+    cast r4 r1 into r6 as InPacketFullScreeningKey;
+    hash.bhp256 r6 into r7 as field;
+    async attest r0.source.chain_id r0.sequence r7 self.caller r1 r5 r0 into r8;
+    output r8 as token_bridge.aleo/attest.future;
 
 finalize attest:
     input r0 as u128.public;
     input r1 as u32.public;
     input r2 as field.public;
     input r3 as address.public;
-    input r4 as field.public;
-    input r5 as InPacketFull.public;
-    assert.eq r5.destination.chain_id 6694886634401u128;
-    get supported_chains[r5.source.chain_id] into r6;
-    assert.eq r6 true;
-    get attestors[r3] into r7;
+    input r4 as boolean.public;
+    input r5 as PacketIdWithAttestor.public;
+    input r6 as InPacketFull.public;
+    assert.eq r6.destination.chain_id 6694886634401u128;
+    get supported_chains[r6.source.chain_id] into r7;
     assert.eq r7 true;
-    contains in_packet_signs[r4] into r8;
-    not r8 into r9;
-    assert.eq r9 true;
-    set true into in_packet_signs[r4];
-    get.or_use in_packet_attestations[r2] 0u8 into r10;
-    add r10 1u8 into r11;
-    set r11 into in_packet_attestations[r2];
-    get bridge_settings[0u8] into r12;
-    cast r0 r1 into r13 as PacketId;
-    contains in_packet_hash[r13] into r14;
-    not r14 into r15;
-    add r10 1u8 into r16;
-    gte r16 r12 into r17;
-    and r15 r17 into r18;
-    set r2 into in_packet_hash[r13];
-    set false into in_packet_consumed[r13];
+    get attestors[r3] into r8;
+    assert.eq r8 true;
+    contains in_packet_attestors[r5] into r9;
+    not r9 into r10;
+    assert.eq r10 true;
+    set r4 into in_packet_attestors[r5];
+    get.or_use in_packet_attestations[r2] 0u8 into r11;
+    add r11 1u8 into r12;
+    set r12 into in_packet_attestations[r2];
+    get bridge_settings[0u8] into r13;
+    cast r0 r1 into r14 as PacketId;
+    contains in_packet_hash[r14] into r15;
+    not r15 into r16;
+    add r11 1u8 into r17;
+    gte r17 r13 into r18;
+    and r16 r18 into r19;
+    set r2 into in_packet_hash[r14];
+    set false into in_packet_consumed[r14];
 
 
 function consume:

@@ -2,13 +2,6 @@ import {
   getTokenAccLeo
 } from './holding';
 import {
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo
-} from './wrapped_token';
-import {
   getTSForeignContractLeo,
   getTokenOriginLeo
 } from './token_service';
@@ -21,9 +14,17 @@ import {
   getInPacketLeo,
   getOutPacketLeo,
   getPacketIdLeo,
+  getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo
 } from './token_bridge';
+import {
+  getwrapped_tokenLeo,
+  getWTForeignContractLeo,
+  getTokenInfoLeo,
+  getWrappedTokenInfoLeo,
+  getTokenAccountLeo
+} from './wrapped_token';
 import {
   getProposalSignLeo,
   getAddMemberProposalLeo,
@@ -39,11 +40,6 @@ import {
 
 export {
   getTokenAccLeo,
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo,
   getTSForeignContractLeo,
   getTokenOriginLeo,
   getAleoProgramLeo,
@@ -54,8 +50,14 @@ export {
   getInPacketLeo,
   getOutPacketLeo,
   getPacketIdLeo,
+  getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
+  getwrapped_tokenLeo,
+  getWTForeignContractLeo,
+  getTokenInfoLeo,
+  getWrappedTokenInfoLeo,
+  getTokenAccountLeo,
   getProposalSignLeo,
   getAddMemberProposalLeo,
   getRemoveMemberProposalLeo,

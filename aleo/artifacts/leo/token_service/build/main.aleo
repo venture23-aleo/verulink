@@ -19,6 +19,7 @@ program token_service.aleo;
 
 
 
+
 struct TSForeignContract:
     chain_id as u128;
     contract_address as [u8; 32u32];

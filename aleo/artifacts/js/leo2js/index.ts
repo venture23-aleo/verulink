@@ -2,13 +2,6 @@ import {
   getTokenAcc
 } from './holding';
 import {
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount
-} from './wrapped_token';
-import {
   getTSForeignContract,
   getTokenOrigin
 } from './token_service';
@@ -21,9 +14,17 @@ import {
   getInPacket,
   getOutPacket,
   getPacketId,
+  getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey
 } from './token_bridge';
+import {
+  getwrapped_token,
+  getWTForeignContract,
+  getTokenInfo,
+  getWrappedTokenInfo,
+  getTokenAccount
+} from './wrapped_token';
 import {
   getProposalSign,
   getAddMemberProposal,
@@ -39,11 +40,6 @@ import {
 
 export {
   getTokenAcc,
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount,
   getTSForeignContract,
   getTokenOrigin,
   getAleoProgram,
@@ -54,8 +50,14 @@ export {
   getInPacket,
   getOutPacket,
   getPacketId,
+  getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
+  getwrapped_token,
+  getWTForeignContract,
+  getTokenInfo,
+  getWrappedTokenInfo,
+  getTokenAccount,
   getProposalSign,
   getAddMemberProposal,
   getRemoveMemberProposal,
