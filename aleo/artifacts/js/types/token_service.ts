@@ -44,3 +44,14 @@ export const leoTokenOriginSchema = z.object({
   token_address: z.array(leoU8Schema).length(32),
 });
 export type TokenOriginLeo = z.infer < typeof leoTokenOriginSchema > ;
+
+export interface OutgoingPercentageInTime {
+  outgoing_percentage: number;
+  timeframe: number;
+}
+
+export const leoOutgoingPercentageInTimeSchema = z.object({
+  outgoing_percentage: leoU16Schema,
+  timeframe: leoU32Schema,
+});
+export type OutgoingPercentageInTimeLeo = z.infer < typeof leoOutgoingPercentageInTimeSchema > ;

@@ -23,5 +23,5 @@ dependencies = ["wrapped_token.aleo"]
 name = "token_service"
 network = "testnet3"
 location = "network"
-checksum = "3fa0bafd400cf88477ca6a6f59b040af28aa333dfd535c44f4236301713d0b34"
+checksum = "9fd22ca781f5a0215649cc521d3fd4b996fa7dca9148ce6b311b954706b2b7d5"
 dependencies = ["wrapped_token.aleo", "token_bridge.aleo", "holding.aleo"]

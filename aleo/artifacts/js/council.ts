@@ -17,7 +17,10 @@ import {
   WtAddToken,
   TsSupportChain,
   TsRemoveChain,
-  TsManageToken,
+  TsSupportToken,
+  TsRemoveToken,
+  TsUpdateMinimumTransfer,
+  TsUpdateOutgoingPercentage,
   TokenAcc,
   AleoProgram,
   ForeignContract,
@@ -32,6 +35,7 @@ import {
   InPacketFullScreeningKey,
   TSForeignContract,
   TokenOrigin,
+  OutgoingPercentageInTime,
   wrapped_token,
   WTForeignContract,
   TokenInfo,
@@ -55,7 +59,10 @@ import {
   getWtAddTokenLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
-  getTsManageTokenLeo,
+  getTsSupportTokenLeo,
+  getTsRemoveTokenLeo,
+  getTsUpdateMinimumTransferLeo,
+  getTsUpdateOutgoingPercentageLeo,
   getTokenAccLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
@@ -70,6 +77,7 @@ import {
   getInPacketFullScreeningKeyLeo,
   getTSForeignContractLeo,
   getTokenOriginLeo,
+  getOutgoingPercentageInTimeLeo,
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
   getTokenInfoLeo,
@@ -93,7 +101,10 @@ import {
   getWtAddToken,
   getTsSupportChain,
   getTsRemoveChain,
-  getTsManageToken,
+  getTsSupportToken,
+  getTsRemoveToken,
+  getTsUpdateMinimumTransfer,
+  getTsUpdateOutgoingPercentage,
   getTokenAcc,
   getAleoProgram,
   getForeignContract,
@@ -108,6 +119,7 @@ import {
   getInPacketFullScreeningKey,
   getTSForeignContract,
   getTokenOrigin,
+  getOutgoingPercentageInTime,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
@@ -401,7 +413,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_manage_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
+  async ts_support_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -411,7 +423,51 @@ export class CouncilContract {
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'ts_manage_token',
+      transition: 'ts_support_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async ts_remove_token(r0: number, r1: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'ts_remove_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async ts_update_minimum_transfer(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u64(r2);
+    const r3Leo = js2leo.u16(r3);
+    const r4Leo = js2leo.u32(r4);
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'ts_update_minimum_transfer',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async ts_update_outgoing_percentage(r0: number, r1: string, r2: number, r3: number) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u16(r2);
+    const r3Leo = js2leo.u32(r3);
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'ts_update_outgoing_percentage',
       params,
     });
     if (this.config.mode === "execute") return result;

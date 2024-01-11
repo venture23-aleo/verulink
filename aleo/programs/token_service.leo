@@ -47,12 +47,13 @@ program token_service.aleo {
     mapping minimum_transfers: address => u64;
 
     // TODO: Check if this makes sense as global variable instead of per_token basis
+    struct OutgoingPercentageInTime {
+        outgoing_percentage: u16, // represented as basis points; 10% = 10_00
+        timeframe: u32 // defined in terms of block height
+    }
     // maximum percentage that can be transferred in the given timeframe
-    // represented in basis points
-    // timeframe is defined in terms of block height
     // key is token_id
-    mapping max_outgoing_percentage: address => u16;
-    mapping timeframe: address => u32;
+    mapping max_outgoing_percentage: address => OutgoingPercentageInTime;
     
     // maximum liquidity after which we do not care about max_outgoing_percentage
     // key is token_id
@@ -142,23 +143,71 @@ program token_service.aleo {
         Mapping::remove(token_service_contracts, chain_id);
     }
 
-    transition manage_token_ts(public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+    transition support_token_ts(public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public timeframe: u32) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
-        return then finalize(self.caller, token_id, minimum_transfer, outgoing_percentage, time);
+        return then finalize(self.caller, token_id, minimum_transfer, outgoing_percentage, timeframe);
     }
 
-    finalize manage_token_ts(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, time: u32) {
+    finalize support_token_ts(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, timeframe: u32) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(governance_TS, true);
         assert_eq(from, council);
 
-        Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage);
-        Mapping::set(timeframe, token_id, time);
+        let outgoing_percentage_in_time: OutgoingPercentageInTime = OutgoingPercentageInTime {
+            outgoing_percentage,
+            timeframe
+        };
+
+        Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
 
         Mapping::set(minimum_transfers, token_id, minimum_transfer);
+    }
+
+    transition remove_token_ts(public token_id: address) {
+        return then finalize(self.caller, token_id);
+    }
+
+    finalize remove_token_ts(from: address, token_id: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(governance_TS, true);
+        assert_eq(from, council);
+
+        Mapping::remove(max_outgoing_percentage, token_id);
+        Mapping::remove(minimum_transfers, token_id);
+    }
+
+    transition update_minimum_transfer_ts(public token_id: address, minimum_transfer: u64) {
+        return then finalize(self.caller, token_id, minimum_transfer);
+    }
+
+    finalize update_minimum_transfer_ts(from: address, token_id: address, minimum_transfer: u64) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(governance_TS, true);
+        assert_eq(from, council);
+
+        Mapping::set(minimum_transfers, token_id, minimum_transfer);
+    }
+
+    transition update_outgoing_percentage_ts(public token_id: address, outgoing_percentage: u16, timeframe: u32) {
+        return then finalize(self.caller, token_id, outgoing_percentage, timeframe);
+    }
+
+    finalize update_outgoing_percentage_ts(from: address, token_id: address, outgoing_percentage: u16, timeframe: u32) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(governance_TS, true);
+        assert_eq(from, council);
+        let outgoing_percentage_in_time: OutgoingPercentageInTime = OutgoingPercentageInTime {
+            outgoing_percentage,
+            timeframe
+        };
+
+        Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
     }
 
     transition token_send(public token_id: address, public receiver: [u8; 32], public amount: u64, public origin: TokenOrigin) {
@@ -193,8 +242,9 @@ program token_service.aleo {
         // or if type conversion is better
         
         // Update only from council
-        let percentage_in_basis_points: u16 = Mapping::get(max_outgoing_percentage, wrapped_addr);
-        let token_timeframe: u32 = Mapping::get(timeframe, wrapped_addr);
+        let outgoing_percentage_in_time: OutgoingPercentageInTime = Mapping::get(max_outgoing_percentage, wrapped_addr);
+        let percentage_in_basis_points: u16 = outgoing_percentage_in_time.outgoing_percentage;
+        let token_timeframe: u32 = outgoing_percentage_in_time.timeframe;
 
         // If percentage = 10
         // then min_required_supply = 90% of current_supply

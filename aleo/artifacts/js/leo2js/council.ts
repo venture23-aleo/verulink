@@ -31,8 +31,14 @@ import {
   TsSupportChainLeo,
   TsRemoveChain,
   TsRemoveChainLeo,
-  TsManageToken,
-  TsManageTokenLeo,
+  TsSupportToken,
+  TsSupportTokenLeo,
+  TsRemoveToken,
+  TsRemoveTokenLeo,
+  TsUpdateMinimumTransfer,
+  TsUpdateMinimumTransferLeo,
+  TsUpdateOutgoingPercentage,
+  TsUpdateOutgoingPercentageLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -173,13 +179,40 @@ export function getTsRemoveChain(tsRemoveChain: TsRemoveChainLeo): TsRemoveChain
   return result;
 }
 
-export function getTsManageToken(tsManageToken: TsManageTokenLeo): TsManageToken {
-  const result: TsManageToken = {
-    id: leo2js.u32(tsManageToken.id),
-    token_id: leo2js.address(tsManageToken.token_id),
-    minimum_transfer: leo2js.u64(tsManageToken.minimum_transfer),
-    outgoing_percentage: leo2js.u16(tsManageToken.outgoing_percentage),
-    time: leo2js.u32(tsManageToken.time),
+export function getTsSupportToken(tsSupportToken: TsSupportTokenLeo): TsSupportToken {
+  const result: TsSupportToken = {
+    id: leo2js.u32(tsSupportToken.id),
+    token_id: leo2js.address(tsSupportToken.token_id),
+    minimum_transfer: leo2js.u64(tsSupportToken.minimum_transfer),
+    outgoing_percentage: leo2js.u16(tsSupportToken.outgoing_percentage),
+    time: leo2js.u32(tsSupportToken.time),
+  }
+  return result;
+}
+
+export function getTsRemoveToken(tsRemoveToken: TsRemoveTokenLeo): TsRemoveToken {
+  const result: TsRemoveToken = {
+    id: leo2js.u32(tsRemoveToken.id),
+    token_id: leo2js.address(tsRemoveToken.token_id),
+  }
+  return result;
+}
+
+export function getTsUpdateMinimumTransfer(tsUpdateMinimumTransfer: TsUpdateMinimumTransferLeo): TsUpdateMinimumTransfer {
+  const result: TsUpdateMinimumTransfer = {
+    id: leo2js.u32(tsUpdateMinimumTransfer.id),
+    token_id: leo2js.address(tsUpdateMinimumTransfer.token_id),
+    minimum_transfer: leo2js.u64(tsUpdateMinimumTransfer.minimum_transfer),
+  }
+  return result;
+}
+
+export function getTsUpdateOutgoingPercentage(tsUpdateOutgoingPercentage: TsUpdateOutgoingPercentageLeo): TsUpdateOutgoingPercentage {
+  const result: TsUpdateOutgoingPercentage = {
+    id: leo2js.u32(tsUpdateOutgoingPercentage.id),
+    token_id: leo2js.address(tsUpdateOutgoingPercentage.token_id),
+    outgoing_percentage: leo2js.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
+    timeframe: leo2js.u32(tsUpdateOutgoingPercentage.timeframe),
   }
   return result;
 }

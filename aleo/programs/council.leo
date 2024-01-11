@@ -736,10 +736,10 @@ program council.aleo {
 
 
     //////////////////////////////////////////////
-    ///////  Token Service: Manage Token ////////
+    ///////  Token Service: Support Token ////////
     //////////////////////////////////////////////
 
-    struct TsManageToken {
+    struct TsSupportToken {
         id: u32,
         token_id: address,
         minimum_transfer: u64,
@@ -747,8 +747,8 @@ program council.aleo {
         time: u32
     }
 
-    transition ts_manage_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
-        let proposal: TsManageToken  = TsManageToken {
+    transition ts_support_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+        let proposal: TsSupportToken  = TsSupportToken {
             id,
             token_id,
             minimum_transfer,
@@ -758,12 +758,12 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service.aleo/manage_token_ts(token_id, minimum_transfer, outgoing_percentage, time);
+        token_service.aleo/support_token_ts(token_id, minimum_transfer, outgoing_percentage, time);
 
         return then finalize(proposal_hash);
     }
 
-    finalize ts_manage_token(proposal_hash: field) {
+    finalize ts_support_token(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -777,7 +777,128 @@ program council.aleo {
 
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
-
     }
+
+    //////////////////////////////////////////////
+    ///////  Token Service: Remove Token ////////
+    //////////////////////////////////////////////
+
+    struct TsRemoveToken {
+        id: u32,
+        token_id: address,
+    }
+
+    transition ts_remove_token(public id: u32, public token_id: address) {
+        let proposal: TsRemoveToken  = TsRemoveToken {
+            id,
+            token_id,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/remove_token_ts(token_id);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_remove_token(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ////////////////////////////////////////////////////////
+    ///////  Token Service: Update Minimum Transfer ////////
+    ////////////////////////////////////////////////////////
+
+    struct TsUpdateMinimumTransfer {
+        id: u32,
+        token_id: address,
+        minimum_transfer: u64,
+    }
+
+    transition ts_update_minimum_transfer(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+        let proposal: TsUpdateMinimumTransfer  = TsUpdateMinimumTransfer {
+            id,
+            token_id,
+            minimum_transfer,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/update_minimum_transfer_ts(token_id, minimum_transfer);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_update_minimum_transfer(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ///////////////////////////////////////////////////////////
+    ///////  Token Service: Update Outgoing Percentage ////////
+    ///////////////////////////////////////////////////////////
+
+    struct TsUpdateOutgoingPercentage {
+        id: u32,
+        token_id: address,
+        outgoing_percentage: u16,
+        timeframe: u32
+    }
+
+    transition ts_update_outgoing_percentage(public id: u32, public token_id: address, public outgoing_percentage: u16, public timeframe: u32) {
+        let proposal: TsUpdateOutgoingPercentage  = TsUpdateOutgoingPercentage {
+            id,
+            token_id,
+            outgoing_percentage,
+            timeframe
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/update_outgoing_percentage_ts(token_id, outgoing_percentage, timeframe);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_update_outgoing_percentage(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+
 
 }

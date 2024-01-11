@@ -23,6 +23,7 @@ program council.aleo;
 
 
 
+
 struct ProposalSign:
     proposal as field;
     member as address;
@@ -96,12 +97,27 @@ struct TsRemoveChain:
     id as u32;
     chain_id as u128;
 
-struct TsManageToken:
+struct TsSupportToken:
     id as u32;
     token_id as address;
     minimum_transfer as u64;
     outgoing_percentage as u16;
     time as u32;
+
+struct TsRemoveToken:
+    id as u32;
+    token_id as address;
+
+struct TsUpdateMinimumTransfer:
+    id as u32;
+    token_id as address;
+    minimum_transfer as u64;
+
+struct TsUpdateOutgoingPercentage:
+    id as u32;
+    token_id as address;
+    outgoing_percentage as u16;
+    timeframe as u32;
 
 
 mapping members:
@@ -587,20 +603,94 @@ finalize ts_remove_chain:
     set true into proposal_executed[r1];
 
 
-function ts_manage_token:
+function ts_support_token:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u64.public;
     input r3 as u16.public;
     input r4 as u32.public;
-    cast r0 r1 r2 r3 r4 into r5 as TsManageToken;
+    cast r0 r1 r2 r3 r4 into r5 as TsSupportToken;
     hash.bhp256 r5 into r6 as field;
-    call token_service.aleo/manage_token_ts r1 r2 r3 r4 into r7;
-    async ts_manage_token r7 r6 into r8;
-    output r8 as council.aleo/ts_manage_token.future;
+    call token_service.aleo/support_token_ts r1 r2 r3 r4 into r7;
+    async ts_support_token r7 r6 into r8;
+    output r8 as council.aleo/ts_support_token.future;
 
-finalize ts_manage_token:
-    input r0 as token_service.aleo/manage_token_ts.future;
+finalize ts_support_token:
+    input r0 as token_service.aleo/support_token_ts.future;
+    input r1 as field.public;
+    await r0;
+    get settings[true] into r2;
+    get proposal_vote_counts[r1] into r3;
+    gte r3 r2 into r4;
+    assert.eq r4 true;
+    contains proposal_executed[r1] into r5;
+    not r5 into r6;
+    assert.eq r6 true;
+    set true into proposal_executed[r1];
+
+
+function ts_remove_token:
+    input r0 as u32.public;
+    input r1 as address.public;
+    cast r0 r1 into r2 as TsRemoveToken;
+    hash.bhp256 r2 into r3 as field;
+    call token_service.aleo/remove_token_ts r1 into r4;
+    async ts_remove_token r4 r3 into r5;
+    output r5 as council.aleo/ts_remove_token.future;
+
+finalize ts_remove_token:
+    input r0 as token_service.aleo/remove_token_ts.future;
+    input r1 as field.public;
+    await r0;
+    get settings[true] into r2;
+    get proposal_vote_counts[r1] into r3;
+    gte r3 r2 into r4;
+    assert.eq r4 true;
+    contains proposal_executed[r1] into r5;
+    not r5 into r6;
+    assert.eq r6 true;
+    set true into proposal_executed[r1];
+
+
+function ts_update_minimum_transfer:
+    input r0 as u32.public;
+    input r1 as address.public;
+    input r2 as u64.public;
+    input r3 as u16.public;
+    input r4 as u32.public;
+    cast r0 r1 r2 into r5 as TsUpdateMinimumTransfer;
+    hash.bhp256 r5 into r6 as field;
+    call token_service.aleo/update_minimum_transfer_ts r1 r2 into r7;
+    async ts_update_minimum_transfer r7 r6 into r8;
+    output r8 as council.aleo/ts_update_minimum_transfer.future;
+
+finalize ts_update_minimum_transfer:
+    input r0 as token_service.aleo/update_minimum_transfer_ts.future;
+    input r1 as field.public;
+    await r0;
+    get settings[true] into r2;
+    get proposal_vote_counts[r1] into r3;
+    gte r3 r2 into r4;
+    assert.eq r4 true;
+    contains proposal_executed[r1] into r5;
+    not r5 into r6;
+    assert.eq r6 true;
+    set true into proposal_executed[r1];
+
+
+function ts_update_outgoing_percentage:
+    input r0 as u32.public;
+    input r1 as address.public;
+    input r2 as u16.public;
+    input r3 as u32.public;
+    cast r0 r1 r2 r3 into r4 as TsUpdateOutgoingPercentage;
+    hash.bhp256 r4 into r5 as field;
+    call token_service.aleo/update_outgoing_percentage_ts r1 r2 r3 into r6;
+    async ts_update_outgoing_percentage r6 r5 into r7;
+    output r7 as council.aleo/ts_update_outgoing_percentage.future;
+
+finalize ts_update_outgoing_percentage:
+    input r0 as token_service.aleo/update_outgoing_percentage_ts.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

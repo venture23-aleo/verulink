@@ -3,6 +3,8 @@ import {
   TSForeignContractLeo,
   TokenOrigin,
   TokenOriginLeo,
+  OutgoingPercentageInTime,
+  OutgoingPercentageInTimeLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -19,6 +21,14 @@ export function getTokenOrigin(tokenOrigin: TokenOriginLeo): TokenOrigin {
     chain_id: leo2js.u128(tokenOrigin.chain_id),
     token_service_address: leo2js.array(tokenOrigin.token_service_address, leo2js.u8),
     token_address: leo2js.array(tokenOrigin.token_address, leo2js.u8),
+  }
+  return result;
+}
+
+export function getOutgoingPercentageInTime(outgoingPercentageInTime: OutgoingPercentageInTimeLeo): OutgoingPercentageInTime {
+  const result: OutgoingPercentageInTime = {
+    outgoing_percentage: leo2js.u16(outgoingPercentageInTime.outgoing_percentage),
+    timeframe: leo2js.u32(outgoingPercentageInTime.timeframe),
   }
   return result;
 }

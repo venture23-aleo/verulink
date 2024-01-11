@@ -3,14 +3,17 @@ import * as leo2js from './leo2js/common';
 import {
   TSForeignContract,
   TokenOrigin,
+  OutgoingPercentageInTime,
 } from "./types";
 import {
   getTSForeignContractLeo,
   getTokenOriginLeo,
+  getOutgoingPercentageInTimeLeo,
 } from './js2leo';
 import {
   getTSForeignContract,
   getTokenOrigin,
+  getOutgoingPercentageInTime,
 } from './leo2js';
 import {
   zkRun,
@@ -102,7 +105,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async manage_token_ts(r0: string, r1: BigInt, r2: number, r3: number) {
+  async support_token_ts(r0: string, r1: BigInt, r2: number, r3: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.u16(r2);
@@ -111,7 +114,46 @@ export class Token_serviceContract {
     const params = [r0Leo, r1Leo, r2Leo, r3Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'manage_token_ts',
+      transition: 'support_token_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async remove_token_ts(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'remove_token_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_minimum_transfer_ts(r0: string, r1: BigInt) {
+    const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u64(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_minimum_transfer_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_outgoing_percentage_ts(r0: string, r1: number, r2: number) {
+    const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u16(r1);
+    const r2Leo = js2leo.u32(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_outgoing_percentage_ts',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -211,7 +253,7 @@ export class Token_serviceContract {
     return leo2js.u64(result);
   }
 
-  async max_outgoing_percentage(key: string): Promise < number > {
+  async max_outgoing_percentage(key: string): Promise < OutgoingPercentageInTime > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
@@ -220,19 +262,7 @@ export class Token_serviceContract {
       transition: 'max_outgoing_percentage',
       params,
     });
-    return leo2js.u16(result);
-  }
-
-  async timeframe(key: string): Promise < number > {
-    const keyLeo = js2leo.address(key);
-
-    const params = [keyLeo]
-    const result = await zkGetMapping({
-      config: this.config,
-      transition: 'timeframe',
-      params,
-    });
-    return leo2js.u32(result);
+    return getOutgoingPercentageInTime(result);
   }
 
   async maximum_liquidity_for_no_cap(key: string): Promise < number > {
