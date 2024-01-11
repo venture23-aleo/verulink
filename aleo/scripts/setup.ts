@@ -1,11 +1,10 @@
 import { CouncilContract } from "../artifacts/js/council";
 import { HoldingContract } from "../artifacts/js/holding";
-import { getSupportTokenLeo } from "../artifacts/js/js2leo/council_v2";
 import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
-import { ApproveChainBridgeProposal, EnableServiceProposal, EnableToken, SupportChainTS, SupportToken, TokenInfo, WTForeignContract, WrappedTokenInfo } from "../artifacts/js/types";
+import { TbEnableChain, WtAddToken, TsSupportToken, TbEnableService, TsSupportChain } from "../artifacts/js/types";
 import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
-import { evm2AleoArr, string2AleoArr } from "../test/utils";
+import { evm2AleoArr } from "../test/utils";
 
 import * as js2leo from '../artifacts/js/js2leo';
 import * as js2leoCommon from '../artifacts/js/js2leo/common';
@@ -75,7 +74,7 @@ const setup = async () => {
 
   // Initialize bridge
   const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
-  await bridge.bridge_initialize(
+  await bridge.initialize_tb(
     1,
     attestor,
     attestor,
@@ -86,11 +85,47 @@ const setup = async () => {
   );
   await wrappedToken.wrapped_token_initialize(councilAddress);
   await holding.holding_initialize(councilAddress);
-  await tokenService.token_service_initialize(councilAddress, councilAddress);
+  await tokenService.initialize_ts(councilAddress, councilAddress);
 
-  // // Add new token
-  let proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
-  const addNewTokenProposal: SupportToken = {
+  let proposalId;
+
+  // TokenBridge: Add Ethereum Chain
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tbEnableChain: TbEnableChain = {
+    id: proposalId,
+    chain_id: ethChainId
+  };
+  const tbEnableChainProposalHash = hashStruct(js2leo.getTbEnableChainLeo(tbEnableChain));
+  tx = await council.propose(proposalId, tbEnableChainProposalHash);
+  await tx.wait()
+
+  await council.tb_enable_chain(
+    tbEnableChain.id,
+    tbEnableChain.chain_id,
+  )
+
+  // TokenService: Add Token Service on Ethereum
+  const tsEthereum = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tsSupportChain: TsSupportChain = {
+    id: proposalId,
+    chain_id: ethChainId,
+    token_service: evm2AleoArr(tsEthereum)
+  };
+  const supportChainTsProposalHash = hashStruct(js2leo.getTsSupportChainLeo(tsSupportChain));
+  await council.propose(proposalId, supportChainTsProposalHash);
+
+  tx = await council.ts_support_chain(
+    tsSupportChain.id,
+    tsSupportChain.chain_id,
+    tsSupportChain.token_service,
+  )
+  await tx.wait()
+
+
+  // WrappedToken: Add new token
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const wtAddToken: WtAddToken = {
     id: proposalId,
     name: usdcInfo.name,
     symbol: usdcInfo.symbol,
@@ -98,86 +133,54 @@ const setup = async () => {
     origin_chain_id: usdcOrigin.chain_id,
     origin_contract_address: usdcOrigin.contract_address
   };
-  const addNewProposalHash = hashStruct(js2leo.getSupportTokenLeo(addNewTokenProposal))
-  tx = await council.propose(proposalId, addNewProposalHash)
+  const tbAddNewProposalHash = hashStruct(js2leo.getWtAddTokenLeo(wtAddToken))
+  tx = await council.propose(proposalId, tbAddNewProposalHash)
   await tx.wait()
 
-  await council.exec_add_new_token(
-    addNewTokenProposal.id,
-    addNewTokenProposal.name,
-    addNewTokenProposal.symbol,
-    addNewTokenProposal.decimals,
-    addNewTokenProposal.origin_chain_id,
-    addNewTokenProposal.origin_contract_address
+  await council.wt_add_token(
+    wtAddToken.id,
+    wtAddToken.name,
+    wtAddToken.symbol,
+    wtAddToken.decimals,
+    wtAddToken.origin_chain_id,
+    wtAddToken.origin_contract_address
   );
 
-  // Enable new token
-  proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
-  const enableTokenProposal: EnableToken = {
+  // TokenService: Support new token
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tsSupportToken: TsSupportToken = {
     id: proposalId,
     token_id: wUSDCProgramAddr,
     minimum_transfer: BigInt(100),
     outgoing_percentage: 100_00,
     time: 1
   };
-  const enableTokenProposalHash = hashStruct(js2leo.getEnableTokenLeo(enableTokenProposal));
+  const enableTokenProposalHash = hashStruct(js2leo.getTsSupportTokenLeo(tsSupportToken));
   await council.propose(proposalId, enableTokenProposalHash);
 
-  await council.exec_enable_new_token(
-    enableTokenProposal.id,
-    enableTokenProposal.token_id,
-    enableTokenProposal.minimum_transfer,
-    enableTokenProposal.outgoing_percentage,
-    enableTokenProposal.time,
+  await council.ts_support_token(
+    tsSupportToken.id,
+    tsSupportToken.token_id,
+    tsSupportToken.minimum_transfer,
+    tsSupportToken.outgoing_percentage,
+    tsSupportToken.time,
   );
 
   // TODO: token_service.address()
-  proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
-  const enableServiceProposal: EnableServiceProposal = {
+  // Bridge: EnableService
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tbEnableService: TbEnableService = {
     id: proposalId,
     service: aleoTsContract
   };
-  const enableServiceProposalHash = hashStruct(js2leo.getEnableServiceProposalLeo(enableServiceProposal));
-  tx = await council.propose(proposalId, enableServiceProposalHash);
+  const tbEnableServiceHash = hashStruct(js2leo.getTbEnableServiceLeo(tbEnableService));
+  tx = await council.propose(proposalId, tbEnableServiceHash);
   await tx.wait()
 
-  await council.exec_enable_service(
-    enableServiceProposal.id,
-    enableServiceProposal.service,
+  await council.tb_enable_service(
+    tbEnableService.id,
+    tbEnableService.service,
   );
-
-  // Approve Ethereum Chain
-  proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
-  const approveChainProposal: ApproveChainBridgeProposal = {
-    id: proposalId,
-    chain_id: ethChainId
-  };
-  const approveChainProposalHash = hashStruct(js2leo.getApproveChainBridgeProposalLeo(approveChainProposal));
-  tx = await council.propose(proposalId, approveChainProposalHash);
-  await tx.wait()
-
-  await council.exec_approve_chain_bridge(
-    approveChainProposal.id,
-    approveChainProposal.chain_id,
-  )
-
-  // Add Ethereum Token Service
-  const tsEthereum = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-  proposalId = await council.settings(TOTAL_PROPOSALS_INDEX);
-  const supportChainTSProposal: SupportChainTS = {
-    id: proposalId,
-    chain_id: ethChainId,
-    token_service: evm2AleoArr(tsEthereum)
-  };
-  const supportChainTsProposalHash = hashStruct(js2leo.getSupportChainTSLeo(supportChainTSProposal));
-  await council.propose(proposalId, supportChainTsProposalHash);
-
-  tx = await council.exec_support_chain_ts(
-    supportChainTSProposal.id,
-    supportChainTSProposal.chain_id,
-    supportChainTSProposal.token_service,
-  )
-  await tx.wait()
 
 };
 

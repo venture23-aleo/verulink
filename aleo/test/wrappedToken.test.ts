@@ -16,7 +16,7 @@ describe("Wrapped Token", () => {
     const symbol = "wUSDC";
     const decimals = 18;
 
-    await wrappedToken.add_token(
+    await wrappedToken.add_token_wt(
         string2AleoArr(name, 32),
         string2AleoArr(symbol, 16),
         decimals,

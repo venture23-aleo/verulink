@@ -61,4 +61,4 @@ export const attestor =
 
 export const councilThreshold = 1;
 
-export const TOTAL_PROPOSALS_INDEX = 3;
+export const TOTAL_PROPOSALS_INDEX = 0;
