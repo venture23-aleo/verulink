@@ -22,17 +22,30 @@ mapping holdings:
 
 
 
-function holding_initialize:
+function initialize_holding:
     input r0 as address.public;
-    async holding_initialize r0 into r1;
-    output r1 as holding.aleo/holding_initialize.future;
+    async initialize_holding r0 into r1;
+    output r1 as holding.aleo/initialize_holding.future;
 
-finalize holding_initialize:
+finalize initialize_holding:
     input r0 as address.public;
     contains governance_holding[true] into r1;
     not r1 into r2;
     assert.eq r2 true;
     set r0 into governance_holding[true];
+
+
+function update_governance_holding:
+    input r0 as address.public;
+    async update_governance_holding self.caller r0 into r1;
+    output r1 as holding.aleo/update_governance_holding.future;
+
+finalize update_governance_holding:
+    input r0 as address.public;
+    input r1 as address.public;
+    get governance_holding[true] into r2;
+    assert.eq r0 r2;
+    set r1 into governance_holding[true];
 
 
 function hold_fund:

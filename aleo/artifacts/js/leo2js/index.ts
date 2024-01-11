@@ -7,13 +7,6 @@ import {
   getOutgoingPercentageInTime
 } from './token_service';
 import {
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount
-} from './wrapped_token';
-import {
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -27,6 +20,13 @@ import {
   getInPacketFullScreeningKey
 } from './token_bridge';
 import {
+  getwrapped_token,
+  getWTForeignContract,
+  getTokenInfo,
+  getWrappedTokenInfo,
+  getTokenAccount
+} from './wrapped_token';
+import {
   getProposalSign,
   getAddMember,
   getRemoveMember,
@@ -41,12 +41,15 @@ import {
   getTbDisableService,
   getWtUpdateGovernance,
   getWtAddToken,
+  getTsUpdateGovernance,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
-  getTsUpdateOutgoingPercentage
+  getTsUpdateOutgoingPercentage,
+  getHoldingUpdateGovernance,
+  getReleaseFund
 } from './council';
 
 export {
@@ -54,11 +57,6 @@ export {
   getTSForeignContract,
   getTokenOrigin,
   getOutgoingPercentageInTime,
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -70,6 +68,11 @@ export {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
+  getwrapped_token,
+  getWTForeignContract,
+  getTokenInfo,
+  getWrappedTokenInfo,
+  getTokenAccount,
   getProposalSign,
   getAddMember,
   getRemoveMember,
@@ -84,10 +87,13 @@ export {
   getTbDisableService,
   getWtUpdateGovernance,
   getWtAddToken,
+  getTsUpdateGovernance,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
+  getHoldingUpdateGovernance,
+  getReleaseFund,
 };

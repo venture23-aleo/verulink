@@ -27,6 +27,8 @@ import {
   WtUpdateGovernanceLeo,
   WtAddToken,
   WtAddTokenLeo,
+  TsUpdateGovernance,
+  TsUpdateGovernanceLeo,
   TsSupportChain,
   TsSupportChainLeo,
   TsRemoveChain,
@@ -39,6 +41,10 @@ import {
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
   TsUpdateOutgoingPercentageLeo,
+  HoldingUpdateGovernance,
+  HoldingUpdateGovernanceLeo,
+  ReleaseFund,
+  ReleaseFundLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -162,6 +168,14 @@ export function getWtAddToken(wtAddToken: WtAddTokenLeo): WtAddToken {
   return result;
 }
 
+export function getTsUpdateGovernance(tsUpdateGovernance: TsUpdateGovernanceLeo): TsUpdateGovernance {
+  const result: TsUpdateGovernance = {
+    id: leo2js.u32(tsUpdateGovernance.id),
+    new_governance: leo2js.address(tsUpdateGovernance.new_governance),
+  }
+  return result;
+}
+
 export function getTsSupportChain(tsSupportChain: TsSupportChainLeo): TsSupportChain {
   const result: TsSupportChain = {
     id: leo2js.u32(tsSupportChain.id),
@@ -213,6 +227,24 @@ export function getTsUpdateOutgoingPercentage(tsUpdateOutgoingPercentage: TsUpda
     token_id: leo2js.address(tsUpdateOutgoingPercentage.token_id),
     outgoing_percentage: leo2js.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
     timeframe: leo2js.u32(tsUpdateOutgoingPercentage.timeframe),
+  }
+  return result;
+}
+
+export function getHoldingUpdateGovernance(holdingUpdateGovernance: HoldingUpdateGovernanceLeo): HoldingUpdateGovernance {
+  const result: HoldingUpdateGovernance = {
+    id: leo2js.u32(holdingUpdateGovernance.id),
+    new_governance: leo2js.address(holdingUpdateGovernance.new_governance),
+  }
+  return result;
+}
+
+export function getReleaseFund(releaseFund: ReleaseFundLeo): ReleaseFund {
+  const result: ReleaseFund = {
+    id: leo2js.u32(releaseFund.id),
+    token_id: leo2js.address(releaseFund.token_id),
+    user: leo2js.address(releaseFund.user),
+    amount: leo2js.u64(releaseFund.amount),
   }
   return result;
 }

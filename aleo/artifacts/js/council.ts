@@ -15,12 +15,15 @@ import {
   TbDisableService,
   WtUpdateGovernance,
   WtAddToken,
+  TsUpdateGovernance,
   TsSupportChain,
   TsRemoveChain,
   TsSupportToken,
   TsRemoveToken,
   TsUpdateMinimumTransfer,
   TsUpdateOutgoingPercentage,
+  HoldingUpdateGovernance,
+  ReleaseFund,
   TokenAcc,
   AleoProgram,
   ForeignContract,
@@ -57,12 +60,15 @@ import {
   getTbDisableServiceLeo,
   getWtUpdateGovernanceLeo,
   getWtAddTokenLeo,
+  getTsUpdateGovernanceLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
+  getHoldingUpdateGovernanceLeo,
+  getReleaseFundLeo,
   getTokenAccLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
@@ -99,12 +105,15 @@ import {
   getTbDisableService,
   getWtUpdateGovernance,
   getWtAddToken,
+  getTsUpdateGovernance,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
+  getHoldingUpdateGovernance,
+  getReleaseFund,
   getTokenAcc,
   getAleoProgram,
   getForeignContract,
@@ -386,6 +395,19 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
+  async ts_update_governance(r0: number, r1: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'ts_update_governance',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
   async ts_support_chain(r0: number, r1: BigInt, r2: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.u128(r1);
@@ -468,6 +490,34 @@ export class CouncilContract {
     const result = await zkRun({
       config: this.config,
       transition: 'ts_update_outgoing_percentage',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async holding_update_governance(r0: number, r1: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'holding_update_governance',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async release_fund_from_holding(r0: number, r1: string, r2: string, r3: BigInt) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.address(r2);
+    const r3Leo = js2leo.u64(r3);
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'release_fund_from_holding',
       params,
     });
     if (this.config.mode === "execute") return result;

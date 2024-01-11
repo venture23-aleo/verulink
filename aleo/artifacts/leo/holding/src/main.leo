@@ -23,17 +23,38 @@ program holding.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition holding_initialize(public council: address) {
+    transition initialize_holding(public council: address) {
         return then finalize(council);
     }
 
-    finalize holding_initialize(council: address) {
+    finalize initialize_holding(council: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(governance_holding, true));
 
         // Set the council program
         Mapping::set(governance_holding, true, council);
     }
+
+    ///////////////////////////////
+    ///// Update Governance ///////
+    ///////////////////////////////
+
+    /// Update the existing governance program
+    /// Can only be called from council/governance program
+    transition update_governance_holding(public new_governance: address) {
+        return then finalize(self.caller, new_governance);
+    }
+
+    finalize update_governance_holding(from: address, new_governance: address) {
+        // Get the governance address
+        // If program not initialized, this fails
+        let governance: address = Mapping::get(governance_holding, true);
+        assert_eq(from, governance);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::set(governance_holding, true, new_governance);
+    }
+
 
     transition hold_fund(public token_id: address, public user: address, public amount: u64) {
         // Assert that only token service program can call this method

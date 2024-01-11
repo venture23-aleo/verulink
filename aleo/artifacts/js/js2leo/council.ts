@@ -27,6 +27,8 @@ import {
   WtUpdateGovernanceLeo,
   WtAddToken,
   WtAddTokenLeo,
+  TsUpdateGovernance,
+  TsUpdateGovernanceLeo,
   TsSupportChain,
   TsSupportChainLeo,
   TsRemoveChain,
@@ -39,6 +41,10 @@ import {
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
   TsUpdateOutgoingPercentageLeo,
+  HoldingUpdateGovernance,
+  HoldingUpdateGovernanceLeo,
+  ReleaseFund,
+  ReleaseFundLeo,
 } from "../types";
 
 import * as js2leo from "./common";
@@ -162,6 +168,14 @@ export function getWtAddTokenLeo(wtAddToken: WtAddToken): WtAddTokenLeo {
   return result;
 }
 
+export function getTsUpdateGovernanceLeo(tsUpdateGovernance: TsUpdateGovernance): TsUpdateGovernanceLeo {
+  const result: TsUpdateGovernanceLeo = {
+    id: js2leo.u32(tsUpdateGovernance.id),
+    new_governance: js2leo.address(tsUpdateGovernance.new_governance),
+  }
+  return result;
+}
+
 export function getTsSupportChainLeo(tsSupportChain: TsSupportChain): TsSupportChainLeo {
   const result: TsSupportChainLeo = {
     id: js2leo.u32(tsSupportChain.id),
@@ -213,6 +227,24 @@ export function getTsUpdateOutgoingPercentageLeo(tsUpdateOutgoingPercentage: TsU
     token_id: js2leo.address(tsUpdateOutgoingPercentage.token_id),
     outgoing_percentage: js2leo.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
     timeframe: js2leo.u32(tsUpdateOutgoingPercentage.timeframe),
+  }
+  return result;
+}
+
+export function getHoldingUpdateGovernanceLeo(holdingUpdateGovernance: HoldingUpdateGovernance): HoldingUpdateGovernanceLeo {
+  const result: HoldingUpdateGovernanceLeo = {
+    id: js2leo.u32(holdingUpdateGovernance.id),
+    new_governance: js2leo.address(holdingUpdateGovernance.new_governance),
+  }
+  return result;
+}
+
+export function getReleaseFundLeo(releaseFund: ReleaseFund): ReleaseFundLeo {
+  const result: ReleaseFundLeo = {
+    id: js2leo.u32(releaseFund.id),
+    token_id: js2leo.address(releaseFund.token_id),
+    user: js2leo.address(releaseFund.user),
+    amount: js2leo.u64(releaseFund.amount),
   }
   return result;
 }

@@ -7,13 +7,6 @@ import {
   getOutgoingPercentageInTimeLeo
 } from './token_service';
 import {
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo
-} from './wrapped_token';
-import {
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -27,6 +20,13 @@ import {
   getInPacketFullScreeningKeyLeo
 } from './token_bridge';
 import {
+  getwrapped_tokenLeo,
+  getWTForeignContractLeo,
+  getTokenInfoLeo,
+  getWrappedTokenInfoLeo,
+  getTokenAccountLeo
+} from './wrapped_token';
+import {
   getProposalSignLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
@@ -41,12 +41,15 @@ import {
   getTbDisableServiceLeo,
   getWtUpdateGovernanceLeo,
   getWtAddTokenLeo,
+  getTsUpdateGovernanceLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
-  getTsUpdateOutgoingPercentageLeo
+  getTsUpdateOutgoingPercentageLeo,
+  getHoldingUpdateGovernanceLeo,
+  getReleaseFundLeo
 } from './council';
 
 export {
@@ -54,11 +57,6 @@ export {
   getTSForeignContractLeo,
   getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo,
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -70,6 +68,11 @@ export {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
+  getwrapped_tokenLeo,
+  getWTForeignContractLeo,
+  getTokenInfoLeo,
+  getWrappedTokenInfoLeo,
+  getTokenAccountLeo,
   getProposalSignLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
@@ -84,10 +87,13 @@ export {
   getTbDisableServiceLeo,
   getWtUpdateGovernanceLeo,
   getWtAddTokenLeo,
+  getTsUpdateGovernanceLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
+  getHoldingUpdateGovernanceLeo,
+  getReleaseFundLeo,
 };

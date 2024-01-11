@@ -191,6 +191,17 @@ export const leoWtAddTokenSchema = z.object({
 });
 export type WtAddTokenLeo = z.infer < typeof leoWtAddTokenSchema > ;
 
+export interface TsUpdateGovernance {
+  id: number;
+  new_governance: string;
+}
+
+export const leoTsUpdateGovernanceSchema = z.object({
+  id: leoU32Schema,
+  new_governance: leoAddressSchema,
+});
+export type TsUpdateGovernanceLeo = z.infer < typeof leoTsUpdateGovernanceSchema > ;
+
 export interface TsSupportChain {
   id: number;
   chain_id: BigInt;
@@ -270,3 +281,29 @@ export const leoTsUpdateOutgoingPercentageSchema = z.object({
   timeframe: leoU32Schema,
 });
 export type TsUpdateOutgoingPercentageLeo = z.infer < typeof leoTsUpdateOutgoingPercentageSchema > ;
+
+export interface HoldingUpdateGovernance {
+  id: number;
+  new_governance: string;
+}
+
+export const leoHoldingUpdateGovernanceSchema = z.object({
+  id: leoU32Schema,
+  new_governance: leoAddressSchema,
+});
+export type HoldingUpdateGovernanceLeo = z.infer < typeof leoHoldingUpdateGovernanceSchema > ;
+
+export interface ReleaseFund {
+  id: number;
+  token_id: string;
+  user: string;
+  amount: BigInt;
+}
+
+export const leoReleaseFundSchema = z.object({
+  id: leoU32Schema,
+  token_id: leoAddressSchema,
+  user: leoAddressSchema,
+  amount: leoU64Schema,
+});
+export type ReleaseFundLeo = z.infer < typeof leoReleaseFundSchema > ;

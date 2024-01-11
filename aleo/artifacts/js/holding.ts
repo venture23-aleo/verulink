@@ -49,13 +49,25 @@ export class HoldingContract {
 
     return result;
   }
-  async holding_initialize(r0: string) {
+  async initialize_holding(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'holding_initialize',
+      transition: 'initialize_holding',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_governance_holding(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_governance_holding',
       params,
     });
     if (this.config.mode === "execute") return result;
