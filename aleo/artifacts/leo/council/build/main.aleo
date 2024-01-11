@@ -193,6 +193,18 @@ finalize initialize:
     set 0field into proposals[0u32];
 
 
+function update_member:
+    input r0 as address.private;
+    async update_member self.caller r0 into r1;
+    output r1 as council.aleo/update_member.future;
+
+finalize update_member:
+    input r0 as address.public;
+    input r1 as address.public;
+    remove members[r0];
+    set true into members[r1];
+
+
 function propose:
     input r0 as u32.public;
     input r1 as field.public;
@@ -259,23 +271,26 @@ finalize add_member:
     input r1 as address.public;
     input r2 as u8.public;
     get settings[true] into r3;
-    gte r2 r3 into r4;
-    assert.eq r4 true;
-    get proposal_vote_counts[r0] into r5;
-    gte r5 r3 into r6;
-    assert.eq r6 true;
-    contains proposal_executed[r0] into r7;
-    not r7 into r8;
-    assert.eq r8 true;
+    get proposal_vote_counts[r0] into r4;
+    gte r4 r3 into r5;
+    assert.eq r5 true;
+    contains proposal_executed[r0] into r6;
+    not r6 into r7;
+    assert.eq r7 true;
     set true into proposal_executed[r0];
-    contains members[r1] into r9;
-    not r9 into r10;
-    assert.eq r10 true;
+    contains members[r1] into r8;
+    not r8 into r9;
+    assert.eq r9 true;
     set true into members[r1];
     set r2 into settings[true];
-    get settings[false] into r11;
-    add r11 1u8 into r12;
-    set r12 into settings[false];
+    get settings[false] into r10;
+    gte r2 1u8 into r11;
+    add r10 1u8 into r12;
+    lte r2 r12 into r13;
+    and r11 r13 into r14;
+    assert.eq r14 true;
+    add r10 1u8 into r15;
+    set r15 into settings[false];
 
 
 function remove_member:
@@ -299,15 +314,17 @@ finalize remove_member:
     not r6 into r7;
     assert.eq r7 true;
     set true into proposal_executed[r0];
+    get settings[false] into r8;
+    gte r8 2u8 into r9;
+    assert.eq r9 true;
+    gte r2 1u8 into r10;
+    lt r2 r8 into r11;
+    and r10 r11 into r12;
+    assert.eq r12 true;
     remove members[r1];
-    gte r2 1u8 into r8;
-    assert.eq r8 true;
     set r2 into settings[true];
-    get settings[false] into r9;
-    gte r9 2u8 into r10;
-    assert.eq r10 true;
-    sub r9 1u8 into r11;
-    set r11 into settings[false];
+    sub r8 1u8 into r13;
+    set r13 into settings[false];
 
 
 function update_threshold:
@@ -315,21 +332,24 @@ function update_threshold:
     input r1 as u8.public;
     cast r0 r1 into r2 as UpdateThreshold;
     hash.bhp256 r2 into r3 as field;
-    async update_threshold r3 r1 into r4;
-    output r4 as council.aleo/update_threshold.future;
+    gte r1 1u8 into r4;
+    assert.eq r4 true;
+    async update_threshold r3 r1 into r5;
+    output r5 as council.aleo/update_threshold.future;
 
 finalize update_threshold:
     input r0 as field.public;
     input r1 as u8.public;
     get settings[true] into r2;
-    gte r1 1u8 into r3;
-    assert.eq r3 true;
-    get proposal_vote_counts[r0] into r4;
-    gte r4 r2 into r5;
-    assert.eq r5 true;
-    contains proposal_executed[r0] into r6;
-    not r6 into r7;
-    assert.eq r7 true;
+    get settings[false] into r3;
+    lte r1 r3 into r4;
+    assert.eq r4 true;
+    get proposal_vote_counts[r0] into r5;
+    gte r5 r2 into r6;
+    assert.eq r6 true;
+    contains proposal_executed[r0] into r7;
+    not r7 into r8;
+    assert.eq r8 true;
     set true into proposal_executed[r0];
     set r1 into settings[true];
 

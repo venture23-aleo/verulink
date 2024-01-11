@@ -62,8 +62,8 @@ struct InPacketFullScreeningKey:
     screening_passed as boolean;
 
 
-mapping bridge_settings:
-	key as u8.public;
+mapping attestor_settings:
+	key as boolean.public;
 	value as u8.public;
 
 
@@ -139,28 +139,21 @@ finalize initialize_tb:
     input r4 as address.public;
     input r5 as address.public;
     input r6 as address.public;
-    contains bridge_settings[0u8] into r7;
+    contains attestor_settings[true] into r7;
     not r7 into r8;
     assert.eq r8 true;
-    set r0 into bridge_settings[0u8];
+    gte r0 1u8 into r9;
+    lte r0 5u8 into r10;
+    and r9 r10 into r11;
+    assert.eq r11 true;
+    set r0 into attestor_settings[true];
+    set 5u8 into attestor_settings[false];
     set true into attestors[r1];
     set true into attestors[r2];
     set true into attestors[r3];
     set true into attestors[r4];
     set true into attestors[r5];
     set r6 into governance_TB[true];
-
-
-function update_attestor_key:
-    input r0 as address.private;
-    async update_attestor_key self.caller r0 into r1;
-    output r1 as token_bridge.aleo/update_attestor_key.future;
-
-finalize update_attestor_key:
-    input r0 as address.public;
-    input r1 as address.public;
-    remove attestors[r0];
-    set true into attestors[r1];
 
 
 function update_governance_tb:
@@ -176,6 +169,18 @@ finalize update_governance_tb:
     set r1 into governance_TB[true];
 
 
+function update_attestor:
+    input r0 as address.private;
+    async update_attestor self.caller r0 into r1;
+    output r1 as token_bridge.aleo/update_attestor.future;
+
+finalize update_attestor:
+    input r0 as address.public;
+    input r1 as address.public;
+    remove attestors[r0];
+    set true into attestors[r1];
+
+
 function add_attestor_tb:
     input r0 as address.public;
     input r1 as u8.private;
@@ -188,8 +193,20 @@ finalize add_attestor_tb:
     input r2 as u8.public;
     get governance_TB[true] into r3;
     assert.eq r0 r3;
+    get attestor_settings[true] into r4;
+    get attestor_settings[false] into r5;
+    gte r2 r4 into r6;
+    add r5 1u8 into r7;
+    lte r2 r7 into r8;
+    and r6 r8 into r9;
+    assert.eq r9 true;
+    contains attestors[r1] into r10;
+    not r10 into r11;
+    assert.eq r11 true;
     set true into attestors[r1];
-    set r2 into bridge_settings[0u8];
+    set r2 into attestor_settings[true];
+    add r5 1u8 into r12;
+    set r12 into attestor_settings[false];
 
 
 function remove_attestor_tb:
@@ -204,21 +221,38 @@ finalize remove_attestor_tb:
     input r2 as u8.public;
     get governance_TB[true] into r3;
     assert.eq r0 r3;
+    get attestor_settings[true] into r4;
+    get attestor_settings[false] into r5;
+    gte r2 1u8 into r6;
+    lt r2 r5 into r7;
+    and r6 r7 into r8;
+    assert.eq r8 true;
+    gte r5 2u8 into r9;
+    assert.eq r9 true;
     remove attestors[r1];
-    set r2 into bridge_settings[0u8];
+    set r2 into attestor_settings[true];
+    sub r5 1u8 into r10;
+    set r10 into attestor_settings[false];
 
 
 function update_threshold_tb:
     input r0 as u8.public;
-    async update_threshold_tb self.caller r0 into r1;
-    output r1 as token_bridge.aleo/update_threshold_tb.future;
+    gte r0 1u8 into r1;
+    assert.eq r1 true;
+    async update_threshold_tb self.caller r0 into r2;
+    output r2 as token_bridge.aleo/update_threshold_tb.future;
 
 finalize update_threshold_tb:
     input r0 as address.public;
     input r1 as u8.public;
     get governance_TB[true] into r2;
     assert.eq r0 r2;
-    set r1 into bridge_settings[0u8];
+    get attestor_settings[false] into r3;
+    gte r1 1u8 into r4;
+    lte r1 r3 into r5;
+    and r4 r5 into r6;
+    assert.eq r6 true;
+    set r1 into attestor_settings[true];
 
 
 function enable_chain_tb:
@@ -343,7 +377,7 @@ finalize attest:
     get.or_use in_packet_attestations[r2] 0u8 into r11;
     add r11 1u8 into r12;
     set r12 into in_packet_attestations[r2];
-    get bridge_settings[0u8] into r13;
+    get attestor_settings[true] into r13;
     cast r0 r1 into r14 as PacketId;
     contains in_packet_hash[r14] into r15;
     not r15 into r16;
@@ -384,7 +418,7 @@ finalize consume:
     input r3 as field.public;
     get supported_services[r0] into r4;
     assert.eq r4 true;
-    get bridge_settings[0u8] into r5;
+    get attestor_settings[true] into r5;
     get in_packet_attestations[r3] into r6;
     gte r6 r5 into r7;
     assert.eq r7 true;

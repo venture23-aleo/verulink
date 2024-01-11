@@ -115,8 +115,9 @@ program token_bridge.aleo {
     }
 
     // keys setting index
-    // 0 -> | 0: not initialized | 1: initialized |
-    mapping bridge_settings: u8 => u8;
+    const THRESHOLD_INDEX: bool = true;
+    const TOTAL_ATTESTORS_INDEX: bool = false;
+    mapping attestor_settings: bool => u8;
 
     // mapping used as variable
     // true: address of council 
@@ -174,15 +175,18 @@ program token_bridge.aleo {
     /// Initialize can only be called once
     /// Initialize must be called from council program
     transition initialize_tb(public threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address, public council: address) {
+        // TODO: check that the attestors are different
         return then finalize(threshold, a1, a2, a3, a4, a5, council);
     }
 
     finalize initialize_tb(threshold: u8, a1: address, a2: address, a3: address, a4: address, a5: address, council: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(bridge_settings, 0u8));
+        assert(!Mapping::contains(attestor_settings, THRESHOLD_INDEX));
 
         // Setting threshold marks the bridge as initialized
-        Mapping::set(bridge_settings, 0u8, threshold);
+        assert(threshold >= 1u8 && threshold <= 5u8 );
+        Mapping::set(attestor_settings, THRESHOLD_INDEX, threshold);
+        Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, 5u8);
 
         // Set the initial attestors
         Mapping::set(attestors, a1, true);
@@ -193,15 +197,6 @@ program token_bridge.aleo {
 
         // Set the governance program
         Mapping::set(governance_TB, true, council);
-    }
-
-    transition update_attestor_key(new_attestor: address) {
-        return then finalize (self.caller, new_attestor);
-    }
-
-    finalize update_attestor_key(existing_attestor: address, new_attestor: address) {
-        Mapping::remove(attestors, existing_attestor);
-        Mapping::set(attestors, new_attestor, true);
     }
 
     ///////////////////////////////
@@ -228,21 +223,36 @@ program token_bridge.aleo {
     ///// Add/Remove Attestor ////
     //////////////////////////////
 
+    transition update_attestor(new_attestor: address) {
+        return then finalize (self.caller, new_attestor);
+    }
+
+    finalize update_attestor(existing_attestor: address, new_attestor: address) {
+        Mapping::remove(attestors, existing_attestor);
+        Mapping::set(attestors, new_attestor, true);
+    }
+
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
     /// Can only be called from council/governance program
-    transition add_attestor_tb(public attestor: address, new_threshold: u8) {
-        return then finalize(self.caller, attestor, new_threshold);
+    transition add_attestor_tb(public new_attestor: address, new_threshold: u8) {
+        return then finalize(self.caller, new_attestor, new_threshold);
     }
 
-    finalize add_attestor_tb(from: address, attestor: address, new_threshold: u8) {
+    finalize add_attestor_tb(from: address, new_attestor: address, new_threshold: u8) {
         // Get the governance address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_TB, true);
         assert_eq(from, governance);
 
-        Mapping::set(attestors, attestor, true);
-        Mapping::set(bridge_settings, 0u8, new_threshold);
+        let current_threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
+        let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
+        assert(new_threshold >= current_threshold && new_threshold <= total_attestors + 1u8);
+
+        assert(!Mapping::contains(attestors, new_attestor));
+        Mapping::set(attestors, new_attestor, true);
+        Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
+        Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, total_attestors + 1u8);
     }
 
     /// Remove an existing attestor from the bridge program
@@ -257,9 +267,15 @@ program token_bridge.aleo {
         let governance: address = Mapping::get(governance_TB, true);
         assert_eq(from, governance);
 
+        let current_threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
+        let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
+        assert(new_threshold >= 1u8 && new_threshold < total_attestors );
+        assert(total_attestors >= 2u8);
+
         // If attestor does not exist, this is expected to fail
         Mapping::remove(attestors, attestor);
-        Mapping::set(bridge_settings, 0u8, new_threshold);
+        Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
+        Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, total_attestors - 1u8);
     }
 
     //////////////////////////////
@@ -269,6 +285,7 @@ program token_bridge.aleo {
     /// Update the existing threshold for a packet to be considered valid
     /// Can only be called from council/governance program
     transition update_threshold_tb(public new_threshold: u8) {
+        assert(new_threshold >= 1u8);
         return then finalize(self.caller, new_threshold);
     }
 
@@ -278,8 +295,11 @@ program token_bridge.aleo {
         let governance: address = Mapping::get(governance_TB, true);
         assert_eq(from, governance);
 
+        let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
+        assert(new_threshold >= 1u8 && new_threshold <= total_attestors);
+
         // If attestor does not exist, this is expected to fail
-        Mapping::set(bridge_settings, 0u8, new_threshold);
+        Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
     }
 
     //////////////////////////////////////
@@ -489,7 +509,7 @@ program token_bridge.aleo {
 
         // Get the threshold
         // If bridge is not initialized, this should fail
-        let threshold: u8 = Mapping::get(bridge_settings, 0u8);
+        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
 
         let packet_id: PacketId = PacketId {
             chain_id,
@@ -586,7 +606,7 @@ program token_bridge.aleo {
 
         // Get the threshold
         // If bridge is not initialized, this should fail
-        let threshold: u8 = Mapping::get(bridge_settings, 0u8);
+        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
 
         // Ensure enough attestation for the packet
         // Not required? since packet_id exists if enough attestations is reached

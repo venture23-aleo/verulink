@@ -105,18 +105,6 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_attestor_key(r0: string) {
-    const r0Leo = js2leo.address(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'update_attestor_key',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
   async update_governance_tb(r0: string) {
     const r0Leo = js2leo.address(r0);
 
@@ -124,6 +112,18 @@ export class Token_bridgeContract {
     const result = await zkRun({
       config: this.config,
       transition: 'update_governance_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_attestor(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_attestor',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -265,13 +265,13 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async bridge_settings(key: number): Promise < number > {
-    const keyLeo = js2leo.u8(key);
+  async attestor_settings(key: boolean): Promise < number > {
+    const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'bridge_settings',
+      transition: 'attestor_settings',
       params,
     });
     return leo2js.u8(result);

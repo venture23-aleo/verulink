@@ -1,6 +1,8 @@
 import {
-  getTokenAcc
-} from './holding';
+  getTSForeignContract,
+  getTokenOrigin,
+  getOutgoingPercentageInTime
+} from './token_service';
 import {
   getAleoProgram,
   getForeignContract,
@@ -15,10 +17,8 @@ import {
   getInPacketFullScreeningKey
 } from './token_bridge';
 import {
-  getTSForeignContract,
-  getTokenOrigin,
-  getOutgoingPercentageInTime
-} from './token_service';
+  getTokenAcc
+} from './holding';
 import {
   getwrapped_token,
   getWTForeignContract,
@@ -53,7 +53,9 @@ import {
 } from './council';
 
 export {
-  getTokenAcc,
+  getTSForeignContract,
+  getTokenOrigin,
+  getOutgoingPercentageInTime,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -65,9 +67,7 @@ export {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
-  getTSForeignContract,
-  getTokenOrigin,
-  getOutgoingPercentageInTime,
+  getTokenAcc,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,

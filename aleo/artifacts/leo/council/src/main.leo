@@ -53,6 +53,16 @@ program council.aleo {
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
     }
 
+    transition update_member(new_member: address) {
+        return then finalize(self.caller, new_member);
+    }
+
+    finalize update_member(existing_member: address, new_member: address) {
+        Mapping::remove(members, existing_member);
+        Mapping::set(members, new_member, true);
+    }
+
+
     ///////////////////////
     /////// Propose ///////
     ///////////////////////
@@ -155,8 +165,6 @@ program council.aleo {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        assert(new_threshold >= threshold);
-
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
@@ -175,6 +183,7 @@ program council.aleo {
 
         // Update total members
         let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(new_threshold >= 1u8 && new_threshold <= current_members_count + 1u8);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u8);
     }
 
@@ -215,14 +224,13 @@ program council.aleo {
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
 
-        // Execute the proposal
-        Mapping::remove(members, existing_member);
-        assert(new_threshold >= 1u8);
-        Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
-
-        // Update total members
         let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
         assert(current_members_count >= 2u8);
+        assert(new_threshold >= 1u8 && new_threshold < current_members_count);
+
+        // Execute the proposal
+        Mapping::remove(members, existing_member);
+        Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u8);
     }
 
@@ -242,6 +250,8 @@ program council.aleo {
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
+        assert(new_threshold >= 1u8);
+
         return then finalize(proposal_hash, new_threshold);
     }
 
@@ -249,7 +259,8 @@ program council.aleo {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        assert(new_threshold >= 1u8);
+        let total_members: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(new_threshold <= total_members);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);

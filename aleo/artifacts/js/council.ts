@@ -200,6 +200,18 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
+  async update_member(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_member',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
   async propose(r0: number, r1: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.field(r1);
