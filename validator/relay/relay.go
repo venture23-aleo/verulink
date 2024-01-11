@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
+	"github.com/venture23-aleo/validator/chain"
+	"github.com/venture23-aleo/validator/logger"
+	"github.com/venture23-aleo/validator/store"
 	"go.uber.org/zap"
 )
 

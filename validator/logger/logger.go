@@ -3,7 +3,7 @@ package logger
 import (
 	"sync"
 
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
+	"github.com/venture23-aleo/validator/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"

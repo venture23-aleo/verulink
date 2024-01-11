@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	aleoRpc "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
-	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
+	"github.com/venture23-aleo/validator/chain"
+	aleoRpc "github.com/venture23-aleo/validator/chain/aleo/rpc"
+	common "github.com/venture23-aleo/validator/common/wallet"
+	"github.com/venture23-aleo/validator/config"
+	"github.com/venture23-aleo/validator/relay"
 )
 
 const (
@@ -94,8 +94,8 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { 
 	}
 
 	// TODO: Add transaction confirmation code
-	// TODO: has consumed before voting 
-	// TODO: has voted 
+	// TODO: has consumed before voting
+	// TODO: has voted
 
 	_ = output
 	//

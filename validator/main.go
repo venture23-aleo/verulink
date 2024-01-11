@@ -7,14 +7,14 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo"
-	_ "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
-	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
+	"github.com/venture23-aleo/validator/chain"
+	_ "github.com/venture23-aleo/validator/chain/aleo"
+	_ "github.com/venture23-aleo/validator/chain/ethereum"
+	common "github.com/venture23-aleo/validator/common/wallet"
+	"github.com/venture23-aleo/validator/config"
+	"github.com/venture23-aleo/validator/logger"
+	"github.com/venture23-aleo/validator/relay"
+	"github.com/venture23-aleo/validator/store"
 )
 
 // flags

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
+	"github.com/venture23-aleo/validator/chain"
 )
 
 func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {

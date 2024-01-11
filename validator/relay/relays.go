@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
+	"github.com/venture23-aleo/validator/chain"
+	"github.com/venture23-aleo/validator/config"
 )
 
 var (

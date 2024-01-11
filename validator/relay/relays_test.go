@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
+	"github.com/venture23-aleo/validator/chain"
+	"github.com/venture23-aleo/validator/config"
 )
 
 func getConfig(name, nodeURL, walletPath, contractAddress string, chainID uint32, finalityHeight uint8) *config.ChainConfig {

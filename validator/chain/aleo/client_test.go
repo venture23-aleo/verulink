@@ -12,9 +12,9 @@ import (
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/aleo/rpc"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
+	"github.com/venture23-aleo/validator/chain"
+	"github.com/venture23-aleo/validator/chain/aleo/rpc"
+	"github.com/venture23-aleo/validator/config"
 )
 
 const (

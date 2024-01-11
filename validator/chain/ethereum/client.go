@@ -12,16 +12,16 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 
-	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/logger"
+	abi "github.com/venture23-aleo/validator/chain/ethereum/abi"
+	"github.com/venture23-aleo/validator/config"
+	"github.com/venture23-aleo/validator/logger"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/relay"
-	common "github.com/venture23-aleo/aleo-bridge/validators/common/wallet"
+	"github.com/venture23-aleo/validator/chain"
+	common "github.com/venture23-aleo/validator/common/wallet"
+	"github.com/venture23-aleo/validator/relay"
 )
 
 const (

@@ -13,15 +13,15 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/assert"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
+	"github.com/venture23-aleo/validator/chain"
+	"github.com/venture23-aleo/validator/chain/ethereum/abi"
+	"github.com/venture23-aleo/validator/config"
 )
 
 const (
-	rpcEndpoint = "https://rpc.sepolia.org"
+	rpcEndpoint      = "https://rpc.sepolia.org"
 	walletConfigFile = "ethWallet.json"
-	ethWalletName = "eth_wallet.json"
+	ethWalletName    = "eth_wallet.json"
 )
 
 func getConfig(name, nodeURL string, finalityHeight uint8) *config.ChainConfig {
@@ -252,12 +252,12 @@ func TestGetPktWithSeq(t *testing.T) {
 
 func TestSendPacket(t *testing.T) {
 	walletConfig, ethWallet := createEthereumWallet()
-		defer func() {
-			err := os.Remove(walletConfig)
-			assert.Nil(t, err)
-			err = os.Remove(ethWallet)
-			assert.Nil(t, err)
-		}()
+	defer func() {
+		err := os.Remove(walletConfig)
+		assert.Nil(t, err)
+		err = os.Remove(ethWallet)
+		assert.Nil(t, err)
+	}()
 	wallet, _ := loadWalletConfig(walletConfig)
 	ethcl, _ := ethclient.Dial(rpcEndpoint)
 	t.Run("case: happy send", func(t *testing.T) {

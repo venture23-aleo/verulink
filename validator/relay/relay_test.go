@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
-	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/store"
+	"github.com/venture23-aleo/validator/chain"
+	"github.com/venture23-aleo/validator/store"
 	"go.uber.org/zap"
 )
 
