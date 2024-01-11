@@ -14,8 +14,12 @@ chains:
   start_height: 0
   finality_height: 64
   wallet_path: "eth_wallet.json"
+# bridge pair let know program that packets from only the given list are to be relayed
+# The pair is taken as source:destination pair. 
 bridge_pair:
-  ethereum: aleo
+  - ethereum->aleo # will raise relay that sends packet from ethereum to aleo
+  - aleo->ethereum # will raise relay that sends packet from aleo to ethereum and so on
+  # - aleo->solana
 db_path: db
 log:
   encoding: console

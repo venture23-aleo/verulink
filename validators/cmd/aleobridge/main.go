@@ -45,7 +45,11 @@ var (
 
 func main() {
 	flag.Parse()
-	config.LoadConfig(configFile)
+	err := config.LoadAndValidateConfig(configFile)
+	if err != nil {
+		fmt.Println("Error while loading config. ", err)
+		os.Exit(1)
+	}
 
 	if devMode {
 		logger.InitLogging(logger.Development, config.GetConfig().LogConfig)
@@ -58,13 +62,13 @@ func main() {
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
 
-	err := store.InitKVStore(config.GetConfig().DBPath)
+	err = store.InitKVStore(config.GetConfig().DBPath)
 	if err != nil {
 		fmt.Printf("Error while initializing db store: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	multirelayer := relay.MultiRelay(ctx, config.GetConfig().ChainConfigs)
+	multirelayer := relay.MultiRelay(ctx, config.GetConfig())
 	multirelayer.StartMultiRelay(ctx)
 
 }
