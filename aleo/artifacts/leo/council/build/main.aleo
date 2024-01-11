@@ -208,9 +208,15 @@ finalize exec_add_member:
     not r9 into r10;
     assert.eq r10 true;
     set true into proposal_executed[r0];
+    contains members[r1] into r11;
+    not r11 into r12;
+    assert.eq r12 true;
     set true into members[r1];
-    cast r2 into r11 as u32;
-    set r11 into settings[1u8];
+    cast r2 into r13 as u32;
+    set r13 into settings[1u8];
+    get settings[2u8] into r14;
+    add r14 1u32 into r15;
+    set r15 into settings[2u8];
 
 
 function exec_remove_member:
@@ -227,17 +233,24 @@ finalize exec_remove_member:
     input r1 as address.public;
     input r2 as u8.public;
     get settings[1u8] into r3;
-    get.or_use proposal_vote_counts[r0] 0u8 into r4;
-    cast r3 into r5 as u8;
-    gte r4 r5 into r6;
-    assert.eq r6 true;
-    contains proposal_executed[r0] into r7;
-    not r7 into r8;
-    assert.eq r8 true;
+    gte r2 1u8 into r4;
+    assert.eq r4 true;
+    get.or_use proposal_vote_counts[r0] 0u8 into r5;
+    cast r3 into r6 as u8;
+    gte r5 r6 into r7;
+    assert.eq r7 true;
+    contains proposal_executed[r0] into r8;
+    not r8 into r9;
+    assert.eq r9 true;
     set true into proposal_executed[r0];
     remove members[r1];
-    cast r2 into r9 as u32;
-    set r9 into settings[1u8];
+    cast r2 into r10 as u32;
+    set r10 into settings[1u8];
+    get settings[2u8] into r11;
+    gte r11 2u32 into r12;
+    assert.eq r12 true;
+    sub r11 1u32 into r13;
+    set r13 into settings[2u8];
 
 
 function exec_update_threshold:
@@ -252,16 +265,18 @@ finalize exec_update_threshold:
     input r0 as field.public;
     input r1 as u8.public;
     get settings[1u8] into r2;
-    get proposal_vote_counts[r0] into r3;
-    cast r2 into r4 as u8;
-    gte r3 r4 into r5;
-    assert.eq r5 true;
-    contains proposal_executed[r0] into r6;
-    not r6 into r7;
-    assert.eq r7 true;
+    gte r1 1u8 into r3;
+    assert.eq r3 true;
+    get proposal_vote_counts[r0] into r4;
+    cast r2 into r5 as u8;
+    gte r4 r5 into r6;
+    assert.eq r6 true;
+    contains proposal_executed[r0] into r7;
+    not r7 into r8;
+    assert.eq r8 true;
     set true into proposal_executed[r0];
-    cast r1 into r8 as u32;
-    set r8 into settings[1u8];
+    cast r1 into r9 as u32;
+    set r9 into settings[1u8];
 
 
 function exec_approve_chain_bridge:

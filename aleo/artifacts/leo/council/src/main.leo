@@ -161,8 +161,13 @@ program council.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
 
         // Execute the proposal
+        assert(!Mapping::contains(members, new_member));
         Mapping::set(members, new_member, true);
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold as u32);
+
+        // Update total members
+        let current_members_count: u32 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u32);
     }
 
     /////////////////////////////////
@@ -191,6 +196,8 @@ program council.aleo {
         // Get the threshold
         let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
 
+        assert(new_threshold >= 1u8);
+
         // Get the votes for the proposal
         let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
 
@@ -205,6 +212,11 @@ program council.aleo {
         // Execute the proposal
         Mapping::remove(members, existing_member);
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold as u32);
+
+        // Update total members
+        let current_members_count: u32 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(current_members_count >= 2u32);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u32);
     }
 
     //////////////////////////////////
@@ -229,6 +241,8 @@ program council.aleo {
     finalize exec_update_threshold(proposal_hash: field, new_threshold: u8) {
         // Get the threshold
         let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        assert(new_threshold >= 1u8);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
