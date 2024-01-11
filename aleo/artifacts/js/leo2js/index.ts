@@ -2,10 +2,6 @@ import {
   getTokenAcc
 } from './holding';
 import {
-  getTSForeignContract,
-  getTokenOrigin
-} from './token_service';
-import {
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -19,6 +15,10 @@ import {
   getInPacketFullScreeningKey
 } from './token_bridge';
 import {
+  getTSForeignContract,
+  getTokenOrigin
+} from './token_service';
+import {
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
@@ -27,21 +27,26 @@ import {
 } from './wrapped_token';
 import {
   getProposalSign,
-  getAddMemberProposal,
-  getRemoveMemberProposal,
-  getUpdateThresholdProposal,
-  getApproveChainBridgeProposal,
-  getEnableServiceProposal,
-  getDisapproveChainBridge,
-  getSupportChainTS,
-  getSupportToken,
-  getEnableToken
+  getAddMember,
+  getRemoveMember,
+  getUpdateThreshold,
+  getTbUpdateGovernance,
+  getTbAddAttestor,
+  getTbRemoveAttestor,
+  getTbUpdateThreshold,
+  getTbEnableChain,
+  getTbDisableChain,
+  getTbEnableService,
+  getTbDisableService,
+  getWtUpdateGovernance,
+  getWtAddToken,
+  getTsSupportChain,
+  getTsRemoveChain,
+  getTsManageToken
 } from './council';
 
 export {
   getTokenAcc,
-  getTSForeignContract,
-  getTokenOrigin,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -53,19 +58,28 @@ export {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
+  getTSForeignContract,
+  getTokenOrigin,
   getwrapped_token,
   getWTForeignContract,
   getTokenInfo,
   getWrappedTokenInfo,
   getTokenAccount,
   getProposalSign,
-  getAddMemberProposal,
-  getRemoveMemberProposal,
-  getUpdateThresholdProposal,
-  getApproveChainBridgeProposal,
-  getEnableServiceProposal,
-  getDisapproveChainBridge,
-  getSupportChainTS,
-  getSupportToken,
-  getEnableToken,
+  getAddMember,
+  getRemoveMember,
+  getUpdateThreshold,
+  getTbUpdateGovernance,
+  getTbAddAttestor,
+  getTbRemoveAttestor,
+  getTbUpdateThreshold,
+  getTbEnableChain,
+  getTbDisableChain,
+  getTbEnableService,
+  getTbDisableService,
+  getWtUpdateGovernance,
+  getWtAddToken,
+  getTsSupportChain,
+  getTsRemoveChain,
+  getTsManageToken,
 };

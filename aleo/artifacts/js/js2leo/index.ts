@@ -2,10 +2,6 @@ import {
   getTokenAccLeo
 } from './holding';
 import {
-  getTSForeignContractLeo,
-  getTokenOriginLeo
-} from './token_service';
-import {
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -19,6 +15,10 @@ import {
   getInPacketFullScreeningKeyLeo
 } from './token_bridge';
 import {
+  getTSForeignContractLeo,
+  getTokenOriginLeo
+} from './token_service';
+import {
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
   getTokenInfoLeo,
@@ -27,21 +27,26 @@ import {
 } from './wrapped_token';
 import {
   getProposalSignLeo,
-  getAddMemberProposalLeo,
-  getRemoveMemberProposalLeo,
-  getUpdateThresholdProposalLeo,
-  getApproveChainBridgeProposalLeo,
-  getEnableServiceProposalLeo,
-  getDisapproveChainBridgeLeo,
-  getSupportChainTSLeo,
-  getSupportTokenLeo,
-  getEnableTokenLeo
+  getAddMemberLeo,
+  getRemoveMemberLeo,
+  getUpdateThresholdLeo,
+  getTbUpdateGovernanceLeo,
+  getTbAddAttestorLeo,
+  getTbRemoveAttestorLeo,
+  getTbUpdateThresholdLeo,
+  getTbEnableChainLeo,
+  getTbDisableChainLeo,
+  getTbEnableServiceLeo,
+  getTbDisableServiceLeo,
+  getWtUpdateGovernanceLeo,
+  getWtAddTokenLeo,
+  getTsSupportChainLeo,
+  getTsRemoveChainLeo,
+  getTsManageTokenLeo
 } from './council';
 
 export {
   getTokenAccLeo,
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -53,19 +58,28 @@ export {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
+  getTSForeignContractLeo,
+  getTokenOriginLeo,
   getwrapped_tokenLeo,
   getWTForeignContractLeo,
   getTokenInfoLeo,
   getWrappedTokenInfoLeo,
   getTokenAccountLeo,
   getProposalSignLeo,
-  getAddMemberProposalLeo,
-  getRemoveMemberProposalLeo,
-  getUpdateThresholdProposalLeo,
-  getApproveChainBridgeProposalLeo,
-  getEnableServiceProposalLeo,
-  getDisapproveChainBridgeLeo,
-  getSupportChainTSLeo,
-  getSupportTokenLeo,
-  getEnableTokenLeo,
+  getAddMemberLeo,
+  getRemoveMemberLeo,
+  getUpdateThresholdLeo,
+  getTbUpdateGovernanceLeo,
+  getTbAddAttestorLeo,
+  getTbRemoveAttestorLeo,
+  getTbUpdateThresholdLeo,
+  getTbEnableChainLeo,
+  getTbDisableChainLeo,
+  getTbEnableServiceLeo,
+  getTbDisableServiceLeo,
+  getWtUpdateGovernanceLeo,
+  getWtAddTokenLeo,
+  getTsSupportChainLeo,
+  getTsRemoveChainLeo,
+  getTsManageTokenLeo,
 };

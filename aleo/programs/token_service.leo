@@ -81,11 +81,11 @@ program token_service.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition token_service_initialize(council: address, holding: address) {
+    transition initialize_ts(council: address, holding: address) {
         return then finalize(council, holding);
     }
 
-    finalize token_service_initialize(council: address, holding: address) {
+    finalize initialize_ts(council: address, holding: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(governance_TS, true));
 
@@ -96,12 +96,31 @@ program token_service.aleo {
         Mapping::set(holding_program_TS, true, holding);
     }
 
+    ///////////////////////////////
+    ///// Update Governance ///////
+    ///////////////////////////////
 
-    transition support_chain(public chain_id: u128, public token_service_address: [u8; 32]) {
+    /// Update the existing governance program
+    /// Can only be called from council/governance program
+    transition update_governance_ts(public new_governance: address) {
+        return then finalize(self.caller, new_governance);
+    }
+
+    finalize update_governance_ts(from: address, new_governance: address) {
+        // Get the governance address
+        // If program not initialized, this fails
+        let governance: address = Mapping::get(governance_TS, true);
+        assert_eq(from, governance);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::set(governance_TS, true, new_governance);
+    }
+
+    transition support_chain_ts(public chain_id: u128, public token_service_address: [u8; 32]) {
         return then finalize(self.caller, chain_id, token_service_address);
     }
 
-    finalize support_chain(from: address, chain_id: u128, token_service_address: [u8; 32]) {
+    finalize support_chain_ts(from: address, chain_id: u128, token_service_address: [u8; 32]) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(governance_TS, true);
@@ -110,14 +129,27 @@ program token_service.aleo {
         Mapping::set(token_service_contracts, chain_id, token_service_address);
     }
 
-    transition enable_token(public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+    transition remove_chain_ts(public chain_id: u128) {
+        return then finalize(self.caller, chain_id);
+    }
+
+    finalize remove_chain_ts(from: address, chain_id: u128) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(governance_TS, true);
+        assert_eq(from, council);
+
+        Mapping::remove(token_service_contracts, chain_id);
+    }
+
+    transition manage_token_ts(public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
         return then finalize(self.caller, token_id, minimum_transfer, outgoing_percentage, time);
     }
 
-    finalize enable_token(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, time: u32) {
+    finalize manage_token_ts(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, time: u32) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(governance_TS, true);

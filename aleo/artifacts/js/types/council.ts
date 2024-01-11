@@ -32,90 +32,147 @@ export const leoProposalSignSchema = z.object({
 });
 export type ProposalSignLeo = z.infer < typeof leoProposalSignSchema > ;
 
-export interface AddMemberProposal {
+export interface AddMember {
   id: number;
   new_member: string;
   new_threshold: number;
 }
 
-export const leoAddMemberProposalSchema = z.object({
+export const leoAddMemberSchema = z.object({
   id: leoU32Schema,
   new_member: leoAddressSchema,
   new_threshold: leoU8Schema,
 });
-export type AddMemberProposalLeo = z.infer < typeof leoAddMemberProposalSchema > ;
+export type AddMemberLeo = z.infer < typeof leoAddMemberSchema > ;
 
-export interface RemoveMemberProposal {
+export interface RemoveMember {
   id: number;
   existing_member: string;
   new_threshold: number;
 }
 
-export const leoRemoveMemberProposalSchema = z.object({
+export const leoRemoveMemberSchema = z.object({
   id: leoU32Schema,
   existing_member: leoAddressSchema,
   new_threshold: leoU8Schema,
 });
-export type RemoveMemberProposalLeo = z.infer < typeof leoRemoveMemberProposalSchema > ;
+export type RemoveMemberLeo = z.infer < typeof leoRemoveMemberSchema > ;
 
-export interface UpdateThresholdProposal {
+export interface UpdateThreshold {
   id: number;
   new_threshold: number;
 }
 
-export const leoUpdateThresholdProposalSchema = z.object({
+export const leoUpdateThresholdSchema = z.object({
   id: leoU32Schema,
   new_threshold: leoU8Schema,
 });
-export type UpdateThresholdProposalLeo = z.infer < typeof leoUpdateThresholdProposalSchema > ;
+export type UpdateThresholdLeo = z.infer < typeof leoUpdateThresholdSchema > ;
 
-export interface ApproveChainBridgeProposal {
+export interface TbUpdateGovernance {
+  id: number;
+  new_governance: string;
+}
+
+export const leoTbUpdateGovernanceSchema = z.object({
+  id: leoU32Schema,
+  new_governance: leoAddressSchema,
+});
+export type TbUpdateGovernanceLeo = z.infer < typeof leoTbUpdateGovernanceSchema > ;
+
+export interface TbAddAttestor {
+  id: number;
+  new_attestor: string;
+  new_threshold: number;
+}
+
+export const leoTbAddAttestorSchema = z.object({
+  id: leoU32Schema,
+  new_attestor: leoAddressSchema,
+  new_threshold: leoU8Schema,
+});
+export type TbAddAttestorLeo = z.infer < typeof leoTbAddAttestorSchema > ;
+
+export interface TbRemoveAttestor {
+  id: number;
+  existing_attestor: string;
+  new_threshold: number;
+}
+
+export const leoTbRemoveAttestorSchema = z.object({
+  id: leoU32Schema,
+  existing_attestor: leoAddressSchema,
+  new_threshold: leoU8Schema,
+});
+export type TbRemoveAttestorLeo = z.infer < typeof leoTbRemoveAttestorSchema > ;
+
+export interface TbUpdateThreshold {
+  id: number;
+  new_threshold: number;
+}
+
+export const leoTbUpdateThresholdSchema = z.object({
+  id: leoU32Schema,
+  new_threshold: leoU8Schema,
+});
+export type TbUpdateThresholdLeo = z.infer < typeof leoTbUpdateThresholdSchema > ;
+
+export interface TbEnableChain {
   id: number;
   chain_id: BigInt;
 }
 
-export const leoApproveChainBridgeProposalSchema = z.object({
+export const leoTbEnableChainSchema = z.object({
   id: leoU32Schema,
   chain_id: leoU128Schema,
 });
-export type ApproveChainBridgeProposalLeo = z.infer < typeof leoApproveChainBridgeProposalSchema > ;
+export type TbEnableChainLeo = z.infer < typeof leoTbEnableChainSchema > ;
 
-export interface EnableServiceProposal {
+export interface TbDisableChain {
+  id: number;
+  chain_id: BigInt;
+}
+
+export const leoTbDisableChainSchema = z.object({
+  id: leoU32Schema,
+  chain_id: leoU128Schema,
+});
+export type TbDisableChainLeo = z.infer < typeof leoTbDisableChainSchema > ;
+
+export interface TbEnableService {
   id: number;
   service: string;
 }
 
-export const leoEnableServiceProposalSchema = z.object({
+export const leoTbEnableServiceSchema = z.object({
   id: leoU32Schema,
   service: leoAddressSchema,
 });
-export type EnableServiceProposalLeo = z.infer < typeof leoEnableServiceProposalSchema > ;
+export type TbEnableServiceLeo = z.infer < typeof leoTbEnableServiceSchema > ;
 
-export interface DisapproveChainBridge {
+export interface TbDisableService {
   id: number;
-  chain_id: BigInt;
+  service: string;
 }
 
-export const leoDisapproveChainBridgeSchema = z.object({
+export const leoTbDisableServiceSchema = z.object({
   id: leoU32Schema,
-  chain_id: leoU128Schema,
+  service: leoAddressSchema,
 });
-export type DisapproveChainBridgeLeo = z.infer < typeof leoDisapproveChainBridgeSchema > ;
+export type TbDisableServiceLeo = z.infer < typeof leoTbDisableServiceSchema > ;
 
-export interface SupportChainTS {
+export interface WtUpdateGovernance {
   id: number;
-  chain_id: BigInt;
-  token_service: Array < number > ;
+  new_governance: string;
 }
 
-export const leoSupportChainTSSchema = z.object({
+export const leoWtUpdateGovernanceSchema = z.object({
   id: leoU32Schema,
-  chain_id: leoU128Schema,
-  token_service: z.array(leoU8Schema).length(32),
+  new_governance: leoAddressSchema,
 });
-export type SupportChainTSLeo = z.infer < typeof leoSupportChainTSSchema > ;
+export type WtUpdateGovernanceLeo = z.infer < typeof leoWtUpdateGovernanceSchema > ;
 
-export interface SupportToken {
+export interface WtAddToken {
   id: number;
   name: Array < number > ;
   symbol: Array < number > ;
@@ -124,7 +181,7 @@ export interface SupportToken {
   origin_contract_address: Array < number > ;
 }
 
-export const leoSupportTokenSchema = z.object({
+export const leoWtAddTokenSchema = z.object({
   id: leoU32Schema,
   name: z.array(leoU8Schema).length(32),
   symbol: z.array(leoU8Schema).length(16),
@@ -132,9 +189,33 @@ export const leoSupportTokenSchema = z.object({
   origin_chain_id: leoU128Schema,
   origin_contract_address: z.array(leoU8Schema).length(32),
 });
-export type SupportTokenLeo = z.infer < typeof leoSupportTokenSchema > ;
+export type WtAddTokenLeo = z.infer < typeof leoWtAddTokenSchema > ;
 
-export interface EnableToken {
+export interface TsSupportChain {
+  id: number;
+  chain_id: BigInt;
+  token_service: Array < number > ;
+}
+
+export const leoTsSupportChainSchema = z.object({
+  id: leoU32Schema,
+  chain_id: leoU128Schema,
+  token_service: z.array(leoU8Schema).length(32),
+});
+export type TsSupportChainLeo = z.infer < typeof leoTsSupportChainSchema > ;
+
+export interface TsRemoveChain {
+  id: number;
+  chain_id: BigInt;
+}
+
+export const leoTsRemoveChainSchema = z.object({
+  id: leoU32Schema,
+  chain_id: leoU128Schema,
+});
+export type TsRemoveChainLeo = z.infer < typeof leoTsRemoveChainSchema > ;
+
+export interface TsManageToken {
   id: number;
   token_id: string;
   minimum_transfer: BigInt;
@@ -142,11 +223,11 @@ export interface EnableToken {
   time: number;
 }
 
-export const leoEnableTokenSchema = z.object({
+export const leoTsManageTokenSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
   minimum_transfer: leoU64Schema,
   outgoing_percentage: leoU16Schema,
   time: leoU32Schema,
 });
-export type EnableTokenLeo = z.infer < typeof leoEnableTokenSchema > ;
+export type TsManageTokenLeo = z.infer < typeof leoTsManageTokenSchema > ;

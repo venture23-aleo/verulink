@@ -102,11 +102,11 @@ program wrapped_token.aleo {
 
     /// Update the existing governance program
     /// Can only be called from council/governance program
-    transition update_wrapped_token_governance(public new_governance: address) {
+    transition update_governance_wt(public new_governance: address) {
         return then finalize(self.caller, new_governance);
     }
 
-    finalize update_wrapped_token_governance(from: address, new_governance: address) {
+    finalize update_governance_wt(from: address, new_governance: address) {
         // Get the governance address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_WT, true);
@@ -117,8 +117,7 @@ program wrapped_token.aleo {
     }
 
 
-
-    transition add_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
+    transition add_token_wt(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
         let new_token_id: address = BHP256::hash_to_address(WrappedTokenInfo {
             token_info: TokenInfo {
                 name, 
@@ -133,7 +132,7 @@ program wrapped_token.aleo {
         return then finalize(self.caller, new_token_id, name, symbol, decimals, origin_chain_id, origin_contract_address);
     }
 
-    finalize add_token(from: address, token_id: address, name: [u8; 32], symbol: [u8; 16], decimals: u8, origin_chain_id: u128, origin_contract_address: [u8; 32]) {
+    finalize add_token_wt(from: address, token_id: address, name: [u8; 32], symbol: [u8; 16], decimals: u8, origin_chain_id: u128, origin_contract_address: [u8; 32]) {
         // Get the council address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_WT, true);

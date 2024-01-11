@@ -83,13 +83,13 @@ mapping last_min_supply:
 
 
 
-function token_service_initialize:
+function initialize_ts:
     input r0 as address.private;
     input r1 as address.private;
-    async token_service_initialize r0 r1 into r2;
-    output r2 as token_service.aleo/token_service_initialize.future;
+    async initialize_ts r0 r1 into r2;
+    output r2 as token_service.aleo/initialize_ts.future;
 
-finalize token_service_initialize:
+finalize initialize_ts:
     input r0 as address.public;
     input r1 as address.public;
     contains governance_TS[true] into r2;
@@ -99,13 +99,26 @@ finalize token_service_initialize:
     set r1 into holding_program_TS[true];
 
 
-function support_chain:
+function update_governance_ts:
+    input r0 as address.public;
+    async update_governance_ts self.caller r0 into r1;
+    output r1 as token_service.aleo/update_governance_ts.future;
+
+finalize update_governance_ts:
+    input r0 as address.public;
+    input r1 as address.public;
+    get governance_TS[true] into r2;
+    assert.eq r0 r2;
+    set r1 into governance_TS[true];
+
+
+function support_chain_ts:
     input r0 as u128.public;
     input r1 as [u8; 32u32].public;
-    async support_chain self.caller r0 r1 into r2;
-    output r2 as token_service.aleo/support_chain.future;
+    async support_chain_ts self.caller r0 r1 into r2;
+    output r2 as token_service.aleo/support_chain_ts.future;
 
-finalize support_chain:
+finalize support_chain_ts:
     input r0 as address.public;
     input r1 as u128.public;
     input r2 as [u8; 32u32].public;
@@ -114,15 +127,28 @@ finalize support_chain:
     set r2 into token_service_contracts[r1];
 
 
-function enable_token:
+function remove_chain_ts:
+    input r0 as u128.public;
+    async remove_chain_ts self.caller r0 into r1;
+    output r1 as token_service.aleo/remove_chain_ts.future;
+
+finalize remove_chain_ts:
+    input r0 as address.public;
+    input r1 as u128.public;
+    get governance_TS[true] into r2;
+    assert.eq r0 r2;
+    remove token_service_contracts[r1];
+
+
+function manage_token_ts:
     input r0 as address.public;
     input r1 as u64.public;
     input r2 as u16.public;
     input r3 as u32.public;
-    async enable_token self.caller r0 r1 r2 r3 into r4;
-    output r4 as token_service.aleo/enable_token.future;
+    async manage_token_ts self.caller r0 r1 r2 r3 into r4;
+    output r4 as token_service.aleo/manage_token_ts.future;
 
-finalize enable_token:
+finalize manage_token_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u64.public;

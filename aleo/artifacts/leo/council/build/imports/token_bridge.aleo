@@ -120,7 +120,7 @@ mapping sequences:
 
 
 
-function bridge_initialize:
+function initialize_tb:
     input r0 as u8.public;
     input r1 as address.public;
     input r2 as address.public;
@@ -128,10 +128,10 @@ function bridge_initialize:
     input r4 as address.public;
     input r5 as address.public;
     input r6 as address.public;
-    async bridge_initialize r0 r1 r2 r3 r4 r5 r6 into r7;
-    output r7 as token_bridge.aleo/bridge_initialize.future;
+    async initialize_tb r0 r1 r2 r3 r4 r5 r6 into r7;
+    output r7 as token_bridge.aleo/initialize_tb.future;
 
-finalize bridge_initialize:
+finalize initialize_tb:
     input r0 as u8.public;
     input r1 as address.public;
     input r2 as address.public;
@@ -151,12 +151,24 @@ finalize bridge_initialize:
     set r6 into governance_TB[true];
 
 
-function update_bridge_governance:
-    input r0 as address.public;
-    async update_bridge_governance self.caller r0 into r1;
-    output r1 as token_bridge.aleo/update_bridge_governance.future;
+function update_attestor_key:
+    input r0 as address.private;
+    async update_attestor_key self.caller r0 into r1;
+    output r1 as token_bridge.aleo/update_attestor_key.future;
 
-finalize update_bridge_governance:
+finalize update_attestor_key:
+    input r0 as address.public;
+    input r1 as address.public;
+    remove attestors[r0];
+    set true into attestors[r1];
+
+
+function update_governance_tb:
+    input r0 as address.public;
+    async update_governance_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/update_governance_tb.future;
+
+finalize update_governance_tb:
     input r0 as address.public;
     input r1 as address.public;
     get governance_TB[true] into r2;
@@ -164,52 +176,13 @@ finalize update_bridge_governance:
     set r1 into governance_TB[true];
 
 
-function update_bridge_threshold:
-    input r0 as u8.public;
-    async update_bridge_threshold self.caller r0 into r1;
-    output r1 as token_bridge.aleo/update_bridge_threshold.future;
-
-finalize update_bridge_threshold:
-    input r0 as address.public;
-    input r1 as u8.public;
-    get governance_TB[true] into r2;
-    assert.eq r0 r2;
-    set r1 into bridge_settings[0u8];
-
-
-function add_service:
-    input r0 as address.public;
-    async add_service self.caller r0 into r1;
-    output r1 as token_bridge.aleo/add_service.future;
-
-finalize add_service:
-    input r0 as address.public;
-    input r1 as address.public;
-    get governance_TB[true] into r2;
-    assert.eq r0 r2;
-    set true into supported_services[r1];
-
-
-function remove_service:
-    input r0 as address.public;
-    async remove_service self.caller r0 into r1;
-    output r1 as token_bridge.aleo/remove_service.future;
-
-finalize remove_service:
-    input r0 as address.public;
-    input r1 as address.public;
-    get governance_TB[true] into r2;
-    assert.eq r0 r2;
-    remove supported_services[r1];
-
-
-function add_attestor:
+function add_attestor_tb:
     input r0 as address.public;
     input r1 as u8.private;
-    async add_attestor self.caller r0 r1 into r2;
-    output r2 as token_bridge.aleo/add_attestor.future;
+    async add_attestor_tb self.caller r0 r1 into r2;
+    output r2 as token_bridge.aleo/add_attestor_tb.future;
 
-finalize add_attestor:
+finalize add_attestor_tb:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u8.public;
@@ -219,13 +192,13 @@ finalize add_attestor:
     set r2 into bridge_settings[0u8];
 
 
-function remove_attestor:
+function remove_attestor_tb:
     input r0 as address.public;
     input r1 as u8.private;
-    async remove_attestor self.caller r0 r1 into r2;
-    output r2 as token_bridge.aleo/remove_attestor.future;
+    async remove_attestor_tb self.caller r0 r1 into r2;
+    output r2 as token_bridge.aleo/remove_attestor_tb.future;
 
-finalize remove_attestor:
+finalize remove_attestor_tb:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u8.public;
@@ -235,12 +208,25 @@ finalize remove_attestor:
     set r2 into bridge_settings[0u8];
 
 
-function approve_chain:
-    input r0 as u128.public;
-    async approve_chain self.caller r0 into r1;
-    output r1 as token_bridge.aleo/approve_chain.future;
+function update_threshold_tb:
+    input r0 as u8.public;
+    async update_threshold_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/update_threshold_tb.future;
 
-finalize approve_chain:
+finalize update_threshold_tb:
+    input r0 as address.public;
+    input r1 as u8.public;
+    get governance_TB[true] into r2;
+    assert.eq r0 r2;
+    set r1 into bridge_settings[0u8];
+
+
+function enable_chain_tb:
+    input r0 as u128.public;
+    async enable_chain_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/enable_chain_tb.future;
+
+finalize enable_chain_tb:
     input r0 as address.public;
     input r1 as u128.public;
     get governance_TB[true] into r2;
@@ -248,17 +234,43 @@ finalize approve_chain:
     set true into supported_chains[r1];
 
 
-function disapprove_chain:
+function disable_chain_tb:
     input r0 as u128.public;
-    async disapprove_chain self.caller r0 into r1;
-    output r1 as token_bridge.aleo/disapprove_chain.future;
+    async disable_chain_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/disable_chain_tb.future;
 
-finalize disapprove_chain:
+finalize disable_chain_tb:
     input r0 as address.public;
     input r1 as u128.public;
     get governance_TB[true] into r2;
     assert.eq r0 r2;
     remove supported_chains[r1];
+
+
+function enable_service_tb:
+    input r0 as address.public;
+    async enable_service_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/enable_service_tb.future;
+
+finalize enable_service_tb:
+    input r0 as address.public;
+    input r1 as address.public;
+    get governance_TB[true] into r2;
+    assert.eq r0 r2;
+    set true into supported_services[r1];
+
+
+function disable_service_tb:
+    input r0 as address.public;
+    async disable_service_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/disable_service_tb.future;
+
+finalize disable_service_tb:
+    input r0 as address.public;
+    input r1 as address.public;
+    get governance_TB[true] into r2;
+    assert.eq r0 r2;
+    remove supported_services[r1];
 
 
 function publish:

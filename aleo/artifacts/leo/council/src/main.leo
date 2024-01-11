@@ -8,17 +8,15 @@ program council.aleo {
     // Members of the Council
     mapping members: address => bool;
 
-    const THRESHOLD_INDEX: u8 = 1u8;
-    const TOTAL_MEMBERS_INDEX: u8 = 2u8;
-    const TOTAL_PROPOSALS_INDEX: u8 = 3u8;
-
-    // keys setting index
-    mapping settings: u8 => u32;
+    const THRESHOLD_INDEX: bool = true;
+    const TOTAL_MEMBERS_INDEX: bool = false;
+    mapping settings: bool => u8;
 
     // key is hash(proposal)
     mapping proposal_vote_counts: field => u8;
     mapping proposal_executed: field => bool;
 
+    const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
     mapping proposals: u32 => field;
 
     struct ProposalSign {
@@ -33,14 +31,14 @@ program council.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize(public m1: address, public m2: address, public m3: address, public m4: address, public m5: address, public threshold: u32) {
+    transition initialize(public m1: address, public m2: address, public m3: address, public m4: address, public m5: address, public threshold: u8) {
         // TODO: Assert that the members are different
         return then finalize(m1, m2, m3, m4, m5, threshold);
     }
 
-    finalize initialize(m1: address, m2: address, m3: address, m4: address, m5: address, threshold: u32) {
+    finalize initialize(m1: address, m2: address, m3: address, m4: address, m5: address, threshold: u8) {
         // Assert council has not been initialized before
-        assert(!Mapping::contains(settings, 0u8));
+        assert(!Mapping::contains(settings, true));
 
         Mapping::set(members, m1, true);
         Mapping::set(members, m2, true);
@@ -50,8 +48,8 @@ program council.aleo {
 
         // Set the initial initial values
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
-        Mapping::set(settings, TOTAL_MEMBERS_INDEX, 5u32);
-        Mapping::set(settings, TOTAL_PROPOSALS_INDEX, 1u32);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, 5u8);
+        Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
     }
 
     transition propose(public id: u32, public proposal_hash: field) {
@@ -75,9 +73,10 @@ program council.aleo {
         assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
 
         // Assert that the proposal id is expected
-        let expected_proposal_id: u32 = Mapping::get(settings, TOTAL_PROPOSALS_INDEX);
+        let total_proposals: field = Mapping::get(proposals, TOTAL_PROPOSALS_INDEX);
+        let expected_proposal_id: u32 = (total_proposals + 1field ) as u32;
         assert_eq(expected_proposal_id, proposal_id);
-        Mapping::set(settings, TOTAL_PROPOSALS_INDEX, proposal_id + 1u32);
+        Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, total_proposals + 1field);
 
         // Store the proposal hash
         Mapping::set(proposals, proposal_id, proposal_hash);
@@ -126,14 +125,14 @@ program council.aleo {
     /////// 1. Add New Member //////
     ////////////////////////////////
 
-    struct AddMemberProposal {
+    struct AddMember {
         id: u32,
         new_member: address,
         new_threshold: u8
     }
 
-    transition exec_add_member(public id: u32, public new_member: address, public new_threshold: u8) {
-        let proposal: AddMemberProposal = AddMemberProposal {
+    transition add_member(public id: u32, public new_member: address, public new_threshold: u8) {
+        let proposal: AddMember = AddMember {
             id,
             new_member,
             new_threshold
@@ -143,16 +142,16 @@ program council.aleo {
         return then finalize(proposal_hash, new_member, new_threshold);
     }
 
-    finalize exec_add_member(proposal_hash: field, new_member: address, new_threshold: u8) {
+    finalize add_member(proposal_hash: field, new_member: address, new_threshold: u8) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        assert(new_threshold >= threshold as u8);
+        assert(new_threshold >= threshold);
 
         // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold );
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -163,25 +162,25 @@ program council.aleo {
         // Execute the proposal
         assert(!Mapping::contains(members, new_member));
         Mapping::set(members, new_member, true);
-        Mapping::set(settings, THRESHOLD_INDEX, new_threshold as u32);
+        Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
 
         // Update total members
-        let current_members_count: u32 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
-        Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u32);
+        let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u8);
     }
 
     /////////////////////////////////
     /////// 2. Remove A Member //////
     /////////////////////////////////
     
-    struct RemoveMemberProposal {
+    struct RemoveMember {
         id: u32,
         existing_member: address,
         new_threshold: u8
     }
 
-    transition exec_remove_member(public id: u32, public existing_member: address, new_threshold: u8) {
-        let proposal: RemoveMemberProposal = RemoveMemberProposal {
+    transition remove_member(public id: u32, public existing_member: address, new_threshold: u8) {
+        let proposal: RemoveMember = RemoveMember {
             id,
             existing_member,
             new_threshold
@@ -192,16 +191,14 @@ program council.aleo {
         return then finalize(proposal_hash, existing_member, new_threshold);
     }
 
-    finalize exec_remove_member(proposal_hash: field, existing_member: address, new_threshold: u8) {
+    finalize remove_member(proposal_hash: field, existing_member: address, new_threshold: u8) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
-
-        assert(new_threshold >= 1u8);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
-        let votes: u8 = Mapping::get_or_use(proposal_vote_counts, proposal_hash, 0u8);
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -211,25 +208,26 @@ program council.aleo {
 
         // Execute the proposal
         Mapping::remove(members, existing_member);
-        Mapping::set(settings, THRESHOLD_INDEX, new_threshold as u32);
+        assert(new_threshold >= 1u8);
+        Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
 
         // Update total members
-        let current_members_count: u32 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
-        assert(current_members_count >= 2u32);
-        Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u32);
+        let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(current_members_count >= 2u8);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u8);
     }
 
     //////////////////////////////////
     /////// 3. Update Threshold //////
     //////////////////////////////////
 
-    struct UpdateThresholdProposal {
+    struct UpdateThreshold {
         id: u32,
         new_threshold: u8
     }
 
-    transition exec_update_threshold(public id: u32, public new_threshold: u8) {
-        let proposal: UpdateThresholdProposal = UpdateThresholdProposal {
+    transition update_threshold(public id: u32, public new_threshold: u8) {
+        let proposal: UpdateThreshold = UpdateThreshold {
             id,
             new_threshold
         };
@@ -238,16 +236,16 @@ program council.aleo {
         return then finalize(proposal_hash, new_threshold);
     }
 
-    finalize exec_update_threshold(proposal_hash: field, new_threshold: u8) {
+    finalize update_threshold(proposal_hash: field, new_threshold: u8) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         assert(new_threshold >= 1u8);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -256,39 +254,233 @@ program council.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
 
         // Execute the proposal
-        Mapping::set(settings, THRESHOLD_INDEX, new_threshold as u32);
+        Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
     }
 
-    ////////////////////////////////////////////
-    /////// 4. Approve Chain on Bridge ////////
-    ///////////////////////////////////////////
+    //////////////////////////////////////////
+    /////// Bridge: Update Governance ////////
+    //////////////////////////////////////////
 
-    struct ApproveChainBridgeProposal {
+    struct TbUpdateGovernance {
+        id: u32,
+        new_governance: address
+    }
+
+    transition tb_update_governance(public id: u32, public new_governance: address) {
+        let proposal: TbUpdateGovernance = TbUpdateGovernance {
+            id,
+            new_governance
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge.aleo/update_governance_tb(new_governance);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize tb_update_governance(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    /////////////////////////////////////
+    /////// Bridge: Add Attestor ////////
+    /////////////////////////////////////
+
+    struct TbAddAttestor {
+        id: u32,
+        new_attestor: address,
+        new_threshold: u8
+    }
+
+    transition tb_add_attestor(public id: u32, public new_attestor: address, new_threshold: u8) {
+        let proposal: TbAddAttestor = TbAddAttestor {
+            id,
+            new_attestor,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge.aleo/add_attestor_tb(new_attestor, new_threshold);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize tb_add_attestor(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ////////////////////////////////////////
+    /////// Bridge: Remove Attestor ////////
+    ///////////////////////////////////////
+
+    struct TbRemoveAttestor {
+        id: u32,
+        existing_attestor: address,
+        new_threshold: u8
+    }
+
+    transition tb_remove_attestor(public id: u32, public existing_attestor: address, new_threshold: u8) {
+        let proposal: TbRemoveAttestor = TbRemoveAttestor {
+            id,
+            existing_attestor,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge.aleo/remove_attestor_tb(existing_attestor, new_threshold);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize tb_remove_attestor(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    /////////////////////////////////////////
+    /////// Bridge: Update Threshold ////////
+    /////////////////////////////////////////
+
+    struct TbUpdateThreshold {
+        id: u32,
+        new_threshold: u8
+    }
+
+    transition tb_update_threshold(public id: u32, public new_threshold: u8) {
+        let proposal: TbUpdateThreshold = TbUpdateThreshold {
+            id,
+            new_threshold
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge.aleo/update_threshold_tb(new_threshold);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize tb_update_threshold(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ///////////////////////////////////////
+    /////// Bridge: Enable Chain ////////
+    //////////////////////////////////////
+
+    struct TbEnableChain {
         id: u32,
         chain_id: u128
     }
 
-    transition exec_approve_chain_bridge(public id: u32, public chain_id: u128) {
-        let proposal: ApproveChainBridgeProposal = ApproveChainBridgeProposal {
+    transition tb_enable_chain(public id: u32, public chain_id: u128) {
+        let proposal: TbEnableChain = TbEnableChain {
             id,
             chain_id
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge.aleo/approve_chain(chain_id);
+        token_bridge.aleo/enable_chain_tb(chain_id);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_approve_chain_bridge(proposal_hash: field) {
+    finalize tb_enable_chain(proposal_hash: field) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ///////////////////////////////////////
+    /////// Bridge: Disable Chain /////////
+    ///////////////////////////////////////
+
+    struct TbDisableChain {
+        id: u32,
+        chain_id: u128
+    }
+
+    transition disapprove_chain_bridge(public id: u32, public chain_id: u128) {
+        let proposal: TbDisableChain = TbDisableChain {
+            id,
+            chain_id
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge.aleo/disable_chain_tb(chain_id);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize disapprove_chain_bridge(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -298,36 +490,36 @@ program council.aleo {
     }
 
 
-    //////////////////////////////////
-    /////// 5. Enable Service ////////
-    //////////////////////////////////
+    ///////////////////////////////////////
+    /////// Bridge: Enable Service ////////
+    ///////////////////////////////////////
 
-    struct EnableServiceProposal {
+    struct TbEnableService {
         id: u32,
         service: address
     }
 
-    transition exec_enable_service(public id: u32, public service: address) {
-        let proposal: EnableServiceProposal = EnableServiceProposal {
+    transition tb_enable_service(public id: u32, public service: address) {
+        let proposal: TbEnableService = TbEnableService {
             id,
             service
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge.aleo/add_service(service);
+        token_bridge.aleo/enable_service_tb(service);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_enable_service(proposal_hash: field) {
+    finalize tb_enable_service(proposal_hash: field) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -337,76 +529,75 @@ program council.aleo {
 
     }
 
-    //////////////////////////////////
-    /////// 6. Withdraw Chain ////////
-    /////////////////////////////////
+    ///////////////////////////////////////
+    /////// Bridge: Disable Service ////////
+    ///////////////////////////////////////
 
-    struct DisapproveChainBridge {
+    struct TbDisableService {
         id: u32,
-        chain_id: u128
+        service: address
     }
 
-    transition exec_disapprove_chain_bridge(public id: u32, public chain_id: u128) {
-        let proposal: DisapproveChainBridge = DisapproveChainBridge {
+    transition tb_disable_service(public id: u32, public service: address) {
+        let proposal: TbEnableService = TbEnableService {
             id,
-            chain_id
+            service
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge.aleo/disapprove_chain(chain_id);
+        token_bridge.aleo/disable_service_tb(service);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_disapprove_chain_bridge(proposal_hash: field) {
+    finalize tb_disable_service(proposal_hash: field) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
 
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
+
     }
 
-    //////////////////////////////////////////////
-    /////// 7. Support Chain on Token Service ////
-    //////////////////////////////////////////////
+    /////////////////////////////////////////////
+    /////// Wrapped Token: Update Governance ////
+    /////////////////////////////////////////////
 
-    struct SupportChainTS {
+    struct WtUpdateGovernance {
         id: u32,
-        chain_id: u128,
-        token_service: [u8; 32]
+        new_governance: address
     }
 
-    transition exec_support_chain_ts(public id: u32, public chain_id: u128, public token_service: [u8; 32]) {
-        let proposal: SupportChainTS = SupportChainTS {
+    transition wt_update_governance(public id: u32, public new_governance: address) {
+        let proposal: WtUpdateGovernance = WtUpdateGovernance {
             id,
-            chain_id,
-            token_service
+            new_governance
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service.aleo/support_chain(chain_id, token_service);
+        wrapped_token.aleo/update_governance_wt(new_governance);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_support_chain_ts(proposal_hash: field) {
+    finalize wt_update_governance(proposal_hash: field) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -415,11 +606,12 @@ program council.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
     }
 
-    //////////////////////////////
-    ////// 8. Add New Token //////
-    //////////////////////////////
 
-    struct SupportToken {
+    //////////////////////////////////////
+    ////// Wrapped Token: Add Token //////
+    //////////////////////////////////////
+
+    struct WtAddToken {
         id: u32,
         name: [u8; 32],
         symbol: [u8; 16],
@@ -428,8 +620,8 @@ program council.aleo {
         origin_contract_address: [u8; 32]
     }
 
-    transition exec_add_new_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
-        let proposal: SupportToken = SupportToken {
+    transition wt_add_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
+        let proposal: WtAddToken = WtAddToken {
             id,
             name,
             symbol,
@@ -441,19 +633,19 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        wrapped_token.aleo/add_token(name, symbol, decimals, origin_chain_id, origin_contract_address);
+        wrapped_token.aleo/add_token_wt(name, symbol, decimals, origin_chain_id, origin_contract_address);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_add_new_token(proposal_hash: field) {
+    finalize wt_add_token(proposal_hash: field) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -463,11 +655,91 @@ program council.aleo {
 
     }
 
-    /////////////////////////////////
-    ///////  9. Enable Token ////////
-    /////////////////////////////////
 
-    struct EnableToken {
+    /////////////////////////////////////////
+    /////// Token Service: Support Chain ///
+    ////////////////////////////////////////
+
+    struct TsSupportChain {
+        id: u32,
+        chain_id: u128,
+        token_service: [u8; 32]
+    }
+
+    transition ts_support_chain(public id: u32, public chain_id: u128, public token_service: [u8; 32]) {
+        let proposal: TsSupportChain = TsSupportChain {
+            id,
+            chain_id,
+            token_service
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/support_chain_ts(chain_id, token_service);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_support_chain(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    /////////////////////////////////////////
+    /////// Token Service: Remove Chain ///
+    ////////////////////////////////////////
+
+    struct TsRemoveChain {
+        id: u32,
+        chain_id: u128,
+    }
+
+    transition ts_remove_chain(public id: u32, public chain_id: u128) {
+        let proposal: TsRemoveChain = TsRemoveChain {
+            id,
+            chain_id,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/remove_chain_ts(chain_id);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_remove_chain(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+
+    //////////////////////////////////////////////
+    ///////  Token Service: Manage Token ////////
+    //////////////////////////////////////////////
+
+    struct TsManageToken {
         id: u32,
         token_id: address,
         minimum_transfer: u64,
@@ -475,8 +747,8 @@ program council.aleo {
         time: u32
     }
 
-    transition exec_enable_new_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
-        let proposal: EnableToken  = EnableToken {
+    transition ts_manage_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+        let proposal: TsManageToken  = TsManageToken {
             id,
             token_id,
             minimum_transfer,
@@ -486,19 +758,19 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service.aleo/enable_token(token_id, minimum_transfer, outgoing_percentage, time);
+        token_service.aleo/manage_token_ts(token_id, minimum_transfer, outgoing_percentage, time);
 
         return then finalize(proposal_hash);
     }
 
-    finalize exec_enable_new_token(proposal_hash: field) {
+    finalize ts_manage_token(proposal_hash: field) {
         // Get the threshold
-        let threshold: u32 = Mapping::get(settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold as u8);
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -507,6 +779,5 @@ program council.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
 
     }
-
 
 }

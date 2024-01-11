@@ -52,33 +52,57 @@ export class Token_serviceContract {
 
     return result;
   }
-  async token_service_initialize(r0: string, r1: string) {
+  async initialize_ts(r0: string, r1: string) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'token_service_initialize',
+      transition: 'initialize_ts',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async support_chain(r0: BigInt, r1: Array < number > ) {
+  async update_governance_ts(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_governance_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async support_chain_ts(r0: BigInt, r1: Array < number > ) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'support_chain',
+      transition: 'support_chain_ts',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async enable_token(r0: string, r1: BigInt, r2: number, r3: number) {
+  async remove_chain_ts(r0: BigInt) {
+    const r0Leo = js2leo.u128(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'remove_chain_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async manage_token_ts(r0: string, r1: BigInt, r2: number, r3: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.u16(r2);
@@ -87,7 +111,7 @@ export class Token_serviceContract {
     const params = [r0Leo, r1Leo, r2Leo, r3Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'enable_token',
+      transition: 'manage_token_ts',
       params,
     });
     if (this.config.mode === "execute") return result;

@@ -79,7 +79,7 @@ export class Token_bridgeContract {
 
     return result;
   }
-  async bridge_initialize(r0: number, r1: string, r2: string, r3: string, r4: string, r5: string, r6: string) {
+  async initialize_tb(r0: number, r1: string, r2: string, r3: string, r4: string, r5: string, r6: string) {
     const r0Leo = js2leo.u8(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
@@ -91,105 +91,117 @@ export class Token_bridgeContract {
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'bridge_initialize',
+      transition: 'initialize_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async update_bridge_governance(r0: string) {
+  async update_attestor_key(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_bridge_governance',
+      transition: 'update_attestor_key',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async update_bridge_threshold(r0: number) {
+  async update_governance_tb(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_governance_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async add_attestor_tb(r0: string, r1: number) {
+    const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'add_attestor_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async remove_attestor_tb(r0: string, r1: number) {
+    const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.u8(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'remove_attestor_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_threshold_tb(r0: number) {
     const r0Leo = js2leo.u8(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_bridge_threshold',
+      transition: 'update_threshold_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async add_service(r0: string) {
-    const r0Leo = js2leo.address(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'add_service',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async remove_service(r0: string) {
-    const r0Leo = js2leo.address(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'remove_service',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async add_attestor(r0: string, r1: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u8(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'add_attestor',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async remove_attestor(r0: string, r1: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u8(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'remove_attestor',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async approve_chain(r0: BigInt) {
+  async enable_chain_tb(r0: BigInt) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'approve_chain',
+      transition: 'enable_chain_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async disapprove_chain(r0: BigInt) {
+  async disable_chain_tb(r0: BigInt) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'disapprove_chain',
+      transition: 'disable_chain_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async enable_service_tb(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'enable_service_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async disable_service_tb(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'disable_service_tb',
       params,
     });
     if (this.config.mode === "execute") return result;

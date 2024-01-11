@@ -62,12 +62,12 @@ finalize wrapped_token_initialize:
     set r0 into governance_WT[true];
 
 
-function update_wrapped_token_governance:
+function update_governance_wt:
     input r0 as address.public;
-    async update_wrapped_token_governance self.caller r0 into r1;
-    output r1 as wrapped_token.aleo/update_wrapped_token_governance.future;
+    async update_governance_wt self.caller r0 into r1;
+    output r1 as wrapped_token.aleo/update_governance_wt.future;
 
-finalize update_wrapped_token_governance:
+finalize update_governance_wt:
     input r0 as address.public;
     input r1 as address.public;
     get governance_WT[true] into r2;
@@ -75,7 +75,7 @@ finalize update_wrapped_token_governance:
     set r1 into governance_WT[true];
 
 
-function add_token:
+function add_token_wt:
     input r0 as [u8; 32u32].public;
     input r1 as [u8; 16u32].public;
     input r2 as u8.public;
@@ -85,10 +85,10 @@ function add_token:
     cast r3 r4 into r6 as WTForeignContract;
     cast r5 r6 into r7 as WrappedTokenInfo;
     hash.bhp256 r7 into r8 as address;
-    async add_token self.caller r8 r0 r1 r2 r3 r4 into r9;
-    output r9 as wrapped_token.aleo/add_token.future;
+    async add_token_wt self.caller r8 r0 r1 r2 r3 r4 into r9;
+    output r9 as wrapped_token.aleo/add_token_wt.future;
 
-finalize add_token:
+finalize add_token_wt:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as [u8; 32u32].public;

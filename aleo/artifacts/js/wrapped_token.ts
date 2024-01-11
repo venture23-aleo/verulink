@@ -73,19 +73,19 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_wrapped_token_governance(r0: string) {
+  async update_governance_wt(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_wrapped_token_governance',
+      transition: 'update_governance_wt',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async add_token(r0: Array < number > , r1: Array < number > , r2: number, r3: BigInt, r4: Array < number > ) {
+  async add_token_wt(r0: Array < number > , r1: Array < number > , r2: number, r3: BigInt, r4: Array < number > ) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.u8(r2);
@@ -95,7 +95,7 @@ export class Wrapped_tokenContract {
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'add_token',
+      transition: 'add_token_wt',
       params,
     });
     if (this.config.mode === "execute") return result;
