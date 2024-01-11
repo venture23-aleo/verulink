@@ -22,7 +22,7 @@ import {
 } from "./leo-types";
 
 export interface ProposalSign {
-  proposal: BigInt;
+  proposal: bigint;
   member: string;
 }
 
@@ -119,7 +119,7 @@ export type TbUpdateThresholdLeo = z.infer < typeof leoTbUpdateThresholdSchema >
 
 export interface TbEnableChain {
   id: number;
-  chain_id: BigInt;
+  chain_id: bigint;
 }
 
 export const leoTbEnableChainSchema = z.object({
@@ -130,7 +130,7 @@ export type TbEnableChainLeo = z.infer < typeof leoTbEnableChainSchema > ;
 
 export interface TbDisableChain {
   id: number;
-  chain_id: BigInt;
+  chain_id: bigint;
 }
 
 export const leoTbDisableChainSchema = z.object({
@@ -177,7 +177,7 @@ export interface WtAddToken {
   name: Array < number > ;
   symbol: Array < number > ;
   decimals: number;
-  origin_chain_id: BigInt;
+  origin_chain_id: bigint;
   origin_contract_address: Array < number > ;
 }
 
@@ -204,7 +204,7 @@ export type TsUpdateGovernanceLeo = z.infer < typeof leoTsUpdateGovernanceSchema
 
 export interface TsSupportChain {
   id: number;
-  chain_id: BigInt;
+  chain_id: bigint;
   token_service: Array < number > ;
 }
 
@@ -217,7 +217,7 @@ export type TsSupportChainLeo = z.infer < typeof leoTsSupportChainSchema > ;
 
 export interface TsRemoveChain {
   id: number;
-  chain_id: BigInt;
+  chain_id: bigint;
 }
 
 export const leoTsRemoveChainSchema = z.object({
@@ -229,7 +229,7 @@ export type TsRemoveChainLeo = z.infer < typeof leoTsRemoveChainSchema > ;
 export interface TsSupportToken {
   id: number;
   token_id: string;
-  minimum_transfer: BigInt;
+  minimum_transfer: bigint;
   outgoing_percentage: number;
   time: number;
 }
@@ -257,7 +257,7 @@ export type TsRemoveTokenLeo = z.infer < typeof leoTsRemoveTokenSchema > ;
 export interface TsUpdateMinimumTransfer {
   id: number;
   token_id: string;
-  minimum_transfer: BigInt;
+  minimum_transfer: bigint;
 }
 
 export const leoTsUpdateMinimumTransferSchema = z.object({
@@ -297,7 +297,7 @@ export interface ReleaseFund {
   id: number;
   token_id: string;
   user: string;
-  amount: BigInt;
+  amount: bigint;
 }
 
 export const leoReleaseFundSchema = z.object({

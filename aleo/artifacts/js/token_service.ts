@@ -38,14 +38,22 @@ export class Token_serviceContract {
       ...this.config,
       ...config
     };
-    if (config.networkName) {
-      if (!networkConfig?.networks[config.networkName])
-        throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
+    if (!config.networkName)
+      this.config.networkName = networkConfig.defaultNetwork;
+
+    const networkName = this.config.networkName;
+    if (networkName) {
+      if (!networkConfig?.networks[networkName])
+        throw Error(`Network config not defined for ${ networkName }.Please add the config in aleo - config.js file in root directory`)
+
       this.config = {
         ...this.config,
-        network: networkConfig.networks[config.networkName]
+        network: networkConfig.networks[networkName]
       };
     }
+
+    if (!this.config.privateKey)
+      this.config.privateKey = networkConfig.networks[networkName].accounts[0];
   }
 
   async deploy(): Promise < any > {
@@ -80,7 +88,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async support_chain_ts(r0: BigInt, r1: Array < number > ) {
+  async support_chain_ts(r0: bigint, r1: Array < number > ) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
 
@@ -93,7 +101,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async remove_chain_ts(r0: BigInt) {
+  async remove_chain_ts(r0: bigint) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
@@ -105,7 +113,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async support_token_ts(r0: string, r1: BigInt, r2: number, r3: number) {
+  async support_token_ts(r0: string, r1: bigint, r2: number, r3: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.u16(r2);
@@ -132,7 +140,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_minimum_transfer_ts(r0: string, r1: BigInt) {
+  async update_minimum_transfer_ts(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
 
@@ -159,7 +167,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_send(r0: string, r1: Array < number > , r2: BigInt, r3: TokenOrigin) {
+  async token_send(r0: string, r1: Array < number > , r2: bigint, r3: TokenOrigin) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.u64(r2);
@@ -174,7 +182,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_receive(r0: TokenOrigin, r1: string, r2: Array < number > , r3: string, r4: string, r5: BigInt, r6: number, r7: number) {
+  async token_receive(r0: TokenOrigin, r1: string, r2: Array < number > , r3: string, r4: string, r5: bigint, r6: number, r7: number) {
     const r0Leo = js2leo.json(getTokenOriginLeo(r0));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
@@ -193,7 +201,7 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_service_contracts(key: BigInt): Promise < Array < number >> {
+  async token_service_contracts(key: bigint): Promise < Array < number >> {
     const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]
@@ -229,7 +237,7 @@ export class Token_serviceContract {
     return leo2js.address(result);
   }
 
-  async total_supply(key: string): Promise < BigInt > {
+  async total_supply(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
@@ -241,7 +249,7 @@ export class Token_serviceContract {
     return leo2js.u64(result);
   }
 
-  async minimum_transfers(key: string): Promise < BigInt > {
+  async minimum_transfers(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
@@ -289,7 +297,7 @@ export class Token_serviceContract {
     return leo2js.u32(result);
   }
 
-  async last_min_supply(key: string): Promise < BigInt > {
+  async last_min_supply(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]

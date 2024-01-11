@@ -44,14 +44,22 @@ export class Wrapped_tokenContract {
       ...this.config,
       ...config
     };
-    if (config.networkName) {
-      if (!networkConfig?.networks[config.networkName])
-        throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
+    if (!config.networkName)
+      this.config.networkName = networkConfig.defaultNetwork;
+
+    const networkName = this.config.networkName;
+    if (networkName) {
+      if (!networkConfig?.networks[networkName])
+        throw Error(`Network config not defined for ${ networkName }.Please add the config in aleo - config.js file in root directory`)
+
       this.config = {
         ...this.config,
-        network: networkConfig.networks[config.networkName]
+        network: networkConfig.networks[networkName]
       };
     }
+
+    if (!this.config.privateKey)
+      this.config.privateKey = networkConfig.networks[networkName].accounts[0];
   }
 
   async deploy(): Promise < any > {
@@ -85,7 +93,7 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async add_token_wt(r0: Array < number > , r1: Array < number > , r2: number, r3: BigInt, r4: Array < number > ) {
+  async add_token_wt(r0: Array < number > , r1: Array < number > , r2: number, r3: bigint, r4: Array < number > ) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.u8(r2);
@@ -101,7 +109,7 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async transfer_public(r0: string, r1: BigInt, r2: string) {
+  async transfer_public(r0: string, r1: bigint, r2: string) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.address(r2);
@@ -115,7 +123,7 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async transfer_private(r0: wrapped_token, r1: string, r2: BigInt): Promise < [wrapped_token, wrapped_token] | any > {
+  async transfer_private(r0: wrapped_token, r1: string, r2: bigint): Promise < [wrapped_token, wrapped_token] | any > {
     const r0Leo = js2leo.json(getwrapped_tokenLeo(r0));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -132,7 +140,7 @@ export class Wrapped_tokenContract {
     return [out0, out1];
   }
 
-  async transfer_private_to_public(r0: wrapped_token, r1: string, r2: BigInt): Promise < wrapped_token | any > {
+  async transfer_private_to_public(r0: wrapped_token, r1: string, r2: bigint): Promise < wrapped_token | any > {
     const r0Leo = js2leo.json(getwrapped_tokenLeo(r0));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -148,7 +156,7 @@ export class Wrapped_tokenContract {
     return out0;
   }
 
-  async transfer_public_to_private(r0: string, r1: BigInt, r2: string): Promise < wrapped_token | any > {
+  async transfer_public_to_private(r0: string, r1: bigint, r2: string): Promise < wrapped_token | any > {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.address(r2);
@@ -164,7 +172,7 @@ export class Wrapped_tokenContract {
     return out0;
   }
 
-  async mint(r0: string, r1: BigInt, r2: string, r3: BigInt, r4: Array < number > ) {
+  async mint(r0: string, r1: bigint, r2: string, r3: bigint, r4: Array < number > ) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u64(r1);
     const r2Leo = js2leo.address(r2);
@@ -180,7 +188,7 @@ export class Wrapped_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async burn(r0: BigInt, r1: string, r2: BigInt, r3: Array < number > ) {
+  async burn(r0: bigint, r1: string, r2: bigint, r3: Array < number > ) {
     const r0Leo = js2leo.u64(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u128(r2);
@@ -219,7 +227,7 @@ export class Wrapped_tokenContract {
     return getWTForeignContract(result);
   }
 
-  async token_supply(key: string): Promise < BigInt > {
+  async token_supply(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
@@ -231,7 +239,7 @@ export class Wrapped_tokenContract {
     return leo2js.u64(result);
   }
 
-  async token_balances(key: TokenAccount): Promise < BigInt > {
+  async token_balances(key: TokenAccount): Promise < bigint > {
     const keyLeo = js2leo.json(getTokenAccountLeo(key));
 
     const params = [keyLeo]

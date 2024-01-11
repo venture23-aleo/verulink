@@ -158,14 +158,22 @@ export class CouncilContract {
       ...this.config,
       ...config
     };
-    if (config.networkName) {
-      if (!networkConfig?.networks[config.networkName])
-        throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
+    if (!config.networkName)
+      this.config.networkName = networkConfig.defaultNetwork;
+
+    const networkName = this.config.networkName;
+    if (networkName) {
+      if (!networkConfig?.networks[networkName])
+        throw Error(`Network config not defined for ${ networkName }.Please add the config in aleo - config.js file in root directory`)
+
       this.config = {
         ...this.config,
-        network: networkConfig.networks[config.networkName]
+        network: networkConfig.networks[networkName]
       };
     }
+
+    if (!this.config.privateKey)
+      this.config.privateKey = networkConfig.networks[networkName].accounts[0];
   }
 
   async deploy(): Promise < any > {
@@ -192,7 +200,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async propose(r0: number, r1: BigInt) {
+  async propose(r0: number, r1: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.field(r1);
 
@@ -205,7 +213,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async vote(r0: BigInt, r1: number) {
+  async vote(r0: bigint, r1: number) {
     const r0Leo = js2leo.field(r0);
     const r1Leo = js2leo.u8(r1);
 
@@ -313,7 +321,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async tb_enable_chain(r0: number, r1: BigInt) {
+  async tb_enable_chain(r0: number, r1: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.u128(r1);
 
@@ -326,7 +334,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async disapprove_chain_bridge(r0: number, r1: BigInt) {
+  async disapprove_chain_bridge(r0: number, r1: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.u128(r1);
 
@@ -378,7 +386,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async wt_add_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: BigInt, r5: Array < number > ) {
+  async wt_add_token(r0: number, r1: Array < number > , r2: Array < number > , r3: number, r4: bigint, r5: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
@@ -408,7 +416,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_support_chain(r0: number, r1: BigInt, r2: Array < number > ) {
+  async ts_support_chain(r0: number, r1: bigint, r2: Array < number > ) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.u128(r1);
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
@@ -422,7 +430,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_remove_chain(r0: number, r1: BigInt) {
+  async ts_remove_chain(r0: number, r1: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.u128(r1);
 
@@ -435,7 +443,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_support_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
+  async ts_support_token(r0: number, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -464,7 +472,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_update_minimum_transfer(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
+  async ts_update_minimum_transfer(r0: number, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -508,7 +516,7 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async release_fund_from_holding(r0: number, r1: string, r2: string, r3: BigInt) {
+  async release_fund_from_holding(r0: number, r1: string, r2: string, r3: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
@@ -547,7 +555,7 @@ export class CouncilContract {
     return leo2js.u8(result);
   }
 
-  async proposal_vote_counts(key: BigInt): Promise < number > {
+  async proposal_vote_counts(key: bigint): Promise < number > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
@@ -559,7 +567,7 @@ export class CouncilContract {
     return leo2js.u8(result);
   }
 
-  async proposal_executed(key: BigInt): Promise < boolean > {
+  async proposal_executed(key: bigint): Promise < boolean > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
@@ -571,7 +579,7 @@ export class CouncilContract {
     return leo2js.boolean(result);
   }
 
-  async proposals(key: number): Promise < BigInt > {
+  async proposals(key: number): Promise < bigint > {
     const keyLeo = js2leo.u32(key);
 
     const params = [keyLeo]
@@ -583,7 +591,7 @@ export class CouncilContract {
     return leo2js.field(result);
   }
 
-  async proposal_vote_signs(key: BigInt): Promise < boolean > {
+  async proposal_vote_signs(key: bigint): Promise < boolean > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]

@@ -24,8 +24,8 @@ import {
 export interface wrapped_token {
   owner: string;
   token_id: string;
-  amount: BigInt;
-  _nonce: BigInt;
+  amount: bigint;
+  _nonce: bigint;
 }
 
 export const leoWrapped_tokenSchema = z.object({
@@ -37,7 +37,7 @@ export const leoWrapped_tokenSchema = z.object({
 export type wrapped_tokenLeo = z.infer < typeof leoWrapped_tokenSchema > ;
 
 export interface WTForeignContract {
-  chain_id: BigInt;
+  chain_id: bigint;
   contract_address: Array < number > ;
 }
 

@@ -22,7 +22,7 @@ import {
 } from "./leo-types";
 
 export interface TSForeignContract {
-  chain_id: BigInt;
+  chain_id: bigint;
   contract_address: Array < number > ;
 }
 
@@ -33,7 +33,7 @@ export const leoTSForeignContractSchema = z.object({
 export type TSForeignContractLeo = z.infer < typeof leoTSForeignContractSchema > ;
 
 export interface TokenOrigin {
-  chain_id: BigInt;
+  chain_id: bigint;
   token_service_address: Array < number > ;
   token_address: Array < number > ;
 }

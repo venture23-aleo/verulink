@@ -62,14 +62,22 @@ export class Token_bridgeContract {
       ...this.config,
       ...config
     };
-    if (config.networkName) {
-      if (!networkConfig?.networks[config.networkName])
-        throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
+    if (!config.networkName)
+      this.config.networkName = networkConfig.defaultNetwork;
+
+    const networkName = this.config.networkName;
+    if (networkName) {
+      if (!networkConfig?.networks[networkName])
+        throw Error(`Network config not defined for ${ networkName }.Please add the config in aleo - config.js file in root directory`)
+
       this.config = {
         ...this.config,
-        network: networkConfig.networks[config.networkName]
+        network: networkConfig.networks[networkName]
       };
     }
+
+    if (!this.config.privateKey)
+      this.config.privateKey = networkConfig.networks[networkName].accounts[0];
   }
 
   async deploy(): Promise < any > {
@@ -159,7 +167,7 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async enable_chain_tb(r0: BigInt) {
+  async enable_chain_tb(r0: bigint) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
@@ -171,7 +179,7 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async disable_chain_tb(r0: BigInt) {
+  async disable_chain_tb(r0: bigint) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
@@ -207,7 +215,7 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async publish(r0: BigInt, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: BigInt) {
+  async publish(r0: bigint, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: bigint) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
@@ -237,7 +245,7 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async consume(r0: BigInt, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: BigInt, r7: number, r8: number) {
+  async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: number, r8: number) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.address(r2);
@@ -293,7 +301,7 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async in_packet_attestations(key: BigInt): Promise < number > {
+  async in_packet_attestations(key: bigint): Promise < number > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
@@ -317,7 +325,7 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async in_packet_hash(key: PacketId): Promise < BigInt > {
+  async in_packet_hash(key: PacketId): Promise < bigint > {
     const keyLeo = js2leo.json(getPacketIdLeo(key));
 
     const params = [keyLeo]
@@ -353,7 +361,7 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async supported_chains(key: BigInt): Promise < boolean > {
+  async supported_chains(key: bigint): Promise < boolean > {
     const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]
@@ -377,7 +385,7 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async sequences(key: BigInt): Promise < number > {
+  async sequences(key: bigint): Promise < number > {
     const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]

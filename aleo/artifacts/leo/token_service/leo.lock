@@ -6,15 +6,15 @@ checksum = "014d0483d41b0181167494e0dc426424139f47857f13b5abb5225ea7c9710f99"
 dependencies = []
 
 [[package]]
-name = "token_bridge"
-network = "testnet3"
-location = "network"
-checksum = "30b67cd70ca835de1ff6f3a8f97423eb1ca15d8ff302f74cee9fcff4221c4c08"
-dependencies = []
-
-[[package]]
 name = "holding"
 network = "testnet3"
 location = "network"
 checksum = "c51de51914907b67e31b207e40a0bf2be9f8d3f12696ad1fa9b071fc0f098500"
 dependencies = ["wrapped_token.aleo"]
+
+[[package]]
+name = "token_bridge"
+network = "testnet3"
+location = "network"
+checksum = "30b67cd70ca835de1ff6f3a8f97423eb1ca15d8ff302f74cee9fcff4221c4c08"
+dependencies = []

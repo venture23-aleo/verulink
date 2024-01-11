@@ -2,7 +2,7 @@
 import token_bridge.aleo;
 import token_service.aleo;
 import wrapped_token.aleo;
-// import holding.aleo;
+import holding.aleo;
 
 program council.aleo {
 

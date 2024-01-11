@@ -32,14 +32,22 @@ export class HoldingContract {
       ...this.config,
       ...config
     };
-    if (config.networkName) {
-      if (!networkConfig?.networks[config.networkName])
-        throw Error(`Network config not defined for ${config.networkName}. Please add the config in aleo-config.js file in root directory`)
+    if (!config.networkName)
+      this.config.networkName = networkConfig.defaultNetwork;
+
+    const networkName = this.config.networkName;
+    if (networkName) {
+      if (!networkConfig?.networks[networkName])
+        throw Error(`Network config not defined for ${ networkName }.Please add the config in aleo - config.js file in root directory`)
+
       this.config = {
         ...this.config,
-        network: networkConfig.networks[config.networkName]
+        network: networkConfig.networks[networkName]
       };
     }
+
+    if (!this.config.privateKey)
+      this.config.privateKey = networkConfig.networks[networkName].accounts[0];
   }
 
   async deploy(): Promise < any > {
@@ -73,7 +81,7 @@ export class HoldingContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async hold_fund(r0: string, r1: string, r2: BigInt) {
+  async hold_fund(r0: string, r1: string, r2: bigint) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -87,7 +95,7 @@ export class HoldingContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async release_fund(r0: string, r1: string, r2: BigInt) {
+  async release_fund(r0: string, r1: string, r2: bigint) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -113,7 +121,7 @@ export class HoldingContract {
     return leo2js.address(result);
   }
 
-  async holdings(key: TokenAcc): Promise < BigInt > {
+  async holdings(key: TokenAcc): Promise < bigint > {
     const keyLeo = js2leo.json(getTokenAccLeo(key));
 
     const params = [keyLeo]

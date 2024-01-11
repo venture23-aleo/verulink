@@ -1,6 +1,6 @@
-import token_bridge.aleo;
 import wrapped_token.aleo;
 import holding.aleo;
+import token_bridge.aleo;
 import token_service.aleo;
 program council.aleo;
 

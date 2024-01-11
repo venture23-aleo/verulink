@@ -4,17 +4,6 @@ import {
   TokenAccLeo
 } from './holding';
 import {
-  TSForeignContract,
-  leoTSForeignContractSchema,
-  TSForeignContractLeo,
-  TokenOrigin,
-  leoTokenOriginSchema,
-  TokenOriginLeo,
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service';
-import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -49,6 +38,17 @@ import {
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo
 } from './token_bridge';
+import {
+  TSForeignContract,
+  leoTSForeignContractSchema,
+  TSForeignContractLeo,
+  TokenOrigin,
+  leoTokenOriginSchema,
+  TokenOriginLeo,
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo
+} from './token_service';
 import {
   wrapped_token,
   leoWrapped_tokenSchema,
@@ -142,15 +142,6 @@ export {
   TokenAcc,
   leoTokenAccSchema,
   TokenAccLeo,
-  TSForeignContract,
-  leoTSForeignContractSchema,
-  TSForeignContractLeo,
-  TokenOrigin,
-  leoTokenOriginSchema,
-  TokenOriginLeo,
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -184,6 +175,15 @@ export {
   InPacketFullScreeningKey,
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo,
+  TSForeignContract,
+  leoTSForeignContractSchema,
+  TSForeignContractLeo,
+  TokenOrigin,
+  leoTokenOriginSchema,
+  TokenOriginLeo,
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo,
   wrapped_token,
   leoWrapped_tokenSchema,
   wrapped_tokenLeo,
