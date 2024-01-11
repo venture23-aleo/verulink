@@ -3,13 +3,14 @@ package ethereum
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"os"
 	"time"
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap"
 
 	abi "github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain/ethereum/abi"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/config"
@@ -38,13 +39,14 @@ type Client struct {
 	name              string
 	address           string
 	eth               *ethclient.Client
-	bridge            *abi.Bridge
+	bridge            abi.ABIInterface
 	minRequiredGasFee uint64
 	finalityHeight    uint64
 	blockGenTime      time.Duration
 	chainID           uint32
 	chainCfg          *config.ChainConfig
 	wallet            common.Wallet
+	sendPktDuration   time.Duration
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
@@ -107,7 +109,7 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, defaultSendTxTimeout)
+	ctx, cancel := context.WithTimeout(ctx, cl.sendPktDuration)
 	defer cancel()
 
 	txOpts.Context = ctx
@@ -134,11 +136,15 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 		Height: big.NewInt(int64(m.Height)),
 	}
 
+	// TODO: Add transaction confirmation code
+	// TODO: has consumed before voting
+	// TODO: has voted
+
 	transaction, err := cl.attestMessage(txOpts, *packet)
 	if err != nil {
 		return err
 	}
-	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zapcore.Field{String: transaction.Hash().String()})
+	logger.GetLogger().Info("packet sent to ethereum", zap.String("txnHash", transaction.Hash().String()))
 	return nil
 }
 
@@ -216,19 +222,19 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 	*/
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
-		panic("failed to create ethereum rpc client")
+		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
 	}
 
 	ethclient := ethclient.NewClient(rpc)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
 	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
 	if err != nil {
-		panic("failed to create ethereum bridge client")
+		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
 	}
 
 	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
-		panic("failed to load ethereum wallet")
+		panic(fmt.Sprintf("failed to load ethereum wallet. Error: %s", err.Error()))
 	}
 	name := cfg.Name
 	finalizeHeight := cfg.FinalityHeight
@@ -240,14 +246,15 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 	}
 	// todo: handle start height from stored height if start height in the config is 0
 	return &Client{
-		name:           name,
-		address:        cfg.BridgeContract,
-		eth:            ethclient,
-		bridge:         bridgeClient,
-		finalityHeight: uint64(finalizeHeight),
-		blockGenTime:   blockGenerationTime,
-		chainID:        cfg.ChainID,
-		chainCfg:       cfg,
-		wallet:         wallet,
+		name:            name,
+		address:         cfg.BridgeContract,
+		eth:             ethclient,
+		bridge:          bridgeClient,
+		finalityHeight:  uint64(finalizeHeight),
+		blockGenTime:    blockGenerationTime,
+		chainID:         cfg.ChainID,
+		chainCfg:        cfg,
+		wallet:          wallet,
+		sendPktDuration: defaultSendTxTimeout,
 	}
 }

@@ -1,23 +1,65 @@
 package aleo
 
 import (
+	"fmt"
 	"math/big"
-	"strconv"
+	"math/rand"
+	"strings"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/validators/cmd/aleobridge/chain"
 )
 
-const (
-	RpcEndpoint = "3.84.49.97"
-)
+func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
+	destAddr := strings.Trim(pkt.destination.address, " ")
+	destAddr = "[" + strings.ReplaceAll(destAddr, " ", ", ") + "]"
+	msgToken := strings.Trim(pkt.message.token, " ")
+	msgToken = "[" + strings.ReplaceAll(msgToken, " ", ", ") + "]"
+	msgReceiver := strings.Trim(pkt.message.receiver, " ")
+	msgReceiver = "[" + strings.ReplaceAll(msgReceiver, " ", ", ") + "]"
 
-func giveOutPackets(key string, seqNum uint64) (map[string]string, error) {
-	packetString := "{\\n  version: 0u8,\\n  sequence: " + strconv.Itoa(int(seqNum)) + "u32,\\n  source: {\\n    chain_id: 2u32,\\n    addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px\\n  },\\n  destination: {\\n    chain_id: 1u32,\\n    addr: [\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      20u8,\\n      119u8,\\n      159u8,\\n      153u8,\\n      43u8,\\n      47u8,\\n      44u8,\\n      66u8,\\n      184u8,\\n      102u8,\\n      15u8,\\n      250u8,\\n      66u8,\\n      219u8,\\n      203u8,\\n      60u8,\\n      124u8,\\n      153u8,\\n      48u8,\\n      176u8\\n    ]\\n  },\\n  message: {\\n    token: [\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      20u8,\\n      119u8,\\n      159u8,\\n      153u8,\\n      43u8,\\n      47u8,\\n      44u8,\\n      66u8,\\n      184u8,\\n      102u8,\\n      15u8,\\n      250u8,\\n      66u8,\\n      219u8,\\n      203u8,\\n      60u8,\\n      124u8,\\n      153u8,\\n      48u8,\\n      176u8\\n    ],\\n    sender: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn,\\n    receiver: [\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8,\\n      0u8\\n    ],\\n    amount: 102u64\\n  },\\n  height: 55u32\\n}"
-	return map[string]string{key: packetString}, nil
+	if !malform {
+		return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
+			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
+			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
+			"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+			"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
+			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
+			msgReceiver, pkt.message.amount, pkt.height,
+		)
+	}
 
+	i := rand.Intn(100)
+	if i%2 == 0 { // remove version field
+		return fmt.Sprintf("{\\n  sequence: %s ,\\n  "+
+			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
+			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
+			"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+			"height: %s\\n}", pkt.sequence, pkt.source.chainID, pkt.source.address,
+			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
+			msgReceiver, pkt.message.amount, pkt.height,
+		)
+	}
+	// empty address: expected to get index error panic catched by
+	return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
+		"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
+		"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
+		"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+		"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
+		pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
+		"", pkt.message.amount, pkt.height,
+	)
+}
+
+func TestConstructOutMappingKey(t *testing.T) {
+	d := uint32(23)
+	seqNum := uint64(32)
+	expectedString := fmt.Sprintf("{chain_id:%du32,sequence:%du32}", d, seqNum)
+	actual := constructOutMappingKey(d, seqNum)
+	require.Equal(t, expectedString, actual)
 }
 
 func TestConstructEthAddressForAleo(t *testing.T) {
@@ -71,10 +113,6 @@ func TestParseEthAleoAddress(t *testing.T) {
 }
 
 func TestParseMessage(t *testing.T) {
-	var dst, seqNum uint64 = 1, 1
-	key := constructOutMappingKey(uint32(dst), seqNum)
-	packet, err := giveOutPackets(key, 1)
-	assert.Nil(t, err)
 	expectedPacket := &aleoPacket{
 		version:  "0u8",
 		sequence: "1u32",
@@ -84,49 +122,121 @@ func TestParseMessage(t *testing.T) {
 		},
 		destination: aleoPacketNetworkAddress{
 			chainID: "1u32",
-			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
+			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 		},
 		message: aleoMessage{
-			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8 ",
+			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 			sender:   "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 			amount:   "102u64",
-			receiver: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 ",
+			receiver: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 		},
 		height: "55u32",
 	}
-	aleoPacket := parseMessage(packet[key])
-	assert.Equal(t, expectedPacket, aleoPacket)
+
+	aleoPacket, err := parseMessage(dumpAleoPacket(expectedPacket, false))
+	require.NoError(t, err)
+	require.Equal(t, expectedPacket, aleoPacket)
+
+	for i := 0; i < 10; i++ {
+		aleoPacket, err := parseMessage(dumpAleoPacket(expectedPacket, true))
+		require.Error(t, err)
+		require.Nil(t, aleoPacket)
+	}
 }
 
 func TestParseAleoPacket(t *testing.T) {
-	var dst, seqNum uint64 = 1, 1
-	key := constructOutMappingKey(uint32(dst), seqNum)
-	packet, err := giveOutPackets(key, 1)
-	assert.Nil(t, err)
-	parsedAleoPacket := parseMessage(packet[key])
-	commonPacket, err := parseAleoPacket(parsedAleoPacket)
-	assert.Nil(t, err)
-	expectedPacket := &chain.Packet{
-		Version:  uint64(0),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: uint64(2),
-			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: uint64(1),
-			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
-		},
-		Message: chain.Message{
-			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
-			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			Amount:           big.NewInt(102),
-			ReceiverAddress:  "0x0000000000000000000000000000000000000000",
-		},
-		Height: uint64(55),
-	}
+	t.Run("case: happy test", func(t *testing.T) {
+		expectedPacket := chain.Packet{
+			Version:  uint64(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: uint64(2),
+				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: uint64(1),
+				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
+			},
+			Message: chain.Message{
+				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				Amount:           big.NewInt(102),
+				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			},
+			Height: uint64(55),
+		}
+		s := dumpToAleoPacketString(expectedPacket)
+		a, err := parseMessage(s)
+		require.NoError(t, err)
+		commonPacket, err := parseAleoPacket(a)
+		require.Nil(t, err)
+		require.Equal(t, &expectedPacket, commonPacket)
+	})
 
-	assert.Equal(t, commonPacket, expectedPacket)
+	t.Run("case: error in parsing", func(t *testing.T) {
+		expectedPacket := chain.Packet{
+			Version:  uint64(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: uint64(2),
+				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: uint64(1),
+				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
+			},
+			Message: chain.Message{
+				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				Amount:           big.NewInt(102),
+				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			},
+			Height: uint64(55),
+		}
+		s := dumpToAleoPacketString(expectedPacket)
+		a, err := parseMessage(s)
+		assert.NoError(t, err)
+		errorPackets := []aleoPacket{}
+		for i := 0; i < 9; i++ {
+			tmp := *a
+			switch i {
+			case 0:
+				tmp.version = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 1:
+				tmp.sequence = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 2:
+				tmp.source.chainID = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 3:
+				tmp.destination.chainID = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 4:
+				tmp.destination.address += "u8"
+				errorPackets = append(errorPackets, tmp)
+			case 5:
+				tmp.message.token += "u8"
+				errorPackets = append(errorPackets, tmp)
+			case 6:
+				tmp.message.receiver += "u8"
+				errorPackets = append(errorPackets, tmp)
+			case 7:
+				tmp.message.amount = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			case 8:
+				tmp.height = "0u6"
+				errorPackets = append(errorPackets, tmp)
+			}
+
+		}
+		for _, v := range errorPackets {
+			commonPacket, err := parseAleoPacket(&v)
+			require.NotNil(t, err)
+			require.Nil(t, commonPacket)
+		}
+
+	})
 }
 
 func TestConstructAleoPacket(t *testing.T) {

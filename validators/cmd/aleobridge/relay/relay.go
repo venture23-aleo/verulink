@@ -49,6 +49,10 @@ type relay struct {
 	mu                     sync.Mutex
 	initliazed             bool
 	logger                 *zap.Logger
+	pollBalDur             time.Duration // poll balance duration
+	pruneDBDur             time.Duration
+	pruneBaseSeqNumDur     time.Duration
+	retryPktDur            time.Duration
 }
 
 func (r *relay) Init(ctx context.Context) {
@@ -101,7 +105,6 @@ func (r *relay) startReceiving(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			close(r.pktCh)
 			return
 		default:
 		}
@@ -137,8 +140,6 @@ func (r *relay) startSending(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			ctxErr := ctx.Err()
-			_ = ctxErr
 			return
 		default:
 		}
@@ -196,19 +197,24 @@ func (r *relay) startSending(ctx context.Context) {
 // If we find that transaction is not going to be finalized then we shall send the packet
 // to retry namespace in database
 func (r *relay) pruneDB(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour)
+	dur := r.pruneDBDur
+	if dur == 0 {
+		dur = time.Hour
+	}
+	ticker := time.NewTicker(dur)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-		default:
 		}
 
 		ch := store.RetrieveNPackets(r.transactedPktNameSpace, 10)
-		seqNums := make([]uint64, 10)
-		pktKeys := make([][]byte, 10)
+		var (
+			seqNums []uint64
+			pktKeys [][]byte
+		)
 		for pkt := range ch {
 			r.logger.Info("Checking packet finality", zap.Uint64("seq_num", pkt.Sequence))
 			finalized, err := r.destChain.IsPktTxnFinalized(ctx, pkt)
@@ -240,7 +246,11 @@ func (r *relay) pruneDB(ctx context.Context) {
 }
 
 func (r *relay) pruneBaseSeqNum(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour * 24)
+	dur := r.pruneBaseSeqNumDur
+	if dur == 0 {
+		dur = time.Hour * 24
+	}
+	ticker := time.NewTicker(dur)
 	defer ticker.Stop()
 	for {
 		select {
@@ -257,7 +267,11 @@ func (r *relay) pruneBaseSeqNum(ctx context.Context) {
 }
 
 func (r *relay) retryLeftOutPackets(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour * 2)
+	dur := r.retryPktDur
+	if dur == 0 {
+		dur = time.Hour * 2
+	}
+	ticker := time.NewTicker(dur)
 	defer ticker.Stop()
 	for {
 		select {
@@ -268,18 +282,20 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 
 		// duration check will ensure that we gave enough time for another goroutine to check finalized transaction
 		// and update db.
-		// baseSeqNum < nextSeqNum -1, will ensure that we don't retry baseSeqNum and curSeqNum are equal as there is no
+		// baseSeqNum < nextSeqNum -1, will ensure that we don't retry baseSeqNum that is equal to curSeqNum as there is no
 		// packets to check for
 		if !(time.Since(r.bSeqNumUpdateTime) > time.Hour*24 && r.bSeqNum < r.nextSeqNum-1) {
 			continue
 		}
 
-		curSeqNum := r.nextSeqNum - 1
-		for seqNum := r.bSeqNum + 1; seqNum < curSeqNum; seqNum++ {
+		for seqNum := r.bSeqNum + 1; seqNum < r.nextSeqNum; seqNum++ {
+			var (
+				err     error
+				chainID uint32
+			)
 			pkt := store.GetPacket[uint64](r.retryPktNameSpace, seqNum, r.logger)
 			if pkt != nil {
-				r.pktCh <- pkt
-				continue
+				goto addPktToChannel
 			}
 			if store.ExistInGivenNamespace(r.transactedPktNameSpace, seqNum) {
 				continue
@@ -289,10 +305,10 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 				continue
 			}
 
-			chainID := r.destChain.GetChainID()
+			chainID = r.destChain.GetChainID()
 
 			//Now get from blockchain and feed to the system
-			pkt, err := r.srcChain.GetPktWithSeq(ctx, chainID, seqNum)
+			pkt, err = r.srcChain.GetPktWithSeq(ctx, chainID, seqNum)
 			if err != nil {
 				//todo: we might decide that older packets be pruned in src chain
 				// and if it is pruned then r.bSeqNum can be updated to seqNum
@@ -300,7 +316,7 @@ func (r *relay) retryLeftOutPackets(ctx context.Context) {
 				r.logger.Debug(err.Error())
 				continue
 			}
-
+		addPktToChannel:
 			r.pktCh <- pkt
 		}
 	}

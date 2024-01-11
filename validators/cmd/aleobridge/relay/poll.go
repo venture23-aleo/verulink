@@ -9,8 +9,11 @@ func (r *relay) pollBalance(ctx context.Context, curBal uint64) {
 	if err := r.notifyDelegator(ctx, insufficientBalance); err != nil {
 		r.logger.Error(err.Error())
 	}
-
-	ticker := time.NewTicker(time.Minute) // take from config
+	dur := r.pollBalDur
+	if dur == 0 {
+		dur = time.Minute
+	}
+	ticker := time.NewTicker(dur) // take from config
 	defer ticker.Stop()
 	for range ticker.C {
 		select {

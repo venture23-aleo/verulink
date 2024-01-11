@@ -67,7 +67,10 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 		return nil, err
 	}
 
-	pktStr := parseMessage(message[mappingKey])
+	pktStr, err := parseMessage(message[mappingKey])
+	if err != nil {
+		return nil, err
+	}
 	return parseAleoPacket(pktStr)
 }
 
@@ -90,7 +93,10 @@ func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { 
 		return err
 	}
 
-	// todo: Add transaction confirmation code
+	// TODO: Add transaction confirmation code
+	// TODO: has consumed before voting 
+	// TODO: has voted 
+
 	_ = output
 	//
 	return nil
@@ -165,12 +171,12 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 
 	aleoClient, err := aleoRpc.NewRPC(urlSlice[0], urlSlice[1])
 	if err != nil {
-		return nil
+		panic("failed to create aleoclient")
 	}
 
 	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
-		return nil
+		panic("invalid address path")
 	}
 
 	name := cfg.Name
@@ -194,6 +200,6 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 		wallet:         wallet,
 		programID:      cfg.BridgeContract,
 		name:           name,
-		sendPktDur:     time.Minute * 3,
+		sendPktDur:     time.Minute * 3, // TODO: packet send timeout
 	}
 }

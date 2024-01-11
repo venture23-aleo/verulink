@@ -80,20 +80,21 @@ func PruneBaseSeqNum(namespace string, logger *zap.Logger) uint64 {
 	// Also take care about the number of go-routines it is going to create below.
 
 	ch := retrieveNKeyValuesFromFirst(namespace, 1000)
-	v, closed := <-ch
-	if closed && v[0] == nil {
+	v, open := <-ch
+	if !open && len(v[0]) == 0 {
 		return 0
 	}
-	key := v[0]
-	curBaseSeqNum := binary.BigEndian.Uint64(key)
-	toDeleteKeys := [][]byte{key}
+	curKey := v[0] // current key
+	curBaseSeqNum := binary.BigEndian.Uint64(curKey)
+	var toDeleteKeys [][]byte
 
 	for v := range ch {
 		key := v[0]
 		nextSeqNum := binary.BigEndian.Uint64(key)
 		if nextSeqNum == curBaseSeqNum+1 {
 			curBaseSeqNum = nextSeqNum
-			toDeleteKeys = append(toDeleteKeys, key)
+			toDeleteKeys = append(toDeleteKeys, curKey)
+			curKey = key
 		} else {
 			break
 		}
@@ -161,7 +162,7 @@ func StoreTransactedPacket(namespace string, pkt *chain.Packet) error {
 	}
 
 	key := make([]byte, 8)
-	binary.NativeEndian.PutUint64(key, pkt.Sequence)
+	binary.BigEndian.PutUint64(key, pkt.Sequence)
 	return put(namespace, key, data)
 }
 

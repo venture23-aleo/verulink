@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -18,64 +17,96 @@ func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
 
 // after splitting we get the message in the form [key1:value1,key2:value2, ...]
 // now we get message in the form []string{key1, value1, key2, value2, ...}
-func parseMessage(s string) *aleoPacket {
+func parseMessage(s string) (pkt *aleoPacket, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			pkt = nil
+			err = fmt.Errorf("error %v while parsing message", r)
+		}
+	}()
+
 	sMessages := strings.Split(trim(s), ",")
-	var messages []string
+	var msgs []string
 
 	for i := 0; i < len(sMessages); i++ {
 		msg := sMessages[i]
 		msplit := strings.Split(msg, ":")
-		messages = append(messages, msplit...)
+		msgs = append(msgs, msplit...)
 	}
 
-	pkt := new(aleoPacket)
+	requiredFields := map[string]bool{
+		"version":     false,
+		"sequence":    false,
+		"source":      false,
+		"destination": false,
+		"message":     false,
+		"height":      false,
+	}
 
+	messages := make([]string, len(msgs)) // shrink slice to length of msgs
+	copy(messages, msgs)
+	pkt = new(aleoPacket)
 	for m, v := range messages {
 		switch v {
 		case "version":
 			pkt.version = messages[m+1]
+			requiredFields["version"] = true
 		case "sequence":
 			pkt.sequence = messages[m+1]
+			requiredFields["sequence"] = true
 		case "source":
-			pkt.source.chainID = messages[m+2]
-			pkt.source.address = messages[m+4]
+			sourceSlice := messages[m+1 : m+5]
+			for i, v := range sourceSlice {
+				switch v {
+				case "chain_id":
+					pkt.source.chainID = sourceSlice[i+1]
+				case "addr":
+					pkt.source.address = sourceSlice[i+1]
+				}
+			}
+			requiredFields["source"] = true
 		case "destination":
-			serviceProgram := ""
-			pkt.destination.chainID = messages[m+2]
-			for i := m + 4; true; i++ {
-				if messages[i] == "message" {
-					break
+			sl := messages[m+1 : m+1+35]
+			for i, v := range sl {
+				switch v {
+				case "chain_id":
+					pkt.destination.chainID = sl[i+1]
+				case "addr":
+					pkt.destination.address = strings.Join(sl[i+1:i+1+32], " ")
 				}
-				serviceProgram += messages[i] + " "
 			}
-			pkt.destination.address = serviceProgram
+			requiredFields["destination"] = true
 		case "message":
-			denom := ""
-			i := 0
-			for i = m + 2; true; i++ {
-				if messages[i] == "sender" {
-					break
+			sl := messages[m+1 : m+1+70]
+			for i, v := range sl {
+				switch v {
+				case "token":
+					pkt.message.token = strings.Join(sl[i+1:i+1+32], " ")
+				case "sender":
+					pkt.message.sender = sl[i+1]
+				case "receiver":
+					pkt.message.receiver = strings.Join(sl[i+1:i+1+32], " ")
+				case "amount":
+					pkt.message.amount = sl[i+1]
 				}
-				denom += messages[i] + " "
 			}
-			pkt.message.token = denom
-			sender := messages[i+1]
-			pkt.message.sender = sender
-			receiver := ""
-			for i = i + 3; true; i++ {
-				if messages[i] == "amount" {
-					break
-				}
-				receiver += messages[i] + " "
-			}
-			pkt.message.receiver = receiver
-			pkt.message.amount = messages[i+1]
+			requiredFields["message"] = true
 		case "height":
 			pkt.height = messages[m+1]
+			requiredFields["height"] = true
 		}
-
 	}
-	return pkt
+
+	var errs []error
+	for field, ok := range requiredFields {
+		if !ok {
+			errs = append(errs, fmt.Errorf("could not find %s field", field))
+		}
+	}
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+	return pkt, nil
 }
 
 func trim(msg string) string {
@@ -98,7 +129,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 
 	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chainID, "u32", "", 1), 0, 64)
 	if err != nil {
-		return nil, &exec.Error{}
+		return nil, err
 	}
 	pkt.Source.ChainID = sourceChainID
 	pkt.Source.Address = packet.source.address
@@ -125,7 +156,11 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt.Message.SenderAddress = packet.message.sender
 
 	amount := &big.Int{}
-	pkt.Message.Amount, _ = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	var ok bool
+	pkt.Message.Amount, ok = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	if !ok {
+		return nil, errors.New("failed in parsing amount")
+	}
 
 	height, err := strconv.ParseUint(strings.Replace(packet.height, "u32", "", 1), 0, 64)
 	if err != nil {
