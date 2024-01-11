@@ -3,6 +3,7 @@ package ethereum
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"os"
 	"time"
@@ -136,14 +137,14 @@ func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
 	}
 
 	// TODO: Add transaction confirmation code
-	// TODO: has consumed before voting 
-	// TODO: has voted 
-	
+	// TODO: has consumed before voting
+	// TODO: has voted
+
 	transaction, err := cl.attestMessage(txOpts, *packet)
 	if err != nil {
 		return err
 	}
-	logger.GetLogger().Info("packet sent to ethereum with hash :: hash :: ", zap.Any("key", transaction.Hash().String()))
+	logger.GetLogger().Info("packet sent to ethereum", zap.String("txnHash", transaction.Hash().String()))
 	return nil
 }
 
@@ -221,19 +222,19 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 	*/
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
-		panic("failed to create ethereum rpc client")
+		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
 	}
 
 	ethclient := ethclient.NewClient(rpc)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
-	bridgeClient, err := abi.NewBridgeInterface(contractAddress, ethclient)
+	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
 	if err != nil {
-		panic("failed to create ethereum bridge client")
+		panic(err)
 	}
 
 	wallet, err := loadWalletConfig(cfg.WalletPath)
 	if err != nil {
-		panic("failed to load ethereum wallet")
+		panic(fmt.Sprintf("failed to load ethereum wallet. Error: %s", err.Error()))
 	}
 	name := cfg.Name
 	finalizeHeight := cfg.FinalityHeight
@@ -245,15 +246,15 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 	}
 	// todo: handle start height from stored height if start height in the config is 0
 	return &Client{
-		name:           name,
-		address:        cfg.BridgeContract,
-		eth:            ethclient,
-		bridge:         bridgeClient,
-		finalityHeight: uint64(finalizeHeight),
-		blockGenTime:   blockGenerationTime,
-		chainID:        cfg.ChainID,
-		chainCfg:       cfg,
-		wallet:         wallet,
+		name:            name,
+		address:         cfg.BridgeContract,
+		eth:             ethclient,
+		bridge:          bridgeClient,
+		finalityHeight:  uint64(finalizeHeight),
+		blockGenTime:    blockGenerationTime,
+		chainID:         cfg.ChainID,
+		chainCfg:        cfg,
+		wallet:          wallet,
 		sendPktDuration: defaultSendTxTimeout,
 	}
 }

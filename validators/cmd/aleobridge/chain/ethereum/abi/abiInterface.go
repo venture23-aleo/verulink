@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -18,8 +17,4 @@ type ABIInterface interface {
 		Height             *big.Int
 	}, error)
 	ReceivePacket(opts *bind.TransactOpts, packet PacketLibraryInPacket) (*types.Transaction, error)
-}
-
-func NewBridgeInterface(address common.Address, backend bind.ContractBackend) (ABIInterface, error) {
-	return NewBridge(address, backend)
 }
