@@ -17,7 +17,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const hashStruct = (struct: any): BigInt => {
+const hashStruct = (struct: any): bigint => {
   const structString= js2leoCommon.json(struct)
   const structHash = hash("bhp256", structString, "field");
   const hashBigInt = leo2jsCommon.field(structHash);
@@ -25,31 +25,11 @@ const hashStruct = (struct: any): BigInt => {
 }
 
 const setup = async () => {
-  const bridge = new Token_bridgeContract({
-    networkName: "testnet3",
-    privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
-    mode: "execute"
-  });
-  const tokenService = new Token_serviceContract({
-    networkName: "testnet3",
-    privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
-    mode: "execute"
-  });
-  const wrappedToken = new Wrapped_tokenContract({
-    networkName: "testnet3",
-    privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
-    mode: "execute"
-  });
-  const council = new CouncilContract({
-    networkName: "testnet3",
-    privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
-    mode: "execute",
-  });
-  const holding = new HoldingContract({
-    networkName: "testnet3",
-    privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH",
-    mode: "execute",
-  });
+  const bridge = new Token_bridgeContract({mode: "execute"});
+  const tokenService = new Token_serviceContract({mode: "execute"});
+  const wrappedToken = new Wrapped_tokenContract({mode: "execute"});
+  const council = new CouncilContract({mode: "execute"});
+  const holding = new HoldingContract({mode: "execute"});
 
   let tx;
 
@@ -84,7 +64,7 @@ const setup = async () => {
     councilAddress
   );
   await wrappedToken.wrapped_token_initialize(councilAddress);
-  await holding.holding_initialize(councilAddress);
+  await holding.initialize_holding(councilAddress);
   await tokenService.initialize_ts(councilAddress, councilAddress);
 
   let proposalId;
@@ -174,13 +154,13 @@ const setup = async () => {
     service: aleoTsContract
   };
   const tbEnableServiceHash = hashStruct(js2leo.getTbEnableServiceLeo(tbEnableService));
-  tx = await council.propose(proposalId, tbEnableServiceHash);
-  await tx.wait()
+  await council.propose(proposalId, tbEnableServiceHash);
 
-  await council.tb_enable_service(
+  tx = await council.tb_enable_service(
     tbEnableService.id,
     tbEnableService.service,
   );
+  await tx.wait()
 
 };
 

@@ -41,8 +41,8 @@ const ASCII_SEPARATOR = ":".charCodeAt(0).toString(16);
 
 export const encodeNetworkChainId = (
   networkType: string,
-  chainId: number | BigInt
-): BigInt => {
+  chainId: number | bigint
+): bigint => {
   if (typeof chainId == "number") {
     verifyNumber(chainId)
   }
@@ -56,7 +56,7 @@ export const encodeNetworkChainId = (
   return BigInt("0x" + networkChainId);
 };
 
-export const decodeNetworkChainId = (encodedChainId: number | BigInt) => {
+export const decodeNetworkChainId = (encodedChainId: number | bigint) => {
   if (typeof encodedChainId == "number") {
     verifyNumber(encodedChainId)
   }

@@ -129,7 +129,7 @@ const checkDeployment = async (endpoint: string): Promise<boolean> => {
 
     return true;
   } catch (e: any) {
-    // console.log(e);
+    console.log(e);
     if (e?.response?.data?.includes('Missing program for ID')) {
       return false;
     }

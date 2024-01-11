@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 module.exports = {
   accounts: [process.env.ALEO_PRIVATE_KEY],
   mode: "execute",
