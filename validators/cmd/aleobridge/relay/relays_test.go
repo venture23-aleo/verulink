@@ -99,11 +99,13 @@ func TestMultiRelay(t *testing.T) {
 		ethConfig := getConfig("ethereum", "eth.nodeURL.suf", "eth_walletPath.json", "ethContract", uint32(1), uint8(64))
 		aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
 
+		chainConfigs := []*config.ChainConfig{ethConfig, aleoConfig}
 		RegisteredClients["ethereum"] = newMockClient
+		cfg := &config.Config{
+			ChainConfigs: chainConfigs,
+		}
 
-		configs := []*config.ChainConfig{ethConfig, aleoConfig}
-
-		assert.Panics(t, func() { MultiRelay(context.Background(), configs) })
+		assert.Panics(t, func() { MultiRelay(context.Background(), cfg) })
 	})
 
 	t.Run("case: multiple destinations", func(t *testing.T) {
@@ -115,9 +117,16 @@ func TestMultiRelay(t *testing.T) {
 		RegisteredClients["aleo"] = newMockClient
 		RegisteredClients["other"] = newMockClient
 
-		configs := []*config.ChainConfig{ethConfig, aleoConfig, otherCOnfig}
-
-		relays := MultiRelay(context.Background(), configs)
+		chainConfigs := []*config.ChainConfig{ethConfig, aleoConfig, otherCOnfig}
+		cfg := &config.Config{
+			ChainConfigs: chainConfigs,
+			BridgePairMap: map[string]map[string]struct{}{
+				"ethereum": {"aleo": struct{}{}, "other": struct{}{}},
+				"aleo":     {"ethereum": struct{}{}, "other": struct{}{}},
+				"other":    {"ethereum": struct{}{}, "aleo": struct{}{}},
+			},
+		}
+		relays := MultiRelay(context.Background(), cfg)
 		assert.Equal(t, len(relays), 6)
 		chains := map[string]bool{
 			"aleo-ethereum":  true,
@@ -136,9 +145,11 @@ func TestMultiRelay(t *testing.T) {
 		aleoConfig := getConfig("aleo", "aleo.nodeURL.suf", "aleo_walletPath.json", "aleoContract", uint32(2), uint8(2))
 		cfgWithNoDestChains := getConfig("error", "error.nodeURL.suf", "error_wallet.json", "errorContract", uint32(3), uint8(1))
 
-		configs := []*config.ChainConfig{aleoConfig, cfgWithNoDestChains}
-
-		assert.Panics(t, func() { MultiRelay(context.Background(), configs) })
+		chainConfigs := []*config.ChainConfig{aleoConfig, cfgWithNoDestChains}
+		cfg := &config.Config{
+			ChainConfigs: chainConfigs,
+		}
+		assert.Panics(t, func() { MultiRelay(context.Background(), cfg) })
 	})
 }
 
