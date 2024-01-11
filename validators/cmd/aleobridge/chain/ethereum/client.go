@@ -229,7 +229,7 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
 	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
 	}
 
 	wallet, err := loadWalletConfig(cfg.WalletPath)
