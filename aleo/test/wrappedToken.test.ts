@@ -1,9 +1,9 @@
-import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
+import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
 import { ethChainId, usdcContractAddr } from "./mockData";
 
 import { evm2AleoArr, string2AleoArr } from "./utils";
 
-const wrappedToken = new Wrapped_tokenContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH" });
+const wrappedToken = new Wrapped_tokensContract();
 
 describe("Wrapped Token", () => {
   // test("Deploy", async() => {

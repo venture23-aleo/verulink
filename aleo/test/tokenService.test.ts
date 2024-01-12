@@ -4,7 +4,7 @@ import { InPacketFull, TokenOrigin, wrapped_tokenLeo } from "../artifacts/js/typ
 import { evm2AleoArr, string2AleoArr } from "./utils";
 import { aleoChainId, aleoTsContract, aleoUser, ethChainId, ethTsContract, ethUser, usdcContractAddr, wUSDCProgramAddr } from "./mockData";
 
-const tokenService = new Token_serviceContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH" })
+const tokenService = new Token_serviceContract({ networkName: "testnet3" })
 
 describe("Token Service", () => {
 

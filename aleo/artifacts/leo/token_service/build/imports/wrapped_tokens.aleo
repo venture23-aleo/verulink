@@ -1,4 +1,4 @@
-program wrapped_token.aleo;
+program wrapped_tokens.aleo;
 
 record wrapped_token:
     owner as address.private;
@@ -52,7 +52,7 @@ mapping governance_WT:
 function wrapped_token_initialize:
     input r0 as address.private;
     async wrapped_token_initialize r0 into r1;
-    output r1 as wrapped_token.aleo/wrapped_token_initialize.future;
+    output r1 as wrapped_tokens.aleo/wrapped_token_initialize.future;
 
 finalize wrapped_token_initialize:
     input r0 as address.public;
@@ -65,7 +65,7 @@ finalize wrapped_token_initialize:
 function update_governance_wt:
     input r0 as address.public;
     async update_governance_wt self.caller r0 into r1;
-    output r1 as wrapped_token.aleo/update_governance_wt.future;
+    output r1 as wrapped_tokens.aleo/update_governance_wt.future;
 
 finalize update_governance_wt:
     input r0 as address.public;
@@ -86,7 +86,7 @@ function add_token_wt:
     cast r5 r6 into r7 as WrappedTokenInfo;
     hash.bhp256 r7 into r8 as address;
     async add_token_wt self.caller r8 r0 r1 r2 r3 r4 into r9;
-    output r9 as wrapped_token.aleo/add_token_wt.future;
+    output r9 as wrapped_tokens.aleo/add_token_wt.future;
 
 finalize add_token_wt:
     input r0 as address.public;
@@ -112,7 +112,7 @@ function transfer_public:
     input r1 as u64.private;
     input r2 as address.private;
     async transfer_public self.caller r2 r0 r1 into r3;
-    output r3 as wrapped_token.aleo/transfer_public.future;
+    output r3 as wrapped_tokens.aleo/transfer_public.future;
 
 finalize transfer_public:
     input r0 as address.public;
@@ -152,7 +152,7 @@ function transfer_private_to_public:
     cast r0.owner r0.token_id r3 into r4 as wrapped_token.record;
     async transfer_private_to_public r0.token_id r1 r2 into r5;
     output r4 as wrapped_token.record;
-    output r5 as wrapped_token.aleo/transfer_private_to_public.future;
+    output r5 as wrapped_tokens.aleo/transfer_private_to_public.future;
 
 finalize transfer_private_to_public:
     input r0 as address.public;
@@ -171,7 +171,7 @@ function transfer_public_to_private:
     cast r0 r2 r1 into r3 as wrapped_token.record;
     async transfer_public_to_private r2 self.caller r1 into r4;
     output r3 as wrapped_token.record;
-    output r4 as wrapped_token.aleo/transfer_public_to_private.future;
+    output r4 as wrapped_tokens.aleo/transfer_public_to_private.future;
 
 finalize transfer_public_to_private:
     input r0 as address.public;
@@ -192,7 +192,7 @@ function mint:
     assert.neq self.signer self.caller;
     assert.eq self.caller aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
     async mint r0 r1 r2 r3 r4 into r5;
-    output r5 as wrapped_token.aleo/mint.future;
+    output r5 as wrapped_tokens.aleo/mint.future;
 
 finalize mint:
     input r0 as address.public;
@@ -220,7 +220,7 @@ function burn:
     assert.neq self.signer self.caller;
     assert.eq self.caller aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
     async burn self.signer r0 r1 r2 r3 into r4;
-    output r4 as wrapped_token.aleo/burn.future;
+    output r4 as wrapped_tokens.aleo/burn.future;
 
 finalize burn:
     input r0 as address.public;

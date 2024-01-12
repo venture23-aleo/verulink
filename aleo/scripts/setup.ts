@@ -3,7 +3,6 @@ import { HoldingContract } from "../artifacts/js/holding";
 import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { TbEnableChain, WtAddToken, TsSupportToken, TbEnableService, TsSupportChain } from "../artifacts/js/types";
-import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
 import { evm2AleoArr } from "../test/utils";
 
 import * as js2leo from '../artifacts/js/js2leo';
@@ -12,6 +11,7 @@ import * as leo2jsCommon from '../artifacts/js/leo2js/common';
 
 import { hash } from "aleo-hasher";
 import { TOTAL_PROPOSALS_INDEX, aleoTsContract, attestor, councilMember, councilThreshold, ethChainId, usdcInfo, usdcOrigin, wUSDCProgramAddr } from "../test/mockData";
+import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,7 +27,7 @@ const hashStruct = (struct: any): bigint => {
 const setup = async () => {
   const bridge = new Token_bridgeContract({mode: "execute"});
   const tokenService = new Token_serviceContract({mode: "execute"});
-  const wrappedToken = new Wrapped_tokenContract({mode: "execute"});
+  const wrappedToken = new Wrapped_tokensContract({mode: "execute"});
   const council = new CouncilContract({mode: "execute"});
   const holding = new HoldingContract({mode: "execute"});
 

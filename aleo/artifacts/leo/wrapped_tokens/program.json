@@ -1,5 +1,5 @@
 {
-    "program": "wrapped_token.aleo",
+    "program": "wrapped_tokens.aleo",
     "version": "0.0.0",
     "description": "",
     "license": "MIT"

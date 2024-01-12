@@ -1,14 +1,14 @@
 import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { InPacketFull, TokenAccount, TokenOrigin } from "../artifacts/js/types";
-import { Wrapped_tokenContract } from "../artifacts/js/wrapped_token";
+import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
 import { aleoChainId, aleoTsContract, aleoUser, councilProgram, ethChainId, ethTsContract, ethUser, usdcContractAddr, wUSDCProgramAddr } from "./mockData";
 
 import { evm2AleoArr } from "./utils";
 
-const bridge = new Token_bridgeContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH", mode: "execute"});
-const tokenService = new Token_serviceContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH", mode: "execute" })
-const wrappedToken = new Wrapped_tokenContract({ networkName: "testnet3", privateKey: "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH", mode: "execute" });
+const bridge = new Token_bridgeContract({ mode: "execute"});
+const tokenService = new Token_serviceContract({ mode: "execute" })
+const wrappedToken = new Wrapped_tokensContract({ mode: "execute" });
 
 describe("Happy Path", () => {
 

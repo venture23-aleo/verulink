@@ -1,1 +1,1 @@
-{"program":"holding.aleo","version":"0.0.0","description":"","license":"MIT","dependencies":[{"name":"wrapped_token.aleo","location":"network","endpoint":"http://localhost:3030","network":"testnet3"}]}
+{"program":"holding.aleo","version":"0.0.0","description":"","license":"MIT","dependencies":[{"name":"wrapped_tokens.aleo","location":"network","endpoint":"http://localhost:3030","network":"testnet3"}]}

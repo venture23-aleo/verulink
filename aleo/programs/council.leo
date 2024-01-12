@@ -1,7 +1,7 @@
 // The 'council' program.
 import token_bridge.aleo;
 import token_service.aleo;
-import wrapped_token.aleo;
+import wrapped_tokens.aleo;
 import holding.aleo;
 
 program council.aleo {
@@ -605,7 +605,7 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        wrapped_token.aleo/update_governance_wt(new_governance);
+        wrapped_tokens.aleo/update_governance_wt(new_governance);
 
         return then finalize(proposal_hash);
     }
@@ -653,7 +653,7 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        wrapped_token.aleo/add_token_wt(name, symbol, decimals, origin_chain_id, origin_contract_address);
+        wrapped_tokens.aleo/add_token_wt(name, symbol, decimals, origin_chain_id, origin_contract_address);
 
         return then finalize(proposal_hash);
     }

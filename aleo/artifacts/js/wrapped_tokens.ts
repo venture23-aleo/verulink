@@ -30,14 +30,14 @@ import {
 
 const networkConfig = require('../../aleo-config');
 
-export class Wrapped_tokenContract {
+export class Wrapped_tokensContract {
 
   config: ContractConfig;
 
   constructor(config: ContractConfig = {}) {
     this.config = {
-      appName: 'wrapped_token',
-      contractPath: 'artifacts/leo/wrapped_token',
+      appName: 'wrapped_tokens',
+      contractPath: 'artifacts/leo/wrapped_tokens',
       fee: '0.01'
     };
     this.config = {

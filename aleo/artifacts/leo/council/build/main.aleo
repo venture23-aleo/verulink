@@ -1,4 +1,4 @@
-import wrapped_token.aleo;
+import wrapped_tokens.aleo;
 import holding.aleo;
 import token_bridge.aleo;
 import token_service.aleo;
@@ -545,12 +545,12 @@ function wt_update_governance:
     input r1 as address.public;
     cast r0 r1 into r2 as WtUpdateGovernance;
     hash.bhp256 r2 into r3 as field;
-    call wrapped_token.aleo/update_governance_wt r1 into r4;
+    call wrapped_tokens.aleo/update_governance_wt r1 into r4;
     async wt_update_governance r4 r3 into r5;
     output r5 as council.aleo/wt_update_governance.future;
 
 finalize wt_update_governance:
-    input r0 as wrapped_token.aleo/update_governance_wt.future;
+    input r0 as wrapped_tokens.aleo/update_governance_wt.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -572,12 +572,12 @@ function wt_add_token:
     input r5 as [u8; 32u32].public;
     cast r0 r1 r2 r3 r4 r5 into r6 as WtAddToken;
     hash.bhp256 r6 into r7 as field;
-    call wrapped_token.aleo/add_token_wt r1 r2 r3 r4 r5 into r8;
+    call wrapped_tokens.aleo/add_token_wt r1 r2 r3 r4 r5 into r8;
     async wt_add_token r8 r7 into r9;
     output r9 as council.aleo/wt_add_token.future;
 
 finalize wt_add_token:
-    input r0 as wrapped_token.aleo/add_token_wt.future;
+    input r0 as wrapped_tokens.aleo/add_token_wt.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

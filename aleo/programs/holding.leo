@@ -1,4 +1,4 @@
-import wrapped_token.aleo;
+import wrapped_tokens.aleo;
 
 program holding.aleo {
 
@@ -79,7 +79,7 @@ program holding.aleo {
     }
 
     transition release_fund(public token_id: address, public user: address, public amount: u64) {
-        wrapped_token.aleo/transfer_public(user, amount, token_id);
+        wrapped_tokens.aleo/transfer_public(user, amount, token_id);
         return then finalize(token_id, user, amount, self.caller);
     }
 

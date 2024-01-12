@@ -1,4 +1,4 @@
-# wrapped_token.aleo
+# wrapped_tokens.aleo
 
 ## Build Guide
 

@@ -1,4 +1,4 @@
-import wrapped_token.aleo;
+import wrapped_tokens.aleo;
 program holding.aleo;
 
 
@@ -71,12 +71,12 @@ function release_fund:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u64.public;
-    call wrapped_token.aleo/transfer_public r1 r2 r0 into r3;
+    call wrapped_tokens.aleo/transfer_public r1 r2 r0 into r3;
     async release_fund r3 r0 r1 r2 self.caller into r4;
     output r4 as holding.aleo/release_fund.future;
 
 finalize release_fund:
-    input r0 as wrapped_token.aleo/transfer_public.future;
+    input r0 as wrapped_tokens.aleo/transfer_public.future;
     input r1 as address.public;
     input r2 as address.public;
     input r3 as u64.public;

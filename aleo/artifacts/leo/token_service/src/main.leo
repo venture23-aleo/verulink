@@ -1,6 +1,6 @@
 // The 'token_service' program.
 
-import wrapped_token.aleo;
+import wrapped_tokens.aleo;
 import token_bridge.aleo;
 import holding.aleo;
 
@@ -215,7 +215,7 @@ program token_service.aleo {
         // If fee is set require credits token for publishing
 
         // call burn on wrapped token
-        wrapped_token.aleo/burn(amount, token_id, origin.chain_id, origin.token_address);
+        wrapped_tokens.aleo/burn(amount, token_id, origin.chain_id, origin.token_address);
 
         // call publish on bridge contract
         token_bridge.aleo/publish(origin.chain_id, origin.token_service_address, origin.token_address, self.caller, receiver, amount);
@@ -283,7 +283,7 @@ program token_service.aleo {
         token_bridge.aleo/consume(source.chain_id, source.token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);
 
         // call mint on wrapped token
-        wrapped_token.aleo/mint(actual_receiver, amount, token_id, source.chain_id, source.token_address);
+        wrapped_tokens.aleo/mint(actual_receiver, amount, token_id, source.chain_id, source.token_address);
 
         // If the packet did not pass the screening, the `actual_receiver` must be the holding program
         // In case the packet passed the screening, the receiver and the actual receiver are the same address.

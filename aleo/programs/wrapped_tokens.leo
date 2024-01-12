@@ -1,5 +1,5 @@
 // The 'wrapped_token' program.
-program wrapped_token.aleo {
+program wrapped_tokens.aleo {
 
     record wrapped_token {
         owner: address,
@@ -58,21 +58,6 @@ program wrapped_token.aleo {
     // true: address of council 
     // false: Null
     mapping governance_WT: bool => address;
-
-    // Referencing: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/program/src/id/to_address.rs
-    // Address of the program is computed as:
-    // hash_to_group_psd4(&[self.name().to_field(), self.network().to_field()]);
-    //
-    // Alternatively, the following opcode program can be used:
-    // `cast <PROGRAM_NAME>.aleo into r1 as address;`
-    //
-    // Reference program:
-    // program program_ids.aleo;
-
-    // function hello:
-    //     input r0 as u32.public;
-    //     cast token_bridge.aleo into r1 as address;
-    //     output r1 as address.private;
 
     inline token_service_program() -> address {
         return aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
