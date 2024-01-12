@@ -1,4 +1,26 @@
 import {
+  wrapped_token,
+  leoWrapped_tokenSchema,
+  wrapped_tokenLeo,
+  WTForeignContract,
+  leoWTForeignContractSchema,
+  WTForeignContractLeo,
+  TokenInfo,
+  leoTokenInfoSchema,
+  TokenInfoLeo,
+  WrappedTokenInfo,
+  leoWrappedTokenInfoSchema,
+  WrappedTokenInfoLeo,
+  TokenAccount,
+  leoTokenAccountSchema,
+  TokenAccountLeo
+} from './wrapped_tokens';
+import {
+  TokenAcc,
+  leoTokenAccSchema,
+  TokenAccLeo
+} from './holding';
+import {
   TSForeignContract,
   leoTSForeignContractSchema,
   TSForeignContractLeo,
@@ -44,28 +66,6 @@ import {
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo
 } from './token_bridge';
-import {
-  TokenAcc,
-  leoTokenAccSchema,
-  TokenAccLeo
-} from './holding';
-import {
-  wrapped_token,
-  leoWrapped_tokenSchema,
-  wrapped_tokenLeo,
-  WTForeignContract,
-  leoWTForeignContractSchema,
-  WTForeignContractLeo,
-  TokenInfo,
-  leoTokenInfoSchema,
-  TokenInfoLeo,
-  WrappedTokenInfo,
-  leoWrappedTokenInfoSchema,
-  WrappedTokenInfoLeo,
-  TokenAccount,
-  leoTokenAccountSchema,
-  TokenAccountLeo
-} from './wrapped_tokens';
 import {
   ProposalSign,
   leoProposalSignSchema,
@@ -147,6 +147,24 @@ import {
 } from './wrapped_token';
 
 export {
+  wrapped_token,
+  leoWrapped_tokenSchema,
+  wrapped_tokenLeo,
+  WTForeignContract,
+  leoWTForeignContractSchema,
+  WTForeignContractLeo,
+  TokenInfo,
+  leoTokenInfoSchema,
+  TokenInfoLeo,
+  WrappedTokenInfo,
+  leoWrappedTokenInfoSchema,
+  WrappedTokenInfoLeo,
+  TokenAccount,
+  leoTokenAccountSchema,
+  TokenAccountLeo,
+  TokenAcc,
+  leoTokenAccSchema,
+  TokenAccLeo,
   TSForeignContract,
   leoTSForeignContractSchema,
   TSForeignContractLeo,
@@ -189,24 +207,6 @@ export {
   InPacketFullScreeningKey,
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo,
-  TokenAcc,
-  leoTokenAccSchema,
-  TokenAccLeo,
-  wrapped_token,
-  leoWrapped_tokenSchema,
-  wrapped_tokenLeo,
-  WTForeignContract,
-  leoWTForeignContractSchema,
-  WTForeignContractLeo,
-  TokenInfo,
-  leoTokenInfoSchema,
-  TokenInfoLeo,
-  WrappedTokenInfo,
-  leoWrappedTokenInfoSchema,
-  WrappedTokenInfoLeo,
-  TokenAccount,
-  leoTokenAccountSchema,
-  TokenAccountLeo,
   ProposalSign,
   leoProposalSignSchema,
   ProposalSignLeo,

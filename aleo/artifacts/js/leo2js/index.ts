@@ -1,4 +1,14 @@
 import {
+  getwrapped_token,
+  getWTForeignContract,
+  getTokenInfo,
+  getWrappedTokenInfo,
+  getTokenAccount
+} from './wrapped_tokens';
+import {
+  getTokenAcc
+} from './holding';
+import {
   getTSForeignContract,
   getTokenOrigin,
   getOutgoingPercentageInTime
@@ -16,16 +26,6 @@ import {
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey
 } from './token_bridge';
-import {
-  getTokenAcc
-} from './holding';
-import {
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount
-} from './wrapped_tokens';
 import {
   getProposalSign,
   getAddMember,
@@ -57,6 +57,12 @@ import {
 } from './wrapped_token';
 
 export {
+  getwrapped_token,
+  getWTForeignContract,
+  getTokenInfo,
+  getWrappedTokenInfo,
+  getTokenAccount,
+  getTokenAcc,
   getTSForeignContract,
   getTokenOrigin,
   getOutgoingPercentageInTime,
@@ -71,12 +77,6 @@ export {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
-  getTokenAcc,
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount,
   getProposalSign,
   getAddMember,
   getRemoveMember,

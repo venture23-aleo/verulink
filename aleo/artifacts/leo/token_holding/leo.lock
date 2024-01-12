@@ -1,0 +1,6 @@
+[[package]]
+name = "wrapped_token"
+network = "testnet3"
+location = "network"
+checksum = "1287bf62a6cc7236d57c793f1372699f6404ad07aa2dc5d327f499c6efce6c9e"
+dependencies = []
