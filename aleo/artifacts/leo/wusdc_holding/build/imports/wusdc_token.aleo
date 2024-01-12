@@ -19,7 +19,7 @@ mapping approvals:
 	value as u64.public;
 
 
-mapping governance_WT:
+mapping governance_wusdc:
 	key as boolean.public;
 	value as address.public;
 
@@ -30,23 +30,23 @@ function token_initialize:
 
 finalize token_initialize:
     input r0 as address.public;
-    contains governance_WT[true] into r1;
+    contains governance_wusdc[true] into r1;
     not r1 into r2;
     assert.eq r2 true;
-    set r0 into governance_WT[true];
+    set r0 into governance_wusdc[true];
 
 
-function update_governance_wt:
+function update_governance_wusdc:
     input r0 as address.public;
-    async update_governance_wt self.caller r0 into r1;
-    output r1 as wusdc_token.aleo/update_governance_wt.future;
+    async update_governance_wusdc self.caller r0 into r1;
+    output r1 as wusdc_token.aleo/update_governance_wusdc.future;
 
-finalize update_governance_wt:
+finalize update_governance_wusdc:
     input r0 as address.public;
     input r1 as address.public;
-    get governance_WT[true] into r2;
+    get governance_wusdc[true] into r2;
     assert.eq r0 r2;
-    set r1 into governance_WT[true];
+    set r1 into governance_wusdc[true];
 
 
 
@@ -68,7 +68,7 @@ finalize mint_public:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u64.public;
-    get governance_WT[true] into r3;
+    get governance_wusdc[true] into r3;
     assert.eq r0 r3;
     get.or_use account[r1] 0u64 into r4;
     add r4 r2 into r5;
@@ -90,7 +90,7 @@ finalize burn_public:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u64.public;
-    get governance_WT[true] into r3;
+    get governance_wusdc[true] into r3;
     assert.eq r0 r3;
     get.or_use account[r1] 0u64 into r4;
     add r4 r2 into r5;

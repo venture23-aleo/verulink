@@ -1,4 +1,4 @@
-# holding.aleo
+# wusdc_connector.aleo
 
 ## Build Guide
 

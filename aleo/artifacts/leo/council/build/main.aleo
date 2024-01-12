@@ -1,14 +1,6 @@
-import wrapped_tokens.aleo;
-import holding.aleo;
 import token_bridge.aleo;
 import token_service.aleo;
 program council.aleo;
-
-
-
-
-
-
 
 
 
@@ -76,18 +68,6 @@ struct TbDisableService:
     id as u32;
     service as address;
 
-struct WtUpdateGovernance:
-    id as u32;
-    new_governance as address;
-
-struct WtAddToken:
-    id as u32;
-    name as [u8; 32u32];
-    symbol as [u8; 16u32];
-    decimals as u8;
-    origin_chain_id as u128;
-    origin_contract_address as [u8; 32u32];
-
 struct TsUpdateGovernance:
     id as u32;
     new_governance as address;
@@ -122,16 +102,6 @@ struct TsUpdateOutgoingPercentage:
     token_id as address;
     outgoing_percentage as u16;
     timeframe as u32;
-
-struct HoldingUpdateGovernance:
-    id as u32;
-    new_governance as address;
-
-struct ReleaseFund:
-    id as u32;
-    token_id as address;
-    user as address;
-    amount as u64;
 
 
 mapping members:
@@ -540,56 +510,6 @@ finalize tb_disable_service:
     set true into proposal_executed[r1];
 
 
-function wt_update_governance:
-    input r0 as u32.public;
-    input r1 as address.public;
-    cast r0 r1 into r2 as WtUpdateGovernance;
-    hash.bhp256 r2 into r3 as field;
-    call wrapped_tokens.aleo/update_governance_wt r1 into r4;
-    async wt_update_governance r4 r3 into r5;
-    output r5 as council.aleo/wt_update_governance.future;
-
-finalize wt_update_governance:
-    input r0 as wrapped_tokens.aleo/update_governance_wt.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
-function wt_add_token:
-    input r0 as u32.public;
-    input r1 as [u8; 32u32].public;
-    input r2 as [u8; 16u32].public;
-    input r3 as u8.public;
-    input r4 as u128.public;
-    input r5 as [u8; 32u32].public;
-    cast r0 r1 r2 r3 r4 r5 into r6 as WtAddToken;
-    hash.bhp256 r6 into r7 as field;
-    call wrapped_tokens.aleo/add_token_wt r1 r2 r3 r4 r5 into r8;
-    async wt_add_token r8 r7 into r9;
-    output r9 as council.aleo/wt_add_token.future;
-
-finalize wt_add_token:
-    input r0 as wrapped_tokens.aleo/add_token_wt.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
 function ts_update_governance:
     input r0 as u32.public;
     input r1 as address.public;
@@ -748,54 +668,6 @@ function ts_update_outgoing_percentage:
 
 finalize ts_update_outgoing_percentage:
     input r0 as token_service.aleo/update_outgoing_percentage_ts.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
-function holding_update_governance:
-    input r0 as u32.public;
-    input r1 as address.private;
-    cast r0 r1 into r2 as HoldingUpdateGovernance;
-    hash.bhp256 r2 into r3 as field;
-    call holding.aleo/update_governance_holding r1 into r4;
-    async holding_update_governance r4 r3 into r5;
-    output r5 as council.aleo/holding_update_governance.future;
-
-finalize holding_update_governance:
-    input r0 as holding.aleo/update_governance_holding.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
-function release_fund_from_holding:
-    input r0 as u32.public;
-    input r1 as address.public;
-    input r2 as address.public;
-    input r3 as u64.public;
-    cast r0 r1 r2 r3 into r4 as ReleaseFund;
-    hash.bhp256 r4 into r5 as field;
-    call holding.aleo/release_fund r1 r2 r3 into r6;
-    async release_fund_from_holding r6 r5 into r7;
-    output r7 as council.aleo/release_fund_from_holding.future;
-
-finalize release_fund_from_holding:
-    input r0 as holding.aleo/release_fund.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

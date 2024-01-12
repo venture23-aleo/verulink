@@ -1,8 +1,6 @@
 // The 'council' program.
 import token_bridge.aleo;
 import token_service.aleo;
-import wrapped_tokens.aleo;
-import holding.aleo;
 
 program council.aleo {
 
@@ -592,88 +590,88 @@ program council.aleo {
     /////// Wrapped Token: Update Governance ////
     /////////////////////////////////////////////
 
-    struct WtUpdateGovernance {
-        id: u32,
-        new_governance: address
-    }
+    // struct WtUpdateGovernance {
+    //     id: u32,
+    //     new_governance: address
+    // }
 
-    transition wt_update_governance(public id: u32, public new_governance: address) {
-        let proposal: WtUpdateGovernance = WtUpdateGovernance {
-            id,
-            new_governance
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
+    // transition wt_update_governance(public id: u32, public new_governance: address) {
+    //     let proposal: WtUpdateGovernance = WtUpdateGovernance {
+    //         id,
+    //         new_governance
+    //     };
+    //     let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        // Execute the proposal
-        wrapped_tokens.aleo/update_governance_wt(new_governance);
+    //     // Execute the proposal
+    //     wrapped_tokens.aleo/update_governance_wt(new_governance);
 
-        return then finalize(proposal_hash);
-    }
+    //     return then finalize(proposal_hash);
+    // }
 
-    finalize wt_update_governance(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+    // finalize wt_update_governance(proposal_hash: field) {
+    //     // Get the threshold
+    //     let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+    //     // Get the votes for the proposal
+    //     let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold);
+    //     assert(votes >= threshold);
 
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
+    //     // Ensure that the proposal has not been executed
+    //     assert(!Mapping::contains(proposal_executed, proposal_hash));
 
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
+    //     // Mark the proposal as executed
+    //     Mapping::set(proposal_executed, proposal_hash, true);
+    // }
 
 
-    //////////////////////////////////////
-    ////// Wrapped Token: Add Token //////
-    //////////////////////////////////////
+    // //////////////////////////////////////
+    // ////// Wrapped Token: Add Token //////
+    // //////////////////////////////////////
 
-    struct WtAddToken {
-        id: u32,
-        name: [u8; 32],
-        symbol: [u8; 16],
-        decimals: u8,
-        origin_chain_id: u128,
-        origin_contract_address: [u8; 32]
-    }
+    // struct WtAddToken {
+    //     id: u32,
+    //     name: [u8; 32],
+    //     symbol: [u8; 16],
+    //     decimals: u8,
+    //     origin_chain_id: u128,
+    //     origin_contract_address: [u8; 32]
+    // }
 
-    transition wt_add_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
-        let proposal: WtAddToken = WtAddToken {
-            id,
-            name,
-            symbol,
-            decimals,
-            origin_chain_id,
-            origin_contract_address
-        };
+    // transition wt_add_token(public id: u32, public name: [u8; 32], public symbol: [u8; 16], public decimals: u8, public origin_chain_id: u128, public origin_contract_address: [u8; 32]) {
+    //     let proposal: WtAddToken = WtAddToken {
+    //         id,
+    //         name,
+    //         symbol,
+    //         decimals,
+    //         origin_chain_id,
+    //         origin_contract_address
+    //     };
 
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
+    //     let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        // Execute the proposal
-        wrapped_tokens.aleo/add_token_wt(name, symbol, decimals, origin_chain_id, origin_contract_address);
+    //     // Execute the proposal
+    //     wrapped_tokens.aleo/add_token_wt(name, symbol, decimals, origin_chain_id, origin_contract_address);
 
-        return then finalize(proposal_hash);
-    }
+    //     return then finalize(proposal_hash);
+    // }
 
-    finalize wt_add_token(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+    // finalize wt_add_token(proposal_hash: field) {
+    //     // Get the threshold
+    //     let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+    //     // Get the votes for the proposal
+    //     let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold);
+    //     assert(votes >= threshold);
 
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
+    //     // Ensure that the proposal has not been executed
+    //     assert(!Mapping::contains(proposal_executed, proposal_hash));
 
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
+    //     // Mark the proposal as executed
+    //     Mapping::set(proposal_executed, proposal_hash, true);
 
-    }
+    // }
 
     /////////////////////////////////////////////
     /////// Token Service: Update Governance ////
@@ -961,81 +959,81 @@ program council.aleo {
     ///////  Holding Program: Update Governance ////////
     ///////////////////////////////////////////////////
 
-    struct HoldingUpdateGovernance {
-        id: u32,
-        new_governance: address
-    }
+    // struct HoldingUpdateGovernance {
+    //     id: u32,
+    //     new_governance: address
+    // }
 
-    transition holding_update_governance(public id: u32, new_governance: address) {
-        let proposal: HoldingUpdateGovernance  = HoldingUpdateGovernance {
-            id,
-            new_governance
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
+    // transition holding_update_governance(public id: u32, new_governance: address) {
+    //     let proposal: HoldingUpdateGovernance  = HoldingUpdateGovernance {
+    //         id,
+    //         new_governance
+    //     };
+    //     let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        // Execute the proposal
-        holding.aleo/update_governance_holding(new_governance);
+    //     // Execute the proposal
+    //     holding.aleo/update_governance_holding(new_governance);
 
-        return then finalize(proposal_hash);
-    }
+    //     return then finalize(proposal_hash);
+    // }
 
-    finalize holding_update_governance(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+    // finalize holding_update_governance(proposal_hash: field) {
+    //     // Get the threshold
+    //     let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+    //     // Get the votes for the proposal
+    //     let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold);
+    //     assert(votes >= threshold);
 
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
+    //     // Ensure that the proposal has not been executed
+    //     assert(!Mapping::contains(proposal_executed, proposal_hash));
 
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
+    //     // Mark the proposal as executed
+    //     Mapping::set(proposal_executed, proposal_hash, true);
+    // }
 
 
-    ///////////////////////////////////////////////
-    ///////  Holding Program: Release Fund ////////
-    ///////////////////////////////////////////////
+    // ///////////////////////////////////////////////
+    // ///////  Holding Program: Release Fund ////////
+    // ///////////////////////////////////////////////
 
-    struct ReleaseFund {
-        id: u32,
-        token_id: address,
-        user: address,
-        amount: u64
-    }
+    // struct ReleaseFund {
+    //     id: u32,
+    //     token_id: address,
+    //     user: address,
+    //     amount: u64
+    // }
 
-    transition release_fund_from_holding(public id: u32, public token_id: address, public user: address, public amount: u64) {
-        let proposal: ReleaseFund  = ReleaseFund {
-            id,
-            token_id,
-            user,
-            amount
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
+    // transition release_fund_from_holding(public id: u32, public token_id: address, public user: address, public amount: u64) {
+    //     let proposal: ReleaseFund  = ReleaseFund {
+    //         id,
+    //         token_id,
+    //         user,
+    //         amount
+    //     };
+    //     let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        // Execute the proposal
-        holding.aleo/release_fund(token_id, user, amount);
+    //     // Execute the proposal
+    //     holding.aleo/release_fund(token_id, user, amount);
 
-        return then finalize(proposal_hash);
-    }
+    //     return then finalize(proposal_hash);
+    // }
 
-    finalize release_fund_from_holding(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+    // finalize release_fund_from_holding(proposal_hash: field) {
+    //     // Get the threshold
+    //     let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+    //     // Get the votes for the proposal
+    //     let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
 
-        assert(votes >= threshold);
+    //     assert(votes >= threshold);
 
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
+    //     // Ensure that the proposal has not been executed
+    //     assert(!Mapping::contains(proposal_executed, proposal_hash));
 
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
+    //     // Mark the proposal as executed
+    //     Mapping::set(proposal_executed, proposal_hash, true);
+    // }
 
 }

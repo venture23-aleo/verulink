@@ -23,10 +23,6 @@ import {
   TbEnableServiceLeo,
   TbDisableService,
   TbDisableServiceLeo,
-  WtUpdateGovernance,
-  WtUpdateGovernanceLeo,
-  WtAddToken,
-  WtAddTokenLeo,
   TsUpdateGovernance,
   TsUpdateGovernanceLeo,
   TsSupportChain,
@@ -41,10 +37,6 @@ import {
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
   TsUpdateOutgoingPercentageLeo,
-  HoldingUpdateGovernance,
-  HoldingUpdateGovernanceLeo,
-  ReleaseFund,
-  ReleaseFundLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -148,26 +140,6 @@ export function getTbDisableService(tbDisableService: TbDisableServiceLeo): TbDi
   return result;
 }
 
-export function getWtUpdateGovernance(wtUpdateGovernance: WtUpdateGovernanceLeo): WtUpdateGovernance {
-  const result: WtUpdateGovernance = {
-    id: leo2js.u32(wtUpdateGovernance.id),
-    new_governance: leo2js.address(wtUpdateGovernance.new_governance),
-  }
-  return result;
-}
-
-export function getWtAddToken(wtAddToken: WtAddTokenLeo): WtAddToken {
-  const result: WtAddToken = {
-    id: leo2js.u32(wtAddToken.id),
-    name: leo2js.array(wtAddToken.name, leo2js.u8),
-    symbol: leo2js.array(wtAddToken.symbol, leo2js.u8),
-    decimals: leo2js.u8(wtAddToken.decimals),
-    origin_chain_id: leo2js.u128(wtAddToken.origin_chain_id),
-    origin_contract_address: leo2js.array(wtAddToken.origin_contract_address, leo2js.u8),
-  }
-  return result;
-}
-
 export function getTsUpdateGovernance(tsUpdateGovernance: TsUpdateGovernanceLeo): TsUpdateGovernance {
   const result: TsUpdateGovernance = {
     id: leo2js.u32(tsUpdateGovernance.id),
@@ -227,24 +199,6 @@ export function getTsUpdateOutgoingPercentage(tsUpdateOutgoingPercentage: TsUpda
     token_id: leo2js.address(tsUpdateOutgoingPercentage.token_id),
     outgoing_percentage: leo2js.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
     timeframe: leo2js.u32(tsUpdateOutgoingPercentage.timeframe),
-  }
-  return result;
-}
-
-export function getHoldingUpdateGovernance(holdingUpdateGovernance: HoldingUpdateGovernanceLeo): HoldingUpdateGovernance {
-  const result: HoldingUpdateGovernance = {
-    id: leo2js.u32(holdingUpdateGovernance.id),
-    new_governance: leo2js.address(holdingUpdateGovernance.new_governance),
-  }
-  return result;
-}
-
-export function getReleaseFund(releaseFund: ReleaseFundLeo): ReleaseFund {
-  const result: ReleaseFund = {
-    id: leo2js.u32(releaseFund.id),
-    token_id: leo2js.address(releaseFund.token_id),
-    user: leo2js.address(releaseFund.user),
-    amount: leo2js.u64(releaseFund.amount),
   }
   return result;
 }

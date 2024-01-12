@@ -22,7 +22,7 @@ program wusdc_token.aleo {
     // and `u64` as the value.
     mapping approvals: field => u64;
 
-    mapping governance_WT: bool => address;
+    mapping governance_wusdc: bool => address;
     const GOVERNANCE_INDEX: bool = true;
 
     ///////////////////////////////////////////
@@ -37,26 +37,26 @@ program wusdc_token.aleo {
 
     finalize token_initialize(governance: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(governance_WT, true));
+        assert(!Mapping::contains(governance_wusdc, true));
 
         // Set the council program
-        Mapping::set(governance_WT, true, governance);
+        Mapping::set(governance_wusdc, true, governance);
     }
 
     /// Update the existing governance program
     /// Can only be called from council/governance program
-    transition update_governance_wt(public new_governance: address) {
+    transition update_governance_wusdc(public new_governance: address) {
         return then finalize(self.caller, new_governance);
     }
 
-    finalize update_governance_wt(from: address, new_governance: address) {
+    finalize update_governance_wusdc(from: address, new_governance: address) {
         // Get the governance address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_WT, true);
+        let governance: address = Mapping::get(governance_wusdc, true);
         assert_eq(from, governance);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(governance_WT, true, new_governance);
+        Mapping::set(governance_wusdc, true, new_governance);
     }
 
 
@@ -75,7 +75,7 @@ program wusdc_token.aleo {
     finalize mint_public(minter: address, receiver: address, amount: u64) {
         // Get the governance address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_WT, true);
+        let governance: address = Mapping::get(governance_wusdc, true);
 
         // Only governance can mint
         assert_eq(minter, governance);
@@ -98,7 +98,7 @@ program wusdc_token.aleo {
     finalize burn_public(burner: address, receiver: address, amount: u64) {
         // Get the governance address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_WT, true);
+        let governance: address = Mapping::get(governance_wusdc, true);
 
         // Only governace can burn
         assert_eq(burner, governance);

@@ -1,14 +1,4 @@
 import {
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount
-} from './wrapped_tokens';
-import {
-  getTokenAcc
-} from './holding';
-import {
   getTSForeignContract,
   getTokenOrigin,
   getOutgoingPercentageInTime
@@ -39,30 +29,24 @@ import {
   getTbDisableChain,
   getTbEnableService,
   getTbDisableService,
-  getWtUpdateGovernance,
-  getWtAddToken,
   getTsUpdateGovernance,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
-  getTsUpdateOutgoingPercentage,
-  getHoldingUpdateGovernance,
-  getReleaseFund
+  getTsUpdateOutgoingPercentage
 } from './council';
 import {
   gettoken,
   getApproval
 } from './wrapped_token';
+import {
+  gettoken,
+  getApproval
+} from './wusdc_token';
 
 export {
-  getwrapped_token,
-  getWTForeignContract,
-  getTokenInfo,
-  getWrappedTokenInfo,
-  getTokenAccount,
-  getTokenAcc,
   getTSForeignContract,
   getTokenOrigin,
   getOutgoingPercentageInTime,
@@ -89,8 +73,6 @@ export {
   getTbDisableChain,
   getTbEnableService,
   getTbDisableService,
-  getWtUpdateGovernance,
-  getWtAddToken,
   getTsUpdateGovernance,
   getTsSupportChain,
   getTsRemoveChain,
@@ -98,8 +80,8 @@ export {
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
-  getHoldingUpdateGovernance,
-  getReleaseFund,
+  gettoken,
+  getApproval,
   gettoken,
   getApproval,
 };

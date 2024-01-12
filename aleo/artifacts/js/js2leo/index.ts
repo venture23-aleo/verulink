@@ -1,14 +1,4 @@
 import {
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo
-} from './wrapped_tokens';
-import {
-  getTokenAccLeo
-} from './holding';
-import {
   getTSForeignContractLeo,
   getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo
@@ -39,30 +29,24 @@ import {
   getTbDisableChainLeo,
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
-  getWtUpdateGovernanceLeo,
-  getWtAddTokenLeo,
   getTsUpdateGovernanceLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
-  getTsUpdateOutgoingPercentageLeo,
-  getHoldingUpdateGovernanceLeo,
-  getReleaseFundLeo
+  getTsUpdateOutgoingPercentageLeo
 } from './council';
 import {
   gettokenLeo,
   getApprovalLeo
 } from './wrapped_token';
+import {
+  gettokenLeo,
+  getApprovalLeo
+} from './wusdc_token';
 
 export {
-  getwrapped_tokenLeo,
-  getWTForeignContractLeo,
-  getTokenInfoLeo,
-  getWrappedTokenInfoLeo,
-  getTokenAccountLeo,
-  getTokenAccLeo,
   getTSForeignContractLeo,
   getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo,
@@ -89,8 +73,6 @@ export {
   getTbDisableChainLeo,
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
-  getWtUpdateGovernanceLeo,
-  getWtAddTokenLeo,
   getTsUpdateGovernanceLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
@@ -98,8 +80,8 @@ export {
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
-  getHoldingUpdateGovernanceLeo,
-  getReleaseFundLeo,
+  gettokenLeo,
+  getApprovalLeo,
   gettokenLeo,
   getApprovalLeo,
 };

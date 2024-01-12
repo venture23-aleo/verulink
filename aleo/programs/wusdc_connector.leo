@@ -1,0 +1,110 @@
+import wusdc_token.aleo;
+import wusdc_holding.aleo;
+import token_service.aleo;
+
+program wusdc_connector.aleo {
+
+    const WUSDC_TOKEN: address = aleo1qg0azcck30ys6598lpmfx9xpfazj9w7ma973g7l5p7eka0p4jq9s2c3vk2;
+    const WUSDC_HOLDING: address = aleo16dyvhwsrfmx5eru9kffhn6df8cr3v3h06apqzsrphl6h03wa2crq43djr6;
+
+    // mapping used as variable
+    // true: address of council 
+    // false: Null
+    mapping governance_connector: bool => address;
+
+    //////////////////////////////
+    /////// Initialization ///////
+    //////////////////////////////
+
+    // Initialize can only be called once
+    transition initialize_holding(public governance: address) {
+        return then finalize(governance);
+    }
+
+    finalize initialize_holding(council: address) {
+        // Assert holding program has not been initialized before
+        assert(!Mapping::contains(governance_connector, true));
+
+        // Set the council program
+        Mapping::set(governance_connector, true, council);
+    }
+
+    ///////////////////////////////
+    ///// Update Governance ///////
+    ///////////////////////////////
+
+    /// Update the existing governance program
+    /// Can only be called from council/governance program
+    transition update_governance_holding(public new_governance: address) {
+        return then finalize(self.caller, new_governance);
+    }
+
+    finalize update_governance_holding(from: address, new_governance: address) {
+        // Get the governance address
+        // If program not initialized, this fails
+        let governance: address = Mapping::get(governance_connector, true);
+        assert_eq(from, governance);
+
+        // If attestor does not exist, this is expected to fail
+        Mapping::set(governance_connector, true, new_governance);
+    }
+
+    /// Receive Wrapped USDC
+    ///
+    /// # Arguments:
+    /// * sender: [u8; 32] - Address of the sender on source chain (Ethereum)
+    /// * receiver: address - Receiver on the packet in Aleo
+    /// * actual_receiver: address - Address where the token is minted on Aleo
+    /// * amount: u64 - Amount to be minted on Aleo
+    /// * `sequence`: u32 - Sequence no for this chain on the source chain
+    /// * `height`: u32 - Height of the source chain where the packet originated
+    transition wusdc_receive(public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence: u32, public height: u32) {
+
+        token_service.aleo/token_receive(origin_chain_id(), origin_token_service_address(), origin_usdc_address(), WUSDC_TOKEN, sender, receiver, actual_receiver, amount, sequence, height);
+
+        wusdc_token.aleo/mint_public(actual_receiver, amount, origin_chain_id(), origin_usdc_address());
+
+        // If the packet did not pass the screening, the `actual_receiver` must be the holding program
+        // In case the packet passed the screening, the receiver and the actual receiver are the same address.
+        // And additional checks are not required
+        let check_required: bool = !(receiver == actual_receiver);
+
+        if check_required {
+            wusdc_holding.aleo/hold_fund(receiver, amount);
+        }
+
+    }
+
+    transition wusdc_send(public receiver: [u8; 32], public amount: u64) {
+
+        wusdc_token.aleo/burn_public(self.caller, amount, origin_chain_id(), origin_usdc_address());
+
+        token_service.aleo/token_send(WUSDC_TOKEN, receiver, amount, origin_chain_id(), origin_usdc_address(), origin_token_service_address());
+
+    }
+
+    // Chain Id of the network
+    // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator
+    // For Ethereum mainnet, chain_id: `evm:1` -> 27236160417
+    inline origin_chain_id() -> u128 {
+        return 27236160417u128;
+    }
+
+    // Contract Address of the original token on the origin chain
+    // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+    // Example: Contract Address of USDC on Ethereum
+    // For EVM Chains, 20 bytes is formated as following:
+    inline origin_usdc_address() -> [u8; 32] {
+        return [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 160u8, 184u8, 105u8, 145u8, 198u8, 33u8, 139u8, 54u8, 193u8, 209u8, 157u8, 74u8, 46u8, 158u8, 176u8, 206u8, 54u8, 6u8, 235u8, 72u8 ] ;
+    }
+
+    // Token Service Contract Address of the original token on the origin chain
+    // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+    // Example: Contract Address of USDC on Ethereum
+    // For EVM Chains, 20 bytes is formated as following:
+    inline origin_token_service_address() -> [u8; 32] {
+        return [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 160u8, 184u8, 105u8, 145u8, 198u8, 33u8, 139u8, 54u8, 193u8, 209u8, 157u8, 74u8, 46u8, 158u8, 176u8, 206u8, 54u8, 6u8, 235u8, 72u8 ] ;
+    }
+
+
+}

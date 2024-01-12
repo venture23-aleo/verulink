@@ -1,8 +1,6 @@
 // The 'token_service' program.
 
-import wrapped_tokens.aleo;
 import token_bridge.aleo;
-import holding.aleo;
 
 program token_service.aleo {
 
@@ -210,26 +208,22 @@ program token_service.aleo {
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
     }
 
-    transition token_send(public token_id: address, public receiver: [u8; 32], public amount: u64, public origin: TokenOrigin) {
+    transition token_send(public token_id: address, public receiver: [u8; 32], public amount: u64, public origin_chain_id: u128, origin_token_address: [u8; 32], origin_token_service_address: [u8; 32]) {
         // TODO
         // If fee is set require credits token for publishing
 
         // call burn on wrapped token
-        wrapped_tokens.aleo/burn(amount, token_id, origin.chain_id, origin.token_address);
+        // wrapped_tokens.aleo/burn(amount, token_id, origin_chain_id, origin_token_address);
 
         // call publish on bridge contract
-        token_bridge.aleo/publish(origin.chain_id, origin.token_service_address, origin.token_address, self.caller, receiver, amount);
+        token_bridge.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, self.caller, receiver, amount);
 
         // return then finalize (self.caller, origin, msg, msg_hash);
-        return then finalize (token_id, origin, amount);
+        return then finalize (token_id, amount);
     }
 
     // finalize token_send(wrapped_addr: address, origin: TokenOrigin, msg: MsgTokenSend, msg_hash: field) {
-    finalize token_send(wrapped_addr: address, origin: TokenOrigin, amount: u64) {
-
-        // Assert that it can only be published to the token service program on the origin network
-        let origin_token_service_contract: [u8; 32] = Mapping::get(token_service_contracts, origin.chain_id);
-        assert_eq(origin_token_service_contract, origin.token_service_address);
+    finalize token_send(wrapped_addr: address, amount: u64) {
 
         let min_amount: u64 = Mapping::get(minimum_transfers, wrapped_addr);
         assert(amount >= min_amount);
@@ -277,35 +271,19 @@ program token_service.aleo {
 
     /// Consumes msg from source at destination
     /// Requires sequence no of the source network
-    transition token_receive(public source: TokenOrigin, public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
+    transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
 
         // call consume on bridge
-        token_bridge.aleo/consume(source.chain_id, source.token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);
+        token_bridge.aleo/consume(source_chain_id, source_token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);
 
-        // call mint on wrapped token
-        wrapped_tokens.aleo/mint(actual_receiver, amount, token_id, source.chain_id, source.token_address);
-
-        // If the packet did not pass the screening, the `actual_receiver` must be the holding program
-        // In case the packet passed the screening, the receiver and the actual receiver are the same address.
-        // And additional checks are not required
-        let check_required: bool = !(receiver == actual_receiver);
-
-        if check_required {
-            holding.aleo/hold_fund(token_id, receiver, amount);
-        }
-
-        return then finalize(token_id, amount, actual_receiver, check_required);
+        return then finalize(token_id, amount);
     }
 
-    finalize token_receive(token_id: address, amount: u64, actual_receiver: address, check_required: bool) {
+    finalize token_receive(token_id: address, amount: u64) {
         // Increase the total supply
         let current_supply: u64 = Mapping::get_or_use(total_supply, token_id, 0u64);
         Mapping::set(total_supply, token_id, current_supply + amount);
 
-        if check_required {
-            let holding_program: address = Mapping::get(holding_program_TS, true);
-            assert_eq(holding_program, actual_receiver);
-        }
     }
 
 }

@@ -167,13 +167,15 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_send(r0: string, r1: Array < number > , r2: bigint, r3: TokenOrigin) {
+  async token_send(r0: string, r1: Array < number > , r2: bigint, r3: bigint, r4: Array < number > , r5: Array < number > ) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.u64(r2);
-    const r3Leo = js2leo.json(getTokenOriginLeo(r3));
+    const r3Leo = js2leo.u128(r3);
+    const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
+    const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_send',
@@ -182,17 +184,19 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_receive(r0: TokenOrigin, r1: string, r2: Array < number > , r3: string, r4: string, r5: bigint, r6: number, r7: number) {
-    const r0Leo = js2leo.json(getTokenOriginLeo(r0));
-    const r1Leo = js2leo.address(r1);
+  async token_receive(r0: bigint, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: string, r6: string, r7: bigint, r8: number, r9: number) {
+    const r0Leo = js2leo.u128(r0);
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
     const r3Leo = js2leo.address(r3);
-    const r4Leo = js2leo.address(r4);
-    const r5Leo = js2leo.u64(r5);
-    const r6Leo = js2leo.u32(r6);
-    const r7Leo = js2leo.u32(r7);
+    const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
+    const r5Leo = js2leo.address(r5);
+    const r6Leo = js2leo.address(r6);
+    const r7Leo = js2leo.u64(r7);
+    const r8Leo = js2leo.u32(r8);
+    const r9Leo = js2leo.u32(r9);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo, r9Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_receive',

@@ -1,18 +1,6 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  token,
-  Approval,
-} from "./types";
-import {
-  gettokenLeo,
-  getApprovalLeo,
-} from './js2leo';
-import {
-  gettoken,
-  getApproval,
-} from './leo2js';
-import {
   zkRun,
   ContractConfig,
   snarkDeploy,
@@ -60,25 +48,25 @@ export class Wusdc_holdingContract {
 
     return result;
   }
-  async initialize_holding(r0: string) {
+  async initialize_wusdc_holding(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'initialize_holding',
+      transition: 'initialize_wusdc_holding',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_holding(r0: string) {
+  async update_governance_wusdc_holding(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_holding',
+      transition: 'update_governance_wusdc_holding',
       params,
     });
     if (this.config.mode === "execute") return result;

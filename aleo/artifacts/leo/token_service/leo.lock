@@ -1,18 +1,4 @@
 [[package]]
-name = "wrapped_tokens"
-network = "testnet3"
-location = "network"
-checksum = "88943cafb9c316ff3c65db70a8527f0e837923ce927d0fca453629d3d07e53ae"
-dependencies = []
-
-[[package]]
-name = "holding"
-network = "testnet3"
-location = "network"
-checksum = "a50ff2430105724c7e3ba5ee84bdaa9927cc4cf4fabbb0ef81e0134d02241a86"
-dependencies = ["wrapped_tokens.aleo"]
-
-[[package]]
 name = "token_bridge"
 network = "testnet3"
 location = "network"

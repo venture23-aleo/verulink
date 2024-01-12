@@ -1,26 +1,4 @@
 import {
-  wrapped_token,
-  leoWrapped_tokenSchema,
-  wrapped_tokenLeo,
-  WTForeignContract,
-  leoWTForeignContractSchema,
-  WTForeignContractLeo,
-  TokenInfo,
-  leoTokenInfoSchema,
-  TokenInfoLeo,
-  WrappedTokenInfo,
-  leoWrappedTokenInfoSchema,
-  WrappedTokenInfoLeo,
-  TokenAccount,
-  leoTokenAccountSchema,
-  TokenAccountLeo
-} from './wrapped_tokens';
-import {
-  TokenAcc,
-  leoTokenAccSchema,
-  TokenAccLeo
-} from './holding';
-import {
   TSForeignContract,
   leoTSForeignContractSchema,
   TSForeignContractLeo,
@@ -103,12 +81,6 @@ import {
   TbDisableService,
   leoTbDisableServiceSchema,
   TbDisableServiceLeo,
-  WtUpdateGovernance,
-  leoWtUpdateGovernanceSchema,
-  WtUpdateGovernanceLeo,
-  WtAddToken,
-  leoWtAddTokenSchema,
-  WtAddTokenLeo,
   TsUpdateGovernance,
   leoTsUpdateGovernanceSchema,
   TsUpdateGovernanceLeo,
@@ -129,13 +101,7 @@ import {
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
   leoTsUpdateOutgoingPercentageSchema,
-  TsUpdateOutgoingPercentageLeo,
-  HoldingUpdateGovernance,
-  leoHoldingUpdateGovernanceSchema,
-  HoldingUpdateGovernanceLeo,
-  ReleaseFund,
-  leoReleaseFundSchema,
-  ReleaseFundLeo
+  TsUpdateOutgoingPercentageLeo
 } from './council';
 import {
   token,
@@ -145,26 +111,16 @@ import {
   leoApprovalSchema,
   ApprovalLeo
 } from './wrapped_token';
+import {
+  token,
+  leoTokenSchema,
+  tokenLeo,
+  Approval,
+  leoApprovalSchema,
+  ApprovalLeo
+} from './wusdc_token';
 
 export {
-  wrapped_token,
-  leoWrapped_tokenSchema,
-  wrapped_tokenLeo,
-  WTForeignContract,
-  leoWTForeignContractSchema,
-  WTForeignContractLeo,
-  TokenInfo,
-  leoTokenInfoSchema,
-  TokenInfoLeo,
-  WrappedTokenInfo,
-  leoWrappedTokenInfoSchema,
-  WrappedTokenInfoLeo,
-  TokenAccount,
-  leoTokenAccountSchema,
-  TokenAccountLeo,
-  TokenAcc,
-  leoTokenAccSchema,
-  TokenAccLeo,
   TSForeignContract,
   leoTSForeignContractSchema,
   TSForeignContractLeo,
@@ -243,12 +199,6 @@ export {
   TbDisableService,
   leoTbDisableServiceSchema,
   TbDisableServiceLeo,
-  WtUpdateGovernance,
-  leoWtUpdateGovernanceSchema,
-  WtUpdateGovernanceLeo,
-  WtAddToken,
-  leoWtAddTokenSchema,
-  WtAddTokenLeo,
   TsUpdateGovernance,
   leoTsUpdateGovernanceSchema,
   TsUpdateGovernanceLeo,
@@ -270,12 +220,12 @@ export {
   TsUpdateOutgoingPercentage,
   leoTsUpdateOutgoingPercentageSchema,
   TsUpdateOutgoingPercentageLeo,
-  HoldingUpdateGovernance,
-  leoHoldingUpdateGovernanceSchema,
-  HoldingUpdateGovernanceLeo,
-  ReleaseFund,
-  leoReleaseFundSchema,
-  ReleaseFundLeo,
+  token,
+  leoTokenSchema,
+  tokenLeo,
+  Approval,
+  leoApprovalSchema,
+  ApprovalLeo,
   token,
   leoTokenSchema,
   tokenLeo,

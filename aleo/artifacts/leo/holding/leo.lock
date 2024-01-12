@@ -1,6 +1,0 @@
-[[package]]
-name = "wrapped_tokens"
-network = "testnet3"
-location = "network"
-checksum = "88943cafb9c316ff3c65db70a8527f0e837923ce927d0fca453629d3d07e53ae"
-dependencies = []

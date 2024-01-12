@@ -14,11 +14,11 @@ program wusdc_holding.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_holding(public governance: address) {
+    transition initialize_wusdc_holding(public governance: address) {
         return then finalize(governance);
     }
 
-    finalize initialize_holding(council: address) {
+    finalize initialize_wusdc_holding(council: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(governance_holding, true));
 
@@ -32,11 +32,11 @@ program wusdc_holding.aleo {
 
     /// Update the existing governance program
     /// Can only be called from council/governance program
-    transition update_governance_holding(public new_governance: address) {
+    transition update_governance_wusdc_holding(public new_governance: address) {
         return then finalize(self.caller, new_governance);
     }
 
-    finalize update_governance_holding(from: address, new_governance: address) {
+    finalize update_governance_wusdc_holding(from: address, new_governance: address) {
         // Get the governance address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_holding, true);

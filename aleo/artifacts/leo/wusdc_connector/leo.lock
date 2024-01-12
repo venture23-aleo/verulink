@@ -11,3 +11,17 @@ network = "testnet3"
 location = "network"
 checksum = "ac97d791876415a70b3dddd41ab285e0a8feb82380d692c633b31a575d9b9470"
 dependencies = ["token_bridge.aleo"]
+
+[[package]]
+name = "wusdc_token"
+network = "testnet3"
+location = "network"
+checksum = "39f750766b1f2d6502e19d9c39b81ac2cf82faf9ee3234db8290593b13c8a756"
+dependencies = []
+
+[[package]]
+name = "wusdc_holding"
+network = "testnet3"
+location = "network"
+checksum = "b3977b279f400c7284a4a4a408786c7b41449df881fc01ec45c1ed0706451e55"
+dependencies = ["wusdc_token.aleo"]
