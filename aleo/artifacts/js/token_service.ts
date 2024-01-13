@@ -1,18 +1,12 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  TSForeignContract,
-  TokenOrigin,
   OutgoingPercentageInTime,
 } from "./types";
 import {
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo,
 } from './js2leo';
 import {
-  getTSForeignContract,
-  getTokenOrigin,
   getOutgoingPercentageInTime,
 } from './leo2js';
 import {
@@ -113,16 +107,30 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async support_token_ts(r0: string, r1: bigint, r2: number, r3: number) {
+  async support_token_ts(r0: string, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
-    const r2Leo = js2leo.u16(r2);
-    const r3Leo = js2leo.u32(r3);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u64(r2);
+    const r3Leo = js2leo.u16(r3);
+    const r4Leo = js2leo.u32(r4);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'support_token_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_token_connector_ts(r0: string, r1: string) {
+    const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_token_connector_ts',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -135,6 +143,19 @@ export class Token_serviceContract {
     const result = await zkRun({
       config: this.config,
       transition: 'remove_token_ts',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_token_connector(r0: string, r1: string) {
+    const r0Leo = js2leo.address(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_token_connector',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -229,18 +250,6 @@ export class Token_serviceContract {
     return leo2js.address(result);
   }
 
-  async holding_program_TS(key: boolean): Promise < string > {
-    const keyLeo = js2leo.boolean(key);
-
-    const params = [keyLeo]
-    const result = await zkGetMapping({
-      config: this.config,
-      transition: 'holding_program_TS',
-      params,
-    });
-    return leo2js.address(result);
-  }
-
   async total_supply(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
@@ -251,6 +260,18 @@ export class Token_serviceContract {
       params,
     });
     return leo2js.u64(result);
+  }
+
+  async token_connectors(key: string): Promise < string > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'token_connectors',
+      params,
+    });
+    return leo2js.address(result);
   }
 
   async minimum_transfers(key: string): Promise < bigint > {

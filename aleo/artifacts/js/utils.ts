@@ -146,7 +146,7 @@ const validateBroadcast = async (
   nodeEndpoint: string
 ) => {
   const pollUrl = `${nodeEndpoint}/testnet3/transaction/${transactionId}`;
-  const timeoutMs = 60_000;
+  const timeoutMs = 120_000;
   const pollInterval = 1000; // 1 second
   const startTime = Date.now();
 

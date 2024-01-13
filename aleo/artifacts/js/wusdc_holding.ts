@@ -48,10 +48,9 @@ export class Wusdc_holdingContract {
 
     return result;
   }
-  async initialize_wusdc_holding(r0: string) {
-    const r0Leo = js2leo.address(r0);
+  async initialize_wusdc_holding() {
 
-    const params = [r0Leo]
+    const params = []
     const result = await zkRun({
       config: this.config,
       transition: 'initialize_wusdc_holding',

@@ -1,6 +1,8 @@
 import {
   ProposalSign,
   ProposalSignLeo,
+  ExternalProposal,
+  ExternalProposalLeo,
   AddMember,
   AddMemberLeo,
   RemoveMember,
@@ -33,6 +35,8 @@ import {
   TsSupportTokenLeo,
   TsRemoveToken,
   TsRemoveTokenLeo,
+  TsUpdateConnector,
+  TsUpdateConnectorLeo,
   TsUpdateMinimumTransfer,
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
@@ -44,6 +48,14 @@ export function getProposalSign(proposalSign: ProposalSignLeo): ProposalSign {
   const result: ProposalSign = {
     proposal: leo2js.field(proposalSign.proposal),
     member: leo2js.address(proposalSign.member),
+  }
+  return result;
+}
+
+export function getExternalProposal(externalProposal: ExternalProposalLeo): ExternalProposal {
+  const result: ExternalProposal = {
+    external_program: leo2js.address(externalProposal.external_program),
+    proposal_hash: leo2js.field(externalProposal.proposal_hash),
   }
   return result;
 }
@@ -169,6 +181,7 @@ export function getTsSupportToken(tsSupportToken: TsSupportTokenLeo): TsSupportT
   const result: TsSupportToken = {
     id: leo2js.u32(tsSupportToken.id),
     token_id: leo2js.address(tsSupportToken.token_id),
+    connector: leo2js.address(tsSupportToken.connector),
     minimum_transfer: leo2js.u64(tsSupportToken.minimum_transfer),
     outgoing_percentage: leo2js.u16(tsSupportToken.outgoing_percentage),
     time: leo2js.u32(tsSupportToken.time),
@@ -180,6 +193,15 @@ export function getTsRemoveToken(tsRemoveToken: TsRemoveTokenLeo): TsRemoveToken
   const result: TsRemoveToken = {
     id: leo2js.u32(tsRemoveToken.id),
     token_id: leo2js.address(tsRemoveToken.token_id),
+  }
+  return result;
+}
+
+export function getTsUpdateConnector(tsUpdateConnector: TsUpdateConnectorLeo): TsUpdateConnector {
+  const result: TsUpdateConnector = {
+    id: leo2js.u32(tsUpdateConnector.id),
+    token_id: leo2js.address(tsUpdateConnector.token_id),
+    new_connector: leo2js.address(tsUpdateConnector.new_connector),
   }
   return result;
 }

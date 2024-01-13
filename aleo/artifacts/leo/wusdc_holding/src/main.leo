@@ -14,16 +14,16 @@ program wusdc_holding.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_wusdc_holding(public governance: address) {
-        return then finalize(governance);
+    transition initialize_wusdc_holding() {
+        return then finalize(self.caller);
     }
 
-    finalize initialize_wusdc_holding(council: address) {
+    finalize initialize_wusdc_holding(connector: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(governance_holding, true));
 
         // Set the council program
-        Mapping::set(governance_holding, true, council);
+        Mapping::set(governance_holding, true, connector);
     }
 
     ///////////////////////////////

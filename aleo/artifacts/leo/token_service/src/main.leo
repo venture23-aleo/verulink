@@ -4,23 +4,6 @@ import token_bridge.aleo;
 
 program token_service.aleo {
 
-    // Contract on different (foreign) chain
-    struct TSForeignContract {
-        // Chain Id other network where the `contract_address` exists
-        chain_id: u128,
-        // Address of the contract on the other chain
-        contract_address: [u8; 32]
-    }
-
-    struct TokenOrigin {
-        // Chain Id of the origin network
-        chain_id: u128,
-        // Address of the token service contract on the origin network
-        token_service_address: [u8; 32],
-        // Address of the token contract on the origin network; Ex: USDC on Ethereum
-        token_address: [u8; 32],
-    }
-
     // key is chain_id
     // value is address of the token service contract on chain (with chain_id)
     mapping token_service_contracts: u128 => [u8; 32];
@@ -30,14 +13,11 @@ program token_service.aleo {
     // false: Null
     mapping governance_TS: bool => address;
 
-    // mapping used as variable
-    // true: address of holding program
-    // false: Null
-    mapping holding_program_TS: bool => address;
-
-
     // tracks the total supply of the token
     mapping total_supply: address => u64;
+
+    // key is token_id
+    mapping token_connectors: address => address;
 
     // minimum amount that can be transferred via Token Service
     // represented as actual value
@@ -62,15 +42,6 @@ program token_service.aleo {
     // tracks the minimum supply that should be available after the token update
     mapping last_min_supply: address => u64;
 
-    // `this` returns the address of the program
-    // TODO: replace the address with address of this program
-    // Referencing: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/program/src/id/to_address.rs
-    // Address of the program is computed as:
-    // hash_to_group_psd4(&[self.name().to_field(), self.network().to_field()]);
-    inline this() -> address {
-        return aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3;
-    }
-
     inline max_basis_point() -> u16 {
         return 10000u16;
     }
@@ -91,8 +62,6 @@ program token_service.aleo {
         // Set the council program
         Mapping::set(governance_TS, true, council);
 
-        // Set the holding program
-        Mapping::set(holding_program_TS, true, holding);
     }
 
     ///////////////////////////////
@@ -141,14 +110,15 @@ program token_service.aleo {
         Mapping::remove(token_service_contracts, chain_id);
     }
 
-    transition support_token_ts(public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public timeframe: u32) {
+
+    transition support_token_ts(public token_id: address, public token_connector: address, public minimum_transfer: u64, public outgoing_percentage: u16, public timeframe: u32) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
-        return then finalize(self.caller, token_id, minimum_transfer, outgoing_percentage, timeframe);
+        return then finalize(self.caller, token_id, token_connector, minimum_transfer, outgoing_percentage, timeframe);
     }
 
-    finalize support_token_ts(from: address, token_id: address, minimum_transfer: u64, outgoing_percentage: u16, timeframe: u32) {
+    finalize support_token_ts(from: address, token_id: address, token_connector: address, minimum_transfer: u64, outgoing_percentage: u16, timeframe: u32) {
         // Get the council address
         // If program not initialized, this fails
         let council: address = Mapping::get(governance_TS, true);
@@ -162,7 +132,26 @@ program token_service.aleo {
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
 
         Mapping::set(minimum_transfers, token_id, minimum_transfer);
+        
+        Mapping::set(token_connectors, token_id, token_connector);
     }
+
+    transition update_token_connector_ts(public token_id: address, public new_token_connector: address) {
+        // TODO: 
+        // 1. handle limits - max amounts that can be withdrawn in given time
+        // 2. handle fees
+        return then finalize(self.caller, token_id, new_token_connector);
+    }
+
+    finalize update_token_connector_ts(from: address, token_id: address, new_token_connector: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(governance_TS, true);
+        assert_eq(from, council);
+
+        Mapping::set(token_connectors, token_id, new_token_connector);
+    }
+
 
     transition remove_token_ts(public token_id: address) {
         return then finalize(self.caller, token_id);
@@ -176,6 +165,19 @@ program token_service.aleo {
 
         Mapping::remove(max_outgoing_percentage, token_id);
         Mapping::remove(minimum_transfers, token_id);
+        Mapping::remove(token_connectors, token_id);
+    }
+
+    transition update_token_connector(token_id: address, token_connector: address) { 
+        return then finalize(self.caller, token_id, token_connector);
+    }
+    finalize update_token_connector(from: address, token_id: address, token_connector: address) {
+        // Get the council address
+        // If program not initialized, this fails
+        let council: address = Mapping::get(governance_TS, true);
+        assert_eq(from, council);
+
+        Mapping::set(token_connectors, token_id, token_connector);
     }
 
     transition update_minimum_transfer_ts(public token_id: address, minimum_transfer: u64) {
@@ -190,6 +192,7 @@ program token_service.aleo {
 
         Mapping::set(minimum_transfers, token_id, minimum_transfer);
     }
+
 
     transition update_outgoing_percentage_ts(public token_id: address, outgoing_percentage: u16, timeframe: u32) {
         return then finalize(self.caller, token_id, outgoing_percentage, timeframe);
@@ -212,18 +215,16 @@ program token_service.aleo {
         // TODO
         // If fee is set require credits token for publishing
 
-        // call burn on wrapped token
-        // wrapped_tokens.aleo/burn(amount, token_id, origin_chain_id, origin_token_address);
-
         // call publish on bridge contract
         token_bridge.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, self.caller, receiver, amount);
 
-        // return then finalize (self.caller, origin, msg, msg_hash);
-        return then finalize (token_id, amount);
+        return then finalize (self.caller, token_id, amount);
     }
 
-    // finalize token_send(wrapped_addr: address, origin: TokenOrigin, msg: MsgTokenSend, msg_hash: field) {
-    finalize token_send(wrapped_addr: address, amount: u64) {
+    finalize token_send(connector: address, wrapped_addr: address, amount: u64) {
+
+        let token_connector: address = Mapping::get(token_connectors, wrapped_addr);
+        assert_eq(token_connector, connector);
 
         let min_amount: u64 = Mapping::get(minimum_transfers, wrapped_addr);
         assert(amount >= min_amount);
@@ -266,7 +267,6 @@ program token_service.aleo {
         
         // Decrease the total supply
         Mapping::set(total_supply, wrapped_addr, current_supply - amount);
-
     }
 
     /// Consumes msg from source at destination
@@ -276,10 +276,13 @@ program token_service.aleo {
         // call consume on bridge
         token_bridge.aleo/consume(source_chain_id, source_token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);
 
-        return then finalize(token_id, amount);
+        return then finalize(self.caller, token_id, amount);
     }
 
-    finalize token_receive(token_id: address, amount: u64) {
+    finalize token_receive(connector: address, token_id: address, amount: u64) {
+        let token_connector: address = Mapping::get(token_connectors, token_id);
+        assert_eq(token_connector, connector);
+
         // Increase the total supply
         let current_supply: u64 = Mapping::get_or_use(total_supply, token_id, 0u64);
         Mapping::set(total_supply, token_id, current_supply + amount);

@@ -1,6 +1,4 @@
 import {
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo
 } from './token_service';
 import {
@@ -18,6 +16,7 @@ import {
 } from './token_bridge';
 import {
   getProposalSignLeo,
+  getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
@@ -34,21 +33,16 @@ import {
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
+  getTsUpdateConnectorLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo
 } from './council';
 import {
   gettokenLeo,
   getApprovalLeo
-} from './wrapped_token';
-import {
-  gettokenLeo,
-  getApprovalLeo
 } from './wusdc_token';
 
 export {
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
@@ -62,6 +56,7 @@ export {
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
   getProposalSignLeo,
+  getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
@@ -78,10 +73,9 @@ export {
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
+  getTsUpdateConnectorLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
-  gettokenLeo,
-  getApprovalLeo,
   gettokenLeo,
   getApprovalLeo,
 };

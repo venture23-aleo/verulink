@@ -1,18 +1,21 @@
 import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
-import { InPacketFull, PacketId, TokenAccount, TokenOrigin } from "../artifacts/js/types";
+import { InPacketFull, PacketId, } from "../artifacts/js/types";
 import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
-import { aleoChainId, aleoTsContract, aleoUser, ethChainId, ethTsContract, ethUser, usdcContractAddr, wUSDCProgramAddr } from "./mockData";
+import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
+import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
+import { aleoChainId, aleoTsContract, aleoUser, ethChainId, ethTsContract, ethUser, wusdcTokenAddr, wusdcConnectorAddr} from "./mockData";
 
 import { evm2AleoArr } from "./utils";
 
-const bridge = new Token_bridgeContract({ mode: "evaluate"});
-const tokenService = new Token_serviceContract({ mode: "evaluate" })
-const wrappedToken = new Wrapped_tokensContract({ mode: "evaluate" });
+const bridge = new Token_bridgeContract({ mode: "execute"});
+const tokenService = new Token_serviceContract({ mode: "execute" })
+const wusdcToken = new Wusdc_tokenContract({ mode: "execute" });
+const wusdcConnecter = new Wusdc_connectorContract({mode: "execute"});
 
 describe("Happy Path", () => {
 
-  const sequence = 1;
+  const incomingSequence = 2;
   const amount = BigInt(10000);
   const height = 10;
 
@@ -21,7 +24,7 @@ describe("Happy Path", () => {
     // Create a packet
     const packet: InPacketFull = {
       version: 0,
-      sequence,
+      sequence: incomingSequence,
       source: {
         chain_id: ethChainId,
         addr: evm2AleoArr(ethTsContract),
@@ -31,7 +34,7 @@ describe("Happy Path", () => {
         addr: aleoTsContract,
       },
       message: {
-        token: wUSDCProgramAddr,
+        token: wusdcTokenAddr,
         sender: evm2AleoArr(ethUser),
         receiver: aleoUser,
         amount
@@ -49,53 +52,44 @@ describe("Happy Path", () => {
 
   test("Receive a Packet", async () => {
 
-    // Consume the packet
-    const origin: TokenOrigin = {
-      chain_id: ethChainId,
-      token_service_address: evm2AleoArr(ethTsContract),
-      token_address: evm2AleoArr(usdcContractAddr)
-    };
-    const tx = await tokenService.token_receive(origin, wUSDCProgramAddr, evm2AleoArr(ethUser), aleoUser, aleoUser, amount, sequence, height);
+    const tx = await wusdcConnecter.wusdc_receive(
+      evm2AleoArr(ethUser), // sender
+      aleoUser, // receiver
+      aleoUser, // actual receiver
+      amount,
+      incomingSequence, 
+      height
+    );
 
     // @ts-ignore
     await tx.wait()
 
-    let key: TokenAccount = {
-      user: aleoUser,
-      token_id: wUSDCProgramAddr
-    }
-    let balance = await wrappedToken.token_balances(key)
+    let balance = await wusdcToken.account(aleoUser)
     console.log(balance)
+
   }, 200_000),
 
 
   test("Send a packet", async () => {
     // Send the packet to ethereum
-    const tx = await tokenService.token_send(
-      wUSDCProgramAddr,
+    const outgoingSequence = 1;
+    const tx = await wusdcConnecter.wusdc_send(
       evm2AleoArr(ethUser),
       BigInt(101),
-      {
-        chain_id: ethChainId,
-        token_service_address: evm2AleoArr(ethTsContract),
-        token_address: evm2AleoArr(usdcContractAddr)
-      }
     )
     // @ts-ignore
     await tx.wait()
 
-    let key: TokenAccount = {
-      user: aleoUser,
-      token_id: wUSDCProgramAddr
-    }
-    const balance = await wrappedToken.token_balances(key)
+    const balance = await wusdcToken.account(aleoUser);
     console.log(balance)
 
     const packetKey: PacketId = {
       chain_id: ethChainId,
-      sequence
+      sequence: outgoingSequence
     }
-    bridge.out_packets(packetKey)
+    const outPacket = await bridge.out_packets(packetKey)
+    console.log(outPacket);
+    
 
   }, 200_000);
 

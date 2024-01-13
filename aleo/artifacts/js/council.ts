@@ -2,6 +2,7 @@ import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
   ProposalSign,
+  ExternalProposal,
   AddMember,
   RemoveMember,
   UpdateThreshold,
@@ -18,6 +19,7 @@ import {
   TsRemoveChain,
   TsSupportToken,
   TsRemoveToken,
+  TsUpdateConnector,
   TsUpdateMinimumTransfer,
   TsUpdateOutgoingPercentage,
   AleoProgram,
@@ -31,12 +33,11 @@ import {
   PacketIdWithAttestor,
   InPacketFullAttestorKey,
   InPacketFullScreeningKey,
-  TSForeignContract,
-  TokenOrigin,
   OutgoingPercentageInTime,
 } from "./types";
 import {
   getProposalSignLeo,
+  getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
@@ -53,6 +54,7 @@ import {
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
+  getTsUpdateConnectorLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
   getAleoProgramLeo,
@@ -66,12 +68,11 @@ import {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo,
 } from './js2leo';
 import {
   getProposalSign,
+  getExternalProposal,
   getAddMember,
   getRemoveMember,
   getUpdateThreshold,
@@ -88,6 +89,7 @@ import {
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
+  getTsUpdateConnector,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
   getAleoProgram,
@@ -101,8 +103,6 @@ import {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
-  getTSForeignContract,
-  getTokenOrigin,
   getOutgoingPercentageInTime,
 } from './leo2js';
 import {
@@ -203,6 +203,18 @@ export class CouncilContract {
     const result = await zkRun({
       config: this.config,
       transition: 'vote',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async external_execute(r0: bigint) {
+    const r0Leo = js2leo.field(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'external_execute',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -395,14 +407,15 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_support_token(r0: number, r1: string, r2: bigint, r3: number, r4: number) {
+  async ts_support_token(r0: number, r1: string, r2: string, r3: bigint, r4: number, r5: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
-    const r3Leo = js2leo.u16(r3);
-    const r4Leo = js2leo.u32(r4);
+    const r2Leo = js2leo.address(r2);
+    const r3Leo = js2leo.u64(r3);
+    const r4Leo = js2leo.u16(r4);
+    const r5Leo = js2leo.u32(r5);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'ts_support_token',
@@ -419,6 +432,20 @@ export class CouncilContract {
     const result = await zkRun({
       config: this.config,
       transition: 'ts_remove_token',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async ts_update_token_connector(r0: number, r1: string, r2: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.address(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'ts_update_token_connector',
       params,
     });
     if (this.config.mode === "execute") return result;

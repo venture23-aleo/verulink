@@ -1,6 +1,4 @@
 import {
-  getTSForeignContract,
-  getTokenOrigin,
   getOutgoingPercentageInTime
 } from './token_service';
 import {
@@ -18,6 +16,7 @@ import {
 } from './token_bridge';
 import {
   getProposalSign,
+  getExternalProposal,
   getAddMember,
   getRemoveMember,
   getUpdateThreshold,
@@ -34,21 +33,16 @@ import {
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
+  getTsUpdateConnector,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage
 } from './council';
 import {
   gettoken,
   getApproval
-} from './wrapped_token';
-import {
-  gettoken,
-  getApproval
 } from './wusdc_token';
 
 export {
-  getTSForeignContract,
-  getTokenOrigin,
   getOutgoingPercentageInTime,
   getAleoProgram,
   getForeignContract,
@@ -62,6 +56,7 @@ export {
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
   getProposalSign,
+  getExternalProposal,
   getAddMember,
   getRemoveMember,
   getUpdateThreshold,
@@ -78,10 +73,9 @@ export {
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
+  getTsUpdateConnector,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
-  gettoken,
-  getApproval,
   gettoken,
   getApproval,
 };

@@ -32,6 +32,17 @@ export const leoProposalSignSchema = z.object({
 });
 export type ProposalSignLeo = z.infer < typeof leoProposalSignSchema > ;
 
+export interface ExternalProposal {
+  external_program: string;
+  proposal_hash: bigint;
+}
+
+export const leoExternalProposalSchema = z.object({
+  external_program: leoAddressSchema,
+  proposal_hash: leoFieldSchema,
+});
+export type ExternalProposalLeo = z.infer < typeof leoExternalProposalSchema > ;
+
 export interface AddMember {
   id: number;
   new_member: string;
@@ -199,6 +210,7 @@ export type TsRemoveChainLeo = z.infer < typeof leoTsRemoveChainSchema > ;
 export interface TsSupportToken {
   id: number;
   token_id: string;
+  connector: string;
   minimum_transfer: bigint;
   outgoing_percentage: number;
   time: number;
@@ -207,6 +219,7 @@ export interface TsSupportToken {
 export const leoTsSupportTokenSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
+  connector: leoAddressSchema,
   minimum_transfer: leoU64Schema,
   outgoing_percentage: leoU16Schema,
   time: leoU32Schema,
@@ -223,6 +236,19 @@ export const leoTsRemoveTokenSchema = z.object({
   token_id: leoAddressSchema,
 });
 export type TsRemoveTokenLeo = z.infer < typeof leoTsRemoveTokenSchema > ;
+
+export interface TsUpdateConnector {
+  id: number;
+  token_id: string;
+  new_connector: string;
+}
+
+export const leoTsUpdateConnectorSchema = z.object({
+  id: leoU32Schema,
+  token_id: leoAddressSchema,
+  new_connector: leoAddressSchema,
+});
+export type TsUpdateConnectorLeo = z.infer < typeof leoTsUpdateConnectorSchema > ;
 
 export interface TsUpdateMinimumTransfer {
   id: number;

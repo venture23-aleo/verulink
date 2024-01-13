@@ -60,25 +60,24 @@ export class Wusdc_tokenContract {
 
     return result;
   }
-  async token_initialize(r0: string) {
-    const r0Leo = js2leo.address(r0);
+  async initialize_wusdc_token() {
 
-    const params = [r0Leo]
+    const params = []
     const result = await zkRun({
       config: this.config,
-      transition: 'token_initialize',
+      transition: 'initialize_wusdc_token',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_wusdc(r0: string) {
+  async update_governance_wusdc_token(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_wusdc',
+      transition: 'update_governance_wusdc_token',
       params,
     });
     if (this.config.mode === "execute") return result;

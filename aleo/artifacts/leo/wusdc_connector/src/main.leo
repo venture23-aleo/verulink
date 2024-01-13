@@ -1,32 +1,21 @@
 import wusdc_token.aleo;
 import wusdc_holding.aleo;
 import token_service.aleo;
+import council.aleo;
 
 program wusdc_connector.aleo {
 
     const WUSDC_TOKEN: address = aleo1qg0azcck30ys6598lpmfx9xpfazj9w7ma973g7l5p7eka0p4jq9s2c3vk2;
     const WUSDC_HOLDING: address = aleo16dyvhwsrfmx5eru9kffhn6df8cr3v3h06apqzsrphl6h03wa2crq43djr6;
 
-    // mapping used as variable
-    // true: address of council 
-    // false: Null
-    mapping governance_connector: bool => address;
-
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_holding(public governance: address) {
-        return then finalize(governance);
-    }
-
-    finalize initialize_holding(council: address) {
-        // Assert holding program has not been initialized before
-        assert(!Mapping::contains(governance_connector, true));
-
-        // Set the council program
-        Mapping::set(governance_connector, true, council);
+    transition initialize_wusdc() {
+        wusdc_token.aleo/initialize_wusdc_token();
+        wusdc_holding.aleo/initialize_wusdc_holding();
     }
 
     ///////////////////////////////
@@ -35,18 +24,10 @@ program wusdc_connector.aleo {
 
     /// Update the existing governance program
     /// Can only be called from council/governance program
-    transition update_governance_holding(public new_governance: address) {
-        return then finalize(self.caller, new_governance);
-    }
-
-    finalize update_governance_holding(from: address, new_governance: address) {
-        // Get the governance address
-        // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_connector, true);
-        assert_eq(from, governance);
-
-        // If attestor does not exist, this is expected to fail
-        Mapping::set(governance_connector, true, new_governance);
+    transition update_wusdc_governance(public new_governance: address) {
+        council.aleo/external_execute(BHP256::hash_to_field(new_governance));
+        wusdc_token.aleo/update_governance_wusdc_token(new_governance);
+        wusdc_holding.aleo/update_governance_wusdc_holding(new_governance);
     }
 
     /// Receive Wrapped USDC
@@ -95,7 +76,7 @@ program wusdc_connector.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formated as following:
     inline origin_usdc_address() -> [u8; 32] {
-        return [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 160u8, 184u8, 105u8, 145u8, 198u8, 33u8, 139u8, 54u8, 193u8, 209u8, 157u8, 74u8, 46u8, 158u8, 176u8, 206u8, 54u8, 6u8, 235u8, 72u8 ] ;
+        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,160u8,184u8,105u8,145u8,198u8,33u8,139u8,54u8,193u8,209u8,157u8,74u8,46u8,158u8,176u8,206u8,54u8,6u8,235u8,72u8];
     }
 
     // Token Service Contract Address of the original token on the origin chain
@@ -103,7 +84,7 @@ program wusdc_connector.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formated as following:
     inline origin_token_service_address() -> [u8; 32] {
-        return [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 160u8, 184u8, 105u8, 145u8, 198u8, 33u8, 139u8, 54u8, 193u8, 209u8, 157u8, 74u8, 46u8, 158u8, 176u8, 206u8, 54u8, 6u8, 235u8, 72u8 ] ;
+        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,160u8,184u8,105u8,145u8,198u8,33u8,139u8,54u8,193u8,209u8,157u8,74u8,46u8,158u8,176u8,206u8,54u8,6u8,235u8,72u8];
     }
 
 

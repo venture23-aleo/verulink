@@ -14,9 +14,8 @@ mapping holdings:
 	value as u64.public;
 
 function initialize_wusdc_holding:
-    input r0 as address.public;
-    async initialize_wusdc_holding r0 into r1;
-    output r1 as wusdc_holding.aleo/initialize_wusdc_holding.future;
+    async initialize_wusdc_holding self.caller into r0;
+    output r0 as wusdc_holding.aleo/initialize_wusdc_holding.future;
 
 finalize initialize_wusdc_holding:
     input r0 as address.public;

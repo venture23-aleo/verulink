@@ -1,5 +1,6 @@
 import token_bridge.aleo;
 import token_service.aleo;
+import council.aleo;
 import wusdc_token.aleo;
 import wusdc_holding.aleo;
 program wusdc_connector.aleo;
@@ -21,34 +22,54 @@ program wusdc_connector.aleo;
 
 
 
-mapping governance_connector:
-	key as boolean.public;
-	value as address.public;
 
-function initialize_holding:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function initialize_wusdc:
+    call wusdc_token.aleo/initialize_wusdc_token into r0;
+    call wusdc_holding.aleo/initialize_wusdc_holding into r1;
+    async initialize_wusdc r0 r1 into r2;
+    output r2 as wusdc_connector.aleo/initialize_wusdc.future;
+
+finalize initialize_wusdc:
+    input r0 as wusdc_token.aleo/initialize_wusdc_token.future;
+    input r1 as wusdc_holding.aleo/initialize_wusdc_holding.future;
+    await r0;
+    await r1;
+
+
+function update_wusdc_governance:
     input r0 as address.public;
-    async initialize_holding r0 into r1;
-    output r1 as wusdc_connector.aleo/initialize_holding.future;
+    hash.bhp256 r0 into r1 as field;
+    call council.aleo/external_execute r1 into r2;
+    call wusdc_token.aleo/update_governance_wusdc_token r0 into r3;
+    call wusdc_holding.aleo/update_governance_wusdc_holding r0 into r4;
+    async update_wusdc_governance r2 r3 r4 into r5;
+    output r5 as wusdc_connector.aleo/update_wusdc_governance.future;
 
-finalize initialize_holding:
-    input r0 as address.public;
-    contains governance_connector[true] into r1;
-    not r1 into r2;
-    assert.eq r2 true;
-    set r0 into governance_connector[true];
-
-
-function update_governance_holding:
-    input r0 as address.public;
-    async update_governance_holding self.caller r0 into r1;
-    output r1 as wusdc_connector.aleo/update_governance_holding.future;
-
-finalize update_governance_holding:
-    input r0 as address.public;
-    input r1 as address.public;
-    get governance_connector[true] into r2;
-    assert.eq r0 r2;
-    set r1 into governance_connector[true];
+finalize update_wusdc_governance:
+    input r0 as council.aleo/external_execute.future;
+    input r1 as wusdc_token.aleo/update_governance_wusdc_token.future;
+    input r2 as wusdc_holding.aleo/update_governance_wusdc_holding.future;
+    await r0;
+    await r1;
+    await r2;
 
 
 

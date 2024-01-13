@@ -1,6 +1,27 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
+  ProposalSign,
+  ExternalProposal,
+  AddMember,
+  RemoveMember,
+  UpdateThreshold,
+  TbUpdateGovernance,
+  TbAddAttestor,
+  TbRemoveAttestor,
+  TbUpdateThreshold,
+  TbEnableChain,
+  TbDisableChain,
+  TbEnableService,
+  TbDisableService,
+  TsUpdateGovernance,
+  TsSupportChain,
+  TsRemoveChain,
+  TsSupportToken,
+  TsRemoveToken,
+  TsUpdateConnector,
+  TsUpdateMinimumTransfer,
+  TsUpdateOutgoingPercentage,
   AleoProgram,
   ForeignContract,
   MsgTokenReceive,
@@ -12,13 +33,32 @@ import {
   PacketIdWithAttestor,
   InPacketFullAttestorKey,
   InPacketFullScreeningKey,
-  TSForeignContract,
-  TokenOrigin,
   OutgoingPercentageInTime,
   token,
   Approval,
 } from "./types";
 import {
+  getProposalSignLeo,
+  getExternalProposalLeo,
+  getAddMemberLeo,
+  getRemoveMemberLeo,
+  getUpdateThresholdLeo,
+  getTbUpdateGovernanceLeo,
+  getTbAddAttestorLeo,
+  getTbRemoveAttestorLeo,
+  getTbUpdateThresholdLeo,
+  getTbEnableChainLeo,
+  getTbDisableChainLeo,
+  getTbEnableServiceLeo,
+  getTbDisableServiceLeo,
+  getTsUpdateGovernanceLeo,
+  getTsSupportChainLeo,
+  getTsRemoveChainLeo,
+  getTsSupportTokenLeo,
+  getTsRemoveTokenLeo,
+  getTsUpdateConnectorLeo,
+  getTsUpdateMinimumTransferLeo,
+  getTsUpdateOutgoingPercentageLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -30,13 +70,32 @@ import {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
-  getTSForeignContractLeo,
-  getTokenOriginLeo,
   getOutgoingPercentageInTimeLeo,
   gettokenLeo,
   getApprovalLeo,
 } from './js2leo';
 import {
+  getProposalSign,
+  getExternalProposal,
+  getAddMember,
+  getRemoveMember,
+  getUpdateThreshold,
+  getTbUpdateGovernance,
+  getTbAddAttestor,
+  getTbRemoveAttestor,
+  getTbUpdateThreshold,
+  getTbEnableChain,
+  getTbDisableChain,
+  getTbEnableService,
+  getTbDisableService,
+  getTsUpdateGovernance,
+  getTsSupportChain,
+  getTsRemoveChain,
+  getTsSupportToken,
+  getTsRemoveToken,
+  getTsUpdateConnector,
+  getTsUpdateMinimumTransfer,
+  getTsUpdateOutgoingPercentage,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -48,8 +107,6 @@ import {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
-  getTSForeignContract,
-  getTokenOrigin,
   getOutgoingPercentageInTime,
   gettoken,
   getApproval,
@@ -102,25 +159,24 @@ export class Wusdc_connectorContract {
 
     return result;
   }
-  async initialize_holding(r0: string) {
-    const r0Leo = js2leo.address(r0);
+  async initialize_wusdc() {
 
-    const params = [r0Leo]
+    const params = []
     const result = await zkRun({
       config: this.config,
-      transition: 'initialize_holding',
+      transition: 'initialize_wusdc',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_holding(r0: string) {
+  async update_wusdc_governance(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_holding',
+      transition: 'update_wusdc_governance',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -154,18 +210,6 @@ export class Wusdc_connectorContract {
       params,
     });
     if (this.config.mode === "execute") return result;
-  }
-
-  async governance_connector(key: boolean): Promise < string > {
-    const keyLeo = js2leo.boolean(key);
-
-    const params = [keyLeo]
-    const result = await zkGetMapping({
-      config: this.config,
-      transition: 'governance_connector',
-      params,
-    });
-    return leo2js.address(result);
   }
 
 

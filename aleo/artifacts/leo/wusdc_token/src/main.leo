@@ -31,11 +31,11 @@ program wusdc_token.aleo {
 
     // Initialize can only be called once
     // Initialize must be called from council program
-    transition token_initialize(governance: address) {
-        return then finalize(governance);
+    transition initialize_wusdc_token() {
+        return then finalize(self.caller);
     }
 
-    finalize token_initialize(governance: address) {
+    finalize initialize_wusdc_token(governance: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(governance_wusdc, true));
 
@@ -45,11 +45,11 @@ program wusdc_token.aleo {
 
     /// Update the existing governance program
     /// Can only be called from council/governance program
-    transition update_governance_wusdc(public new_governance: address) {
+    transition update_governance_wusdc_token(public new_governance: address) {
         return then finalize(self.caller, new_governance);
     }
 
-    finalize update_governance_wusdc(from: address, new_governance: address) {
+    finalize update_governance_wusdc_token(from: address, new_governance: address) {
         // Get the governance address
         // If program not initialized, this fails
         let governance: address = Mapping::get(governance_wusdc, true);
@@ -107,7 +107,7 @@ program wusdc_token.aleo {
         // If `account[receiver]` does not exist, it will be created.
         // If `account[receiver] + amount` overflows, `transfer_public` is reverted.
         let receiver_amount: u64 = Mapping::get_or_use(account, receiver, 0u64);
-        Mapping::set(account, receiver, receiver_amount + amount);
+        Mapping::set(account, receiver, receiver_amount - amount);
     }
 
 
@@ -314,7 +314,7 @@ program wusdc_token.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formated as following:
     inline origin_contract_address() -> [u8; 32] {
-        return [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 160u8, 184u8, 105u8, 145u8, 198u8, 33u8, 139u8, 54u8, 193u8, 209u8, 157u8, 74u8, 46u8, 158u8, 176u8, 206u8, 54u8, 6u8, 235u8, 72u8 ] ;
+        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,160u8,184u8,105u8,145u8,198u8,33u8,139u8,54u8,193u8,209u8,157u8,74u8,46u8,158u8,176u8,206u8,54u8,6u8,235u8,72u8];
     }
 
 }

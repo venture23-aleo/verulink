@@ -137,6 +137,42 @@ program council.aleo {
 
     }
 
+    ////////////////////////////////////////////////
+    /////// External Program: Execute Proposal /////
+    ////////////////////////////////////////////////
+
+    struct ExternalProposal {
+        external_program: address
+        proposal_hash: field,
+    }
+
+    transition external_execute(proposal_hash: field) {
+        let external_proposal: ExternalProposal = ExternalProposal {
+            external_program: self.caller,
+            proposal_hash,
+        };
+
+        let external_proposal_hash: field = BHP256::hash_to_field(external_proposal);
+
+        return then finalize(external_proposal_hash);
+    }
+
+    finalize external_execute(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
 
     //////////////////////////////////////
     /////// Council: Add New Member //////
@@ -798,15 +834,17 @@ program council.aleo {
     struct TsSupportToken {
         id: u32,
         token_id: address,
+        connector: address,
         minimum_transfer: u64,
         outgoing_percentage: u16,
         time: u32
     }
 
-    transition ts_support_token(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+    transition ts_support_token(public id: u32, public token_id: address, connector: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
         let proposal: TsSupportToken  = TsSupportToken {
             id,
             token_id,
+            connector,
             minimum_transfer,
             outgoing_percentage,
             time
@@ -814,7 +852,7 @@ program council.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service.aleo/support_token_ts(token_id, minimum_transfer, outgoing_percentage, time);
+        token_service.aleo/support_token_ts(token_id, connector, minimum_transfer, outgoing_percentage, time);
 
         return then finalize(proposal_hash);
     }
@@ -872,6 +910,47 @@ program council.aleo {
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
     }
+
+    /////////////////////////////////////////////////
+    ///////  Token Service: Update Connector ////////
+    /////////////////////////////////////////////////
+
+    struct TsUpdateConnector {
+        id: u32,
+        token_id: address,
+        new_connector: address,
+    }
+
+    transition ts_update_token_connector(public id: u32, public token_id: address, public new_connector: address) {
+        let proposal: TsUpdateConnector  = TsUpdateConnector {
+            id,
+            token_id,
+            new_connector,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service.aleo/update_token_connector_ts(token_id, new_connector);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_update_token_connector(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
 
     ////////////////////////////////////////////////////////
     ///////  Token Service: Update Minimum Transfer ////////
