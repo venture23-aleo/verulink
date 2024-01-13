@@ -195,6 +195,7 @@ program token_service.aleo {
 
 
     transition update_outgoing_percentage_ts(public token_id: address, outgoing_percentage: u16, timeframe: u32) {
+        assert(outgoing_percentage <= HUNDRED_PERCENTAGE);
         return then finalize(self.caller, token_id, outgoing_percentage, timeframe);
     }
 
@@ -233,34 +234,25 @@ program token_service.aleo {
         // 1. handle fees
 
         let current_supply: u64 = Mapping::get(total_supply, wrapped_addr);
-        // TODO: check if storing as u16 is actually better
-        // or if type conversion is better
         
-        // Update only from council
         let outgoing_percentage_in_time: OutgoingPercentageInTime = Mapping::get(max_outgoing_percentage, wrapped_addr);
         let percentage_in_basis_points: u16 = outgoing_percentage_in_time.outgoing_percentage;
         let token_timeframe: u32 = outgoing_percentage_in_time.timeframe;
-
-        // If percentage = 10
-        // then min_required_supply = 90% of current_supply
-        let min_required_supply: u64 = (current_supply * ( max_basis_point() - percentage_in_basis_points) as u64) / (max_basis_point() as u64);
-        
-        // Updated on each token_send
+        let min_required_supply: u64 = get_x_percent_of_y(HUNDRED_PERCENTAGE - percentage_in_basis_points, current_supply);
         let last_update: u32 = Mapping::get_or_use(last_token_update, wrapped_addr, 0u32);
         let last_min_required_supply: u64 = Mapping::get_or_use(last_min_supply, wrapped_addr, min_required_supply);
 
-        let time_passed: u32 = block.height - last_update;
+        let current_block_height: u32 = block.height;
 
-        // If percentage = 10
-        // then max_withdraw = 10% of current_supply
-        let max_withdraw_in_timeframe: u64 = current_supply * (percentage_in_basis_points as u64) / (max_basis_point() as u64);
-        let max_withdraw_from_last_update: u64 = (max_withdraw_in_timeframe * time_passed as u64 ) / (token_timeframe as u64);
-        let new_min_required_supply: u64 = last_min_required_supply > max_withdraw_from_last_update? last_min_required_supply.sub_wrapped(max_withdraw_from_last_update) : 0u64;
-        
-        // Select the max
-        new_min_required_supply = new_min_required_supply > min_required_supply ? new_min_required_supply : min_required_supply;
-
-        assert(current_supply - amount >= new_min_required_supply);
+        let new_min_required_supply: u64 = get_new_min_required_supply(
+            current_supply, 
+            amount, 
+            current_block_height, 
+            last_update, 
+            last_min_required_supply, 
+            percentage_in_basis_points, 
+            token_timeframe
+        );
 
         Mapping::set(last_token_update, wrapped_addr, block.height);
         Mapping::set(last_min_supply, wrapped_addr, new_min_required_supply);
@@ -287,6 +279,48 @@ program token_service.aleo {
         let current_supply: u64 = Mapping::get_or_use(total_supply, token_id, 0u64);
         Mapping::set(total_supply, token_id, current_supply + amount);
 
+    }
+
+    inline sub_to_zero(a: u64, b: u64) -> u64 {
+        let c: u64 = a > b ? a.sub_wrapped(b) : 0u64;
+        return c;
+    }
+    inline get_max(a: u64, b: u64) -> u64 {
+        let max: u64 = a > b ? a : b;
+        return max;
+    }
+
+    const HUNDRED_PERCENTAGE: u16 = 100_00u16;
+
+    // x_percent: percentage representation in basis point
+    // y: actual value
+    inline get_x_percent_of_y(x_percent: u16, y: u64) -> u64 {
+        assert(x_percent <= HUNDRED_PERCENTAGE);
+        let z: u64 = (y *  (x_percent as u64)) / ( HUNDRED_PERCENTAGE as u64);
+        return z;
+    }
+
+    // TODO: verify this logic
+    inline get_new_min_required_supply(current_supply: u64, transfer_amount: u64, current_block: u32, last_update: u32, last_min_required_supply: u64, percentage: u16, timeframe: u32 ) -> u64 {
+        // If percentage = 10
+        // then min_required_supply = 90% of current_supply
+        let min_required_supply: u64 = get_x_percent_of_y(HUNDRED_PERCENTAGE - percentage, current_supply);
+
+        // If percentage = 10
+        // then max_withdraw = 10% of current_supply
+        let max_withdraw_in_timeframe: u64 = get_x_percent_of_y(percentage, current_supply);
+
+        let time_passed: u32 = current_block - last_update;
+
+        let max_withdraw_from_last_update: u64 = (max_withdraw_in_timeframe * time_passed as u64 ) / ( timeframe as u64);
+        let new_min_required_supply: u64 = sub_to_zero(last_min_required_supply, max_withdraw_from_last_update);
+
+        // Select the max
+        new_min_required_supply = get_max(new_min_required_supply, min_required_supply);
+
+        assert(current_supply - transfer_amount >= new_min_required_supply);
+
+        return new_min_required_supply;
     }
 
 }

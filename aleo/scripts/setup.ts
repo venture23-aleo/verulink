@@ -25,104 +25,104 @@ const setup = async () => {
 
   let tx, proposalId;
 
-  // // Deploy contracts
-  // await bridge.deploy();
-  // tx = await tokenService.deploy();
-  // await tx.wait();
-  // tx = await council.deploy();
-  // await tx.wait();
+  // Deploy contracts
+  await bridge.deploy();
+  tx = await tokenService.deploy();
+  await tx.wait();
+  tx = await council.deploy();
+  await tx.wait();
   
-  // // Initialize council program with a single council member and 1/5 threshold
-  // await council.initialize(
-  //   councilMember,
-  //   councilMember,
-  //   councilMember,
-  //   councilMember,
-  //   councilMember,
-  //   councilThreshold
-  // );
+  // Initialize council program with a single council member and 1/5 threshold
+  await council.initialize(
+    councilMember,
+    councilMember,
+    councilMember,
+    councilMember,
+    councilMember,
+    councilThreshold
+  );
 
-  // // Initialize bridge
-  // const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
-  // await bridge.initialize_tb(
-  //   1,
-  //   attestor,
-  //   attestor,
-  //   attestor,
-  //   attestor,
-  //   attestor,
-  //   councilAddress
-  // );
-  // await tokenService.initialize_ts(councilAddress, councilAddress);
+  // Initialize bridge
+  const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
+  await bridge.initialize_tb(
+    1,
+    attestor,
+    attestor,
+    attestor,
+    attestor,
+    attestor,
+    councilAddress
+  );
+  await tokenService.initialize_ts(councilAddress, councilAddress);
 
-  // // TokenBridge: Add Ethereum Chain
-  // proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-  // const tbEnableChain: TbEnableChain = {
-  //   id: proposalId,
-  //   chain_id: ethChainId
-  // };
-  // const tbEnableChainProposalHash = hashStruct(js2leo.getTbEnableChainLeo(tbEnableChain));
-  // tx = await council.propose(proposalId, tbEnableChainProposalHash);
-  // await tx.wait()
+  // TokenBridge: Add Ethereum Chain
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tbEnableChain: TbEnableChain = {
+    id: proposalId,
+    chain_id: ethChainId
+  };
+  const tbEnableChainProposalHash = hashStruct(js2leo.getTbEnableChainLeo(tbEnableChain));
+  tx = await council.propose(proposalId, tbEnableChainProposalHash);
+  await tx.wait()
 
-  // await council.tb_enable_chain(
-  //   tbEnableChain.id,
-  //   tbEnableChain.chain_id,
-  // )
+  await council.tb_enable_chain(
+    tbEnableChain.id,
+    tbEnableChain.chain_id,
+  )
 
-  // // TokenService: Add Token Service on Ethereum
-  // const tsEthereum = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-  // proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-  // const tsSupportChain: TsSupportChain = {
-  //   id: proposalId,
-  //   chain_id: ethChainId,
-  //   token_service: evm2AleoArr(tsEthereum)
-  // };
-  // const supportChainTsProposalHash = hashStruct(js2leo.getTsSupportChainLeo(tsSupportChain));
-  // await council.propose(proposalId, supportChainTsProposalHash);
+  // TokenService: Add Token Service on Ethereum
+  const tsEthereum = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tsSupportChain: TsSupportChain = {
+    id: proposalId,
+    chain_id: ethChainId,
+    token_service: evm2AleoArr(tsEthereum)
+  };
+  const supportChainTsProposalHash = hashStruct(js2leo.getTsSupportChainLeo(tsSupportChain));
+  await council.propose(proposalId, supportChainTsProposalHash);
 
-  // tx = await council.ts_support_chain(
-  //   tsSupportChain.id,
-  //   tsSupportChain.chain_id,
-  //   tsSupportChain.token_service,
-  // )
-  // await tx.wait()
+  tx = await council.ts_support_chain(
+    tsSupportChain.id,
+    tsSupportChain.chain_id,
+    tsSupportChain.token_service,
+  )
+  await tx.wait()
 
 
-  // // WrappedToken: Add new token
-  // const wusdcToken = new Wusdc_tokenContract({mode: "execute"});
-  // const wusdcHolding = new Wusdc_holdingContract({mode: "execute"});
-  // const wusdcConnecter = new Wusdc_connectorContract({mode: "execute"});
-  // tx = await wusdcToken.deploy();
-  // await tx.wait();
-  // tx = await wusdcHolding.deploy();
-  // await tx.wait();
-  // tx = await wusdcConnecter.deploy();
-  // await tx.wait();
-  // await wusdcConnecter.initialize_wusdc();
+  // WrappedToken: Add new token
+  const wusdcToken = new Wusdc_tokenContract({mode: "execute"});
+  const wusdcHolding = new Wusdc_holdingContract({mode: "execute"});
+  const wusdcConnecter = new Wusdc_connectorContract({mode: "execute"});
+  tx = await wusdcToken.deploy();
+  await tx.wait();
+  tx = await wusdcHolding.deploy();
+  await tx.wait();
+  tx = await wusdcConnecter.deploy();
+  await tx.wait();
+  await wusdcConnecter.initialize_wusdc();
 
-  // // TokenService: Support new token
-  // proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-  // const tsSupportToken: TsSupportToken = {
-  //   id: proposalId,
-  //   token_id: wusdcTokenAddr,
-  //   connector: wusdcConnectorAddr,
-  //   minimum_transfer: bigint(100),
-  //   outgoing_percentage: 100_00,
-  //   time: 1
-  // };
-  // const enableTokenProposalHash = hashStruct(js2leo.getTsSupportTokenLeo(tsSupportToken));
-  // await council.propose(proposalId, enableTokenProposalHash);
+  // TokenService: Support new token
+  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  const tsSupportToken: TsSupportToken = {
+    id: proposalId,
+    token_id: wusdcTokenAddr,
+    connector: wusdcConnectorAddr,
+    minimum_transfer: BigInt(100),
+    outgoing_percentage: 100_00,
+    time: 1
+  };
+  const enableTokenProposalHash = hashStruct(js2leo.getTsSupportTokenLeo(tsSupportToken));
+  await council.propose(proposalId, enableTokenProposalHash);
 
-  // tx = await council.ts_support_token(
-  //   tsSupportToken.id,
-  //   tsSupportToken.token_id,
-  //   tsSupportToken.connector,
-  //   tsSupportToken.minimum_transfer,
-  //   tsSupportToken.outgoing_percentage,
-  //   tsSupportToken.time,
-  // );
-  // await tx.wait()
+  tx = await council.ts_support_token(
+    tsSupportToken.id,
+    tsSupportToken.token_id,
+    tsSupportToken.connector,
+    tsSupportToken.minimum_transfer,
+    tsSupportToken.outgoing_percentage,
+    tsSupportToken.time,
+  );
+  await tx.wait()
 
   // Bridge: EnableService
   proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
