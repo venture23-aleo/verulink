@@ -147,7 +147,7 @@ export class Council_v2Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async propose(r0: number, r1: BigInt) {
+  async propose(r0: number, r1: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.field(r1);
 
@@ -160,7 +160,7 @@ export class Council_v2Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async vote(r0: BigInt, r1: number) {
+  async vote(r0: bigint, r1: number) {
     const r0Leo = js2leo.field(r0);
     const r1Leo = js2leo.u8(r1);
 
@@ -284,7 +284,7 @@ export class Council_v2Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async exec_enable_new_token(r0: number, r1: string, r2: BigInt, r3: number, r4: number) {
+  async exec_enable_new_token(r0: number, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u64(r2);
@@ -324,7 +324,7 @@ export class Council_v2Contract {
     return leo2js.u32(result);
   }
 
-  async proposal_vote_counts(key: BigInt): Promise < number > {
+  async proposal_vote_counts(key: bigint): Promise < number > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
@@ -336,7 +336,7 @@ export class Council_v2Contract {
     return leo2js.u8(result);
   }
 
-  async proposal_executed(key: BigInt): Promise < boolean > {
+  async proposal_executed(key: bigint): Promise < boolean > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
@@ -360,7 +360,7 @@ export class Council_v2Contract {
     return leo2js.field(result);
   }
 
-  async proposal_vote_signs(key: BigInt): Promise < boolean > {
+  async proposal_vote_signs(key: bigint): Promise < boolean > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]

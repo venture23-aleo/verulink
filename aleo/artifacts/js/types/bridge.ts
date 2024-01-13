@@ -47,7 +47,7 @@ export interface MsgTokenReceive {
   token: string;
   sender: Array < number > ;
   receiver: string;
-  amount: BigInt;
+  amount: bigint;
 }
 
 export const leoMsgTokenReceiveSchema = z.object({
@@ -62,7 +62,7 @@ export interface MsgTokenSend {
   token: Array < number > ;
   sender: string;
   receiver: Array < number > ;
-  amount: BigInt;
+  amount: bigint;
 }
 
 export const leoMsgTokenSendSchema = z.object({
@@ -97,7 +97,7 @@ export interface InPacket {
   sequence: number;
   source: ForeignContract;
   destination: AleoProgram;
-  msg_hash: BigInt;
+  msg_hash: bigint;
   height: number;
 }
 
@@ -142,7 +142,7 @@ export const leoPacketIdSchema = z.object({
 export type PacketIdLeo = z.infer < typeof leoPacketIdSchema > ;
 
 export interface InPacketFullAttestorKey {
-  packet_hash: BigInt;
+  packet_hash: bigint;
   attestor: string;
 }
 
@@ -153,7 +153,7 @@ export const leoInPacketFullAttestorKeySchema = z.object({
 export type InPacketFullAttestorKeyLeo = z.infer < typeof leoInPacketFullAttestorKeySchema > ;
 
 export interface InPacketFullScreeningKey {
-  packet_hash: BigInt;
+  packet_hash: bigint;
   screening_passed: boolean;
 }
 

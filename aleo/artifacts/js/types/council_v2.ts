@@ -22,7 +22,7 @@ import {
 } from "./leo-types";
 
 export interface ProposalSign {
-  proposal: BigInt;
+  proposal: bigint;
   member: string;
 }
 
@@ -137,7 +137,7 @@ export type SupportTokenLeo = z.infer < typeof leoSupportTokenSchema > ;
 export interface EnableToken {
   id: number;
   token_id: string;
-  minimum_transfer: BigInt;
+  minimum_transfer: bigint;
   outgoing_percentage: number;
   time: number;
 }

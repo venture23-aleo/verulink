@@ -1,6 +1,8 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
+  UpdateGovernance,
+  WUsdcRelease,
   ProposalSign,
   ExternalProposal,
   AddMember,
@@ -38,6 +40,8 @@ import {
   Approval,
 } from "./types";
 import {
+  getUpdateGovernanceLeo,
+  getWUsdcReleaseLeo,
   getProposalSignLeo,
   getExternalProposalLeo,
   getAddMemberLeo,
@@ -75,6 +79,8 @@ import {
   getApprovalLeo,
 } from './js2leo';
 import {
+  getUpdateGovernance,
+  getWUsdcRelease,
   getProposalSign,
   getExternalProposal,
   getAddMember,
@@ -170,10 +176,11 @@ export class Wusdc_connectorContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_wusdc_governance(r0: string) {
-    const r0Leo = js2leo.address(r0);
+  async update_wusdc_governance(r0: number, r1: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'update_wusdc_governance',
@@ -207,6 +214,20 @@ export class Wusdc_connectorContract {
     const result = await zkRun({
       config: this.config,
       transition: 'wusdc_send',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async wusdc_release(r0: number, r1: string, r2: bigint) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u64(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'wusdc_release',
       params,
     });
     if (this.config.mode === "execute") return result;

@@ -19,6 +19,7 @@ struct ProposalSign:
     member as address;
 
 struct ExternalProposal:
+    id as u32;
     external_program as address;
     proposal_hash as field;
 
@@ -236,11 +237,12 @@ finalize vote:
 
 
 function external_execute:
-    input r0 as field.private;
-    cast self.caller r0 into r1 as ExternalProposal;
-    hash.bhp256 r1 into r2 as field;
-    async external_execute r2 into r3;
-    output r3 as council.aleo/external_execute.future;
+    input r0 as u32.public;
+    input r1 as field.public;
+    cast r0 self.caller r1 into r2 as ExternalProposal;
+    hash.bhp256 r2 into r3 as field;
+    async external_execute r3 into r4;
+    output r4 as council.aleo/external_execute.future;
 
 finalize external_execute:
     input r0 as field.public;

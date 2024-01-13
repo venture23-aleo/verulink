@@ -19,6 +19,7 @@ console.log(evm2AleoArr(usdcContractAddr));
 
 export const wusdcTokenAddr = "aleo1qg0azcck30ys6598lpmfx9xpfazj9w7ma973g7l5p7eka0p4jq9s2c3vk2";
 export const wusdcConnectorAddr = "aleo1l9a39hr7kyuccdw5m3lmz45qjzx3v3mz5a2jfveqkztyr0u0p58s79tre8";
+export const wusdcHoldingAddr = "aleo16dyvhwsrfmx5eru9kffhn6df8cr3v3h06apqzsrphl6h03wa2crq43djr6"
 
 // // User Address on Ethereum
 export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";

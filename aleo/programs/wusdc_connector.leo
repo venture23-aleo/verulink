@@ -24,8 +24,14 @@ program wusdc_connector.aleo {
 
     /// Update the existing governance program
     /// Can only be called from council/governance program
-    transition update_wusdc_governance(public new_governance: address) {
-        council.aleo/external_execute(BHP256::hash_to_field(new_governance));
+    struct UpdateGovernance {
+        new_governance: address
+    }
+    transition update_wusdc_governance(public proposal_id: u32, public new_governance: address) {
+        let update_governance: UpdateGovernance = UpdateGovernance {
+            new_governance
+        };
+        council.aleo/external_execute(proposal_id, BHP256::hash_to_field(update_governance));
         wusdc_token.aleo/update_governance_wusdc_token(new_governance);
         wusdc_holding.aleo/update_governance_wusdc_holding(new_governance);
     }
@@ -63,6 +69,21 @@ program wusdc_connector.aleo {
         token_service.aleo/token_send(WUSDC_TOKEN, receiver, amount, origin_chain_id(), origin_usdc_address(), origin_token_service_address());
 
     }
+
+    struct WUsdcRelease {
+        receiver: address,
+        amount: u64
+    }
+
+    transition wusdc_release(public proposal_id: u32, public receiver: address, public amount: u64) {
+        let releaseProposal: WUsdcRelease = WUsdcRelease {
+            receiver,
+            amount
+        };
+        council.aleo/external_execute(proposal_id, BHP256::hash_to_field(releaseProposal));
+        wusdc_holding.aleo/release_fund(receiver, amount);
+    }
+
 
     // Chain Id of the network
     // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator

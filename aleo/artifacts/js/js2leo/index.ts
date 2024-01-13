@@ -41,6 +41,10 @@ import {
   gettokenLeo,
   getApprovalLeo
 } from './wusdc_token';
+import {
+  getUpdateGovernanceLeo,
+  getWUsdcReleaseLeo
+} from './wusdc_connector';
 
 export {
   getOutgoingPercentageInTimeLeo,
@@ -78,4 +82,6 @@ export {
   getTsUpdateOutgoingPercentageLeo,
   gettokenLeo,
   getApprovalLeo,
+  getUpdateGovernanceLeo,
+  getWUsdcReleaseLeo,
 };

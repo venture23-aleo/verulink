@@ -142,12 +142,14 @@ program council.aleo {
     ////////////////////////////////////////////////
 
     struct ExternalProposal {
+        id: u32,
         external_program: address
         proposal_hash: field,
     }
 
-    transition external_execute(proposal_hash: field) {
+    transition external_execute(public id: u32, public proposal_hash: field) {
         let external_proposal: ExternalProposal = ExternalProposal {
+            id,
             external_program: self.caller,
             proposal_hash,
         };

@@ -111,6 +111,14 @@ import {
   leoApprovalSchema,
   ApprovalLeo
 } from './wusdc_token';
+import {
+  UpdateGovernance,
+  leoUpdateGovernanceSchema,
+  UpdateGovernanceLeo,
+  WUsdcRelease,
+  leoWUsdcReleaseSchema,
+  WUsdcReleaseLeo
+} from './wusdc_connector';
 
 export {
   OutgoingPercentageInTime,
@@ -218,4 +226,10 @@ export {
   Approval,
   leoApprovalSchema,
   ApprovalLeo,
+  UpdateGovernance,
+  leoUpdateGovernanceSchema,
+  UpdateGovernanceLeo,
+  WUsdcRelease,
+  leoWUsdcReleaseSchema,
+  WUsdcReleaseLeo,
 };

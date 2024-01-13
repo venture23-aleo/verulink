@@ -27,7 +27,7 @@ describe("Aleo Bridge", () => {
         token: wUSDCProgramAddr,
         sender: evm2AleoArr(ethUser),
         receiver: aleoUser,
-        amount: BigInt(100),
+        amount: bigint(100),
       },
       height: 10,
     };

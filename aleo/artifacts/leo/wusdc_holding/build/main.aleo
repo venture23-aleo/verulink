@@ -41,16 +41,18 @@ finalize update_governance_wusdc_holding:
 function hold_fund:
     input r0 as address.public;
     input r1 as u64.public;
-    assert.neq self.signer self.caller;
-    async hold_fund r0 r1 into r2;
+    async hold_fund self.caller r0 r1 into r2;
     output r2 as wusdc_holding.aleo/hold_fund.future;
 
 finalize hold_fund:
     input r0 as address.public;
-    input r1 as u64.public;
-    get.or_use holdings[r0] 0u64 into r2;
-    add r2 r1 into r3;
-    set r3 into holdings[r0];
+    input r1 as address.public;
+    input r2 as u64.public;
+    get governance_holding[true] into r3;
+    assert.eq r3 r0;
+    get.or_use holdings[r1] 0u64 into r4;
+    add r4 r2 into r5;
+    set r5 into holdings[r1];
 
 
 function release_fund:

@@ -33,11 +33,13 @@ export const leoProposalSignSchema = z.object({
 export type ProposalSignLeo = z.infer < typeof leoProposalSignSchema > ;
 
 export interface ExternalProposal {
+  id: number;
   external_program: string;
   proposal_hash: bigint;
 }
 
 export const leoExternalProposalSchema = z.object({
+  id: leoU32Schema,
   external_program: leoAddressSchema,
   proposal_hash: leoFieldSchema,
 });

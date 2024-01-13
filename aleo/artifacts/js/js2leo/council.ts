@@ -54,6 +54,7 @@ export function getProposalSignLeo(proposalSign: ProposalSign): ProposalSignLeo 
 
 export function getExternalProposalLeo(externalProposal: ExternalProposal): ExternalProposalLeo {
   const result: ExternalProposalLeo = {
+    id: js2leo.u32(externalProposal.id),
     external_program: js2leo.address(externalProposal.external_program),
     proposal_hash: js2leo.field(externalProposal.proposal_hash),
   }

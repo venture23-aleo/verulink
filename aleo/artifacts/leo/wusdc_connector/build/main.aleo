@@ -40,6 +40,13 @@ program wusdc_connector.aleo;
 
 
 
+struct UpdateGovernance:
+    new_governance as address;
+
+struct WUsdcRelease:
+    receiver as address;
+    amount as u64;
+
 
 function initialize_wusdc:
     call wusdc_token.aleo/initialize_wusdc_token into r0;
@@ -55,13 +62,15 @@ finalize initialize_wusdc:
 
 
 function update_wusdc_governance:
-    input r0 as address.public;
-    hash.bhp256 r0 into r1 as field;
-    call council.aleo/external_execute r1 into r2;
-    call wusdc_token.aleo/update_governance_wusdc_token r0 into r3;
-    call wusdc_holding.aleo/update_governance_wusdc_holding r0 into r4;
-    async update_wusdc_governance r2 r3 r4 into r5;
-    output r5 as wusdc_connector.aleo/update_wusdc_governance.future;
+    input r0 as u32.public;
+    input r1 as address.public;
+    cast r1 into r2 as UpdateGovernance;
+    hash.bhp256 r2 into r3 as field;
+    call council.aleo/external_execute r0 r3 into r4;
+    call wusdc_token.aleo/update_governance_wusdc_token r1 into r5;
+    call wusdc_holding.aleo/update_governance_wusdc_holding r1 into r6;
+    async update_wusdc_governance r4 r5 r6 into r7;
+    output r7 as wusdc_connector.aleo/update_wusdc_governance.future;
 
 finalize update_wusdc_governance:
     input r0 as council.aleo/external_execute.future;
@@ -119,5 +128,23 @@ function wusdc_send:
 finalize wusdc_send:
     input r0 as wusdc_token.aleo/burn_public.future;
     input r1 as token_service.aleo/token_send.future;
+    await r0;
+    await r1;
+
+
+function wusdc_release:
+    input r0 as u32.public;
+    input r1 as address.public;
+    input r2 as u64.public;
+    cast r1 r2 into r3 as WUsdcRelease;
+    hash.bhp256 r3 into r4 as field;
+    call council.aleo/external_execute r0 r4 into r5;
+    call wusdc_holding.aleo/release_fund r1 r2 into r6;
+    async wusdc_release r5 r6 into r7;
+    output r7 as wusdc_connector.aleo/wusdc_release.future;
+
+finalize wusdc_release:
+    input r0 as council.aleo/external_execute.future;
+    input r1 as wusdc_holding.aleo/release_fund.future;
     await r0;
     await r1;

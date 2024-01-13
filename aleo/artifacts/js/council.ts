@@ -208,10 +208,11 @@ export class CouncilContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async external_execute(r0: bigint) {
-    const r0Leo = js2leo.field(r0);
+  async external_execute(r0: number, r1: bigint) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.field(r1);
 
-    const params = [r0Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'external_execute',

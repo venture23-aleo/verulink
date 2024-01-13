@@ -41,6 +41,10 @@ import {
   gettoken,
   getApproval
 } from './wusdc_token';
+import {
+  getUpdateGovernance,
+  getWUsdcRelease
+} from './wusdc_connector';
 
 export {
   getOutgoingPercentageInTime,
@@ -78,4 +82,6 @@ export {
   getTsUpdateOutgoingPercentage,
   gettoken,
   getApproval,
+  getUpdateGovernance,
+  getWUsdcRelease,
 };

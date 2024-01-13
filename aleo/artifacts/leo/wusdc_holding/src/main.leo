@@ -52,13 +52,12 @@ program wusdc_holding.aleo {
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
         // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-        // assert_eq(self.caller, token_service_program());
-
-        return then finalize(user, amount);
+        return then finalize(self.caller, user, amount);
     }
 
-    finalize hold_fund(user: address, amount: u64) {
+    finalize hold_fund(from: address, user: address, amount: u64) {
+        assert_eq(Mapping::get(governance_holding, true), from);
+
         let held_amount: u64 = Mapping::get_or_use(holdings, user, 0u64);
 
         // Increase the held amount for the token_user

@@ -75,3 +75,14 @@ export const decodeNetworkChainId = (encodedChainId: number | bigint) => {
     chainId,
   };
 };
+
+import * as js2leoCommon from '../artifacts/js/js2leo/common';
+import * as leo2jsCommon from '../artifacts/js/leo2js/common';
+
+import { hash } from "aleo-hasher";
+export const hashStruct = (struct: any): bigint => {
+  const structString= js2leoCommon.json(struct)
+  const structHash = hash("bhp256", structString, "field");
+  const hashBigInt = leo2jsCommon.field(structHash);
+  return hashBigInt
+}

@@ -23,8 +23,8 @@ import {
 
 export interface token {
   owner: string;
-  amount: BigInt;
-  _nonce: BigInt;
+  amount: bigint;
+  _nonce: bigint;
 }
 
 export const leoTokenSchema = z.object({
