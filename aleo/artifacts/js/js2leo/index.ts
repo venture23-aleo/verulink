@@ -1,4 +1,7 @@
 import {
+  getOutgoingPercentageInTimeLeo
+} from './token_service';
+import {
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -11,9 +14,6 @@ import {
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo
 } from './token_bridge';
-import {
-  getOutgoingPercentageInTimeLeo
-} from './token_service';
 import {
   getProposalSignLeo,
   getExternalProposalLeo,
@@ -47,6 +47,7 @@ import {
 } from './wusdc_connector';
 
 export {
+  getOutgoingPercentageInTimeLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -58,7 +59,6 @@ export {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
-  getOutgoingPercentageInTimeLeo,
   getProposalSignLeo,
   getExternalProposalLeo,
   getAddMemberLeo,

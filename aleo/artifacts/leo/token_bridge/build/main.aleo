@@ -122,38 +122,40 @@ mapping sequences:
 
 function initialize_tb:
     input r0 as u8.public;
-    input r1 as address.public;
+    input r1 as [address; 5u32].public;
     input r2 as address.public;
-    input r3 as address.public;
-    input r4 as address.public;
-    input r5 as address.public;
-    input r6 as address.public;
-    async initialize_tb r0 r1 r2 r3 r4 r5 r6 into r7;
-    output r7 as token_bridge.aleo/initialize_tb.future;
+    gte r0 1u8 into r3;
+    lte r0 5u8 into r4;
+    and r3 r4 into r5;
+    assert.eq r5 true;
+    assert.neq r1[0u32] r1[1u32];
+    assert.neq r1[0u32] r1[2u32];
+    assert.neq r1[0u32] r1[3u32];
+    assert.neq r1[0u32] r1[4u32];
+    assert.neq r1[1u32] r1[2u32];
+    assert.neq r1[1u32] r1[3u32];
+    assert.neq r1[1u32] r1[4u32];
+    assert.neq r1[2u32] r1[3u32];
+    assert.neq r1[2u32] r1[4u32];
+    assert.neq r1[3u32] r1[4u32];
+    async initialize_tb r0 r1 r2 into r6;
+    output r6 as token_bridge.aleo/initialize_tb.future;
 
 finalize initialize_tb:
     input r0 as u8.public;
-    input r1 as address.public;
+    input r1 as [address; 5u32].public;
     input r2 as address.public;
-    input r3 as address.public;
-    input r4 as address.public;
-    input r5 as address.public;
-    input r6 as address.public;
-    contains attestor_settings[true] into r7;
-    not r7 into r8;
-    assert.eq r8 true;
-    gte r0 1u8 into r9;
-    lte r0 5u8 into r10;
-    and r9 r10 into r11;
-    assert.eq r11 true;
+    contains attestor_settings[true] into r3;
+    not r3 into r4;
+    assert.eq r4 true;
     set r0 into attestor_settings[true];
     set 5u8 into attestor_settings[false];
-    set true into attestors[r1];
-    set true into attestors[r2];
-    set true into attestors[r3];
-    set true into attestors[r4];
-    set true into attestors[r5];
-    set r6 into governance_TB[true];
+    set true into attestors[r1[0u32]];
+    set true into attestors[r1[1u32]];
+    set true into attestors[r1[2u32]];
+    set true into attestors[r1[3u32]];
+    set true into attestors[r1[4u32]];
+    set r2 into governance_TB[true];
 
 
 function update_governance_tb:

@@ -87,16 +87,12 @@ export class Token_bridgeContract {
 
     return result;
   }
-  async initialize_tb(r0: number, r1: string, r2: string, r3: string, r4: string, r5: string, r6: string) {
+  async initialize_tb(r0: number, r1: Array < string > , r2: string) {
     const r0Leo = js2leo.u8(r0);
-    const r1Leo = js2leo.address(r1);
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.address));
     const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.address(r3);
-    const r4Leo = js2leo.address(r4);
-    const r5Leo = js2leo.address(r5);
-    const r6Leo = js2leo.address(r6);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'initialize_tb',

@@ -153,15 +153,11 @@ export class CouncilContract {
 
     return result;
   }
-  async initialize(r0: string, r1: string, r2: string, r3: string, r4: string, r5: number) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.address(r3);
-    const r4Leo = js2leo.address(r4);
-    const r5Leo = js2leo.u8(r5);
+  async initialize(r0: Array < string > , r1: number) {
+    const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.address));
+    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'initialize',

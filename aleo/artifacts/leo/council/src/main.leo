@@ -30,20 +30,37 @@ program council.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize(public m1: address, public m2: address, public m3: address, public m4: address, public m5: address, public threshold: u8) {
-        // TODO: Assert that the members are different
-        return then finalize(m1, m2, m3, m4, m5, threshold);
+    transition initialize(public initial_members: [address; 5], public threshold: u8) {
+        
+        // Sanity check for threhsold
+        assert(threshold >= 1u8 && threshold <= 5u8 );
+
+        // Assert that the members are different
+        assert_neq(initial_members[0u8], initial_members[1u8]);
+        assert_neq(initial_members[0u8], initial_members[2u8]);
+        assert_neq(initial_members[0u8], initial_members[3u8]);
+        assert_neq(initial_members[0u8], initial_members[4u8]);
+
+        assert_neq(initial_members[1u8], initial_members[2u8]);
+        assert_neq(initial_members[1u8], initial_members[3u8]);
+        assert_neq(initial_members[1u8], initial_members[4u8]);
+
+        assert_neq(initial_members[2u8], initial_members[3u8]);
+        assert_neq(initial_members[2u8], initial_members[4u8]);
+
+        assert_neq(initial_members[3u8], initial_members[4u8]);
+
+        return then finalize(initial_members, threshold);
     }
 
-    finalize initialize(m1: address, m2: address, m3: address, m4: address, m5: address, threshold: u8) {
+    finalize initialize(initial_members: [address; 5], threshold: u8) {
         // Assert council has not been initialized before
         assert(!Mapping::contains(settings, true));
 
-        Mapping::set(members, m1, true);
-        Mapping::set(members, m2, true);
-        Mapping::set(members, m3, true);
-        Mapping::set(members, m4, true);
-        Mapping::set(members, m5, true);
+        // Set the initial members
+        for i: u8 in 0u8..5u8 {
+            Mapping::set(members, initial_members[i], true);
+        }
 
         // Set the initial initial values
         Mapping::set(settings, THRESHOLD_INDEX, threshold);

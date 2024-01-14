@@ -1,4 +1,9 @@
 import {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo
+} from './token_service';
+import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -33,11 +38,6 @@ import {
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo
 } from './token_bridge';
-import {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service';
 import {
   ProposalSign,
   leoProposalSignSchema,
@@ -121,6 +121,9 @@ import {
 } from './wusdc_connector';
 
 export {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -154,9 +157,6 @@ export {
   InPacketFullScreeningKey,
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo,
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
   ProposalSign,
   leoProposalSignSchema,
   ProposalSignLeo,

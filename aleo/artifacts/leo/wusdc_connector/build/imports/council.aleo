@@ -143,31 +143,37 @@ mapping proposal_vote_signs:
 	value as boolean.public;
 
 function initialize:
-    input r0 as address.public;
-    input r1 as address.public;
-    input r2 as address.public;
-    input r3 as address.public;
-    input r4 as address.public;
-    input r5 as u8.public;
-    async initialize r0 r1 r2 r3 r4 r5 into r6;
-    output r6 as council.aleo/initialize.future;
+    input r0 as [address; 5u32].public;
+    input r1 as u8.public;
+    gte r1 1u8 into r2;
+    lte r1 5u8 into r3;
+    and r2 r3 into r4;
+    assert.eq r4 true;
+    assert.neq r0[0u32] r0[1u32];
+    assert.neq r0[0u32] r0[2u32];
+    assert.neq r0[0u32] r0[3u32];
+    assert.neq r0[0u32] r0[4u32];
+    assert.neq r0[1u32] r0[2u32];
+    assert.neq r0[1u32] r0[3u32];
+    assert.neq r0[1u32] r0[4u32];
+    assert.neq r0[2u32] r0[3u32];
+    assert.neq r0[2u32] r0[4u32];
+    assert.neq r0[3u32] r0[4u32];
+    async initialize r0 r1 into r5;
+    output r5 as council.aleo/initialize.future;
 
 finalize initialize:
-    input r0 as address.public;
-    input r1 as address.public;
-    input r2 as address.public;
-    input r3 as address.public;
-    input r4 as address.public;
-    input r5 as u8.public;
-    contains settings[true] into r6;
-    not r6 into r7;
-    assert.eq r7 true;
-    set true into members[r0];
-    set true into members[r1];
-    set true into members[r2];
-    set true into members[r3];
-    set true into members[r4];
-    set r5 into settings[true];
+    input r0 as [address; 5u32].public;
+    input r1 as u8.public;
+    contains settings[true] into r2;
+    not r2 into r3;
+    assert.eq r3 true;
+    set true into members[r0[0u32]];
+    set true into members[r0[1u32]];
+    set true into members[r0[2u32]];
+    set true into members[r0[3u32]];
+    set true into members[r0[4u32]];
+    set r1 into settings[true];
     set 5u8 into settings[false];
     set 0field into proposals[0u32];
 

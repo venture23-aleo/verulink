@@ -174,26 +174,40 @@ program token_bridge.aleo {
 
     /// Initialize can only be called once
     /// Initialize must be called from council program
-    transition initialize_tb(public threshold: u8, public a1: address, public a2: address, public a3: address, public a4: address, public a5: address, public council: address) {
-        // TODO: check that the attestors are different
-        return then finalize(threshold, a1, a2, a3, a4, a5, council);
+    transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public council: address) {
+
+        // Sanity check for threshold
+        assert(threshold >= 1u8 && threshold <= 5u8 );
+
+        // Assert all attestors are different
+        assert_neq(initial_attestors[0u8], initial_attestors[1u8]);
+        assert_neq(initial_attestors[0u8], initial_attestors[2u8]);
+        assert_neq(initial_attestors[0u8], initial_attestors[3u8]);
+        assert_neq(initial_attestors[0u8], initial_attestors[4u8]);
+
+        assert_neq(initial_attestors[1u8], initial_attestors[2u8]);
+        assert_neq(initial_attestors[1u8], initial_attestors[3u8]);
+        assert_neq(initial_attestors[1u8], initial_attestors[4u8]);
+
+        assert_neq(initial_attestors[2u8], initial_attestors[3u8]);
+        assert_neq(initial_attestors[2u8], initial_attestors[4u8]);
+
+        assert_neq(initial_attestors[3u8], initial_attestors[4u8]);
+
+        return then finalize(threshold, initial_attestors, council);
     }
 
-    finalize initialize_tb(threshold: u8, a1: address, a2: address, a3: address, a4: address, a5: address, council: address) {
+    finalize initialize_tb(threshold: u8, initial_attestors: [address; 5], council: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(attestor_settings, THRESHOLD_INDEX));
 
-        // Setting threshold marks the bridge as initialized
-        assert(threshold >= 1u8 && threshold <= 5u8 );
         Mapping::set(attestor_settings, THRESHOLD_INDEX, threshold);
         Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, 5u8);
 
         // Set the initial attestors
-        Mapping::set(attestors, a1, true);
-        Mapping::set(attestors, a2, true);
-        Mapping::set(attestors, a3, true);
-        Mapping::set(attestors, a4, true);
-        Mapping::set(attestors, a5, true);
+        for i: u8 in 0u8..5u8 {
+            Mapping::set(attestors, initial_attestors[i], true);
+        }
 
         // Set the governance program
         Mapping::set(governance_TB, true, council);
