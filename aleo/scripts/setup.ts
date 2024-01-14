@@ -9,7 +9,7 @@ import * as js2leo from '../artifacts/js/js2leo';
 import * as js2leoCommon from '../artifacts/js/js2leo/common';
 import * as leo2jsCommon from '../artifacts/js/leo2js/common';
 
-import { TOTAL_PROPOSALS_INDEX, aleoTsContract, attestor, councilMember, councilThreshold, ethChainId, wusdcConnectorAddr, wusdcTokenAddr } from "../test/mockData";
+import { TOTAL_PROPOSALS_INDEX, aleoTsContract, aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilThreshold, ethChainId, wusdcConnectorAddr, wusdcTokenAddr } from "../test/mockData";
 import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
 import { Wusdc_holdingContract } from "../artifacts/js/wusdc_holding";
 import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
@@ -34,11 +34,7 @@ const setup = async () => {
   
   // Initialize council program with a single council member and 1/5 threshold
   await council.initialize(
-    councilMember,
-    councilMember,
-    councilMember,
-    councilMember,
-    councilMember,
+    [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
     councilThreshold
   );
 
@@ -46,11 +42,7 @@ const setup = async () => {
   const councilAddress = "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
   await bridge.initialize_tb(
     1,
-    attestor,
-    attestor,
-    attestor,
-    attestor,
-    attestor,
+    [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
     councilAddress
   );
   await tokenService.initialize_ts(councilAddress, councilAddress);

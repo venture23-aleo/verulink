@@ -4,7 +4,7 @@ import { InPacketFull, PacketId, } from "../artifacts/js/types";
 import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
 import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
 import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
-import { aleoChainId, aleoTsContract, aleoUser, ethChainId, ethTsContract, ethUser, wusdcTokenAddr, wusdcConnectorAddr} from "./mockData";
+import { aleoChainId, aleoTsContract, aleoUser1, ethChainId, ethTsContract, ethUser, wusdcTokenAddr, wusdcConnectorAddr} from "./mockData";
 
 import { evm2AleoArr } from "./utils";
 
@@ -36,7 +36,7 @@ describe("Happy Path", () => {
       message: {
         token: wusdcTokenAddr,
         sender: evm2AleoArr(ethUser),
-        receiver: aleoUser,
+        receiver: aleoUser1,
         amount
       },
       height: 10,
@@ -54,8 +54,8 @@ describe("Happy Path", () => {
 
     const tx = await wusdcConnecter.wusdc_receive(
       evm2AleoArr(ethUser), // sender
-      aleoUser, // receiver
-      aleoUser, // actual receiver
+      aleoUser1, // receiver
+      aleoUser1, // actual receiver
       amount,
       incomingSequence, 
       height
@@ -64,7 +64,7 @@ describe("Happy Path", () => {
     // @ts-ignore
     await tx.wait()
 
-    let balance = await wusdcToken.account(aleoUser)
+    let balance = await wusdcToken.account(aleoUser1)
     console.log(balance)
 
   }, 200_000),
@@ -80,7 +80,7 @@ describe("Happy Path", () => {
     // @ts-ignore
     await tx.wait()
 
-    const balance = await wusdcToken.account(aleoUser);
+    const balance = await wusdcToken.account(aleoUser1);
     console.log(balance)
 
     const packetKey: PacketId = {

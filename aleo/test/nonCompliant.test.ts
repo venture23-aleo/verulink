@@ -5,7 +5,7 @@ import { ExternalProposal, InPacketFull, WUsdcRelease } from "../artifacts/js/ty
 import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
 import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
 import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
-import { TOTAL_PROPOSALS_INDEX, aleoChainId, aleoTsContract, aleoUser, councilProgram, ethChainId, ethTsContract, ethUser, usdcContractAddr, wusdcConnectorAddr, wusdcHoldingAddr, wusdcTokenAddr } from "./mockData";
+import { TOTAL_PROPOSALS_INDEX, aleoChainId, aleoTsContract, aleoUser1, councilProgram, ethChainId, ethTsContract, ethUser, usdcContractAddr, wusdcConnectorAddr, wusdcHoldingAddr, wusdcTokenAddr } from "./mockData";
 
 import { evm2AleoArr, hashStruct } from "./utils";
 
@@ -39,7 +39,7 @@ describe("Happy Path", () => {
       message: {
         token: wusdcTokenAddr,
         sender: evm2AleoArr(ethUser),
-        receiver: aleoUser,
+        receiver: aleoUser1,
         amount
       },
       height,
@@ -57,7 +57,7 @@ describe("Happy Path", () => {
 
     const tx = await wusdcConnecter.wusdc_receive(
       evm2AleoArr(ethUser), // sender
-      aleoUser, // receiver
+      aleoUser1, // receiver
       wusdcHoldingAddr, // actual receiver
       amount,
       incomingSequence, 
@@ -75,9 +75,9 @@ describe("Happy Path", () => {
 
   test("Relase held fund", async () => {
     const wusdcHoldingBalanceBefore = await wusdcToken.account(wusdcHoldingAddr)
-    const userBalanceBefore = await wusdcToken.account(aleoUser)
+    const userBalanceBefore = await wusdcToken.account(aleoUser1)
     const releaseWusdcProposal: WUsdcRelease = {
-      receiver: aleoUser,
+      receiver: aleoUser1,
       amount
     }
     const releaseProposalHash = hashStruct(js2leo.getWUsdcReleaseLeo(releaseWusdcProposal));
@@ -94,13 +94,13 @@ describe("Happy Path", () => {
     // @ts-ignore
     await proposeTx.wait()
 
-    const executeTx = await wusdcConnecter.wusdc_release(proposalId, aleoUser, amount);
+    const executeTx = await wusdcConnecter.wusdc_release(proposalId, aleoUser1, amount);
 
     // @ts-ignore
     await executeTx.wait()
 
     const wusdcHoldingBalanceAfter = await wusdcToken.account(wusdcHoldingAddr)
-    const userBalanceAfter = await wusdcToken.account(aleoUser)
+    const userBalanceAfter = await wusdcToken.account(aleoUser1)
     console.log(`WUSDC Holding Program: ${wusdcHoldingBalanceBefore} -> ${wusdcHoldingBalanceAfter}`)
     console.log(`User: ${userBalanceBefore} -> ${userBalanceAfter}`)
 
