@@ -57,11 +57,10 @@ export class Token_serviceContract {
 
     return result;
   }
-  async initialize_ts(r0: string, r1: string) {
+  async initialize_ts(r0: string) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.address(r1);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'initialize_ts',

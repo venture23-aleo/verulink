@@ -25,10 +25,10 @@ describe("Token Bridge ", () => {
     const highThreshold = 6; // Any number above 5
     const admin = aleoUser1;
 
-    // test("Deploy", async () => {
-    //   const deployTx = await bridge.deploy();
-    //   await deployTx.wait();
-    // }, 100_000);
+    test("Deploy", async () => {
+      const deployTx = await bridge.deploy();
+      await deployTx.wait();
+    }, 100_000);
 
     test.failing(
       "Initialize - Threshold too low (must fail)",

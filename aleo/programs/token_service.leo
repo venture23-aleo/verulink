@@ -51,11 +51,11 @@ program token_service.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_ts(council: address, holding: address) {
-        return then finalize(council, holding);
+    transition initialize_ts(council: address) {
+        return then finalize(council);
     }
 
-    finalize initialize_ts(council: address, holding: address) {
+    finalize initialize_ts(council: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(governance_TS, true));
 
@@ -213,6 +213,12 @@ program token_service.aleo {
     }
 
     transition token_send(public token_id: address, public receiver: [u8; 32], public amount: u64, public origin_chain_id: u128, origin_token_address: [u8; 32], origin_token_service_address: [u8; 32]) {
+        // Assert that only a connector program can call this method
+        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
+        // self.signer = tx.origin
+        // self.caller = msg.sender
+        assert_neq(self.signer, self.caller);
+
         // TODO
         // If fee is set require credits token for publishing
 
@@ -264,6 +270,13 @@ program token_service.aleo {
     /// Consumes msg from source at destination
     /// Requires sequence no of the source network
     transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
+
+        // Assert that only a connector program can call this method
+        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
+        // self.signer = tx.origin
+        // self.caller = msg.sender
+        assert_neq(self.signer, self.caller);
+
 
         // call consume on bridge
         token_bridge.aleo/consume(source_chain_id, source_token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);

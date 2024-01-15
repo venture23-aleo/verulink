@@ -65,16 +65,14 @@ mapping last_min_supply:
 
 function initialize_ts:
     input r0 as address.private;
-    input r1 as address.private;
-    async initialize_ts r0 r1 into r2;
-    output r2 as token_service.aleo/initialize_ts.future;
+    async initialize_ts r0 into r1;
+    output r1 as token_service.aleo/initialize_ts.future;
 
 finalize initialize_ts:
     input r0 as address.public;
-    input r1 as address.public;
-    contains governance_TS[true] into r2;
-    not r2 into r3;
-    assert.eq r3 true;
+    contains governance_TS[true] into r1;
+    not r1 into r2;
+    assert.eq r2 true;
     set r0 into governance_TS[true];
 
 
@@ -238,6 +236,7 @@ function token_send:
     input r3 as u128.public;
     input r4 as [u8; 32u32].private;
     input r5 as [u8; 32u32].private;
+    assert.neq self.signer self.caller;
     call token_bridge.aleo/publish r3 r5 r4 self.caller r1 r2 into r6;
     async token_send r6 self.caller r0 r2 into r7;
     output r7 as token_service.aleo/token_send.future;
@@ -307,6 +306,7 @@ function token_receive:
     input r7 as u64.public;
     input r8 as u32.public;
     input r9 as u32.public;
+    assert.neq self.signer self.caller;
     call token_bridge.aleo/consume r0 r1 r3 r4 r5 r6 r7 r8 r9 into r10;
     async token_receive r10 self.caller r3 r7 into r11;
     output r11 as token_service.aleo/token_receive.future;
