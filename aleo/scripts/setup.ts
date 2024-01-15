@@ -62,7 +62,7 @@ const setup = async () => {
     tbEnableChain.chain_id,
   )
 
-  // TokenService: Add Token Service on Ethereum
+  // TokenService: Support Ethereum Chain
   const tsEthereum = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
   proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsSupportChain: TsSupportChain = {
