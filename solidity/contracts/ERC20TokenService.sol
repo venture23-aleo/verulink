@@ -46,12 +46,11 @@ contract ERC20TokenService is Ownable, BlackListService,
         holding = _holding;
     }
 
-    function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
+    function _packetify(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) 
+        private returns (PacketLibrary.OutPacket memory packet){
         require(!isBlackListed(msg.sender), "Sender Blacklisted");
         require(isEnabledToken(tokenAddress,destChainId), "Token not supported");
         require(isAmountInRange(tokenAddress, amount), "Transfer amount not in range");
-
-        IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
 
         PacketLibrary.OutTokenMessage memory message = PacketLibrary.OutTokenMessage(
             msg.sender,
@@ -60,26 +59,50 @@ contract ERC20TokenService is Ownable, BlackListService,
             receiver
         );
 
-        PacketLibrary.OutPacket memory packet ;
+        // PacketLibrary.OutPacket memory packet ;
         packet.sourceTokenService = self;
         packet.destTokenService = supportedTokens[tokenAddress].destTokenService;
         packet.message = message;
         packet.height = block.number;
 
+        return packet;
+    }
+
+    function transfer(string memory receiver, uint256 destChainId) external payable {
+        PacketLibrary.OutPacket memory packet = _packetify(address(0), msg.value, receiver, destChainId);
+        IERC20TokenBridge(erc20Bridge).sendMessage(packet);
+    }
+
+    function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
+        require(IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "ETH Transfer Failed");
+
+        PacketLibrary.OutPacket memory packet = _packetify(tokenAddress, amount, receiver, destChainId); 
         IERC20TokenBridge(erc20Bridge).sendMessage(packet);
     }
 
     function withdraw(PacketLibrary.InPacket memory packet) external {
         PacketLibrary.Vote quorum = IERC20TokenBridge(erc20Bridge).consume(packet);
-        require(packet.destTokenService.addr == address(this),"Packet not intended for this Token Service");
+        require(packet.destTokenService.addr == address(this),"Packet not for this Token Service");
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
+        uint256 amount = packet.message.amount;
         require(isEnabledToken(tokenAddress, packet.sourceTokenService.chainId), "Token either disabled or not supported");
         if(isBlackListed(receiver) || quorum == PacketLibrary.Vote.NAY) {
-            IERC20(tokenAddress).transfer(address(holding), packet.message.amount);
-            holding.lock(receiver, tokenAddress, packet.message.amount);
+            if(tokenAddress == address(0)) {
+                // eth lock
+                holding.lockETH{value:amount}(receiver, tokenAddress, amount);
+            }else {
+                IERC20(tokenAddress).transfer(address(holding), amount);
+                holding.lock(receiver, tokenAddress, amount);
+            }
         }else {
-            IERC20(tokenAddress).transfer(receiver, packet.message.amount);
+            if(tokenAddress == address(0)) {
+                // eth transfer
+                (bool sent, bytes memory data) = receiver.call{value: amount}("");
+                require(sent, "ETH Transfer Failed");
+            }else {
+                require(IERC20(tokenAddress).transfer(receiver, amount), "Withdraw Failed");
+            }  
         }
     }
 }

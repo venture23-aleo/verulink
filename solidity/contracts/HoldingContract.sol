@@ -41,6 +41,16 @@ contract Holding is Ownable, Initializable, Upgradeable {
         emit Locked(user, token, amount);
     }
 
+    function lockETH(address user, address token, uint256 amount) public payable {
+        require(msg.value > 0, "Requires ETH Transfer");
+        require(
+            msg.sender == tokenService,
+            "Caller is not registered Token Service"
+        );
+        locked[user][token] += amount;
+        emit Locked(user, token, amount);
+    }
+
     function unlock(
         address user,
         address token,
@@ -56,6 +66,12 @@ contract Holding is Ownable, Initializable, Upgradeable {
         require(unlocked[user][token] >= amount, "Insufficient amount");
         unlocked[user][token] -= amount;
         emit Released(user, token, amount);
-        IERC20(token).transfer(user, amount);
+        if(token == address(0)) {
+            // eth transfer
+            (bool sent, bytes memory data) = user.call{value: amount}("");
+            require(sent, "ETH Released Failed");
+        }else {
+            require(IERC20(token).transfer(user, amount), "ERC20 Release Failed");
+        }
     }
 }
