@@ -3,9 +3,9 @@ import wusdc_token.aleo;
 program wusdc_holding.aleo {
 
     // mapping used as variable
-    // true: address of council 
+    // true: address of owner 
     // false: Null
-    mapping governance_holding: bool => address;
+    mapping owner_holding: bool => address;
 
     mapping holdings: address => u64;
 
@@ -20,30 +20,30 @@ program wusdc_holding.aleo {
 
     finalize initialize_wusdc_holding(connector: address) {
         // Assert holding program has not been initialized before
-        assert(!Mapping::contains(governance_holding, true));
+        assert(!Mapping::contains(owner_holding, true));
 
-        // Set the council program
-        Mapping::set(governance_holding, true, connector);
+        // Set the owner program
+        Mapping::set(owner_holding, true, connector);
     }
 
     ///////////////////////////////
-    ///// Update Governance ///////
+    ///// Transfer Ownership ///////
     ///////////////////////////////
 
-    /// Update the existing governance program
-    /// Can only be called from council/governance program
-    transition update_governance_wusdc_holding(public new_governance: address) {
-        return then finalize(self.caller, new_governance);
+    /// Update the existing owner program
+    /// Can only be called from owner/owner program
+    transition transfer_ownership_wusdc_holdin(public new_owner: address) {
+        return then finalize(self.caller, new_owner);
     }
 
-    finalize update_governance_wusdc_holding(from: address, new_governance: address) {
-        // Get the governance address
+    finalize transfer_ownership_wusdc_holdin(from: address, new_owner: address) {
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_holding, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_holding, true);
+        assert_eq(from, owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(governance_holding, true, new_governance);
+        Mapping::set(owner_holding, true, new_owner);
     }
 
 
@@ -56,7 +56,7 @@ program wusdc_holding.aleo {
     }
 
     finalize hold_fund(from: address, user: address, amount: u64) {
-        assert_eq(Mapping::get(governance_holding, true), from);
+        assert_eq(Mapping::get(owner_holding, true), from);
 
         let held_amount: u64 = Mapping::get_or_use(holdings, user, 0u64);
 
@@ -70,9 +70,9 @@ program wusdc_holding.aleo {
     }
 
     finalize release_fund(user: address, amount: u64, caller: address) {
-        // Assert only governance can release fund
-        let governance: address = Mapping::get(governance_holding, true);
-        assert_eq(governance, caller);
+        // Assert only owner can release fund
+        let owner: address = Mapping::get(owner_holding, true);
+        assert_eq(owner, caller);
 
         let held_amount: u64 = Mapping::get(holdings, user);
 

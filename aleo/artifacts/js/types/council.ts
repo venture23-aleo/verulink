@@ -84,12 +84,12 @@ export type UpdateThresholdLeo = z.infer < typeof leoUpdateThresholdSchema > ;
 
 export interface TbUpdateGovernance {
   id: number;
-  new_governance: string;
+  new_owner: string;
 }
 
 export const leoTbUpdateGovernanceSchema = z.object({
   id: leoU32Schema,
-  new_governance: leoAddressSchema,
+  new_owner: leoAddressSchema,
 });
 export type TbUpdateGovernanceLeo = z.infer < typeof leoTbUpdateGovernanceSchema > ;
 
@@ -174,16 +174,16 @@ export const leoTbDisableServiceSchema = z.object({
 });
 export type TbDisableServiceLeo = z.infer < typeof leoTbDisableServiceSchema > ;
 
-export interface TsUpdateGovernance {
+export interface TsTransferOwnership {
   id: number;
-  new_governance: string;
+  new_owner: string;
 }
 
-export const leoTsUpdateGovernanceSchema = z.object({
+export const leoTsTransferOwnershipSchema = z.object({
   id: leoU32Schema,
-  new_governance: leoAddressSchema,
+  new_owner: leoAddressSchema,
 });
-export type TsUpdateGovernanceLeo = z.infer < typeof leoTsUpdateGovernanceSchema > ;
+export type TsTransferOwnershipLeo = z.infer < typeof leoTsTransferOwnershipSchema > ;
 
 export interface TsSupportChain {
   id: number;

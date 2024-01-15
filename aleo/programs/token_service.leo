@@ -9,9 +9,9 @@ program token_service.aleo {
     mapping token_service_contracts: u128 => [u8; 32];
 
     // mapping used as variable
-    // true: address of governance program
+    // true: address of owner
     // false: Null
-    mapping governance_TS: bool => address;
+    mapping owner_TS: bool => address;
 
     // tracks the total supply of the token
     mapping total_supply: address => u64;
@@ -51,37 +51,37 @@ program token_service.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_ts(council: address) {
-        return then finalize(council);
+    transition initialize_ts(owner: address) {
+        return then finalize(owner);
     }
 
-    finalize initialize_ts(council: address) {
+    finalize initialize_ts(owner: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(governance_TS, true));
+        assert(!Mapping::contains(owner_TS, true));
 
-        // Set the council program
-        Mapping::set(governance_TS, true, council);
+        // Set the owner program
+        Mapping::set(owner_TS, true, owner);
 
     }
 
-    ///////////////////////////////
-    ///// Update Governance ///////
-    ///////////////////////////////
+    ////////////////////////////////
+    ///// Transfer Ownership ///////
+    ////////////////////////////////
 
-    /// Update the existing governance program
-    /// Can only be called from council/governance program
-    transition update_governance_ts(public new_governance: address) {
+    /// Update the existing owner
+    /// Can only be called from owner program
+    transition transfer_ownership_ts(public new_governance: address) {
         return then finalize(self.caller, new_governance);
     }
 
-    finalize update_governance_ts(from: address, new_governance: address) {
-        // Get the governance address
+    finalize transfer_ownership_ts(from: address, new_governance: address) {
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TS, true);
+        let governance: address = Mapping::get(owner_TS, true);
         assert_eq(from, governance);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(governance_TS, true, new_governance);
+        Mapping::set(owner_TS, true, new_governance);
     }
 
     transition support_chain_ts(public chain_id: u128, public token_service_address: [u8; 32]) {
@@ -89,10 +89,10 @@ program token_service.aleo {
     }
 
     finalize support_chain_ts(from: address, chain_id: u128, token_service_address: [u8; 32]) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         Mapping::set(token_service_contracts, chain_id, token_service_address);
     }
@@ -102,10 +102,10 @@ program token_service.aleo {
     }
 
     finalize remove_chain_ts(from: address, chain_id: u128) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         Mapping::remove(token_service_contracts, chain_id);
     }
@@ -119,10 +119,10 @@ program token_service.aleo {
     }
 
     finalize support_token_ts(from: address, token_id: address, token_connector: address, minimum_transfer: u64, outgoing_percentage: u16, timeframe: u32) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         let outgoing_percentage_in_time: OutgoingPercentageInTime = OutgoingPercentageInTime {
             outgoing_percentage,
@@ -144,10 +144,10 @@ program token_service.aleo {
     }
 
     finalize update_token_connector_ts(from: address, token_id: address, new_token_connector: address) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         Mapping::set(token_connectors, token_id, new_token_connector);
     }
@@ -158,10 +158,10 @@ program token_service.aleo {
     }
 
     finalize remove_token_ts(from: address, token_id: address) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         Mapping::remove(max_outgoing_percentage, token_id);
         Mapping::remove(minimum_transfers, token_id);
@@ -172,10 +172,10 @@ program token_service.aleo {
         return then finalize(self.caller, token_id, token_connector);
     }
     finalize update_token_connector(from: address, token_id: address, token_connector: address) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         Mapping::set(token_connectors, token_id, token_connector);
     }
@@ -185,10 +185,10 @@ program token_service.aleo {
     }
 
     finalize update_minimum_transfer_ts(from: address, token_id: address, minimum_transfer: u64) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
 
         Mapping::set(minimum_transfers, token_id, minimum_transfer);
     }
@@ -200,10 +200,10 @@ program token_service.aleo {
     }
 
     finalize update_outgoing_percentage_ts(from: address, token_id: address, outgoing_percentage: u16, timeframe: u32) {
-        // Get the council address
+        // Get the owner address
         // If program not initialized, this fails
-        let council: address = Mapping::get(governance_TS, true);
-        assert_eq(from, council);
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
         let outgoing_percentage_in_time: OutgoingPercentageInTime = OutgoingPercentageInTime {
             outgoing_percentage,
             timeframe

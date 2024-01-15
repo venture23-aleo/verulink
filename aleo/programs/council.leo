@@ -330,24 +330,24 @@ program council.aleo {
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
     }
 
-    //////////////////////////////////////////
-    /////// Bridge: Update Governance ////////
-    //////////////////////////////////////////
+    ///////////////////////////////////////////
+    /////// Bridge: Transfer Ownership ////////
+    ///////////////////////////////////////////
 
     struct TbUpdateGovernance {
         id: u32,
-        new_governance: address
+        new_owner: address
     }
 
-    transition tb_update_governance(public id: u32, public new_governance: address) {
+    transition tb_update_governance(public id: u32, public new_owner: address) {
         let proposal: TbUpdateGovernance = TbUpdateGovernance {
             id,
-            new_governance
+            new_owner
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge.aleo/update_governance_tb(new_governance);
+        token_bridge.aleo/transfer_ownership_tb(new_owner);
 
         return then finalize(proposal_hash);
     }
@@ -641,24 +641,24 @@ program council.aleo {
 
     }
 
-    /////////////////////////////////////////////
-    /////// Token Service: Update Governance ////
-    /////////////////////////////////////////////
+    //////////////////////////////////////////////
+    /////// Token Service: Transfer Ownership ////
+    //////////////////////////////////////////////
 
-    struct TsUpdateGovernance {
+    struct TsTransferOwnership {
         id: u32,
-        new_governance: address
+        new_owner: address
     }
 
-    transition ts_update_governance(public id: u32, public new_governance: address) {
-        let proposal: TsUpdateGovernance = TsUpdateGovernance {
+    transition ts_update_governance(public id: u32, public new_owner: address) {
+        let proposal: TsTransferOwnership = TsTransferOwnership {
             id,
-            new_governance
+            new_owner
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service.aleo/update_governance_ts(new_governance);
+        token_service.aleo/transfer_ownership_ts(new_owner);
 
         return then finalize(proposal_hash);
     }

@@ -40,8 +40,8 @@ program wusdc_connector.aleo;
 
 
 
-struct UpdateGovernance:
-    new_governance as address;
+struct UpdateConnector:
+    new_connector as address;
 
 struct WUsdcRelease:
     receiver as address;
@@ -59,26 +59,6 @@ finalize initialize_wusdc:
     input r1 as wusdc_holding.aleo/initialize_wusdc_holding.future;
     await r0;
     await r1;
-
-
-function update_wusdc_governance:
-    input r0 as u32.public;
-    input r1 as address.public;
-    cast r1 into r2 as UpdateGovernance;
-    hash.bhp256 r2 into r3 as field;
-    call council.aleo/external_execute r0 r3 into r4;
-    call wusdc_token.aleo/update_governance_wusdc_token r1 into r5;
-    call wusdc_holding.aleo/update_governance_wusdc_holding r1 into r6;
-    async update_wusdc_governance r4 r5 r6 into r7;
-    output r7 as wusdc_connector.aleo/update_wusdc_governance.future;
-
-finalize update_wusdc_governance:
-    input r0 as council.aleo/external_execute.future;
-    input r1 as wusdc_token.aleo/update_governance_wusdc_token.future;
-    input r2 as wusdc_holding.aleo/update_governance_wusdc_holding.future;
-    await r0;
-    await r1;
-    await r2;
 
 
 
@@ -130,6 +110,26 @@ finalize wusdc_send:
     input r1 as token_service.aleo/token_send.future;
     await r0;
     await r1;
+
+
+function update_wusdc_connector:
+    input r0 as u32.public;
+    input r1 as address.public;
+    cast r1 into r2 as UpdateConnector;
+    hash.bhp256 r2 into r3 as field;
+    call council.aleo/external_execute r0 r3 into r4;
+    call wusdc_token.aleo/transfer_ownership_wusdc_token r1 into r5;
+    call wusdc_holding.aleo/transfer_ownership_wusdc_holdin r1 into r6;
+    async update_wusdc_connector r4 r5 r6 into r7;
+    output r7 as wusdc_connector.aleo/update_wusdc_connector.future;
+
+finalize update_wusdc_connector:
+    input r0 as council.aleo/external_execute.future;
+    input r1 as wusdc_token.aleo/transfer_ownership_wusdc_token.future;
+    input r2 as wusdc_holding.aleo/transfer_ownership_wusdc_holdin.future;
+    await r0;
+    await r1;
+    await r2;
 
 
 function wusdc_release:

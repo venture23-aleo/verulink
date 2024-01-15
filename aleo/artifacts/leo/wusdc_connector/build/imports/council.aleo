@@ -39,7 +39,7 @@ struct UpdateThreshold:
 
 struct TbUpdateGovernance:
     id as u32;
-    new_governance as address;
+    new_owner as address;
 
 struct TbAddAttestor:
     id as u32;
@@ -71,9 +71,9 @@ struct TbDisableService:
     id as u32;
     service as address;
 
-struct TsUpdateGovernance:
+struct TsTransferOwnership:
     id as u32;
-    new_governance as address;
+    new_owner as address;
 
 struct TsSupportChain:
     id as u32;
@@ -364,12 +364,12 @@ function tb_update_governance:
     input r1 as address.public;
     cast r0 r1 into r2 as TbUpdateGovernance;
     hash.bhp256 r2 into r3 as field;
-    call token_bridge.aleo/update_governance_tb r1 into r4;
+    call token_bridge.aleo/transfer_ownership_tb r1 into r4;
     async tb_update_governance r4 r3 into r5;
     output r5 as council.aleo/tb_update_governance.future;
 
 finalize tb_update_governance:
-    input r0 as token_bridge.aleo/update_governance_tb.future;
+    input r0 as token_bridge.aleo/transfer_ownership_tb.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -548,14 +548,14 @@ finalize tb_disable_service:
 function ts_update_governance:
     input r0 as u32.public;
     input r1 as address.public;
-    cast r0 r1 into r2 as TsUpdateGovernance;
+    cast r0 r1 into r2 as TsTransferOwnership;
     hash.bhp256 r2 into r3 as field;
-    call token_service.aleo/update_governance_ts r1 into r4;
+    call token_service.aleo/transfer_ownership_ts r1 into r4;
     async ts_update_governance r4 r3 into r5;
     output r5 as council.aleo/ts_update_governance.future;
 
 finalize ts_update_governance:
-    input r0 as token_service.aleo/update_governance_ts.future;
+    input r0 as token_service.aleo/transfer_ownership_ts.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

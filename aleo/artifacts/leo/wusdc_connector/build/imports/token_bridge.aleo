@@ -67,7 +67,7 @@ mapping attestor_settings:
 	value as u8.public;
 
 
-mapping governance_TB:
+mapping owner_TB:
 	key as boolean.public;
 	value as address.public;
 
@@ -155,20 +155,20 @@ finalize initialize_tb:
     set true into attestors[r1[2u32]];
     set true into attestors[r1[3u32]];
     set true into attestors[r1[4u32]];
-    set r2 into governance_TB[true];
+    set r2 into owner_TB[true];
 
 
-function update_governance_tb:
+function transfer_ownership_tb:
     input r0 as address.public;
-    async update_governance_tb self.caller r0 into r1;
-    output r1 as token_bridge.aleo/update_governance_tb.future;
+    async transfer_ownership_tb self.caller r0 into r1;
+    output r1 as token_bridge.aleo/transfer_ownership_tb.future;
 
-finalize update_governance_tb:
+finalize transfer_ownership_tb:
     input r0 as address.public;
     input r1 as address.public;
-    get governance_TB[true] into r2;
+    get owner_TB[true] into r2;
     assert.eq r0 r2;
-    set r1 into governance_TB[true];
+    set r1 into owner_TB[true];
 
 
 function update_attestor:
@@ -193,7 +193,7 @@ finalize add_attestor_tb:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u8.public;
-    get governance_TB[true] into r3;
+    get owner_TB[true] into r3;
     assert.eq r0 r3;
     get attestor_settings[true] into r4;
     get attestor_settings[false] into r5;
@@ -221,7 +221,7 @@ finalize remove_attestor_tb:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u8.public;
-    get governance_TB[true] into r3;
+    get owner_TB[true] into r3;
     assert.eq r0 r3;
     get attestor_settings[true] into r4;
     get attestor_settings[false] into r5;
@@ -247,7 +247,7 @@ function update_threshold_tb:
 finalize update_threshold_tb:
     input r0 as address.public;
     input r1 as u8.public;
-    get governance_TB[true] into r2;
+    get owner_TB[true] into r2;
     assert.eq r0 r2;
     get attestor_settings[false] into r3;
     gte r1 1u8 into r4;
@@ -265,7 +265,7 @@ function enable_chain_tb:
 finalize enable_chain_tb:
     input r0 as address.public;
     input r1 as u128.public;
-    get governance_TB[true] into r2;
+    get owner_TB[true] into r2;
     assert.eq r0 r2;
     set true into supported_chains[r1];
 
@@ -278,7 +278,7 @@ function disable_chain_tb:
 finalize disable_chain_tb:
     input r0 as address.public;
     input r1 as u128.public;
-    get governance_TB[true] into r2;
+    get owner_TB[true] into r2;
     assert.eq r0 r2;
     remove supported_chains[r1];
 
@@ -291,7 +291,7 @@ function enable_service_tb:
 finalize enable_service_tb:
     input r0 as address.public;
     input r1 as address.public;
-    get governance_TB[true] into r2;
+    get owner_TB[true] into r2;
     assert.eq r0 r2;
     set true into supported_services[r1];
 
@@ -304,7 +304,7 @@ function disable_service_tb:
 finalize disable_service_tb:
     input r0 as address.public;
     input r1 as address.public;
-    get governance_TB[true] into r2;
+    get owner_TB[true] into r2;
     assert.eq r0 r2;
     remove supported_services[r1];
 

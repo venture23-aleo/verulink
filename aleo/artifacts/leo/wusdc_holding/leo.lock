@@ -2,5 +2,5 @@
 name = "wusdc_token"
 network = "testnet3"
 location = "network"
-checksum = "ea47b69f7dfbaea7cb53bf2e7a4ca31d6857e1eb9f8dfae70a1ebc10e853807b"
+checksum = "7bc15f3d981d90fabd3e36ff450621fdf0ce8b5496e2ae8ff3a3afa0115ba40a"
 dependencies = []

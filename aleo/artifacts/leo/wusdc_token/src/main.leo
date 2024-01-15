@@ -22,7 +22,7 @@ program wusdc_token.aleo {
     // and `u64` as the value.
     mapping approvals: field => u64;
 
-    mapping governance_wusdc: bool => address;
+    mapping owner_wusdc: bool => address;
     const GOVERNANCE_INDEX: bool = true;
 
     ///////////////////////////////////////////
@@ -30,33 +30,32 @@ program wusdc_token.aleo {
     ///////////////////////////////////////////
 
     // Initialize can only be called once
-    // Initialize must be called from council program
     transition initialize_wusdc_token() {
         return then finalize(self.caller);
     }
 
-    finalize initialize_wusdc_token(governance: address) {
+    finalize initialize_wusdc_token(owner: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(governance_wusdc, true));
+        assert(!Mapping::contains(owner_wusdc, true));
 
         // Set the council program
-        Mapping::set(governance_wusdc, true, governance);
+        Mapping::set(owner_wusdc, true, owner);
     }
 
-    /// Update the existing governance program
-    /// Can only be called from council/governance program
-    transition update_governance_wusdc_token(public new_governance: address) {
+    /// Update the existing owner program
+    /// Can only be called from owner program
+    transition transfer_ownership_wusdc_token(public new_governance: address) {
         return then finalize(self.caller, new_governance);
     }
 
-    finalize update_governance_wusdc_token(from: address, new_governance: address) {
-        // Get the governance address
+    finalize transfer_ownership_wusdc_token(from: address, new_governance: address) {
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_wusdc, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_wusdc, true);
+        assert_eq(from, owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(governance_wusdc, true, new_governance);
+        Mapping::set(owner_wusdc, true, new_governance);
     }
 
 
@@ -73,12 +72,12 @@ program wusdc_token.aleo {
     }
 
     finalize mint_public(minter: address, receiver: address, amount: u64) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_wusdc, true);
+        let owner: address = Mapping::get(owner_wusdc, true);
 
-        // Only governance can mint
-        assert_eq(minter, governance);
+        // Only owner can mint
+        assert_eq(minter, owner);
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.
@@ -96,12 +95,12 @@ program wusdc_token.aleo {
     }
 
     finalize burn_public(burner: address, receiver: address, amount: u64) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_wusdc, true);
+        let owner: address = Mapping::get(owner_wusdc, true);
 
         // Only governace can burn
-        assert_eq(burner, governance);
+        assert_eq(burner, owner);
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.

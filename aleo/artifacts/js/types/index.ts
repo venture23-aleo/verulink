@@ -1,9 +1,4 @@
 import {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service';
-import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -39,6 +34,11 @@ import {
   InPacketFullScreeningKeyLeo
 } from './token_bridge';
 import {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo
+} from './token_service';
+import {
   ProposalSign,
   leoProposalSignSchema,
   ProposalSignLeo,
@@ -78,9 +78,9 @@ import {
   TbDisableService,
   leoTbDisableServiceSchema,
   TbDisableServiceLeo,
-  TsUpdateGovernance,
-  leoTsUpdateGovernanceSchema,
-  TsUpdateGovernanceLeo,
+  TsTransferOwnership,
+  leoTsTransferOwnershipSchema,
+  TsTransferOwnershipLeo,
   TsSupportChain,
   leoTsSupportChainSchema,
   TsSupportChainLeo,
@@ -112,18 +112,15 @@ import {
   ApprovalLeo
 } from './wusdc_token';
 import {
-  UpdateGovernance,
-  leoUpdateGovernanceSchema,
-  UpdateGovernanceLeo,
+  UpdateConnector,
+  leoUpdateConnectorSchema,
+  UpdateConnectorLeo,
   WUsdcRelease,
   leoWUsdcReleaseSchema,
   WUsdcReleaseLeo
 } from './wusdc_connector';
 
 export {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -157,6 +154,9 @@ export {
   InPacketFullScreeningKey,
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo,
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo,
   ProposalSign,
   leoProposalSignSchema,
   ProposalSignLeo,
@@ -196,9 +196,9 @@ export {
   TbDisableService,
   leoTbDisableServiceSchema,
   TbDisableServiceLeo,
-  TsUpdateGovernance,
-  leoTsUpdateGovernanceSchema,
-  TsUpdateGovernanceLeo,
+  TsTransferOwnership,
+  leoTsTransferOwnershipSchema,
+  TsTransferOwnershipLeo,
   TsSupportChain,
   leoTsSupportChainSchema,
   TsSupportChainLeo,
@@ -226,9 +226,9 @@ export {
   Approval,
   leoApprovalSchema,
   ApprovalLeo,
-  UpdateGovernance,
-  leoUpdateGovernanceSchema,
-  UpdateGovernanceLeo,
+  UpdateConnector,
+  leoUpdateConnectorSchema,
+  UpdateConnectorLeo,
   WUsdcRelease,
   leoWUsdcReleaseSchema,
   WUsdcReleaseLeo,

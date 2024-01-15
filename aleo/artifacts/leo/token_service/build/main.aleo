@@ -22,7 +22,7 @@ mapping token_service_contracts:
 	value as [u8; 32u32].public;
 
 
-mapping governance_TS:
+mapping owner_TS:
 	key as boolean.public;
 	value as address.public;
 
@@ -70,23 +70,23 @@ function initialize_ts:
 
 finalize initialize_ts:
     input r0 as address.public;
-    contains governance_TS[true] into r1;
+    contains owner_TS[true] into r1;
     not r1 into r2;
     assert.eq r2 true;
-    set r0 into governance_TS[true];
+    set r0 into owner_TS[true];
 
 
-function update_governance_ts:
+function transfer_ownership_ts:
     input r0 as address.public;
-    async update_governance_ts self.caller r0 into r1;
-    output r1 as token_service.aleo/update_governance_ts.future;
+    async transfer_ownership_ts self.caller r0 into r1;
+    output r1 as token_service.aleo/transfer_ownership_ts.future;
 
-finalize update_governance_ts:
+finalize transfer_ownership_ts:
     input r0 as address.public;
     input r1 as address.public;
-    get governance_TS[true] into r2;
+    get owner_TS[true] into r2;
     assert.eq r0 r2;
-    set r1 into governance_TS[true];
+    set r1 into owner_TS[true];
 
 
 function support_chain_ts:
@@ -99,7 +99,7 @@ finalize support_chain_ts:
     input r0 as address.public;
     input r1 as u128.public;
     input r2 as [u8; 32u32].public;
-    get governance_TS[true] into r3;
+    get owner_TS[true] into r3;
     assert.eq r0 r3;
     set r2 into token_service_contracts[r1];
 
@@ -112,7 +112,7 @@ function remove_chain_ts:
 finalize remove_chain_ts:
     input r0 as address.public;
     input r1 as u128.public;
-    get governance_TS[true] into r2;
+    get owner_TS[true] into r2;
     assert.eq r0 r2;
     remove token_service_contracts[r1];
 
@@ -133,7 +133,7 @@ finalize support_token_ts:
     input r3 as u64.public;
     input r4 as u16.public;
     input r5 as u32.public;
-    get governance_TS[true] into r6;
+    get owner_TS[true] into r6;
     assert.eq r0 r6;
     cast r4 r5 into r7 as OutgoingPercentageInTime;
     set r7 into max_outgoing_percentage[r1];
@@ -151,7 +151,7 @@ finalize update_token_connector_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as address.public;
-    get governance_TS[true] into r3;
+    get owner_TS[true] into r3;
     assert.eq r0 r3;
     set r2 into token_connectors[r1];
 
@@ -164,7 +164,7 @@ function remove_token_ts:
 finalize remove_token_ts:
     input r0 as address.public;
     input r1 as address.public;
-    get governance_TS[true] into r2;
+    get owner_TS[true] into r2;
     assert.eq r0 r2;
     remove max_outgoing_percentage[r1];
     remove minimum_transfers[r1];
@@ -181,7 +181,7 @@ finalize update_token_connector:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as address.public;
-    get governance_TS[true] into r3;
+    get owner_TS[true] into r3;
     assert.eq r0 r3;
     set r2 into token_connectors[r1];
 
@@ -196,7 +196,7 @@ finalize update_minimum_transfer_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u64.public;
-    get governance_TS[true] into r3;
+    get owner_TS[true] into r3;
     assert.eq r0 r3;
     set r2 into minimum_transfers[r1];
 
@@ -215,7 +215,7 @@ finalize update_outgoing_percentage_ts:
     input r1 as address.public;
     input r2 as u16.public;
     input r3 as u32.public;
-    get governance_TS[true] into r4;
+    get owner_TS[true] into r4;
     assert.eq r0 r4;
     cast r2 r3 into r5 as OutgoingPercentageInTime;
     set r5 into max_outgoing_percentage[r1];

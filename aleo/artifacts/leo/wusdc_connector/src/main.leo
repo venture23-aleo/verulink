@@ -18,24 +18,6 @@ program wusdc_connector.aleo {
         wusdc_holding.aleo/initialize_wusdc_holding();
     }
 
-    ///////////////////////////////
-    ///// Update Governance ///////
-    ///////////////////////////////
-
-    /// Update the existing governance program
-    /// Can only be called from council/governance program
-    struct UpdateGovernance {
-        new_governance: address
-    }
-    transition update_wusdc_governance(public proposal_id: u32, public new_governance: address) {
-        let update_governance: UpdateGovernance = UpdateGovernance {
-            new_governance
-        };
-        council.aleo/external_execute(proposal_id, BHP256::hash_to_field(update_governance));
-        wusdc_token.aleo/update_governance_wusdc_token(new_governance);
-        wusdc_holding.aleo/update_governance_wusdc_holding(new_governance);
-    }
-
     /// Receive Wrapped USDC
     ///
     /// # Arguments:
@@ -70,6 +52,27 @@ program wusdc_connector.aleo {
 
     }
 
+    ///////////////////////////////
+    ///// Update Connector ////////
+    ///////////////////////////////
+
+    /// Update the existing connector program
+    /// Can only be called if proposal with enough votes exist on council program
+    struct UpdateConnector {
+        new_connector: address
+    }
+    transition update_wusdc_connector(public proposal_id: u32, public new_connector: address) {
+        let update_connector: UpdateConnector = UpdateConnector {
+            new_connector
+        };
+        council.aleo/external_execute(proposal_id, BHP256::hash_to_field(update_connector));
+        wusdc_token.aleo/transfer_ownership_wusdc_token(new_connector);
+        wusdc_holding.aleo/transfer_ownership_wusdc_holdin(new_connector);
+    }
+
+
+    /// Release fund from holding program
+    /// Can only be called if proposal with enough votes exist on council program
     struct WUsdcRelease {
         receiver: address,
         amount: u64

@@ -71,13 +71,13 @@ export class Wusdc_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_wusdc_token(r0: string) {
+  async transfer_ownership_wusdc_token(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_wusdc_token',
+      transition: 'transfer_ownership_wusdc_token',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -238,13 +238,13 @@ export class Wusdc_tokenContract {
     return leo2js.u64(result);
   }
 
-  async governance_wusdc(key: boolean): Promise < string > {
+  async owner_wusdc(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'governance_wusdc',
+      transition: 'owner_wusdc',
       params,
     });
     return leo2js.address(result);

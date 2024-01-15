@@ -101,13 +101,13 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_tb(r0: string) {
+  async transfer_ownership_tb(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_tb',
+      transition: 'transfer_ownership_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -273,13 +273,13 @@ export class Token_bridgeContract {
     return leo2js.u8(result);
   }
 
-  async governance_TB(key: boolean): Promise < string > {
+  async owner_TB(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'governance_TB',
+      transition: 'owner_TB',
       params,
     });
     return leo2js.address(result);

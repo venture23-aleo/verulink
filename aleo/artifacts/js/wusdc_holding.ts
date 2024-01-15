@@ -59,13 +59,13 @@ export class Wusdc_holdingContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_wusdc_holding(r0: string) {
+  async transfer_ownership_wusdc_holdin(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_wusdc_holding',
+      transition: 'transfer_ownership_wusdc_holdin',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -97,13 +97,13 @@ export class Wusdc_holdingContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async governance_holding(key: boolean): Promise < string > {
+  async owner_holding(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'governance_holding',
+      transition: 'owner_holding',
       params,
     });
     return leo2js.address(result);

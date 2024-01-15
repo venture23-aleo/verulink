@@ -21,14 +21,14 @@ import {
   LeoArray
 } from "./leo-types";
 
-export interface UpdateGovernance {
-  new_governance: string;
+export interface UpdateConnector {
+  new_connector: string;
 }
 
-export const leoUpdateGovernanceSchema = z.object({
-  new_governance: leoAddressSchema,
+export const leoUpdateConnectorSchema = z.object({
+  new_connector: leoAddressSchema,
 });
-export type UpdateGovernanceLeo = z.infer < typeof leoUpdateGovernanceSchema > ;
+export type UpdateConnectorLeo = z.infer < typeof leoUpdateConnectorSchema > ;
 
 export interface WUsdcRelease {
   receiver: string;

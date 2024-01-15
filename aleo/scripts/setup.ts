@@ -45,7 +45,7 @@ const setup = async () => {
     [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
     councilAddress
   );
-  await tokenService.initialize_ts(councilAddress, councilAddress);
+  await tokenService.initialize_ts(councilAddress);
 
   // TokenBridge: Add Ethereum Chain
   proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;

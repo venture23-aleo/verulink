@@ -34,7 +34,7 @@ describe("Token Service", () => {
       // TODO: figure out why unskipping this fails consume below
       let isTokenServiceInitialized = true;
       try {
-        const governanceAddr = tokenService.governance_TS(true);
+        const governanceAddr = tokenService.owner_TS(true);
       } catch (err) {
         isTokenServiceInitialized = false;
       }

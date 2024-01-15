@@ -1,7 +1,7 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  UpdateGovernance,
+  UpdateConnector,
   WUsdcRelease,
   ProposalSign,
   ExternalProposal,
@@ -16,7 +16,7 @@ import {
   TbDisableChain,
   TbEnableService,
   TbDisableService,
-  TsUpdateGovernance,
+  TsTransferOwnership,
   TsSupportChain,
   TsRemoveChain,
   TsSupportToken,
@@ -40,7 +40,7 @@ import {
   Approval,
 } from "./types";
 import {
-  getUpdateGovernanceLeo,
+  getUpdateConnectorLeo,
   getWUsdcReleaseLeo,
   getProposalSignLeo,
   getExternalProposalLeo,
@@ -55,7 +55,7 @@ import {
   getTbDisableChainLeo,
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
-  getTsUpdateGovernanceLeo,
+  getTsTransferOwnershipLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
@@ -79,7 +79,7 @@ import {
   getApprovalLeo,
 } from './js2leo';
 import {
-  getUpdateGovernance,
+  getUpdateConnector,
   getWUsdcRelease,
   getProposalSign,
   getExternalProposal,
@@ -94,7 +94,7 @@ import {
   getTbDisableChain,
   getTbEnableService,
   getTbDisableService,
-  getTsUpdateGovernance,
+  getTsTransferOwnership,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
@@ -176,19 +176,6 @@ export class Wusdc_connectorContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_wusdc_governance(r0: number, r1: string) {
-    const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.address(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'update_wusdc_governance',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
   async wusdc_receive(r0: Array < number > , r1: string, r2: string, r3: bigint, r4: number, r5: number) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.address(r1);
@@ -214,6 +201,19 @@ export class Wusdc_connectorContract {
     const result = await zkRun({
       config: this.config,
       transition: 'wusdc_send',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_wusdc_connector(r0: number, r1: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_wusdc_connector',
       params,
     });
     if (this.config.mode === "execute") return result;

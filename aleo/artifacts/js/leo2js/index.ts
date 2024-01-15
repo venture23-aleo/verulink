@@ -1,7 +1,4 @@
 import {
-  getOutgoingPercentageInTime
-} from './token_service';
-import {
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -15,6 +12,9 @@ import {
   getInPacketFullScreeningKey
 } from './token_bridge';
 import {
+  getOutgoingPercentageInTime
+} from './token_service';
+import {
   getProposalSign,
   getExternalProposal,
   getAddMember,
@@ -28,7 +28,7 @@ import {
   getTbDisableChain,
   getTbEnableService,
   getTbDisableService,
-  getTsUpdateGovernance,
+  getTsTransferOwnership,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
@@ -42,12 +42,11 @@ import {
   getApproval
 } from './wusdc_token';
 import {
-  getUpdateGovernance,
+  getUpdateConnector,
   getWUsdcRelease
 } from './wusdc_connector';
 
 export {
-  getOutgoingPercentageInTime,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -59,6 +58,7 @@ export {
   getPacketIdWithAttestor,
   getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
+  getOutgoingPercentageInTime,
   getProposalSign,
   getExternalProposal,
   getAddMember,
@@ -72,7 +72,7 @@ export {
   getTbDisableChain,
   getTbEnableService,
   getTbDisableService,
-  getTsUpdateGovernance,
+  getTsTransferOwnership,
   getTsSupportChain,
   getTsRemoveChain,
   getTsSupportToken,
@@ -82,6 +82,6 @@ export {
   getTsUpdateOutgoingPercentage,
   gettoken,
   getApproval,
-  getUpdateGovernance,
+  getUpdateConnector,
   getWUsdcRelease,
 };

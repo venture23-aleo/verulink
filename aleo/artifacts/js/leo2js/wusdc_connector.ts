@@ -1,14 +1,14 @@
 import {
-  UpdateGovernance,
-  UpdateGovernanceLeo,
+  UpdateConnector,
+  UpdateConnectorLeo,
   WUsdcRelease,
   WUsdcReleaseLeo,
 } from "../types";
 
 import * as leo2js from "./common";
-export function getUpdateGovernance(updateGovernance: UpdateGovernanceLeo): UpdateGovernance {
-  const result: UpdateGovernance = {
-    new_governance: leo2js.address(updateGovernance.new_governance),
+export function getUpdateConnector(updateConnector: UpdateConnectorLeo): UpdateConnector {
+  const result: UpdateConnector = {
+    new_connector: leo2js.address(updateConnector.new_connector),
   }
   return result;
 }

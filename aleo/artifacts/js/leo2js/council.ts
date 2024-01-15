@@ -25,8 +25,8 @@ import {
   TbEnableServiceLeo,
   TbDisableService,
   TbDisableServiceLeo,
-  TsUpdateGovernance,
-  TsUpdateGovernanceLeo,
+  TsTransferOwnership,
+  TsTransferOwnershipLeo,
   TsSupportChain,
   TsSupportChainLeo,
   TsRemoveChain,
@@ -90,7 +90,7 @@ export function getUpdateThreshold(updateThreshold: UpdateThresholdLeo): UpdateT
 export function getTbUpdateGovernance(tbUpdateGovernance: TbUpdateGovernanceLeo): TbUpdateGovernance {
   const result: TbUpdateGovernance = {
     id: leo2js.u32(tbUpdateGovernance.id),
-    new_governance: leo2js.address(tbUpdateGovernance.new_governance),
+    new_owner: leo2js.address(tbUpdateGovernance.new_owner),
   }
   return result;
 }
@@ -153,10 +153,10 @@ export function getTbDisableService(tbDisableService: TbDisableServiceLeo): TbDi
   return result;
 }
 
-export function getTsUpdateGovernance(tsUpdateGovernance: TsUpdateGovernanceLeo): TsUpdateGovernance {
-  const result: TsUpdateGovernance = {
-    id: leo2js.u32(tsUpdateGovernance.id),
-    new_governance: leo2js.address(tsUpdateGovernance.new_governance),
+export function getTsTransferOwnership(tsTransferOwnership: TsTransferOwnershipLeo): TsTransferOwnership {
+  const result: TsTransferOwnership = {
+    id: leo2js.u32(tsTransferOwnership.id),
+    new_owner: leo2js.address(tsTransferOwnership.new_owner),
   }
   return result;
 }

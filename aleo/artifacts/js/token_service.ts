@@ -69,13 +69,13 @@ export class Token_serviceContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_governance_ts(r0: string) {
+  async transfer_ownership_ts(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_governance_ts',
+      transition: 'transfer_ownership_ts',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -237,13 +237,13 @@ export class Token_serviceContract {
     return leo2js.array(result, leo2js.u8);
   }
 
-  async governance_TS(key: boolean): Promise < string > {
+  async owner_TS(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'governance_TS',
+      transition: 'owner_TS',
       params,
     });
     return leo2js.address(result);

@@ -120,9 +120,9 @@ program token_bridge.aleo {
     mapping attestor_settings: bool => u8;
 
     // mapping used as variable
-    // true: address of council 
+    // true: address of owner 
     // false: Null
-    mapping governance_TB: bool => address;
+    mapping owner_TB: bool => address;
 
     mapping attestors: address => bool;
 
@@ -173,8 +173,8 @@ program token_bridge.aleo {
     //////////////////////////////
 
     /// Initialize can only be called once
-    /// Initialize must be called from council program
-    transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public council: address) {
+    /// Initialize must be called from owner program
+    transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public owner: address) {
 
         // Sanity check for threshold
         assert(threshold >= 1u8 && threshold <= 5u8 );
@@ -194,10 +194,10 @@ program token_bridge.aleo {
 
         assert_neq(initial_attestors[3u8], initial_attestors[4u8]);
 
-        return then finalize(threshold, initial_attestors, council);
+        return then finalize(threshold, initial_attestors, owner);
     }
 
-    finalize initialize_tb(threshold: u8, initial_attestors: [address; 5], council: address) {
+    finalize initialize_tb(threshold: u8, initial_attestors: [address; 5], owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(attestor_settings, THRESHOLD_INDEX));
 
@@ -209,28 +209,28 @@ program token_bridge.aleo {
             Mapping::set(attestors, initial_attestors[i], true);
         }
 
-        // Set the governance program
-        Mapping::set(governance_TB, true, council);
+        // Set the owner
+        Mapping::set(owner_TB, true, owner);
     }
 
-    ///////////////////////////////
-    ///// Update Governance ///////
-    ///////////////////////////////
+    ////////////////////////////////
+    ///// Transfer Ownership ///////
+    ////////////////////////////////
 
-    /// Update the existing governance program
-    /// Can only be called from council/governance program
-    transition update_governance_tb(public new_governance: address) {
-        return then finalize(self.caller, new_governance);
+    /// Update the existing owner
+    /// Can only be called from owner
+    transition transfer_ownership_tb(public new_owner: address) {
+        return then finalize(self.caller, new_owner);
     }
 
-    finalize update_governance_tb(from: address, new_governance: address) {
-        // Get the governance address
+    finalize transfer_ownership_tb(from: address, new_owner: address) {
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let current_owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, current_owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(governance_TB, true, new_governance);
+        Mapping::set(owner_TB, true, new_owner);
     }
 
     //////////////////////////////
@@ -248,16 +248,16 @@ program token_bridge.aleo {
 
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
-    /// Can only be called from council/governance program
+    /// Can only be called from owner
     transition add_attestor_tb(public new_attestor: address, new_threshold: u8) {
         return then finalize(self.caller, new_attestor, new_threshold);
     }
 
     finalize add_attestor_tb(from: address, new_attestor: address, new_threshold: u8) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         let current_threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
         let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
@@ -270,16 +270,16 @@ program token_bridge.aleo {
     }
 
     /// Remove an existing attestor from the bridge program
-    /// Can only be called from council/governance program
+    /// Can only be called from owner
     transition remove_attestor_tb(public attestor: address, new_threshold: u8) {
         return then finalize(self.caller, attestor, new_threshold);
     }
 
     finalize remove_attestor_tb(from: address, attestor: address, new_threshold: u8) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         let current_threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
         let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
@@ -297,17 +297,17 @@ program token_bridge.aleo {
     //////////////////////////////
 
     /// Update the existing threshold for a packet to be considered valid
-    /// Can only be called from council/governance program
+    /// Can only be called from owner
     transition update_threshold_tb(public new_threshold: u8) {
         assert(new_threshold >= 1u8);
         return then finalize(self.caller, new_threshold);
     }
 
     finalize update_threshold_tb(from: address, new_threshold: u8) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
         assert(new_threshold >= 1u8 && new_threshold <= total_attestors);
@@ -326,10 +326,10 @@ program token_bridge.aleo {
     }
 
     finalize enable_chain_tb(from: address, chain_id: u128) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         Mapping::set(supported_chains, chain_id, true);
     }
@@ -340,10 +340,10 @@ program token_bridge.aleo {
     }
 
     finalize disable_chain_tb(from: address, chain_id: u128) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         // If the chain_id is not supported, this fails
         Mapping::remove(supported_chains, chain_id);
@@ -356,32 +356,32 @@ program token_bridge.aleo {
 
     /// Add a new supported service program to the bridge program
     /// Only the supported service program can call publish/consume on bridge program
-    /// Can only be called from council/governance program
+    /// Can only be called from owner
     transition enable_service_tb(public service: address) {
         return then finalize(self.caller, service);
     }
 
     finalize enable_service_tb(from: address, service: address) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         Mapping::set(supported_services, service, true);
     }
 
     /// Remove an existing service program from the bridge program
     /// Removing the program program prevents it from calling publish/consume on bridge program
-    /// Can only be called from council/governance program
+    /// Can only be called from owner
     transition disable_service_tb(public service: address) {
         return then finalize(self.caller, service);
     }
 
     finalize disable_service_tb(from: address, service: address) {
-        // Get the governance address
+        // Get the owner address
         // If program not initialized, this fails
-        let governance: address = Mapping::get(governance_TB, true);
-        assert_eq(from, governance);
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
 
         // If service does not exist, this is expected to fail
         Mapping::remove(supported_services, service);

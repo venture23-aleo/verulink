@@ -1,7 +1,4 @@
 import {
-  getOutgoingPercentageInTimeLeo
-} from './token_service';
-import {
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -15,6 +12,9 @@ import {
   getInPacketFullScreeningKeyLeo
 } from './token_bridge';
 import {
+  getOutgoingPercentageInTimeLeo
+} from './token_service';
+import {
   getProposalSignLeo,
   getExternalProposalLeo,
   getAddMemberLeo,
@@ -28,7 +28,7 @@ import {
   getTbDisableChainLeo,
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
-  getTsUpdateGovernanceLeo,
+  getTsTransferOwnershipLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
@@ -42,12 +42,11 @@ import {
   getApprovalLeo
 } from './wusdc_token';
 import {
-  getUpdateGovernanceLeo,
+  getUpdateConnectorLeo,
   getWUsdcReleaseLeo
 } from './wusdc_connector';
 
 export {
-  getOutgoingPercentageInTimeLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -59,6 +58,7 @@ export {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
+  getOutgoingPercentageInTimeLeo,
   getProposalSignLeo,
   getExternalProposalLeo,
   getAddMemberLeo,
@@ -72,7 +72,7 @@ export {
   getTbDisableChainLeo,
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
-  getTsUpdateGovernanceLeo,
+  getTsTransferOwnershipLeo,
   getTsSupportChainLeo,
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
@@ -82,6 +82,6 @@ export {
   getTsUpdateOutgoingPercentageLeo,
   gettokenLeo,
   getApprovalLeo,
-  getUpdateGovernanceLeo,
+  getUpdateConnectorLeo,
   getWUsdcReleaseLeo,
 };
