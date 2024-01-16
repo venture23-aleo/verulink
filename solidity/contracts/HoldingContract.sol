@@ -68,7 +68,7 @@ contract Holding is Ownable, Initializable, Upgradeable {
         emit Released(user, token, amount);
         if(token == address(0)) {
             // eth transfer
-            (bool sent, bytes memory data) = user.call{value: amount}("");
+            (bool sent,) = user.call{value: amount}("");
             require(sent, "ETH Released Failed");
         }else {
             require(IERC20(token).transfer(user, amount), "ERC20 Release Failed");

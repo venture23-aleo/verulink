@@ -10,7 +10,7 @@ contract AttestorManager is Ownable{
     mapping(address => bool) private attestors;
     uint256 public quorumRequired;
 
-    function isAttestor(address attestor) public view returns (bool) {
+    function isAttestor(address attestor) public virtual view returns (bool) {
         return attestors[attestor];
     }
 
