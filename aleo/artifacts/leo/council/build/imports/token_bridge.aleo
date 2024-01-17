@@ -116,10 +116,6 @@ mapping sequences:
 	key as u128.public;
 	value as u64.public;
 
-
-
-
-
 function initialize_tb:
     input r0 as u8.public;
     input r1 as [address; 5u32].public;

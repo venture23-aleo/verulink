@@ -48,7 +48,6 @@ program token_bridge.aleo {
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         receiver: [u8; 32],
         // Amount to unlock on origin chain
-        // TODO: u128
         amount: u128
     }
 
@@ -159,15 +158,10 @@ program token_bridge.aleo {
     }
 
 
-    // Returns the chain id of the network where this program is deployed
-    inline this_chain_id() -> u128 {
-        return 6694886634401u128;
-    }
+    // The chain id of the Aleo network where this program is deployed
+    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
 
-    // TODO: store as a variable
-    inline version() -> u8 {
-        return 0u8;
-    }
+    const VERSION: u8 = 0u8;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -407,11 +401,11 @@ program token_bridge.aleo {
         // So construct source struct on `finalize` instead
         // Issue: https://github.com/AleoHQ/leo/issues/3269
         // let source: AleoProgram = AleoProgram {
-        //     chain_id: this_chain_id(),
+        //     chain_id: ALEO_CHAIN_ID,
         //     addr: self.caller
         // };
 
-        return then finalize (this_chain_id(), self.caller, destination_chain_id, destination_service_contract, token, sender, receiver, amount);
+        return then finalize (ALEO_CHAIN_ID, self.caller, destination_chain_id, destination_service_contract, token, sender, receiver, amount);
     }
 
     finalize publish(source_chain_id: u128, source_service_program: address, destination_chain_id: u128, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u128) {
@@ -430,7 +424,7 @@ program token_bridge.aleo {
         let target_sequence_no: u64 = Mapping::get_or_use(sequences, destination_chain_id, 1u64);
         
         // Get Sequence number of the bridge
-        let bridge_sequence_no: u64 = Mapping::get_or_use(sequences, this_chain_id(), 1u64); 
+        let bridge_sequence_no: u64 = Mapping::get_or_use(sequences, ALEO_CHAIN_ID, 1u64); 
 
         let destination: ForeignContract = ForeignContract {
             chain_id: destination_chain_id,
@@ -438,7 +432,7 @@ program token_bridge.aleo {
         };
 
         let packet: OutPacket = OutPacket {
-            version: version(),
+            version: VERSION,
             sequence: target_sequence_no,
             source,
             destination,
@@ -502,7 +496,7 @@ program token_bridge.aleo {
     finalize attest(chain_id: u128, sequence: u64, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: PacketIdWithAttestor, packet: InPacketFull) {
 
         // Assert that the packet is being sent to this chain
-        assert_eq(packet.destination.chain_id, this_chain_id());
+        assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
 
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, packet.source.chain_id));
@@ -510,7 +504,7 @@ program token_bridge.aleo {
         // Assert that the attestors signing are valid
         assert(Mapping::get(attestors, attestor));
         
-        // TODO: Ensure attestor can only vote once for given (chain_id, sequence)
+        // Assert attestor can only vote once for given (chain_id, sequence)
         assert(!Mapping::contains(in_packet_attestors, packet_attestor_key));
 
         // Mark the packet as signed by attestor
@@ -580,7 +574,7 @@ program token_bridge.aleo {
         };
 
         let destination: AleoProgram = AleoProgram {
-            chain_id: this_chain_id(),
+            chain_id: ALEO_CHAIN_ID,
             addr: self.caller
         };
 
@@ -594,7 +588,7 @@ program token_bridge.aleo {
         let msg_hash: field = BHP256::hash_to_field(message);
 
         let in_packet: InPacket = InPacket {
-            version: version(),
+            version: VERSION,
             sequence,
             source,
             destination,
