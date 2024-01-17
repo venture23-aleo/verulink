@@ -4,11 +4,12 @@ pragma solidity ^0.8.19;
 import "../../common/libraries/Lib.sol";
 
 contract OutgoingPacketManagerImpl  {
-    
+    using PacketLibrary for PacketLibrary.OutPacket;
+
     event PacketDispatched(PacketLibrary.OutPacket packet);
     
-    // chainId => sequence => Packet
-    mapping(uint256 => mapping(uint256 => PacketLibrary.OutPacket)) public outgoingPackets;
+    // chainId => sequence => Packet hash
+    mapping(uint256 => mapping(uint256 => bytes32)) public outgoingPackets;
     // chainId => sequence number
     mapping(uint256 => uint256) public sequences;
 
@@ -21,7 +22,7 @@ contract OutgoingPacketManagerImpl  {
         packet.version = 1;
         packet.sequence = _incrementSequence(packet.destTokenService.chainId);
 
-        outgoingPackets[packet.destTokenService.chainId][packet.sequence] = packet;
+        outgoingPackets[packet.destTokenService.chainId][packet.sequence] = packet.hash();
         emit PacketDispatched(packet);
     }    
 }

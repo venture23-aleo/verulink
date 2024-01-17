@@ -5,7 +5,7 @@ import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
 abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
-    using PacketLibrary for PacketLibrary.InPacket;
+    // using PacketLibrary for PacketLibrary.InPacket;
 
     event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash, PacketLibrary.Vote _quorum);
 
