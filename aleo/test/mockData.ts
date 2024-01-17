@@ -10,7 +10,9 @@ import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from "./utils";
 // import { hash } from "aleo-hasher";
 
 export const ethChainId = encodeNetworkChainId("evm", 1);
+export const falseEthChainId = encodeNetworkChainId("evm", 2);
 export const aleoChainId = encodeNetworkChainId("aleo", 1);
+export const falseAleoChainId = encodeNetworkChainId("aleo", 2);
 
 // // USDC Contract Address on Ethereum
 
@@ -40,7 +42,12 @@ export const aleoUser2 = "aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m
 export const aleoUser3 = "aleo1ashyu96tjwe63u0gtnnv8z5lhapdu4l5pjsl2kha7fv7hvz2eqxs5dz0rg"
 export const aleoUser4 = "aleo12ux3gdauck0v60westgcpqj7v8rrcr3v346e4jtq04q7kkt22czsh808v2"
 export const aleoUser5 = "aleo18s6w7g80y4tdwhthmg5js7yhmud4xqfeq7qdpsfmg099rrv7vq8qkqq3j7"
+export const aleoUser6 = "aleo1uvyfal66e5ze3tg3cmxzcqfdtamedae00efw3d82pgy4jrnu9c8q8kg5l8"
+export const aleoUser7 = "aleo12pe8c6q7zguznclw2zgkj20lyqj0h6zemqx38rpyevnxlcycuc9q0x8c3a"
 
 export const councilThreshold = 1;
 
 export const TOTAL_PROPOSALS_INDEX = 0;
+
+export const incomingSequence = 2;
+
