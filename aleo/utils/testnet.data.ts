@@ -3,31 +3,32 @@ import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from "../utils/util
 const sepoliaChainId = 11155111
 export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 export const aleoChainId = encodeNetworkChainId("aleo", 3);
+console.log("Sepolia Chain Id", ethChainId)
+console.log("Aleo Testnet3 Id", aleoChainId)
 
 // USDC Contract Address on Ethereum
 export const usdcContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
-export const wusdcTokenAddr = "aleo1qg0azcck30ys6598lpmfx9xpfazj9w7ma973g7l5p7eka0p4jq9s2c3vk2";
-
-export const wusdcConnectorAddr = "aleo1l9a39hr7kyuccdw5m3lmz45qjzx3v3mz5a2jfveqkztyr0u0p58s79tre8";
-export const wusdcHoldingAddr = "aleo16dyvhwsrfmx5eru9kffhn6df8cr3v3h06apqzsrphl6h03wa2crq43djr6"
+export const wusdcTokenAddr = "aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j";
+export const wusdcConnectorAddr = "aleo19aner4k7m4nlg9av2t7cl3tpdlvytzc6wgwwp36pm76hmw4jmspsmcqte0";
+export const wusdcHoldingAddr = "aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr793djuxgsxsnf37q8"
 
 // // User Address on Ethereum
 export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 // // Token Service Contract Address on Ethereum
-export const ethTsContract = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+export const ethTsContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
 // // Token Service Contract on Aleo
-export const aleoTsContract =
-  "aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3";
+export const aleoTsProgramAddr =
+  "aleo1z0fa6zr78sppt6ph4kaardmkjn2vme55n8hq8ej2ds7rayxzvq8s6p9p3y";
 
 // // Address of the council Program
-export const councilProgram =
-  "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
+export const councilProgramAddr =
+  "aleo1d35t6tsp8ne403vj5y9xefjeac8536en5el5f9gpkyt55wuqqqqqpuldsh";
 
 // // User address on Aleo
-export const aleoUser1 = "aleo1zyt7ldc0t3ung0h5sg4k65wjtnmsa6hatagjccxr7s84h93tpuxqf9zse9";
+export const aleoUser1 = "aleo1s567xd2j2ale8t008gf8cx82pn0784l2c22c7uemxtqcuf973cyqc6cz6t";
 export const aleoUser2 = "aleo1tvuwdl7remyvccqypa5lzehrdd5tnqpuy49jv7h6uw5au67pkupsjljwgn"
 export const aleoUser3 = "aleo154t7wtj5putqrkjaep99zztd7za23m7jnkh6csc328aqww8c6srsqcpe8k"
 export const aleoUser4 = "aleo1u4y9ntu2yegz29w4rppwvyzddyfw6scnzklf59q4ngjs5h6vqvfqqwad9n"

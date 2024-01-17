@@ -5,8 +5,8 @@ import council_v0001.aleo;
 
 program wusdc_connector_v0001.aleo {
 
-    const WUSDC_TOKEN: address = aleo1qg0azcck30ys6598lpmfx9xpfazj9w7ma973g7l5p7eka0p4jq9s2c3vk2;
-    const WUSDC_HOLDING: address = aleo16dyvhwsrfmx5eru9kffhn6df8cr3v3h06apqzsrphl6h03wa2crq43djr6;
+    const WUSDC_TOKEN: address = aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j;
+    const WUSDC_HOLDING: address = aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr793djuxgsxsnf37q8;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -91,9 +91,9 @@ program wusdc_connector_v0001.aleo {
 
     // Chain Id of the network
     // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator
-    // For Ethereum mainnet, chain_id: `evm:1` -> 27236160417
+    // For Ethereum Sepolia testnet, chain_id: `eth:11155111` -> 28556963657430695
     inline origin_chain_id() -> u128 {
-        return 27236160417u128;
+        return 28556963657430695u128;
     }
 
     // Contract Address of the original token on the origin chain

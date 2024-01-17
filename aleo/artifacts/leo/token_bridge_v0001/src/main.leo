@@ -160,7 +160,7 @@ program token_bridge_v0001.aleo {
 
 
     // The chain id of the Aleo network where this program is deployed
-    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
+    const ALEO_CHAIN_ID: u128 = 6694886634403u128;
 
     const VERSION: u8 = 0u8;
 

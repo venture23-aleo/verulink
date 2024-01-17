@@ -2,7 +2,7 @@
 name = "token_bridge_v0001"
 network = "testnet3"
 location = "network"
-checksum = "8d71aa7fb8d3e7ac75903e9045cbcf944c5d65ce554de68ec8e6d3b540df3d54"
+checksum = "dcaee4e1b0c20f3cb9e905eec4a34493b7bdd726c9127fa522848e9b3f9bca47"
 dependencies = []
 
 [[package]]

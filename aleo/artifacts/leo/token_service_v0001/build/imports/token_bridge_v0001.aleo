@@ -313,7 +313,7 @@ function publish:
     input r4 as [u8; 32u32].public;
     input r5 as u128.public;
     assert.neq self.signer self.caller;
-    async publish 6694886634401u128 self.caller r0 r1 r2 r3 r4 r5 into r6;
+    async publish 6694886634403u128 self.caller r0 r1 r2 r3 r4 r5 into r6;
     output r6 as token_bridge_v0001.aleo/publish.future;
 
 finalize publish:
@@ -331,7 +331,7 @@ finalize publish:
     get supported_services[r8.addr] into r10;
     assert.eq r10 true;
     get.or_use sequences[r2] 1u64 into r11;
-    get.or_use sequences[6694886634401u128] 1u64 into r12;
+    get.or_use sequences[6694886634403u128] 1u64 into r12;
     cast r2 r3 into r13 as ForeignContract;
     cast r4 r5 r6 r7 into r14 as MsgTokenSend;
     cast 0u8 r11 r8 r13 r14 block.height into r15 as OutPacket;
@@ -346,7 +346,7 @@ finalize publish:
 function attest:
     input r0 as InPacketFull.public;
     input r1 as boolean.public;
-    assert.eq r0.destination.chain_id 6694886634401u128;
+    assert.eq r0.destination.chain_id 6694886634403u128;
     hash.bhp256 r0.message into r2 as field;
     cast r0.version r0.sequence r0.source r0.destination r2 r0.height into r3 as InPacket;
     hash.bhp256 r3 into r4 as field;
@@ -418,7 +418,7 @@ function receive:
     input r1 as [address; 5u32].public;
     input r2 as [signature; 5u32].public;
     input r3 as boolean.private;
-    assert.eq r0.destination.chain_id 6694886634401u128;
+    assert.eq r0.destination.chain_id 6694886634403u128;
     hash.bhp256 r0.message into r4 as field;
     cast r0.version r0.sequence r0.source r0.destination r4 r0.height into r5 as InPacket;
     hash.bhp256 r5 into r6 as field;
@@ -530,7 +530,7 @@ function consume:
     input r8 as u32.public;
     assert.neq self.signer self.caller;
     cast r0 r1 into r9 as ForeignContract;
-    cast 6694886634401u128 self.caller into r10 as AleoProgram;
+    cast 6694886634403u128 self.caller into r10 as AleoProgram;
     cast r2 r3 r4 r6 into r11 as MsgTokenReceive;
     hash.bhp256 r11 into r12 as field;
     cast 0u8 r7 r9 r10 r12 r8 into r13 as InPacket;

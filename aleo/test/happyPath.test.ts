@@ -1,21 +1,19 @@
-import { Token_bridgeContract } from "../artifacts/js/token_bridge";
-import { Token_serviceContract } from "../artifacts/js/token_service";
 import { InPacketFull, PacketId, } from "../artifacts/js/types";
-import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
-import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
-import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
-import { aleoChainId, aleoTsContract, aleoUser1, ethChainId, ethTsContract, ethUser, wusdcTokenAddr, wusdcConnectorAddr} from "./mockData";
+import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
+import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
+import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
+
+import { aleoChainId, aleoUser1, ethChainId, ethUser, wusdcTokenAddr, wusdcConnectorAddr, aleoTsProgramAddr, ethTsContractAddr} from "../utils/testnet.data";
 
 import { evm2AleoArr } from "../utils/utils";
 
-const bridge = new Token_bridgeContract({ mode: "execute"});
-const tokenService = new Token_serviceContract({ mode: "execute" })
-const wusdcToken = new Wusdc_tokenContract({ mode: "execute" });
-const wusdcConnecter = new Wusdc_connectorContract({mode: "execute"});
+  const bridge = new Token_bridge_v0001Contract({mode: "execute"});
+  const wusdcToken = new Wusdc_token_v0001Contract({mode: "execute"});
+  const wusdcConnecter = new Wusdc_connector_v0001Contract({mode: "execute"});
 
 describe("Happy Path", () => {
 
-  const incomingSequence = 2;
+  const incomingSequence = BigInt(2);
   const amount = BigInt(10000);
   const height = 10;
 
@@ -27,11 +25,11 @@ describe("Happy Path", () => {
       sequence: incomingSequence,
       source: {
         chain_id: ethChainId,
-        addr: evm2AleoArr(ethTsContract),
+        addr: evm2AleoArr(ethTsContractAddr),
       },
       destination: {
         chain_id: aleoChainId,
-        addr: aleoTsContract,
+        addr: aleoTsProgramAddr,
       },
       message: {
         token: wusdcTokenAddr,
@@ -41,6 +39,7 @@ describe("Happy Path", () => {
       },
       height: 10,
     };
+    console.log(packet)
 
     // Attest to a packet
     const tx = await bridge.attest(packet, true);
@@ -48,7 +47,7 @@ describe("Happy Path", () => {
     // @ts-ignore
     await tx.wait()
 
-  }, 200_000),
+  }, 200_000) 
 
   test("Receive a Packet", async () => {
 
@@ -72,7 +71,7 @@ describe("Happy Path", () => {
 
   test("Send a packet", async () => {
     // Send the packet to ethereum
-    const outgoingSequence = 1;
+    const outgoingSequence = BigInt(1);
     const tx = await wusdcConnecter.wusdc_send(
       evm2AleoArr(ethUser),
       BigInt(101),
@@ -91,6 +90,6 @@ describe("Happy Path", () => {
     console.log(outPacket);
     
 
-  }, 200_000);
+  }, 200_000)
 
 });
