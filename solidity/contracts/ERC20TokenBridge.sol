@@ -4,19 +4,18 @@ pragma solidity ^0.8.19;
 import "./common/libraries/Lib.sol";
 import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
-import {IncomingPacketManager} from "./base/bridge/IncomingPacketManager.sol";
-import {ConsumedPacketManagerImpl} from "./base/bridge/ConsumedPacketManagerImpl.sol";
-import {OutgoingPacketManagerImpl} from "./base/bridge/OutgoingPacketManagerImpl.sol";
 import {Ownable} from "./common/Ownable.sol";
 import {AttestorManager} from "./base/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "./base/bridge/BridgeTokenServiceManager.sol";
+import {ConsumedPacketManagerImpl} from "./base/bridge/ConsumedPacketManagerImpl.sol";
+import {OutgoingPacketManagerImpl} from "./base/bridge/OutgoingPacketManagerImpl.sol";
 
-contract ERC20TokenBridge is IncomingPacketManager,
-    ConsumedPacketManagerImpl, 
-    OutgoingPacketManagerImpl, 
+contract ERC20TokenBridge is 
     Ownable,
     AttestorManager,
     BridgeTokenServiceManager,
+    ConsumedPacketManagerImpl,
+    OutgoingPacketManagerImpl,
     Initializable,
     Upgradeable
 {
@@ -48,8 +47,8 @@ contract ERC20TokenBridge is IncomingPacketManager,
         require(msg.sender == owner);
     }
 
-    function isAttestor(address signer) public view override (AttestorManager, IncomingPacketManager) returns (bool) {
-        return AttestorManager.isAttestor(signer);
+    function _validateAttestor(address signer) internal view override returns (bool) {
+        return isAttestor(signer);
     }
 
     function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) public returns (PacketLibrary.Vote) {

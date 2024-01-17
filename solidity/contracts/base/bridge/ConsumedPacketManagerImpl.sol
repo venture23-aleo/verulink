@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {IncomingPacketManager} from "./IncomingPacketManager.sol";
 import "../../common/libraries/Lib.sol";
 
-abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
-    // using PacketLibrary for PacketLibrary.InPacket;
+abstract contract ConsumedPacketManagerImpl {
 
     event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash, PacketLibrary.Vote _quorum);
 
     // sequence => packet hash
     mapping(uint256 => bytes32) public consumedPackets;
 
+    function _validateAttestor(address signer) internal view virtual returns (bool);
+
     function isPacketConsumed(
         uint256 _sequence
-    ) public view virtual override returns (bool) {
+    ) public view returns (bool) {
         return consumedPackets[_sequence] != bytes32(0);
     }
 
@@ -56,11 +56,11 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
         for(uint256 i = 0; i < sigs.length; i++) {
             (v,r,s) = _splitSignature(sigs[i]);
             signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.YEA);
-            if(isAttestor(signer)) {
+            if(_validateAttestor(signer)) {
                 if(++yeaVote >= threshold) return PacketLibrary.Vote.YEA;
             }else {
                 signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
-                require(isAttestor(signer), "Unknown Signer");
+                require(_validateAttestor(signer), "Unknown Signer");
                 if(++nayVote >= threshold) return PacketLibrary.Vote.NAY;
             }
         }
