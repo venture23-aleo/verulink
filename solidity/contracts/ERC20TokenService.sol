@@ -67,15 +67,12 @@ contract ERC20TokenService is Ownable, BlackListService,
     }
 
     function transfer(string memory receiver, uint256 destChainId) external payable {
-        // PacketLibrary.OutPacket memory packet = _packetify(address(0), msg.value, receiver, destChainId);
         IERC20TokenBridge(erc20Bridge).sendMessage(_packetify(address(0), msg.value, receiver, destChainId));
     }
 
     function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
         require(tokenAddress != address(0), "Only ERC20 Tokens");
         require(IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "ETH Transfer Failed");
-
-        // PacketLibrary.OutPacket memory packet = _packetify(tokenAddress, amount, receiver, destChainId); 
         IERC20TokenBridge(erc20Bridge).sendMessage(_packetify(tokenAddress, amount, receiver, destChainId));
     }
 
@@ -86,7 +83,7 @@ contract ERC20TokenService is Ownable, BlackListService,
         address tokenAddress = packet.message.destTokenAddress;
         uint256 amount = packet.message.amount;
         require(isEnabledToken(tokenAddress, packet.sourceTokenService.chainId), "Invalid Token");
-        if(isBlackListed(receiver) || quorum == PacketLibrary.Vote.NAY) {
+        if(PacketLibrary.Vote.NAY == quorum || isBlackListed(receiver)) {
             if(tokenAddress == address(0)) {
                 // eth lock
                 holding.lockETH{value:amount}(receiver, tokenAddress, amount);

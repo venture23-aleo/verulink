@@ -8,21 +8,15 @@ contract OutgoingPacketManagerImpl  {
 
     event PacketDispatched(PacketLibrary.OutPacket packet);
     
-    // chainId => sequence => Packet hash
-    mapping(uint256 => mapping(uint256 => bytes32)) public outgoingPackets;
-    // chainId => sequence number
-    mapping(uint256 => uint256) public sequences;
+    //sequence => Packet hash
+    mapping(uint256 => bytes32) public outgoingPackets;
 
-    function _incrementSequence(uint256 _chainId) internal returns (uint256) {
-        sequences[_chainId] += 1;
-        return sequences[_chainId];
-    }
+    uint256 public sequence;
 
     function sendMessage(PacketLibrary.OutPacket memory packet) public virtual {
         packet.version = 1;
-        packet.sequence = _incrementSequence(packet.destTokenService.chainId);
-
-        outgoingPackets[packet.destTokenService.chainId][packet.sequence] = packet.hash();
+        packet.sequence = ++sequence;
+        outgoingPackets[packet.sequence] = packet.hash();
         emit PacketDispatched(packet);
     }    
 }

@@ -9,17 +9,23 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
 
     event Consumed(uint256 chainId, uint256 sequence, bytes32 packetHash, PacketLibrary.Vote _quorum);
 
-    mapping(uint256 => mapping(uint256 => bytes32)) public consumedPackets;
+    // sequence => packet hash
+    mapping(uint256 => bytes32) public consumedPackets;
 
     function isPacketConsumed(
-        uint256 _chainId,
         uint256 _sequence
     ) public view virtual override returns (bool) {
-        return consumedPackets[_chainId][_sequence] != bytes32(0);
+        return consumedPackets[_sequence] != bytes32(0);
     }
 
     function _recover(bytes32 packetHash, uint8 v, bytes32 r, bytes32 s, PacketLibrary.Vote tryVote) internal view returns (address) {
-        bytes32 prefixedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", packetHash, tryVote));
+        bytes32 prefixedHash = keccak256(
+            abi.encodePacked(
+                "\x19Ethereum Signed Message:\n32", 
+                packetHash, 
+                tryVote
+            )
+        );
         return ecrecover(prefixedHash, v, r, s);
     }
 
@@ -42,6 +48,7 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
         address signer;
         uint256 yeaVote;
         uint256 nayVote;
+
         uint8 v;
         bytes32 r;
         bytes32 s;
@@ -71,15 +78,12 @@ abstract contract ConsumedPacketManagerImpl is IncomingPacketManager {
     ) internal returns (PacketLibrary.Vote _quorum) {
         require(
             !isPacketConsumed(
-                sourceChainId,
                 sequence
             ),
             "Packet already consumed"
         );
         
-        consumedPackets[sourceChainId][
-            sequence
-        ] = packetHash;
+        consumedPackets[sequence] = packetHash;
 
         _quorum = _checkSignatures(packetHash, sigs, threshold);
 
