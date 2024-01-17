@@ -6,7 +6,7 @@ import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
 import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
 import { aleoChainId, aleoTsContract, aleoUser1, ethChainId, ethTsContract, ethUser, wusdcTokenAddr, wusdcConnectorAddr} from "./mockData";
 
-import { evm2AleoArr } from "./utils";
+import { evm2AleoArr } from "../utils/utils";
 
 const bridge = new Token_bridgeContract({ mode: "execute"});
 const tokenService = new Token_serviceContract({ mode: "execute" })

@@ -183,7 +183,7 @@ export function getTsSupportToken(tsSupportToken: TsSupportTokenLeo): TsSupportT
     id: leo2js.u32(tsSupportToken.id),
     token_id: leo2js.address(tsSupportToken.token_id),
     connector: leo2js.address(tsSupportToken.connector),
-    minimum_transfer: leo2js.u64(tsSupportToken.minimum_transfer),
+    minimum_transfer: leo2js.u128(tsSupportToken.minimum_transfer),
     outgoing_percentage: leo2js.u16(tsSupportToken.outgoing_percentage),
     time: leo2js.u32(tsSupportToken.time),
   }
@@ -211,7 +211,7 @@ export function getTsUpdateMinimumTransfer(tsUpdateMinimumTransfer: TsUpdateMini
   const result: TsUpdateMinimumTransfer = {
     id: leo2js.u32(tsUpdateMinimumTransfer.id),
     token_id: leo2js.address(tsUpdateMinimumTransfer.token_id),
-    minimum_transfer: leo2js.u64(tsUpdateMinimumTransfer.minimum_transfer),
+    minimum_transfer: leo2js.u128(tsUpdateMinimumTransfer.minimum_transfer),
   }
   return result;
 }

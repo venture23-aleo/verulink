@@ -222,7 +222,7 @@ export const leoTsSupportTokenSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
   connector: leoAddressSchema,
-  minimum_transfer: leoU64Schema,
+  minimum_transfer: leoU128Schema,
   outgoing_percentage: leoU16Schema,
   time: leoU32Schema,
 });
@@ -261,7 +261,7 @@ export interface TsUpdateMinimumTransfer {
 export const leoTsUpdateMinimumTransferSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
-  minimum_transfer: leoU64Schema,
+  minimum_transfer: leoU128Schema,
 });
 export type TsUpdateMinimumTransferLeo = z.infer < typeof leoTsUpdateMinimumTransferSchema > ;
 

@@ -18,11 +18,13 @@ program council.aleo {
     const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
     mapping proposals: u32 => field;
 
+    // TODO: ProposalVote
     struct ProposalSign {
         proposal: field,
         member: address
     }
     // key is hash(hash(proposal), member)
+    // TODO: rename to proposal_votes
     mapping proposal_vote_signs: field => bool;
 
     //////////////////////////////
@@ -73,6 +75,7 @@ program council.aleo {
     }
 
     finalize update_member(existing_member: address, new_member: address) {
+        // TODO: add test
         Mapping::remove(members, existing_member);
         Mapping::set(members, new_member, true);
     }
@@ -378,6 +381,7 @@ program council.aleo {
         new_threshold: u8
     }
 
+    // TODO: Change name to co_add_attestor
     transition tb_add_attestor(public id: u32, public new_attestor: address, new_threshold: u8) {
         let proposal: TbAddAttestor = TbAddAttestor {
             id,
@@ -767,12 +771,12 @@ program council.aleo {
         id: u32,
         token_id: address,
         connector: address,
-        minimum_transfer: u64,
+        minimum_transfer: u128,
         outgoing_percentage: u16,
         time: u32
     }
 
-    transition ts_support_token(public id: u32, public token_id: address, connector: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+    transition ts_support_token(public id: u32, public token_id: address, connector: address, public minimum_transfer: u128, public outgoing_percentage: u16, public time: u32) {
         let proposal: TsSupportToken  = TsSupportToken {
             id,
             token_id,
@@ -891,10 +895,10 @@ program council.aleo {
     struct TsUpdateMinimumTransfer {
         id: u32,
         token_id: address,
-        minimum_transfer: u64,
+        minimum_transfer: u128,
     }
 
-    transition ts_update_minimum_transfer(public id: u32, public token_id: address, public minimum_transfer: u64, public outgoing_percentage: u16, public time: u32) {
+    transition ts_update_minimum_transfer(public id: u32, public token_id: address, public minimum_transfer: u128, public outgoing_percentage: u16, public time: u32) {
         let proposal: TsUpdateMinimumTransfer  = TsUpdateMinimumTransfer {
             id,
             token_id,

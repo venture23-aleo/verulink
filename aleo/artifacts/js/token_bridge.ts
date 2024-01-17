@@ -217,7 +217,7 @@ export class Token_bridgeContract {
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
     const r3Leo = js2leo.address(r3);
     const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
-    const r5Leo = js2leo.u64(r5);
+    const r5Leo = js2leo.u128(r5);
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
     const result = await zkRun({
@@ -248,7 +248,7 @@ export class Token_bridgeContract {
     const r3Leo = js2leo.arr2string(js2leo.array(r3, js2leo.u8));
     const r4Leo = js2leo.address(r4);
     const r5Leo = js2leo.address(r5);
-    const r6Leo = js2leo.u64(r6);
+    const r6Leo = js2leo.u128(r6);
     const r7Leo = js2leo.u32(r7);
     const r8Leo = js2leo.u32(r8);
 

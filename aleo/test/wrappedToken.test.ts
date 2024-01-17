@@ -1,7 +1,7 @@
 import { Wrapped_tokensContract } from "../artifacts/js/wrapped_tokens";
 import { ethChainId, usdcContractAddr } from "./mockData";
 
-import { evm2AleoArr, string2AleoArr } from "./utils";
+import { evm2AleoArr, string2AleoArr } from "../utils/utils";
 
 const wrappedToken = new Wrapped_tokensContract();
 

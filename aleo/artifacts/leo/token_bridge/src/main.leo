@@ -31,7 +31,7 @@ program token_bridge.aleo {
         // Address of the receiver on Aleo
         receiver: address,
         // Amount to mint on Aleo
-        amount: u64
+        amount: u128
     }
 
     struct MsgTokenSend {
@@ -48,7 +48,8 @@ program token_bridge.aleo {
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         receiver: [u8; 32],
         // Amount to unlock on origin chain
-        amount: u64
+        // TODO: u128
+        amount: u128
     }
 
 
@@ -143,6 +144,7 @@ program token_bridge.aleo {
 
     // sequence no of the packet for the target (destination) chain
     // key is chain_id
+    // TODO: update sequence to u64
     mapping sequences: u128 => u32;
 
     // Used to receive the packet
@@ -395,7 +397,7 @@ program token_bridge.aleo {
     /// * `destination_service_contract`: u32 - Service contract on destination chain which can consume the message
     /// * `msg_hash`: field - Hash of the message; Message is stored in the service program
 
-    transition publish(public destination_chain_id: u128, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u64) {
+    transition publish(public destination_chain_id: u128, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u128) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -413,7 +415,7 @@ program token_bridge.aleo {
         return then finalize (this_chain_id(), self.caller, destination_chain_id, destination_service_contract, token, sender, receiver, amount);
     }
 
-    finalize publish(source_chain_id: u128, source_service_program: address, destination_chain_id: u128, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u64) {
+    finalize publish(source_chain_id: u128, source_service_program: address, destination_chain_id: u128, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u128) {
         let source: AleoProgram = AleoProgram {
             chain_id: source_chain_id,
             addr: source_service_program
@@ -566,7 +568,7 @@ program token_bridge.aleo {
     /// * `amount`: u64 - Amount to be minted on Aleo 
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence: u32, public height: u32) {
+    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u32, public height: u32) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin

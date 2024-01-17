@@ -2,12 +2,12 @@
 name = "token_bridge"
 network = "testnet3"
 location = "network"
-checksum = "fe29f8f0d7081b12130bab80b76bd5facbd07d5cd36374adea0d6c33c784d921"
+checksum = "bb96212864a4387a909468a16c0a829d7fdae3a249fd84fdfc7851df7e7d7bcb"
 dependencies = []
 
 [[package]]
 name = "token_service"
 network = "testnet3"
 location = "network"
-checksum = "76d03a4419026c97488971dfc9b25750f40960f5f22bc888b1fe63518503d839"
+checksum = "886466ffbaae15db189dc84f150742b38e29983cce701f27bc2ae856118f0dd8"
 dependencies = ["token_bridge.aleo"]

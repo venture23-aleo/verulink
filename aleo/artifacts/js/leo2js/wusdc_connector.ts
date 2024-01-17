@@ -16,7 +16,7 @@ export function getUpdateConnector(updateConnector: UpdateConnectorLeo): UpdateC
 export function getWUsdcRelease(wUsdcRelease: WUsdcReleaseLeo): WUsdcRelease {
   const result: WUsdcRelease = {
     receiver: leo2js.address(wUsdcRelease.receiver),
-    amount: leo2js.u64(wUsdcRelease.amount),
+    amount: leo2js.u128(wUsdcRelease.amount),
   }
   return result;
 }

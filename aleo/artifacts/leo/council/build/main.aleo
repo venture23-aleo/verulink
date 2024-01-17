@@ -88,7 +88,7 @@ struct TsSupportToken:
     id as u32;
     token_id as address;
     connector as address;
-    minimum_transfer as u64;
+    minimum_transfer as u128;
     outgoing_percentage as u16;
     time as u32;
 
@@ -104,7 +104,7 @@ struct TsUpdateConnector:
 struct TsUpdateMinimumTransfer:
     id as u32;
     token_id as address;
-    minimum_transfer as u64;
+    minimum_transfer as u128;
 
 struct TsUpdateOutgoingPercentage:
     id as u32;
@@ -619,7 +619,7 @@ function ts_support_token:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as address.private;
-    input r3 as u64.public;
+    input r3 as u128.public;
     input r4 as u16.public;
     input r5 as u32.public;
     cast r0 r1 r2 r3 r4 r5 into r6 as TsSupportToken;
@@ -692,7 +692,7 @@ finalize ts_update_token_connector:
 function ts_update_minimum_transfer:
     input r0 as u32.public;
     input r1 as address.public;
-    input r2 as u64.public;
+    input r2 as u128.public;
     input r3 as u16.public;
     input r4 as u32.public;
     cast r0 r1 r2 into r5 as TsUpdateMinimumTransfer;

@@ -54,7 +54,7 @@ export const leoMsgTokenReceiveSchema = z.object({
   token: leoAddressSchema,
   sender: z.array(leoU8Schema).length(32),
   receiver: leoAddressSchema,
-  amount: leoU64Schema,
+  amount: leoU128Schema,
 });
 export type MsgTokenReceiveLeo = z.infer < typeof leoMsgTokenReceiveSchema > ;
 
@@ -69,7 +69,7 @@ export const leoMsgTokenSendSchema = z.object({
   token: z.array(leoU8Schema).length(32),
   sender: leoAddressSchema,
   receiver: z.array(leoU8Schema).length(32),
-  amount: leoU64Schema,
+  amount: leoU128Schema,
 });
 export type MsgTokenSendLeo = z.infer < typeof leoMsgTokenSendSchema > ;
 

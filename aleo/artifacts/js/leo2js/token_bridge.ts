@@ -45,7 +45,7 @@ export function getMsgTokenReceive(msgTokenReceive: MsgTokenReceiveLeo): MsgToke
     token: leo2js.address(msgTokenReceive.token),
     sender: leo2js.array(msgTokenReceive.sender, leo2js.u8),
     receiver: leo2js.address(msgTokenReceive.receiver),
-    amount: leo2js.u64(msgTokenReceive.amount),
+    amount: leo2js.u128(msgTokenReceive.amount),
   }
   return result;
 }
@@ -55,7 +55,7 @@ export function getMsgTokenSend(msgTokenSend: MsgTokenSendLeo): MsgTokenSend {
     token: leo2js.array(msgTokenSend.token, leo2js.u8),
     sender: leo2js.address(msgTokenSend.sender),
     receiver: leo2js.array(msgTokenSend.receiver, leo2js.u8),
-    amount: leo2js.u64(msgTokenSend.amount),
+    amount: leo2js.u128(msgTokenSend.amount),
   }
   return result;
 }

@@ -109,7 +109,7 @@ export class Token_serviceContract {
   async support_token_ts(r0: string, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
     const r3Leo = js2leo.u16(r3);
     const r4Leo = js2leo.u32(r4);
 
@@ -162,7 +162,7 @@ export class Token_serviceContract {
 
   async update_minimum_transfer_ts(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -190,7 +190,7 @@ export class Token_serviceContract {
   async token_send(r0: string, r1: Array < number > , r2: bigint, r3: bigint, r4: Array < number > , r5: Array < number > ) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
     const r3Leo = js2leo.u128(r3);
     const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
     const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
@@ -212,7 +212,7 @@ export class Token_serviceContract {
     const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
     const r5Leo = js2leo.address(r5);
     const r6Leo = js2leo.address(r6);
-    const r7Leo = js2leo.u64(r7);
+    const r7Leo = js2leo.u128(r7);
     const r8Leo = js2leo.u32(r8);
     const r9Leo = js2leo.u32(r9);
 
@@ -258,7 +258,7 @@ export class Token_serviceContract {
       transition: 'total_supply',
       params,
     });
-    return leo2js.u64(result);
+    return leo2js.u128(result);
   }
 
   async token_connectors(key: string): Promise < string > {
@@ -282,7 +282,7 @@ export class Token_serviceContract {
       transition: 'minimum_transfers',
       params,
     });
-    return leo2js.u64(result);
+    return leo2js.u128(result);
   }
 
   async max_outgoing_percentage(key: string): Promise < OutgoingPercentageInTime > {
@@ -330,7 +330,7 @@ export class Token_serviceContract {
       transition: 'last_min_supply',
       params,
     });
-    return leo2js.u64(result);
+    return leo2js.u128(result);
   }
 
 

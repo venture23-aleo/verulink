@@ -12,13 +12,13 @@ struct MsgTokenReceive:
     token as address;
     sender as [u8; 32u32];
     receiver as address;
-    amount as u64;
+    amount as u128;
 
 struct MsgTokenSend:
     token as [u8; 32u32];
     sender as address;
     receiver as [u8; 32u32];
-    amount as u64;
+    amount as u128;
 
 struct InPacketFull:
     version as u8;
@@ -315,7 +315,7 @@ function publish:
     input r2 as [u8; 32u32].public;
     input r3 as address.public;
     input r4 as [u8; 32u32].public;
-    input r5 as u64.public;
+    input r5 as u128.public;
     assert.neq self.signer self.caller;
     async publish 6694886634401u128 self.caller r0 r1 r2 r3 r4 r5 into r6;
     output r6 as token_bridge.aleo/publish.future;
@@ -328,7 +328,7 @@ finalize publish:
     input r4 as [u8; 32u32].public;
     input r5 as address.public;
     input r6 as [u8; 32u32].public;
-    input r7 as u64.public;
+    input r7 as u128.public;
     cast r0 r1 into r8 as AleoProgram;
     get supported_chains[r2] into r9;
     assert.eq r9 true;
@@ -397,7 +397,7 @@ function consume:
     input r3 as [u8; 32u32].public;
     input r4 as address.public;
     input r5 as address.public;
-    input r6 as u64.public;
+    input r6 as u128.public;
     input r7 as u32.public;
     input r8 as u32.public;
     assert.neq self.signer self.caller;

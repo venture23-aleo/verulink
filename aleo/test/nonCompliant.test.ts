@@ -7,7 +7,7 @@ import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
 import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
 import { TOTAL_PROPOSALS_INDEX, aleoChainId, aleoTsContract, aleoUser1, councilProgram, ethChainId, ethTsContract, ethUser, usdcContractAddr, wusdcConnectorAddr, wusdcHoldingAddr, wusdcTokenAddr } from "./mockData";
 
-import { evm2AleoArr, hashStruct } from "./utils";
+import { evm2AleoArr, hashStruct } from "../utils/utils";
 
 import * as js2leo from '../artifacts/js/js2leo';
 

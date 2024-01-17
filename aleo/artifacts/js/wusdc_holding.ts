@@ -73,7 +73,7 @@ export class Wusdc_holdingContract {
 
   async hold_fund(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -86,7 +86,7 @@ export class Wusdc_holdingContract {
 
   async release_fund(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -118,7 +118,7 @@ export class Wusdc_holdingContract {
       transition: 'holdings',
       params,
     });
-    return leo2js.u64(result);
+    return leo2js.u128(result);
   }
 
 

@@ -37,6 +37,6 @@ export interface WUsdcRelease {
 
 export const leoWUsdcReleaseSchema = z.object({
   receiver: leoAddressSchema,
-  amount: leoU64Schema,
+  amount: leoU128Schema,
 });
 export type WUsdcReleaseLeo = z.infer < typeof leoWUsdcReleaseSchema > ;

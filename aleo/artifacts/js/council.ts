@@ -408,7 +408,7 @@ export class CouncilContract {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.u64(r3);
+    const r3Leo = js2leo.u128(r3);
     const r4Leo = js2leo.u16(r4);
     const r5Leo = js2leo.u32(r5);
 
@@ -451,7 +451,7 @@ export class CouncilContract {
   async ts_update_minimum_transfer(r0: number, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
     const r3Leo = js2leo.u16(r3);
     const r4Leo = js2leo.u32(r4);
 

@@ -1,7 +1,7 @@
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { InPacketFull } from "../artifacts/js/types";
 
-import { evm2AleoArr, string2AleoArr } from "./utils";
+import { evm2AleoArr, string2AleoArr } from "../utils/utils";
 import {
   aleoChainId,
   aleoTsContract,

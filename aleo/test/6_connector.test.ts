@@ -19,7 +19,7 @@ import {
   wusdcConnectorAddr,
   wusdcTokenAddr,
 } from "./mockData";
-import { evm2AleoArr } from "./utils";
+import { evm2AleoArr } from "../utils/utils";
 
 const bridge = new Token_bridgeContract({ mode: "execute" });
 const tokenService = new Token_serviceContract({ mode: "execute" });

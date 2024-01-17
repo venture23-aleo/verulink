@@ -18,7 +18,7 @@ import {
   wusdcTokenAddr,
 } from "./mockData";
 
-import { evm2AleoArr } from "./utils";
+import { evm2AleoArr } from "../utils/utils";
 const bridge = new Token_bridgeContract({mode: "execute"});
 
 const testTimeout = 1000_000;

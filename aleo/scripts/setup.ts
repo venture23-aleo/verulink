@@ -3,13 +3,13 @@ import { HoldingContract } from "../artifacts/js/holding";
 import { Token_bridgeContract } from "../artifacts/js/token_bridge";
 import { Token_serviceContract } from "../artifacts/js/token_service";
 import { TbEnableChain, TsSupportToken, TbEnableService, TsSupportChain } from "../artifacts/js/types";
-import { evm2AleoArr, hashStruct } from "../test/utils";
+import { evm2AleoArr, hashStruct } from "../utils/utils";
 
 import * as js2leo from '../artifacts/js/js2leo';
 import * as js2leoCommon from '../artifacts/js/js2leo/common';
 import * as leo2jsCommon from '../artifacts/js/leo2js/common';
 
-import { TOTAL_PROPOSALS_INDEX, aleoTsContract, aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilThreshold, ethChainId, wusdcConnectorAddr, wusdcTokenAddr } from "../test/mockData";
+import { TOTAL_PROPOSALS_INDEX, aleoTsContract, aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilThreshold, ethChainId, wusdcConnectorAddr, wusdcTokenAddr } from "../utils/testnet.data";
 import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
 import { Wusdc_holdingContract } from "../artifacts/js/wusdc_holding";
 import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";

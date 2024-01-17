@@ -24,14 +24,14 @@ program wusdc_connector.aleo {
     /// * sender: [u8; 32] - Address of the sender on source chain (Ethereum)
     /// * receiver: address - Receiver on the packet in Aleo
     /// * actual_receiver: address - Address where the token is minted on Aleo
-    /// * amount: u64 - Amount to be minted on Aleo
+    /// * amount: u128 - Amount to be minted on Aleo
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition wusdc_receive(public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u64, public sequence: u32, public height: u32) {
+    transition wusdc_receive(public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u32, public height: u32) {
 
         token_service.aleo/token_receive(origin_chain_id(), origin_token_service_address(), origin_usdc_address(), WUSDC_TOKEN, sender, receiver, actual_receiver, amount, sequence, height);
 
-        wusdc_token.aleo/mint_public(actual_receiver, amount, origin_chain_id(), origin_usdc_address());
+        wusdc_token.aleo/mint_public(actual_receiver, amount);
 
         // If the packet did not pass the screening, the `actual_receiver` must be the holding program
         // In case the packet passed the screening, the receiver and the actual receiver are the same address.
@@ -39,14 +39,15 @@ program wusdc_connector.aleo {
         let check_required: bool = !(receiver == actual_receiver);
 
         if check_required {
+            assert_eq(actual_receiver, WUSDC_HOLDING);
             wusdc_holding.aleo/hold_fund(receiver, amount);
         }
 
     }
 
-    transition wusdc_send(public receiver: [u8; 32], public amount: u64) {
+    transition wusdc_send(public receiver: [u8; 32], public amount: u128) {
 
-        wusdc_token.aleo/burn_public(self.caller, amount, origin_chain_id(), origin_usdc_address());
+        wusdc_token.aleo/burn_public(self.caller, amount);
 
         token_service.aleo/token_send(WUSDC_TOKEN, receiver, amount, origin_chain_id(), origin_usdc_address(), origin_token_service_address());
 
@@ -75,10 +76,10 @@ program wusdc_connector.aleo {
     /// Can only be called if proposal with enough votes exist on council program
     struct WUsdcRelease {
         receiver: address,
-        amount: u64
+        amount: u128
     }
 
-    transition wusdc_release(public proposal_id: u32, public receiver: address, public amount: u64) {
+    transition wusdc_release(public proposal_id: u32, public receiver: address, public amount: u128) {
         let releaseProposal: WUsdcRelease = WUsdcRelease {
             receiver,
             amount

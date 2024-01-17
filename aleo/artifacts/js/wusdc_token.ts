@@ -83,13 +83,11 @@ export class Wusdc_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async mint_public(r0: string, r1: bigint, r2: bigint, r3: Array < number > ) {
+  async mint_public(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
-    const r2Leo = js2leo.u128(r2);
-    const r3Leo = js2leo.arr2string(js2leo.array(r3, js2leo.u8));
+    const r1Leo = js2leo.u128(r1);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'mint_public',
@@ -98,13 +96,11 @@ export class Wusdc_tokenContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async burn_public(r0: string, r1: bigint, r2: bigint, r3: Array < number > ) {
+  async burn_public(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
-    const r2Leo = js2leo.u128(r2);
-    const r3Leo = js2leo.arr2string(js2leo.array(r3, js2leo.u8));
+    const r1Leo = js2leo.u128(r1);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'burn_public',
@@ -115,7 +111,7 @@ export class Wusdc_tokenContract {
 
   async transfer_public(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -129,7 +125,7 @@ export class Wusdc_tokenContract {
   async transfer_private(r0: token, r1: string, r2: bigint): Promise < [token, token] | any > {
     const r0Leo = js2leo.json(gettokenLeo(r0));
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
 
     const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
@@ -146,7 +142,7 @@ export class Wusdc_tokenContract {
   async transfer_private_to_public(r0: token, r1: string, r2: bigint): Promise < token | any > {
     const r0Leo = js2leo.json(gettokenLeo(r0));
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
 
     const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
@@ -161,7 +157,7 @@ export class Wusdc_tokenContract {
 
   async transfer_public_to_private(r0: string, r1: bigint): Promise < token | any > {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -176,7 +172,7 @@ export class Wusdc_tokenContract {
 
   async approve_public(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -189,7 +185,7 @@ export class Wusdc_tokenContract {
 
   async unapprove_public(r0: string, r1: bigint) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -203,7 +199,7 @@ export class Wusdc_tokenContract {
   async transfer_from_public(r0: string, r1: string, r2: bigint) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
 
     const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
@@ -223,7 +219,7 @@ export class Wusdc_tokenContract {
       transition: 'account',
       params,
     });
-    return leo2js.u64(result);
+    return leo2js.u128(result);
   }
 
   async approvals(key: bigint): Promise < bigint > {
@@ -235,7 +231,7 @@ export class Wusdc_tokenContract {
       transition: 'approvals',
       params,
     });
-    return leo2js.u64(result);
+    return leo2js.u128(result);
   }
 
   async owner_wusdc(key: boolean): Promise < string > {

@@ -29,7 +29,7 @@ mapping owner_TS:
 
 mapping total_supply:
 	key as address.public;
-	value as u64.public;
+	value as u128.public;
 
 
 mapping token_connectors:
@@ -39,7 +39,7 @@ mapping token_connectors:
 
 mapping minimum_transfers:
 	key as address.public;
-	value as u64.public;
+	value as u128.public;
 
 
 mapping max_outgoing_percentage:
@@ -59,7 +59,7 @@ mapping last_token_update:
 
 mapping last_min_supply:
 	key as address.public;
-	value as u64.public;
+	value as u128.public;
 
 
 
@@ -120,7 +120,7 @@ finalize remove_chain_ts:
 function support_token_ts:
     input r0 as address.public;
     input r1 as address.public;
-    input r2 as u64.public;
+    input r2 as u128.public;
     input r3 as u16.public;
     input r4 as u32.public;
     async support_token_ts self.caller r0 r1 r2 r3 r4 into r5;
@@ -130,7 +130,7 @@ finalize support_token_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as address.public;
-    input r3 as u64.public;
+    input r3 as u128.public;
     input r4 as u16.public;
     input r5 as u32.public;
     get owner_TS[true] into r6;
@@ -188,14 +188,14 @@ finalize update_token_connector:
 
 function update_minimum_transfer_ts:
     input r0 as address.public;
-    input r1 as u64.private;
+    input r1 as u128.private;
     async update_minimum_transfer_ts self.caller r0 r1 into r2;
     output r2 as token_service.aleo/update_minimum_transfer_ts.future;
 
 finalize update_minimum_transfer_ts:
     input r0 as address.public;
     input r1 as address.public;
-    input r2 as u64.public;
+    input r2 as u128.public;
     get owner_TS[true] into r3;
     assert.eq r0 r3;
     set r2 into minimum_transfers[r1];
@@ -232,7 +232,7 @@ finalize update_outgoing_percentage_ts:
 function token_send:
     input r0 as address.public;
     input r1 as [u8; 32u32].public;
-    input r2 as u64.public;
+    input r2 as u128.public;
     input r3 as u128.public;
     input r4 as [u8; 32u32].private;
     input r5 as [u8; 32u32].private;
@@ -245,7 +245,7 @@ finalize token_send:
     input r0 as token_bridge.aleo/publish.future;
     input r1 as address.public;
     input r2 as address.public;
-    input r3 as u64.public;
+    input r3 as u128.public;
     await r0;
     get token_connectors[r2] into r4;
     assert.eq r4 r1;
@@ -257,33 +257,33 @@ finalize token_send:
     sub 100_00u16 r8.outgoing_percentage into r9;
     lte r9 100_00u16 into r10;
     assert.eq r10 true;
-    cast r9 into r11 as u64;
+    cast r9 into r11 as u128;
     mul r7 r11 into r12;
-    cast 100_00u16 into r13 as u64;
+    cast 100_00u16 into r13 as u128;
     div r12 r13 into r14;
     get.or_use last_token_update[r2] 0u32 into r15;
     get.or_use last_min_supply[r2] r14 into r16;
     sub 100_00u16 r8.outgoing_percentage into r17;
     lte r17 100_00u16 into r18;
     assert.eq r18 true;
-    cast r17 into r19 as u64;
+    cast r17 into r19 as u128;
     mul r7 r19 into r20;
-    cast 100_00u16 into r21 as u64;
+    cast 100_00u16 into r21 as u128;
     div r20 r21 into r22;
     lte r8.outgoing_percentage 100_00u16 into r23;
     assert.eq r23 true;
-    cast r8.outgoing_percentage into r24 as u64;
+    cast r8.outgoing_percentage into r24 as u128;
     mul r7 r24 into r25;
-    cast 100_00u16 into r26 as u64;
+    cast 100_00u16 into r26 as u128;
     div r25 r26 into r27;
     sub block.height r15 into r28;
-    cast r28 into r29 as u64;
+    cast r28 into r29 as u128;
     mul r27 r29 into r30;
-    cast r8.timeframe into r31 as u64;
+    cast r8.timeframe into r31 as u128;
     div r30 r31 into r32;
     gt r16 r32 into r33;
     sub.w r16 r32 into r34;
-    ternary r33 r34 0u64 into r35;
+    ternary r33 r34 0u128 into r35;
     gt r35 r22 into r36;
     ternary r36 r35 r22 into r37;
     sub r7 r3 into r38;
@@ -303,7 +303,7 @@ function token_receive:
     input r4 as [u8; 32u32].public;
     input r5 as address.public;
     input r6 as address.public;
-    input r7 as u64.public;
+    input r7 as u128.public;
     input r8 as u32.public;
     input r9 as u32.public;
     assert.neq self.signer self.caller;
@@ -315,10 +315,10 @@ finalize token_receive:
     input r0 as token_bridge.aleo/consume.future;
     input r1 as address.public;
     input r2 as address.public;
-    input r3 as u64.public;
+    input r3 as u128.public;
     await r0;
     get token_connectors[r2] into r4;
     assert.eq r4 r1;
-    get.or_use total_supply[r2] 0u64 into r5;
+    get.or_use total_supply[r2] 0u128 into r5;
     add r5 r3 into r6;
     set r6 into total_supply[r2];

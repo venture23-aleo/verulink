@@ -180,7 +180,7 @@ export class Wusdc_connectorContract {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
-    const r3Leo = js2leo.u64(r3);
+    const r3Leo = js2leo.u128(r3);
     const r4Leo = js2leo.u32(r4);
     const r5Leo = js2leo.u32(r5);
 
@@ -195,7 +195,7 @@ export class Wusdc_connectorContract {
 
   async wusdc_send(r0: Array < number > , r1: bigint) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
-    const r1Leo = js2leo.u64(r1);
+    const r1Leo = js2leo.u128(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
@@ -222,7 +222,7 @@ export class Wusdc_connectorContract {
   async wusdc_release(r0: number, r1: string, r2: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.u64(r2);
+    const r2Leo = js2leo.u128(r2);
 
     const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({

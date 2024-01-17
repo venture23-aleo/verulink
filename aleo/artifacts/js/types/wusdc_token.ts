@@ -29,7 +29,7 @@ export interface token {
 
 export const leoTokenSchema = z.object({
   owner: leoAddressSchema,
-  amount: leoU64Schema,
+  amount: leoU128Schema,
   _nonce: leoGroupSchema,
 });
 export type tokenLeo = z.infer < typeof leoTokenSchema > ;
