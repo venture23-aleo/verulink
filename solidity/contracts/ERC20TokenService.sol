@@ -72,17 +72,20 @@ contract ERC20TokenService is Ownable, BlackListService,
 
     function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
         require(tokenAddress != address(0), "Only ERC20 Tokens");
-        require(IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "ETH Transfer Failed");
+        require(IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         IERC20TokenBridge(erc20Bridge).sendMessage(_packetify(tokenAddress, amount, receiver, destChainId));
     }
 
     function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external {
         require(packet.destTokenService.addr == address(this),"Invalid Token Service");
-        PacketLibrary.Vote quorum = IERC20TokenBridge(erc20Bridge).consume(packet, sigs);
+        
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
         uint256 amount = packet.message.amount;
+
         require(isEnabledToken(tokenAddress, packet.sourceTokenService.chainId), "Invalid Token");
+        PacketLibrary.Vote quorum = IERC20TokenBridge(erc20Bridge).consume(packet, sigs);
+
         if(PacketLibrary.Vote.NAY == quorum || isBlackListed(receiver)) {
             if(tokenAddress == address(0)) {
                 // eth lock
@@ -95,7 +98,7 @@ contract ERC20TokenService is Ownable, BlackListService,
             if(tokenAddress == address(0)) {
                 // eth transfer
                 (bool sent,) = receiver.call{value: amount}("");
-                require(sent, "ETH Transfer Failed");
+                require(sent, "ETH Withdraw Failed");
             }else {
                 require(IERC20(tokenAddress).transfer(receiver, amount), "Withdraw Failed");
             }  

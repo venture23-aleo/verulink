@@ -9,14 +9,14 @@ import {ConsumedPacketManagerImpl} from "./base/bridge/ConsumedPacketManagerImpl
 import {OutgoingPacketManagerImpl} from "./base/bridge/OutgoingPacketManagerImpl.sol";
 import {Ownable} from "./common/Ownable.sol";
 import {AttestorManager} from "./base/bridge/AttestorManager.sol";
-import {BridgeERC20TokenServiceManager} from "./base/bridge/BridgeERC20TokenServiceManager.sol";
+import {BridgeTokenServiceManager} from "./base/bridge/BridgeTokenServiceManager.sol";
 
 contract ERC20TokenBridge is IncomingPacketManager,
     ConsumedPacketManagerImpl, 
     OutgoingPacketManagerImpl, 
     Ownable,
     AttestorManager,
-    BridgeERC20TokenServiceManager,
+    BridgeTokenServiceManager,
     Initializable,
     Upgradeable
 {
