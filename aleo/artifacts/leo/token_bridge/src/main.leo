@@ -57,7 +57,7 @@ program token_bridge.aleo {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for this chain on source chain
-        sequence: u32,
+        sequence: u64,
         // Service Contract where the packet originated
         source: ForeignContract,
         // Destination Program where the packet should be consumed
@@ -72,7 +72,7 @@ program token_bridge.aleo {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for this chain on source chain
-        sequence: u32,
+        sequence: u64,
         // Service Contract where the packet originated
         source: ForeignContract,
         // Destination Program where the packet should be consumed
@@ -88,7 +88,7 @@ program token_bridge.aleo {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for destination chain
-        sequence: u32,
+        sequence: u64,
         // Service Program where the packet originated
         source: AleoProgram,
         // Service Contract where the packet should be consumed
@@ -103,14 +103,14 @@ program token_bridge.aleo {
         // Chain Id where the packet originated
         chain_id: u128,
         // Sequence no of when the packet emitted
-        sequence: u32
+        sequence: u64
     }
 
     struct PacketIdWithAttestor {
         // Chain Id where the packet originated
         chain_id: u128,
         // Sequence no of when the packet emitted
-        sequence: u32,
+        sequence: u64,
         // Address of the attestor
         attestor: address
     }
@@ -144,8 +144,7 @@ program token_bridge.aleo {
 
     // sequence no of the packet for the target (destination) chain
     // key is chain_id
-    // TODO: update sequence to u64
-    mapping sequences: u128 => u32;
+    mapping sequences: u128 => u64;
 
     // Used to receive the packet
     // Can only be called by attestor
@@ -428,10 +427,10 @@ program token_bridge.aleo {
         assert(Mapping::get(supported_services, source.addr));
 
         // Get Sequence number of the service
-        let target_sequence_no: u32 = Mapping::get_or_use(sequences, destination_chain_id, 1u32);
+        let target_sequence_no: u64 = Mapping::get_or_use(sequences, destination_chain_id, 1u64);
         
         // Get Sequence number of the bridge
-        let bridge_sequence_no: u32 = Mapping::get_or_use(sequences, this_chain_id(), 1u32); 
+        let bridge_sequence_no: u64 = Mapping::get_or_use(sequences, this_chain_id(), 1u64); 
 
         let destination: ForeignContract = ForeignContract {
             chain_id: destination_chain_id,
@@ -453,9 +452,9 @@ program token_bridge.aleo {
         };
 
         // Update sequence no of the destination chain
-        Mapping::set(sequences, destination_chain_id, target_sequence_no + 1u32);
+        Mapping::set(sequences, destination_chain_id, target_sequence_no + 1u64);
 
-        Mapping::set(sequences, source_chain_id, bridge_sequence_no + 1u32);
+        Mapping::set(sequences, source_chain_id, bridge_sequence_no + 1u64);
 
         let packet_id: PacketId = PacketId {
             chain_id: destination_chain_id,
@@ -500,7 +499,7 @@ program token_bridge.aleo {
         return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, attestor, screening_passed, packet_attestor_key, packet);
     }
 
-    finalize attest(chain_id: u128, sequence: u32, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: PacketIdWithAttestor, packet: InPacketFull) {
+    finalize attest(chain_id: u128, sequence: u64, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: PacketIdWithAttestor, packet: InPacketFull) {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, this_chain_id());
@@ -568,7 +567,7 @@ program token_bridge.aleo {
     /// * `amount`: u64 - Amount to be minted on Aleo 
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u32, public height: u32) {
+    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -616,7 +615,7 @@ program token_bridge.aleo {
         return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening);
     }
 
-    finalize consume(by: address, chain_id: u128, sequence: u32 , packet_hash_with_screening: field) {
+    finalize consume(by: address, chain_id: u128, sequence: u64 , packet_hash_with_screening: field) {
         // Assert that the packet is being sent from one of the supported services
         assert(Mapping::get(supported_services, by));
 

@@ -176,12 +176,12 @@ export class Wusdc_connectorContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async wusdc_receive(r0: Array < number > , r1: string, r2: string, r3: bigint, r4: number, r5: number) {
+  async wusdc_receive(r0: Array < number > , r1: string, r2: string, r3: bigint, r4: bigint, r5: number) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
     const r3Leo = js2leo.u128(r3);
-    const r4Leo = js2leo.u32(r4);
+    const r4Leo = js2leo.u64(r4);
     const r5Leo = js2leo.u32(r5);
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]

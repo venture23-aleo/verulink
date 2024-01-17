@@ -75,7 +75,7 @@ export type MsgTokenSendLeo = z.infer < typeof leoMsgTokenSendSchema > ;
 
 export interface InPacketFull {
   version: number;
-  sequence: number;
+  sequence: bigint;
   source: ForeignContract;
   destination: AleoProgram;
   message: MsgTokenReceive;
@@ -84,7 +84,7 @@ export interface InPacketFull {
 
 export const leoInPacketFullSchema = z.object({
   version: leoU8Schema,
-  sequence: leoU32Schema,
+  sequence: leoU64Schema,
   source: leoForeignContractSchema,
   destination: leoAleoProgramSchema,
   message: leoMsgTokenReceiveSchema,
@@ -94,7 +94,7 @@ export type InPacketFullLeo = z.infer < typeof leoInPacketFullSchema > ;
 
 export interface InPacket {
   version: number;
-  sequence: number;
+  sequence: bigint;
   source: ForeignContract;
   destination: AleoProgram;
   msg_hash: bigint;
@@ -103,7 +103,7 @@ export interface InPacket {
 
 export const leoInPacketSchema = z.object({
   version: leoU8Schema,
-  sequence: leoU32Schema,
+  sequence: leoU64Schema,
   source: leoForeignContractSchema,
   destination: leoAleoProgramSchema,
   msg_hash: leoFieldSchema,
@@ -113,7 +113,7 @@ export type InPacketLeo = z.infer < typeof leoInPacketSchema > ;
 
 export interface OutPacket {
   version: number;
-  sequence: number;
+  sequence: bigint;
   source: AleoProgram;
   destination: ForeignContract;
   message: MsgTokenSend;
@@ -122,7 +122,7 @@ export interface OutPacket {
 
 export const leoOutPacketSchema = z.object({
   version: leoU8Schema,
-  sequence: leoU32Schema,
+  sequence: leoU64Schema,
   source: leoAleoProgramSchema,
   destination: leoForeignContractSchema,
   message: leoMsgTokenSendSchema,
@@ -132,24 +132,24 @@ export type OutPacketLeo = z.infer < typeof leoOutPacketSchema > ;
 
 export interface PacketId {
   chain_id: bigint;
-  sequence: number;
+  sequence: bigint;
 }
 
 export const leoPacketIdSchema = z.object({
   chain_id: leoU128Schema,
-  sequence: leoU32Schema,
+  sequence: leoU64Schema,
 });
 export type PacketIdLeo = z.infer < typeof leoPacketIdSchema > ;
 
 export interface PacketIdWithAttestor {
   chain_id: bigint;
-  sequence: number;
+  sequence: bigint;
   attestor: string;
 }
 
 export const leoPacketIdWithAttestorSchema = z.object({
   chain_id: leoU128Schema,
-  sequence: leoU32Schema,
+  sequence: leoU64Schema,
   attestor: leoAddressSchema,
 });
 export type PacketIdWithAttestorLeo = z.infer < typeof leoPacketIdWithAttestorSchema > ;

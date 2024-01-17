@@ -304,7 +304,7 @@ function token_receive:
     input r5 as address.public;
     input r6 as address.public;
     input r7 as u128.public;
-    input r8 as u32.public;
+    input r8 as u64.public;
     input r9 as u32.public;
     assert.neq self.signer self.caller;
     call token_bridge.aleo/consume r0 r1 r3 r4 r5 r6 r7 r8 r9 into r10;

@@ -241,7 +241,7 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: number, r8: number) {
+  async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: bigint, r8: number) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.address(r2);
@@ -249,7 +249,7 @@ export class Token_bridgeContract {
     const r4Leo = js2leo.address(r4);
     const r5Leo = js2leo.address(r5);
     const r6Leo = js2leo.u128(r6);
-    const r7Leo = js2leo.u32(r7);
+    const r7Leo = js2leo.u64(r7);
     const r8Leo = js2leo.u32(r8);
 
     const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo]
@@ -381,7 +381,7 @@ export class Token_bridgeContract {
     return leo2js.boolean(result);
   }
 
-  async sequences(key: bigint): Promise < number > {
+  async sequences(key: bigint): Promise < bigint > {
     const keyLeo = js2leo.u128(key);
 
     const params = [keyLeo]
@@ -390,7 +390,7 @@ export class Token_bridgeContract {
       transition: 'sequences',
       params,
     });
-    return leo2js.u32(result);
+    return leo2js.u64(result);
   }
 
 

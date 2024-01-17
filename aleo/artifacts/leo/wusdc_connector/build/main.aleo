@@ -72,7 +72,7 @@ function wusdc_receive:
     input r1 as address.public;
     input r2 as address.public;
     input r3 as u128.public;
-    input r4 as u32.public;
+    input r4 as u64.public;
     input r5 as u32.public;
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r6 as [u8; 32u32];
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r7 as [u8; 32u32];

@@ -269,7 +269,7 @@ program token_service.aleo {
 
     /// Consumes msg from source at destination
     /// Requires sequence no of the source network
-    transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence_no_of_source_network: u32, public height_of_source_network: u32) {
+    transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence_no_of_source_network: u64, public height_of_source_network: u32) {
 
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020

@@ -63,7 +63,7 @@ export function getMsgTokenSendLeo(msgTokenSend: MsgTokenSend): MsgTokenSendLeo 
 export function getInPacketFullLeo(inPacketFull: InPacketFull): InPacketFullLeo {
   const result: InPacketFullLeo = {
     version: js2leo.u8(inPacketFull.version),
-    sequence: js2leo.u32(inPacketFull.sequence),
+    sequence: js2leo.u64(inPacketFull.sequence),
     source: getForeignContractLeo(inPacketFull.source),
     destination: getAleoProgramLeo(inPacketFull.destination),
     message: getMsgTokenReceiveLeo(inPacketFull.message),
@@ -75,7 +75,7 @@ export function getInPacketFullLeo(inPacketFull: InPacketFull): InPacketFullLeo 
 export function getInPacketLeo(inPacket: InPacket): InPacketLeo {
   const result: InPacketLeo = {
     version: js2leo.u8(inPacket.version),
-    sequence: js2leo.u32(inPacket.sequence),
+    sequence: js2leo.u64(inPacket.sequence),
     source: getForeignContractLeo(inPacket.source),
     destination: getAleoProgramLeo(inPacket.destination),
     msg_hash: js2leo.field(inPacket.msg_hash),
@@ -87,7 +87,7 @@ export function getInPacketLeo(inPacket: InPacket): InPacketLeo {
 export function getOutPacketLeo(outPacket: OutPacket): OutPacketLeo {
   const result: OutPacketLeo = {
     version: js2leo.u8(outPacket.version),
-    sequence: js2leo.u32(outPacket.sequence),
+    sequence: js2leo.u64(outPacket.sequence),
     source: getAleoProgramLeo(outPacket.source),
     destination: getForeignContractLeo(outPacket.destination),
     message: getMsgTokenSendLeo(outPacket.message),
@@ -99,7 +99,7 @@ export function getOutPacketLeo(outPacket: OutPacket): OutPacketLeo {
 export function getPacketIdLeo(packetId: PacketId): PacketIdLeo {
   const result: PacketIdLeo = {
     chain_id: js2leo.u128(packetId.chain_id),
-    sequence: js2leo.u32(packetId.sequence),
+    sequence: js2leo.u64(packetId.sequence),
   }
   return result;
 }
@@ -107,7 +107,7 @@ export function getPacketIdLeo(packetId: PacketId): PacketIdLeo {
 export function getPacketIdWithAttestorLeo(packetIdWithAttestor: PacketIdWithAttestor): PacketIdWithAttestorLeo {
   const result: PacketIdWithAttestorLeo = {
     chain_id: js2leo.u128(packetIdWithAttestor.chain_id),
-    sequence: js2leo.u32(packetIdWithAttestor.sequence),
+    sequence: js2leo.u64(packetIdWithAttestor.sequence),
     attestor: js2leo.address(packetIdWithAttestor.attestor),
   }
   return result;

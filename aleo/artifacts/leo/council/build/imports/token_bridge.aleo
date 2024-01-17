@@ -22,7 +22,7 @@ struct MsgTokenSend:
 
 struct InPacketFull:
     version as u8;
-    sequence as u32;
+    sequence as u64;
     source as ForeignContract;
     destination as AleoProgram;
     message as MsgTokenReceive;
@@ -30,7 +30,7 @@ struct InPacketFull:
 
 struct InPacket:
     version as u8;
-    sequence as u32;
+    sequence as u64;
     source as ForeignContract;
     destination as AleoProgram;
     msg_hash as field;
@@ -38,7 +38,7 @@ struct InPacket:
 
 struct OutPacket:
     version as u8;
-    sequence as u32;
+    sequence as u64;
     source as AleoProgram;
     destination as ForeignContract;
     message as MsgTokenSend;
@@ -46,11 +46,11 @@ struct OutPacket:
 
 struct PacketId:
     chain_id as u128;
-    sequence as u32;
+    sequence as u64;
 
 struct PacketIdWithAttestor:
     chain_id as u128;
-    sequence as u32;
+    sequence as u64;
     attestor as address;
 
 struct InPacketFullAttestorKey:
@@ -114,7 +114,7 @@ mapping supported_services:
 
 mapping sequences:
 	key as u128.public;
-	value as u32.public;
+	value as u64.public;
 
 
 
@@ -334,14 +334,14 @@ finalize publish:
     assert.eq r9 true;
     get supported_services[r8.addr] into r10;
     assert.eq r10 true;
-    get.or_use sequences[r2] 1u32 into r11;
-    get.or_use sequences[6694886634401u128] 1u32 into r12;
+    get.or_use sequences[r2] 1u64 into r11;
+    get.or_use sequences[6694886634401u128] 1u64 into r12;
     cast r2 r3 into r13 as ForeignContract;
     cast r4 r5 r6 r7 into r14 as MsgTokenSend;
     cast 0u8 r11 r8 r13 r14 block.height into r15 as OutPacket;
-    add r11 1u32 into r16;
+    add r11 1u64 into r16;
     set r16 into sequences[r2];
-    add r12 1u32 into r17;
+    add r12 1u64 into r17;
     set r17 into sequences[r0];
     cast r2 r11 into r18 as PacketId;
     set r15 into out_packets[r18];
@@ -361,7 +361,7 @@ function attest:
 
 finalize attest:
     input r0 as u128.public;
-    input r1 as u32.public;
+    input r1 as u64.public;
     input r2 as field.public;
     input r3 as address.public;
     input r4 as boolean.public;
@@ -398,7 +398,7 @@ function consume:
     input r4 as address.public;
     input r5 as address.public;
     input r6 as u128.public;
-    input r7 as u32.public;
+    input r7 as u64.public;
     input r8 as u32.public;
     assert.neq self.signer self.caller;
     cast r0 r1 into r9 as ForeignContract;
@@ -416,7 +416,7 @@ function consume:
 finalize consume:
     input r0 as address.public;
     input r1 as u128.public;
-    input r2 as u32.public;
+    input r2 as u64.public;
     input r3 as field.public;
     get supported_services[r0] into r4;
     assert.eq r4 true;
