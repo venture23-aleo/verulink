@@ -135,7 +135,8 @@ program token_bridge.aleo {
 
     mapping out_packets: PacketId => OutPacket;
 
-    mapping in_packet_attestors: PacketIdWithAttestor => bool;
+    // key is hash(PacketIdWithAttestor)
+    mapping in_packet_attestors: field => bool;
 
     // key is chain_id
     mapping supported_chains: u128 => bool;
@@ -467,6 +468,9 @@ program token_bridge.aleo {
     /// * `screening_passed`: bool - true if the receiver/sender pass the screening; false otherwise
     transition attest(public packet: InPacketFull, public screening_passed: bool) {
 
+        // Assert that the packet is being sent to this chain
+        assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
+
         let msg_hash: field = BHP256::hash_to_field(packet.message);
 
         let packet_hash: field = BHP256::hash_to_field(InPacket {
@@ -479,27 +483,24 @@ program token_bridge.aleo {
         });
 
         let attestor: address = self.caller;
-        let packet_attestor_key: PacketIdWithAttestor = PacketIdWithAttestor {
+        let packet_attestor_key: field = BHP256::hash_to_field(PacketIdWithAttestor {
             chain_id: packet.source.chain_id,
             sequence: packet.sequence,
             attestor
-        };
+        });
 
         let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
             packet_hash,
             screening_passed
         });
 
-        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, attestor, screening_passed, packet_attestor_key, packet);
+        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, attestor, screening_passed, packet_attestor_key);
     }
 
-    finalize attest(chain_id: u128, sequence: u64, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: PacketIdWithAttestor, packet: InPacketFull) {
-
-        // Assert that the packet is being sent to this chain
-        assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
+    finalize attest(source_chain_id: u128, sequence: u64, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: field) {
 
         // Assert that the packet is being received from supported chain.
-        assert(Mapping::get(supported_chains, packet.source.chain_id));
+        assert(Mapping::get(supported_chains, source_chain_id));
 
         // Assert that the attestors signing are valid
         assert(Mapping::get(attestors, attestor));
@@ -521,7 +522,7 @@ program token_bridge.aleo {
         let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
 
         let packet_id: PacketId = PacketId {
-            chain_id,
+            chain_id: source_chain_id,
             sequence
         };
 
@@ -540,14 +541,127 @@ program token_bridge.aleo {
     }
 
 
+    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
     /// Receive a message published on some other chain.
     /// This transition can be called by anyone with valid signature of the attestor.
     ///
     /// # Arguments:
     /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
-    /// * `attestor`: address - Address of the attestor
-    /// * `sign`: signature - Signature of the attestor signing the packet
-    // transition receive(public packet: InPacketFull, public attestor: address, public sign: signature) { sign.verify(attestor, packet) // same as attest};
+    /// * `signers`: address - Array of the addresses of the signers
+    /// * `signs`: signature - Array of the signatures after signing the packet
+    transition receive(public packet: InPacketFull, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) {
+
+        // Assert that the packet is being sent to this chain
+        assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
+
+        let msg_hash: field = BHP256::hash_to_field(packet.message);
+
+        let packet_hash: field = BHP256::hash_to_field(InPacket {
+            version: packet.version,
+            sequence: packet.sequence,
+            source: packet.source,
+            destination: packet.destination,
+            msg_hash,
+            height: packet.height
+        });
+
+        let attestor: address = self.caller;
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
+            packet_hash,
+            screening_passed
+        });
+
+        let valid_signs: u8 = get_valid_signatures_count(packet_hash_with_screening, signers , signs );
+
+        let packet_attestor_keys: [field; 5] = [
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: packet.source.chain_id,
+                sequence: packet.sequence,
+                attestor: signers[0u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: packet.source.chain_id,
+                sequence: packet.sequence,
+                attestor: signers[1u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: packet.source.chain_id,
+                sequence: packet.sequence,
+                attestor: signers[2u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: packet.source.chain_id,
+                sequence: packet.sequence,
+                attestor: signers[3u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: packet.source.chain_id,
+                sequence: packet.sequence,
+                attestor: signers[4u8]
+            })
+        ];
+
+        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, signers, valid_signs, screening_passed, packet_attestor_keys);
+    }
+
+    finalize receive(source_chain_id: u128, sequence: u64, packet_hash_with_screening: field, signers: [address; 5], valid_signs: u8, screening_passed: bool, packet_attestor_keys: [field; 5]) {
+
+        // Assert that the packet is being received from supported chain.
+        assert(Mapping::get(supported_chains, source_chain_id));
+
+        for i: u8 in 0u8..5u8 {
+            if (i <= valid_signs) {
+                // Assert that the attestors signing are valid
+                assert(Mapping::get(attestors, signers[i]));
+                
+                // Assert attestor can only vote once for given (chain_id, sequence)
+                assert(!Mapping::contains(in_packet_attestors, packet_attestor_keys[i]));
+
+                // Mark the packet as signed by attestor
+                Mapping::set(in_packet_attestors, packet_attestor_keys[i], screening_passed);
+            }
+        }
+
+        // Get the attestations for the packet
+        let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8);
+
+        // Increase the attestation by 1
+        Mapping::set(in_packet_attestations, packet_hash_with_screening, packet_attestation_count + valid_signs);
+
+        // Get the threshold
+        // If bridge is not initialized, this should fail
+        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
+
+        let packet_id: PacketId = PacketId {
+            chain_id: source_chain_id,
+            sequence
+        };
+
+        // Check if the packet exists
+        let packet_id_exists: bool = Mapping::contains(in_packet_hash, packet_id);
+
+        if (!packet_id_exists && packet_attestation_count + valid_signs >= threshold) {
+            // If the threshold is met, set the packet_id
+            // Alternatively, store the entire packet
+            Mapping::set(in_packet_hash, packet_id, packet_hash_with_screening);
+
+            // Mark the packet as not consumed
+            Mapping::set(in_packet_consumed, packet_id, false);
+        }
+
+    }
+
+
+    function get_valid_signatures_count(msg: field, signers: [address; 5], signs: [signature; 5]) -> u8 {
+        let count: u8 = 0u8;
+        for i: u8 in 0u8..5u8 {
+            if (signers[i] != ZERO_ADDRESS) {
+                signature::verify(signs[i], signers[i], msg);
+                count = count + 1u8;
+            }
+        }
+        return count;
+    }
 
     /// Consumes a packet available on bridge program.
     /// This transition must be called from one of the service supported by the bridge.

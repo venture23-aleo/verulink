@@ -241,6 +241,21 @@ export class Token_bridgeContract {
     if (this.config.mode === "execute") return result;
   }
 
+  async receive(r0: InPacketFull, r1: Array < string > , r2: Array < string > , r3: boolean) {
+    const r0Leo = js2leo.json(getInPacketFullLeo(r0));
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.address));
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.signature));
+    const r3Leo = js2leo.boolean(r3);
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'receive',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
   async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: bigint, r8: number) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
@@ -345,8 +360,8 @@ export class Token_bridgeContract {
     return getOutPacket(result);
   }
 
-  async in_packet_attestors(key: PacketIdWithAttestor): Promise < boolean > {
-    const keyLeo = js2leo.json(getPacketIdWithAttestorLeo(key));
+  async in_packet_attestors(key: bigint): Promise < boolean > {
+    const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
