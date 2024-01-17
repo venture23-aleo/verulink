@@ -1,0 +1,6 @@
+[[package]]
+name = "token_bridge_v0001"
+network = "testnet3"
+location = "network"
+checksum = "8d71aa7fb8d3e7ac75903e9045cbcf944c5d65ce554de68ec8e6d3b540df3d54"
+dependencies = []

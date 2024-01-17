@@ -32,12 +32,12 @@ import {
   InPacketFullScreeningKey,
   leoInPacketFullScreeningKeySchema,
   InPacketFullScreeningKeyLeo
-} from './token_bridge';
+} from './token_bridge_v0001';
 import {
   OutgoingPercentageInTime,
   leoOutgoingPercentageInTimeSchema,
   OutgoingPercentageInTimeLeo
-} from './token_service';
+} from './token_service_v0001';
 import {
   ProposalSign,
   leoProposalSignSchema,
@@ -102,7 +102,7 @@ import {
   TsUpdateOutgoingPercentage,
   leoTsUpdateOutgoingPercentageSchema,
   TsUpdateOutgoingPercentageLeo
-} from './council';
+} from './council_v0001';
 import {
   token,
   leoTokenSchema,
@@ -110,7 +110,7 @@ import {
   Approval,
   leoApprovalSchema,
   ApprovalLeo
-} from './wusdc_token';
+} from './wusdc_token_v0001';
 import {
   UpdateConnector,
   leoUpdateConnectorSchema,
@@ -118,7 +118,7 @@ import {
   WUsdcRelease,
   leoWUsdcReleaseSchema,
   WUsdcReleaseLeo
-} from './wusdc_connector';
+} from './wusdc_connector_v0001';
 
 export {
   AleoProgram,

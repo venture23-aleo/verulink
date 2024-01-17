@@ -1,0 +1,6 @@
+[[package]]
+name = "wusdc_token_v0001"
+network = "testnet3"
+location = "network"
+checksum = "241c05aab6203fbf2a718550e610b7576209344751e3d85614003c1bee88fb3b"
+dependencies = []

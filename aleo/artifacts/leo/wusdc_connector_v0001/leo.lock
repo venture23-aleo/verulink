@@ -1,0 +1,34 @@
+[[package]]
+name = "token_bridge_v0001"
+network = "testnet3"
+location = "network"
+checksum = "8d71aa7fb8d3e7ac75903e9045cbcf944c5d65ce554de68ec8e6d3b540df3d54"
+dependencies = []
+
+[[package]]
+name = "token_service_v0001"
+network = "testnet3"
+location = "network"
+checksum = "befe2d4dd64571dc515039a8b076709c0d393057eaf43d551550371514b6efb6"
+dependencies = ["token_bridge_v0001.aleo"]
+
+[[package]]
+name = "council_v0001"
+network = "testnet3"
+location = "network"
+checksum = "8fa5c65440b6bfc6199f8c7c514e26e280f8d7b2f64ce8cfc36b9c4f2d75df81"
+dependencies = ["token_bridge_v0001.aleo", "token_service_v0001.aleo"]
+
+[[package]]
+name = "wusdc_token_v0001"
+network = "testnet3"
+location = "network"
+checksum = "241c05aab6203fbf2a718550e610b7576209344751e3d85614003c1bee88fb3b"
+dependencies = []
+
+[[package]]
+name = "wusdc_holding_v0001"
+network = "testnet3"
+location = "network"
+checksum = "2a134104667464c3db264103ed00b04352cf25987d6bb964caaa9b1c63ce1238"
+dependencies = ["wusdc_token_v0001.aleo"]

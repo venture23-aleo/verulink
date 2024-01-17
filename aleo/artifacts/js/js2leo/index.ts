@@ -10,10 +10,10 @@ import {
   getPacketIdWithAttestorLeo,
   getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo
-} from './token_bridge';
+} from './token_bridge_v0001';
 import {
   getOutgoingPercentageInTimeLeo
-} from './token_service';
+} from './token_service_v0001';
 import {
   getProposalSignLeo,
   getExternalProposalLeo,
@@ -36,15 +36,15 @@ import {
   getTsUpdateConnectorLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo
-} from './council';
+} from './council_v0001';
 import {
   gettokenLeo,
   getApprovalLeo
-} from './wusdc_token';
+} from './wusdc_token_v0001';
 import {
   getUpdateConnectorLeo,
   getWUsdcReleaseLeo
-} from './wusdc_connector';
+} from './wusdc_connector_v0001';
 
 export {
   getAleoProgramLeo,

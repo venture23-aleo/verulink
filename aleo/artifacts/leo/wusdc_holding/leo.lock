@@ -1,6 +1,0 @@
-[[package]]
-name = "wusdc_token"
-network = "testnet3"
-location = "network"
-checksum = "0c8aa7d4e07c70b64d3505b0029516a12dc5e5b330f579b92946d15a8e69e6a6"
-dependencies = []
