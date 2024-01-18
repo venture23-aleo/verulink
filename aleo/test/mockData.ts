@@ -13,16 +13,12 @@ const sepoliaChainId = 11155111
 export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 export const aleoChainId = encodeNetworkChainId("aleo", 3);
 
-// // USDC Contract Address on Ethereum
-
+// USDC Contract Address on Ethereum
 export const usdcContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
-export const wusdcTokenAddr = "aleo1qg0azcck30ys6598lpmfx9xpfazj9w7ma973g7l5p7eka0p4jq9s2c3vk2";
-
-console.log(evm2AleoArr(usdcContractAddr))
-
-export const wusdcConnectorAddr = "aleo1l9a39hr7kyuccdw5m3lmz45qjzx3v3mz5a2jfveqkztyr0u0p58s79tre8";
-export const wusdcHoldingAddr = "aleo16dyvhwsrfmx5eru9kffhn6df8cr3v3h06apqzsrphl6h03wa2crq43djr6"
+export const wusdcTokenAddr = "aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j";
+export const wusdcConnectorAddr = "aleo19aner4k7m4nlg9av2t7cl3tpdlvytzc6wgwwp36pm76hmw4jmspsmcqte0";
+export const wusdcHoldingAddr = "aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr793djuxgsxsnf37q8"
 
 // // User Address on Ethereum
 export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
@@ -30,13 +26,13 @@ export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 // // Token Service Contract Address on Ethereum
 export const ethTsContract = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
-// // Token Service Contract on Aleo
-export const aleoTsContract =
-  "aleo1r55t75nceunfds6chwmmhhw3zx5c6wvf62jed0ldyygqctckaurqr8fnd3";
+// Token Service Contract on Aleo
+export const aleoTsProgramAddr =
+  "aleo1z0fa6zr78sppt6ph4kaardmkjn2vme55n8hq8ej2ds7rayxzvq8s6p9p3y";
 
-// // Address of the council Program
-export const councilProgram =
-  "aleo17kz55dul4jmqmw7j3c83yh3wh82hlxnz7v2y5ccqzzj7r6yyeupq4447kp";
+// Address of the council Program
+export const councilProgramAddr =
+  "aleo1d35t6tsp8ne403vj5y9xefjeac8536en5el5f9gpkyt55wuqqqqqpuldsh";
 
 // // User address on Aleo
 export const aleoUser1 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";

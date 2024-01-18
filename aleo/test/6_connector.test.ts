@@ -1,13 +1,15 @@
-import { CouncilContract } from "../artifacts/js/council";
-import { Token_bridgeContract } from "../artifacts/js/token_bridge";
-import { Token_serviceContract } from "../artifacts/js/token_service";
+import { Council_v0001Contract } from "../artifacts/js/council_v0001";
+import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
+import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
+import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
+import { Wusdc_holding_v0001Contract } from "../artifacts/js/wusdc_holding_v0001";
+import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
+
 import { InPacketFull, PacketId } from "../artifacts/js/types";
-import { Wusdc_connectorContract } from "../artifacts/js/wusdc_connector";
-import { Wusdc_holdingContract } from "../artifacts/js/wusdc_holding";
-import { Wusdc_tokenContract } from "../artifacts/js/wusdc_token";
+
 import {
     aleoChainId,
-  aleoTsContract,
+  aleoTsProgramAddr,
   aleoUser1,
   aleoUser2,
   aleoUser3,
@@ -21,12 +23,12 @@ import {
 } from "./mockData";
 import { evm2AleoArr } from "../utils/utils";
 
-const bridge = new Token_bridgeContract({ mode: "execute" });
-const tokenService = new Token_serviceContract({ mode: "execute" });
-const council = new CouncilContract({ mode: "execute" });
-const wusdcToken = new Wusdc_tokenContract({ mode: "execute" });
-const wusdcHolding = new Wusdc_holdingContract({ mode: "execute" });
-const wusdcConnecter = new Wusdc_connectorContract({ mode: "execute" });
+const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
+const tokenService = new Token_service_v0001Contract({ mode: "execute" });
+const council = new Council_v0001Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
+const wusdcHolding = new Wusdc_holding_v0001Contract({ mode: "execute" });
+const wusdcConnecter = new Wusdc_connector_v0001Contract({ mode: "execute" });
 
 const TIMEOUT = 100_000 // 100 seconds
 
@@ -68,11 +70,11 @@ describe("Token Connector", () => {
   describe("Setup", () => {
 
     test("Initialize Bridge", async () => {
-      const threshold = 1;
+      let threshold = 1;
       const owner = aleoUser1;
       let isBridgeInitialized = true;
       try {
-        const threshold = bridge.attestor_settings(true);
+        threshold = await bridge.attestor_settings(true);
       } catch (err) {
         isBridgeInitialized = false;
       }
@@ -91,7 +93,7 @@ describe("Token Connector", () => {
     test("Initialize Token Service", async () => {
       let isTokenServiceInitialized = true;
       try {
-        const owner = tokenService.owner_TS(true);
+        const owner = await tokenService.owner_TS(true);
       } catch (err) {
         isTokenServiceInitialized = false;
       }
@@ -140,35 +142,15 @@ describe("Token Connector", () => {
       }
     }, TIMEOUT);
 
-    test("Token Service: Support Ethereum Chain", async () => {
-      let isEthSupported = true;
-      try {
-        const ethTsAddr = await tokenService.token_service_contracts(
-          ethChainId
-        );
-      } catch (err) {
-        isEthSupported = false;
-      }
-
-      if (!isEthSupported) {
-        const supportEthChainTx = await tokenService.support_chain_ts(
-          ethChainId,
-          evm2AleoArr(ethTsContract)
-        );
-        // @ts-ignore
-        await supportEthChainTx.wait();
-      }
-    }, TIMEOUT);
-
     test("Initialize WUSDC", async () => {
       let isTokenInitialized = true;
       try {
-        const owner = wusdcToken.owner_wusdc(true);
+        const owner = await wusdcToken.owner_wusdc(true);
       } catch (err) {
         isTokenInitialized = false;
       }
 
-      if (isTokenInitialized) {
+      if (!isTokenInitialized) {
         const initializeTx = await wusdcConnecter.initialize_wusdc();
         // @ts-ignore
         await initializeTx.wait();
@@ -201,13 +183,13 @@ describe("Token Connector", () => {
     test("Token Bridge: Enable Service", async () => {
       let isServiceEnabled = true;
       try {
-        isServiceEnabled = await bridge.supported_services(aleoTsContract);
+        isServiceEnabled = await bridge.supported_services(aleoTsProgramAddr);
       } catch (err) {
         isServiceEnabled = false;
       }
 
       if (!isServiceEnabled) {
-        const supportServiceTx = await bridge.enable_service_tb(aleoTsContract);
+        const supportServiceTx = await bridge.enable_service_tb(aleoTsProgramAddr);
         // @ts-ignore
         await supportServiceTx.wait();
       }
@@ -216,9 +198,16 @@ describe("Token Connector", () => {
   });
 
   describe("Happy Path", () => {
-    const incomingSequence = 2;
+    const incomingSequence = BigInt(6);
     const amount = BigInt(10000);
     const height = 10;
+
+    test("Ensure proper setup", async () => {
+      expect(await bridge.owner_TB(true)).toBe(aleoUser1);
+      expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
+      expect(await wusdcToken.owner_wusdc(true)).toBe(wusdcConnectorAddr);
+      expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnectorAddr);
+    })
 
     test("Attest A Packet", async () => {
       // Create a packet
@@ -231,7 +220,7 @@ describe("Token Connector", () => {
         },
         destination: {
           chain_id: aleoChainId,
-          addr: aleoTsContract,
+          addr: aleoTsProgramAddr,
         },
         message: {
           token: wusdcTokenAddr,
@@ -270,7 +259,7 @@ describe("Token Connector", () => {
 
   test("Send a packet", async () => {
     // Send the packet to ethereum
-    const outgoingSequence = 1;
+    const outgoingSequence = BigInt(1);
     const tx = await wusdcConnecter.wusdc_send(
       evm2AleoArr(ethUser),
       BigInt(101),
@@ -288,6 +277,7 @@ describe("Token Connector", () => {
     const outPacket = await bridge.out_packets(packetKey)
     console.log(outPacket);
   }, TIMEOUT);
+
   });
 
   describe("Update governance", () => {
