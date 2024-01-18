@@ -44,6 +44,8 @@ export const aleoUser2 = "aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m
 export const aleoUser3 = "aleo1ashyu96tjwe63u0gtnnv8z5lhapdu4l5pjsl2kha7fv7hvz2eqxs5dz0rg"
 export const aleoUser4 = "aleo12ux3gdauck0v60westgcpqj7v8rrcr3v346e4jtq04q7kkt22czsh808v2"
 export const aleoUser5 = "aleo18s6w7g80y4tdwhthmg5js7yhmud4xqfeq7qdpsfmg099rrv7vq8qkqq3j7"
+export const aleoUser6 = "aleo1zyt7ldc0t3ung0h5sg4k65wjtnmsa6hatagjccxr7s84h93tpuxqf9zse9"
+export const aleoUser7 = "aleo1tvuwdl7remyvccqypa5lzehrdd5tnqpuy49jv7h6uw5au67pkupsjljwgn"
 
 export const councilThreshold = 1;
 
@@ -64,7 +66,7 @@ export const nullError = `Cannot read properties of null (reading 'replace')`;
 export const nullError2 = `Cannot read properties of null (reading 'map')`;
 export const nullError3 = `Cannot read properties of null (reading 'outgoing_percentage')`;
 
-export const incomingSequence = 2;
+export const incomingSequence = BigInt(2);
 export const amount = BigInt(10000);
 export const height = 10;
 
