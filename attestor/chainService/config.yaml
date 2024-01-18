@@ -5,13 +5,21 @@ chains:
   bridge_contract: bridge.aleo
   node_url: http://52.91.48.169|testnet3
   start_from: 0
-  wait_time: 24h # 24 hours
+  wait_time: 24h
+  wallet_path: "aleo_wallet.json"
 - name: ethereum
   chain_id: 1
   bridge_contract: '0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758'
   node_url: https://rpc.sepolia.org
   start_from: 0
-  wait_time: 24h # 24 hours
+  wait_time: 24h
+  wallet_path: "eth_wallet.json"
+# bridge pair let know program that packets from only the given list are to be relayed
+# The pair is taken as source:destination pair. 
+bridge_pair:
+  - ethereum->aleo # will raise relay that sends packet from ethereum to aleo
+  - aleo->ethereum # will raise relay that sends packet from aleo to ethereum and so on
+  # - aleo->solana
 db_path: db
 log:
   encoding: console
