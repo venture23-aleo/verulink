@@ -47,7 +47,7 @@ contract ERC20TokenBridge is
 
     function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) public onlyProxy returns (PacketLibrary.Vote){
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
-        _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
+        return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 
     function sendMessage(PacketLibrary.OutPacket memory packet) public override onlyProxy {

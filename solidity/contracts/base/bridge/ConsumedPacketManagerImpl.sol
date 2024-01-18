@@ -18,7 +18,7 @@ abstract contract ConsumedPacketManagerImpl {
         return consumedPackets[_sequence] != bytes32(0);
     }
 
-    function _recover(bytes32 packetHash, uint8 v, bytes32 r, bytes32 s, PacketLibrary.Vote tryVote) internal view returns (address) {
+    function _recover(bytes32 packetHash, uint8 v, bytes32 r, bytes32 s, PacketLibrary.Vote tryVote) internal pure returns (address) {
         bytes32 prefixedHash = keccak256(
             abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32", 
@@ -29,7 +29,7 @@ abstract contract ConsumedPacketManagerImpl {
         return ecrecover(prefixedHash, v, r, s);
     }
 
-    function _splitSignature(bytes memory sig) private view returns (uint8 v, bytes32 r, bytes32 s) {
+    function _splitSignature(bytes memory sig) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         require(sig.length == 65);
 
         assembly {
@@ -44,7 +44,7 @@ abstract contract ConsumedPacketManagerImpl {
         return (v, r, s);
     }
 
-    function _checkSignatures(bytes32 packetHash, bytes[] memory sigs, uint256 threshold) internal returns (PacketLibrary.Vote) {
+    function _checkSignatures(bytes32 packetHash, bytes[] memory sigs, uint256 threshold) internal view returns (PacketLibrary.Vote) {
         address signer;
         uint256 yeaVote;
         uint256 nayVote;
