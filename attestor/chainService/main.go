@@ -7,10 +7,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/venture23-aleo/attestor/chainService/chain"
 	_ "github.com/venture23-aleo/attestor/chainService/chain/aleo"
 	_ "github.com/venture23-aleo/attestor/chainService/chain/ethereum"
-	common "github.com/venture23-aleo/attestor/chainService/common/wallet"
 	"github.com/venture23-aleo/attestor/chainService/config"
 	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/relay"
@@ -23,25 +21,10 @@ var (
 	devMode    bool
 )
 
-type Receiver struct {
-	Src    string
-	Dst    string
-	Client Client
-}
-type Client struct{}
-
-type SenderFunc func(src, dst, url string, wallet common.Wallet) chain.ISender
-type ReceiverFunc func(src string, dst []string, nodeAddress string) chain.IReceiver
-
 func init() {
 	flag.StringVar(&configFile, "config", "", "config file")
 	flag.BoolVar(&devMode, "mode", true, "Set mode. Especially useful for logging")
 }
-
-var (
-	Senders   = map[string]SenderFunc{}
-	Receivers = map[string]ReceiverFunc{}
-)
 
 func main() {
 	flag.Parse()
