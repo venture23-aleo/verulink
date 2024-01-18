@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {Ownable} from "../../common/Ownable.sol";
 import "../../common/libraries/Lib.sol";
 
-contract ERC20TokenSupport is Ownable {
+abstract contract ERC20TokenSupport is Ownable {
     struct Token {
         address tokenAddress;
         PacketLibrary.OutNetworkAddress destTokenAddress;
@@ -14,7 +14,7 @@ contract ERC20TokenSupport is Ownable {
         bool enabled;
     }
 
-    mapping(address => Token) public supportedTokens;
+    mapping(address => Token) supportedTokens;
 
     event TokenAdded(Token token, uint256 destChainId);
     event TokenRemoved(address token, uint256 destChainId);
@@ -27,7 +27,7 @@ contract ERC20TokenSupport is Ownable {
     function isSupportedToken(
         address token,
         uint256 destChainId
-    ) public view returns (bool) {
+    ) public view onlyProxy returns (bool) {
         return
             supportedTokens[token].destTokenAddress.chainId ==
             destChainId;
@@ -36,12 +36,12 @@ contract ERC20TokenSupport is Ownable {
     function isEnabledToken(
         address token,
         uint256 destChainId
-    ) public view returns (bool) {
+    ) public view onlyProxy returns (bool) {
         return
             supportedTokens[token].enabled && isSupportedToken(token, destChainId);
     }
 
-    function isAmountInRange(address tokenAddress, uint256 amount) public view returns (bool) {
+    function isAmountInRange(address tokenAddress, uint256 amount) public view onlyProxy returns (bool) {
         Token memory token = supportedTokens[tokenAddress];
         return amount >= token.minValue && amount <= token.maxValue;
     }
@@ -53,7 +53,7 @@ contract ERC20TokenSupport is Ownable {
         string memory destTokenService,
         uint256 min,
         uint256 max
-    ) public onlyOwner {
+    ) public onlyOwner onlyProxy {
         require(
             !isSupportedToken(tokenAddress, destChainId),
             "Token already supported"
@@ -73,7 +73,7 @@ contract ERC20TokenSupport is Ownable {
     function removeToken(
         address tokenAddress,
         uint256 destChainId
-    ) public onlyOwner {
+    ) public onlyOwner onlyProxy {
         require(
             isSupportedToken(tokenAddress, destChainId),
             "Token not supported"
@@ -85,7 +85,7 @@ contract ERC20TokenSupport is Ownable {
     function enable(
         address tokenAddress,
         uint256 destChainId
-    ) public onlyOwner {
+    ) public onlyOwner onlyProxy {
         require(
             isEnabledToken(tokenAddress, destChainId),
             "Token not enabled"
@@ -97,19 +97,19 @@ contract ERC20TokenSupport is Ownable {
     function disable(
         address tokenAddress,
         uint256 destChainId
-    ) public onlyOwner {
+    ) public onlyOwner onlyProxy {
         require(isEnabledToken(tokenAddress, destChainId), "Token not enabled");
         supportedTokens[tokenAddress].enabled = false;
         emit TokenDisabled(tokenAddress, destChainId);
     }
 
-    function updateMinValue(address tokenAddress, uint256 destChainId, uint256 minValue) public onlyOwner {
+    function updateMinValue(address tokenAddress, uint256 destChainId, uint256 minValue) public onlyOwner onlyProxy {
         require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
         emit TokenMinValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].minValue, minValue);
         supportedTokens[tokenAddress].minValue = minValue;
     }
 
-    function updateMaxValue(address tokenAddress, uint256 destChainId, uint256 maxValue) public onlyOwner {
+    function updateMaxValue(address tokenAddress, uint256 destChainId, uint256 maxValue) public onlyOwner onlyProxy {
         require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
         emit TokenMaxValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].maxValue, maxValue);
         supportedTokens[tokenAddress].maxValue = maxValue;

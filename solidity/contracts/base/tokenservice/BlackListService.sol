@@ -28,15 +28,15 @@ contract BlackListService is Ownable {
         usdt = _usdt;
     }
 
-    function addToBlackList(address account) external onlyOwner {
+    function addToBlackList(address account) external onlyOwner onlyProxy {
         emit BlackListAdded(account);
         blackLists[account] = true;
     }
-    function removeFromBlackList(address account) external onlyOwner {
+    function removeFromBlackList(address account) external onlyOwner onlyProxy {
         emit BlackListRemoved(account);
         delete blackLists[account];
     }
-    function isBlackListed(address account) public view returns (bool) {
+    function isBlackListed(address account) public view onlyProxy returns (bool) {
         return (blackLists[account] || 
             IERC20(usdc).isBlacklisted(account) ||
             IERC20(usdt).getBlackListStatus(account));

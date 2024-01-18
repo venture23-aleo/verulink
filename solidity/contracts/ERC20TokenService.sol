@@ -2,19 +2,17 @@
 pragma solidity ^0.8.19;
 
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
-import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-import {BlackListService} from "./base/tokenservice/BlackListService.sol";
-import {ERC20TokenSupport} from "./base/tokenservice/ERC20TokenSupport.sol";
 import {IERC20TokenBridge} from "./common/interface/bridge/IERC20TokenBridge.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
-import {Holding} from "./HoldingContract.sol";
-import "./common/libraries/Lib.sol";
 import {Ownable} from "./common/Ownable.sol";
+import {BlackListService} from "./base/tokenservice/BlackListService.sol";
+import {ERC20TokenSupport} from "./base/tokenservice/ERC20TokenSupport.sol";
+import {Holding} from "./Holding.sol";
+import "./common/libraries/Lib.sol";
 
 contract ERC20TokenService is Ownable, BlackListService, 
     ERC20TokenSupport, 
-    Initializable,
-    Upgradeable 
+    Initializable
 {
     address erc20Bridge;
     Holding holding;
@@ -36,10 +34,6 @@ contract ERC20TokenService is Ownable, BlackListService,
 
     function tokenType() public pure returns (string memory) {
         return "ERC20";
-    }
-
-    function _authorizeUpgrade(address) internal view override {
-        msg.sender == owner;
     }
 
     function setHolding(Holding _holding) public onlyOwner {

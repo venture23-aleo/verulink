@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Ownable} from "../../common/Ownable.sol";
 
-contract AttestorManager is Ownable{
+abstract contract AttestorManager is Ownable {
     event AttestorAdded(address attestor, uint256 quorum);
     event AttestorRemoved(address attestor, uint256 quorum);
 
@@ -14,7 +14,7 @@ contract AttestorManager is Ownable{
         return attestors[attestor];
     }
 
-    function addAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
+    function addAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner onlyProxy {
         require(attestor != address(0), "Zero Address");
         require(!isAttestor(attestor), "Attestor already exists");
         attestors[attestor] = true;
@@ -22,14 +22,14 @@ contract AttestorManager is Ownable{
         emit AttestorAdded(attestor, newQuorumRequired);
     }
 
-    function removeAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
+    function removeAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner onlyProxy {
         require(attestors[attestor], "Unknown Attestor");
         delete attestors[attestor];
         quorumRequired = newQuorumRequired;
         emit AttestorRemoved(attestor, newQuorumRequired);
     }
 
-    function addAttestors(address[] memory _attestors, uint256 newQuorumRequired) public onlyOwner {
+    function addAttestors(address[] memory _attestors, uint256 newQuorumRequired) public onlyOwner onlyProxy {
         for(uint256 i=0;i<_attestors.length;i++) {
             addAttestor(_attestors[i], newQuorumRequired);
         }

@@ -1,25 +1,35 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-contract Ownable {
+import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
+
+abstract contract Ownable is Upgradeable {
     event OwnershipTransferred(address oldOwner, address newOwner);
 
-    address public owner;
+    address _owner_;
 
     modifier onlyOwner {
-        require(msg.sender == owner, "Not owner");
+        require(msg.sender == _owner_, "Not owner");
         _;
     }
 
     function initialize(
-        address _owner
+        address __owner
     ) public virtual {
-        owner = _owner;
+        _owner_ = __owner;
     }
 
-    function transferOwnership(address newOwner) external onlyOwner {
+    function owner() public view onlyProxy returns (address) {
+        return _owner_;
+    }
+
+    function _authorizeUpgrade(address) internal view override {
+        require(msg.sender == _owner_);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner onlyProxy {
         require(newOwner != address(0), "Zero Address");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+        emit OwnershipTransferred(_owner_, newOwner);
+        _owner_ = newOwner;
     }
 }

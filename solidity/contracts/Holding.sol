@@ -4,9 +4,8 @@ pragma solidity ^0.8.19;
 import {Ownable} from "./common/Ownable.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
-import "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Holding is Ownable, Initializable, Upgradeable {
+contract Holding is Ownable, Initializable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);
@@ -22,10 +21,6 @@ contract Holding is Ownable, Initializable, Upgradeable {
     function initialize(address _owner, address _tokenService) public initializer {
         super.initialize(_owner);
         tokenService = _tokenService;
-    }
-
-    function _authorizeUpgrade(address) internal view override {
-        msg.sender == owner;
     }
 
     function updateTokenService(address _tokenService) public onlyOwner {
