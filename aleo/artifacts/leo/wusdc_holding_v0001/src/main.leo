@@ -14,11 +14,11 @@ program wusdc_holding_v0001.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_wusdc_holding() {
+    transition initialize_holding() {
         return then finalize(self.caller);
     }
 
-    finalize initialize_wusdc_holding(connector: address) {
+    finalize initialize_holding(connector: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(owner_holding, true));
 
@@ -32,11 +32,11 @@ program wusdc_holding_v0001.aleo {
 
     /// Update the existing owner program
     /// Can only be called from owner/owner program
-    transition transfer_ownership_wusdc_holdin(public new_owner: address) {
+    transition transfer_ownership_holding(public new_owner: address) {
         return then finalize(self.caller, new_owner);
     }
 
-    finalize transfer_ownership_wusdc_holdin(from: address, new_owner: address) {
+    finalize transfer_ownership_holding(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_holding, true);

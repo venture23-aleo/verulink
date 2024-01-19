@@ -48,24 +48,24 @@ export class Wusdc_holding_v0001Contract {
 
     return result;
   }
-  async initialize_wusdc_holding() {
+  async initialize_holding() {
 
     const params = []
     const result = await zkRun({
       config: this.config,
-      transition: 'initialize_wusdc_holding',
+      transition: 'initialize_holding',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async transfer_ownership_wusdc_holdin(r0: string) {
+  async transfer_ownership_holding(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'transfer_ownership_wusdc_holdin',
+      transition: 'transfer_ownership_holding',
       params,
     });
     if (this.config.mode === "execute") return result;

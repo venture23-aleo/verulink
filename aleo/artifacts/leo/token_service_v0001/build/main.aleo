@@ -231,15 +231,16 @@ finalize update_outgoing_percentage_ts:
 
 function token_send:
     input r0 as address.public;
-    input r1 as [u8; 32u32].public;
-    input r2 as u128.public;
+    input r1 as address.public;
+    input r2 as [u8; 32u32].public;
     input r3 as u128.public;
-    input r4 as [u8; 32u32].private;
+    input r4 as u128.public;
     input r5 as [u8; 32u32].private;
+    input r6 as [u8; 32u32].private;
     assert.neq self.signer self.caller;
-    call token_bridge_v0001.aleo/publish r3 r5 r4 self.caller r1 r2 into r6;
-    async token_send r6 self.caller r0 r2 into r7;
-    output r7 as token_service_v0001.aleo/token_send.future;
+    call token_bridge_v0001.aleo/publish r4 r6 r5 r1 r2 r3 into r7;
+    async token_send r7 self.caller r0 r3 into r8;
+    output r8 as token_service_v0001.aleo/token_send.future;
 
 finalize token_send:
     input r0 as token_bridge_v0001.aleo/publish.future;

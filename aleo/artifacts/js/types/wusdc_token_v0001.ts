@@ -44,3 +44,16 @@ export const leoApprovalSchema = z.object({
   spender: leoAddressSchema,
 });
 export type ApprovalLeo = z.infer < typeof leoApprovalSchema > ;
+
+export interface TokenInfo {
+  name: Array < number > ;
+  symbol: Array < number > ;
+  decimals: number;
+}
+
+export const leoTokenInfoSchema = z.object({
+  name: z.array(leoU8Schema).length(32),
+  symbol: z.array(leoU8Schema).length(16),
+  decimals: leoU8Schema,
+});
+export type TokenInfoLeo = z.infer < typeof leoTokenInfoSchema > ;

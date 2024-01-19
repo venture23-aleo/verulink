@@ -3,14 +3,17 @@ import * as leo2js from './leo2js/common';
 import {
   token,
   Approval,
+  TokenInfo,
 } from "./types";
 import {
   gettokenLeo,
   getApprovalLeo,
+  getTokenInfoLeo,
 } from './js2leo';
 import {
   gettoken,
   getApproval,
+  getTokenInfo,
 } from './leo2js';
 import {
   zkRun,
@@ -60,24 +63,27 @@ export class Wusdc_token_v0001Contract {
 
     return result;
   }
-  async initialize_wusdc_token() {
+  async initialize_token(r0: Array < number > , r1: Array < number > , r2: number) {
+    const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
+    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
+    const r2Leo = js2leo.u8(r2);
 
-    const params = []
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'initialize_wusdc_token',
+      transition: 'initialize_token',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async transfer_ownership_wusdc_token(r0: string) {
+  async transfer_ownership_token(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'transfer_ownership_wusdc_token',
+      transition: 'transfer_ownership_token',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -234,16 +240,28 @@ export class Wusdc_token_v0001Contract {
     return leo2js.u128(result);
   }
 
-  async owner_wusdc(key: boolean): Promise < string > {
+  async token_owner(key: boolean): Promise < string > {
     const keyLeo = js2leo.boolean(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'owner_wusdc',
+      transition: 'token_owner',
       params,
     });
     return leo2js.address(result);
+  }
+
+  async info(key: boolean): Promise < TokenInfo > {
+    const keyLeo = js2leo.boolean(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'info',
+      params,
+    });
+    return getTokenInfo(result);
   }
 
 

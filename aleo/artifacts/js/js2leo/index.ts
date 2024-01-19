@@ -39,7 +39,8 @@ import {
 } from './council_v0001';
 import {
   gettokenLeo,
-  getApprovalLeo
+  getApprovalLeo,
+  getTokenInfoLeo
 } from './wusdc_token_v0001';
 import {
   getUpdateConnectorLeo,
@@ -82,6 +83,7 @@ export {
   getTsUpdateOutgoingPercentageLeo,
   gettokenLeo,
   getApprovalLeo,
+  getTokenInfoLeo,
   getUpdateConnectorLeo,
   getWUsdcReleaseLeo,
 };

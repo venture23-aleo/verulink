@@ -18,44 +18,70 @@ program wusdc_token_v0001.aleo {
         spender: address
     }
 
+    struct TokenInfo {
+        // Name of the token
+        // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
+        // Example: `USD Coin` is represented as following (hex):
+        // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
+        name: [u8; 32],
+        // Symbol of the token
+        // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
+        // Example: `USDC` is represented as following (hex):
+        // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
+        symbol: [u8; 16],
+        // Decimals of the token
+        decimals: u8
+    }
+
     // On-chain storage of an `approvals` map, with `hash(approver, spender)` as the key,
     // and `u128` as the value.
     mapping approvals: field => u128;
 
-    mapping owner_wusdc: bool => address;
-    const GOVERNANCE_INDEX: bool = true;
+    // Store the owner of the token
+    // Token Owner can mint/burn asset
+    mapping token_owner: bool => address;
+
+    // Store the information about the token
+    mapping info: bool => TokenInfo;
 
     ///////////////////////////////////////////
     /////// Initialization & Governance ///////
     ///////////////////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_wusdc_token() {
-        return then finalize(self.caller);
+    transition initialize_token(name: [u8; 32], symbol: [u8; 16], decimals: u8) {
+        return then finalize(self.caller, name, symbol, decimals);
     }
 
-    finalize initialize_wusdc_token(owner: address) {
+    finalize initialize_token(owner: address, name: [u8; 32], symbol: [u8; 16], decimals: u8) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(owner_wusdc, true));
+        assert(!Mapping::contains(token_owner, true));
 
         // Set the council program
-        Mapping::set(owner_wusdc, true, owner);
+        Mapping::set(token_owner, true, owner);
+
+        let token_info: TokenInfo = TokenInfo {
+            name,
+            symbol,
+            decimals
+        };
+        Mapping::set(info, true, token_info);
     }
 
     /// Update the existing owner program
     /// Can only be called from owner program
-    transition transfer_ownership_wusdc_token(public new_governance: address) {
-        return then finalize(self.caller, new_governance);
+    transition transfer_ownership_token(public new_owner: address) {
+        return then finalize(self.caller, new_owner);
     }
 
-    finalize transfer_ownership_wusdc_token(from: address, new_governance: address) {
+    finalize transfer_ownership_token(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_wusdc, true);
+        let owner: address = Mapping::get(token_owner, true);
         assert_eq(from, owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(owner_wusdc, true, new_governance);
+        Mapping::set(token_owner, true, new_owner);
     }
 
 
@@ -70,7 +96,7 @@ program wusdc_token_v0001.aleo {
     finalize mint_public(minter: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_wusdc, true);
+        let owner: address = Mapping::get(token_owner, true);
 
         // Only owner can mint
         assert_eq(minter, owner);
@@ -89,7 +115,7 @@ program wusdc_token_v0001.aleo {
     finalize burn_public(burner: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_wusdc, true);
+        let owner: address = Mapping::get(token_owner, true);
 
         // Only governace can burn
         assert_eq(burner, owner);
@@ -269,28 +295,6 @@ program wusdc_token_v0001.aleo {
         // If `account[receiver]` does not exist, it will be created.
         let receiver_amount: u128 = Mapping::get_or_use(account, receiver, 0u128);
         Mapping::set(account, receiver, receiver_amount + amount);
-    }
-
-    // Name of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USD Coin` is represented as following (hex):
-    // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
-    // Storing in const? Error [ETYC0372080]: The value of a const declaration must be a literal
-    inline name() -> [u8; 32] {
-        return [ 85u8, 83u8, 68u8, 32u8, 67u8, 111u8, 105u8, 110u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8 ];
-    }
-
-    // Symbol of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USDC` is represented as following (hex):
-    // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
-    inline symbol() -> [u8; 16] {
-        return [ 85u8, 83u8, 68u8, 67u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8 ];
-    }
-
-    // Decimals of the token
-    inline decimals() -> u8 {
-        return 6u8;
     }
 
 }

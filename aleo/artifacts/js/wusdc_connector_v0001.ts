@@ -38,6 +38,7 @@ import {
   OutgoingPercentageInTime,
   token,
   Approval,
+  TokenInfo,
 } from "./types";
 import {
   getUpdateConnectorLeo,
@@ -77,6 +78,7 @@ import {
   getOutgoingPercentageInTimeLeo,
   gettokenLeo,
   getApprovalLeo,
+  getTokenInfoLeo,
 } from './js2leo';
 import {
   getUpdateConnector,
@@ -116,6 +118,7 @@ import {
   getOutgoingPercentageInTime,
   gettoken,
   getApproval,
+  getTokenInfo,
 } from './leo2js';
 import {
   zkRun,

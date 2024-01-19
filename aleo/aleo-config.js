@@ -5,14 +5,14 @@ module.exports = {
   mode: "execute",
   mainnet: {},
   networks: {
-    testnet3: {
+    local: {
       endpoint: "http://localhost:3030",
       accounts: [process.env.ALEO_TESTNET_PRIVATE_KEY],
       priorityFee: 0.01,
     },
-    mainnet: {
+    testnet3: {
       endpoint: "https://api.explorer.aleo.org/v1",
-      accounts: [process.env.ALEO_PRIVATE_KEY_MAINNET],
+      accounts: [process.env.ALEO_TESTNET3_PRIVATE_KEY],
       priorityFee: 0.001,
     },
   },
