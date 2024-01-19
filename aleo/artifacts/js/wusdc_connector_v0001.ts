@@ -127,7 +127,7 @@ import {
   zkGetMapping
 } from './utils';
 
-const networkConfig = require('../../aleo-config');
+import networkConfig from '../../aleo-config';
 
 export class Wusdc_connector_v0001Contract {
 

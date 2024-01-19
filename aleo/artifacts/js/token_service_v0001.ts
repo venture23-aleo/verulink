@@ -16,7 +16,7 @@ import {
   zkGetMapping
 } from './utils';
 
-const networkConfig = require('../../aleo-config');
+import networkConfig from '../../aleo-config';
 
 export class Token_service_v0001Contract {
 

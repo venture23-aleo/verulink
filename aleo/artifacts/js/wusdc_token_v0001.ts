@@ -22,7 +22,7 @@ import {
   zkGetMapping
 } from './utils';
 
-const networkConfig = require('../../aleo-config');
+import networkConfig from '../../aleo-config';
 
 export class Wusdc_token_v0001Contract {
 

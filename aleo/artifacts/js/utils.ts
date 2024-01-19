@@ -146,7 +146,7 @@ const validateBroadcast = async (
   nodeEndpoint: string
 ) => {
   const pollUrl = `${nodeEndpoint}/testnet3/transaction/${transactionId}`;
-  const timeoutMs = 240_000;
+  const timeoutMs = 2000_000;
   const pollInterval = 1000; // 1 second
   const startTime = Date.now();
 
@@ -161,7 +161,7 @@ const validateBroadcast = async (
       }
       return data;
     } catch (e: any) {
-      console.log(e.response.data);
+      // console.log(e.response.data);
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
       console.log('Retrying');
     }

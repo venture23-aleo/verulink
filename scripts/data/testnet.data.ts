@@ -1,4 +1,4 @@
-import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from "../../utils/utils";
+import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from "../../aleo/utils/utils";
 
 const sepoliaChainId = 11155111
 export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);

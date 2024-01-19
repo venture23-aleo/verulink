@@ -16,17 +16,17 @@ import {
   aleoUser4,
   aleoUser5,
   ethChainId,
-  ethTsContract,
+  ethTsContractAddr,
   ethUser,
   usdcContractAddr,
   wusdcConnectorAddr,
   wusdcTokenAddr,
 } from "./mockData";
 import { aleoArr2Evm, evm2AleoArr } from "../utils/utils";
-import { ethTsContractAddr } from "../scripts/data/testnet.data";
 
 const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
 const tokenService = new Token_service_v0001Contract({ mode: "execute" });
+const council = new Council_v0001Contract({mode: "execute"});
 const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
 const wusdcHolding = new Wusdc_holding_v0001Contract({ mode: "execute" });
 const wusdcConnecter = new Wusdc_connector_v0001Contract({ mode: "execute" });
@@ -46,6 +46,12 @@ describe("Token Connector", () => {
       const deployTx = await tokenService.deploy();
       await deployTx.wait();
     }, TIMEOUT);
+
+    test("Deploy Token Service", async () => {
+      const deployTx = await council.deploy();
+      await deployTx.wait();
+    }, TIMEOUT);
+
 
     test("Deploy Token", async () => {
       const deployTx = await wusdcToken.deploy();
@@ -131,7 +137,7 @@ describe("Token Connector", () => {
       if (!isEthSupported) {
         const supportEthChainTx = await tokenService.support_chain_ts(
           ethChainId,
-          evm2AleoArr(ethTsContract)
+          evm2AleoArr(ethTsContractAddr)
         );
         // @ts-ignore
         await supportEthChainTx.wait();
@@ -216,7 +222,7 @@ describe("Token Connector", () => {
         sequence: incomingSequence,
         source: {
           chain_id: ethChainId,
-          addr: evm2AleoArr(ethTsContract),
+          addr: evm2AleoArr(ethTsContractAddr),
         },
         destination: {
           chain_id: aleoChainId,

@@ -10,7 +10,7 @@ import {
 } from "./data/testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
-import { THRESHOLD_INDEX, TOTAL_ATTESTORS_INDEX } from "../test/mockData";
+import { THRESHOLD_INDEX, TOTAL_ATTESTORS_INDEX } from "../aleo/test/mockData";
 
 const setup = async () => {
   const bridge = new Token_bridge_v0001Contract({

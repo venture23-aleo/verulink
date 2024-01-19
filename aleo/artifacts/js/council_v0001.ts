@@ -112,7 +112,7 @@ import {
   zkGetMapping
 } from './utils';
 
-const networkConfig = require('../../aleo-config');
+import networkConfig from '../../aleo-config';
 
 export class Council_v0001Contract {
 
