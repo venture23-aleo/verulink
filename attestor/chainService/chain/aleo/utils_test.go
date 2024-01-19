@@ -150,11 +150,11 @@ func TestParseAleoPacket(t *testing.T) {
 			Version:  uint64(0),
 			Sequence: uint64(1),
 			Source: chain.NetworkAddress{
-				ChainID: uint64(2),
+				ChainID: uint32(2),
 				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 			},
 			Destination: chain.NetworkAddress{
-				ChainID: uint64(1),
+				ChainID: uint32(1),
 				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
 			},
 			Message: chain.Message{
@@ -178,11 +178,11 @@ func TestParseAleoPacket(t *testing.T) {
 			Version:  uint64(0),
 			Sequence: uint64(1),
 			Source: chain.NetworkAddress{
-				ChainID: uint64(2),
+				ChainID: uint32(2),
 				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 			},
 			Destination: chain.NetworkAddress{
-				ChainID: uint64(1),
+				ChainID: uint32(1),
 				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
 			},
 			Message: chain.Message{
@@ -245,11 +245,11 @@ func TestConstructAleoPacket(t *testing.T) {
 		Version:  uint64(0),
 		Sequence: uint64(1),
 		Source: chain.NetworkAddress{
-			ChainID: uint64(1),
+			ChainID: uint32(1),
 			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
 		},
 		Destination: chain.NetworkAddress{
-			ChainID: uint64(2),
+			ChainID: uint32(2),
 			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px", // converting address of form [0u8, 0u8, ..., 176u8] to str
 		},
 		Message: chain.Message{

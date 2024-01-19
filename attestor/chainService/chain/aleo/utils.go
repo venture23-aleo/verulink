@@ -127,11 +127,11 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	}
 	pkt.Sequence = sequence
 
-	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chainID, "u32", "", 1), 0, 64)
+	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chainID, "u32", "", 1), 0, 32)
 	if err != nil {
 		return nil, err
 	}
-	pkt.Source.ChainID = sourceChainID
+	pkt.Source.ChainID = uint32(sourceChainID)
 	pkt.Source.Address = packet.source.address
 
 	destChainID, err := strconv.ParseUint(strings.Replace(packet.destination.chainID, "u32", "", 1), 0, 64)
@@ -139,7 +139,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 		return nil, err
 	}
 
-	pkt.Destination.ChainID = destChainID
+	pkt.Destination.ChainID = uint32(destChainID)
 
 	pkt.Destination.Address, err = parseAleoEthAddrToHexString(packet.destination.address)
 	if err != nil {

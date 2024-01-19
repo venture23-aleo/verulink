@@ -3,7 +3,6 @@ package relay
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	"github.com/venture23-aleo/attestor/chainService/config"
@@ -15,8 +14,13 @@ const (
 	walletScreeningNameSpace = "walletScreeningNS"
 )
 
-var RegisteredClients = map[string]ClientFunc{}
-var RegisteredHashers = map[string]HashFunc{}
+var (
+	chainIDToChainName         = map[uint32]string{}
+	RegisteredClients          = map[string]ClientFunc{}
+	RegisteredHashers          = map[string]HashFunc{}
+	RegisteredRetryChannels    = map[string]chan *chain.Packet{}
+	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
+)
 
 type Namer interface {
 	Name() string
@@ -31,12 +35,12 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 		panic(err)
 	}
 
-	dbCh := make(chan *chain.Packet)
-	go store.StartStoringPackets(ctx, dbCh)
+	pktCh := make(chan *chain.Packet)
+	go store.StartStoringPackets(ctx, pktCh)
 	doneCh := make(chan struct{})
-	go initPacketFeeder(ctx, cfg.ChainConfigs, dbCh, doneCh)
+	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh, doneCh)
 	<-doneCh
-	consumePackets(ctx)
+	consumePackets(ctx, pktCh)
 }
 
 func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet, doneCh chan struct{}) {
@@ -50,7 +54,7 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 			if _, ok := RegisteredHashers[chainCfg.Name]; !ok {
 				panic(fmt.Sprintf("hash undefined for chain %s", chainCfg.Name))
 			}
-
+			chainIDToChainName[chainCfg.ChainID] = chainCfg.Name
 			ch <- RegisteredClients[chainCfg.Name](chainCfg)
 		}
 		close(doneCh)
@@ -74,36 +78,24 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 	}
 }
 
-type screenedPacket struct {
-	*chain.Packet
-	IsWhite bool
-}
-
-func consumePackets(ctx context.Context) {
+func consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
+	guideCh := make(chan struct{}, 100) // todo: take from config
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 		}
+		pkt := <-pktCh
+		guideCh <- struct{}{}
 
-		ch := store.RetrieveNPackets("", 100)
-		wg := sync.WaitGroup{}
-		mu := sync.Mutex{}
-		screenedPackets := make([]*screenedPacket, 0)
-		for pkt := range ch {
-			wg.Add(1)
-			go func() {
-				defer wg.Wait()
-
-				isWhite := screen(pkt)
-
-				mu.Lock()
-				screenedPackets = append(screenedPackets, &screenedPacket{pkt, isWhite})
-				mu.Unlock()
+		go func() {
+			defer func() {
+				<-guideCh
 			}()
-		}
-		wg.Wait()
+
+			processPacket(pkt)
+		}()
 
 		// Get hash data respective to chain
 		// Maybe get hash as well, as per chain
@@ -112,4 +104,45 @@ func consumePackets(ctx context.Context) {
 		// on successful response, delete entry in database
 
 	}
+}
+
+func processPacket(pkt *chain.Packet) {
+	isWhite := screen(pkt) // todo: might need to receive error as well
+	sp := chain.ScreenedPacket{
+		Packet:  pkt,
+		IsWhite: isWhite,
+	}
+
+	chainName := chainIDToChainName[pkt.Source.ChainID]
+
+	var err error
+
+	defer func() {
+		// store Packet + isWhite information
+		// isWhite info can be stored simply as sha256Hash(packet):isWhite
+	}()
+
+	signature, err := signScreenedPacket(&sp)
+	if err != nil {
+		// todo: store isWhite information
+		// log error
+		return
+	}
+
+	err = sendToCollector(&sp, signature)
+	if err != nil {
+		// log error
+		return
+	}
+
+	RegisteredCompleteChannels[chainName] <- pkt
+}
+
+func addToRetryNameSpace(pkt *chain.Packet) error {
+	return nil
+}
+
+func sendToCollector(sp *chain.ScreenedPacket, signature string) error {
+	// todo: need to send srcChainId, destChainID, packetSeqNum, signature and probably isWhite
+	return nil
 }

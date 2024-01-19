@@ -54,11 +54,11 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum u
 	packet := &chain.Packet{
 		Version: ethpacket.Version.Uint64(),
 		Destination: chain.NetworkAddress{
-			ChainID: ethpacket.DestTokenService.ChainId.Uint64(),
+			ChainID: uint32(ethpacket.DestTokenService.ChainId.Uint64()),
 			Address: ethpacket.DestTokenService.Addr,
 		},
 		Source: chain.NetworkAddress{
-			ChainID: ethpacket.SourceTokenService.ChainId.Uint64(),
+			ChainID: uint32(ethpacket.SourceTokenService.ChainId.Uint64()),
 			Address: string(ethpacket.SourceTokenService.Addr.Bytes()),
 		},
 		Sequence: ethpacket.Sequence.Uint64(),
@@ -146,7 +146,6 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 		//
 	}
-
 }
 
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
@@ -158,3 +157,16 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 	}
 }
+
+/*
+Send packet immediately for it to be signed and sent to public database
+If it fails to sign or send to public database, then send to retry namespace
+Have a go routine to update base sequence number
+For ethereum it should store it as seqNum:Height
+For aleo it can store it as seqNum:nil
+
+While updating baseseq num, if it finds any gap then it gets packet from retry namespace and
+send it for it to be signed immediately.
+If not available in namespace then download block and parse and store the packet
+
+*/

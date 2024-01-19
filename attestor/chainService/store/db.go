@@ -89,6 +89,21 @@ func RetrieveNPackets(namespace string, n int) chan *chain.Packet {
 	return ch
 }
 
+func RetrieveNPacketsFromPrefix(namespace string, n int, prefix string) chan *chain.Packet {
+	pktCh := retrieveNKeyValuesAfterPrefix(namespace, n, prefix)
+	ch := make(chan *chain.Packet)
+	go func() {
+		for kv := range pktCh {
+			value := kv[1]
+			pkt := new(chain.Packet)
+			json.Unmarshal(value, pkt)
+			ch <- pkt
+		}
+		close(ch)
+	}()
+	return ch
+}
+
 func StartStoringPackets(ctx context.Context, ch <-chan *chain.Packet) {
 	for {
 		var pkt *chain.Packet

@@ -1,7 +1,15 @@
 package relay
 
-import "fmt"
+import (
+	"github.com/venture23-aleo/attestor/chainService/chain"
+)
 
-func signScreenedPacket(sp *screenedPacket) {
-	fmt.Sprintf("%s%v", sp.Packet.GetSha256Hash(), sp.IsWhite)
+func signScreenedPacket(sp *chain.ScreenedPacket) (string, error) {
+	name := chainIDToChainName[sp.Packet.Destination.ChainID]
+	hash := RegisteredHashers[name](sp)
+	//sign hash from signing service
+
+	_ = hash
+
+	return "", nil
 }

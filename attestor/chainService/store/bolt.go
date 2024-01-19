@@ -110,24 +110,27 @@ func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
 	return
 }
 
-func retrieveNKeyValuesAfterPrefix(bucket string, n int, prefix string) [][2][]byte {
-	count := 0
-	s := make([][2][]byte, 0)
-	db.View(func(tx *bbolt.Tx) error {
-		bkt := tx.Bucket([]byte(bucket))
-		c := bkt.Cursor()
-		for key, value := c.Seek([]byte(prefix)); count != n && key != nil; key, value = c.Next() {
-			k := make([]byte, len(key))
-			v := make([]byte, len(value))
-			copy(k, key)
-			copy(v, value)
-			a := [2][]byte{k, v}
-			s = append(s, a)
-			count++
-		}
-		return nil
-	})
-	return s
+func retrieveNKeyValuesAfterPrefix(bucket string, n int, prefix string) <-chan [2][]byte {
+	ch := make(chan [2][]byte, n)
+	go func() {
+		count := 0
+		db.View(func(tx *bbolt.Tx) error {
+			bkt := tx.Bucket([]byte(bucket))
+			c := bkt.Cursor()
+			c.Seek([]byte(prefix))
+			for key, value := c.Next(); count != n && key != nil; key, value = c.Next() {
+				k := make([]byte, len(key))
+				v := make([]byte, len(value))
+				copy(k, key)
+				copy(v, value)
+				ch <- [2][]byte{k, v}
+				count++
+			}
+			close(ch)
+			return nil
+		})
+	}()
+	return ch
 }
 
 // This function will return channel and populate minimum of n and total keys number of packets
@@ -146,10 +149,9 @@ func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 				ch <- [2][]byte{k, v}
 				count++
 			}
+			close(ch)
 			return nil
 		})
-		close(ch)
 	}()
-
 	return ch
 }
