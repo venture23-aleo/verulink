@@ -4,7 +4,7 @@ import {
   THRESHOLD_INDEX,
   TOTAL_ATTESTORS_INDEX,
   aleoChainId,
-  aleoTsContract,
+  aleoTsProgramAddr,
   aleoUser1,
   aleoUser2,
   aleoUser3,
@@ -22,7 +22,6 @@ import {
 } from "./mockData";
 
 import { evm2AleoArr } from "../utils/utils";
-import { aleoTsProgramAddr, councilProgramAddr } from "../utils/testnet.data";
 const bridge = new Token_bridge_v0001Contract({mode: "execute"});
 
 const testTimeout = 1000_000;
