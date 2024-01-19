@@ -2,41 +2,29 @@ package aleo
 
 import (
 	"context"
-	"encoding/json"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	aleoRpc "github.com/venture23-aleo/attestor/chainService/chain/aleo/rpc"
-	common "github.com/venture23-aleo/attestor/chainService/common/wallet"
 	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/relay"
 )
 
 const (
-	defaultFinalityHeight = 1
-	blockGenerationTime   = time.Second * 5
-	outPacket             = "out_packets"
-	priorityFee           = "1000"
-	aleo                  = "aleo"
+	defaultWaitDur = time.Hour * 24
+	outPacket      = "out_packets"
+	aleo           = "aleo"
 )
 
 type Client struct {
-	aleoClient        aleoRpc.IAleoRPC
-	name              string
-	programID         string
-	queryUrl          string
-	network           string
-	chainID           uint32
-	finalityHeight    uint64
-	blockGenTime      time.Duration
-	minRequiredGasFee uint64
-
-	//
-	chainCfg   *config.ChainConfig
-	wallet     common.Wallet
-	sendPktDur time.Duration
+	aleoClient aleoRpc.IAleoRPC
+	name       string
+	programID  string
+	queryUrl   string
+	network    string
+	chainID    uint32
+	waitDur    time.Duration
+	startFrom  uint32
 }
 
 type aleoPacket struct {
@@ -74,42 +62,6 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) 
 	return parseAleoPacket(pktStr)
 }
 
-// SendAttestedPacket sends packet from source chain to target chain
-// TODO: output parser
-func (cl *Client) SendPacket(ctx context.Context, packet *chain.Packet) error { //TODO: seems to panic at misformed packet so need to handle that
-	if cl.isAlreadyExist(ctx, packet) {
-		return chain.AlreadyRelayedPacket{
-			CurChainHeight: 0,
-		}
-	}
-	aleoPacket := constructAleoPacket(packet)
-	privateKey := cl.wallet.(*wallet).PrivateKey
-
-	ctx, cancel := context.WithTimeout(ctx, cl.sendPktDur)
-	defer cancel()
-	cmd := cl.aleoClient.Send(ctx, aleoPacket, privateKey, cl.queryUrl, cl.network, priorityFee)
-	output, err := cmd.Output()
-	if err != nil {
-		return err
-	}
-
-	// TODO: Add transaction confirmation code
-	// TODO: has consumed before voting
-	// TODO: has voted
-
-	_ = output
-	//
-	return nil
-}
-
-func (cl *Client) isAlreadyExist(ctx context.Context, pkt *chain.Packet) bool {
-	return false
-}
-
-func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (bool, error) {
-	return false, nil
-}
-
 func (cl *Client) CurHeight(ctx context.Context) uint64 {
 	height, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
@@ -118,24 +70,8 @@ func (cl *Client) CurHeight(ctx context.Context) uint64 {
 	return uint64(height)
 }
 
-func (cl *Client) GetFinalityHeight() uint64 {
-	return cl.finalityHeight
-}
-
-func (cl *Client) GetBlockGenTime() time.Duration {
-	return cl.blockGenTime
-}
-
-func (cl *Client) GetDestChains() ([]string, error) {
+func (cl *Client) getDestChains() ([]string, error) {
 	return []string{"ethereum"}, nil
-}
-
-func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
-	return cl.minRequiredGasFee
-}
-
-func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
-	return 0, nil
 }
 
 func (cl *Client) Name() string {
@@ -146,21 +82,7 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func loadWalletConfig(file string) (common.Wallet, error) {
-	walletBt, err := os.ReadFile(file) // wallet byte
-	if err != nil {
-		return nil, err
-	}
-	w := &wallet{}
-	err = json.Unmarshal(walletBt, w)
-	if err != nil {
-		return nil, err
-	}
-	return w, nil
-
-}
-
-func NewClient(cfg *config.ChainConfig) relay.IClient {
+func NewClient(cfg *config.ChainConfig) chain.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
 	*/
@@ -174,32 +96,83 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 		panic("failed to create aleoclient")
 	}
 
-	wallet, err := loadWalletConfig(cfg.WalletPath)
-	if err != nil {
-		panic("invalid address path")
-	}
-
 	name := cfg.Name
 	if name == "" {
 		name = aleo
 	}
 
-	finalityHeight := cfg.FinalityHeight
-	if finalityHeight == 0 {
-		finalityHeight = defaultFinalityHeight
+	waitDur := cfg.WaitDuration
+	if waitDur == 0 {
+		waitDur = defaultWaitDur
 	}
 
 	return &Client{
-		queryUrl:       urlSlice[0],
-		network:        urlSlice[1],
-		aleoClient:     aleoClient,
-		finalityHeight: uint64(finalityHeight),
-		chainID:        cfg.ChainID,
-		blockGenTime:   blockGenerationTime,
-		chainCfg:       cfg,
-		wallet:         wallet,
-		programID:      cfg.BridgeContract,
-		name:           name,
-		sendPktDur:     time.Minute * 3, // TODO: packet send timeout
+		queryUrl:   urlSlice[0],
+		network:    urlSlice[1],
+		aleoClient: aleoClient,
+		waitDur:    waitDur,
+		chainID:    cfg.ChainID,
+		programID:  cfg.BridgeContract,
+		name:       name,
 	}
 }
+
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+	}
+
+}
+
+/*
+
+version+source.chain_id+source.address+sequence
+
+"version":version+ "source":
+
+type SignaturePacket struct{
+	hash string
+	isWhite string
+}
+
+bhp256(hash:respective_hash,isWhite:isWhite) -->
+*/
+
+/*
+ethereum hash:
+bytes32 prefixedHash = keccak256(
+	abi.encodePacked(
+		"\x19Ethereum Signed Message:\n32", // check if it is provided by abi package
+		packetHash,
+		tryVote
+	)
+	);
+
+	tryVote=1 for Yes, 2 for No
+
+*/
+
+/*
+
+function hash(PacketLibrary.InPacket memory packet) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(
+            packet.version,
+            packet.sequence,
+            packet.sourceTokenService.chainId,
+            packet.sourceTokenService.addr,
+            packet.destTokenService.chainId,
+            packet.destTokenService.addr,
+            packet.message.senderAddress,
+            packet.message.destTokenAddress,
+                packet.message.amount,
+                packet.message.receiverAddress,
+            packet.height)
+        );
+    }
+
+*/

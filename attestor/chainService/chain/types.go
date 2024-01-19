@@ -2,52 +2,24 @@ package chain
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"math/big"
-	"time"
 )
 
-type ChainEvent struct {
-}
-
-type ICommon interface {
+type IClient interface {
 	Name() string
-	GetFinalityHeight() uint64
-	GetDestChains() ([]string, error)
-	GetChainID() uint32
-}
-
-type ISender interface {
-	ICommon
-	// TODO: optimization might be achieved if packets can be sent in single txn
-	// if the error is insufficient balance error, its better to send balance
-	// at which this error occurred so that balance polling can be done precisely
-	SendPacket(ctx context.Context, packet *Packet) (err error)
-
-	IsPktTxnFinalized(ctx context.Context, pkt *Packet) (bool, error)
-
-	// GetMinReqBalForMakingTxn returns minimum balance required to make a transaction.
-	// Since size of transaction is fixed, it should return same value which also means
-	// sender can store it in some struct field
-	GetMinReqBalForMakingTxn() uint64
-	// GetWalletBalance returns current balance of a wallet and error if encounters any
-	GetWalletBalance(ctx context.Context) (uint64, error)
-}
-
-type IReceiver interface {
-	ICommon
-
-	// GetPktWithSeqGT will be called periodically by subscriber. Thus it shall return packet
-	// which it shall put into the channel given by subscriber
-	GetPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*Packet, error)
-	// Returns current height of chain
-	CurHeight(ctx context.Context) uint64
-	// Return average duration to generate a block by blockchain
-	GetBlockGenTime() time.Duration
+	FeedPacket(ctx context.Context, ch chan<- *Packet)
 }
 
 type NetworkAddress struct {
 	ChainID uint64
 	Address string
+}
+
+func (n NetworkAddress) String() string {
+	return fmt.Sprint(n.ChainID, n.Address)
 }
 
 type Message struct {
@@ -57,16 +29,30 @@ type Message struct {
 	ReceiverAddress  string
 }
 
-type Packet struct {
-	// It is assigned by Storing function and will be populated in struct when retrieving from the db
-	SeqByte []byte `json:"-"`
+func (m Message) String() string {
+	return fmt.Sprint(m.DestTokenAddress, m.SenderAddress, m.Amount, m.ReceiverAddress)
+}
 
+type Packet struct {
 	Version     uint64
-	Destination NetworkAddress
 	Source      NetworkAddress
+	Destination NetworkAddress
 	Sequence    uint64
 	Message     Message
 	Height      uint64
+}
+
+func (p *Packet) GetSha256Hash() string {
+	s := fmt.Sprint(p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
+	h := sha256.New()
+	h.Write([]byte(s))
+	b := h.Sum(nil)
+	return hex.EncodeToString(b)
+}
+
+type ScreenedPacket struct {
+	Packet  *Packet
+	IsWhite bool
 }
 
 type QueuedMessage struct {

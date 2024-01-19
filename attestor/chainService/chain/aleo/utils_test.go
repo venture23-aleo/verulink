@@ -165,7 +165,7 @@ func TestParseAleoPacket(t *testing.T) {
 			},
 			Height: uint64(55),
 		}
-		s := dumpToAleoPacketString(expectedPacket)
+		s := dumpPktToAleoPacketString(expectedPacket)
 		a, err := parseMessage(s)
 		require.NoError(t, err)
 		commonPacket, err := parseAleoPacket(a)
@@ -193,7 +193,7 @@ func TestParseAleoPacket(t *testing.T) {
 			},
 			Height: uint64(55),
 		}
-		s := dumpToAleoPacketString(expectedPacket)
+		s := dumpPktToAleoPacketString(expectedPacket)
 		a, err := parseMessage(s)
 		assert.NoError(t, err)
 		errorPackets := []aleoPacket{}
@@ -263,4 +263,20 @@ func TestConstructAleoPacket(t *testing.T) {
 
 	aleoPacket := constructAleoPacket(commonPacket)
 	assert.Equal(t, modelAleoPacket, aleoPacket)
+}
+
+func dumpPktToAleoPacketString(pkt chain.Packet) string {
+	pkt.Destination.Address = string(ethCommon.HexToAddress(pkt.Destination.Address).Bytes())
+	pkt.Message.DestTokenAddress = string(ethCommon.HexToAddress(pkt.Message.DestTokenAddress).Bytes())
+	pkt.Message.ReceiverAddress = string(ethCommon.HexToAddress(pkt.Message.ReceiverAddress).Bytes())
+
+	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du32 ,\\n  "+
+		"source: {\\n    chain_id: %du32,\\n    addr: %s\\n  },\\n  "+
+		"destination: {\\n    chain_id: %du32,\\n    addr: %s},\\n  "+
+		"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %su64\\n  },\\n  "+
+		"height: %du32\\n}", pkt.Version, pkt.Sequence, pkt.Source.ChainID, pkt.Source.Address,
+		pkt.Destination.ChainID, constructEthAddressForAleoParameter(pkt.Destination.Address),
+		constructEthAddressForAleoParameter(pkt.Message.DestTokenAddress), pkt.Message.SenderAddress,
+		constructEthAddressForAleoParameter(pkt.Message.ReceiverAddress), pkt.Message.Amount.String(),
+		pkt.Height)
 }

@@ -2,26 +2,20 @@ package ethereum
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
-	"os"
 	"time"
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"go.uber.org/zap"
 
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/venture23-aleo/attestor/chainService/chain"
-	common "github.com/venture23-aleo/attestor/chainService/common/wallet"
-	"github.com/venture23-aleo/attestor/chainService/relay"
 )
 
 const (
@@ -41,12 +35,9 @@ type Client struct {
 	eth               *ethclient.Client
 	bridge            abi.ABIInterface
 	minRequiredGasFee uint64
-	finalityHeight    uint64
-	blockGenTime      time.Duration
+	waitDur           time.Duration
+	startFrom         uint64
 	chainID           uint32
-	chainCfg          *config.ChainConfig
-	wallet            common.Wallet
-	sendPktDuration   time.Duration
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
@@ -87,101 +78,12 @@ func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLib
 	return
 }
 
-// SendAttestedPacket sends packet from source chain to target chain
-func (cl *Client) SendPacket(ctx context.Context, m *chain.Packet) error {
-	newTransactOpts := func() (*ethBind.TransactOpts, error) {
-		txo, err := ethBind.NewKeyedTransactorWithChainID(cl.wallet.(*wallet).SKey(), big.NewInt(int64(cl.chainID)))
-		if err != nil {
-			return nil, err
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), defaultReadTimeout)
-		defer cancel()
-		txo.GasPrice, err = cl.SuggestGasPrice(ctx)
-		if err != nil {
-			return nil, err
-		}
-		txo.GasLimit = uint64(defaultGasLimit)
-		return txo, nil
-	}
-
-	txOpts, err := newTransactOpts()
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, cl.sendPktDuration)
-	defer cancel()
-
-	txOpts.Context = ctx
-	txOpts.GasLimit = defaultGasLimit
-
-	txOpts.GasPrice = big.NewInt(defaultGasPrice)
-	// send transaction here
-	packet := &abi.PacketLibraryInPacket{
-		Version:  big.NewInt(int64(m.Version)),
-		Sequence: big.NewInt(int64(m.Sequence)),
-		SourceTokenService: abi.PacketLibraryOutNetworkAddress{
-			ChainId: big.NewInt(2),
-			Addr:    m.Source.Address,
-		},
-		DestTokenService: abi.PacketLibraryInNetworkAddress{
-			ChainId: big.NewInt(1),
-			Addr:    ethCommon.HexToAddress(m.Destination.Address),
-		},
-		Message: abi.PacketLibraryInTokenMessage{
-			DestTokenAddress: ethCommon.HexToAddress(m.Message.DestTokenAddress),
-			Amount:           m.Message.Amount,
-			ReceiverAddress:  ethCommon.HexToAddress(m.Message.ReceiverAddress),
-		},
-		Height: big.NewInt(int64(m.Height)),
-	}
-
-	// TODO: Add transaction confirmation code
-	// TODO: has consumed before voting
-	// TODO: has voted
-
-	transaction, err := cl.attestMessage(txOpts, *packet)
-	if err != nil {
-		return err
-	}
-	logger.GetLogger().Info("packet sent to ethereum", zap.String("txnHash", transaction.Hash().String()))
-	return nil
-}
-
-func (cl *Client) GetLatestHeight(ctx context.Context) (uint64, error) {
-	return 0, nil
-}
-
-func (cl *Client) IsPktTxnFinalized(ctx context.Context, pkt *chain.Packet) (bool, error) {
-	return false, nil
-}
-
-func (cl *Client) CurHeight(ctx context.Context) uint64 {
+func (cl *Client) curHeight(ctx context.Context) uint64 {
 	height, err := cl.eth.BlockNumber(ctx)
 	if err != nil {
 		return 0
 	}
 	return height
-}
-
-func (cl *Client) GetFinalityHeight() uint64 {
-	return cl.finalityHeight
-}
-
-func (cl *Client) GetBlockGenTime() time.Duration {
-	return cl.blockGenTime
-}
-
-func (cl *Client) GetDestChains() ([]string, error) {
-	return []string{"aleo"}, nil
-}
-
-func (cl *Client) GetMinReqBalForMakingTxn() uint64 {
-	return cl.minRequiredGasFee
-}
-
-func (cl *Client) GetWalletBalance(ctx context.Context) (uint64, error) {
-	return 0, nil
 }
 
 func (cl *Client) Name() string {
@@ -196,26 +98,7 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func (cl *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
-	return cl.eth.SuggestGasPrice(ctx)
-}
-
-func loadWalletConfig(file string) (common.Wallet, error) {
-	walletBt, err := os.ReadFile(file) // wallet byte
-	if err != nil {
-		return nil, err
-	}
-
-	w := &wallet{}
-	err = json.Unmarshal(walletBt, w)
-	if err != nil {
-		return nil, err
-	}
-	return w, nil
-
-}
-
-func NewClient(cfg *config.ChainConfig) relay.IClient {
+func NewClient(cfg *config.ChainConfig) chain.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
 		nextSeq should start from 1
@@ -232,29 +115,46 @@ func NewClient(cfg *config.ChainConfig) relay.IClient {
 		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
 	}
 
-	wallet, err := loadWalletConfig(cfg.WalletPath)
-	if err != nil {
-		panic(fmt.Sprintf("failed to load ethereum wallet. Error: %s", err.Error()))
-	}
 	name := cfg.Name
-	finalizeHeight := cfg.FinalityHeight
 	if name == "" {
 		name = ethereum
 	}
-	if finalizeHeight == 0 {
-		finalizeHeight = defaultFinalityHeight
+	waitDur := cfg.WaitDuration
+	if waitDur == 0 {
+		waitDur = defaultFinalityHeight
 	}
 	// todo: handle start height from stored height if start height in the config is 0
 	return &Client{
-		name:            name,
-		address:         cfg.BridgeContract,
-		eth:             ethclient,
-		bridge:          bridgeClient,
-		finalityHeight:  uint64(finalizeHeight),
-		blockGenTime:    blockGenerationTime,
-		chainID:         cfg.ChainID,
-		chainCfg:        cfg,
-		wallet:          wallet,
-		sendPktDuration: defaultSendTxTimeout,
+		name:      name,
+		address:   cfg.BridgeContract,
+		eth:       ethclient,
+		bridge:    bridgeClient,
+		waitDur:   waitDur,
+		chainID:   cfg.ChainID,
+		startFrom: cfg.StartFrom,
+	}
+}
+
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+	go cl.retryFeed(ctx, ch)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		//
+	}
+
+}
+
+func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 	}
 }

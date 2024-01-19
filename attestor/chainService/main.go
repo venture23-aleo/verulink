@@ -51,7 +51,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	multirelayer := relay.MultiRelay(ctx, config.GetConfig())
-	multirelayer.StartMultiRelay(ctx)
+	relay.StartRelay(ctx, config.GetConfig())
 
 }
