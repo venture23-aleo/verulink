@@ -13,7 +13,7 @@ import {
   aleoUser6,
   aleoUser7,
   ethChainId,
-  ethTsContract,
+  ethTsContractAddr,
   ethUser,
   incomingSequence,
   normalThreshold,
@@ -347,7 +347,7 @@ describe("Token Bridge ", () => {
   //     sequence: incomingSequence,
   //     source: {
   //       chain_id: ethChainId,
-  //       addr: evm2AleoArr(ethTsContract),
+  //       addr: evm2AleoArr(ethTsContractAddr),
   //     },
   //     destination: {
   //       chain_id: aleoChainId,
@@ -381,7 +381,7 @@ describe("Token Bridge ", () => {
     test.failing("Consume can only be called from program", async () => {
       await bridge.consume(
         ethChainId, // sourceChainId
-        evm2AleoArr(ethTsContract), // sourceServiceContract
+        evm2AleoArr(ethTsContractAddr), // sourceServiceContract
         wusdcTokenAddr, // token
         evm2AleoArr(ethUser), // sender
         aleoUser1, // receiver
@@ -400,7 +400,7 @@ describe("Token Bridge ", () => {
     test.failing("Publish can only be called from program", async () => {
       await bridge.publish(
         ethChainId, // destinationChainId
-        evm2AleoArr(ethTsContract), // destinationServiceContract
+        evm2AleoArr(ethTsContractAddr), // destinationServiceContract
         evm2AleoArr(usdcContractAddr), // token
         aleoUser1, // sender
         evm2AleoArr(ethUser), // receiver

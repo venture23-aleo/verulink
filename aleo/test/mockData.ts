@@ -24,7 +24,7 @@ export const wusdcHoldingAddr = "aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr7
 export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 // // Token Service Contract Address on Ethereum
-export const ethTsContract = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+export const ethTsContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
 // Token Service Contract on Aleo
 export const aleoTsProgramAddr =

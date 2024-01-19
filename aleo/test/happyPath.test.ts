@@ -3,7 +3,7 @@ import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
 
-import { aleoChainId, aleoUser1, ethChainId, ethUser, wusdcTokenAddr, wusdcConnectorAddr, aleoTsProgramAddr, ethTsContractAddr} from "../utils/testnet.data";
+import { aleoChainId, aleoUser1, ethChainId, ethUser, wusdcTokenAddr, wusdcConnectorAddr, aleoTsProgramAddr, ethTsContractAddr} from "./mockData";
 
 import { evm2AleoArr } from "../utils/utils";
 
