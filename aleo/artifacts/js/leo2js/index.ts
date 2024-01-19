@@ -39,7 +39,8 @@ import {
 } from './council_v0001';
 import {
   gettoken,
-  getApproval
+  getApproval,
+  getTokenInfo
 } from './wusdc_token_v0001';
 import {
   getUpdateConnector,
@@ -82,6 +83,7 @@ export {
   getTsUpdateOutgoingPercentage,
   gettoken,
   getApproval,
+  getTokenInfo,
   getUpdateConnector,
   getWUsdcRelease,
 };

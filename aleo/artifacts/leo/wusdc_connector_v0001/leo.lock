@@ -9,7 +9,7 @@ dependencies = []
 name = "token_service_v0001"
 network = "testnet3"
 location = "network"
-checksum = "befe2d4dd64571dc515039a8b076709c0d393057eaf43d551550371514b6efb6"
+checksum = "7d41be747313e42a5fc5686a60e1f0e897f1bc154d7f4d38031da366b91eb051"
 dependencies = ["token_bridge_v0001.aleo"]
 
 [[package]]
@@ -23,12 +23,12 @@ dependencies = ["token_bridge_v0001.aleo", "token_service_v0001.aleo"]
 name = "wusdc_token_v0001"
 network = "testnet3"
 location = "network"
-checksum = "241c05aab6203fbf2a718550e610b7576209344751e3d85614003c1bee88fb3b"
+checksum = "fafc38f430dae23520aade115e0a13edf303a6f3bdfa673e7f37ee873863c500"
 dependencies = []
 
 [[package]]
 name = "wusdc_holding_v0001"
 network = "testnet3"
 location = "network"
-checksum = "2a134104667464c3db264103ed00b04352cf25987d6bb964caaa9b1c63ce1238"
+checksum = "ff736112271a95a6bf1d6e8e982763e4146f6b754888db8728b8f965eb6706fa"
 dependencies = ["wusdc_token_v0001.aleo"]

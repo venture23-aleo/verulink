@@ -109,7 +109,10 @@ import {
   tokenLeo,
   Approval,
   leoApprovalSchema,
-  ApprovalLeo
+  ApprovalLeo,
+  TokenInfo,
+  leoTokenInfoSchema,
+  TokenInfoLeo
 } from './wusdc_token_v0001';
 import {
   UpdateConnector,
@@ -226,6 +229,9 @@ export {
   Approval,
   leoApprovalSchema,
   ApprovalLeo,
+  TokenInfo,
+  leoTokenInfoSchema,
+  TokenInfoLeo,
   UpdateConnector,
   leoUpdateConnectorSchema,
   UpdateConnectorLeo,

@@ -187,15 +187,16 @@ export class Token_service_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_send(r0: string, r1: Array < number > , r2: bigint, r3: bigint, r4: Array < number > , r5: Array < number > ) {
+  async token_send(r0: string, r1: string, r2: Array < number > , r3: bigint, r4: bigint, r5: Array < number > , r6: Array < number > ) {
     const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
-    const r2Leo = js2leo.u128(r2);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
     const r3Leo = js2leo.u128(r3);
-    const r4Leo = js2leo.arr2string(js2leo.array(r4, js2leo.u8));
+    const r4Leo = js2leo.u128(r4);
     const r5Leo = js2leo.arr2string(js2leo.array(r5, js2leo.u8));
+    const r6Leo = js2leo.arr2string(js2leo.array(r6, js2leo.u8));
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_send',

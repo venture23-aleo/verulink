@@ -5,7 +5,10 @@ import council_v0001.aleo;
 
 program wusdc_connector_v0001.aleo {
 
+    // wusdc_token_v0001.aleo as address
     const WUSDC_TOKEN: address = aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j;
+
+    // wusdc_holding_v0001.aleo as address
     const WUSDC_HOLDING: address = aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr793djuxgsxsnf37q8;
 
     //////////////////////////////
@@ -14,8 +17,8 @@ program wusdc_connector_v0001.aleo {
 
     // Initialize can only be called once
     transition initialize_wusdc() {
-        wusdc_token_v0001.aleo/initialize_wusdc_token();
-        wusdc_holding_v0001.aleo/initialize_wusdc_holding();
+        wusdc_token_v0001.aleo/initialize_token(name(), symbol(), decimals());
+        wusdc_holding_v0001.aleo/initialize_holding();
     }
 
     /// Receive Wrapped USDC
@@ -49,7 +52,7 @@ program wusdc_connector_v0001.aleo {
 
         wusdc_token_v0001.aleo/burn_public(self.caller, amount);
 
-        token_service_v0001.aleo/token_send(WUSDC_TOKEN, receiver, amount, origin_chain_id(), origin_usdc_address(), origin_token_service_address());
+        token_service_v0001.aleo/token_send(WUSDC_TOKEN, self.caller, receiver, amount, origin_chain_id(), origin_usdc_address(), origin_token_service_address());
 
     }
 
@@ -67,8 +70,8 @@ program wusdc_connector_v0001.aleo {
             new_connector
         };
         council_v0001.aleo/external_execute(proposal_id, BHP256::hash_to_field(update_connector));
-        wusdc_token_v0001.aleo/transfer_ownership_wusdc_token(new_connector);
-        wusdc_holding_v0001.aleo/transfer_ownership_wusdc_holdin(new_connector);
+        wusdc_token_v0001.aleo/transfer_ownership_token(new_connector);
+        wusdc_holding_v0001.aleo/transfer_ownership_holding(new_connector);
     }
 
 
@@ -111,6 +114,29 @@ program wusdc_connector_v0001.aleo {
     inline origin_token_service_address() -> [u8; 32] {
         return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,160u8,184u8,105u8,145u8,198u8,33u8,139u8,54u8,193u8,209u8,157u8,74u8,46u8,158u8,176u8,206u8,54u8,6u8,235u8,72u8];
     }
+
+    // Name of the token
+    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
+    // Example: `USD Coin` is represented as following (hex):
+    // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
+    // Storing in const? Error [ETYC0372080]: The value of a const declaration must be a literal
+    inline name() -> [u8; 32] {
+        return [ 85u8, 83u8, 68u8, 32u8, 67u8, 111u8, 105u8, 110u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8 ];
+    }
+
+    // Symbol of the token
+    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
+    // Example: `USDC` is represented as following (hex):
+    // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
+    inline symbol() -> [u8; 16] {
+        return [ 85u8, 83u8, 68u8, 67u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8 ];
+    }
+
+    // Decimals of the token
+    inline decimals() -> u8 {
+        return 6u8;
+    }
+
 
 
 }

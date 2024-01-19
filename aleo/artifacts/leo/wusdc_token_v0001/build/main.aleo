@@ -8,6 +8,11 @@ struct Approval:
     approver as address;
     spender as address;
 
+struct TokenInfo:
+    name as [u8; 32u32];
+    symbol as [u8; 16u32];
+    decimals as u8;
+
 
 mapping account:
 	key as address.public;
@@ -19,33 +24,46 @@ mapping approvals:
 	value as u128.public;
 
 
-mapping owner_wusdc:
+mapping token_owner:
 	key as boolean.public;
 	value as address.public;
 
-function initialize_wusdc_token:
-    async initialize_wusdc_token self.caller into r0;
-    output r0 as wusdc_token_v0001.aleo/initialize_wusdc_token.future;
 
-finalize initialize_wusdc_token:
+mapping info:
+	key as boolean.public;
+	value as TokenInfo.public;
+
+function initialize_token:
+    input r0 as [u8; 32u32].private;
+    input r1 as [u8; 16u32].private;
+    input r2 as u8.private;
+    async initialize_token self.caller r0 r1 r2 into r3;
+    output r3 as wusdc_token_v0001.aleo/initialize_token.future;
+
+finalize initialize_token:
     input r0 as address.public;
-    contains owner_wusdc[true] into r1;
-    not r1 into r2;
-    assert.eq r2 true;
-    set r0 into owner_wusdc[true];
+    input r1 as [u8; 32u32].public;
+    input r2 as [u8; 16u32].public;
+    input r3 as u8.public;
+    contains token_owner[true] into r4;
+    not r4 into r5;
+    assert.eq r5 true;
+    set r0 into token_owner[true];
+    cast r1 r2 r3 into r6 as TokenInfo;
+    set r6 into info[true];
 
 
-function transfer_ownership_wusdc_token:
+function transfer_ownership_token:
     input r0 as address.public;
-    async transfer_ownership_wusdc_token self.caller r0 into r1;
-    output r1 as wusdc_token_v0001.aleo/transfer_ownership_wusdc_token.future;
+    async transfer_ownership_token self.caller r0 into r1;
+    output r1 as wusdc_token_v0001.aleo/transfer_ownership_token.future;
 
-finalize transfer_ownership_wusdc_token:
+finalize transfer_ownership_token:
     input r0 as address.public;
     input r1 as address.public;
-    get owner_wusdc[true] into r2;
+    get token_owner[true] into r2;
     assert.eq r0 r2;
-    set r1 into owner_wusdc[true];
+    set r1 into token_owner[true];
 
 
 function mint_public:
@@ -58,7 +76,7 @@ finalize mint_public:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u128.public;
-    get owner_wusdc[true] into r3;
+    get token_owner[true] into r3;
     assert.eq r0 r3;
     get.or_use account[r1] 0u128 into r4;
     add r4 r2 into r5;
@@ -75,7 +93,7 @@ finalize burn_public:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u128.public;
-    get owner_wusdc[true] into r3;
+    get token_owner[true] into r3;
     assert.eq r0 r3;
     get.or_use account[r1] 0u128 into r4;
     sub r4 r2 into r5;
@@ -200,9 +218,3 @@ finalize transfer_from_public:
     get.or_use account[r2] 0u128 into r8;
     add r8 r3 into r9;
     set r9 into account[r2];
-
-
-
-
-
-

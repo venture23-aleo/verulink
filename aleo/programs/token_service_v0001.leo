@@ -212,7 +212,7 @@ program token_service_v0001.aleo {
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
     }
 
-    transition token_send(public token_id: address, public receiver: [u8; 32], public amount: u128, public origin_chain_id: u128, origin_token_address: [u8; 32], origin_token_service_address: [u8; 32]) {
+    transition token_send(public token_id: address, public sender: address, public receiver: [u8; 32], public amount: u128, public origin_chain_id: u128, origin_token_address: [u8; 32], origin_token_service_address: [u8; 32]) {
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -223,7 +223,7 @@ program token_service_v0001.aleo {
         // If fee is set require credits token for publishing
 
         // call publish on bridge contract
-        token_bridge_v0001.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, self.caller, receiver, amount);
+        token_bridge_v0001.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, sender, receiver, amount);
 
         return then finalize (self.caller, token_id, amount);
     }

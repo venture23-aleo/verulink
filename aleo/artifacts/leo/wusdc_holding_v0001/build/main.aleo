@@ -4,6 +4,7 @@ program wusdc_holding_v0001.aleo;
 
 
 
+
 mapping owner_holding:
 	key as boolean.public;
 	value as address.public;
@@ -13,11 +14,11 @@ mapping holdings:
 	key as address.public;
 	value as u128.public;
 
-function initialize_wusdc_holding:
-    async initialize_wusdc_holding self.caller into r0;
-    output r0 as wusdc_holding_v0001.aleo/initialize_wusdc_holding.future;
+function initialize_holding:
+    async initialize_holding self.caller into r0;
+    output r0 as wusdc_holding_v0001.aleo/initialize_holding.future;
 
-finalize initialize_wusdc_holding:
+finalize initialize_holding:
     input r0 as address.public;
     contains owner_holding[true] into r1;
     not r1 into r2;
@@ -25,12 +26,12 @@ finalize initialize_wusdc_holding:
     set r0 into owner_holding[true];
 
 
-function transfer_ownership_wusdc_holdin:
+function transfer_ownership_holding:
     input r0 as address.public;
-    async transfer_ownership_wusdc_holdin self.caller r0 into r1;
-    output r1 as wusdc_holding_v0001.aleo/transfer_ownership_wusdc_holdin.future;
+    async transfer_ownership_holding self.caller r0 into r1;
+    output r1 as wusdc_holding_v0001.aleo/transfer_ownership_holding.future;
 
-finalize transfer_ownership_wusdc_holdin:
+finalize transfer_ownership_holding:
     input r0 as address.public;
     input r1 as address.public;
     get owner_holding[true] into r2;

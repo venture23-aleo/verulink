@@ -3,6 +3,8 @@ import {
   tokenLeo,
   Approval,
   ApprovalLeo,
+  TokenInfo,
+  TokenInfoLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -19,6 +21,15 @@ export function getApproval(approval: ApprovalLeo): Approval {
   const result: Approval = {
     approver: leo2js.address(approval.approver),
     spender: leo2js.address(approval.spender),
+  }
+  return result;
+}
+
+export function getTokenInfo(tokenInfo: TokenInfoLeo): TokenInfo {
+  const result: TokenInfo = {
+    name: leo2js.array(tokenInfo.name, leo2js.u8),
+    symbol: leo2js.array(tokenInfo.symbol, leo2js.u8),
+    decimals: leo2js.u8(tokenInfo.decimals),
   }
   return result;
 }
