@@ -26,7 +26,7 @@ import { aleoArr2Evm, evm2AleoArr } from "../utils/utils";
 
 const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
 const tokenService = new Token_service_v0001Contract({ mode: "execute" });
-const council = new Council_v0001Contract({mode: "execute"});
+const council = new Council_v0001Contract({ mode: "execute" });
 const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
 const wusdcHolding = new Wusdc_holding_v0001Contract({ mode: "execute" });
 const wusdcConnecter = new Wusdc_connector_v0001Contract({ mode: "execute" });
@@ -47,7 +47,7 @@ describe("Token Connector", () => {
       await deployTx.wait();
     }, TIMEOUT);
 
-    test("Deploy Token Service", async () => {
+    test("Deploy Council", async () => {
       const deployTx = await council.deploy();
       await deployTx.wait();
     }, TIMEOUT);
