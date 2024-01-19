@@ -23,14 +23,14 @@ import {
   TOTAL_ATTESTORS_INDEX,
   TOTAL_MEMBERS_INDEX,
   TOTAL_PROPOSALS_INDEX,
-  aleoTsContract,
+  aleoTsProgramAddr,
   aleoUser1,
   aleoUser2,
   aleoUser3,
   aleoUser4,
   aleoUser5,
   aleoUser6,
-  councilProgram,
+  councilProgramAddr,
   ethChainId,
   ethTsContract,
   highThreshold,
@@ -88,7 +88,6 @@ const admin = aleoUser1;
 
 describe("Council", () => {
   describe("Deployment and initialization", () => {
-    //     const admin = aleoUser1;
 
     test("Deploy and intialize bridge", async () => {
       //bridge deploy
@@ -102,7 +101,7 @@ describe("Council", () => {
       );
       // @ts-ignore
       await initializeTx.wait();
-    });
+    }, 20000_000);
 
     test("Deploy and intialize token service", async () => {
       // token_service deploy
@@ -112,23 +111,25 @@ describe("Council", () => {
       initializeTx = await token_service.initialize_ts(admin);
       // @ts-ignore
       await initializeTx.wait();
-    });
-
-    test("Deploy and intialize wudc_token", async () => {
-      // wusdc_token deploy
-      tx = await wudc_token.deploy();
-      await tx.wait();
-
-      // wusdc_holding deploy
-      tx = await wudc_holding.deploy();
-      await tx.wait();
-    });
+    }, 20000_000);
 
     test("Deploy council", async () => {
       // deploy council
       const deployTx = await council.deploy();
       await deployTx.wait();
-    });
+    }, 200000_000);
+
+    test("Deploy wudc_token", async () => {
+      // wusdc_token deploy
+      tx = await wudc_token.deploy();
+      await tx.wait();
+    }, 20000_000);
+
+    test("Deploy wudc_holding", async () => {
+      // wusdc_holding deploy
+      tx = await wudc_holding.deploy();
+      await tx.wait();
+    }, 20000_000);
 
     test("Deploy and intialize wudc_connector", async () => {
       // wusdc_connector deploy
@@ -137,8 +138,8 @@ describe("Council", () => {
       //intialize wusdc_connector
       tx = await wudc_connector.initialize_wusdc();
       await tx.wait();
-    }, 10000_000);
-  });
+    }, 200000_000);
+  
 
   test.failing(
     "Initialize - Threshold too low (must fail)",
@@ -222,20 +223,21 @@ describe("Council", () => {
   }, 10000_000);
 });
 
+
 describe("Transfer Ownership to Council", () => {
   test.todo("Token Program");
   test.todo("Holding Program");
 
   test("trasnfer ownership of token bridge program to council", async () => {
-    tx = await bridge.transfer_ownership_tb(councilProgram);
+    tx = await bridge.transfer_ownership_tb(councilProgramAddr);
     await tx.wait();
-    expect(await bridge.owner_TB(true)).toBe(councilProgram);
+    expect(await bridge.owner_TB(true)).toBe(councilProgramAddr);
   }, 20000_000);
 
   test("trasnfer ownership of token service program to council", async () => {
-    tx = await token_service.transfer_ownership_ts(councilProgram);
+    tx = await token_service.transfer_ownership_ts(councilProgramAddr);
     await tx.wait();
-    expect(await token_service.owner_TS(true)).toBe(councilProgram);
+    expect(await token_service.owner_TS(true)).toBe(councilProgramAddr);
   }, 20000_000);
 });
 
@@ -334,89 +336,90 @@ describe("Add New Member", () => {
   }, 20000_000);
 });
 
-test("should remove a member and increase threshold", async () => {
-  // proposing to remove member3
-  proposalId =
-    parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-  const removeMemeberProposal: RemoveMember = {
-    id: proposalId,
-    existing_member: aleoUser6,
-    new_threshold: newThreshold,
-  };
-  const removeProposalHash = hashStruct(
-    js2leo.getRemoveMemberLeo(removeMemeberProposal)
-  );
-  tx = await council.propose(proposalId, removeProposalHash);
-  await tx.wait();
+describe("update threshold", () => {
+    test("should remove a member and increase threshold", async () => {
+      // proposing to remove member3
+      proposalId =
+        parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+      const removeMemeberProposal: RemoveMember = {
+        id: proposalId,
+        existing_member: aleoUser6,
+        new_threshold: newThreshold,
+      };
+      const removeProposalHash = hashStruct(
+        js2leo.getRemoveMemberLeo(removeMemeberProposal)
+      );
+      tx = await council.propose(proposalId, removeProposalHash);
+      await tx.wait();
 
-  // executing to remove member3 and checking mappings
-  tx = await council.remove_member(
-    removeMemeberProposal.id,
-    removeMemeberProposal.existing_member,
-    removeMemeberProposal.new_threshold
-  );
-  await tx.wait();
-  try {
-    await council.members(aleoUser6);
-  } catch (err) {
-    errMsg = err.message;
-  }
-  expect(errMsg).toStrictEqual(nullError);
-  expect(await council.proposal_executed(removeProposalHash)).toBe(true);
-  expect(await council.settings(THRESHOLD_INDEX)).toBe(newThreshold);
-  expect(await council.settings(TOTAL_MEMBERS_INDEX)).toBe(5);
-}, 20000_000);
+      // executing to remove member3 and checking mappings
+      tx = await council.remove_member(
+        removeMemeberProposal.id,
+        removeMemeberProposal.existing_member,
+        removeMemeberProposal.new_threshold
+      );
+      await tx.wait();
+      try {
+        await council.members(aleoUser6);
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).toStrictEqual(nullError);
+      expect(await council.proposal_executed(removeProposalHash)).toBe(true);
+      expect(await council.settings(THRESHOLD_INDEX)).toBe(newThreshold);
+      expect(await council.settings(TOTAL_MEMBERS_INDEX)).toBe(5);
+    }, 20000_000);
 
-test("should update the threshold and vote", async () => {
-  proposalId =
-    parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-  const updateThreshold: UpdateThreshold = {
-    id: proposalId,
-    new_threshold: normalThreshold,
-  };
-  const updateThresholdHash = hashStruct(
-    js2leo.getUpdateThresholdLeo(updateThreshold)
-  );
-  const updateThresholdSign: ProposalSign = {
-    proposal: updateThresholdHash,
-    member: aleoUser2,
-  };
-  const updateThresholdSignHash = hashStruct(
-    js2leo.getProposalSignLeo(updateThresholdSign)
-  );
-  // propse to update threshold
-  tx = await council.propose(proposalId, updateThresholdHash);
-  await tx.wait();
-  // vote to update threshold
-  tx = await council_fromAnotherMember.vote(
-    updateThresholdHash,
-    normalThreshold
-  );
-  await tx.wait();
-  expect(
-    await council.proposal_vote_signs(updateThresholdSignHash)
-  ).toBeTruthy();
-  expect(await council.proposal_vote_counts(updateThresholdHash)).toBe(2);
-  // execute update threshold
-  tx = await council.update_threshold(
-    updateThreshold.id,
-    updateThreshold.new_threshold
-  );
-  await tx.wait();
-  expect(await council.proposal_executed(updateThresholdHash)).toBe(true);
-  expect(await council.settings(THRESHOLD_INDEX)).toBe(normalThreshold);
-}, 20000_000);
+    test("should update the threshold and vote", async () => {
+      proposalId =
+        parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+      const updateThreshold: UpdateThreshold = {
+        id: proposalId,
+        new_threshold: normalThreshold,
+      };
+      const updateThresholdHash = hashStruct(
+        js2leo.getUpdateThresholdLeo(updateThreshold)
+      );
+      const updateThresholdSign: ProposalSign = {
+        proposal: updateThresholdHash,
+        member: aleoUser2,
+      };
+      const updateThresholdSignHash = hashStruct(
+        js2leo.getProposalSignLeo(updateThresholdSign)
+      );
+      // propse to update threshold
+      tx = await council.propose(proposalId, updateThresholdHash);
+      await tx.wait();
+      // vote to update threshold
+      tx = await council_fromAnotherMember.vote(
+        updateThresholdHash,
+        normalThreshold
+      );
+      await tx.wait();
+      expect(
+        await council.proposal_vote_signs(updateThresholdSignHash)
+      ).toBeTruthy();
+      expect(await council.proposal_vote_counts(updateThresholdHash)).toBe(2);
+      // execute update threshold
+      tx = await council.update_threshold(
+        updateThreshold.id,
+        updateThreshold.new_threshold
+      );
+      await tx.wait();
+      expect(await council.proposal_executed(updateThresholdHash)).toBe(true);
+      expect(await council.settings(THRESHOLD_INDEX)).toBe(normalThreshold);
+    }, 20000_000);
+});
 
 describe("Call to external programs", () => {
   describe("Token Bridge", () => {
     // test.todo("Update Governance")
     test("should add attestor", async () => {
       proposalId =
-        parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) +
-        1;
+        parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
       const addAttestor: TbAddAttestor = {
         id: proposalId,
-        new_attestor: councilProgram,
+        new_attestor: councilProgramAddr,
         new_threshold: normalThreshold,
       };
       const addAttestorHash = hashStruct(
@@ -428,14 +431,16 @@ describe("Call to external programs", () => {
 
       // execute to add attestor
       tx = await council.tb_add_attestor(
-        proposalId,
-        councilProgram,
-        normalThreshold
+        addAttestor.id,
+        addAttestor.new_attestor,
+        addAttestor.new_threshold
       );
-      await tx.wait();
+      const receipt =await tx.wait();
+      console.log(receipt);
+      
 
       expect(await council.proposal_executed(addAttestorHash)).toBe(true);
-      expect(await bridge.attestors(councilProgram)).toBe(true);
+      expect(await bridge.attestors(councilProgramAddr)).toBe(true);
       expect(await bridge.attestor_settings(THRESHOLD_INDEX)).toBe(
         normalThreshold
       );
@@ -448,7 +453,7 @@ describe("Call to external programs", () => {
         1;
       const removeAttestor: TbRemoveAttestor = {
         id: proposalId,
-        existing_attestor: councilProgram,
+        existing_attestor: councilProgramAddr,
         new_threshold: normalThreshold,
       };
       const removeAttestorHash = hashStruct(
@@ -461,7 +466,7 @@ describe("Call to external programs", () => {
       // execute to remove attestor
       tx = await council.tb_remove_attestor(
         proposalId,
-        councilProgram,
+        councilProgramAddr,
         normalThreshold
       );
       await tx.wait();
@@ -470,7 +475,7 @@ describe("Call to external programs", () => {
       let errorMsgCouncil = `Cannot read properties of null (reading 'replace')`;
       let errorMsg = "";
       try {
-        await bridge.attestors(councilProgram);
+        await bridge.attestors(councilProgramAddr);
       } catch (err) {
         errorMsg = err.message;
       }
@@ -590,7 +595,7 @@ describe("Call to external programs", () => {
         1;
       const enableServiceProposal: TbEnableService = {
         id: proposalId,
-        service: aleoTsContract,
+        service: aleoTsProgramAddr,
       };
       const enableServiceProposalHash = hashStruct(
         js2leo.getTbEnableServiceLeo(enableServiceProposal)
@@ -608,7 +613,7 @@ describe("Call to external programs", () => {
       );
       const enableServicesProposal: TbEnableService = {
         id: proposalId,
-        service: aleoTsContract,
+        service: aleoTsProgramAddr,
       };
       const enableServiceProposalsHash = hashStruct(
         js2leo.getTbEnableServiceLeo(enableServicesProposal)
@@ -616,7 +621,7 @@ describe("Call to external programs", () => {
       expect(await council.proposal_executed(enableServiceProposalsHash)).toBe(
         true
       );
-      expect(await bridge.supported_services(aleoTsContract)).toBe(true);
+      expect(await bridge.supported_services(aleoTsProgramAddr)).toBe(true);
     }, 20000_000);
 
     test("should disable token_service program", async () => {
@@ -625,7 +630,7 @@ describe("Call to external programs", () => {
         1;
       const disableServiceProposal: TbDisableService = {
         id: proposalId,
-        service: aleoTsContract,
+        service: aleoTsProgramAddr,
       };
       const disableServiceProposalHash = hashStruct(
         js2leo.getTbDisableServiceLeo(disableServiceProposal)
@@ -643,7 +648,7 @@ describe("Call to external programs", () => {
       );
       let errorMsg = "";
       try {
-        await bridge.supported_services(aleoTsContract);
+        await bridge.supported_services(aleoTsProgramAddr);
       } catch (err) {
         errorMsg = err.message;
       }
@@ -856,4 +861,5 @@ describe("Call to external programs", () => {
 
     //     test.todo("Update Connector")
   });
+});
 });
