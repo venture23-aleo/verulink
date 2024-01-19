@@ -5,7 +5,7 @@ import * as js2leo from '../artifacts/js/js2leo';
 import * as js2leoCommon from '../artifacts/js/js2leo/common';
 import * as leo2jsCommon from '../artifacts/js/leo2js/common';
 
-import { TOTAL_PROPOSALS_INDEX, aleoTsProgramAddr, aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilProgramAddr, councilThreshold, ethChainId, ethTsContractAddr, wusdcConnectorAddr, wusdcTokenAddr } from "../utils/testnet.data";
+import { TOTAL_PROPOSALS_INDEX, aleoTsProgramAddr, aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilProgramAddr, councilThreshold, ethChainId, ethTsContractAddr, wusdcConnectorAddr, wusdcTokenAddr } from "./data/testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
