@@ -7,7 +7,7 @@ import (
 
 func screen(p *chain.Packet) (isWhite bool) {
 	key := p.GetSha256Hash()
-	v, err := store.GetScreenValue(walletScreeningNameSpace, key)
+	v, err := store.GetAndDeleteWhiteStatus(walletScreeningNameSpace, key)
 	if err == nil {
 		return v
 	}
@@ -19,4 +19,9 @@ func screen(p *chain.Packet) (isWhite bool) {
 	// send both addresses to chain analysis
 	_, _, _, _ = chain1, chain2, addr1, addr2
 	return false
+}
+
+func storeWhiteStatus(pkt *chain.Packet, isWhite bool) error {
+	key := pkt.GetSha256Hash()
+	return store.StoreWhiteStatus(walletScreeningNameSpace, key, isWhite)
 }

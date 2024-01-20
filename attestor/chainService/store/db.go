@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"sync"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
@@ -197,14 +196,14 @@ func StartStoringPackets(ctx context.Context, ch <-chan *chain.Packet) {
 
 var screenValueMap = map[bool]string{true: "1", false: "0"}
 
-func StoreScreenValue(ns, key string, value bool) error {
+func StoreWhiteStatus(ns, key string, value bool) error {
 	return put(ns, []byte(key), []byte(screenValueMap[value]))
 }
 
-func GetScreenValue(ns, key string) (bool, error) {
-	v := get(ns, []byte(key))
-	if len(v) == 0 {
-		return false, errors.New("key does not exist")
+func GetAndDeleteWhiteStatus(ns, key string) (bool, error) {
+	v, err := getAndDelete(ns, []byte(key))
+	if err != nil {
+		return false, err
 	}
 	return screenValueMap[true] == string(v), nil
 }
