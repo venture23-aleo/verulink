@@ -75,6 +75,23 @@ func get(bucket string, key []byte) (value []byte) {
 	return
 }
 
+func getAndDelete(bucket string, key []byte) (value []byte, err error) {
+	err = db.Update(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		data := bkt.Get(key)
+		if data == nil {
+			return errors.New("key does not exist")
+		}
+		value = make([]byte, len(data))
+		copy(value, data)
+		return bkt.Delete(key)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
 func getFirstKey(bucket string) []byte {
 	var key []byte
 	db.View(func(tx *bbolt.Tx) error {
