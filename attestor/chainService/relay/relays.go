@@ -6,11 +6,12 @@ import (
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	"github.com/venture23-aleo/attestor/chainService/config"
+	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
+	"go.uber.org/zap"
 )
 
 const (
-	packetNameSpace          = "packetsNS"
 	walletScreeningNameSpace = "walletScreeningNS"
 )
 
@@ -26,7 +27,7 @@ type ClientFunc func(cfg *config.ChainConfig) chain.IClient
 type HashFunc func(sp *chain.ScreenedPacket) string
 
 func StartRelay(ctx context.Context, cfg *config.Config) {
-	err := store.CreateNamespaces(nil)
+	err := store.CreateNamespaces([]string{walletScreeningNameSpace})
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +76,7 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 }
 
 func consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
-	guideCh := make(chan struct{}, 100) // todo: take from config
+	guideCh := make(chan struct{}, config.GetConfig().ConsumePacketWorker)
 	for {
 		select {
 		case <-ctx.Done():
@@ -96,36 +97,40 @@ func consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
 }
 
 func processPacket(pkt *chain.Packet) {
-	isWhite := screen(pkt) // todo: might need to receive error as well
+	chainName := chainIDToChainName[pkt.Source.ChainID]
+	var (
+		err     error
+		isWhite bool
+	)
+
+	defer func() {
+		if err != nil {
+			RegisteredRetryChannels[chainName] <- pkt
+			err := storeWhiteStatus(pkt, isWhite)
+			if err != nil {
+				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
+			}
+			return
+		}
+		RegisteredCompleteChannels[chainName] <- pkt
+	}()
+
+	isWhite = screen(pkt) // todo: might need to receive error as well
 	sp := chain.ScreenedPacket{
 		Packet:  pkt,
 		IsWhite: isWhite,
 	}
 
-	chainName := chainIDToChainName[pkt.Source.ChainID]
-
-	var err error
-
-	defer func() {
-		if err != nil {
-			RegisteredRetryChannels[chainName] <- pkt
-			return
-		}
-		RegisteredCompleteChannels[chainName] <- pkt
-		// store Packet + isWhite information
-		// isWhite info can be stored simply as sha256Hash(packet):isWhite
-	}()
-
 	signature, err := signScreenedPacket(&sp)
 	if err != nil {
-		// todo: store isWhite information
-		// log error
+		logger.GetLogger().Error(
+			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
 		return
 	}
 
 	err = sendToCollector(&sp, signature)
 	if err != nil {
-		// log error
+		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
 	}
 
