@@ -22,10 +22,6 @@ var (
 	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 )
 
-type Namer interface {
-	Name() string
-}
-
 type ClientFunc func(cfg *config.ChainConfig) chain.IClient
 type HashFunc func(sp *chain.ScreenedPacket) string
 
@@ -54,8 +50,8 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 			if _, ok := RegisteredHashers[chainCfg.Name]; !ok {
 				panic(fmt.Sprintf("hash undefined for chain %s", chainCfg.Name))
 			}
-			chainIDToChainName[chainCfg.ChainID] = chainCfg.Name
 			ch <- RegisteredClients[chainCfg.Name](chainCfg)
+			chainIDToChainName[chainCfg.ChainID] = chainCfg.Name
 		}
 		close(doneCh)
 	}()
@@ -96,13 +92,6 @@ func consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
 
 			processPacket(pkt)
 		}()
-
-		// Get hash data respective to chain
-		// Maybe get hash as well, as per chain
-		// send message for signing
-		// send signature to public-database. Store signature in database
-		// on successful response, delete entry in database
-
 	}
 }
 
@@ -118,6 +107,11 @@ func processPacket(pkt *chain.Packet) {
 	var err error
 
 	defer func() {
+		if err != nil {
+			RegisteredRetryChannels[chainName] <- pkt
+			return
+		}
+		RegisteredCompleteChannels[chainName] <- pkt
 		// store Packet + isWhite information
 		// isWhite info can be stored simply as sha256Hash(packet):isWhite
 	}()
@@ -136,13 +130,4 @@ func processPacket(pkt *chain.Packet) {
 	}
 
 	RegisteredCompleteChannels[chainName] <- pkt
-}
-
-func addToRetryNameSpace(pkt *chain.Packet) error {
-	return nil
-}
-
-func sendToCollector(sp *chain.ScreenedPacket, signature string) error {
-	// todo: need to send srcChainId, destChainID, packetSeqNum, signature and probably isWhite
-	return nil
 }

@@ -11,6 +11,7 @@ import (
 
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/attestor/chainService/config"
+	"github.com/venture23-aleo/attestor/chainService/store"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -19,14 +20,14 @@ import (
 )
 
 const (
-	defaultFinalityHeight = 2
-	blockGenerationTime   = time.Second * 12
-	defaultRetryCount     = 5
-	ethereum              = "ethereum"
-	defaultGasLimit       = 1500000
-	defaultGasPrice       = 130000000000
-	defaultSendTxTimeout  = time.Second * 30
-	defaultReadTimeout    = 50 * time.Second
+	defaultWaitDur = 24 * time.Hour
+	ethereum       = "ethereum"
+)
+
+// Namespaces
+const (
+	baseSeqNumNameSpace  = "ethereum_bsns"
+	retryPacketNamespace = "ethereum_rpns"
 )
 
 type Client struct {
@@ -36,7 +37,7 @@ type Client struct {
 	bridge            abi.ABIInterface
 	minRequiredGasFee uint64
 	waitDur           time.Duration
-	startFrom         uint64
+	nextBlockHeight   uint64
 	chainID           uint32
 }
 
@@ -98,6 +99,14 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
+func (cl *Client) createNamespaces() error {
+	err := store.CreateNamespace(baseSeqNumNameSpace)
+	if err != nil {
+		return err
+	}
+	return store.CreateNamespace(retryPacketNamespace)
+}
+
 func NewClient(cfg *config.ChainConfig) chain.IClient {
 	/*
 		Initialize eth client and panic if any error occurs.
@@ -121,21 +130,27 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	}
 	waitDur := cfg.WaitDuration
 	if waitDur == 0 {
-		waitDur = defaultFinalityHeight
+		waitDur = defaultWaitDur
 	}
-	// todo: handle start height from stored height if start height in the config is 0
+
 	return &Client{
-		name:      name,
-		address:   cfg.BridgeContract,
-		eth:       ethclient,
-		bridge:    bridgeClient,
-		waitDur:   waitDur,
-		chainID:   cfg.ChainID,
-		startFrom: cfg.StartFrom,
+		name:            name,
+		address:         cfg.BridgeContract,
+		eth:             ethclient,
+		bridge:          bridgeClient,
+		waitDur:         waitDur,
+		chainID:         cfg.ChainID,
+		nextBlockHeight: cfg.StartFrom,
 	}
 }
 
+func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet) {
+	return
+}
+
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+	go cl.managePacket(ctx)
+	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
 	for {
@@ -144,16 +159,87 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 			return
 		default:
 		}
-		//
+
+		pkts := cl.parseBlock(ctx, cl.nextBlockHeight)
+		for _, pkt := range pkts {
+			ch <- pkt
+		}
+		cl.nextBlockHeight++
 	}
 }
 
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
+	ticker := time.NewTicker(time.Hour) // todo: define in config
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case <-ticker.C:
+		}
+
+		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
+		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
+		// this is the most efficient approach.
+		pkt, err := store.RetrieveAndDeleteFirstPacket(retryPacketNamespace)
+		if err != nil {
+			//log error
+			continue
+		}
+		if pkt != nil {
+			ch <- pkt
+		}
+	}
+}
+
+func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
+	// also fill gap and put in retry feed
+	ticker := time.NewTicker(time.Hour * 2)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(baseSeqNumNameSpace)
+		if !shouldFetch {
+			continue
+		}
+
+		// seqNum is less useful for ethereum
+		// We should now parse all the blocks between startHeight and Endheight including end height
+		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
+		endSeqNum := seqHeightRanges[0][1]
+	L1:
+		for i := startHeight; i <= endHeight; i++ {
+			pkts := cl.parseBlock(ctx, i)
+			for _, pkt := range pkts {
+				if pkt.Sequence == endSeqNum {
+					break L1
+				}
+				ch <- pkt
+			}
+		}
+	}
+}
+
+func (cl *Client) managePacket(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case pkt := <-retryCh:
+			err := store.StoreRetryPacket(retryPacketNamespace, pkt)
+			if err != nil {
+				//log error
+			}
+		case pkt := <-completedCh:
+			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence, pkt.Height)
+			if err != nil {
+				// log error
+			}
 		}
 	}
 }

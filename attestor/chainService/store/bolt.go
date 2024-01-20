@@ -1,6 +1,8 @@
 package store
 
 import (
+	"errors"
+
 	"go.etcd.io/bbolt"
 )
 
@@ -154,4 +156,25 @@ func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 		})
 	}()
 	return ch
+}
+
+func retrieveAndDeleteFirstKey(bucket string) (a [2][]byte, err error) {
+	err = db.Update(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		c := bkt.Cursor()
+		key, value := c.First()
+		if key == nil {
+			return errors.New("empty bucket")
+		}
+		k := make([]byte, len(key))
+		v := make([]byte, len(value))
+		copy(k, key)
+		copy(v, value)
+		bkt.Delete(key)
+
+		a[0], a[1] = k, v
+		return nil
+	})
+
+	return
 }

@@ -8,12 +8,19 @@ import (
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	aleoRpc "github.com/venture23-aleo/attestor/chainService/chain/aleo/rpc"
 	"github.com/venture23-aleo/attestor/chainService/config"
+	"github.com/venture23-aleo/attestor/chainService/store"
 )
 
 const (
 	defaultWaitDur = time.Hour * 24
 	outPacket      = "out_packets"
 	aleo           = "aleo"
+)
+
+// Namespaces
+const (
+	baseSeqNumNameSpace  = "ethereum_bsns"
+	retryPacketNamespace = "ethereum_rpns"
 )
 
 type Client struct {
@@ -82,6 +89,104 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
+func (cl *Client) createNamespaces() error {
+	err := store.CreateNamespace(baseSeqNumNameSpace)
+	if err != nil {
+		return err
+	}
+	return store.CreateNamespace(retryPacketNamespace)
+}
+
+func (cl *Client) getPacket(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
+	return nil, nil
+}
+
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+	go cl.managePacket(ctx)
+	go cl.pruneBaseSeqNum(ctx, ch)
+	go cl.retryFeed(ctx, ch)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+	}
+
+}
+
+func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
+	// also fill gap and put in retry feed
+	ticker := time.NewTicker(time.Hour * 2)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(baseSeqNumNameSpace)
+		if !shouldFetch {
+			continue
+		}
+
+		startSeqNum, endSeqNum := seqHeightRanges[0][0], seqHeightRanges[0][1]
+		for i := startSeqNum; i < endSeqNum; i++ {
+			pkt, err := cl.getPacket(ctx, i)
+			if err != nil {
+				// log/handle error
+			}
+			ch <- pkt
+		}
+	}
+}
+
+func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
+	ticker := time.NewTicker(time.Hour) // todo: define in config
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
+		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
+		// this is the most efficient approach.
+		pkt, err := store.RetrieveAndDeleteFirstPacket(retryPacketNamespace)
+		if err != nil {
+			//log error
+			continue
+		}
+		if pkt != nil {
+			ch <- pkt
+		}
+	}
+}
+
+func (cl *Client) managePacket(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case pkt := <-retryCh:
+			err := store.StoreRetryPacket(retryPacketNamespace, pkt)
+			if err != nil {
+				//log error
+			}
+		case pkt := <-completedCh:
+			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence, pkt.Height)
+			if err != nil {
+				// log error
+			}
+		}
+	}
+}
+
 func NewClient(cfg *config.ChainConfig) chain.IClient {
 	/*
 		Initialize aleo client and panic if any error occurs.
@@ -115,18 +220,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		programID:  cfg.BridgeContract,
 		name:       name,
 	}
-}
-
-func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-	}
-
 }
 
 /*
