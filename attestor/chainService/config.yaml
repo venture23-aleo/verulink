@@ -21,6 +21,7 @@ bridge_pair:
   - aleo->ethereum # will raise relay that sends packet from aleo to ethereum and so on
   # - aleo->solana
 db_path: db
+consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_path: relays.log
