@@ -107,48 +107,16 @@ func (cl *Client) createNamespaces() error {
 	return store.CreateNamespace(retryPacketNamespace)
 }
 
-func NewClient(cfg *config.ChainConfig) chain.IClient {
-	/*
-		Initialize eth client and panic if any error occurs.
-		nextSeq should start from 1
-	*/
-	rpc, err := rpc.Dial(cfg.NodeUrl)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
-	}
-
-	ethclient := ethclient.NewClient(rpc)
-	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
-	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
-	}
-
-	name := cfg.Name
-	if name == "" {
-		name = ethereum
-	}
-	waitDur := cfg.WaitDuration
-	if waitDur == 0 {
-		waitDur = defaultWaitDur
-	}
-
-	return &Client{
-		name:            name,
-		address:         cfg.BridgeContract,
-		eth:             ethclient,
-		bridge:          bridgeClient,
-		waitDur:         waitDur,
-		chainID:         cfg.ChainID,
-		nextBlockHeight: cfg.StartFrom,
-	}
-}
-
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet) {
 	return
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+	err := cl.createNamespaces()
+	if err != nil {
+		panic(err)
+	}
+
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
@@ -241,6 +209,43 @@ func (cl *Client) managePacket(ctx context.Context) {
 				// log error
 			}
 		}
+	}
+}
+
+func NewClient(cfg *config.ChainConfig) chain.IClient {
+	/*
+		Initialize eth client and panic if any error occurs.
+		nextSeq should start from 1
+	*/
+	rpc, err := rpc.Dial(cfg.NodeUrl)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
+	}
+
+	ethclient := ethclient.NewClient(rpc)
+	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
+	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
+	}
+
+	name := cfg.Name
+	if name == "" {
+		name = ethereum
+	}
+	waitDur := cfg.WaitDuration
+	if waitDur == 0 {
+		waitDur = defaultWaitDur
+	}
+
+	return &Client{
+		name:            name,
+		address:         cfg.BridgeContract,
+		eth:             ethclient,
+		bridge:          bridgeClient,
+		waitDur:         waitDur,
+		chainID:         cfg.ChainID,
+		nextBlockHeight: cfg.StartFrom,
 	}
 }
 
