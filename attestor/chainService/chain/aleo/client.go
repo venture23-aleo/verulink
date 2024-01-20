@@ -19,8 +19,8 @@ const (
 
 // Namespaces
 const (
-	baseSeqNumNameSpace  = "ethereum_bsns"
-	retryPacketNamespace = "ethereum_rpns"
+	baseSeqNumNameSpace  = "aleo_bsns"
+	retryPacketNamespace = "aleo_rpns"
 )
 
 type Client struct {
@@ -102,6 +102,11 @@ func (cl *Client) getPacket(ctx context.Context, seqNum uint64) (*chain.Packet, 
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+	err := cl.createNamespaces()
+	if err != nil {
+		panic(err)
+	}
+
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
