@@ -28,7 +28,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	err := config.LoadAndValidateConfig(configFile)
+	err := config.LoadConfig(configFile)
 	if err != nil {
 		fmt.Println("Error while loading config. ", err)
 		os.Exit(1)
