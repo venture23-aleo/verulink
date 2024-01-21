@@ -500,10 +500,10 @@ program token_bridge_v0001.aleo {
     finalize attest(source_chain_id: u128, sequence: u64, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: field) {
 
         // Assert that the packet is being received from supported chain.
-        assert(Mapping::get(supported_chains, source_chain_id));
+        assert(Mapping::contains(supported_chains, source_chain_id));
 
         // Assert that the attestors signing are valid
-        assert(Mapping::get(attestors, attestor));
+        assert(Mapping::contains(attestors, attestor));
         
         // Assert attestor can only vote once for given (chain_id, sequence)
         assert(!Mapping::contains(in_packet_attestors, packet_attestor_key));
@@ -549,21 +549,12 @@ program token_bridge_v0001.aleo {
     /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
     /// * `signers`: address - Array of the addresses of the signers
     /// * `signs`: signature - Array of the signatures after signing the packet
-    transition receive(public packet: InPacketFull, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) {
+    transition receive(public packet: InPacketFull, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) -> u8 {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
 
-        let msg_hash: field = BHP256::hash_to_field(packet.message);
-
-        let packet_hash: field = BHP256::hash_to_field(InPacket {
-            version: packet.version,
-            sequence: packet.sequence,
-            source: packet.source,
-            destination: packet.destination,
-            msg_hash,
-            height: packet.height
-        });
+        let packet_hash: field = BHP256::hash_to_field(packet);
 
         let attestor: address = self.caller;
         let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
@@ -601,7 +592,7 @@ program token_bridge_v0001.aleo {
             })
         ];
 
-        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, signers, valid_signs, screening_passed, packet_attestor_keys);
+        return valid_signs then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, signers, valid_signs, screening_passed, packet_attestor_keys);
     }
 
     finalize receive(source_chain_id: u128, sequence: u64, packet_hash_with_screening: field, signers: [address; 5], valid_signs: u8, screening_passed: bool, packet_attestor_keys: [field; 5]) {
@@ -610,9 +601,9 @@ program token_bridge_v0001.aleo {
         assert(Mapping::get(supported_chains, source_chain_id));
 
         for i: u8 in 0u8..5u8 {
-            if (i <= valid_signs) {
+            if (i < valid_signs) {
                 // Assert that the attestors signing are valid
-                assert(Mapping::get(attestors, signers[i]));
+                assert(Mapping::contains(attestors, signers[i]));
                 
                 // Assert attestor can only vote once for given (chain_id, sequence)
                 assert(!Mapping::contains(in_packet_attestors, packet_attestor_keys[i]));
@@ -656,13 +647,13 @@ program token_bridge_v0001.aleo {
         let count: u8 = 0u8;
         for i: u8 in 0u8..5u8 {
             if (signers[i] != ZERO_ADDRESS) {
-                signature::verify(signs[i], signers[i], msg);
+                assert(signature::verify(signs[i], signers[i], msg));
                 count = count + 1u8;
             }
         }
         return count;
     }
-
+    
     /// Consumes a packet available on bridge program.
     /// This transition must be called from one of the service supported by the bridge.
     ///
