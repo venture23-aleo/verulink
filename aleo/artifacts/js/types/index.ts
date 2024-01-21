@@ -23,9 +23,9 @@ import {
   PacketIdWithAttestor,
   leoPacketIdWithAttestorSchema,
   PacketIdWithAttestorLeo,
-  InPacketFullScreeningKey,
-  leoInPacketFullScreeningKeySchema,
-  InPacketFullScreeningKeyLeo
+  InPacketWithScreening,
+  leoInPacketWithScreeningSchema,
+  InPacketWithScreeningLeo
 } from './token_bridge_v0001';
 import {
   OutgoingPercentageInTime,
@@ -142,9 +142,9 @@ export {
   PacketIdWithAttestor,
   leoPacketIdWithAttestorSchema,
   PacketIdWithAttestorLeo,
-  InPacketFullScreeningKey,
-  leoInPacketFullScreeningKeySchema,
-  InPacketFullScreeningKeyLeo,
+  InPacketWithScreening,
+  leoInPacketWithScreeningSchema,
+  InPacketWithScreeningLeo,
   OutgoingPercentageInTime,
   leoOutgoingPercentageInTimeSchema,
   OutgoingPercentageInTimeLeo,

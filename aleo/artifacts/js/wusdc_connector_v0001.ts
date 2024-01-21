@@ -32,7 +32,7 @@ import {
   OutPacket,
   PacketId,
   PacketIdWithAttestor,
-  InPacketFullScreeningKey,
+  InPacketWithScreening,
   OutgoingPercentageInTime,
   token,
   Approval,
@@ -70,7 +70,7 @@ import {
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullScreeningKeyLeo,
+  getInPacketWithScreeningLeo,
   getOutgoingPercentageInTimeLeo,
   gettokenLeo,
   getApprovalLeo,
@@ -108,7 +108,7 @@ import {
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullScreeningKey,
+  getInPacketWithScreening,
   getOutgoingPercentageInTime,
   gettoken,
   getApproval,
@@ -173,15 +173,17 @@ export class Wusdc_connector_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async wusdc_receive(r0: Array < number > , r1: string, r2: string, r3: bigint, r4: bigint, r5: number) {
+  async wusdc_receive(r0: Array < number > , r1: string, r2: string, r3: bigint, r4: bigint, r5: number, r6: Array < string > , r7: Array < string > ) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
     const r3Leo = js2leo.u128(r3);
     const r4Leo = js2leo.u64(r4);
     const r5Leo = js2leo.u32(r5);
+    const r6Leo = js2leo.arr2string(js2leo.array(r6, js2leo.address));
+    const r7Leo = js2leo.arr2string(js2leo.array(r7, js2leo.signature));
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'wusdc_receive',

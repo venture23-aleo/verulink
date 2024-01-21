@@ -9,7 +9,7 @@ import {
   OutPacket,
   PacketId,
   PacketIdWithAttestor,
-  InPacketFullScreeningKey,
+  InPacketWithScreening,
 } from "./types";
 import {
   getAleoProgramLeo,
@@ -20,7 +20,7 @@ import {
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullScreeningKeyLeo,
+  getInPacketWithScreeningLeo,
 } from './js2leo';
 import {
   getAleoProgram,
@@ -31,7 +31,7 @@ import {
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullScreeningKey,
+  getInPacketWithScreening,
 } from './leo2js';
 import {
   zkRun,
@@ -107,18 +107,6 @@ export class Token_bridge_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_attestor(r0: string) {
-    const r0Leo = js2leo.address(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'update_attestor',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
   async add_attestor_tb(r0: string, r1: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u8(r1);
@@ -140,6 +128,18 @@ export class Token_bridge_v0001Contract {
     const result = await zkRun({
       config: this.config,
       transition: 'remove_attestor_tb',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async update_attestor_key(r0: string) {
+    const r0Leo = js2leo.address(r0);
+
+    const params = [r0Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'update_attestor_key',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -222,19 +222,6 @@ export class Token_bridge_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async attest(r0: InPacket, r1: boolean) {
-    const r0Leo = js2leo.json(getInPacketLeo(r0));
-    const r1Leo = js2leo.boolean(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'attest',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
   async receive(r0: InPacket, r1: Array < string > , r2: Array < string > , r3: boolean): Promise < number | any > {
     const r0Leo = js2leo.json(getInPacketLeo(r0));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.address));
@@ -252,7 +239,7 @@ export class Token_bridge_v0001Contract {
     return out0;
   }
 
-  async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: bigint, r8: number) {
+  async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: bigint, r8: number, r9: Array < string > , r10: Array < string > ) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.address(r2);
@@ -262,8 +249,10 @@ export class Token_bridge_v0001Contract {
     const r6Leo = js2leo.u128(r6);
     const r7Leo = js2leo.u64(r7);
     const r8Leo = js2leo.u32(r8);
+    const r9Leo = js2leo.arr2string(js2leo.array(r9, js2leo.address));
+    const r10Leo = js2leo.arr2string(js2leo.array(r10, js2leo.signature));
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo, r9Leo, r10Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'consume',

@@ -7,7 +7,7 @@ import {
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullScreeningKeyLeo
+  getInPacketWithScreeningLeo
 } from './token_bridge_v0001';
 import {
   getOutgoingPercentageInTimeLeo
@@ -54,7 +54,7 @@ export {
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullScreeningKeyLeo,
+  getInPacketWithScreeningLeo,
   getOutgoingPercentageInTimeLeo,
   getProposalSignLeo,
   getExternalProposalLeo,

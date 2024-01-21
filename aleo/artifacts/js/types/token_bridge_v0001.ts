@@ -135,13 +135,13 @@ export const leoPacketIdWithAttestorSchema = z.object({
 });
 export type PacketIdWithAttestorLeo = z.infer < typeof leoPacketIdWithAttestorSchema > ;
 
-export interface InPacketFullScreeningKey {
+export interface InPacketWithScreening {
   packet_hash: bigint;
   screening_passed: boolean;
 }
 
-export const leoInPacketFullScreeningKeySchema = z.object({
+export const leoInPacketWithScreeningSchema = z.object({
   packet_hash: leoFieldSchema,
   screening_passed: leoBooleanSchema,
 });
-export type InPacketFullScreeningKeyLeo = z.infer < typeof leoInPacketFullScreeningKeySchema > ;
+export type InPacketWithScreeningLeo = z.infer < typeof leoInPacketWithScreeningSchema > ;

@@ -30,7 +30,7 @@ import {
   OutPacket,
   PacketId,
   PacketIdWithAttestor,
-  InPacketFullScreeningKey,
+  InPacketWithScreening,
   OutgoingPercentageInTime,
 } from "./types";
 import {
@@ -63,7 +63,7 @@ import {
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullScreeningKeyLeo,
+  getInPacketWithScreeningLeo,
   getOutgoingPercentageInTimeLeo,
 } from './js2leo';
 import {
@@ -96,7 +96,7 @@ import {
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullScreeningKey,
+  getInPacketWithScreening,
   getOutgoingPercentageInTime,
 } from './leo2js';
 import {
@@ -160,13 +160,13 @@ export class Council_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_member(r0: string) {
+  async update_member_key(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_member',
+      transition: 'update_member_key',
       params,
     });
     if (this.config.mode === "execute") return result;

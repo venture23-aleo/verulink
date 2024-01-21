@@ -15,8 +15,8 @@ import {
   PacketIdLeo,
   PacketIdWithAttestor,
   PacketIdWithAttestorLeo,
-  InPacketFullScreeningKey,
-  InPacketFullScreeningKeyLeo,
+  InPacketWithScreening,
+  InPacketWithScreeningLeo,
 } from "../types";
 
 import * as js2leo from "./common";
@@ -97,10 +97,10 @@ export function getPacketIdWithAttestorLeo(packetIdWithAttestor: PacketIdWithAtt
   return result;
 }
 
-export function getInPacketFullScreeningKeyLeo(inPacketFullScreeningKey: InPacketFullScreeningKey): InPacketFullScreeningKeyLeo {
-  const result: InPacketFullScreeningKeyLeo = {
-    packet_hash: js2leo.field(inPacketFullScreeningKey.packet_hash),
-    screening_passed: js2leo.boolean(inPacketFullScreeningKey.screening_passed),
+export function getInPacketWithScreeningLeo(inPacketWithScreening: InPacketWithScreening): InPacketWithScreeningLeo {
+  const result: InPacketWithScreeningLeo = {
+    packet_hash: js2leo.field(inPacketWithScreening.packet_hash),
+    screening_passed: js2leo.boolean(inPacketWithScreening.screening_passed),
   }
   return result;
 }

@@ -7,7 +7,7 @@ import {
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullScreeningKey
+  getInPacketWithScreening
 } from './token_bridge_v0001';
 import {
   getOutgoingPercentageInTime
@@ -54,7 +54,7 @@ export {
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullScreeningKey,
+  getInPacketWithScreening,
   getOutgoingPercentageInTime,
   getProposalSign,
   getExternalProposal,

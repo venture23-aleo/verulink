@@ -205,7 +205,7 @@ export class Token_service_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async token_receive(r0: bigint, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: string, r6: string, r7: bigint, r8: bigint, r9: number) {
+  async token_receive(r0: bigint, r1: Array < number > , r2: Array < number > , r3: string, r4: Array < number > , r5: string, r6: string, r7: bigint, r8: bigint, r9: number, r10: Array < string > , r11: Array < string > ) {
     const r0Leo = js2leo.u128(r0);
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
@@ -216,8 +216,10 @@ export class Token_service_v0001Contract {
     const r7Leo = js2leo.u128(r7);
     const r8Leo = js2leo.u64(r8);
     const r9Leo = js2leo.u32(r9);
+    const r10Leo = js2leo.arr2string(js2leo.array(r10, js2leo.address));
+    const r11Leo = js2leo.arr2string(js2leo.array(r11, js2leo.signature));
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo, r9Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo, r8Leo, r9Leo, r10Leo, r11Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'token_receive',

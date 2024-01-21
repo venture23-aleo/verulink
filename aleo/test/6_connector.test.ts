@@ -260,6 +260,27 @@ describe("Token Connector", () => {
     let outgoingSequence = BigInt(1);
     let outgoingAmount = BigInt(101);
 
+    // Create a packet
+    const packet: InPacket = {
+      version: 0,
+      sequence: incomingSequence,
+      source: {
+        chain_id: ethChainId,
+        addr: evm2AleoArr(ethTsContractAddr),
+      },
+      destination: {
+        chain_id: aleoChainId,
+        addr: aleoTsProgramAddr,
+      },
+      message: {
+        token: wusdcTokenAddr,
+        sender: evm2AleoArr(ethUser),
+        receiver: aleoUser1,
+        amount: incomingAmount,
+      },
+      height: incomingHeight,
+    };
+
     test("Ensure proper setup", async () => {
       expect(await bridge.owner_TB(true)).toBe(aleoUser1);
       expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
@@ -267,58 +288,14 @@ describe("Token Connector", () => {
       expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnectorAddr);
     });
 
-    // test("Attest A Packet", async () => {
-    //   // Create a packet
-    //   const packet: InPacket = {
-    //     version: 0,
-    //     sequence: incomingSequence,
-    //     source: {
-    //       chain_id: ethChainId,
-    //       addr: evm2AleoArr(ethTsContractAddr),
-    //     },
-    //     destination: {
-    //       chain_id: aleoChainId,
-    //       addr: aleoTsProgramAddr,
-    //     },
-    //     message: {
-    //       token: wusdcTokenAddr,
-    //       sender: evm2AleoArr(ethUser),
-    //       receiver: aleoUser1,
-    //       amount: incomingAmount,
-    //     },
-    //     height: incomingHeight,
-    //   };
-
-    //   // Attest to a packet
-    //   const tx = await bridge.attest(packet, true);
-
-    //   // @ts-ignore
-    //   await tx.wait();
-    // }, TIMEOUT);
-
     test(
-      "Receive A Packet With Signatures",
+      "Receive wUSDC",
       async () => {
-        // Create a packet
-        const packet: InPacket = {
-          version: 0,
-          sequence: incomingSequence,
-          source: {
-            chain_id: ethChainId,
-            addr: evm2AleoArr(ethTsContractAddr),
-          },
-          destination: {
-            chain_id: aleoChainId,
-            addr: aleoTsProgramAddr,
-          },
-          message: {
-            token: wusdcTokenAddr,
-            sender: evm2AleoArr(ethUser),
-            receiver: aleoUser1,
-            amount: incomingAmount,
-          },
-          height: incomingHeight,
-        };
+        try {
+          initialBalance = await wusdcToken.account(aleoUser1);
+        } catch (e) {
+          initialBalance = BigInt(0);
+        }
 
         const signature = signPacket(packet, bridge.config.privateKey);
 
@@ -334,30 +311,15 @@ describe("Token Connector", () => {
 
         const signs = [signature, signature, signature, signature, signature];
 
-        // Attest to a packet
-        const tx = await bridge.receive(packet, signers, signs, true);
-
-        // @ts-ignore
-        await tx.wait();
-      },
-      TIMEOUT
-    );
-
-    test(
-      "Receive wUSDC",
-      async () => {
-        try {
-          initialBalance = await wusdcToken.account(aleoUser1);
-        } catch (e) {
-          initialBalance = BigInt(0);
-        }
         const tx = await wusdcConnecter.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           aleoUser1, // actual receiver
           incomingAmount,
           incomingSequence,
-          incomingHeight
+          incomingHeight,
+          signers,
+          signs
         );
 
         // @ts-ignore

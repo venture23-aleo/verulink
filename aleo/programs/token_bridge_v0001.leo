@@ -145,6 +145,8 @@ program token_bridge_v0001.aleo {
     // Version of the bridge program
     const VERSION: u8 = 0u8;
 
+    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
@@ -212,15 +214,6 @@ program token_bridge_v0001.aleo {
     ///// Add/Remove Attestor ////
     //////////////////////////////
 
-    transition update_attestor(new_attestor: address) {
-        return then finalize (self.caller, new_attestor);
-    }
-
-    finalize update_attestor(existing_attestor: address, new_attestor: address) {
-        Mapping::remove(attestors, existing_attestor);
-        Mapping::set(attestors, new_attestor, true);
-    }
-
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
     /// Can only be called from owner
@@ -265,6 +258,18 @@ program token_bridge_v0001.aleo {
         Mapping::remove(attestors, attestor);
         Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
         Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, total_attestors - 1u8);
+    }
+
+    /// Update attestor key to a new address
+    /// Attestor can use this transition to update their key to a new address
+    /// This is useful in key-rotation of an attestor without any overhead from council
+    transition update_attestor_key(new_attestor: address) {
+        return then finalize (self.caller, new_attestor);
+    }
+
+    finalize update_attestor_key(existing_attestor: address, new_attestor: address) {
+        Mapping::remove(attestors, existing_attestor);
+        Mapping::set(attestors, new_attestor, true);
     }
 
     //////////////////////////////
@@ -442,79 +447,7 @@ program token_bridge_v0001.aleo {
         Mapping::set(out_packets, packet_id, packet);
     }
 
-    /// Attest to a message published on some other chain.
-    /// This transition must be called only by the attestors.
-    ///
-    /// # Arguments:
-    /// * `packet`: InPacket - Incoming packet with this chain as destination.
-    /// * `screening_passed`: bool - true if the receiver/sender pass the screening; false otherwise
-    transition attest(public packet: InPacket, public screening_passed: bool) {
 
-        // Assert that the packet is being sent to this chain
-        assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
-
-        let packet_hash: field = BHP256::hash_to_field(packet);
-
-        let attestor: address = self.caller;
-        let packet_attestor_key: field = BHP256::hash_to_field(PacketIdWithAttestor {
-            chain_id: packet.source.chain_id,
-            sequence: packet.sequence,
-            attestor
-        });
-
-        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
-            packet_hash,
-            screening_passed
-        });
-
-        return then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, attestor, screening_passed, packet_attestor_key);
-    }
-
-    finalize attest(source_chain_id: u128, sequence: u64, packet_hash_with_screening: field, attestor: address, screening_passed: bool, packet_attestor_key: field) {
-
-        // Assert that the packet is being received from supported chain.
-        assert(Mapping::contains(supported_chains, source_chain_id));
-
-        // Assert that the attestors signing are valid
-        assert(Mapping::contains(attestors, attestor));
-        
-        // Assert attestor can only vote once for given (chain_id, sequence)
-        assert(!Mapping::contains(in_packet_attestors, packet_attestor_key));
-
-        // Mark the packet as signed by attestor
-        Mapping::set(in_packet_attestors, packet_attestor_key, screening_passed);
-
-        // Get the attestations for the packet
-        let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8);
-
-        // Increase the attestation by 1
-        Mapping::set(in_packet_attestations, packet_hash_with_screening, packet_attestation_count + 1u8);
-
-        // Get the threshold
-        // If bridge is not initialized, this should fail
-        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
-
-        let packet_id: PacketId = PacketId {
-            chain_id: source_chain_id,
-            sequence
-        };
-
-        // Check if the packet exists
-        let packet_id_exists: bool = Mapping::contains(in_packet_hash, packet_id);
-
-        if (!packet_id_exists && packet_attestation_count + 1u8 >= threshold) {
-            // If the threshold is met, set the packet_id
-            // Alternatively, store the entire packet
-            Mapping::set(in_packet_hash, packet_id, packet_hash_with_screening);
-
-            // Mark the packet as not consumed
-            Mapping::set(in_packet_consumed, packet_id, false);
-        }
-
-    }
-
-
-    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
     /// Receive a message published on some other chain.
     /// This transition can be called by anyone with valid signature of the attestor.
     ///
@@ -627,7 +560,7 @@ program token_bridge_v0001.aleo {
         return count;
     }
     
-    /// Consumes a packet available on bridge program.
+    /// Consumes it
     /// This transition must be called from one of the service supported by the bridge.
     ///
     /// # Arguments:
@@ -639,96 +572,9 @@ program token_bridge_v0001.aleo {
     /// * `amount`: u64 - Amount to be minted on Aleo 
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32) {
-        // Assert that only a program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-
-        let source: ForeignContract = ForeignContract {
-            chain_id: source_chain_id,
-            addr: source_service_contract
-        };
-
-        let destination: AleoProgram = AleoProgram {
-            chain_id: ALEO_CHAIN_ID,
-            addr: self.caller
-        };
-
-        let message: MsgTokenReceive = MsgTokenReceive {
-            token,
-            sender,
-            receiver,
-            amount
-        };
-
-        let in_packet: InPacket = InPacket {
-            version: VERSION,
-            sequence,
-            source,
-            destination,
-            message,
-            height
-        };
-
-        let packet_hash: field = BHP256::hash_to_field(in_packet);
-
-        let screening_passed: bool = receiver == actual_receiver;
-
-        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
-            packet_hash,
-            screening_passed
-        });
-
-        return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening);
-    }
-
-    finalize consume(by: address, chain_id: u128, sequence: u64 , packet_hash_with_screening: field) {
-        // Assert that the packet is being sent from one of the supported services
-        assert(Mapping::get(supported_services, by));
-
-        // Get the threshold
-        // If bridge is not initialized, this should fail
-        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
-
-        // Ensure enough attestation for the packet
-        // Not required? since packet_id exists if enough attestations is reached
-        let packet_attestation: u8 = Mapping::get(in_packet_attestations, packet_hash_with_screening);
-        assert(packet_attestation >= threshold);
-
-        let packet_id: PacketId = PacketId {
-            chain_id,
-            sequence
-        };
-
-        // Ensure that the packet has the right information
-        let stored_packet_hash: field = Mapping::get(in_packet_hash, packet_id);
-        assert_eq(stored_packet_hash, packet_hash_with_screening);
-
-        // Ensure that the packet has not been consumed
-        let is_packet_consumed: bool = Mapping::get(in_packet_consumed, packet_id);
-        assert(!is_packet_consumed);
-
-        // Consume the packet
-        Mapping::set(in_packet_consumed, packet_id, true);
-
-
-    }
-
-    /// Receives a packet and consumes it
-    /// This transition must be called from one of the service supported by the bridge.
-    ///
-    /// # Arguments:
-    /// * `source_chain_id`: u32 - Source Chain Id
-    /// * `source_service_contract`: [u8;32] - Service contract of the source service contract
-    /// * `token`: address - Address of the wrapped token on Aleo
-    /// * `sender`: address - Address of the sender on other chain
-    /// * `receiver`: address - Address of the receiver on Aleo
-    /// * `amount`: u64 - Amount to be minted on Aleo 
-    /// * `sequence`: u32 - Sequence no for this chain on the source chain
-    /// * `height`: u32 - Height of the source chain where the packet originated
-    transition receive_and_consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32, signers: [address; 5], signs: [signature; 5]) {
+    /// * `signers`: [address; 5] - Addresses of the attestors who have signed the packet
+    /// * `signs`: [signature; 5] - Signatures of the attestors after signing the packet
+    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32, signers: [address; 5], signs: [signature; 5]) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -801,10 +647,10 @@ program token_bridge_v0001.aleo {
         ];
 
 
-        return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening, signers, signs, valid_signs, screening_passed);
+        return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening, signers, signs, valid_signs, packet_attestor_keys, screening_passed);
     }
 
-    finalize receive_and_consume(by: address, chain_id: u128, sequence: u64 , packet_hash_with_screening: field, signers: [address; 5], signs: [signature; 5], valid_signs: u8, screening_passed: bool) {
+    finalize consume(by: address, chain_id: u128, sequence: u64 , packet_hash_with_screening: field, signers: [address; 5], signs: [signature; 5], valid_signs: u8, packet_attestor_keys: [field; 5], screening_passed: bool) {
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, chain_id));
 

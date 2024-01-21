@@ -30,9 +30,11 @@ program wusdc_connector_v0001.aleo {
     /// * amount: u128 - Amount to be minted on Aleo
     /// * `sequence`: u32 - Sequence no for this chain on the source chain
     /// * `height`: u32 - Height of the source chain where the packet originated
-    transition wusdc_receive(public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32) {
+    /// * `signers`: [address; 5] - Addresses of the attestors who have signed the packet
+    /// * `signs`: [signature; 5] - Signatures of the attestors after signing the packet
+    transition wusdc_receive(public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32, signers: [address; 5], signs: [signature; 5]) {
 
-        token_service_v0001.aleo/token_receive(origin_chain_id(), origin_token_service_address(), origin_usdc_address(), WUSDC_TOKEN, sender, receiver, actual_receiver, amount, sequence, height);
+        token_service_v0001.aleo/token_receive(origin_chain_id(), origin_token_service_address(), origin_usdc_address(), WUSDC_TOKEN, sender, receiver, actual_receiver, amount, sequence, height, signers, signs);
 
         wusdc_token_v0001.aleo/mint_public(actual_receiver, amount);
 

@@ -45,7 +45,7 @@ struct PacketIdWithAttestor:
     sequence as u64;
     attestor as address;
 
-struct InPacketFullScreeningKey:
+struct InPacketWithScreening:
     packet_hash as field;
     screening_passed as boolean;
 
@@ -155,18 +155,6 @@ finalize transfer_ownership_tb:
     set r1 into owner_TB[true];
 
 
-function update_attestor:
-    input r0 as address.private;
-    async update_attestor self.caller r0 into r1;
-    output r1 as token_bridge_v0001.aleo/update_attestor.future;
-
-finalize update_attestor:
-    input r0 as address.public;
-    input r1 as address.public;
-    remove attestors[r0];
-    set true into attestors[r1];
-
-
 function add_attestor_tb:
     input r0 as address.public;
     input r1 as u8.private;
@@ -219,6 +207,18 @@ finalize remove_attestor_tb:
     set r2 into attestor_settings[true];
     sub r5 1u8 into r10;
     set r10 into attestor_settings[false];
+
+
+function update_attestor_key:
+    input r0 as address.private;
+    async update_attestor_key self.caller r0 into r1;
+    output r1 as token_bridge_v0001.aleo/update_attestor_key.future;
+
+finalize update_attestor_key:
+    input r0 as address.public;
+    input r1 as address.public;
+    remove attestors[r0];
+    set true into attestors[r1];
 
 
 function update_threshold_tb:
@@ -331,47 +331,6 @@ finalize publish:
     set r15 into out_packets[r18];
 
 
-function attest:
-    input r0 as InPacket.public;
-    input r1 as boolean.public;
-    assert.eq r0.destination.chain_id 6694886634403u128;
-    hash.bhp256 r0 into r2 as field;
-    cast r0.source.chain_id r0.sequence self.caller into r3 as PacketIdWithAttestor;
-    hash.bhp256 r3 into r4 as field;
-    cast r2 r1 into r5 as InPacketFullScreeningKey;
-    hash.bhp256 r5 into r6 as field;
-    async attest r0.source.chain_id r0.sequence r6 self.caller r1 r4 into r7;
-    output r7 as token_bridge_v0001.aleo/attest.future;
-
-finalize attest:
-    input r0 as u128.public;
-    input r1 as u64.public;
-    input r2 as field.public;
-    input r3 as address.public;
-    input r4 as boolean.public;
-    input r5 as field.public;
-    contains supported_chains[r0] into r6;
-    assert.eq r6 true;
-    contains attestors[r3] into r7;
-    assert.eq r7 true;
-    contains in_packet_attestors[r5] into r8;
-    not r8 into r9;
-    assert.eq r9 true;
-    set r4 into in_packet_attestors[r5];
-    get.or_use in_packet_attestations[r2] 0u8 into r10;
-    add r10 1u8 into r11;
-    set r11 into in_packet_attestations[r2];
-    get attestor_settings[true] into r12;
-    cast r0 r1 into r13 as PacketId;
-    contains in_packet_hash[r13] into r14;
-    not r14 into r15;
-    add r10 1u8 into r16;
-    gte r16 r12 into r17;
-    and r15 r17 into r18;
-    set r2 into in_packet_hash[r13];
-    set false into in_packet_consumed[r13];
-
-
 closure get_valid_signatures_count:
     input r0 as field;
     input r1 as [address; 5u32];
@@ -421,7 +380,7 @@ function receive:
     input r3 as boolean.private;
     assert.eq r0.destination.chain_id 6694886634403u128;
     hash.bhp256 r0 into r4 as field;
-    cast r4 r3 into r5 as InPacketFullScreeningKey;
+    cast r4 r3 into r5 as InPacketWithScreening;
     hash.bhp256 r5 into r6 as field;
     call get_valid_signatures_count r6 r1 r2 into r7;
     cast r0.source.chain_id r0.sequence r1[0u32] into r8 as PacketIdWithAttestor;
@@ -528,33 +487,108 @@ function consume:
     input r6 as u128.public;
     input r7 as u64.public;
     input r8 as u32.public;
+    input r9 as [address; 5u32].private;
+    input r10 as [signature; 5u32].private;
     assert.neq self.signer self.caller;
-    cast r0 r1 into r9 as ForeignContract;
-    cast 6694886634403u128 self.caller into r10 as AleoProgram;
-    cast r2 r3 r4 r6 into r11 as MsgTokenReceive;
-    cast 0u8 r7 r9 r10 r11 r8 into r12 as InPacket;
-    hash.bhp256 r12 into r13 as field;
-    is.eq r4 r5 into r14;
-    cast r13 r14 into r15 as InPacketFullScreeningKey;
-    hash.bhp256 r15 into r16 as field;
-    async consume self.caller r0 r7 r16 into r17;
-    output r17 as token_bridge_v0001.aleo/consume.future;
+    cast r0 r1 into r11 as ForeignContract;
+    cast 6694886634403u128 self.caller into r12 as AleoProgram;
+    cast r2 r3 r4 r6 into r13 as MsgTokenReceive;
+    cast 0u8 r7 r11 r12 r13 r8 into r14 as InPacket;
+    hash.bhp256 r14 into r15 as field;
+    is.eq r4 r5 into r16;
+    cast r15 r16 into r17 as InPacketWithScreening;
+    hash.bhp256 r17 into r18 as field;
+    call get_valid_signatures_count r18 r9 r10 into r19;
+    cast r0 r7 r9[0u32] into r20 as PacketIdWithAttestor;
+    hash.bhp256 r20 into r21 as field;
+    cast r0 r7 r9[1u32] into r22 as PacketIdWithAttestor;
+    hash.bhp256 r22 into r23 as field;
+    cast r0 r7 r9[2u32] into r24 as PacketIdWithAttestor;
+    hash.bhp256 r24 into r25 as field;
+    cast r0 r7 r9[3u32] into r26 as PacketIdWithAttestor;
+    hash.bhp256 r26 into r27 as field;
+    cast r0 r7 r9[4u32] into r28 as PacketIdWithAttestor;
+    hash.bhp256 r28 into r29 as field;
+    cast  r21 r23 r25 r27 r29 into r30 as [field; 5u32];
+    async consume self.caller r0 r7 r18 r9 r10 r19 r30 r16 into r31;
+    output r31 as token_bridge_v0001.aleo/consume.future;
 
 finalize consume:
     input r0 as address.public;
     input r1 as u128.public;
     input r2 as u64.public;
     input r3 as field.public;
-    get supported_services[r0] into r4;
-    assert.eq r4 true;
-    get attestor_settings[true] into r5;
-    get in_packet_attestations[r3] into r6;
-    gte r6 r5 into r7;
-    assert.eq r7 true;
-    cast r1 r2 into r8 as PacketId;
-    get in_packet_hash[r8] into r9;
-    assert.eq r9 r3;
-    get in_packet_consumed[r8] into r10;
-    not r10 into r11;
-    assert.eq r11 true;
-    set true into in_packet_consumed[r8];
+    input r4 as [address; 5u32].public;
+    input r5 as [signature; 5u32].public;
+    input r6 as u8.public;
+    input r7 as [field; 5u32].public;
+    input r8 as boolean.public;
+    get supported_chains[r1] into r9;
+    assert.eq r9 true;
+    get supported_services[r0] into r10;
+    assert.eq r10 true;
+    lt 0u8 r6 into r11;
+    contains attestors[r4[0u32]] into r12;
+    not r11 into r13;
+    or r13 r12 into r14;
+    assert.eq r14 true;
+    contains in_packet_attestors[r7[0u32]] into r15;
+    not r15 into r16;
+    not r11 into r17;
+    or r17 r16 into r18;
+    assert.eq r18 true;
+    set r8 into in_packet_attestors[r7[0u32]];
+    lt 1u8 r6 into r19;
+    contains attestors[r4[1u32]] into r20;
+    not r19 into r21;
+    or r21 r20 into r22;
+    assert.eq r22 true;
+    contains in_packet_attestors[r7[1u32]] into r23;
+    not r23 into r24;
+    not r19 into r25;
+    or r25 r24 into r26;
+    assert.eq r26 true;
+    set r8 into in_packet_attestors[r7[1u32]];
+    lt 2u8 r6 into r27;
+    contains attestors[r4[2u32]] into r28;
+    not r27 into r29;
+    or r29 r28 into r30;
+    assert.eq r30 true;
+    contains in_packet_attestors[r7[2u32]] into r31;
+    not r31 into r32;
+    not r27 into r33;
+    or r33 r32 into r34;
+    assert.eq r34 true;
+    set r8 into in_packet_attestors[r7[2u32]];
+    lt 3u8 r6 into r35;
+    contains attestors[r4[3u32]] into r36;
+    not r35 into r37;
+    or r37 r36 into r38;
+    assert.eq r38 true;
+    contains in_packet_attestors[r7[3u32]] into r39;
+    not r39 into r40;
+    not r35 into r41;
+    or r41 r40 into r42;
+    assert.eq r42 true;
+    set r8 into in_packet_attestors[r7[3u32]];
+    lt 4u8 r6 into r43;
+    contains attestors[r4[4u32]] into r44;
+    not r43 into r45;
+    or r45 r44 into r46;
+    assert.eq r46 true;
+    contains in_packet_attestors[r7[4u32]] into r47;
+    not r47 into r48;
+    not r43 into r49;
+    or r49 r48 into r50;
+    assert.eq r50 true;
+    set r8 into in_packet_attestors[r7[4u32]];
+    get attestor_settings[true] into r51;
+    get.or_use in_packet_attestations[r3] 0u8 into r52;
+    add r52 r6 into r53;
+    gte r53 r51 into r54;
+    assert.eq r54 true;
+    cast r1 r2 into r55 as PacketId;
+    get.or_use in_packet_consumed[r55] false into r56;
+    not r56 into r57;
+    assert.eq r57 true;
+    set true into in_packet_consumed[r55];

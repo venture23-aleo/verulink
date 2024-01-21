@@ -176,12 +176,12 @@ finalize initialize:
     set 0field into proposals[0u32];
 
 
-function update_member:
+function update_member_key:
     input r0 as address.private;
-    async update_member self.caller r0 into r1;
-    output r1 as council_v0001.aleo/update_member.future;
+    async update_member_key self.caller r0 into r1;
+    output r1 as council_v0001.aleo/update_member_key.future;
 
-finalize update_member:
+finalize update_member_key:
     input r0 as address.public;
     input r1 as address.public;
     remove members[r0];

@@ -70,12 +70,14 @@ program council_v0001.aleo {
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
     }
 
-    transition update_member(new_member: address) {
+    /// Update member key to a new address
+    /// Council member can use this transition to update their key to a new address
+    /// This is useful in key-rotation of a member without creating new proposal to add/remove member
+    transition update_member_key(new_member: address) {
         return then finalize(self.caller, new_member);
     }
 
-    finalize update_member(existing_member: address, new_member: address) {
-        // TODO: add test
+    finalize update_member_key(existing_member: address, new_member: address) {
         Mapping::remove(members, existing_member);
         Mapping::set(members, new_member, true);
     }

@@ -1,4 +1,4 @@
-import { InPacketFull, TbAddAttestor } from "../artifacts/js/types";
+import { InPacket, TbAddAttestor } from "../artifacts/js/types";
 import { evm2AleoArr, hashStruct, signPacket } from "../utils/utils";
 
 import * as js2leo from "../artifacts/js/js2leo";
@@ -30,8 +30,7 @@ const wusdcConnecter = new Wusdc_connector_v0001Contract({
   priorityFee: 10_000,
 });
 
-const mintWrappedTokenWithAttest = async (aleoUser: string) => {
-
+const mintWrappedToken = async (aleoUser: string) => {
   const incomingSequence = BigInt(
     Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
   );
@@ -40,63 +39,7 @@ const mintWrappedTokenWithAttest = async (aleoUser: string) => {
   let initialBalance = BigInt(0);
 
   // Create a packet
-  const packet: InPacketFull = {
-    version: 0,
-    sequence: incomingSequence,
-    source: {
-      chain_id: ethChainId,
-      addr: evm2AleoArr(ethTsContractAddr),
-    },
-    destination: {
-      chain_id: aleoChainId,
-      addr: aleoTsProgramAddr,
-    },
-    message: {
-      token: wusdcTokenAddr,
-      sender: evm2AleoArr(ethUser),
-      receiver: aleoUser,
-      amount: incomingAmount,
-    },
-    height: incomingHeight,
-  };
-
-  // Attest to a packet
-  const attestTx = await bridge.attest(packet, true);
-
-  // @ts-ignore
-  await attestTx.wait();
-
-  try {
-    initialBalance = await wusdcToken.account(aleoUser);
-  } catch (e) {
-    initialBalance = BigInt(0);
-  }
-  const tx = await wusdcConnecter.wusdc_receive(
-    evm2AleoArr(ethUser), // sender
-    aleoUser, // receiver
-    aleoUser, // actual receiver
-    incomingAmount,
-    incomingSequence,
-    incomingHeight
-  );
-
-  // @ts-ignore
-  await tx.wait();
-
-  let finalBalance = await wusdcToken.account(aleoUser);
-  console.log(`Balance of ${aleoUser}: ${initialBalance} -> ${finalBalance}`);
-};
-
-const mintWrappedTokenWithSignatures = async (aleoUser: string) => {
-  const incomingSequence = BigInt(
-    Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-  );
-  const incomingAmount = BigInt(10000);
-  const incomingHeight = 10;
-  let initialBalance = BigInt(0);
-
-  // Create a packet
-  const packet: InPacketFull = {
+  const packet: InPacket = {
     version: 0,
     sequence: incomingSequence,
     source: {
@@ -117,8 +60,6 @@ const mintWrappedTokenWithSignatures = async (aleoUser: string) => {
   };
 
   const signature = signPacket(packet, bridge.config.privateKey);
-  console.log(signature);
-
   const signatures = [signature, signature, signature, signature, signature];
 
   const signers = [
@@ -128,12 +69,6 @@ const mintWrappedTokenWithSignatures = async (aleoUser: string) => {
     ALEO_ZERO_ADDRESS,
     ALEO_ZERO_ADDRESS,
   ];
-
-  // Receive a packet
-  const receiveTx = await bridge.receive(packet, signers, signatures, true);
-
-  // @ts-ignore
-  await receiveTx.wait();
 
   try {
     initialBalance = await wusdcToken.account(aleoUser);
@@ -146,7 +81,9 @@ const mintWrappedTokenWithSignatures = async (aleoUser: string) => {
     aleoUser, // actual receiver
     incomingAmount,
     incomingSequence,
-    incomingHeight
+    incomingHeight,
+    signers,
+    signatures
   );
 
   // @ts-ignore
@@ -158,4 +95,4 @@ const mintWrappedTokenWithSignatures = async (aleoUser: string) => {
 
 const aleoUser = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px"
 // mintWrappedTokenWithAttest(aleoUser);
-mintWrappedTokenWithSignatures(aleoUser);
+mintWrappedToken(aleoUser);

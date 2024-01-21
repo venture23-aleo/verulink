@@ -305,10 +305,12 @@ function token_receive:
     input r7 as u128.public;
     input r8 as u64.public;
     input r9 as u32.public;
+    input r10 as [address; 5u32].private;
+    input r11 as [signature; 5u32].private;
     assert.neq self.signer self.caller;
-    call token_bridge_v0001.aleo/consume r0 r1 r3 r4 r5 r6 r7 r8 r9 into r10;
-    async token_receive r10 self.caller r3 r7 into r11;
-    output r11 as token_service_v0001.aleo/token_receive.future;
+    call token_bridge_v0001.aleo/consume r0 r1 r3 r4 r5 r6 r7 r8 r9 r10 r11 into r12;
+    async token_receive r12 self.caller r3 r7 into r13;
+    output r13 as token_service_v0001.aleo/token_receive.future;
 
 finalize token_receive:
     input r0 as token_bridge_v0001.aleo/consume.future;

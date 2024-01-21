@@ -269,7 +269,7 @@ program token_service_v0001.aleo {
 
     /// Consumes msg from source at destination
     /// Requires sequence no of the source network
-    transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence_no_of_source_network: u64, public height_of_source_network: u32) {
+    transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence_no_of_source_network: u64, public height_of_source_network: u32, signers: [address; 5], signs: [signature; 5]) {
 
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
@@ -279,7 +279,7 @@ program token_service_v0001.aleo {
 
 
         // call consume on bridge
-        token_bridge_v0001.aleo/consume(source_chain_id, source_token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network);
+        token_bridge_v0001.aleo/consume(source_chain_id, source_token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network, signers, signs);
 
         return then finalize(self.caller, token_id, amount);
     }
