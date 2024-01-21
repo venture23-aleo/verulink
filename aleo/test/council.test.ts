@@ -1,7 +1,7 @@
-import { CouncilContract } from "../artifacts/js/council";
+import { Council_v0001Contract } from "../artifacts/js/council_v0001";
 import { aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5 } from "./mockData";
 
-const council = new CouncilContract();
+const council = new Council_v0001Contract();
 
 describe("Council", () => {
 

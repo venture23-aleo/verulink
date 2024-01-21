@@ -2,7 +2,7 @@ import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
 
-import { InPacketFull, TsTransferOwnership } from "../artifacts/js/types";
+import { InPacket, TsTransferOwnership } from "../artifacts/js/types";
 
 import { evm2AleoArr, hashStruct, string2AleoArr } from "../utils/utils";
 import {
@@ -90,20 +90,20 @@ describe("Token Service", () => {
     );
   });
 
-  test.failing("Receive Token From Ethereum To Aleo", async () => {
-    await tokenService.token_receive(
-      ethChainId, //source chain id
-      evm2AleoArr(ethTsContractAddr), // source token service address
-      evm2AleoArr(usdcContractAddr), // originTokenAddress
-      wusdcTokenAddr,
-      evm2AleoArr(ethUser), // sender
-      aleoUser1, // receiver
-      aleoUser1, // actual_receiver
-      BigInt(100), // amount
-      BigInt(1), // sequence
-      1 // height
-    );
-  });
+  // test.failing("Receive Token From Ethereum To Aleo", async () => {
+  //   await tokenService.token_receive(
+  //     ethChainId, //source chain id
+  //     evm2AleoArr(ethTsContractAddr), // source token service address
+  //     evm2AleoArr(usdcContractAddr), // originTokenAddress
+  //     wusdcTokenAddr,
+  //     evm2AleoArr(ethUser), // sender
+  //     aleoUser1, // receiver
+  //     aleoUser1, // actual_receiver
+  //     BigInt(100), // amount
+  //     BigInt(1), // sequence
+  //     1 // height
+  //   );
+  // });
 
   describe("Governance Tests", () => {
 

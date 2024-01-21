@@ -1,5 +1,5 @@
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { InPacket, InPacketFull, InPacketFullAttestorKey, InPacketFullScreeningKey, MsgTokenReceive } from "../artifacts/js/types";
+import { InPacket } from "../artifacts/js/types";
 import {
   ALEO_ZERO_ADDRESS,
   THRESHOLD_INDEX,
@@ -93,17 +93,17 @@ describe("Token Bridge ", () => {
       console.log(receipt)
     }, testTimeout);
 
-    // test("Initialize (Second try) - Expected parameters (must fail)", async () => {
-    //   const initializeTx =  await bridge.initialize_tb(
-    //     normalThreshold,
-    //     [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-    //     admin //governance
-    //   );
+    test("Initialize (Second try) - Expected parameters (must fail)", async () => {
+      const initializeTx =  await bridge.initialize_tb(
+        normalThreshold,
+        [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
+        admin //governance
+      );
 
-    //   // @ts-ignore
-    //   const receipt = await initializeTx.wait();
-    //   expect(receipt.error).toBeTruthy();
-    // }, testTimeout);
+      // @ts-ignore
+      const receipt = await initializeTx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, testTimeout);
 
   });
 
@@ -347,93 +347,59 @@ describe("Token Bridge ", () => {
 
   // })
 
-  // describe("Attest", () => {
-  //   const packet: InPacketFull = {
-  //     version: 0,
-  //     sequence: incomingSequence,
-  //     source: {
-  //       chain_id: ethChainId,
-  //       addr: evm2AleoArr(ethTsContractAddr),
-  //     },
-  //     destination: {
-  //       chain_id: aleoChainId,
-  //       addr: aleoTsProgramAddr,
-  //     },
-  //     message: {
-  //       token: wusdcTokenAddr,
-  //       sender: evm2AleoArr(ethUser),
-  //       receiver: aleoUser1,
-  //       amount : BigInt(10000)
-  //     },
-  //     height: 10,
-  //   };
+  describe("Receive", () => {
+    const packet: InPacket = {
+      version: 0,
+      sequence: incomingSequence,
+      source: {
+        chain_id: ethChainId,
+        addr: evm2AleoArr(ethTsContractAddr),
+      },
+      destination: {
+        chain_id: aleoChainId,
+        addr: aleoTsProgramAddr,
+      },
+      message: {
+        token: wusdcTokenAddr,
+        sender: evm2AleoArr(ethUser),
+        receiver: aleoUser1,
+        amount : BigInt(10000)
+      },
+      height: 10,
+    };
 
-  //   test("Attestation can only be done on chain the packet is addressed to", async() => {
-  //     const tx = await bridge.attest(packet, true);
-
-  //     // @ts-ignore
-  //     const receipt = await tx.wait()
-  //     expect(receipt.mode).toBe('execute');
-  //   })
-  //   test.todo("Attestation can only be done on packets coming from support chain")
-  //   test.todo("Attestation can only be done by valid attestors ")
-  //   test.todo("Attestation can only be done once per attestor")
-  //   test.todo("Attestation should increase the attestation count by 1")
-  //   test.todo("If attestation crosses the threshold, packet should be queryable by packetId")
-
-  // })
-
-  // describe("Receive", () => {
-  //   const packet: InPacketFull = {
-  //     version: 0,
-  //     sequence: incomingSequence,
-  //     source: {
-  //       chain_id: ethChainId,
-  //       addr: evm2AleoArr(ethTsContractAddr),
-  //     },
-  //     destination: {
-  //       chain_id: aleoChainId,
-  //       addr: aleoTsProgramAddr,
-  //     },
-  //     message: {
-  //       token: wusdcTokenAddr,
-  //       sender: evm2AleoArr(ethUser),
-  //       receiver: aleoUser1,
-  //       amount : BigInt(10000)
-  //     },
-  //     height: 10,
-  //   };
-
-  //   const signature = signPacket(packet, bridge.config.privateKey);
-  //   console.log(signature)
+    const signature = signPacket(packet, bridge.config.privateKey);
+    console.log(signature)
     
-  //   const signatures = [
-  //     signature,
-  //     signature,
-  //     signature,
-  //     signature,
-  //     signature
-  //   ]
+    const signatures = [
+      signature,
+      signature,
+      signature,
+      signature,
+      signature
+    ]
 
-  //   const signers = [
-  //     aleoUser1,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //   ]
+    const signers = [
+      aleoUser1,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+    ]
 
-  //   test("Cal receive", async() => {
-  //     const tx = await bridge.receive(packet, signers, signatures, true);
-  //     // @ts-ignore
-  //     const receipt = await tx.wait()
-  //     expect(receipt.mode).toBe('execute');
-  //   })
+    test("Cal receive", async() => {
+      const tx = await bridge.receive(packet, signers, signatures, true);
+      // @ts-ignore
+      const receipt = await tx.wait()
+      expect(receipt.mode).toBe('execute');
+    })
 
-  // })
+    test.todo("Attestation can only be done on packets coming from support chain")
+    test.todo("Attestation can only be done by valid attestors ")
+    test.todo("Attestation can only be done once per attestor")
+    test.todo("Attestation should increase the attestation count by 1")
+    test.todo("If attestation crosses the threshold, packet should be queryable by packetId")
 
-
-  describe("Consume", () => {
     test.failing("Consume can only be called from program", async () => {
       await bridge.consume(
         ethChainId, // sourceChainId
@@ -444,12 +410,13 @@ describe("Token Bridge ", () => {
         aleoUser1, // actual_receiver
         BigInt(100), // amount
         BigInt(1), // sequence
-        1 // height
+        1, // height
+        signers,
+        signatures
       )
-
     }, testTimeout)
-
   })
+
 
   describe("Publish", () => {
 
