@@ -3,12 +3,10 @@ import {
   getForeignContract,
   getMsgTokenReceive,
   getMsgTokenSend,
-  getInPacketFull,
   getInPacket,
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullAttestorKey,
   getInPacketFullScreeningKey
 } from './token_bridge_v0001';
 import {
@@ -52,12 +50,10 @@ export {
   getForeignContract,
   getMsgTokenReceive,
   getMsgTokenSend,
-  getInPacketFull,
   getInPacket,
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
   getOutgoingPercentageInTime,
   getProposalSign,

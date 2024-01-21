@@ -52,7 +52,7 @@ program token_bridge_v0001.aleo {
     }
 
 
-    struct InPacketFull {
+    struct InPacket {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for this chain on source chain
@@ -66,22 +66,6 @@ program token_bridge_v0001.aleo {
         // Height on the source chain where the packet originated
         height: u32
     }
-
-    struct InPacket {
-        // Packet versioning for future enhancements or changes
-        version: u8,
-        // Sequence no of the packet for this chain on source chain
-        sequence: u64,
-        // Service Contract where the packet originated
-        source: ForeignContract,
-        // Destination Program where the packet should be consumed
-        destination: AleoProgram,
-        // Hash of the message
-        msg_hash: field,
-        // Height on the source chain where the packet originated
-        height: u32
-    }
-
 
     struct OutPacket {
         // Packet versioning for future enhancements or changes
@@ -112,6 +96,14 @@ program token_bridge_v0001.aleo {
         sequence: u64,
         // Address of the attestor
         attestor: address
+    }
+
+    struct InPacketWithScreening {
+        // Hash of the InPacket
+        packet_hash: field,
+        // Screening result of the packet sender/receiver
+        // If the screening_passed is false, it means that the fund of the packet must go to the holding program
+        screening_passed: bool
     }
 
     // keys setting index
@@ -146,30 +138,17 @@ program token_bridge_v0001.aleo {
     // key is chain_id
     mapping sequences: u128 => u64;
 
-    // Used to receive the packet
-    // Can only be called by attestor
-    struct InPacketFullAttestorKey {
-        packet_hash: field,
-        attestor: address
-    }
-
-    struct InPacketFullScreeningKey {
-        packet_hash: field,
-        screening_passed: bool
-    }
-
 
     // The chain id of the Aleo network where this program is deployed
     const ALEO_CHAIN_ID: u128 = 6694886634403u128;
 
+    // Version of the bridge program
     const VERSION: u8 = 0u8;
 
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
-    /// Initialize can only be called once
-    /// Initialize must be called from owner program
     transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public owner: address) {
 
         // Sanity check for threshold
@@ -387,9 +366,12 @@ program token_bridge_v0001.aleo {
     /// This transition must be called from one of the service supported by the bridge.
     ///
     /// # Arguments:
-    /// * `destination_chain_id`: u32 - ChainId of the chain where the message is intended for
-    /// * `destination_service_contract`: u32 - Service contract on destination chain which can consume the message
-    /// * `msg_hash`: field - Hash of the message; Message is stored in the service program
+    /// * `destination_chain_id`: u128 - ChainId of the chain where the message is intended for
+    /// * `destination_service_contract`: [u8; 32] - Service contract on destination chain which can consume the message
+    /// * `token`: [u8; 32] - Token contract of destination chain
+    /// * `sender`: address - Sender of the message
+    /// * `receiver`: [u8; 32] - Receiver of the message on destination chain
+    /// * `amount`: u128 - Amount being sent to the receiver
 
     transition publish(public destination_chain_id: u128, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u128) {
         // Assert that only a program can call this method
@@ -464,23 +446,14 @@ program token_bridge_v0001.aleo {
     /// This transition must be called only by the attestors.
     ///
     /// # Arguments:
-    /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
+    /// * `packet`: InPacket - Incoming packet with this chain as destination.
     /// * `screening_passed`: bool - true if the receiver/sender pass the screening; false otherwise
-    transition attest(public packet: InPacketFull, public screening_passed: bool) {
+    transition attest(public packet: InPacket, public screening_passed: bool) {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
 
-        let msg_hash: field = BHP256::hash_to_field(packet.message);
-
-        let packet_hash: field = BHP256::hash_to_field(InPacket {
-            version: packet.version,
-            sequence: packet.sequence,
-            source: packet.source,
-            destination: packet.destination,
-            msg_hash,
-            height: packet.height
-        });
+        let packet_hash: field = BHP256::hash_to_field(packet);
 
         let attestor: address = self.caller;
         let packet_attestor_key: field = BHP256::hash_to_field(PacketIdWithAttestor {
@@ -489,7 +462,7 @@ program token_bridge_v0001.aleo {
             attestor
         });
 
-        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
             packet_hash,
             screening_passed
         });
@@ -546,10 +519,10 @@ program token_bridge_v0001.aleo {
     /// This transition can be called by anyone with valid signature of the attestor.
     ///
     /// # Arguments:
-    /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
+    /// * `packet`: InPacket - Incoming packet with this chain as destination.
     /// * `signers`: address - Array of the addresses of the signers
     /// * `signs`: signature - Array of the signatures after signing the packet
-    transition receive(public packet: InPacketFull, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) -> u8 {
+    transition receive(public packet: InPacket, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) -> u8 {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
@@ -557,7 +530,7 @@ program token_bridge_v0001.aleo {
         let packet_hash: field = BHP256::hash_to_field(packet);
 
         let attestor: address = self.caller;
-        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
             packet_hash,
             screening_passed
         });
@@ -690,14 +663,12 @@ program token_bridge_v0001.aleo {
             amount
         };
 
-        let msg_hash: field = BHP256::hash_to_field(message);
-
         let in_packet: InPacket = InPacket {
             version: VERSION,
             sequence,
             source,
             destination,
-            msg_hash,
+            message,
             height
         };
 
@@ -705,11 +676,10 @@ program token_bridge_v0001.aleo {
 
         let screening_passed: bool = receiver == actual_receiver;
 
-        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketFullScreeningKey {
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
             packet_hash,
             screening_passed
         });
-
 
         return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening);
     }
@@ -724,8 +694,8 @@ program token_bridge_v0001.aleo {
 
         // Ensure enough attestation for the packet
         // Not required? since packet_id exists if enough attestations is reached
-        let packet_validation: u8 = Mapping::get(in_packet_attestations, packet_hash_with_screening);
-        assert(packet_validation >= threshold);
+        let packet_attestation: u8 = Mapping::get(in_packet_attestations, packet_hash_with_screening);
+        assert(packet_attestation >= threshold);
 
         let packet_id: PacketId = PacketId {
             chain_id,
@@ -743,6 +713,136 @@ program token_bridge_v0001.aleo {
         // Consume the packet
         Mapping::set(in_packet_consumed, packet_id, true);
 
+
+    }
+
+    /// Receives a packet and consumes it
+    /// This transition must be called from one of the service supported by the bridge.
+    ///
+    /// # Arguments:
+    /// * `source_chain_id`: u32 - Source Chain Id
+    /// * `source_service_contract`: [u8;32] - Service contract of the source service contract
+    /// * `token`: address - Address of the wrapped token on Aleo
+    /// * `sender`: address - Address of the sender on other chain
+    /// * `receiver`: address - Address of the receiver on Aleo
+    /// * `amount`: u64 - Amount to be minted on Aleo 
+    /// * `sequence`: u32 - Sequence no for this chain on the source chain
+    /// * `height`: u32 - Height of the source chain where the packet originated
+    transition receive_and_consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32, signers: [address; 5], signs: [signature; 5]) {
+        // Assert that only a program can call this method
+        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
+        // self.signer = tx.origin
+        // self.caller = msg.sender
+        assert_neq(self.signer, self.caller);
+
+        let source: ForeignContract = ForeignContract {
+            chain_id: source_chain_id,
+            addr: source_service_contract
+        };
+
+        let destination: AleoProgram = AleoProgram {
+            chain_id: ALEO_CHAIN_ID,
+            addr: self.caller
+        };
+
+        let message: MsgTokenReceive = MsgTokenReceive {
+            token,
+            sender,
+            receiver,
+            amount
+        };
+
+        let in_packet: InPacket = InPacket {
+            version: VERSION,
+            sequence,
+            source,
+            destination,
+            message,
+            height
+        };
+
+        let packet_hash: field = BHP256::hash_to_field(in_packet);
+
+        let screening_passed: bool = receiver == actual_receiver;
+
+        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
+            packet_hash,
+            screening_passed
+        });
+
+        let valid_signs: u8 = get_valid_signatures_count(packet_hash_with_screening, signers , signs );
+
+        let packet_attestor_keys: [field; 5] = [
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: source_chain_id,
+                sequence: sequence,
+                attestor: signers[0u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: source_chain_id,
+                sequence: sequence,
+                attestor: signers[1u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: source_chain_id,
+                sequence: sequence,
+                attestor: signers[2u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: source_chain_id,
+                sequence: sequence,
+                attestor: signers[3u8]
+            }),
+            BHP256::hash_to_field(PacketIdWithAttestor {
+                chain_id: source_chain_id,
+                sequence: sequence,
+                attestor: signers[4u8]
+            })
+        ];
+
+
+        return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening, signers, signs, valid_signs, screening_passed);
+    }
+
+    finalize receive_and_consume(by: address, chain_id: u128, sequence: u64 , packet_hash_with_screening: field, signers: [address; 5], signs: [signature; 5], valid_signs: u8, screening_passed: bool) {
+        // Assert that the packet is being received from supported chain.
+        assert(Mapping::get(supported_chains, chain_id));
+
+        // Assert that the packet is being consumed from one of the supported services
+        assert(Mapping::get(supported_services, by));
+
+        for i: u8 in 0u8..5u8 {
+            if (i < valid_signs) {
+                // Assert that the attestors signing are valid
+                assert(Mapping::contains(attestors, signers[i]));
+                
+                // Assert attestor can only vote once for given (chain_id, sequence)
+                assert(!Mapping::contains(in_packet_attestors, packet_attestor_keys[i]));
+
+                // Mark the packet as signed by attestor
+                Mapping::set(in_packet_attestors, packet_attestor_keys[i], screening_passed);
+            }
+        }
+
+        // Get the threshold
+        // If bridge is not initialized, this should fail
+        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
+
+        // Ensure enough attestation for the packet
+        let packet_attestation: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8) + valid_signs;
+        assert(packet_attestation >= threshold);
+
+        let packet_id: PacketId = PacketId {
+            chain_id,
+            sequence
+        };
+
+        // Ensure that the packet has not been consumed
+        let is_packet_consumed: bool = Mapping::get_or_use(in_packet_consumed, packet_id, false);
+        assert(!is_packet_consumed);
+
+        // Consume the packet
+        Mapping::set(in_packet_consumed, packet_id, true);
 
     }
 

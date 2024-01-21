@@ -7,8 +7,6 @@ import {
   MsgTokenReceiveLeo,
   MsgTokenSend,
   MsgTokenSendLeo,
-  InPacketFull,
-  InPacketFullLeo,
   InPacket,
   InPacketLeo,
   OutPacket,
@@ -17,8 +15,6 @@ import {
   PacketIdLeo,
   PacketIdWithAttestor,
   PacketIdWithAttestorLeo,
-  InPacketFullAttestorKey,
-  InPacketFullAttestorKeyLeo,
   InPacketFullScreeningKey,
   InPacketFullScreeningKeyLeo,
 } from "../types";
@@ -60,25 +56,13 @@ export function getMsgTokenSendLeo(msgTokenSend: MsgTokenSend): MsgTokenSendLeo 
   return result;
 }
 
-export function getInPacketFullLeo(inPacketFull: InPacketFull): InPacketFullLeo {
-  const result: InPacketFullLeo = {
-    version: js2leo.u8(inPacketFull.version),
-    sequence: js2leo.u64(inPacketFull.sequence),
-    source: getForeignContractLeo(inPacketFull.source),
-    destination: getAleoProgramLeo(inPacketFull.destination),
-    message: getMsgTokenReceiveLeo(inPacketFull.message),
-    height: js2leo.u32(inPacketFull.height),
-  }
-  return result;
-}
-
 export function getInPacketLeo(inPacket: InPacket): InPacketLeo {
   const result: InPacketLeo = {
     version: js2leo.u8(inPacket.version),
     sequence: js2leo.u64(inPacket.sequence),
     source: getForeignContractLeo(inPacket.source),
     destination: getAleoProgramLeo(inPacket.destination),
-    msg_hash: js2leo.field(inPacket.msg_hash),
+    message: getMsgTokenReceiveLeo(inPacket.message),
     height: js2leo.u32(inPacket.height),
   }
   return result;
@@ -109,14 +93,6 @@ export function getPacketIdWithAttestorLeo(packetIdWithAttestor: PacketIdWithAtt
     chain_id: js2leo.u128(packetIdWithAttestor.chain_id),
     sequence: js2leo.u64(packetIdWithAttestor.sequence),
     attestor: js2leo.address(packetIdWithAttestor.attestor),
-  }
-  return result;
-}
-
-export function getInPacketFullAttestorKeyLeo(inPacketFullAttestorKey: InPacketFullAttestorKey): InPacketFullAttestorKeyLeo {
-  const result: InPacketFullAttestorKeyLeo = {
-    packet_hash: js2leo.field(inPacketFullAttestorKey.packet_hash),
-    attestor: js2leo.address(inPacketFullAttestorKey.attestor),
   }
   return result;
 }

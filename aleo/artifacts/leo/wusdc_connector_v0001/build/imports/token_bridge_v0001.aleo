@@ -20,20 +20,12 @@ struct MsgTokenSend:
     receiver as [u8; 32u32];
     amount as u128;
 
-struct InPacketFull:
-    version as u8;
-    sequence as u64;
-    source as ForeignContract;
-    destination as AleoProgram;
-    message as MsgTokenReceive;
-    height as u32;
-
 struct InPacket:
     version as u8;
     sequence as u64;
     source as ForeignContract;
     destination as AleoProgram;
-    msg_hash as field;
+    message as MsgTokenReceive;
     height as u32;
 
 struct OutPacket:
@@ -51,10 +43,6 @@ struct PacketId:
 struct PacketIdWithAttestor:
     chain_id as u128;
     sequence as u64;
-    attestor as address;
-
-struct InPacketFullAttestorKey:
-    packet_hash as field;
     attestor as address;
 
 struct InPacketFullScreeningKey:
@@ -344,18 +332,16 @@ finalize publish:
 
 
 function attest:
-    input r0 as InPacketFull.public;
+    input r0 as InPacket.public;
     input r1 as boolean.public;
     assert.eq r0.destination.chain_id 6694886634403u128;
-    hash.bhp256 r0.message into r2 as field;
-    cast r0.version r0.sequence r0.source r0.destination r2 r0.height into r3 as InPacket;
+    hash.bhp256 r0 into r2 as field;
+    cast r0.source.chain_id r0.sequence self.caller into r3 as PacketIdWithAttestor;
     hash.bhp256 r3 into r4 as field;
-    cast r0.source.chain_id r0.sequence self.caller into r5 as PacketIdWithAttestor;
+    cast r2 r1 into r5 as InPacketFullScreeningKey;
     hash.bhp256 r5 into r6 as field;
-    cast r4 r1 into r7 as InPacketFullScreeningKey;
-    hash.bhp256 r7 into r8 as field;
-    async attest r0.source.chain_id r0.sequence r8 self.caller r1 r6 into r9;
-    output r9 as token_bridge_v0001.aleo/attest.future;
+    async attest r0.source.chain_id r0.sequence r6 self.caller r1 r4 into r7;
+    output r7 as token_bridge_v0001.aleo/attest.future;
 
 finalize attest:
     input r0 as u128.public;
@@ -429,7 +415,7 @@ closure get_valid_signatures_count:
 
 
 function receive:
-    input r0 as InPacketFull.public;
+    input r0 as InPacket.public;
     input r1 as [address; 5u32].public;
     input r2 as [signature; 5u32].public;
     input r3 as boolean.private;
@@ -546,14 +532,13 @@ function consume:
     cast r0 r1 into r9 as ForeignContract;
     cast 6694886634403u128 self.caller into r10 as AleoProgram;
     cast r2 r3 r4 r6 into r11 as MsgTokenReceive;
-    hash.bhp256 r11 into r12 as field;
-    cast 0u8 r7 r9 r10 r12 r8 into r13 as InPacket;
-    hash.bhp256 r13 into r14 as field;
-    is.eq r4 r5 into r15;
-    cast r14 r15 into r16 as InPacketFullScreeningKey;
-    hash.bhp256 r16 into r17 as field;
-    async consume self.caller r0 r7 r17 into r18;
-    output r18 as token_bridge_v0001.aleo/consume.future;
+    cast 0u8 r7 r9 r10 r11 r8 into r12 as InPacket;
+    hash.bhp256 r12 into r13 as field;
+    is.eq r4 r5 into r14;
+    cast r13 r14 into r15 as InPacketFullScreeningKey;
+    hash.bhp256 r15 into r16 as field;
+    async consume self.caller r0 r7 r16 into r17;
+    output r17 as token_bridge_v0001.aleo/consume.future;
 
 finalize consume:
     input r0 as address.public;

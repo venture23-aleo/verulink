@@ -52,7 +52,7 @@ program token_bridge_v0001.aleo {
     }
 
 
-    struct InPacketFull {
+    struct InPacket {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for this chain on source chain
@@ -66,22 +66,6 @@ program token_bridge_v0001.aleo {
         // Height on the source chain where the packet originated
         height: u32
     }
-
-    struct InPacket {
-        // Packet versioning for future enhancements or changes
-        version: u8,
-        // Sequence no of the packet for this chain on source chain
-        sequence: u64,
-        // Service Contract where the packet originated
-        source: ForeignContract,
-        // Destination Program where the packet should be consumed
-        destination: AleoProgram,
-        // Hash of the message
-        msg_hash: field,
-        // Height on the source chain where the packet originated
-        height: u32
-    }
-
 
     struct OutPacket {
         // Packet versioning for future enhancements or changes
@@ -112,6 +96,13 @@ program token_bridge_v0001.aleo {
         sequence: u64,
         // Address of the attestor
         attestor: address
+    }
+
+    struct InPacketFullScreeningKey {
+        // Hash of the InPacket
+        packet_hash: field,
+        // 
+        screening_passed: bool
     }
 
     // keys setting index
@@ -145,18 +136,6 @@ program token_bridge_v0001.aleo {
     // sequence no of the packet for the target (destination) chain
     // key is chain_id
     mapping sequences: u128 => u64;
-
-    // Used to receive the packet
-    // Can only be called by attestor
-    struct InPacketFullAttestorKey {
-        packet_hash: field,
-        attestor: address
-    }
-
-    struct InPacketFullScreeningKey {
-        packet_hash: field,
-        screening_passed: bool
-    }
 
 
     // The chain id of the Aleo network where this program is deployed
@@ -464,23 +443,15 @@ program token_bridge_v0001.aleo {
     /// This transition must be called only by the attestors.
     ///
     /// # Arguments:
-    /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
+    /// * `packet`: InPacket - Incoming packet with this chain as destination.
     /// * `screening_passed`: bool - true if the receiver/sender pass the screening; false otherwise
-    transition attest(public packet: InPacketFull, public screening_passed: bool) {
+    transition attest(public packet: InPacket, public screening_passed: bool) {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
 
-        let msg_hash: field = BHP256::hash_to_field(packet.message);
 
-        let packet_hash: field = BHP256::hash_to_field(InPacket {
-            version: packet.version,
-            sequence: packet.sequence,
-            source: packet.source,
-            destination: packet.destination,
-            msg_hash,
-            height: packet.height
-        });
+        let packet_hash: field = BHP256::hash_to_field(packet);
 
         let attestor: address = self.caller;
         let packet_attestor_key: field = BHP256::hash_to_field(PacketIdWithAttestor {
@@ -546,10 +517,10 @@ program token_bridge_v0001.aleo {
     /// This transition can be called by anyone with valid signature of the attestor.
     ///
     /// # Arguments:
-    /// * `packet`: InPacketFull - Incoming packet with this chain as destination.
+    /// * `packet`: InPacket - Incoming packet with this chain as destination.
     /// * `signers`: address - Array of the addresses of the signers
     /// * `signs`: signature - Array of the signatures after signing the packet
-    transition receive(public packet: InPacketFull, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) -> u8 {
+    transition receive(public packet: InPacket, public signers: [address; 5], public signs: [signature; 5], screening_passed: bool) -> u8 {
 
         // Assert that the packet is being sent to this chain
         assert_eq(packet.destination.chain_id, ALEO_CHAIN_ID);
@@ -690,14 +661,12 @@ program token_bridge_v0001.aleo {
             amount
         };
 
-        let msg_hash: field = BHP256::hash_to_field(message);
-
         let in_packet: InPacket = InPacket {
             version: VERSION,
             sequence,
             source,
             destination,
-            msg_hash,
+            message,
             height
         };
 
@@ -745,6 +714,7 @@ program token_bridge_v0001.aleo {
 
 
     }
+
 
 }
 

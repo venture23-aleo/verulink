@@ -7,8 +7,6 @@ import {
   MsgTokenReceiveLeo,
   MsgTokenSend,
   MsgTokenSendLeo,
-  InPacketFull,
-  InPacketFullLeo,
   InPacket,
   InPacketLeo,
   OutPacket,
@@ -17,8 +15,6 @@ import {
   PacketIdLeo,
   PacketIdWithAttestor,
   PacketIdWithAttestorLeo,
-  InPacketFullAttestorKey,
-  InPacketFullAttestorKeyLeo,
   InPacketFullScreeningKey,
   InPacketFullScreeningKeyLeo,
 } from "../types";
@@ -60,25 +56,13 @@ export function getMsgTokenSend(msgTokenSend: MsgTokenSendLeo): MsgTokenSend {
   return result;
 }
 
-export function getInPacketFull(inPacketFull: InPacketFullLeo): InPacketFull {
-  const result: InPacketFull = {
-    version: leo2js.u8(inPacketFull.version),
-    sequence: leo2js.u64(inPacketFull.sequence),
-    source: getForeignContract(inPacketFull.source),
-    destination: getAleoProgram(inPacketFull.destination),
-    message: getMsgTokenReceive(inPacketFull.message),
-    height: leo2js.u32(inPacketFull.height),
-  }
-  return result;
-}
-
 export function getInPacket(inPacket: InPacketLeo): InPacket {
   const result: InPacket = {
     version: leo2js.u8(inPacket.version),
     sequence: leo2js.u64(inPacket.sequence),
     source: getForeignContract(inPacket.source),
     destination: getAleoProgram(inPacket.destination),
-    msg_hash: leo2js.field(inPacket.msg_hash),
+    message: getMsgTokenReceive(inPacket.message),
     height: leo2js.u32(inPacket.height),
   }
   return result;
@@ -109,14 +93,6 @@ export function getPacketIdWithAttestor(packetIdWithAttestor: PacketIdWithAttest
     chain_id: leo2js.u128(packetIdWithAttestor.chain_id),
     sequence: leo2js.u64(packetIdWithAttestor.sequence),
     attestor: leo2js.address(packetIdWithAttestor.attestor),
-  }
-  return result;
-}
-
-export function getInPacketFullAttestorKey(inPacketFullAttestorKey: InPacketFullAttestorKeyLeo): InPacketFullAttestorKey {
-  const result: InPacketFullAttestorKey = {
-    packet_hash: leo2js.field(inPacketFullAttestorKey.packet_hash),
-    attestor: leo2js.address(inPacketFullAttestorKey.attestor),
   }
   return result;
 }

@@ -5,12 +5,10 @@ import {
   ForeignContract,
   MsgTokenReceive,
   MsgTokenSend,
-  InPacketFull,
   InPacket,
   OutPacket,
   PacketId,
   PacketIdWithAttestor,
-  InPacketFullAttestorKey,
   InPacketFullScreeningKey,
 } from "./types";
 import {
@@ -18,12 +16,10 @@ import {
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
   getMsgTokenSendLeo,
-  getInPacketFullLeo,
   getInPacketLeo,
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
 } from './js2leo';
 import {
@@ -31,12 +27,10 @@ import {
   getForeignContract,
   getMsgTokenReceive,
   getMsgTokenSend,
-  getInPacketFull,
   getInPacket,
   getOutPacket,
   getPacketId,
   getPacketIdWithAttestor,
-  getInPacketFullAttestorKey,
   getInPacketFullScreeningKey,
 } from './leo2js';
 import {
@@ -228,8 +222,8 @@ export class Token_bridge_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async attest(r0: InPacketFull, r1: boolean) {
-    const r0Leo = js2leo.json(getInPacketFullLeo(r0));
+  async attest(r0: InPacket, r1: boolean) {
+    const r0Leo = js2leo.json(getInPacketLeo(r0));
     const r1Leo = js2leo.boolean(r1);
 
     const params = [r0Leo, r1Leo]
@@ -241,8 +235,8 @@ export class Token_bridge_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async receive(r0: InPacketFull, r1: Array < string > , r2: Array < string > , r3: boolean): Promise < number | any > {
-    const r0Leo = js2leo.json(getInPacketFullLeo(r0));
+  async receive(r0: InPacket, r1: Array < string > , r2: Array < string > , r3: boolean): Promise < number | any > {
+    const r0Leo = js2leo.json(getInPacketLeo(r0));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.address));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.signature));
     const r3Leo = js2leo.boolean(r3);

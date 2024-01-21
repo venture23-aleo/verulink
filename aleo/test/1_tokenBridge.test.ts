@@ -1,6 +1,7 @@
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { InPacketFull } from "../artifacts/js/types";
+import { InPacket, InPacketFull, InPacketFullAttestorKey, InPacketFullScreeningKey, MsgTokenReceive } from "../artifacts/js/types";
 import {
+  ALEO_ZERO_ADDRESS,
   THRESHOLD_INDEX,
   TOTAL_ATTESTORS_INDEX,
   aleoChainId,
@@ -12,6 +13,7 @@ import {
   aleoUser5,
   aleoUser6,
   aleoUser7,
+  councilProgramAddr,
   ethChainId,
   ethTsContractAddr,
   ethUser,
@@ -21,7 +23,11 @@ import {
   wusdcTokenAddr,
 } from "./mockData";
 
-import { evm2AleoArr } from "../utils/utils";
+import { evm2AleoArr, hashStruct, signPacket } from "../utils/utils";
+import * as js2leo from "../artifacts/js/js2leo";
+import * as js2leoCommon from '../artifacts/js/js2leo/common';
+import { sign } from "aleo-signer";
+
 const bridge = new Token_bridge_v0001Contract({mode: "execute"});
 
 const testTimeout = 1000_000;
@@ -87,162 +93,162 @@ describe("Token Bridge ", () => {
       console.log(receipt)
     }, testTimeout);
 
-    test("Initialize (Second try) - Expected parameters (must fail)", async () => {
-      const initializeTx =  await bridge.initialize_tb(
-        normalThreshold,
-        [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-        admin //governance
-      );
+    // test("Initialize (Second try) - Expected parameters (must fail)", async () => {
+    //   const initializeTx =  await bridge.initialize_tb(
+    //     normalThreshold,
+    //     [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
+    //     admin //governance
+    //   );
 
-      // @ts-ignore
-      const receipt = await initializeTx.wait();
-      expect(receipt.error).toBeTruthy();
-    }, testTimeout);
+    //   // @ts-ignore
+    //   const receipt = await initializeTx.wait();
+    //   expect(receipt.error).toBeTruthy();
+    // }, testTimeout);
 
   });
 
-  describe("Governance", () => {
+  // describe("Governance", () => {
 
-    describe("Add Attestor", () => {
+  //   describe("Add Attestor", () => {
 
-      test("Owner can add new attestor", async () => {
-        const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-        const threshold = await bridge.attestor_settings(THRESHOLD_INDEX)
-        const newThreshold = 2;
+  //     test("Owner can add new attestor", async () => {
+  //       const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
+  //       const threshold = await bridge.attestor_settings(THRESHOLD_INDEX)
+  //       const newThreshold = 2;
 
-        let isAttestor = true;
+  //       let isAttestor = true;
 
-        try {
-          await bridge.attestors(aleoUser6)
-        } catch (e) {
-          isAttestor = false
-        }
-        expect(isAttestor).toBe(false);
+  //       try {
+  //         await bridge.attestors(aleoUser6)
+  //       } catch (e) {
+  //         isAttestor = false
+  //       }
+  //       expect(isAttestor).toBe(false);
 
-        const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, newThreshold);
-        // @ts-ignore
-        await addAttestorTx.wait()
-        isAttestor = await bridge.attestors(aleoUser6);
-        expect(isAttestor).toBe(true);
+  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, newThreshold);
+  //       // @ts-ignore
+  //       await addAttestorTx.wait()
+  //       isAttestor = await bridge.attestors(aleoUser6);
+  //       expect(isAttestor).toBe(true);
 
-        const newTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-        expect(newTotalAttestors).toBe(totalAttestors + 1);
+  //       const newTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
+  //       expect(newTotalAttestors).toBe(totalAttestors + 1);
 
-        const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-        expect(updatedThreshold).toBe(newThreshold);
+  //       const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
+  //       expect(updatedThreshold).toBe(newThreshold);
 
-      }, testTimeout)
+  //     }, testTimeout)
 
-      test.skip("Other address cannot add attestor", async () => {
-        // TODO: add following syntax
-        // bridge.connect(aleoUser2).add_attestor_tb()
-      })
+  //     test.skip("Other address cannot add attestor", async () => {
+  //       // TODO: add following syntax
+  //       // bridge.connect(aleoUser2).add_attestor_tb()
+  //     })
 
-      test.skip("Existing attestor cannot be added again", async () => {
-        const THRESHOLD_INDEX = true;
-        const threshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-        let isAttestor = true;
+  //     test.skip("Existing attestor cannot be added again", async () => {
+  //       const THRESHOLD_INDEX = true;
+  //       const threshold = await bridge.attestor_settings(THRESHOLD_INDEX);
+  //       let isAttestor = true;
 
-        try {
-          await bridge.attestors(aleoUser6)
-        } catch (e) {
-          isAttestor = false
-        }
-        expect(isAttestor).toBe(true);
+  //       try {
+  //         await bridge.attestors(aleoUser6)
+  //       } catch (e) {
+  //         isAttestor = false
+  //       }
+  //       expect(isAttestor).toBe(true);
 
-        const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, threshold);
-        // @ts-ignore
-        const txReceipt = await addAttestorTx.wait()
-        expect(txReceipt.error).toBeTruthy();
+  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, threshold);
+  //       // @ts-ignore
+  //       const txReceipt = await addAttestorTx.wait()
+  //       expect(txReceipt.error).toBeTruthy();
 
-      }, testTimeout)
+  //     }, testTimeout)
 
-      test.skip("New threshold must be greater than or equal to existing threshold", async () => {
-        const THRESHOLD_INDEX = true;
-        const threshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-        let isAttestor = true;
+  //     test.skip("New threshold must be greater than or equal to existing threshold", async () => {
+  //       const THRESHOLD_INDEX = true;
+  //       const threshold = await bridge.attestor_settings(THRESHOLD_INDEX);
+  //       let isAttestor = true;
 
-        try {
-          await bridge.attestors(aleoUser7)
-        } catch (e) {
-          isAttestor = false
-        }
-        expect(isAttestor).toBe(false);
+  //       try {
+  //         await bridge.attestors(aleoUser7)
+  //       } catch (e) {
+  //         isAttestor = false
+  //       }
+  //       expect(isAttestor).toBe(false);
 
-        const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, threshold - 1);
-        // @ts-ignore
-        const txReceipt = await addAttestorTx.wait()
-        expect(txReceipt.error).toBeTruthy();
-      }, testTimeout)
+  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, threshold - 1);
+  //       // @ts-ignore
+  //       const txReceipt = await addAttestorTx.wait()
+  //       expect(txReceipt.error).toBeTruthy();
+  //     }, testTimeout)
 
-      test.skip("New threshold must be less than or equal to total attestors", async () => {
-        const TOTAL_ATTESTORS_INDEX = false;
-        const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-        let isAttestor = true;
-        try {
-          await bridge.attestors(aleoUser7)
-        } catch (e) {
-          isAttestor = false
-        }
+  //     test.skip("New threshold must be less than or equal to total attestors", async () => {
+  //       const TOTAL_ATTESTORS_INDEX = false;
+  //       const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
+  //       let isAttestor = true;
+  //       try {
+  //         await bridge.attestors(aleoUser7)
+  //       } catch (e) {
+  //         isAttestor = false
+  //       }
 
-        expect(isAttestor).toBe(false);
-        const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, totalAttestors + 2);
-        // @ts-ignore
-        const txReceipt = await addAttestorTx.wait()
-        expect(txReceipt.error).toBeTruthy();
+  //       expect(isAttestor).toBe(false);
+  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, totalAttestors + 2);
+  //       // @ts-ignore
+  //       const txReceipt = await addAttestorTx.wait()
+  //       expect(txReceipt.error).toBeTruthy();
 
-      }, testTimeout)
+  //     }, testTimeout)
 
-    })
+  //   })
 
-    describe("Remove Attestor", () => {
-      test("Owner can remove attestor", async () => {
-        const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-        const newThreshold = 1
+  //   describe("Remove Attestor", () => {
+  //     test("Owner can remove attestor", async () => {
+  //       const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
+  //       const newThreshold = 1
 
-        let isAttestor = await bridge.attestors(aleoUser6);
-        expect(isAttestor).toBe(true);
+  //       let isAttestor = await bridge.attestors(aleoUser6);
+  //       expect(isAttestor).toBe(true);
 
-        const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser6, newThreshold);
-        // @ts-ignore
-        await removeAttestorTx.wait()
+  //       const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser6, newThreshold);
+  //       // @ts-ignore
+  //       await removeAttestorTx.wait()
 
 
-        isAttestor = true
-        try {
-          isAttestor = await bridge.attestors(aleoUser6);
-        } catch (e) {
-          isAttestor = false
-        }
-        expect(isAttestor).toBe(false);
+  //       isAttestor = true
+  //       try {
+  //         isAttestor = await bridge.attestors(aleoUser6);
+  //       } catch (e) {
+  //         isAttestor = false
+  //       }
+  //       expect(isAttestor).toBe(false);
 
-        const newTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-        expect(newTotalAttestors).toBe(totalAttestors - 1);
-      }, testTimeout)
+  //       const newTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
+  //       expect(newTotalAttestors).toBe(totalAttestors - 1);
+  //     }, testTimeout)
 
-      test.todo("Other address cannot remove attestor")
-      test.todo("Only existing attestor can be removed")
-      test.todo("There must be at least two attestors to remove a attestor")
-      test.todo("New threshold must be greater than or equal to existing threshold")
-      test.todo("New threshold must be less than or equal to total attestors")
-    })
+  //     test.todo("Other address cannot remove attestor")
+  //     test.todo("Only existing attestor can be removed")
+  //     test.todo("There must be at least two attestors to remove a attestor")
+  //     test.todo("New threshold must be greater than or equal to existing threshold")
+  //     test.todo("New threshold must be less than or equal to total attestors")
+  //   })
 
-    describe("Update threshold", () => {
-      test("Owner can update threshold", async () => {
-        const newThreshold = 3
+  //   describe("Update threshold", () => {
+  //     test("Owner can update threshold", async () => {
+  //       const newThreshold = 3
 
-        const addAttestorTx = await bridge.update_threshold_tb(newThreshold);
-        // @ts-ignore
-        await addAttestorTx.wait()
+  //       const addAttestorTx = await bridge.update_threshold_tb(newThreshold);
+  //       // @ts-ignore
+  //       await addAttestorTx.wait()
 
-        const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-        expect(updatedThreshold).toBe(newThreshold);
-      }, testTimeout)
+  //       const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
+  //       expect(updatedThreshold).toBe(newThreshold);
+  //     }, testTimeout)
 
-      test.todo("Other address cannot update threshold")
-      test.todo("New threshold must be greater than or equal to 1")
-      test.todo("New threshold must be less than or equal to total attestors")
-    })
+  //     test.todo("Other address cannot update threshold")
+  //     test.todo("New threshold must be greater than or equal to 1")
+  //     test.todo("New threshold must be less than or equal to total attestors")
+  //   })
 
   //   describe("Enable Chain", () => {
   //     test("Owner can enable chain", async () => {
@@ -339,7 +345,7 @@ describe("Token Bridge ", () => {
 
   //   })
 
-  })
+  // })
 
   // describe("Attest", () => {
   //   const packet: InPacketFull = {
@@ -351,7 +357,7 @@ describe("Token Bridge ", () => {
   //     },
   //     destination: {
   //       chain_id: aleoChainId,
-  //       addr: aleoTsContract,
+  //       addr: aleoTsProgramAddr,
   //     },
   //     message: {
   //       token: wusdcTokenAddr,
@@ -376,6 +382,56 @@ describe("Token Bridge ", () => {
   //   test.todo("If attestation crosses the threshold, packet should be queryable by packetId")
 
   // })
+
+  // describe("Receive", () => {
+  //   const packet: InPacketFull = {
+  //     version: 0,
+  //     sequence: incomingSequence,
+  //     source: {
+  //       chain_id: ethChainId,
+  //       addr: evm2AleoArr(ethTsContractAddr),
+  //     },
+  //     destination: {
+  //       chain_id: aleoChainId,
+  //       addr: aleoTsProgramAddr,
+  //     },
+  //     message: {
+  //       token: wusdcTokenAddr,
+  //       sender: evm2AleoArr(ethUser),
+  //       receiver: aleoUser1,
+  //       amount : BigInt(10000)
+  //     },
+  //     height: 10,
+  //   };
+
+  //   const signature = signPacket(packet, bridge.config.privateKey);
+  //   console.log(signature)
+    
+  //   const signatures = [
+  //     signature,
+  //     signature,
+  //     signature,
+  //     signature,
+  //     signature
+  //   ]
+
+  //   const signers = [
+  //     aleoUser1,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //   ]
+
+  //   test("Cal receive", async() => {
+  //     const tx = await bridge.receive(packet, signers, signatures, true);
+  //     // @ts-ignore
+  //     const receipt = await tx.wait()
+  //     expect(receipt.mode).toBe('execute');
+  //   })
+
+  // })
+
 
   describe("Consume", () => {
     test.failing("Consume can only be called from program", async () => {

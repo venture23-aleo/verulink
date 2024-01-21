@@ -73,7 +73,7 @@ export const leoMsgTokenSendSchema = z.object({
 });
 export type MsgTokenSendLeo = z.infer < typeof leoMsgTokenSendSchema > ;
 
-export interface InPacketFull {
+export interface InPacket {
   version: number;
   sequence: bigint;
   source: ForeignContract;
@@ -82,31 +82,12 @@ export interface InPacketFull {
   height: number;
 }
 
-export const leoInPacketFullSchema = z.object({
-  version: leoU8Schema,
-  sequence: leoU64Schema,
-  source: leoForeignContractSchema,
-  destination: leoAleoProgramSchema,
-  message: leoMsgTokenReceiveSchema,
-  height: leoU32Schema,
-});
-export type InPacketFullLeo = z.infer < typeof leoInPacketFullSchema > ;
-
-export interface InPacket {
-  version: number;
-  sequence: bigint;
-  source: ForeignContract;
-  destination: AleoProgram;
-  msg_hash: bigint;
-  height: number;
-}
-
 export const leoInPacketSchema = z.object({
   version: leoU8Schema,
   sequence: leoU64Schema,
   source: leoForeignContractSchema,
   destination: leoAleoProgramSchema,
-  msg_hash: leoFieldSchema,
+  message: leoMsgTokenReceiveSchema,
   height: leoU32Schema,
 });
 export type InPacketLeo = z.infer < typeof leoInPacketSchema > ;
@@ -153,17 +134,6 @@ export const leoPacketIdWithAttestorSchema = z.object({
   attestor: leoAddressSchema,
 });
 export type PacketIdWithAttestorLeo = z.infer < typeof leoPacketIdWithAttestorSchema > ;
-
-export interface InPacketFullAttestorKey {
-  packet_hash: bigint;
-  attestor: string;
-}
-
-export const leoInPacketFullAttestorKeySchema = z.object({
-  packet_hash: leoFieldSchema,
-  attestor: leoAddressSchema,
-});
-export type InPacketFullAttestorKeyLeo = z.infer < typeof leoInPacketFullAttestorKeySchema > ;
 
 export interface InPacketFullScreeningKey {
   packet_hash: bigint;

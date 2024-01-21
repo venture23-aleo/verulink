@@ -157,5 +157,5 @@ const mintWrappedTokenWithSignatures = async (aleoUser: string) => {
 };
 
 const aleoUser = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px"
-mintWrappedTokenWithAttest(aleoUser);
+// mintWrappedTokenWithAttest(aleoUser);
 mintWrappedTokenWithSignatures(aleoUser);

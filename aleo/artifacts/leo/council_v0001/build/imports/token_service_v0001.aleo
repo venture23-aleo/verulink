@@ -10,8 +10,6 @@ program token_service_v0001.aleo;
 
 
 
-
-
 struct OutgoingPercentageInTime:
     outgoing_percentage as u16;
     timeframe as u32;

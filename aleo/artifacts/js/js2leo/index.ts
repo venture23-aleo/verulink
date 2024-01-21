@@ -3,12 +3,10 @@ import {
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
   getMsgTokenSendLeo,
-  getInPacketFullLeo,
   getInPacketLeo,
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo
 } from './token_bridge_v0001';
 import {
@@ -52,12 +50,10 @@ export {
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
   getMsgTokenSendLeo,
-  getInPacketFullLeo,
   getInPacketLeo,
   getOutPacketLeo,
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
-  getInPacketFullAttestorKeyLeo,
   getInPacketFullScreeningKeyLeo,
   getOutgoingPercentageInTimeLeo,
   getProposalSignLeo,
