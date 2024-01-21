@@ -69,4 +69,4 @@ export const height = 10;
 export const outgoing_percentage_in_time = {"outgoing_percentage": 10000, "timeframe": 1}
 export const minimum_transfer = BigInt(100);
 
-
+export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";

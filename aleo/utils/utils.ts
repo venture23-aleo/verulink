@@ -91,3 +91,19 @@ export const hashStruct = (struct: any): bigint => {
   const hashBigInt = leo2jsCommon.field(structHash);
   return hashBigInt
 }
+
+import {sign} from "aleo-signer"
+import { InPacket, InPacketFull, InPacketFullScreeningKey, MsgTokenReceive } from '../artifacts/js/types';
+
+import * as js2leo from "../artifacts/js/js2leo";
+export const signPacket = (packet: InPacketFull, privateKey: string) => {
+
+    const packetHash = hashStruct(js2leo.getInPacketFullLeo(packet));
+    const packetHashWithScreening: InPacketFullScreeningKey = {
+      packet_hash: packetHash,
+      screening_passed: true
+    };
+    const packetHashWithScreeningHash = hashStruct(js2leo.getInPacketFullScreeningKeyLeo(packetHashWithScreening));
+    const signature = sign(privateKey, js2leoCommon.field(packetHashWithScreeningHash))
+    return signature
+}

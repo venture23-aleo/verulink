@@ -20,6 +20,7 @@
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
     "aleo-hasher": "^0.1.2",
+    "aleo-signer": "^0.1.1",
     "axios": "^1.6.5",
     "dotenv": "^16.3.1",
     "zod": "^3.22.4"

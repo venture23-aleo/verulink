@@ -241,7 +241,7 @@ export class Token_bridge_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async receive(r0: InPacketFull, r1: Array < string > , r2: Array < string > , r3: boolean) {
+  async receive(r0: InPacketFull, r1: Array < string > , r2: Array < string > , r3: boolean): Promise < number | any > {
     const r0Leo = js2leo.json(getInPacketFullLeo(r0));
     const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.address));
     const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.signature));
@@ -254,6 +254,8 @@ export class Token_bridge_v0001Contract {
       params,
     });
     if (this.config.mode === "execute") return result;
+    const out0 = leo2js.u8(result.data[0] as string);
+    return out0;
   }
 
   async consume(r0: bigint, r1: Array < number > , r2: string, r3: Array < number > , r4: string, r5: string, r6: bigint, r7: bigint, r8: number) {

@@ -6,6 +6,8 @@ const replaceValue = (value: string, searchValue = '') =>
 
 export const address = (value: string): string => replaceValue(value);
 
+export const signature = (value: string): string => replaceValue(value);
+
 export const field = (value: string): bigint => {
   const parsed = BigInt(replaceValue(value, 'field'));
   return parsed;
@@ -81,11 +83,6 @@ export const i64 = (value: string): bigint => {
 export const i128 = (value: string): bigint => {
   const parsed = BigInt(replaceValue(value, 'u128'));
   // if (isNaN(parsed)) throw new Error("u128 parsing failed");
-  return parsed;
-};
-
-export const signature = (value: string): string => {
-  const parsed = replaceValue(value, 'signature');
   return parsed;
 };
 
