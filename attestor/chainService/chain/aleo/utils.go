@@ -9,7 +9,6 @@ import (
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/venture23-aleo/attestor/chainService/chain"
-	"github.com/venture23-aleo/attestor/chainService/store"
 )
 
 func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
@@ -231,12 +230,4 @@ func parseAleoEthAddrToHexString(addr string) (string, error) {
 
 	return ethCommon.BytesToAddress(addrbt).String(), nil
 
-}
-
-func createNamespaces() error {
-	err := store.CreateNamespace(baseSeqNumNameSpace)
-	if err != nil {
-		return err
-	}
-	return store.CreateNamespace(retryPacketNamespace)
 }

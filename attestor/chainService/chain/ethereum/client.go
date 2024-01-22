@@ -29,8 +29,8 @@ const (
 
 // Namespaces
 const (
-	baseSeqNumNameSpaceSuffix  = "ethereum_bsns"
-	retryPacketNamespacePrefix = "ethereum_rpns" + "target_chain_id"
+	baseSeqNumNameSpacePrefix  = "ethereum_bsns"
+	retryPacketNamespacePrefix = "ethereum_rpns"
 )
 
 var (
@@ -152,18 +152,21 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], 10)
 		if err != nil {
 			//log error
-			continue
+			goto indIncr
 		}
 
 		for _, pkt := range pkts {
 			ch <- pkt
 		}
+
+	indIncr:
+		index++
 	}
 }
 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
-	index := 0
 	ticker := time.NewTicker(time.Hour * 2)
+	index := 0
 	defer ticker.Stop()
 	for {
 		select {
@@ -172,7 +175,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		case <-ticker.C:
 		}
 
-		if index == len(retryPacketNamespaces) {
+		if index == len(baseSeqNamespaces) {
 			index = 0
 		}
 
@@ -216,7 +219,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 			}
 		case pkt := <-completedCh:
 			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
-			ns := baseSeqNumNameSpaceSuffix + chainID
+			ns := baseSeqNumNameSpacePrefix + chainID
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -245,10 +248,10 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	var namespaces []string
 	for _, destChain := range destChains {
 		rns := retryPacketNamespacePrefix + destChain
-		bns := baseSeqNumNameSpaceSuffix + destChain
+		bns := baseSeqNumNameSpacePrefix + destChain
 		namespaces = append(namespaces, rns, bns)
 	}
-	err = createNamespaces(namespaces)
+	err = store.CreateNamespaces(namespaces)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create namespaces. Error: %s", err.Error()))
 	}
@@ -285,15 +288,6 @@ send it for it to be signed immediately.
 If not available in namespace then download block and parse and store the packet
 
 */
-
-func createNamespaces(namespaces []string) error {
-	for _, ns := range namespaces {
-		if err := store.CreateNamespace(ns); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func getDestChains() []string { // list of chain IDs
 	return nil
