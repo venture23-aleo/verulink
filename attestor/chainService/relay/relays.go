@@ -123,6 +123,4 @@ func processPacket(pkt *chain.Packet) {
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
 	}
-
-	RegisteredCompleteChannels[chainName] <- pkt
 }
