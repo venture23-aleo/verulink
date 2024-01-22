@@ -12,7 +12,7 @@ program council_v0001.aleo;
 
 
 
-struct ProposalSign:
+struct ProposalVote:
     proposal as field;
     member as address;
 
@@ -136,7 +136,7 @@ mapping proposals:
 	value as field.public;
 
 
-mapping proposal_vote_signs:
+mapping proposal_votes:
 	key as field.public;
 	value as boolean.public;
 
@@ -191,7 +191,7 @@ finalize update_member_key:
 function propose:
     input r0 as u32.public;
     input r1 as field.public;
-    cast r1 self.caller into r2 as ProposalSign;
+    cast r1 self.caller into r2 as ProposalVote;
     hash.bhp256 r2 into r3 as field;
     async propose self.caller r0 r1 r3 into r4;
     output r4 as council_v0001.aleo/propose.future;
@@ -203,7 +203,7 @@ finalize propose:
     input r3 as field.public;
     get members[r0] into r4;
     assert.eq r4 true;
-    contains proposal_vote_signs[r3] into r5;
+    contains proposal_votes[r3] into r5;
     not r5 into r6;
     assert.eq r6 true;
     get proposals[0u32] into r7;
@@ -213,14 +213,14 @@ finalize propose:
     add r7 1field into r10;
     set r10 into proposals[0u32];
     set r2 into proposals[r1];
-    set true into proposal_vote_signs[r3];
+    set true into proposal_votes[r3];
     set 1u8 into proposal_vote_counts[r2];
 
 
 function vote:
     input r0 as field.private;
     input r1 as u8.public;
-    cast r0 self.caller into r2 as ProposalSign;
+    cast r0 self.caller into r2 as ProposalVote;
     hash.bhp256 r2 into r3 as field;
     async vote self.caller r0 r3 into r4;
     output r4 as council_v0001.aleo/vote.future;
@@ -231,10 +231,10 @@ finalize vote:
     input r2 as field.public;
     get members[r0] into r3;
     assert.eq r3 true;
-    contains proposal_vote_signs[r2] into r4;
+    contains proposal_votes[r2] into r4;
     not r4 into r5;
     assert.eq r5 true;
-    set true into proposal_vote_signs[r2];
+    set true into proposal_votes[r2];
     get proposal_vote_counts[r1] into r6;
     add r6 1u8 into r7;
     set r7 into proposal_vote_counts[r1];

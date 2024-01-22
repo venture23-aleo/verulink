@@ -4,34 +4,51 @@ import token_service_v0001.aleo;
 
 program council_v0001.aleo {
 
-    // Members of the Council
-    mapping members: address => bool;
-
-    const THRESHOLD_INDEX: bool = true;
-    const TOTAL_MEMBERS_INDEX: bool = false;
-    mapping settings: bool => u8;
-
-    // key is hash(proposal)
-    mapping proposal_vote_counts: field => u8;
-    mapping proposal_executed: field => bool;
-
-    const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
-    mapping proposals: u32 => field;
-
-    // TODO: ProposalVote
-    struct ProposalSign {
+    struct ProposalVote {
+        // BHP256::Hash of the proposal
         proposal: field,
+        // Address of the member who have signed the proposal
         member: address
     }
-    // key is hash(hash(proposal), member)
-    // TODO: rename to proposal_votes
-    mapping proposal_vote_signs: field => bool;
+
+    /// Tracks if the addess is an attestor
+    /// Returns true if the address is a member
+    /// Returns null/false otherwise
+    mapping members: address => bool;
+
+    /// Stores the threshold and the total attestors
+    /// key = true : returns the threshold
+    /// key = false : returns the total attestors
+    mapping settings: bool => u8;
+
+    /// Tracks the number of votes received by the given proposal
+    mapping proposal_vote_counts: field => u8;
+
+    /// Tracks if the proposal is executed or not
+    mapping proposal_executed: field => bool;
+
+    /// Stores the hash of the proposal
+    /// Key is the proposalId
+    /// TOTAL_PROPOSALS_INDEX keeps track of the total proposals created
+    mapping proposals: u32 => field;
+
+    /// Tracks if the given member has signed the proposal
+    /// Key is hash(ProposalVote)
+    /// Returns true if the member has voted
+    mapping proposal_votes: field => bool;
+
+    const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
+
+    const THRESHOLD_INDEX: bool = true;
+
+    const TOTAL_MEMBERS_INDEX: bool = false;
 
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
-    // Initialize can only be called once
+    /// Initialize the council program
+    /// Note: This function must be allowed to be called only once.
     transition initialize(public initial_members: [address; 5], public threshold: u8) {
         
         // Sanity check for threhsold
@@ -70,6 +87,10 @@ program council_v0001.aleo {
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
     }
 
+    /////////////////////////////////
+    /////// Update Member Key ///////
+    /////////////////////////////////
+
     /// Update member key to a new address
     /// Council member can use this transition to update their key to a new address
     /// This is useful in key-rotation of a member without creating new proposal to add/remove member
@@ -91,7 +112,7 @@ program council_v0001.aleo {
         let from: address = self.caller;
 
         let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
+            ProposalVote {
                 proposal: proposal_hash,
                 member: from
             }
@@ -105,7 +126,7 @@ program council_v0001.aleo {
         assert(Mapping::get(members, from));
 
         // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+        assert(!Mapping::contains(proposal_votes, proposal_sign));
 
         // Assert that the proposal id is expected
         let total_proposals: field = Mapping::get(proposals, TOTAL_PROPOSALS_INDEX);
@@ -117,7 +138,7 @@ program council_v0001.aleo {
         Mapping::set(proposals, proposal_id, proposal_hash);
 
         // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
+        Mapping::set(proposal_votes, proposal_sign, true);
 
         // Set the vote for proposal to be 1
         Mapping::set(proposal_vote_counts, proposal_hash, 1u8);
@@ -132,7 +153,7 @@ program council_v0001.aleo {
         let from: address = self.caller;
 
         let proposal_sign: field = BHP256::hash_to_field(
-            ProposalSign {
+            ProposalVote {
                 proposal: proposal_hash,
                 member: from
             }
@@ -146,10 +167,10 @@ program council_v0001.aleo {
         assert(Mapping::get(members, from));
 
         // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_vote_signs, proposal_sign));
+        assert(!Mapping::contains(proposal_votes, proposal_sign));
 
         // Set that the member has signed the packet
-        Mapping::set(proposal_vote_signs, proposal_sign, true);
+        Mapping::set(proposal_votes, proposal_sign, true);
 
         // Get the votes for the proposal
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);

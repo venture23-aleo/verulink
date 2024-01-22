@@ -1,4 +1,9 @@
 import {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo
+} from './token_service_v0001';
+import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -28,14 +33,9 @@ import {
   InPacketWithScreeningLeo
 } from './token_bridge_v0001';
 import {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service_v0001';
-import {
-  ProposalSign,
-  leoProposalSignSchema,
-  ProposalSignLeo,
+  ProposalVote,
+  leoProposalVoteSchema,
+  ProposalVoteLeo,
   ExternalProposal,
   leoExternalProposalSchema,
   ExternalProposalLeo,
@@ -118,6 +118,9 @@ import {
 } from './wusdc_connector_v0001';
 
 export {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -145,12 +148,9 @@ export {
   InPacketWithScreening,
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo,
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
-  ProposalSign,
-  leoProposalSignSchema,
-  ProposalSignLeo,
+  ProposalVote,
+  leoProposalVoteSchema,
+  ProposalVoteLeo,
   ExternalProposal,
   leoExternalProposalSchema,
   ExternalProposalLeo,

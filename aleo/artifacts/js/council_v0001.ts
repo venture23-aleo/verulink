@@ -1,7 +1,7 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  ProposalSign,
+  ProposalVote,
   ExternalProposal,
   AddMember,
   RemoveMember,
@@ -34,7 +34,7 @@ import {
   OutgoingPercentageInTime,
 } from "./types";
 import {
-  getProposalSignLeo,
+  getProposalVoteLeo,
   getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
@@ -67,7 +67,7 @@ import {
   getOutgoingPercentageInTimeLeo,
 } from './js2leo';
 import {
-  getProposalSign,
+  getProposalVote,
   getExternalProposal,
   getAddMember,
   getRemoveMember,
@@ -533,13 +533,13 @@ export class Council_v0001Contract {
     return leo2js.field(result);
   }
 
-  async proposal_vote_signs(key: bigint): Promise < boolean > {
+  async proposal_votes(key: bigint): Promise < boolean > {
     const keyLeo = js2leo.field(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'proposal_vote_signs',
+      transition: 'proposal_votes',
       params,
     });
     return leo2js.boolean(result);

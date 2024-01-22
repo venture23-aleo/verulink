@@ -1,6 +1,6 @@
 import {
-  ProposalSign,
-  ProposalSignLeo,
+  ProposalVote,
+  ProposalVoteLeo,
   ExternalProposal,
   ExternalProposalLeo,
   AddMember,
@@ -44,10 +44,10 @@ import {
 } from "../types";
 
 import * as js2leo from "./common";
-export function getProposalSignLeo(proposalSign: ProposalSign): ProposalSignLeo {
-  const result: ProposalSignLeo = {
-    proposal: js2leo.field(proposalSign.proposal),
-    member: js2leo.address(proposalSign.member),
+export function getProposalVoteLeo(proposalVote: ProposalVote): ProposalVoteLeo {
+  const result: ProposalVoteLeo = {
+    proposal: js2leo.field(proposalVote.proposal),
+    member: js2leo.address(proposalVote.member),
   }
   return result;
 }

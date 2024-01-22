@@ -21,16 +21,16 @@ import {
   LeoArray
 } from "./leo-types";
 
-export interface ProposalSign {
+export interface ProposalVote {
   proposal: bigint;
   member: string;
 }
 
-export const leoProposalSignSchema = z.object({
+export const leoProposalVoteSchema = z.object({
   proposal: leoFieldSchema,
   member: leoAddressSchema,
 });
-export type ProposalSignLeo = z.infer < typeof leoProposalSignSchema > ;
+export type ProposalVoteLeo = z.infer < typeof leoProposalVoteSchema > ;
 
 export interface ExternalProposal {
   id: number;

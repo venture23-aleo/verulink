@@ -119,7 +119,7 @@ program token_bridge_v0001.aleo {
 
     /// Tracks if the address is an attestor
     /// Returns true is the attestor is valid
-    /// Returns false otherwise
+    /// Returns null otherwise
     mapping attestors: address => bool;
 
     /// Tracks the number of attestations for a given packet
@@ -517,7 +517,7 @@ program token_bridge_v0001.aleo {
         // Get the attestations for the packet
         let packet_attestation_count: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8);
 
-        // Increase the attestation by 1
+        // Increase the attestation by valid_signs
         Mapping::set(in_packet_attestations, packet_hash_with_screening, packet_attestation_count + valid_signs);
 
         // Get the threshold

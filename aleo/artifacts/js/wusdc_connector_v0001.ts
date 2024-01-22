@@ -3,7 +3,7 @@ import * as leo2js from './leo2js/common';
 import {
   UpdateConnector,
   WUsdcRelease,
-  ProposalSign,
+  ProposalVote,
   ExternalProposal,
   AddMember,
   RemoveMember,
@@ -41,7 +41,7 @@ import {
 import {
   getUpdateConnectorLeo,
   getWUsdcReleaseLeo,
-  getProposalSignLeo,
+  getProposalVoteLeo,
   getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
@@ -79,7 +79,7 @@ import {
 import {
   getUpdateConnector,
   getWUsdcRelease,
-  getProposalSign,
+  getProposalVote,
   getExternalProposal,
   getAddMember,
   getRemoveMember,

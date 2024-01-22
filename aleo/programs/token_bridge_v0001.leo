@@ -119,7 +119,7 @@ program token_bridge_v0001.aleo {
 
     /// Tracks if the address is an attestor
     /// Returns true is the attestor is valid
-    /// Returns false otherwise
+    /// Returns null otherwise
     mapping attestors: address => bool;
 
     /// Tracks the number of attestations for a given packet
