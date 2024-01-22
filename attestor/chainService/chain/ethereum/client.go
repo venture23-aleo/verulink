@@ -187,12 +187,16 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		// seqNum is less useful for ethereum
 		// We should now parse all the blocks between startHeight and Endheight including end height
+		startSeqNum, endSeqNum := seqHeightRanges[0][0], seqHeightRanges[0][1]
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
-		endSeqNum := seqHeightRanges[0][1]
 	L1:
 		for i := startHeight; i <= endHeight; i++ {
 			pkts := cl.parseBlock(ctx, i)
 			for _, pkt := range pkts {
+				if pkt.Sequence <= startSeqNum {
+					continue
+				}
+
 				if pkt.Sequence == endSeqNum {
 					break L1
 				}

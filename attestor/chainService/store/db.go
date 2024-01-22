@@ -148,7 +148,7 @@ func RetrieveNPacketsFromPrefix(namespace string, n int, prefix string) chan *ch
 }
 
 // RetrieveNPackets retrieves n packets from first index
-// Caller should process sequence number range as semi-open end and height range as close end.
+// Caller should process sequence number range as open end and height range as close end.
 func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [[startSeqNum, EndSeqNum], [startHeight, endHeight]]
 	seqNumCh := retrieveNKeyValuesFromFirst(namespace, 1000)
 	kv, open := <-seqNumCh
