@@ -128,6 +128,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 				}
 				// todo verify pkt creation time
 				ch <- pkt
+				cl.destChains[dst]++
 			}()
 		}
 		wg.Wait()
