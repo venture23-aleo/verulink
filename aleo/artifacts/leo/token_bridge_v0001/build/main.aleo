@@ -313,21 +313,21 @@ finalize publish:
     input r5 as address.public;
     input r6 as [u8; 32u32].public;
     input r7 as u128.public;
-    cast r0 r1 into r8 as AleoProgram;
-    get supported_chains[r2] into r9;
+    get supported_chains[r2] into r8;
+    assert.eq r8 true;
+    get supported_services[r1] into r9;
     assert.eq r9 true;
-    get supported_services[r8.addr] into r10;
-    assert.eq r10 true;
-    get.or_use sequences[r2] 1u64 into r11;
-    get.or_use sequences[6694886634403u128] 1u64 into r12;
+    get.or_use sequences[r2] 1u64 into r10;
+    get.or_use sequences[6694886634403u128] 1u64 into r11;
+    cast r0 r1 into r12 as AleoProgram;
     cast r2 r3 into r13 as ForeignContract;
     cast r4 r5 r6 r7 into r14 as MsgTokenSend;
-    cast 0u8 r11 r8 r13 r14 block.height into r15 as OutPacket;
-    add r11 1u64 into r16;
+    cast 0u8 r10 r12 r13 r14 block.height into r15 as OutPacket;
+    add r10 1u64 into r16;
     set r16 into sequences[r2];
-    add r12 1u64 into r17;
+    add r11 1u64 into r17;
     set r17 into sequences[r0];
-    cast r2 r11 into r18 as PacketId;
+    cast r2 r10 into r18 as PacketId;
     set r15 into out_packets[r18];
 
 
@@ -373,6 +373,24 @@ closure get_valid_signatures_count:
     output r32 as u8;
 
 
+closure get_packet_attestor_keys:
+    input r0 as u128;
+    input r1 as u64;
+    input r2 as [address; 5u32];
+    cast r0 r1 r2[0u32] into r3 as PacketIdWithAttestor;
+    hash.bhp256 r3 into r4 as field;
+    cast r0 r1 r2[1u32] into r5 as PacketIdWithAttestor;
+    hash.bhp256 r5 into r6 as field;
+    cast r0 r1 r2[2u32] into r7 as PacketIdWithAttestor;
+    hash.bhp256 r7 into r8 as field;
+    cast r0 r1 r2[3u32] into r9 as PacketIdWithAttestor;
+    hash.bhp256 r9 into r10 as field;
+    cast r0 r1 r2[4u32] into r11 as PacketIdWithAttestor;
+    hash.bhp256 r11 into r12 as field;
+    cast  r4 r6 r8 r10 r12 into r13 as [field; 5u32];
+    output r13 as [field; 5u32];
+
+
 function receive:
     input r0 as InPacket.public;
     input r1 as [address; 5u32].public;
@@ -383,20 +401,10 @@ function receive:
     cast r4 r3 into r5 as InPacketWithScreening;
     hash.bhp256 r5 into r6 as field;
     call get_valid_signatures_count r6 r1 r2 into r7;
-    cast r0.source.chain_id r0.sequence r1[0u32] into r8 as PacketIdWithAttestor;
-    hash.bhp256 r8 into r9 as field;
-    cast r0.source.chain_id r0.sequence r1[1u32] into r10 as PacketIdWithAttestor;
-    hash.bhp256 r10 into r11 as field;
-    cast r0.source.chain_id r0.sequence r1[2u32] into r12 as PacketIdWithAttestor;
-    hash.bhp256 r12 into r13 as field;
-    cast r0.source.chain_id r0.sequence r1[3u32] into r14 as PacketIdWithAttestor;
-    hash.bhp256 r14 into r15 as field;
-    cast r0.source.chain_id r0.sequence r1[4u32] into r16 as PacketIdWithAttestor;
-    hash.bhp256 r16 into r17 as field;
-    cast  r9 r11 r13 r15 r17 into r18 as [field; 5u32];
-    async receive r0.source.chain_id r0.sequence r6 r1 r7 r3 r18 into r19;
+    call get_packet_attestor_keys r0.source.chain_id r0.sequence r1 into r8;
+    async receive r0.source.chain_id r0.sequence r6 r1 r7 r3 r8 into r9;
     output r7 as u8.private;
-    output r19 as token_bridge_v0001.aleo/receive.future;
+    output r9 as token_bridge_v0001.aleo/receive.future;
 
 finalize receive:
     input r0 as u128.public;
@@ -499,19 +507,9 @@ function consume:
     cast r15 r16 into r17 as InPacketWithScreening;
     hash.bhp256 r17 into r18 as field;
     call get_valid_signatures_count r18 r9 r10 into r19;
-    cast r0 r7 r9[0u32] into r20 as PacketIdWithAttestor;
-    hash.bhp256 r20 into r21 as field;
-    cast r0 r7 r9[1u32] into r22 as PacketIdWithAttestor;
-    hash.bhp256 r22 into r23 as field;
-    cast r0 r7 r9[2u32] into r24 as PacketIdWithAttestor;
-    hash.bhp256 r24 into r25 as field;
-    cast r0 r7 r9[3u32] into r26 as PacketIdWithAttestor;
-    hash.bhp256 r26 into r27 as field;
-    cast r0 r7 r9[4u32] into r28 as PacketIdWithAttestor;
-    hash.bhp256 r28 into r29 as field;
-    cast  r21 r23 r25 r27 r29 into r30 as [field; 5u32];
-    async consume self.caller r0 r7 r18 r9 r10 r19 r30 r16 into r31;
-    output r31 as token_bridge_v0001.aleo/consume.future;
+    call get_packet_attestor_keys r0 r7 r9 into r20;
+    async consume self.caller r0 r7 r18 r9 r10 r19 r20 r16 into r21;
+    output r21 as token_bridge_v0001.aleo/consume.future;
 
 finalize consume:
     input r0 as address.public;
