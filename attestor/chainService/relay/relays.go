@@ -33,7 +33,6 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	}
 
 	pktCh := make(chan *chain.Packet)
-	go store.StartStoringPackets(ctx, pktCh)
 	doneCh := make(chan struct{})
 	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh, doneCh)
 	<-doneCh

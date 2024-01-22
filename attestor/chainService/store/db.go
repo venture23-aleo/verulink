@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"sync"
@@ -178,20 +177,6 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 	wg.Wait()
 
 	return
-}
-
-func StartStoringPackets(ctx context.Context, ch <-chan *chain.Packet) {
-	for {
-		var pkt *chain.Packet
-		select {
-		case <-ctx.Done():
-			return
-		case pkt = <-ch:
-		}
-
-		// store all packets under same namespace
-		_ = pkt
-	}
 }
 
 var screenValueMap = map[bool]string{true: "1", false: "0"}
