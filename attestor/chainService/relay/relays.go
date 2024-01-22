@@ -106,19 +106,19 @@ func processPacket(pkt *chain.Packet) {
 	}()
 
 	isWhite = screen(pkt) // todo: might need to receive error as well
-	sp := chain.ScreenedPacket{
+	sp := &chain.ScreenedPacket{
 		Packet:  pkt,
 		IsWhite: isWhite,
 	}
 
-	signature, err := signScreenedPacket(&sp)
+	signature, err := signScreenedPacket(sp)
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
 		return
 	}
 
-	err = sendToCollector(&sp, signature)
+	err = sendToCollector(sp, signature)
 	if err != nil {
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
