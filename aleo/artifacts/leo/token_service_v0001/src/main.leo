@@ -4,53 +4,64 @@ import token_bridge_v0001.aleo;
 
 program token_service_v0001.aleo {
 
-    // key is chain_id
-    // value is address of the token service contract on chain (with chain_id)
-    mapping token_service_contracts: u128 => [u8; 32];
-
-    // mapping used as variable
-    // true: address of owner
-    // false: Null
-    mapping owner_TS: bool => address;
-
-    // tracks the total supply of the token
-    mapping total_supply: address => u128;
-
-    // key is token_id
-    mapping token_connectors: address => address;
-
-    // minimum amount that can be transferred via Token Service
-    // represented as actual value
-    // key is token_id
-    mapping minimum_transfers: address => u128;
-
     // TODO: Check if this makes sense as global variable instead of per_token basis
     struct OutgoingPercentageInTime {
-        outgoing_percentage: u16, // represented as basis points; 10% = 10_00
-        timeframe: u32 // defined in terms of block height
+        // Percentage represented as basis points
+        // For example: 10% = 10_00u16
+        outgoing_percentage: u16, 
+        // Defined in terms of block height
+        // Info: 360 blocks per hour (approx)
+        // Reference: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/network/src/lib.rs#L115
+        timeframe: u32 
     }
-    // maximum percentage that can be transferred in the given timeframe
-    // key is token_id
+
+    /// Stores the contract address of the token service contract of other chain
+    /// Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+    /// For EVM Chains, 20 bytes is formated as following:
+    /// [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
+    /// Key is chain_id
+    mapping token_service_contracts: u128 => [u8; 32];
+
+    /// Stores the owner of this program
+    /// The owner can be another program or wallet
+    /// key = true: returns the address of the owner
+    /// key = false: returns Null
+    mapping owner_TS: bool => address;
+
+    /// Stores the total supply of the token
+    /// Key is the address of the token program
+    mapping total_supply: address => u128;
+
+    /// Stores the address of connector for a given token
+    /// Key is the address of the token program
+    mapping token_connectors: address => address;
+
+    /// Stores the minimum amount that can be transferred via Token Service
+    /// Key is address of the token program
+    mapping minimum_transfers: address => u128;
+
+    /// Stores the maximum percentage that can be transferred in the given timeframe
+    /// Key is the address of the token program
     mapping max_outgoing_percentage: address => OutgoingPercentageInTime;
     
-    // maximum liquidity after which we do not care about max_outgoing_percentage
-    // key is token_id
+    /// Stores maximum liquidity after which we do not care about max_outgoing_percentage
+    /// Key is the address of the token program
     mapping maximum_liquidity_for_no_cap: address => u32;
 
-    // tracks the last time the token was minted/burned
+    /// Tracks the last time (in block height) when the token was minted/burned
+    /// Key is the address of the token program
     mapping last_token_update: address => u32;
-    // tracks the minimum supply that should be available after the token update
-    mapping last_min_supply: address => u128;
 
-    inline max_basis_point() -> u16 {
-        return 10000u16;
-    }
+    /// Tracks the minimum supply that should be available after the token update
+    /// Key is the address of the token program
+    mapping last_min_supply: address => u128;
 
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
-    // Initialize can only be called once
+    /// Initialize the token service program
+    /// Note: This function must be allowed to be called only once.
     transition initialize_ts(owner: address) {
         return then finalize(owner);
     }
@@ -84,6 +95,10 @@ program token_service_v0001.aleo {
         Mapping::set(owner_TS, true, new_governance);
     }
 
+    //////////////////////////////////
+    ///// Support/Remove Chain ///////
+    //////////////////////////////////
+
     transition support_chain_ts(public chain_id: u128, public token_service_address: [u8; 32]) {
         return then finalize(self.caller, chain_id, token_service_address);
     }
@@ -111,6 +126,10 @@ program token_service_v0001.aleo {
     }
 
 
+    //////////////////////////////////
+    ///// Support/Remove Token ///////
+    //////////////////////////////////
+
     transition support_token_ts(public token_id: address, public token_connector: address, public minimum_transfer: u128, public outgoing_percentage: u16, public timeframe: u32) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
@@ -137,9 +156,6 @@ program token_service_v0001.aleo {
     }
 
     transition update_token_connector_ts(public token_id: address, public new_token_connector: address) {
-        // TODO: 
-        // 1. handle limits - max amounts that can be withdrawn in given time
-        // 2. handle fees
         return then finalize(self.caller, token_id, new_token_connector);
     }
 
@@ -180,6 +196,11 @@ program token_service_v0001.aleo {
         Mapping::set(token_connectors, token_id, token_connector);
     }
 
+
+    /////////////////////////////////////
+    ///// Update Minimum Transfer ///////
+    ////////////////////////////////////
+
     transition update_minimum_transfer_ts(public token_id: address, minimum_transfer: u128) {
         return then finalize(self.caller, token_id, minimum_transfer);
     }
@@ -193,6 +214,10 @@ program token_service_v0001.aleo {
         Mapping::set(minimum_transfers, token_id, minimum_transfer);
     }
 
+
+    ////////////////////////////////////////
+    ///// Update Outgoing Percentage ///////
+    ////////////////////////////////////////
 
     transition update_outgoing_percentage_ts(public token_id: address, outgoing_percentage: u16, timeframe: u32) {
         assert(outgoing_percentage <= HUNDRED_PERCENTAGE);
@@ -211,6 +236,10 @@ program token_service_v0001.aleo {
 
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
     }
+
+    /////////////////////////////
+    ///// Token Transfers ///////
+    /////////////////////////////
 
     transition token_send(public token_id: address, public sender: address, public receiver: [u8; 32], public amount: u128, public origin_chain_id: u128, origin_token_address: [u8; 32], origin_token_service_address: [u8; 32]) {
         // Assert that only a connector program can call this method

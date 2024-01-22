@@ -59,8 +59,6 @@ mapping last_min_supply:
 	key as address.public;
 	value as u128.public;
 
-
-
 function initialize_ts:
     input r0 as address.private;
     async initialize_ts r0 into r1;

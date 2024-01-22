@@ -167,6 +167,8 @@ program token_bridge_v0001.aleo {
     /////// Initialization ///////
     //////////////////////////////
 
+    /// Initialize the token bridge program
+    /// Note: This function must be allowed to be called only once.
     transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public owner: address) {
 
         // Sanity check for threshold
