@@ -2,9 +2,11 @@ package relay
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
+	common "github.com/venture23-aleo/attestor/chainService/common/wallet"
 	"github.com/venture23-aleo/attestor/chainService/config"
 	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
@@ -34,6 +36,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 
 	pktCh := make(chan *chain.Packet)
 	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
+	go receivePktsFromCollector(ctx, pktCh)
 	consumePackets(ctx, pktCh)
 }
 
@@ -120,6 +123,10 @@ func processPacket(pkt *chain.Packet) {
 
 	err = sendToCollector(sp, signature)
 	if err != nil {
+		if errors.Is(err, common.AlreadyRelayedPacket{}) {
+			err = nil // non-nil error will put packet in retry namespace
+			return
+		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
 	}
