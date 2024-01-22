@@ -195,3 +195,22 @@ func retrieveAndDeleteFirstKey(bucket string) (a [2][]byte, err error) {
 
 	return
 }
+
+func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err error) {
+	s = make([][]byte, 0, n)
+	err = db.Update(func(tx *bbolt.Tx) error {
+		bkt := tx.Bucket([]byte(bucket))
+		c := bkt.Cursor()
+		count := 0
+		for key, value := c.First(); key != nil && count != n; key, value = c.Next() {
+			v := make([]byte, len(value))
+			copy(v, value)
+			if err := bkt.Delete(key); err != nil {
+				return err
+			}
+			s = append(s, v)
+		}
+		return nil
+	})
+	return
+}

@@ -63,6 +63,22 @@ func RetrieveAndDeleteFirstPacket(namespace string) (pkt *chain.Packet, err erro
 	return
 }
 
+func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
+	s, err := retrieveAndDeleteNKeysFromFirst(namespace, n)
+	if err != nil {
+		return nil, err
+	}
+	pkts := make([]*chain.Packet, 0, n)
+	for _, b := range s {
+		pkt := new(chain.Packet)
+		if err := json.Unmarshal(b, pkt); err != nil {
+			return nil, err
+		}
+		pkts = append(pkts, pkt)
+	}
+	return pkts, nil
+}
+
 func RemoveKey[T keyConstraint](namespace string, key T, batch bool) error {
 	k := getKeyByteForKeyConstraint(key)
 	if batch {
