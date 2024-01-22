@@ -89,23 +89,11 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func (cl *Client) createNamespaces() error {
-	err := store.CreateNamespace(baseSeqNumNameSpace)
-	if err != nil {
-		return err
-	}
-	return store.CreateNamespace(retryPacketNamespace)
-}
-
 func (cl *Client) getPacket(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
 	return nil, nil
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
-	err := cl.createNamespaces()
-	if err != nil {
-		panic(err)
-	}
 
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
@@ -193,9 +181,11 @@ func (cl *Client) managePacket(ctx context.Context) {
 }
 
 func NewClient(cfg *config.ChainConfig) chain.IClient {
-	/*
-		Initialize aleo client and panic if any error occurs.
-	*/
+	err := createNamespaces()
+	if err != nil {
+		panic(err)
+	}
+
 	urlSlice := strings.Split(cfg.NodeUrl, "|")
 	if len(urlSlice) != 2 {
 		panic("invalid format. Expected format:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
