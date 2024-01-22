@@ -155,20 +155,6 @@ program token_service_v0001.aleo {
         Mapping::set(token_connectors, token_id, token_connector);
     }
 
-    transition update_token_connector_ts(public token_id: address, public new_token_connector: address) {
-        return then finalize(self.caller, token_id, new_token_connector);
-    }
-
-    finalize update_token_connector_ts(from: address, token_id: address, new_token_connector: address) {
-        // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
-        assert_eq(from, owner);
-
-        Mapping::set(token_connectors, token_id, new_token_connector);
-    }
-
-
     transition remove_token_ts(public token_id: address) {
         return then finalize(self.caller, token_id);
     }
@@ -184,16 +170,16 @@ program token_service_v0001.aleo {
         Mapping::remove(token_connectors, token_id);
     }
 
-    transition update_token_connector(token_id: address, token_connector: address) { 
-        return then finalize(self.caller, token_id, token_connector);
+    transition update_connector_ts(token_id: address, new_token_connector: address) { 
+        return then finalize(self.caller, token_id, new_token_connector);
     }
-    finalize update_token_connector(from: address, token_id: address, token_connector: address) {
-        // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
-        assert_eq(from, owner);
 
-        Mapping::set(token_connectors, token_id, token_connector);
+    finalize update_connector_ts(from: address, token_id: address, new_token_connector: address) {
+        // If the token is not supported, this fails
+        let current_token_connector: address = Mapping::get(token_connectors, token_id);
+        assert_eq(from, current_token_connector);
+
+        Mapping::set(token_connectors, token_id, new_token_connector);
     }
 
 

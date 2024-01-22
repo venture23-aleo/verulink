@@ -74,6 +74,7 @@ program wusdc_connector_v0001.aleo {
         council_v0001.aleo/external_execute(proposal_id, BHP256::hash_to_field(update_connector));
         wusdc_token_v0001.aleo/transfer_ownership_token(new_connector);
         wusdc_holding_v0001.aleo/transfer_ownership_holding(new_connector);
+        token_service_v0001.aleo/update_connector_ts(WUSDC_TOKEN, new_connector);
     }
 
 

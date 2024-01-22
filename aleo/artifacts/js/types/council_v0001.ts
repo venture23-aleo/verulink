@@ -239,19 +239,6 @@ export const leoTsRemoveTokenSchema = z.object({
 });
 export type TsRemoveTokenLeo = z.infer < typeof leoTsRemoveTokenSchema > ;
 
-export interface TsUpdateConnector {
-  id: number;
-  token_id: string;
-  new_connector: string;
-}
-
-export const leoTsUpdateConnectorSchema = z.object({
-  id: leoU32Schema,
-  token_id: leoAddressSchema,
-  new_connector: leoAddressSchema,
-});
-export type TsUpdateConnectorLeo = z.infer < typeof leoTsUpdateConnectorSchema > ;
-
 export interface TsUpdateMinimumTransfer {
   id: number;
   token_id: string;

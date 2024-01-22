@@ -35,8 +35,6 @@ import {
   TsSupportTokenLeo,
   TsRemoveToken,
   TsRemoveTokenLeo,
-  TsUpdateConnector,
-  TsUpdateConnectorLeo,
   TsUpdateMinimumTransfer,
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
@@ -194,15 +192,6 @@ export function getTsRemoveToken(tsRemoveToken: TsRemoveTokenLeo): TsRemoveToken
   const result: TsRemoveToken = {
     id: leo2js.u32(tsRemoveToken.id),
     token_id: leo2js.address(tsRemoveToken.token_id),
-  }
-  return result;
-}
-
-export function getTsUpdateConnector(tsUpdateConnector: TsUpdateConnectorLeo): TsUpdateConnector {
-  const result: TsUpdateConnector = {
-    id: leo2js.u32(tsUpdateConnector.id),
-    token_id: leo2js.address(tsUpdateConnector.token_id),
-    new_connector: leo2js.address(tsUpdateConnector.new_connector),
   }
   return result;
 }

@@ -137,21 +137,6 @@ finalize support_token_ts:
     set r2 into token_connectors[r1];
 
 
-function update_token_connector_ts:
-    input r0 as address.public;
-    input r1 as address.public;
-    async update_token_connector_ts self.caller r0 r1 into r2;
-    output r2 as token_service_v0001.aleo/update_token_connector_ts.future;
-
-finalize update_token_connector_ts:
-    input r0 as address.public;
-    input r1 as address.public;
-    input r2 as address.public;
-    get owner_TS[true] into r3;
-    assert.eq r0 r3;
-    set r2 into token_connectors[r1];
-
-
 function remove_token_ts:
     input r0 as address.public;
     async remove_token_ts self.caller r0 into r1;
@@ -167,17 +152,17 @@ finalize remove_token_ts:
     remove token_connectors[r1];
 
 
-function update_token_connector:
+function update_connector_ts:
     input r0 as address.private;
     input r1 as address.private;
-    async update_token_connector self.caller r0 r1 into r2;
-    output r2 as token_service_v0001.aleo/update_token_connector.future;
+    async update_connector_ts self.caller r0 r1 into r2;
+    output r2 as token_service_v0001.aleo/update_connector_ts.future;
 
-finalize update_token_connector:
+finalize update_connector_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as address.public;
-    get owner_TS[true] into r3;
+    get token_connectors[r1] into r3;
     assert.eq r0 r3;
     set r2 into token_connectors[r1];
 

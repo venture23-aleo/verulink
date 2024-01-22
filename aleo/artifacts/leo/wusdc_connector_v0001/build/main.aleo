@@ -38,7 +38,6 @@ program wusdc_connector_v0001.aleo;
 
 
 
-
 struct UpdateConnector:
     new_connector as address;
 
@@ -131,16 +130,19 @@ function update_wusdc_connector:
     call council_v0001.aleo/external_execute r0 r3 into r4;
     call wusdc_token_v0001.aleo/transfer_ownership_token r1 into r5;
     call wusdc_holding_v0001.aleo/transfer_ownership_holding r1 into r6;
-    async update_wusdc_connector r4 r5 r6 into r7;
-    output r7 as wusdc_connector_v0001.aleo/update_wusdc_connector.future;
+    call token_service_v0001.aleo/update_connector_ts aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r1 into r7;
+    async update_wusdc_connector r4 r5 r6 r7 into r8;
+    output r8 as wusdc_connector_v0001.aleo/update_wusdc_connector.future;
 
 finalize update_wusdc_connector:
     input r0 as council_v0001.aleo/external_execute.future;
     input r1 as wusdc_token_v0001.aleo/transfer_ownership_token.future;
     input r2 as wusdc_holding_v0001.aleo/transfer_ownership_holding.future;
+    input r3 as token_service_v0001.aleo/update_connector_ts.future;
     await r0;
     await r1;
     await r2;
+    await r3;
 
 
 function wusdc_release:

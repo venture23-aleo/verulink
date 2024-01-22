@@ -94,11 +94,6 @@ struct TsRemoveToken:
     id as u32;
     token_id as address;
 
-struct TsUpdateConnector:
-    id as u32;
-    token_id as address;
-    new_connector as address;
-
 struct TsUpdateMinimumTransfer:
     id as u32;
     token_id as address;
@@ -651,30 +646,6 @@ function ts_remove_token:
 
 finalize ts_remove_token:
     input r0 as token_service_v0001.aleo/remove_token_ts.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
-function ts_update_token_connector:
-    input r0 as u32.public;
-    input r1 as address.public;
-    input r2 as address.public;
-    cast r0 r1 r2 into r3 as TsUpdateConnector;
-    hash.bhp256 r3 into r4 as field;
-    call token_service_v0001.aleo/update_token_connector_ts r1 r2 into r5;
-    async ts_update_token_connector r5 r4 into r6;
-    output r6 as council_v0001.aleo/ts_update_token_connector.future;
-
-finalize ts_update_token_connector:
-    input r0 as token_service_v0001.aleo/update_token_connector_ts.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

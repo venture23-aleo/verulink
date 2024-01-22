@@ -19,7 +19,6 @@ import {
   TsRemoveChain,
   TsSupportToken,
   TsRemoveToken,
-  TsUpdateConnector,
   TsUpdateMinimumTransfer,
   TsUpdateOutgoingPercentage,
   AleoProgram,
@@ -52,7 +51,6 @@ import {
   getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
-  getTsUpdateConnectorLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
   getAleoProgramLeo,
@@ -85,7 +83,6 @@ import {
   getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
-  getTsUpdateConnector,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
   getAleoProgram,
@@ -423,20 +420,6 @@ export class Council_v0001Contract {
     const result = await zkRun({
       config: this.config,
       transition: 'ts_remove_token',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async ts_update_token_connector(r0: number, r1: string, r2: string) {
-    const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.address(r1);
-    const r2Leo = js2leo.address(r2);
-
-    const params = [r0Leo, r1Leo, r2Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'ts_update_token_connector',
       params,
     });
     if (this.config.mode === "execute") return result;

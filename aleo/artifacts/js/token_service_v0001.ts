@@ -122,19 +122,6 @@ export class Token_service_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_token_connector_ts(r0: string, r1: string) {
-    const r0Leo = js2leo.address(r0);
-    const r1Leo = js2leo.address(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'update_token_connector_ts',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
   async remove_token_ts(r0: string) {
     const r0Leo = js2leo.address(r0);
 
@@ -147,14 +134,14 @@ export class Token_service_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_token_connector(r0: string, r1: string) {
+  async update_connector_ts(r0: string, r1: string) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_token_connector',
+      transition: 'update_connector_ts',
       params,
     });
     if (this.config.mode === "execute") return result;

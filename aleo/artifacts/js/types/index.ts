@@ -1,9 +1,4 @@
 import {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service_v0001';
-import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -33,6 +28,11 @@ import {
   InPacketWithScreeningLeo
 } from './token_bridge_v0001';
 import {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo
+} from './token_service_v0001';
+import {
   ProposalVote,
   leoProposalVoteSchema,
   ProposalVoteLeo,
@@ -87,9 +87,6 @@ import {
   TsRemoveToken,
   leoTsRemoveTokenSchema,
   TsRemoveTokenLeo,
-  TsUpdateConnector,
-  leoTsUpdateConnectorSchema,
-  TsUpdateConnectorLeo,
   TsUpdateMinimumTransfer,
   leoTsUpdateMinimumTransferSchema,
   TsUpdateMinimumTransferLeo,
@@ -118,9 +115,6 @@ import {
 } from './wusdc_connector_v0001';
 
 export {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -148,6 +142,9 @@ export {
   InPacketWithScreening,
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo,
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo,
   ProposalVote,
   leoProposalVoteSchema,
   ProposalVoteLeo,
@@ -202,9 +199,6 @@ export {
   TsRemoveToken,
   leoTsRemoveTokenSchema,
   TsRemoveTokenLeo,
-  TsUpdateConnector,
-  leoTsUpdateConnectorSchema,
-  TsUpdateConnectorLeo,
   TsUpdateMinimumTransfer,
   leoTsUpdateMinimumTransferSchema,
   TsUpdateMinimumTransferLeo,
