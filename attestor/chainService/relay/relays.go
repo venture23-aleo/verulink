@@ -73,16 +73,14 @@ func consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case guideCh <- struct{}{}:
 		}
-		pkt := <-pktCh
-		guideCh <- struct{}{}
 
+		pkt := <-pktCh
 		go func() {
 			defer func() {
 				<-guideCh
 			}()
-
 			processPacket(pkt)
 		}()
 	}
