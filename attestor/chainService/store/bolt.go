@@ -53,15 +53,8 @@ func put(bucket string, key, value []byte) error {
 	})
 }
 
-func batchPut(bucket string, key, value []byte) error {
-	return db.Batch(func(tx *bbolt.Tx) error {
-		bkt := tx.Bucket([]byte(bucket))
-		return bkt.Put(key, value)
-	})
-}
-
 func get(bucket string, key []byte) (value []byte) {
-	db.View(func(tx *bbolt.Tx) error {
+	db.View(func(tx *bbolt.Tx) error { // nolint
 		bkt := tx.Bucket([]byte(bucket))
 		data := bkt.Get(key)
 		if data == nil {
@@ -94,7 +87,7 @@ func getAndDelete(bucket string, key []byte) (value []byte, err error) {
 
 func getFirstKey(bucket string) []byte {
 	var key []byte
-	db.View(func(tx *bbolt.Tx) error {
+	db.View(func(tx *bbolt.Tx) error { // nolint
 		bkt := tx.Bucket([]byte(bucket))
 		if bkt == nil {
 			return nil
@@ -114,7 +107,7 @@ func getFirstKey(bucket string) []byte {
 }
 
 func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
-	db.View(func(tx *bbolt.Tx) error {
+	db.View(func(tx *bbolt.Tx) error { // nolint
 		bkt := tx.Bucket([]byte(bktName))
 		if bkt == nil {
 			return nil
@@ -129,35 +122,12 @@ func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
 	return
 }
 
-func retrieveNKeyValuesAfterPrefix(bucket string, n int, prefix string) <-chan [2][]byte {
-	ch := make(chan [2][]byte, n)
-	go func() {
-		count := 0
-		db.View(func(tx *bbolt.Tx) error {
-			bkt := tx.Bucket([]byte(bucket))
-			c := bkt.Cursor()
-			c.Seek([]byte(prefix))
-			for key, value := c.Next(); count != n && key != nil; key, value = c.Next() {
-				k := make([]byte, len(key))
-				v := make([]byte, len(value))
-				copy(k, key)
-				copy(v, value)
-				ch <- [2][]byte{k, v}
-				count++
-			}
-			close(ch)
-			return nil
-		})
-	}()
-	return ch
-}
-
 // This function will return channel and populate minimum of n and total keys number of packets
 func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 	ch := make(chan [2][]byte, n)
 	go func() {
 		count := 0
-		db.View(func(tx *bbolt.Tx) error {
+		db.View(func(tx *bbolt.Tx) error { // nolint
 			bkt := tx.Bucket([]byte(bucket))
 			c := bkt.Cursor()
 			for key, value := c.First(); count != n && key != nil; key, value = c.Next() {
@@ -187,7 +157,7 @@ func retrieveAndDeleteFirstKey(bucket string) (a [2][]byte, err error) {
 		v := make([]byte, len(value))
 		copy(k, key)
 		copy(v, value)
-		bkt.Delete(key)
+		bkt.Delete(key) // nolint
 
 		a[0], a[1] = k, v
 		return nil

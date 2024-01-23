@@ -46,7 +46,10 @@ func initLog(mode logMode, cfg *config.LoggerConfig) {
 		MaxAge:     logCfg.maxAge,
 		Compress:   logCfg.compress,
 	}
-	lumber.Rotate()
+	err := lumber.Rotate()
+	if err != nil {
+		panic(err)
+	}
 
 	w := zapcore.AddSync(lumber)
 

@@ -43,6 +43,7 @@ func receivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
 		case <-ticker.C:
 		}
 
+		_, _ = verifyPkt(ctx, nil)
 	}
 }
 

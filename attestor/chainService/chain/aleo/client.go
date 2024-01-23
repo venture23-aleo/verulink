@@ -86,20 +86,12 @@ func (cl *Client) CurHeight(ctx context.Context) uint64 {
 	return uint64(height)
 }
 
-func (cl *Client) getDestChains() ([]string, error) {
-	return []string{"ethereum"}, nil
-}
-
 func (cl *Client) Name() string {
 	return cl.name
 }
 
 func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
-}
-
-func (cl *Client) getPacket(ctx context.Context, seqNum uint64) (*chain.Packet, error) {
-	return nil, nil
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
@@ -299,5 +291,5 @@ func NewClient(cfg *config.ChainConfig, m map[string]uint32) chain.IClient {
 }
 
 func getDestChains() []string { // list of chain IDs
-	return nil
+	return []string{"ethereum"}
 }

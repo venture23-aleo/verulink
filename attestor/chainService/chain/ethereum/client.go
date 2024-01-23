@@ -9,7 +9,6 @@ import (
 	"time"
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
@@ -40,14 +39,13 @@ var (
 )
 
 type Client struct {
-	name              string
-	address           string
-	eth               *ethclient.Client
-	bridge            abi.ABIInterface
-	minRequiredGasFee uint64
-	waitDur           time.Duration
-	nextBlockHeight   uint64
-	chainID           uint32
+	name            string
+	address         string
+	eth             *ethclient.Client
+	bridge          abi.ABIInterface
+	waitDur         time.Duration
+	nextBlockHeight uint64
+	chainID         uint32
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
@@ -81,11 +79,6 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum u
 		Height: ethpacket.Height.Uint64(),
 	}
 	return packet, nil
-}
-
-func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
-	tx, err = cl.bridge.ReceivePacket(opts, packet)
-	return
 }
 
 func (cl *Client) curHeight(ctx context.Context) uint64 {

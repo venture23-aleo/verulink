@@ -24,5 +24,5 @@ type AlreadyRelayedPacket struct {
 }
 
 func (e AlreadyRelayedPacket) Error() string {
-	return fmt.Sprintf("packet aleady sent")
+	return "packet aleady sent"
 }
