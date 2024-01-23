@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
-	common "github.com/venture23-aleo/attestor/chainService/common/wallet"
+	common "github.com/venture23-aleo/attestor/chainService/common"
 	"github.com/venture23-aleo/attestor/chainService/config"
 	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
@@ -25,7 +25,7 @@ var (
 	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 )
 
-type ClientFunc func(cfg *config.ChainConfig) chain.IClient
+type ClientFunc func(cfg *config.ChainConfig, m map[string]uint32) chain.IClient
 type HashFunc func(sp *chain.ScreenedPacket) string
 
 func StartRelay(ctx context.Context, cfg *config.Config) {
@@ -42,6 +42,13 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 
 func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
+
+	m := make(map[string]uint32)
+	for _, chainCfg := range cfgs {
+		m[chainCfg.Name] = chainCfg.ChainID
+		chainIDToChainName[chainCfg.ChainID] = chainCfg.Name
+	}
+
 	for _, chainCfg := range cfgs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
@@ -50,8 +57,7 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 		if _, ok := RegisteredHashers[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("hash undefined for chain %s", chainCfg.Name))
 		}
-		ch <- RegisteredClients[chainCfg.Name](chainCfg)
-		chainIDToChainName[chainCfg.ChainID] = chainCfg.Name
+		ch <- RegisteredClients[chainCfg.Name](chainCfg, m)
 	}
 
 	for chain := range ch {

@@ -40,7 +40,7 @@ type Client struct {
 	network    string
 	chainID    uint32
 	waitDur    time.Duration
-	destChains map[uint32]uint64
+	destChains map[uint32]uint64 // keeps record of sequence number of all dest chains
 }
 
 type aleoPacket struct {
@@ -242,7 +242,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 	}
 }
 
-func NewClient(cfg *config.ChainConfig) chain.IClient {
+func NewClient(cfg *config.ChainConfig, m map[string]uint32) chain.IClient {
 
 	urlSlice := strings.Split(cfg.NodeUrl, "|")
 	if len(urlSlice) != 2 {
@@ -277,6 +277,15 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		waitDur = defaultWaitDur
 	}
 
+	destChainsSeqMap := make(map[uint32]uint64, 0)
+	for chainName, seqNum := range cfg.StartSeqNum {
+		chainID, ok := m[chainName]
+		if !ok {
+			panic("missing start sequence number information")
+		}
+		destChainsSeqMap[chainID] = seqNum
+	}
+
 	return &Client{
 		queryUrl:   urlSlice[0],
 		network:    urlSlice[1],
@@ -285,6 +294,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		chainID:    cfg.ChainID,
 		programID:  cfg.BridgeContract,
 		name:       name,
+		destChains: destChainsSeqMap,
 	}
 }
 

@@ -241,7 +241,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 	}
 }
 
-func NewClient(cfg *config.ChainConfig) chain.IClient {
+func NewClient(cfg *config.ChainConfig, _ map[string]uint32) chain.IClient {
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
@@ -282,7 +282,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		bridge:          bridgeClient,
 		waitDur:         waitDur,
 		chainID:         cfg.ChainID,
-		nextBlockHeight: cfg.StartFrom,
+		nextBlockHeight: cfg.StartHeight,
 	}
 }
 

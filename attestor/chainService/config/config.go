@@ -34,14 +34,15 @@ func init() {
 }
 
 type ChainConfig struct {
-	Name           string        `yaml:"name"`
-	ChainID        uint32        `yaml:"chain_id"`
-	BridgeContract string        `yaml:"bridge_contract"`
-	NodeUrl        string        `yaml:"node_url"`
-	StartFrom      uint64        `yaml:"start_from"`
-	WaitDuration   time.Duration `yaml:"wait_duration"`
-	WalletPath     string        `yaml:"wallet_path"`
-	DestChains     []string      `yaml:"dest_chains"`
+	Name           string            `yaml:"name"`
+	ChainID        uint32            `yaml:"chain_id"`
+	BridgeContract string            `yaml:"bridge_contract"`
+	NodeUrl        string            `yaml:"node_url"`
+	WaitDuration   time.Duration     `yaml:"wait_duration"`
+	WalletPath     string            `yaml:"wallet_path"`
+	DestChains     []string          `yaml:"dest_chains"`
+	StartSeqNum    map[string]uint64 `yaml:"sequence_num_start"` // useful for aleo
+	StartHeight    uint64            `yaml:"start_height"`       // useful for ethereum
 }
 
 type Config struct {
