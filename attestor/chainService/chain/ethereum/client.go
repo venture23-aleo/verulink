@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 
 	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -178,9 +179,11 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		if index == len(baseSeqNamespaces) {
 			index = 0
 		}
-
+		ns := baseSeqNamespaces[index]
+		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
+		chainID, _ := strconv.ParseUint(chainIDStr, 10, 32)
 		// segragate sequence numbers as per target chain
-		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(baseSeqNamespaces[index])
+		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(ns)
 		if !shouldFetch {
 			continue
 		}
@@ -193,6 +196,9 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		for i := startHeight; i <= endHeight; i++ {
 			pkts := cl.parseBlock(ctx, i)
 			for _, pkt := range pkts {
+				if pkt.Destination.ChainID != uint32(chainID) {
+					continue
+				}
 				if pkt.Sequence <= startSeqNum {
 					continue
 				}
