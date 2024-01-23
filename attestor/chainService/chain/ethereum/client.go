@@ -1,7 +1,9 @@
 package ethereum
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -39,6 +41,7 @@ type Client struct {
 	waitDur           time.Duration
 	nextBlockHeight   uint64
 	chainID           *big.Int
+	rpcEndpoint       string
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
@@ -74,19 +77,6 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum u
 	return packet, nil
 }
 
-func (cl *Client) attestMessage(opts *ethBind.TransactOpts, packet abi.PacketLibraryInPacket) (tx *ethTypes.Transaction, err error) {
-	tx, err = cl.bridge.ReceivePacket(opts, packet)
-	return
-}
-
-func (cl *Client) curHeight(ctx context.Context) uint64 {
-	height, err := cl.eth.BlockNumber(ctx)
-	if err != nil {
-		return 0
-	}
-	return height
-}
-
 func (cl *Client) Name() string {
 	return cl.name
 }
@@ -107,9 +97,101 @@ func (cl *Client) createNamespaces() error {
 	return store.CreateNamespace(retryPacketNamespace)
 }
 
-// TODO: 
-func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet) {
-	return
+func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
+	sc := ethCommon.HexToAddress(cl.address)
+
+	ctxBlk, cancel := context.WithCancel(ctx)
+	defer cancel()
+	block, err := cl.eth.BlockByNumber(ctxBlk, big.NewInt(int64(height)))
+	if err != nil {
+		return nil, err
+	}
+
+	ctxRecpt, cancel := context.WithCancel(ctx)
+	defer cancel()
+	receipts, err := getTxReceipts(ctxRecpt, cl.eth, block)
+	if err != nil {
+		return nil, err	
+	}
+	packets, err := getRelayReceipts(cl.bridge.(*abi.Bridge), sc, receipts)
+	if err != nil {
+		return nil, err
+	}
+	return packets, nil 
+}
+
+func getRelayReceipts(bridgeClient *abi.Bridge, contract ethCommon.Address, receipts ethTypes.Receipts) ([]*chain.Packet, error) {
+	packets := []*chain.Packet{}
+	for _, receipt := range receipts {
+		for _, log := range receipt.Logs {
+			if !bytes.Equal(log.Address.Bytes(), contract.Bytes()) {
+				continue
+			}
+			packet, err := bridgeClient.ParsePacketDispatched(*log)
+			if err != nil {
+				return nil, err
+			}
+			_=packet
+			// append after converting to common packet 
+		}
+	}
+	return packets, nil 
+}
+
+func getTxReceipts(ctx context.Context, ethClient *ethclient.Client, hb *ethTypes.Block) (ethTypes.Receipts, error) {
+	txhs := hb.Transactions()
+	receipts := make(ethTypes.Receipts, 0, len(txhs))
+
+	type receiptStruct struct {
+		txHash  ethCommon.Hash
+		receipt *ethTypes.Receipt
+		err     error
+	}
+	receiptCh := make(chan *receiptStruct, len(txhs))
+	queryCh := make(chan *receiptStruct, cap(receiptCh))
+
+	for _, v := range hb.Transactions() {
+		queryCh <- &receiptStruct{txHash: v.Hash(), receipt: nil, err: nil}
+	}
+	counter := 0
+
+outerFor:
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			for q := range queryCh {
+				switch {
+				case q.err != nil:
+					counter++
+					q.err = nil
+					q.receipt = nil
+					queryCh <- q
+				case q.receipt != nil:
+					receipts = append(receipts, q.receipt)
+					if len(receipts) == cap(queryCh) {
+						close(queryCh)
+						break outerFor
+					} else {
+						continue
+					}
+				default:
+					go func(txReceipt *receiptStruct) {
+						r, err := ethClient.TransactionReceipt(ctx, txReceipt.txHash)
+						if err != nil || r == nil {
+							txReceipt.err = errors.Join(errors.New("failed"), err)
+							queryCh <- txReceipt
+						}
+						txReceipt.receipt = r
+						queryCh <- txReceipt
+					}(q)
+				}
+
+			}
+		}
+	}
+	return receipts, nil
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
@@ -129,7 +211,10 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 		default:
 		}
 
-		pkts := cl.parseBlock(ctx, cl.nextBlockHeight)
+		pkts, err := cl.parseBlock(ctx, cl.nextBlockHeight)
+		if err != nil {
+			continue // retry if err
+		}
 		for _, pkt := range pkts {
 			ch <- pkt
 		}
@@ -183,7 +268,11 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		endSeqNum := seqHeightRanges[0][1]
 	L1:
 		for i := startHeight; i <= endHeight; i++ {
-			pkts := cl.parseBlock(ctx, i)
+			pkts, err := cl.parseBlock(ctx, i)
+			if err != nil {
+				i--
+				continue // retry the same block if err
+			}
 			for _, pkt := range pkts {
 				if pkt.Sequence.Uint64() == endSeqNum {
 					break L1
@@ -202,12 +291,14 @@ func (cl *Client) managePacket(ctx context.Context) {
 		case pkt := <-retryCh:
 			err := store.StoreRetryPacket(retryPacketNamespace, pkt)
 			if err != nil {
-				//log error
+				_ = err
+				// TODO: log error
 			}
 		case pkt := <-completedCh:
 			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence.Uint64(), pkt.Height.Uint64())
 			if err != nil {
-				// log error
+				_ = err
+				// TODO: log error
 			}
 		}
 	}
