@@ -25,3 +25,4 @@ consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_path: relays.log
+mode: dev # dev/prod
