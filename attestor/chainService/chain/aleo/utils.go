@@ -117,31 +117,38 @@ func trim(msg string) string {
 
 func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt := new(chain.Packet)
-	version, err := strconv.ParseUint(strings.Replace(packet.version, "u8", "", 1), 0, 64)
-	if err != nil {
-		return nil, err
+	version := new(big.Int)
+	version, versionOk := version.SetString(strings.Replace(packet.version, "u8", "", 1), 10)
+	if !versionOk {
+		return nil, errors.New("failed to parse version")
 	}
 	pkt.Version = version
-	sequence, err := strconv.ParseUint(strings.Replace(packet.sequence, "u32", "", 1), 0, 64)
-	if err != nil {
-		return nil, err
+
+	sequence := new(big.Int)
+	sequence, sequenceOk := sequence.SetString(strings.Replace(packet.sequence, "u64", "", 1), 10)
+	if !sequenceOk  {
+		return nil, errors.New("failed to parse sequence")
 	}
 	pkt.Sequence = sequence
 
-	sourceChainID, err := strconv.ParseUint(strings.Replace(packet.source.chainID, "u32", "", 1), 0, 32)
-	if err != nil {
-		return nil, err
+	sourceChainID := new(big.Int)
+
+	sourceChainID, sourceChainIDOk := sourceChainID.SetString(strings.Replace(packet.source.chainID, "u128", "", 1), 10)
+	if !sourceChainIDOk {
+		return nil, errors.New("failed to parse version")
 	}
-	pkt.Source.ChainID = uint32(sourceChainID)
+	pkt.Source.ChainID = sourceChainID
 	pkt.Source.Address = packet.source.address
 
-	destChainID, err := strconv.ParseUint(strings.Replace(packet.destination.chainID, "u32", "", 1), 0, 64)
-	if err != nil {
-		return nil, err
+	destChainID := new(big.Int)
+	destChainID, destChainIDOk := destChainID.SetString(strings.Replace(packet.destination.chainID, "u32", "", 1), 10)
+	if !destChainIDOk {
+		return nil, errors.New("failed to parse version")
 	}
 
-	pkt.Destination.ChainID = uint32(destChainID)
+	pkt.Destination.ChainID = destChainID
 
+	var err error
 	pkt.Destination.Address, err = parseAleoEthAddrToHexString(packet.destination.address)
 	if err != nil {
 		return nil, err
@@ -156,16 +163,17 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	}
 	pkt.Message.SenderAddress = packet.message.sender
 
-	amount := &big.Int{}
-	var ok bool
-	pkt.Message.Amount, ok = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
-	if !ok {
+	amount := new(big.Int)
+	var amountOk bool
+	pkt.Message.Amount, amountOk = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	if !amountOk {
 		return nil, errors.New("failed in parsing amount")
 	}
 
-	height, err := strconv.ParseUint(strings.Replace(packet.height, "u32", "", 1), 0, 64)
-	if err != nil {
-		return nil, err
+	height := new(big.Int)
+	height, heightOk := height.SetString(strings.Replace(packet.height, "u32", "", 1), 10)
+	if !heightOk {
+		return nil, errors.New("failed to parse version")
 	}
 	pkt.Height = height
 

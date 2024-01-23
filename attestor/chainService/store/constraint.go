@@ -1,9 +1,12 @@
 package store
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"math/big"
+)
 
 type keyConstraint interface {
-	int64 | uint64 | ~string | ~[]byte
+	int64 | uint64 | ~string | ~[]byte | *big.Int
 }
 
 type byteConstraint interface {
@@ -23,6 +26,8 @@ func getKeyByteForKeyConstraint[T keyConstraint](key T) (k []byte) {
 		k = []byte(v)
 	case []byte:
 		k = v
+	case *big.Int:
+		k = v.Bytes()
 	}
 	return
 }

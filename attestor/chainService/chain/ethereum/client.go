@@ -38,7 +38,7 @@ type Client struct {
 	minRequiredGasFee uint64
 	waitDur           time.Duration
 	nextBlockHeight   uint64
-	chainID           uint32
+	chainID           *big.Int
 }
 
 func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
@@ -53,23 +53,23 @@ func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum u
 	}
 
 	packet := &chain.Packet{
-		Version: ethpacket.Version.Uint64(),
+		Version: ethpacket.Version,
 		Destination: chain.NetworkAddress{
-			ChainID: uint32(ethpacket.DestTokenService.ChainId.Uint64()),
+			ChainID: ethpacket.DestTokenService.ChainId,
 			Address: ethpacket.DestTokenService.Addr,
 		},
 		Source: chain.NetworkAddress{
-			ChainID: uint32(ethpacket.SourceTokenService.ChainId.Uint64()),
+			ChainID: ethpacket.SourceTokenService.ChainId,
 			Address: string(ethpacket.SourceTokenService.Addr.Bytes()),
 		},
-		Sequence: ethpacket.Sequence.Uint64(),
+		Sequence: ethpacket.Sequence,
 		Message: chain.Message{
 			DestTokenAddress: ethpacket.Message.DestTokenAddress,
 			Amount:           ethpacket.Message.Amount,
 			ReceiverAddress:  ethpacket.Message.ReceiverAddress,
 			SenderAddress:    string(ethpacket.Message.SenderAddress.Bytes()),
 		},
-		Height: ethpacket.Height.Uint64(),
+		Height: ethpacket.Height,
 	}
 	return packet, nil
 }
@@ -95,7 +95,7 @@ func (cl *Client) GetSourceChain() (string, string) {
 	return cl.name, cl.address
 }
 
-func (cl *Client) GetChainID() uint32 {
+func (cl *Client) GetChainID() *big.Int {
 	return cl.chainID
 }
 
@@ -107,6 +107,7 @@ func (cl *Client) createNamespaces() error {
 	return store.CreateNamespace(retryPacketNamespace)
 }
 
+// TODO: 
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet) {
 	return
 }
@@ -184,7 +185,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		for i := startHeight; i <= endHeight; i++ {
 			pkts := cl.parseBlock(ctx, i)
 			for _, pkt := range pkts {
-				if pkt.Sequence == endSeqNum {
+				if pkt.Sequence.Uint64() == endSeqNum {
 					break L1
 				}
 				ch <- pkt
@@ -204,7 +205,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 				//log error
 			}
 		case pkt := <-completedCh:
-			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence, pkt.Height)
+			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence.Uint64(), pkt.Height.Uint64())
 			if err != nil {
 				// log error
 			}

@@ -2,6 +2,7 @@ package aleo
 
 import (
 	"context"
+	"math/big"
 	"strings"
 	"time"
 
@@ -29,7 +30,7 @@ type Client struct {
 	programID  string
 	queryUrl   string
 	network    string
-	chainID    uint32
+	chainID    *big.Int
 	waitDur    time.Duration
 	startFrom  uint32
 }
@@ -85,7 +86,7 @@ func (cl *Client) Name() string {
 	return cl.name
 }
 
-func (cl *Client) GetChainID() uint32 {
+func (cl *Client) GetChainID() *big.Int {
 	return cl.chainID
 }
 
@@ -172,7 +173,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 				//log error
 			}
 		case pkt := <-completedCh:
-			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence, pkt.Height)
+			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence.Uint64(), pkt.Height.Uint64())
 			if err != nil {
 				// log error
 			}

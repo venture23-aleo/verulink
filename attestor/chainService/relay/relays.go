@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	"github.com/venture23-aleo/attestor/chainService/config"
@@ -16,7 +17,7 @@ const (
 )
 
 var (
-	chainIDToChainName         = map[uint32]string{}
+	chainIDToChainName         = map[*big.Int]string{}
 	RegisteredClients          = map[string]ClientFunc{}
 	RegisteredHashers          = map[string]HashFunc{}
 	RegisteredRetryChannels    = map[string]chan *chain.Packet{}

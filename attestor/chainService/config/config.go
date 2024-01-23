@@ -1,6 +1,7 @@
 package config
 
 import (
+	"math/big"
 	"os"
 	"time"
 
@@ -13,7 +14,7 @@ const (
 
 type ChainConfig struct {
 	Name           string        `yaml:"name"`
-	ChainID        uint32        `yaml:"chain_id"`
+	ChainID        *big.Int        `yaml:"chain_id"`
 	BridgeContract string        `yaml:"bridge_contract"`
 	NodeUrl        string        `yaml:"node_url"`
 	StartFrom      uint64        `yaml:"start_from"`
