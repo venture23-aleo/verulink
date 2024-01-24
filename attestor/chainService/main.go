@@ -19,11 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if config.GetConfig().Mode == config.Development {
-		logger.InitLogging(logger.Development, config.GetConfig().LogConfig)
-	} else {
-		logger.InitLogging(logger.Production, config.GetConfig().LogConfig)
-	}
+	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().LogConfig)
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
