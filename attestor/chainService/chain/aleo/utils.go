@@ -197,6 +197,10 @@ func constructAleoPacket(msg *chain.Packet) string {
 		msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
 }
 
+func constructAleoScreeningPacket(packetHash, screening string) string {
+	return fmt.Sprintf("{packet_hash:%s,screening_passed:%s}", packetHash, screening)
+}
+
 // constructs ethereum address in the format of 32 len byte array string, appending "u8" in every
 // array element. The eth address is represented by the last 20 elements in the array and the
 // first 12 fields are padded with "0u8"
