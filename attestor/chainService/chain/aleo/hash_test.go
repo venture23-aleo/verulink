@@ -1,11 +1,11 @@
 package aleo
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/attestor/chainService/chain"
 )
 
@@ -30,5 +30,5 @@ func TestHash(t *testing.T) {
 		Height: big.NewInt(55).Uint64(),
 	}
 	finalHash := hash(&chain.ScreenedPacket{Packet: commonPacket, IsWhite: true})
-	fmt.Println(finalHash)
+	assert.Equal(t, "1233032529535352533537970719453602118145153682706641379905676168317090198721field", finalHash)
 }
