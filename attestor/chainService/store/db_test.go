@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"os"
 	"reflect"
 	"strconv"
@@ -83,8 +82,8 @@ func TestStoreRetryPacket(t *testing.T) {
 	packets := make(map[interface{}]interface{}, totNum)
 	for i := 1; i <= totNum; i++ {
 		var p interface{} = chain.Packet{
-			Sequence: big.NewInt(int64(i)),
-			Height:   big.NewInt(int64(i)),
+			Sequence: uint64(i),
+			Height:   uint64(i),
 		}
 		packets[uint64(i)] = p
 	}
