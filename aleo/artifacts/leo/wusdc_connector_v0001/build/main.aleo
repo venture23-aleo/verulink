@@ -36,12 +36,7 @@ program wusdc_connector_v0001.aleo;
 
 
 
-struct UpdateConnector:
-    new_connector as address;
 
-struct WUsdcRelease:
-    receiver as address;
-    amount as u128;
 
 
 
@@ -120,20 +115,18 @@ finalize wusdc_send:
     await r1;
 
 
-function update_wusdc_connector:
+function update:
     input r0 as u32.public;
     input r1 as address.public;
-    cast r1 into r2 as UpdateConnector;
-    hash.bhp256 r2 into r3 as field;
-    call council_v0001.aleo/external_execute r0 r3 into r4;
-    call wusdc_token_v0001.aleo/transfer_ownership_token r1 into r5;
-    call wusdc_holding_v0001.aleo/transfer_ownership_holding r1 into r6;
-    call token_service_v0001.aleo/update_connector_ts aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r1 into r7;
-    async update_wusdc_connector r4 r5 r6 r7 into r8;
-    output r8 as wusdc_connector_v0001.aleo/update_wusdc_connector.future;
+    call council_v0001.aleo/connector_update r0 aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r1 into r2;
+    call wusdc_token_v0001.aleo/transfer_ownership_token r1 into r3;
+    call wusdc_holding_v0001.aleo/transfer_ownership_holding r1 into r4;
+    call token_service_v0001.aleo/update_connector_ts aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r1 into r5;
+    async update r2 r3 r4 r5 into r6;
+    output r6 as wusdc_connector_v0001.aleo/update.future;
 
-finalize update_wusdc_connector:
-    input r0 as council_v0001.aleo/external_execute.future;
+finalize update:
+    input r0 as council_v0001.aleo/connector_update.future;
     input r1 as wusdc_token_v0001.aleo/transfer_ownership_token.future;
     input r2 as wusdc_holding_v0001.aleo/transfer_ownership_holding.future;
     input r3 as token_service_v0001.aleo/update_connector_ts.future;
@@ -147,15 +140,13 @@ function wusdc_release:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u128.public;
-    cast r1 r2 into r3 as WUsdcRelease;
-    hash.bhp256 r3 into r4 as field;
-    call council_v0001.aleo/external_execute r0 r4 into r5;
-    call wusdc_holding_v0001.aleo/release_fund r1 r2 into r6;
-    async wusdc_release r5 r6 into r7;
-    output r7 as wusdc_connector_v0001.aleo/wusdc_release.future;
+    call council_v0001.aleo/holding_release r0 aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r1 r2 into r3;
+    call wusdc_holding_v0001.aleo/release_fund r1 r2 into r4;
+    async wusdc_release r3 r4 into r5;
+    output r5 as wusdc_connector_v0001.aleo/wusdc_release.future;
 
 finalize wusdc_release:
-    input r0 as council_v0001.aleo/external_execute.future;
+    input r0 as council_v0001.aleo/holding_release.future;
     input r1 as wusdc_holding_v0001.aleo/release_fund.future;
     await r0;
     await r1;

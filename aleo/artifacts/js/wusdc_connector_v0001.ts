@@ -1,10 +1,7 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  UpdateConnector,
-  WUsdcRelease,
   ProposalVote,
-  ExternalProposal,
   AddMember,
   RemoveMember,
   UpdateThreshold,
@@ -21,6 +18,9 @@ import {
   TsRemoveToken,
   TsUpdateMinimumTransfer,
   TsUpdateOutgoingPercentage,
+  HoldingRelease,
+  ConnectorUpdate,
+  ExternalProposal,
   AleoProgram,
   ForeignContract,
   MsgTokenReceive,
@@ -36,10 +36,7 @@ import {
   TokenInfo,
 } from "./types";
 import {
-  getUpdateConnectorLeo,
-  getWUsdcReleaseLeo,
   getProposalVoteLeo,
-  getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
@@ -56,6 +53,9 @@ import {
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
+  getHoldingReleaseLeo,
+  getConnectorUpdateLeo,
+  getExternalProposalLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -71,10 +71,7 @@ import {
   getTokenInfoLeo,
 } from './js2leo';
 import {
-  getUpdateConnector,
-  getWUsdcRelease,
   getProposalVote,
-  getExternalProposal,
   getAddMember,
   getRemoveMember,
   getUpdateThreshold,
@@ -91,6 +88,9 @@ import {
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
+  getHoldingRelease,
+  getConnectorUpdate,
+  getExternalProposal,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -196,14 +196,14 @@ export class Wusdc_connector_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_wusdc_connector(r0: number, r1: string) {
+  async update(r0: number, r1: string) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_wusdc_connector',
+      transition: 'update',
       params,
     });
     if (this.config.mode === "execute") return result;

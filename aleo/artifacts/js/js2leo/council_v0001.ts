@@ -1,8 +1,6 @@
 import {
   ProposalVote,
   ProposalVoteLeo,
-  ExternalProposal,
-  ExternalProposalLeo,
   AddMember,
   AddMemberLeo,
   RemoveMember,
@@ -35,6 +33,12 @@ import {
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
   TsUpdateOutgoingPercentageLeo,
+  HoldingRelease,
+  HoldingReleaseLeo,
+  ConnectorUpdate,
+  ConnectorUpdateLeo,
+  ExternalProposal,
+  ExternalProposalLeo,
 } from "../types";
 
 import * as js2leo from "./common";
@@ -42,15 +46,6 @@ export function getProposalVoteLeo(proposalVote: ProposalVote): ProposalVoteLeo 
   const result: ProposalVoteLeo = {
     proposal: js2leo.field(proposalVote.proposal),
     member: js2leo.address(proposalVote.member),
-  }
-  return result;
-}
-
-export function getExternalProposalLeo(externalProposal: ExternalProposal): ExternalProposalLeo {
-  const result: ExternalProposalLeo = {
-    id: js2leo.u32(externalProposal.id),
-    external_program: js2leo.address(externalProposal.external_program),
-    proposal_hash: js2leo.field(externalProposal.proposal_hash),
   }
   return result;
 }
@@ -190,6 +185,36 @@ export function getTsUpdateOutgoingPercentageLeo(tsUpdateOutgoingPercentage: TsU
     token_id: js2leo.address(tsUpdateOutgoingPercentage.token_id),
     outgoing_percentage: js2leo.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
     timeframe: js2leo.u32(tsUpdateOutgoingPercentage.timeframe),
+  }
+  return result;
+}
+
+export function getHoldingReleaseLeo(holdingRelease: HoldingRelease): HoldingReleaseLeo {
+  const result: HoldingReleaseLeo = {
+    id: js2leo.u32(holdingRelease.id),
+    token_id: js2leo.address(holdingRelease.token_id),
+    connector: js2leo.address(holdingRelease.connector),
+    receiver: js2leo.address(holdingRelease.receiver),
+    amount: js2leo.u128(holdingRelease.amount),
+  }
+  return result;
+}
+
+export function getConnectorUpdateLeo(connectorUpdate: ConnectorUpdate): ConnectorUpdateLeo {
+  const result: ConnectorUpdateLeo = {
+    id: js2leo.u32(connectorUpdate.id),
+    token_id: js2leo.address(connectorUpdate.token_id),
+    connector: js2leo.address(connectorUpdate.connector),
+    new_connector: js2leo.address(connectorUpdate.new_connector),
+  }
+  return result;
+}
+
+export function getExternalProposalLeo(externalProposal: ExternalProposal): ExternalProposalLeo {
+  const result: ExternalProposalLeo = {
+    id: js2leo.u32(externalProposal.id),
+    external_program: js2leo.address(externalProposal.external_program),
+    proposal_hash: js2leo.field(externalProposal.proposal_hash),
   }
   return result;
 }

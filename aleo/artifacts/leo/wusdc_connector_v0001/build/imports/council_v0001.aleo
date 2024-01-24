@@ -16,11 +16,6 @@ struct ProposalVote:
     proposal as field;
     member as address;
 
-struct ExternalProposal:
-    id as u32;
-    external_program as address;
-    proposal_hash as field;
-
 struct AddMember:
     id as u32;
     new_member as address;
@@ -95,6 +90,24 @@ struct TsUpdateOutgoingPercentage:
     token_id as address;
     outgoing_percentage as u16;
     timeframe as u32;
+
+struct HoldingRelease:
+    id as u32;
+    token_id as address;
+    connector as address;
+    receiver as address;
+    amount as u128;
+
+struct ConnectorUpdate:
+    id as u32;
+    token_id as address;
+    connector as address;
+    new_connector as address;
+
+struct ExternalProposal:
+    id as u32;
+    external_program as address;
+    proposal_hash as field;
 
 
 mapping members:
@@ -226,26 +239,6 @@ finalize vote:
     get proposal_vote_counts[r1] into r6;
     add r6 1u8 into r7;
     set r7 into proposal_vote_counts[r1];
-
-
-function external_execute:
-    input r0 as u32.public;
-    input r1 as field.public;
-    cast r0 self.caller r1 into r2 as ExternalProposal;
-    hash.bhp256 r2 into r3 as field;
-    async external_execute r3 into r4;
-    output r4 as council_v0001.aleo/external_execute.future;
-
-finalize external_execute:
-    input r0 as field.public;
-    get settings[true] into r1;
-    get proposal_vote_counts[r0] into r2;
-    gte r2 r1 into r3;
-    assert.eq r3 true;
-    contains proposal_executed[r0] into r4;
-    not r4 into r5;
-    assert.eq r5 true;
-    set true into proposal_executed[r0];
 
 
 function add_member:
@@ -533,16 +526,16 @@ finalize tb_disable_service:
     set true into proposal_executed[r1];
 
 
-function ts_update_governance:
+function ts_transfer_ownership:
     input r0 as u32.public;
     input r1 as address.public;
     cast r0 r1 into r2 as TsTransferOwnership;
     hash.bhp256 r2 into r3 as field;
     call token_service_v0001.aleo/transfer_ownership_ts r1 into r4;
-    async ts_update_governance r4 r3 into r5;
-    output r5 as council_v0001.aleo/ts_update_governance.future;
+    async ts_transfer_ownership r4 r3 into r5;
+    output r5 as council_v0001.aleo/ts_transfer_ownership.future;
 
-finalize ts_update_governance:
+finalize ts_transfer_ownership:
     input r0 as token_service_v0001.aleo/transfer_ownership_ts.future;
     input r1 as field.public;
     await r0;
@@ -610,13 +603,11 @@ function ts_update_minimum_transfer:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u128.public;
-    input r3 as u16.public;
-    input r4 as u32.public;
-    cast r0 r1 r2 into r5 as TsUpdateMinimumTransfer;
-    hash.bhp256 r5 into r6 as field;
-    call token_service_v0001.aleo/update_minimum_transfer_ts r1 r2 into r7;
-    async ts_update_minimum_transfer r7 r6 into r8;
-    output r8 as council_v0001.aleo/ts_update_minimum_transfer.future;
+    cast r0 r1 r2 into r3 as TsUpdateMinimumTransfer;
+    hash.bhp256 r3 into r4 as field;
+    call token_service_v0001.aleo/update_minimum_transfer_ts r1 r2 into r5;
+    async ts_update_minimum_transfer r5 r4 into r6;
+    output r6 as council_v0001.aleo/ts_update_minimum_transfer.future;
 
 finalize ts_update_minimum_transfer:
     input r0 as token_service_v0001.aleo/update_minimum_transfer_ts.future;
@@ -655,3 +646,66 @@ finalize ts_update_outgoing_percentage:
     not r5 into r6;
     assert.eq r6 true;
     set true into proposal_executed[r1];
+
+
+function holding_release:
+    input r0 as u32.public;
+    input r1 as address.public;
+    input r2 as address.public;
+    input r3 as u128.public;
+    cast r0 r1 self.caller r2 r3 into r4 as HoldingRelease;
+    hash.bhp256 r4 into r5 as field;
+    async holding_release r5 into r6;
+    output r6 as council_v0001.aleo/holding_release.future;
+
+finalize holding_release:
+    input r0 as field.public;
+    get settings[true] into r1;
+    get proposal_vote_counts[r0] into r2;
+    gte r2 r1 into r3;
+    assert.eq r3 true;
+    contains proposal_executed[r0] into r4;
+    not r4 into r5;
+    assert.eq r5 true;
+    set true into proposal_executed[r0];
+
+
+function connector_update:
+    input r0 as u32.public;
+    input r1 as address.public;
+    input r2 as address.public;
+    cast r0 r1 self.caller r2 into r3 as ConnectorUpdate;
+    hash.bhp256 r3 into r4 as field;
+    async connector_update r4 into r5;
+    output r5 as council_v0001.aleo/connector_update.future;
+
+finalize connector_update:
+    input r0 as field.public;
+    get settings[true] into r1;
+    get proposal_vote_counts[r0] into r2;
+    gte r2 r1 into r3;
+    assert.eq r3 true;
+    contains proposal_executed[r0] into r4;
+    not r4 into r5;
+    assert.eq r5 true;
+    set true into proposal_executed[r0];
+
+
+function external_execute:
+    input r0 as u32.public;
+    input r1 as field.public;
+    cast r0 self.caller r1 into r2 as ExternalProposal;
+    hash.bhp256 r2 into r3 as field;
+    async external_execute r3 into r4;
+    output r4 as council_v0001.aleo/external_execute.future;
+
+finalize external_execute:
+    input r0 as field.public;
+    get settings[true] into r1;
+    get proposal_vote_counts[r0] into r2;
+    gte r2 r1 into r3;
+    assert.eq r3 true;
+    contains proposal_executed[r0] into r4;
+    not r4 into r5;
+    assert.eq r5 true;
+    set true into proposal_executed[r0];

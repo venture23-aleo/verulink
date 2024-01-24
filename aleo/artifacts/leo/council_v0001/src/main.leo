@@ -181,45 +181,6 @@ program council_v0001.aleo {
 
     }
 
-    ////////////////////////////////////////////////
-    /////// External Program: Execute Proposal /////
-    ////////////////////////////////////////////////
-
-    struct ExternalProposal {
-        id: u32,
-        external_program: address
-        proposal_hash: field,
-    }
-
-    transition external_execute(public id: u32, public proposal_hash: field) {
-        let external_proposal: ExternalProposal = ExternalProposal {
-            id,
-            external_program: self.caller,
-            proposal_hash,
-        };
-
-        let external_proposal_hash: field = BHP256::hash_to_field(external_proposal);
-
-        return then finalize(external_proposal_hash);
-    }
-
-    finalize external_execute(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
-
-
     //////////////////////////////////////
     /////// Council: Add New Member //////
     //////////////////////////////////////
@@ -357,6 +318,8 @@ program council_v0001.aleo {
         // Execute the proposal
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
     }
+
+
 
     ///////////////////////////////////////////
     /////// Bridge: Transfer Ownership ////////
@@ -679,7 +642,7 @@ program council_v0001.aleo {
         new_owner: address
     }
 
-    transition ts_update_governance(public id: u32, public new_owner: address) {
+    transition ts_transfer_ownership(public id: u32, public new_owner: address) {
         let proposal: TsTransferOwnership = TsTransferOwnership {
             id,
             new_owner
@@ -692,7 +655,7 @@ program council_v0001.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize ts_update_governance(proposal_hash: field) {
+    finalize ts_transfer_ownership(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -814,8 +777,6 @@ program council_v0001.aleo {
         public id: u32, 
         public token_id: address, 
         public minimum_transfer: u128, 
-        public outgoing_percentage: u16, 
-        public time: u32
     ) {
         let proposal: TsUpdateMinimumTransfer  = TsUpdateMinimumTransfer {
             id,
@@ -892,6 +853,134 @@ program council_v0001.aleo {
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
     }
+
+    ////////////////////////////////////////////////
+    ///////  Holding Program : Release Fund ////////
+    ////////////////////////////////////////////////
+
+    struct HoldingRelease {
+        id: u32,
+        token_id: address,
+        connector: address,
+        receiver: address,
+        amount: u128
+    }
+
+    transition holding_release(
+        public id: u32,
+        public token_id: address,
+        public receiver: address,
+        public amount: u128
+    ) {
+        let proposal: HoldingRelease  = HoldingRelease {
+            id,
+            token_id,
+            connector: self.caller,
+            receiver,
+            amount
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize holding_release(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ///////////////////////////////////////////
+    ///////  Connector Program: Update ////////
+    ///////////////////////////////////////////
+
+    struct ConnectorUpdate {
+        id: u32,
+        token_id: address,
+        connector: address,
+        new_connector: address
+    }
+
+    transition connector_update (
+        public id: u32,
+        public token_id: address,
+        public new_connector: address,
+    ) {
+        let proposal: ConnectorUpdate  = ConnectorUpdate {
+            id,
+            token_id,
+            connector: self.caller,
+            new_connector
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize connector_update(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    ////////////////////////////////////////////////
+    /////// External Program: Execute Proposal /////
+    ////////////////////////////////////////////////
+
+    struct ExternalProposal {
+        id: u32,
+        external_program: address
+        proposal_hash: field,
+    }
+
+    transition external_execute(public id: u32, public proposal_hash: field) {
+        let external_proposal: ExternalProposal = ExternalProposal {
+            id,
+            external_program: self.caller,
+            proposal_hash,
+        };
+
+        let external_proposal_hash: field = BHP256::hash_to_field(external_proposal);
+
+        return then finalize(external_proposal_hash);
+    }
+
+    finalize external_execute(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
 
 
 }

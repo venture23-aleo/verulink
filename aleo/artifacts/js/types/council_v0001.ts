@@ -32,19 +32,6 @@ export const leoProposalVoteSchema = z.object({
 });
 export type ProposalVoteLeo = z.infer < typeof leoProposalVoteSchema > ;
 
-export interface ExternalProposal {
-  id: number;
-  external_program: string;
-  proposal_hash: bigint;
-}
-
-export const leoExternalProposalSchema = z.object({
-  id: leoU32Schema,
-  external_program: leoAddressSchema,
-  proposal_hash: leoFieldSchema,
-});
-export type ExternalProposalLeo = z.infer < typeof leoExternalProposalSchema > ;
-
 export interface AddMember {
   id: number;
   new_member: string;
@@ -242,3 +229,48 @@ export const leoTsUpdateOutgoingPercentageSchema = z.object({
   timeframe: leoU32Schema,
 });
 export type TsUpdateOutgoingPercentageLeo = z.infer < typeof leoTsUpdateOutgoingPercentageSchema > ;
+
+export interface HoldingRelease {
+  id: number;
+  token_id: string;
+  connector: string;
+  receiver: string;
+  amount: bigint;
+}
+
+export const leoHoldingReleaseSchema = z.object({
+  id: leoU32Schema,
+  token_id: leoAddressSchema,
+  connector: leoAddressSchema,
+  receiver: leoAddressSchema,
+  amount: leoU128Schema,
+});
+export type HoldingReleaseLeo = z.infer < typeof leoHoldingReleaseSchema > ;
+
+export interface ConnectorUpdate {
+  id: number;
+  token_id: string;
+  connector: string;
+  new_connector: string;
+}
+
+export const leoConnectorUpdateSchema = z.object({
+  id: leoU32Schema,
+  token_id: leoAddressSchema,
+  connector: leoAddressSchema,
+  new_connector: leoAddressSchema,
+});
+export type ConnectorUpdateLeo = z.infer < typeof leoConnectorUpdateSchema > ;
+
+export interface ExternalProposal {
+  id: number;
+  external_program: string;
+  proposal_hash: bigint;
+}
+
+export const leoExternalProposalSchema = z.object({
+  id: leoU32Schema,
+  external_program: leoAddressSchema,
+  proposal_hash: leoFieldSchema,
+});
+export type ExternalProposalLeo = z.infer < typeof leoExternalProposalSchema > ;

@@ -1,8 +1,6 @@
 import {
   ProposalVote,
   ProposalVoteLeo,
-  ExternalProposal,
-  ExternalProposalLeo,
   AddMember,
   AddMemberLeo,
   RemoveMember,
@@ -35,6 +33,12 @@ import {
   TsUpdateMinimumTransferLeo,
   TsUpdateOutgoingPercentage,
   TsUpdateOutgoingPercentageLeo,
+  HoldingRelease,
+  HoldingReleaseLeo,
+  ConnectorUpdate,
+  ConnectorUpdateLeo,
+  ExternalProposal,
+  ExternalProposalLeo,
 } from "../types";
 
 import * as leo2js from "./common";
@@ -42,15 +46,6 @@ export function getProposalVote(proposalVote: ProposalVoteLeo): ProposalVote {
   const result: ProposalVote = {
     proposal: leo2js.field(proposalVote.proposal),
     member: leo2js.address(proposalVote.member),
-  }
-  return result;
-}
-
-export function getExternalProposal(externalProposal: ExternalProposalLeo): ExternalProposal {
-  const result: ExternalProposal = {
-    id: leo2js.u32(externalProposal.id),
-    external_program: leo2js.address(externalProposal.external_program),
-    proposal_hash: leo2js.field(externalProposal.proposal_hash),
   }
   return result;
 }
@@ -190,6 +185,36 @@ export function getTsUpdateOutgoingPercentage(tsUpdateOutgoingPercentage: TsUpda
     token_id: leo2js.address(tsUpdateOutgoingPercentage.token_id),
     outgoing_percentage: leo2js.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
     timeframe: leo2js.u32(tsUpdateOutgoingPercentage.timeframe),
+  }
+  return result;
+}
+
+export function getHoldingRelease(holdingRelease: HoldingReleaseLeo): HoldingRelease {
+  const result: HoldingRelease = {
+    id: leo2js.u32(holdingRelease.id),
+    token_id: leo2js.address(holdingRelease.token_id),
+    connector: leo2js.address(holdingRelease.connector),
+    receiver: leo2js.address(holdingRelease.receiver),
+    amount: leo2js.u128(holdingRelease.amount),
+  }
+  return result;
+}
+
+export function getConnectorUpdate(connectorUpdate: ConnectorUpdateLeo): ConnectorUpdate {
+  const result: ConnectorUpdate = {
+    id: leo2js.u32(connectorUpdate.id),
+    token_id: leo2js.address(connectorUpdate.token_id),
+    connector: leo2js.address(connectorUpdate.connector),
+    new_connector: leo2js.address(connectorUpdate.new_connector),
+  }
+  return result;
+}
+
+export function getExternalProposal(externalProposal: ExternalProposalLeo): ExternalProposal {
+  const result: ExternalProposal = {
+    id: leo2js.u32(externalProposal.id),
+    external_program: leo2js.address(externalProposal.external_program),
+    proposal_hash: leo2js.field(externalProposal.proposal_hash),
   }
   return result;
 }

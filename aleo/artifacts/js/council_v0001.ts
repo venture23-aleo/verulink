@@ -2,7 +2,6 @@ import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
   ProposalVote,
-  ExternalProposal,
   AddMember,
   RemoveMember,
   UpdateThreshold,
@@ -19,6 +18,9 @@ import {
   TsRemoveToken,
   TsUpdateMinimumTransfer,
   TsUpdateOutgoingPercentage,
+  HoldingRelease,
+  ConnectorUpdate,
+  ExternalProposal,
   AleoProgram,
   ForeignContract,
   MsgTokenReceive,
@@ -32,7 +34,6 @@ import {
 } from "./types";
 import {
   getProposalVoteLeo,
-  getExternalProposalLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
@@ -49,6 +50,9 @@ import {
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
+  getHoldingReleaseLeo,
+  getConnectorUpdateLeo,
+  getExternalProposalLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -62,7 +66,6 @@ import {
 } from './js2leo';
 import {
   getProposalVote,
-  getExternalProposal,
   getAddMember,
   getRemoveMember,
   getUpdateThreshold,
@@ -79,6 +82,9 @@ import {
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
   getTsUpdateOutgoingPercentage,
+  getHoldingRelease,
+  getConnectorUpdate,
+  getExternalProposal,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -184,19 +190,6 @@ export class Council_v0001Contract {
     const result = await zkRun({
       config: this.config,
       transition: 'vote',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async external_execute(r0: number, r1: bigint) {
-    const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.field(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'external_execute',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -349,14 +342,14 @@ export class Council_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_update_governance(r0: number, r1: string) {
+  async ts_transfer_ownership(r0: number, r1: string) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
 
     const params = [r0Leo, r1Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'ts_update_governance',
+      transition: 'ts_transfer_ownership',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -392,14 +385,12 @@ export class Council_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_update_minimum_transfer(r0: number, r1: string, r2: bigint, r3: number, r4: number) {
+  async ts_update_minimum_transfer(r0: number, r1: string, r2: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u128(r2);
-    const r3Leo = js2leo.u16(r3);
-    const r4Leo = js2leo.u32(r4);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
+    const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'ts_update_minimum_transfer',
@@ -418,6 +409,48 @@ export class Council_v0001Contract {
     const result = await zkRun({
       config: this.config,
       transition: 'ts_update_outgoing_percentage',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async holding_release(r0: number, r1: string, r2: string, r3: bigint) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.address(r2);
+    const r3Leo = js2leo.u128(r3);
+
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'holding_release',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async connector_update(r0: number, r1: string, r2: string) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.address(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'connector_update',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async external_execute(r0: number, r1: bigint) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.field(r1);
+
+    const params = [r0Leo, r1Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'external_execute',
       params,
     });
     if (this.config.mode === "execute") return result;
