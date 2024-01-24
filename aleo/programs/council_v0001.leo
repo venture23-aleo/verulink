@@ -801,7 +801,14 @@ program council_v0001.aleo {
         time: u32
     }
 
-    transition ts_support_token(public id: u32, public token_id: address, connector: address, public minimum_transfer: u128, public outgoing_percentage: u16, public time: u32) {
+    transition ts_support_token(
+        public id: u32, 
+        public token_id: address, 
+        public connector: address, 
+        public minimum_transfer: u128, 
+        public outgoing_percentage: u16, 
+        public time: u32
+    ) {
         let proposal: TsSupportToken  = TsSupportToken {
             id,
             token_id,
@@ -882,7 +889,13 @@ program council_v0001.aleo {
         minimum_transfer: u128,
     }
 
-    transition ts_update_minimum_transfer(public id: u32, public token_id: address, public minimum_transfer: u128, public outgoing_percentage: u16, public time: u32) {
+    transition ts_update_minimum_transfer(
+        public id: u32, 
+        public token_id: address, 
+        public minimum_transfer: u128, 
+        public outgoing_percentage: u16, 
+        public time: u32
+    ) {
         let proposal: TsUpdateMinimumTransfer  = TsUpdateMinimumTransfer {
             id,
             token_id,
@@ -923,7 +936,12 @@ program council_v0001.aleo {
         timeframe: u32
     }
 
-    transition ts_update_outgoing_percentage(public id: u32, public token_id: address, public outgoing_percentage: u16, public timeframe: u32) {
+    transition ts_update_outgoing_percentage(
+        public id: u32, 
+        public token_id: address, 
+        public outgoing_percentage: u16, 
+        public timeframe: u32
+    ) {
         let proposal: TsUpdateOutgoingPercentage  = TsUpdateOutgoingPercentage {
             id,
             token_id,

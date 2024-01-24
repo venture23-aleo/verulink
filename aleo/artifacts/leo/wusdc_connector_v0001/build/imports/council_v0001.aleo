@@ -615,7 +615,7 @@ finalize ts_remove_chain:
 function ts_support_token:
     input r0 as u32.public;
     input r1 as address.public;
-    input r2 as address.private;
+    input r2 as address.public;
     input r3 as u128.public;
     input r4 as u16.public;
     input r5 as u32.public;

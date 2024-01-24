@@ -399,7 +399,14 @@ program token_bridge_v0001.aleo {
     /// * `sender`: address - Sender of the message
     /// * `receiver`: [u8; 32] - Receiver of the message on destination chain
     /// * `amount`: u128 - Amount being sent to the receiver
-    transition publish(public destination_chain_id: u128, public destination_service_contract: [u8; 32], public token: [u8; 32], public sender: address, public receiver: [u8; 32], public amount: u128) {
+    transition publish(
+        public destination_chain_id: u128, 
+        public destination_service_contract: [u8; 32], 
+        public token: [u8; 32], 
+        public sender: address, 
+        public receiver: [u8; 32], 
+        public amount: u128
+    ) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -414,10 +421,28 @@ program token_bridge_v0001.aleo {
         //     addr: self.caller
         // };
 
-        return then finalize (ALEO_CHAIN_ID, self.caller, destination_chain_id, destination_service_contract, token, sender, receiver, amount);
+        return then finalize (
+            ALEO_CHAIN_ID, 
+            self.caller, 
+            destination_chain_id, 
+            destination_service_contract, 
+            token, 
+            sender, 
+            receiver, 
+            amount
+        );
     }
 
-    finalize publish(source_chain_id: u128, source_service_program: address, destination_chain_id: u128, destination_service_contract: [u8; 32], token: [u8;32], sender: address, receiver: [u8; 32], amount: u128) {
+    finalize publish(
+        source_chain_id: u128, 
+        source_service_program: address, 
+        destination_chain_id: u128, 
+        destination_service_contract: [u8; 32], 
+        token: [u8;32], 
+        sender: address, 
+        receiver: [u8; 32], 
+        amount: u128
+    ) {
         // Assert that the packet is being sent to supported chain.
         assert(Mapping::get(supported_chains, destination_chain_id));
 
@@ -499,10 +524,26 @@ program token_bridge_v0001.aleo {
 
         let packet_attestor_keys: [field; 5] = get_packet_attestor_keys(packet.source.chain_id, packet.sequence, signers);
 
-        return valid_signs then finalize(packet.source.chain_id, packet.sequence, packet_hash_with_screening, signers, valid_signs, screening_passed, packet_attestor_keys);
+        return valid_signs then finalize(
+            packet.source.chain_id, 
+            packet.sequence, 
+            packet_hash_with_screening, 
+            signers, 
+            valid_signs, 
+            screening_passed, 
+            packet_attestor_keys
+        );
     }
 
-    finalize receive(source_chain_id: u128, sequence: u64, packet_hash_with_screening: field, signers: [address; 5], valid_signs: u8, screening_passed: bool, packet_attestor_keys: [field; 5]) {
+    finalize receive(
+        source_chain_id: u128, 
+        sequence: u64, 
+        packet_hash_with_screening: field, 
+        signers: [address; 5], 
+        valid_signs: u8, 
+        screening_passed: bool, 
+        packet_attestor_keys: [field; 5]
+    ) {
 
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, source_chain_id));
@@ -565,7 +606,19 @@ program token_bridge_v0001.aleo {
     /// * `height`: u32 - Height of the source chain where the packet originated
     /// * `signers`: [address; 5] - Addresses of the attestors who have signed the packet
     /// * `signs`: [signature; 5] - Signatures of the attestors after signing the packet
-    transition consume(public source_chain_id: u128, public source_service_contract: [u8;32], public token: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence: u64, public height: u32, signers: [address; 5], signs: [signature; 5]) {
+    transition consume(
+        public source_chain_id: u128, 
+        public source_service_contract: [u8;32], 
+        public token: address, 
+        public sender: [u8; 32], 
+        public receiver: address, 
+        public actual_receiver: address, 
+        public amount: u128, 
+        public sequence: u64, 
+        public height: u32, 
+        signers: [address; 5], 
+        signs: [signature; 5]
+    ) {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -611,10 +664,30 @@ program token_bridge_v0001.aleo {
 
         let packet_attestor_keys: [field; 5] = get_packet_attestor_keys(source_chain_id, sequence, signers);
 
-        return then finalize (self.caller, source_chain_id, sequence, packet_hash_with_screening, signers, signs, valid_signs, packet_attestor_keys, screening_passed);
+        return then finalize (
+            self.caller, 
+            source_chain_id, 
+            sequence, 
+            packet_hash_with_screening, 
+            signers, 
+            signs, 
+            valid_signs, 
+            packet_attestor_keys, 
+            screening_passed
+        );
     }
 
-    finalize consume(by: address, chain_id: u128, sequence: u64 , packet_hash_with_screening: field, signers: [address; 5], signs: [signature; 5], valid_signs: u8, packet_attestor_keys: [field; 5], screening_passed: bool) {
+    finalize consume(
+        by: address, 
+        chain_id: u128, 
+        sequence: u64 , 
+        packet_hash_with_screening: field, 
+        signers: [address; 5], 
+        signs: [signature; 5], 
+        valid_signs: u8, 
+        packet_attestor_keys: [field; 5], 
+        screening_passed: bool
+    ) {
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, chain_id));
 

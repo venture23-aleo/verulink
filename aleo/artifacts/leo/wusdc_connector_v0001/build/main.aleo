@@ -80,8 +80,8 @@ function wusdc_receive:
     input r3 as u128.public;
     input r4 as u64.public;
     input r5 as u32.public;
-    input r6 as [address; 5u32].private;
-    input r7 as [signature; 5u32].private;
+    input r6 as [address; 5u32].public;
+    input r7 as [signature; 5u32].public;
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r8 as [u8; 32u32];
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r9 as [u8; 32u32];
     call token_service_v0001.aleo/token_receive 28556963657430695u128 r8 r9 aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r0 r1 r2 r3 r4 r5 r6 r7 into r10;

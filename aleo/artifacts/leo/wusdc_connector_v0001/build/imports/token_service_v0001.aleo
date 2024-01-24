@@ -220,7 +220,7 @@ function token_send:
     input r2 as [u8; 32u32].public;
     input r3 as u128.public;
     input r4 as u128.public;
-    input r5 as [u8; 32u32].private;
+    input r5 as [u8; 32u32].public;
     input r6 as [u8; 32u32].private;
     assert.neq self.signer self.caller;
     call token_bridge_v0001.aleo/publish r4 r6 r5 r1 r2 r3 into r7;
@@ -282,9 +282,9 @@ finalize token_send:
 
 
 function token_receive:
-    input r0 as u128.private;
-    input r1 as [u8; 32u32].private;
-    input r2 as [u8; 32u32].private;
+    input r0 as u128.public;
+    input r1 as [u8; 32u32].public;
+    input r2 as [u8; 32u32].public;
     input r3 as address.public;
     input r4 as [u8; 32u32].public;
     input r5 as address.public;

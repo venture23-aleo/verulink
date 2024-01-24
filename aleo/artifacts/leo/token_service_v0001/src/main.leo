@@ -131,14 +131,27 @@ program token_service_v0001.aleo {
     ///// Support/Remove Token ///////
     //////////////////////////////////
 
-    transition support_token_ts(public token_id: address, public token_connector: address, public minimum_transfer: u128, public outgoing_percentage: u16, public timeframe: u32) {
+    transition support_token_ts(
+        public token_id: address, 
+        public token_connector: address, 
+        public minimum_transfer: u128, 
+        public outgoing_percentage: u16, 
+        public timeframe: u32
+    ) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
         return then finalize(self.caller, token_id, token_connector, minimum_transfer, outgoing_percentage, timeframe);
     }
 
-    finalize support_token_ts(from: address, token_id: address, token_connector: address, minimum_transfer: u128, outgoing_percentage: u16, timeframe: u32) {
+    finalize support_token_ts(
+        from: address, 
+        token_id: address, 
+        token_connector: address, 
+        minimum_transfer: u128, 
+        outgoing_percentage: u16, 
+        timeframe: u32
+    ) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
@@ -229,7 +242,15 @@ program token_service_v0001.aleo {
     ///// Token Transfers ///////
     /////////////////////////////
 
-    transition token_send(public token_id: address, public sender: address, public receiver: [u8; 32], public amount: u128, public origin_chain_id: u128, origin_token_address: [u8; 32], origin_token_service_address: [u8; 32]) {
+    transition token_send(
+        public token_id: address, 
+        public sender: address, 
+        public receiver: [u8; 32], 
+        public amount: u128, 
+        public origin_chain_id: u128, 
+        public origin_token_address: [u8; 32], 
+        origin_token_service_address: [u8; 32]
+    ) {
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -286,7 +307,20 @@ program token_service_v0001.aleo {
 
     /// Consumes msg from source at destination
     /// Requires sequence no of the source network
-    transition token_receive(source_chain_id: u128, source_token_service_address: [u8; 32], source_token_address: [u8; 32], public token_id: address, public sender: [u8; 32], public receiver: address, public actual_receiver: address, public amount: u128, public sequence_no_of_source_network: u64, public height_of_source_network: u32, signers: [address; 5], signs: [signature; 5]) {
+    transition token_receive(
+        public source_chain_id: u128, 
+        public source_token_service_address: [u8; 32], 
+        public source_token_address: [u8; 32], 
+        public token_id: address, 
+        public sender: [u8; 32], 
+        public receiver: address, 
+        public actual_receiver: address, 
+        public amount: u128, 
+        public sequence_no_of_source_network: u64, 
+        public height_of_source_network: u32, 
+        signers: [address; 5], 
+        signs: [signature; 5]
+    ) {
 
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
@@ -296,7 +330,18 @@ program token_service_v0001.aleo {
 
 
         // call consume on bridge
-        token_bridge_v0001.aleo/consume(source_chain_id, source_token_service_address, token_id, sender, receiver, actual_receiver, amount, sequence_no_of_source_network, height_of_source_network, signers, signs);
+        token_bridge_v0001.aleo/consume(
+            source_chain_id, 
+            source_token_service_address, 
+            token_id, sender, 
+            receiver, 
+            actual_receiver, 
+            amount, 
+            sequence_no_of_source_network, 
+            height_of_source_network, 
+            signers, 
+            signs
+        );
 
         return then finalize(self.caller, token_id, amount);
     }
@@ -331,7 +376,15 @@ program token_service_v0001.aleo {
     }
 
     // TODO: verify this logic
-    inline get_new_min_required_supply(current_supply: u128, transfer_amount: u128, current_block: u32, last_update: u32, last_min_required_supply: u128, percentage: u16, timeframe: u32 ) -> u128 {
+    inline get_new_min_required_supply(
+        current_supply: u128, 
+        transfer_amount: u128, 
+        current_block: u32, 
+        last_update: u32, 
+        last_min_required_supply: u128, 
+        percentage: u16, 
+        timeframe: u32 
+    ) -> u128 {
         // If percentage = 10
         // then min_required_supply = 90% of current_supply
         let min_required_supply: u128 = get_x_percent_of_y(HUNDRED_PERCENTAGE - percentage, current_supply);

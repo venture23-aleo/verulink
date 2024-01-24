@@ -9,14 +9,14 @@ dependencies = []
 name = "token_service_v0001"
 network = "testnet3"
 location = "network"
-checksum = "a50c5d059d2bfa4a9b490f911a9411fdc5ed5bddbc411bc287cfadc06f919ad7"
+checksum = "9c85a6d74f094a76bb34c1d6088e12ee94275d87e1a7d4b84c74a86699ff5f66"
 dependencies = ["token_bridge_v0001.aleo"]
 
 [[package]]
 name = "council_v0001"
 network = "testnet3"
 location = "network"
-checksum = "087ffae3af25da9d60f552a3f6bb976933f50ffee30ef095c79f13a18290bb4b"
+checksum = "246358cb63b1915b195c2895ae75117d53cc29983858341c5387c582a3d9b821"
 dependencies = ["token_bridge_v0001.aleo", "token_service_v0001.aleo"]
 
 [[package]]
