@@ -15,11 +15,6 @@ struct OutgoingPercentageInTime:
     timeframe as u32;
 
 
-mapping token_service_contracts:
-	key as u128.public;
-	value as [u8; 32u32].public;
-
-
 mapping owner_TS:
 	key as boolean.public;
 	value as address.public;
@@ -83,36 +78,6 @@ finalize transfer_ownership_ts:
     get owner_TS[true] into r2;
     assert.eq r0 r2;
     set r1 into owner_TS[true];
-
-
-function support_chain_ts:
-    input r0 as u128.public;
-    input r1 as [u8; 32u32].public;
-    async support_chain_ts self.caller r0 r1 into r2;
-    output r2 as token_service_v0001.aleo/support_chain_ts.future;
-
-finalize support_chain_ts:
-    input r0 as address.public;
-    input r1 as u128.public;
-    input r2 as [u8; 32u32].public;
-    get owner_TS[true] into r3;
-    assert.eq r0 r3;
-    set r2 into token_service_contracts[r1];
-
-
-function remove_chain_ts:
-    input r0 as u128.public;
-    async remove_chain_ts self.caller r0 into r1;
-    output r1 as token_service_v0001.aleo/remove_chain_ts.future;
-
-finalize remove_chain_ts:
-    input r0 as address.public;
-    input r1 as u128.public;
-    get owner_TS[true] into r2;
-    assert.eq r0 r2;
-    contains token_service_contracts[r1] into r3;
-    assert.eq r3 true;
-    remove token_service_contracts[r1];
 
 
 function support_token_ts:

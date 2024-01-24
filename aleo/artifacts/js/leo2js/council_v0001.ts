@@ -27,10 +27,6 @@ import {
   TbDisableServiceLeo,
   TsTransferOwnership,
   TsTransferOwnershipLeo,
-  TsSupportChain,
-  TsSupportChainLeo,
-  TsRemoveChain,
-  TsRemoveChainLeo,
   TsSupportToken,
   TsSupportTokenLeo,
   TsRemoveToken,
@@ -155,23 +151,6 @@ export function getTsTransferOwnership(tsTransferOwnership: TsTransferOwnershipL
   const result: TsTransferOwnership = {
     id: leo2js.u32(tsTransferOwnership.id),
     new_owner: leo2js.address(tsTransferOwnership.new_owner),
-  }
-  return result;
-}
-
-export function getTsSupportChain(tsSupportChain: TsSupportChainLeo): TsSupportChain {
-  const result: TsSupportChain = {
-    id: leo2js.u32(tsSupportChain.id),
-    chain_id: leo2js.u128(tsSupportChain.chain_id),
-    token_service: leo2js.array(tsSupportChain.token_service, leo2js.u8),
-  }
-  return result;
-}
-
-export function getTsRemoveChain(tsRemoveChain: TsRemoveChainLeo): TsRemoveChain {
-  const result: TsRemoveChain = {
-    id: leo2js.u32(tsRemoveChain.id),
-    chain_id: leo2js.u128(tsRemoveChain.chain_id),
   }
   return result;
 }

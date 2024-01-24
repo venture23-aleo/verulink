@@ -36,8 +36,6 @@ program wusdc_connector_v0001.aleo;
 
 
 
-
-
 struct UpdateConnector:
     new_connector as address;
 

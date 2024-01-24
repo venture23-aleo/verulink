@@ -15,8 +15,6 @@ import {
   TbEnableService,
   TbDisableService,
   TsTransferOwnership,
-  TsSupportChain,
-  TsRemoveChain,
   TsSupportToken,
   TsRemoveToken,
   TsUpdateMinimumTransfer,
@@ -47,8 +45,6 @@ import {
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
   getTsTransferOwnershipLeo,
-  getTsSupportChainLeo,
-  getTsRemoveChainLeo,
   getTsSupportTokenLeo,
   getTsRemoveTokenLeo,
   getTsUpdateMinimumTransferLeo,
@@ -79,8 +75,6 @@ import {
   getTbEnableService,
   getTbDisableService,
   getTsTransferOwnership,
-  getTsSupportChain,
-  getTsRemoveChain,
   getTsSupportToken,
   getTsRemoveToken,
   getTsUpdateMinimumTransfer,
@@ -363,33 +357,6 @@ export class Council_v0001Contract {
     const result = await zkRun({
       config: this.config,
       transition: 'ts_update_governance',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async ts_support_chain(r0: number, r1: bigint, r2: Array < number > ) {
-    const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.u128(r1);
-    const r2Leo = js2leo.arr2string(js2leo.array(r2, js2leo.u8));
-
-    const params = [r0Leo, r1Leo, r2Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'ts_support_chain',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async ts_remove_chain(r0: number, r1: bigint) {
-    const r0Leo = js2leo.u32(r0);
-    const r1Leo = js2leo.u128(r1);
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'ts_remove_chain',
       params,
     });
     if (this.config.mode === "execute") return result;

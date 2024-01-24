@@ -5,7 +5,7 @@ import token_service_v0001.aleo;
 program council_v0001.aleo {
 
     struct ProposalVote {
-        // BHP256::Hash of the proposal
+        // Hash of the proposal
         proposal: field,
         // Address of the member who have signed the proposal
         member: address
@@ -693,85 +693,6 @@ program council_v0001.aleo {
     }
 
     finalize ts_update_governance(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
-
-
-    /////////////////////////////////////////
-    /////// Token Service: Support Chain ///
-    ////////////////////////////////////////
-
-    struct TsSupportChain {
-        id: u32,
-        chain_id: u128,
-        token_service: [u8; 32]
-    }
-
-    transition ts_support_chain(public id: u32, public chain_id: u128, public token_service: [u8; 32]) {
-        let proposal: TsSupportChain = TsSupportChain {
-            id,
-            chain_id,
-            token_service
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
-
-        // Execute the proposal
-        token_service_v0001.aleo/support_chain_ts(chain_id, token_service);
-
-        return then finalize(proposal_hash);
-    }
-
-    finalize ts_support_chain(proposal_hash: field) {
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
-
-        // Get the votes for the proposal
-        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
-
-    /////////////////////////////////////////
-    /////// Token Service: Remove Chain ////
-    ////////////////////////////////////////
-
-    struct TsRemoveChain {
-        id: u32,
-        chain_id: u128,
-    }
-
-    transition ts_remove_chain(public id: u32, public chain_id: u128) {
-        let proposal: TsRemoveChain = TsRemoveChain {
-            id,
-            chain_id,
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
-
-        // Execute the proposal
-        token_service_v0001.aleo/remove_chain_ts(chain_id);
-
-        return then finalize(proposal_hash);
-    }
-
-    finalize ts_remove_chain(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 

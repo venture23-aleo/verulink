@@ -15,13 +15,6 @@ program token_service_v0001.aleo {
         timeframe: u32 
     }
 
-    /// Stores the contract address of the token service contract of other chain
-    /// Represented as bytes32 zero-left-padded (Similar to Wormhole address)
-    /// For EVM Chains, 20 bytes is formated as following:
-    /// [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
-    /// Key is chain_id
-    mapping token_service_contracts: u128 => [u8; 32];
-
     /// Stores the owner of this program
     /// The owner can be another program or wallet
     /// key = true: returns the address of the owner
@@ -94,38 +87,6 @@ program token_service_v0001.aleo {
         // If attestor does not exist, this is expected to fail
         Mapping::set(owner_TS, true, new_governance);
     }
-
-    //////////////////////////////////
-    ///// Support/Remove Chain ///////
-    //////////////////////////////////
-
-    transition support_chain_ts(public chain_id: u128, public token_service_address: [u8; 32]) {
-        return then finalize(self.caller, chain_id, token_service_address);
-    }
-
-    finalize support_chain_ts(from: address, chain_id: u128, token_service_address: [u8; 32]) {
-        // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
-        assert_eq(from, owner);
-
-        Mapping::set(token_service_contracts, chain_id, token_service_address);
-    }
-
-    transition remove_chain_ts(public chain_id: u128) {
-        return then finalize(self.caller, chain_id);
-    }
-
-    finalize remove_chain_ts(from: address, chain_id: u128) {
-        // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
-        assert_eq(from, owner);
-
-        assert(Mapping::contains(token_service_contracts, chain_id));
-        Mapping::remove(token_service_contracts, chain_id);
-    }
-
 
     //////////////////////////////////
     ///// Support/Remove Token ///////

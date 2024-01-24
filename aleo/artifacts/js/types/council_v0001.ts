@@ -185,30 +185,6 @@ export const leoTsTransferOwnershipSchema = z.object({
 });
 export type TsTransferOwnershipLeo = z.infer < typeof leoTsTransferOwnershipSchema > ;
 
-export interface TsSupportChain {
-  id: number;
-  chain_id: bigint;
-  token_service: Array < number > ;
-}
-
-export const leoTsSupportChainSchema = z.object({
-  id: leoU32Schema,
-  chain_id: leoU128Schema,
-  token_service: z.array(leoU8Schema).length(32),
-});
-export type TsSupportChainLeo = z.infer < typeof leoTsSupportChainSchema > ;
-
-export interface TsRemoveChain {
-  id: number;
-  chain_id: bigint;
-}
-
-export const leoTsRemoveChainSchema = z.object({
-  id: leoU32Schema,
-  chain_id: leoU128Schema,
-});
-export type TsRemoveChainLeo = z.infer < typeof leoTsRemoveChainSchema > ;
-
 export interface TsSupportToken {
   id: number;
   token_id: string;

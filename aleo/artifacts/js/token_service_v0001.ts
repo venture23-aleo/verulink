@@ -81,31 +81,6 @@ export class Token_service_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async support_chain_ts(r0: bigint, r1: Array < number > ) {
-    const r0Leo = js2leo.u128(r0);
-    const r1Leo = js2leo.arr2string(js2leo.array(r1, js2leo.u8));
-
-    const params = [r0Leo, r1Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'support_chain_ts',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
-  async remove_chain_ts(r0: bigint) {
-    const r0Leo = js2leo.u128(r0);
-
-    const params = [r0Leo]
-    const result = await zkRun({
-      config: this.config,
-      transition: 'remove_chain_ts',
-      params,
-    });
-    if (this.config.mode === "execute") return result;
-  }
-
   async support_token_ts(r0: string, r1: string, r2: bigint, r3: number, r4: number) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.address(r1);
@@ -213,18 +188,6 @@ export class Token_service_v0001Contract {
       params,
     });
     if (this.config.mode === "execute") return result;
-  }
-
-  async token_service_contracts(key: bigint): Promise < Array < number >> {
-    const keyLeo = js2leo.u128(key);
-
-    const params = [keyLeo]
-    const result = await zkGetMapping({
-      config: this.config,
-      transition: 'token_service_contracts',
-      params,
-    });
-    return leo2js.array(result, leo2js.u8);
   }
 
   async owner_TS(key: boolean): Promise < string > {

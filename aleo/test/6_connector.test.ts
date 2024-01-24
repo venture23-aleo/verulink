@@ -159,30 +159,6 @@ describe("Token Connector", () => {
     );
 
     test(
-      "Token Service: Support Ethereum Chain",
-      async () => {
-        let isEthSupported = true;
-        try {
-          const ethTsAddr = await tokenService.token_service_contracts(
-            ethChainId
-          );
-        } catch (err) {
-          isEthSupported = false;
-        }
-
-        if (!isEthSupported) {
-          const supportEthChainTx = await tokenService.support_chain_ts(
-            ethChainId,
-            evm2AleoArr(ethTsContractAddr)
-          );
-          // @ts-ignore
-          await supportEthChainTx.wait();
-        }
-      },
-      TIMEOUT
-    );
-
-    test(
       "Initialize WUSDC",
       async () => {
         let isTokenInitialized = true;

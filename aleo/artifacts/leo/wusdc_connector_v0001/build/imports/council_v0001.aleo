@@ -73,15 +73,6 @@ struct TsTransferOwnership:
     id as u32;
     new_owner as address;
 
-struct TsSupportChain:
-    id as u32;
-    chain_id as u128;
-    token_service as [u8; 32u32];
-
-struct TsRemoveChain:
-    id as u32;
-    chain_id as u128;
-
 struct TsSupportToken:
     id as u32;
     token_id as address;
@@ -553,53 +544,6 @@ function ts_update_governance:
 
 finalize ts_update_governance:
     input r0 as token_service_v0001.aleo/transfer_ownership_ts.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
-function ts_support_chain:
-    input r0 as u32.public;
-    input r1 as u128.public;
-    input r2 as [u8; 32u32].public;
-    cast r0 r1 r2 into r3 as TsSupportChain;
-    hash.bhp256 r3 into r4 as field;
-    call token_service_v0001.aleo/support_chain_ts r1 r2 into r5;
-    async ts_support_chain r5 r4 into r6;
-    output r6 as council_v0001.aleo/ts_support_chain.future;
-
-finalize ts_support_chain:
-    input r0 as token_service_v0001.aleo/support_chain_ts.future;
-    input r1 as field.public;
-    await r0;
-    get settings[true] into r2;
-    get proposal_vote_counts[r1] into r3;
-    gte r3 r2 into r4;
-    assert.eq r4 true;
-    contains proposal_executed[r1] into r5;
-    not r5 into r6;
-    assert.eq r6 true;
-    set true into proposal_executed[r1];
-
-
-function ts_remove_chain:
-    input r0 as u32.public;
-    input r1 as u128.public;
-    cast r0 r1 into r2 as TsRemoveChain;
-    hash.bhp256 r2 into r3 as field;
-    call token_service_v0001.aleo/remove_chain_ts r1 into r4;
-    async ts_remove_chain r4 r3 into r5;
-    output r5 as council_v0001.aleo/ts_remove_chain.future;
-
-finalize ts_remove_chain:
-    input r0 as token_service_v0001.aleo/remove_chain_ts.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

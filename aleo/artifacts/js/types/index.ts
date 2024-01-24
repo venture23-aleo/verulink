@@ -1,4 +1,9 @@
 import {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo
+} from './token_service_v0001';
+import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -27,11 +32,6 @@ import {
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo
 } from './token_bridge_v0001';
-import {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service_v0001';
 import {
   ProposalVote,
   leoProposalVoteSchema,
@@ -75,12 +75,6 @@ import {
   TsTransferOwnership,
   leoTsTransferOwnershipSchema,
   TsTransferOwnershipLeo,
-  TsSupportChain,
-  leoTsSupportChainSchema,
-  TsSupportChainLeo,
-  TsRemoveChain,
-  leoTsRemoveChainSchema,
-  TsRemoveChainLeo,
   TsSupportToken,
   leoTsSupportTokenSchema,
   TsSupportTokenLeo,
@@ -115,6 +109,9 @@ import {
 } from './wusdc_connector_v0001';
 
 export {
+  OutgoingPercentageInTime,
+  leoOutgoingPercentageInTimeSchema,
+  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -142,9 +139,6 @@ export {
   InPacketWithScreening,
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo,
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
   ProposalVote,
   leoProposalVoteSchema,
   ProposalVoteLeo,
@@ -187,12 +181,6 @@ export {
   TsTransferOwnership,
   leoTsTransferOwnershipSchema,
   TsTransferOwnershipLeo,
-  TsSupportChain,
-  leoTsSupportChainSchema,
-  TsSupportChainLeo,
-  TsRemoveChain,
-  leoTsRemoveChainSchema,
-  TsRemoveChainLeo,
   TsSupportToken,
   leoTsSupportTokenSchema,
   TsSupportTokenLeo,
