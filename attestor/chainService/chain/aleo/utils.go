@@ -114,6 +114,7 @@ func trim(msg string) string {
 	return strReplacer.Replace(msg)
 }
 
+// TODO fix this
 func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt := new(chain.Packet)
 	version := new(big.Int)
@@ -121,14 +122,14 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	if !versionOk {
 		return nil, errors.New("failed to parse version")
 	}
-	pkt.Version = version
+	pkt.Version = uint8(version.Uint64())
 
 	sequence := new(big.Int)
 	sequence, sequenceOk := sequence.SetString(strings.Replace(packet.sequence, "u64", "", 1), 10)
 	if !sequenceOk  {
 		return nil, errors.New("failed to parse sequence")
 	}
-	pkt.Sequence = sequence
+	pkt.Sequence = sequence.Uint64()
 
 	sourceChainID := new(big.Int)
 
@@ -136,7 +137,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	if !sourceChainIDOk {
 		return nil, errors.New("failed to parse version")
 	}
-	pkt.Source.ChainID = sourceChainID
+	pkt.Source.ChainID = uint32(sourceChainID.Uint64())
 	pkt.Source.Address = packet.source.address
 
 	destChainID := new(big.Int)
@@ -145,7 +146,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 		return nil, errors.New("failed to parse version")
 	}
 
-	pkt.Destination.ChainID = destChainID
+	pkt.Destination.ChainID = uint32(destChainID.Uint64())
 
 	var err error
 	pkt.Destination.Address, err = parseAleoEthAddrToHexString(packet.destination.address)
@@ -174,7 +175,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	if !heightOk {
 		return nil, errors.New("failed to parse version")
 	}
-	pkt.Height = height
+	pkt.Height = height.Uint64()
 
 	return pkt, nil
 }

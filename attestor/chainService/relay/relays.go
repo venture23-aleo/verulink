@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	common "github.com/venture23-aleo/attestor/chainService/common"
@@ -19,7 +18,7 @@ const (
 )
 
 var (
-	chainIDToChainName         = map[*big.Int]string{}
+	chainIDToChainName         = map[uint32]string{}
 	RegisteredClients          = map[string]ClientFunc{}
 	RegisteredHashers          = map[string]HashFunc{}
 	RegisteredRetryChannels    = map[string]chan *chain.Packet{}
