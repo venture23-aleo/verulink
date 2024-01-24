@@ -66,9 +66,9 @@ All components of bridge agree to some common data structures which are as follo
 ### NetworkAddress
 It is the data structure that should allow us to point to any resource in any network uniquely.
 Can also be represented as single string url as : `{chain_id}/{address}`.
-```
+```rust
 pub struct NetworkAddress {
-    pub chain_id:u32,
+    pub chain_id:128,
     pub address:String,
 }
 ```
@@ -80,22 +80,22 @@ pub struct NetworkAddress {
 
 ### Token Message
 It is the message created by a token contract to transfer or withdraw assets.
-```
+```rust
 pub struct TokenMessage {
-    pub denom: String,
-    pub amount: u128,
+    pub sender_address: String,
+    pub dest_token_address: String,
+    pub amount: u128
     pub receiver_address: String,
-    pub sender_address: String
 }
 
 ```
 
 | Name             | Remarks                                                                           |
 |------------------|-----------------------------------------------------------------------------------|
-| Denom            | The field represents the address/id of token we are dealing with like “USDT” or “wUSDT” |
+| Sender Address   | Address of the sender on the source chain.                                        |
+| Destination Token Address            | The field represents the address of token we are dealing with in target chain.|
 | Amount           | The amount of fungibles to be transferred.                                        |
 | Receiver Address | Address of the receiver on the target chain.                                      |
-| Sender Address   | Address of the sender on the source chain.                                        |
 
 
 
@@ -103,12 +103,12 @@ pub struct TokenMessage {
 ### Packet
 It consists of all the information that is required for the components in our bridge to process the message, verify it and execute it.
 
-```
+```rust
 pub struct Packet{
-    version:u64,
+    version:u8,
     destination:NetworkAddress,
     source:NetworkAddress,
-    sequence:u128,
+    sequence:u64,
     message:TokenMessage,
     height:String,
 }
@@ -120,14 +120,14 @@ pub struct Packet{
 | Version     | Packet versioning for future enhancements or changes.                               |
 | Destination | Target chain’s chain_id and (token) service contract address                        |
 | Source      | Source chain's chain_id and (token) service contact address                         |
-| Sequence    | sequence no of the packet for the target chain id.                                  |
+| Sequence    | sequence no of the packet for the target chain.                                  |
 | Message     | [TokenMessage](#token-message)                                                      |
 | Height      | Height of the source chain where the packet was created                             |
 
 ## Logical Components
 Key logical components in the platform and their interfaces are describe below in detail.
 
-### Common Contracts
+### Main Contracts
 Each participating chain will have at least two contracts i.e. Bridge Contract and TokenService Contract. 
 There may be more contracts depending on the platform requirements.
 
@@ -140,7 +140,7 @@ For detailed design and interface we can follow below link:
 #### Token Service Contract
 This contract is responsible for interacting with other ERC20-like tokens to mint/burn (on Aleo) or lock/unlock (on Ethereum) and pass relevant information to bridge contract as TokenMessage.
 
-##### Token Contract Storage Structure
+##### Token Service Contract Storage Structure
 
 | Name      | Structure      | Remarks                                       |
 |-----------|----------------|-----------------------------------------------|
@@ -150,45 +150,46 @@ This contract is responsible for interacting with other ERC20-like tokens to min
 | Token Service Contracts | chain_id=>address | Address of the corresponding token service contracts of the given chain_id |
 
 ##### Token Service Contract Interface
-``` 
-pub trait TokenContract{
+```rust 
+pub trait TokenServiceContract{
     pub fn transfer(&self,recipient:String, token:String, amount: u64, to_chain_id: u32);
-    pub fn withdraw(&self,packet:Packet,msg:TokenMessage);
-    pub fn get_transfer_info(sequence_no:u128)->TokenMessage;
+    pub fn withdraw(&self, packet:Packet, sigs: []);
     pub fn validate_blacklisted(address:String)->bool;
 
+    pub fn is_supported_token(address:String)->bool;
+    pub fn is_enabled_token(address:String)->bool;
+
     pub fn add_chain(chain_id: u32, token_service_address: String);
+
+    // TODO: add details
+    pub fn add_token(address: String, token: TokenInfo);
+    pub fn remove_token(address: String);
+
     pub fn enable_token(address: String);
     pub fn disable_token(address: String);
+
     pub fn add_to_blacklist(address: String);
     pub fn remove_from_blacklist(address: String);
 }
 
 
 ```
-Transfer
-: This method will be invoked by the frontend/user to transfer assets from one chain to another. User will provide the target chain_id, recipient address of the target chain, asset in the current chain and the amount that needs to be transferred. For verified request token service contract will construct TokenMessage and call send_message on bridge contract with the token service contract of target chain as destination. Token contract will also update the TVL data.
+**Transfer:** This method will be invoked by the frontend/user to transfer assets from one chain to another. User will provide the target chain_id, recipient address of the target chain, asset in the current chain and the amount that needs to be transferred. For verified request token service contract will construct TokenMessage and call send_message on bridge contract with the token service contract of target chain as destination. Token contract will also update the TVL data.
 
-Withdraw
-: This method can be invoked on the target chain once the user has called transfer on the source chain. Users will need to provide the [Packet](#packet) information to unlock/withdraw the asset. Bridge contract asserts that the packet exists, has sufficient attestations and has not been consumed previously. Token service contract can proceed to min/unlock the asset and update the TVL as well. The function can be called by anyone to transfer value to recipient but in case of value transferred being higher than threshold amount only councils would be able to complete the transaction.
+**Withdraw:** This method can be invoked on the target chain once the user has called transfer on the source chain. 
+Users will need to provide the [Packet](#packet) information along with enough signatures from valid attestors to unlock/withdraw the asset. 
 
-GetTransfer Info
-: Frontend can use this to query original Token Message using transfer id generated by transfer method.
+Bridge contract asserts that signatures are valid and the packet has not been consumed previously. Token service contract can proceed to mint/unlock the asset and update the TVL as well. The function can be called by anyone to transfer value to recipient but in case of value transferred being higher than threshold amount only council would be able to complete the transaction.
 
-Validate Blacklist
-: Frontend can query on eth side to check if address is already on our blacklist or not.
+**Validate Blacklist:** Frontend can query on eth side to check if address is already on our blacklist or not.
 
-Enable Token
-: This will either create a new entry on supported token or enable it if it is disabled. Called by governance.
+**Enable Token:** This will either create a new entry on supported token or enable it if it is disabled. Called by governance.
 
-Disable Token
-: This will temporarily disable moving of the token specified in case of a disaster. Called by governance.
+**Disable Token:** This will temporarily disable moving of the token specified in case of a disaster. Called by governance.
 
-Add To Blacklist
-: Add an address of a malicious user in blacklist to prevent it from utilizing the token service. Called by governance.
+**Add To Blacklist:** Add an address of a malicious user in blacklist to prevent it from utilizing the token service. Called by governance.
 
-Remove Blacklist
-: Remove a user from blacklist. Called by governance.
+**Remove Blacklist:** Remove a user from blacklist. Called by governance.
 
 #### Holding Contract
 This contract is responsible for holding disputed funds and transfers. In event of transfer being initiated to an address that is blacklisted on target chain, the token service contract on target chain will lock the funds in holding contract. The funds can be released by council multisig once the dispute has been settled for the blacklisted address.
@@ -255,7 +256,6 @@ pub struct AppConfig {
     // other application specific configs
     // ...
 }
- 
 ```
 
 Receiver
@@ -267,8 +267,6 @@ pub struct Receiver {
     client: Client,
     config:ChainConfig,
 }
-
-
 ```
 
 Sender
@@ -280,8 +278,6 @@ pub struct Sender {
     config:ChainConfig,
     wallet:Wallet,
 }
-
-
 ```
 
 Relayer
@@ -292,7 +288,6 @@ pub struct Relayer {
     source:Receiver,
     target:Sender,
 }
-
 ```
 
 #### Components Overview
@@ -305,7 +300,7 @@ pub struct Relayer {
 #### Reference For Implementation
 
 ##### Chain Config Interface
-```C
+```rust
 pub trait IChainConfig:Send+Sync{
     fn get_chain_id(&self) -> u32;
     fn get_node_url(&self) -> String;
@@ -313,7 +308,7 @@ pub trait IChainConfig:Send+Sync{
 ```
 
 ##### Message Interface
-```C 
+```rust
 pub trait IMessage {
     fn get_source_address(&self) -> NetworkAddress;
     fn get_target_address(&self) -> NetworkAddress;
@@ -323,7 +318,7 @@ pub trait IMessage {
 ```
 
 ##### Store Interface
-```C 
+```rust 
 pub trait IStore<T: IMessage> {
     fn get_current_sequence(&self, target_chain_id: u32) -> u128;
     fn log_success(&mut self, message: impl IMessage);
@@ -337,7 +332,7 @@ pub trait IStore<T: IMessage> {
 
 ##### Client Interface
 
-```C 
+```rust
 pub trait IClient<T: IMessage> {
     type Response: Into<Option<T>>;
     type Error;
@@ -350,7 +345,7 @@ pub trait IClient<T: IMessage> {
 
 ##### Chain Interface
 
-```C 
+```rust
 pub trait IChain<M: IMessage> {
     type Config: IChainConfig;
 
@@ -372,7 +367,7 @@ pub trait IChain<M: IMessage> {
 
 ##### Receiver Interface 
 
-```C 
+```rust
 pub trait IReceiver<M: IMessage>: IChain<M> {
     // check if retry timeout has elapsed
     fn has_retry_elapsed(&self) -> bool;
@@ -404,7 +399,7 @@ pub trait IReceiver<M: IMessage>: IChain<M> {
 
 ##### Sender Interface
 
-```C 
+```rust
 pub trait ISender<M: IMessage>: IChain<M> {
     fn send(&mut self, msg: M) {
         let res = self.get_client().publish_message(&msg);
@@ -417,7 +412,7 @@ pub trait ISender<M: IMessage>: IChain<M> {
 
 ##### Relayer Interface
 
-```C 
+```rust
 pub trait IRelayer<M: IMessage, Source: IReceiver<M>, Target: ISender<M>> {
     fn get_source_chain(&self) -> &Source;
     fn get_target_chain(&mut self) -> &mut Target;
@@ -447,12 +442,11 @@ pub trait IRelayer<M: IMessage, Source: IReceiver<M>, Target: ISender<M>> {
         }
     }
 }
-
 ```
 
 ##### Bridge Interface
 
-```C 
+```rust
 pub trait IBridge<M: IMessage, Source: IReceiver<M>, Target: ISender<M>>{
     type Relay:IRelayer<M,Source,Target>;
 
@@ -482,10 +476,6 @@ pub trait IBridge<M: IMessage, Source: IReceiver<M>, Target: ISender<M>>{
          });
          handles.push(h);
     }
-
-
-
-    
 }
 ```
 
