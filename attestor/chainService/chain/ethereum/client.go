@@ -139,7 +139,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		if index == len(retryPacketNamespaces) {
 			index = 0
 		}
-
+		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this is the most efficient approach.
@@ -172,6 +172,9 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		if index == len(baseSeqNamespaces) {
 			index = 0
 		}
+		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
+			zap.String("namespace", baseSeqNamespaces[index]))
+
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
 		chainID, _ := strconv.ParseUint(chainIDStr, 10, 32)
@@ -211,6 +214,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pkt := <-retryCh:
+			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
 			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
 			ns := retryPacketNamespacePrefix + chainID
 			err := store.StoreRetryPacket(ns, pkt)
@@ -223,6 +227,12 @@ func (cl *Client) managePacket(ctx context.Context) {
 		case pkt := <-completedCh:
 			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
 			ns := baseSeqNumNameSpacePrefix + chainID
+			logger.GetLogger().Info("Updating base seq num",
+				zap.String("namespace", ns),
+				zap.Uint32("source_chain_id", pkt.Source.ChainID),
+				zap.Uint32("dest_chain_id", pkt.Destination.ChainID),
+				zap.Uint64("pkt_seq_num", pkt.Sequence),
+			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -253,6 +263,9 @@ func NewClient(cfg *config.ChainConfig, _ map[string]uint32) chain.IClient {
 		rns := retryPacketNamespacePrefix + destChain
 		bns := baseSeqNumNameSpacePrefix + destChain
 		namespaces = append(namespaces, rns, bns)
+
+		retryPacketNamespaces = append(retryPacketNamespaces, rns)
+		baseSeqNamespaces = append(baseSeqNamespaces, bns)
 	}
 	err = store.CreateNamespaces(namespaces)
 	if err != nil {
@@ -293,5 +306,5 @@ If not available in namespace then download block and parse and store the packet
 */
 
 func getDestChains() []string { // list of chain IDs
-	return nil
+	return []string{"2"}
 }

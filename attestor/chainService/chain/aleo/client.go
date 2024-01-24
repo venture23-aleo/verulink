@@ -142,6 +142,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		if index == len(baseSeqNamespaces) {
 			index = 0
 		}
+		logger.GetLogger().Info("pruning base sequence number", zap.String("namespace", baseSeqNamespaces[index]))
 
 		var (
 			startSeqNum, endSeqNum uint64
@@ -152,7 +153,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		chainIdStr := strings.Replace(ns, baseSeqNumNameSpacePrefix, "", 1)
 		chainID, err := strconv.ParseUint(chainIdStr, 10, 32)
 		if err != nil {
-			//log error
+			logger.GetLogger().Error("Error while parsing uint", zap.Error(err))
 			goto indIncr
 		}
 		seqHeightRanges, shouldFetch = store.PruneBaseSeqNum(ns)
@@ -188,6 +189,8 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		if index == len(retryPacketNamespaces) {
 			index = 0
 		}
+		logger.GetLogger().Info("retrying aleo feeds", zap.String("namespace", retryPacketNamespaces[index]))
+
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this is the most efficient approach.
@@ -211,6 +214,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pkt := <-retryCh:
+			logger.GetLogger().Info("Adding packet to retry namespace", zap.Any("packet", pkt))
 			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
 			ns := retryPacketNamespacePrefix + chainID
 			err := store.StoreRetryPacket(ns, pkt)
@@ -223,6 +227,12 @@ func (cl *Client) managePacket(ctx context.Context) {
 		case pkt := <-completedCh:
 			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
 			ns := baseSeqNumNameSpacePrefix + chainID
+			logger.GetLogger().Info("Updating base seq num",
+				zap.String("namespace", ns),
+				zap.Uint32("source_chain_id", pkt.Source.ChainID),
+				zap.Uint32("dest_chain_id", pkt.Destination.ChainID),
+				zap.Uint64("pkt_seq_num", pkt.Sequence),
+			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, 0)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -252,6 +262,9 @@ func NewClient(cfg *config.ChainConfig, m map[string]uint32) chain.IClient {
 		rns := retryPacketNamespacePrefix + destChain
 		bns := baseSeqNumNameSpacePrefix + destChain
 		namespaces = append(namespaces, rns, bns)
+
+		retryPacketNamespaces = append(retryPacketNamespaces, rns)
+		baseSeqNamespaces = append(baseSeqNamespaces, bns)
 	}
 
 	err = store.CreateNamespaces(namespaces)
@@ -291,5 +304,5 @@ func NewClient(cfg *config.ChainConfig, m map[string]uint32) chain.IClient {
 }
 
 func getDestChains() []string { // list of chain IDs
-	return []string{"ethereum"}
+	return []string{"1"}
 }
