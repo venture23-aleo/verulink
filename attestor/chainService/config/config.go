@@ -71,6 +71,7 @@ func InitConfig() error {
 	if err != nil {
 		return err
 	}
+	config = new(Config)
 	err = yaml.Unmarshal(b, config)
 	if err != nil {
 		return err
