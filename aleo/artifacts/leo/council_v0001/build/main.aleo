@@ -179,6 +179,8 @@ function update_member_key:
 finalize update_member_key:
     input r0 as address.public;
     input r1 as address.public;
+    contains members[r0] into r2;
+    assert.eq r2 true;
     remove members[r0];
     set true into members[r1];
 
@@ -319,10 +321,12 @@ finalize remove_member:
     lt r2 r8 into r11;
     and r10 r11 into r12;
     assert.eq r12 true;
+    contains members[r1] into r13;
+    assert.eq r13 true;
     remove members[r1];
     set r2 into settings[true];
-    sub r8 1u8 into r13;
-    set r13 into settings[false];
+    sub r8 1u8 into r14;
+    set r14 into settings[false];
 
 
 function update_threshold:

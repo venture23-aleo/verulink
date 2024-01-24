@@ -203,10 +203,12 @@ finalize remove_attestor_tb:
     assert.eq r8 true;
     gte r5 2u8 into r9;
     assert.eq r9 true;
+    contains attestors[r1] into r10;
+    assert.eq r10 true;
     remove attestors[r1];
     set r2 into attestor_settings[true];
-    sub r5 1u8 into r10;
-    set r10 into attestor_settings[false];
+    sub r5 1u8 into r11;
+    set r11 into attestor_settings[false];
 
 
 function update_attestor_key:
@@ -217,6 +219,8 @@ function update_attestor_key:
 finalize update_attestor_key:
     input r0 as address.public;
     input r1 as address.public;
+    contains attestors[r0] into r2;
+    assert.eq r2 true;
     remove attestors[r0];
     set true into attestors[r1];
 
@@ -264,6 +268,8 @@ finalize disable_chain_tb:
     input r1 as u128.public;
     get owner_TB[true] into r2;
     assert.eq r0 r2;
+    contains supported_chains[r1] into r3;
+    assert.eq r3 true;
     remove supported_chains[r1];
 
 
@@ -290,6 +296,8 @@ finalize disable_service_tb:
     input r1 as address.public;
     get owner_TB[true] into r2;
     assert.eq r0 r2;
+    contains supported_services[r1] into r3;
+    assert.eq r3 true;
     remove supported_services[r1];
 
 

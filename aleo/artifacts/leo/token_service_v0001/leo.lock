@@ -2,5 +2,5 @@
 name = "token_bridge_v0001"
 network = "testnet3"
 location = "network"
-checksum = "08dc6db4cd092a00c88848be35cf4fd770ec18cd7df11d1adedf9ea52f70d068"
+checksum = "887d86a212ed2d1ca1e308852e0705dd7f95ff508687983a09da2d2290efdc21"
 dependencies = []

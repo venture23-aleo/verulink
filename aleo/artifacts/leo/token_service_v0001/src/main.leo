@@ -122,6 +122,7 @@ program token_service_v0001.aleo {
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
+        assert(Mapping::contains(token_service_contracts, chain_id));
         Mapping::remove(token_service_contracts, chain_id);
     }
 
@@ -165,6 +166,7 @@ program token_service_v0001.aleo {
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
+        assert(Mapping::contains(max_outgoing_percentage, token_id));
         Mapping::remove(max_outgoing_percentage, token_id);
         Mapping::remove(minimum_transfers, token_id);
         Mapping::remove(token_connectors, token_id);

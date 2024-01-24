@@ -273,6 +273,7 @@ program token_bridge_v0001.aleo {
         assert(total_attestors >= 2u8);
 
         // If attestor does not exist, this is expected to fail
+        assert(Mapping::contains(attestors, attestor));
         Mapping::remove(attestors, attestor);
         Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
         Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, total_attestors - 1u8);
@@ -286,6 +287,7 @@ program token_bridge_v0001.aleo {
     }
 
     finalize update_attestor_key(existing_attestor: address, new_attestor: address) {
+        assert(Mapping::contains(attestors, existing_attestor));
         Mapping::remove(attestors, existing_attestor);
         Mapping::set(attestors, new_attestor, true);
     }
@@ -344,6 +346,7 @@ program token_bridge_v0001.aleo {
         assert_eq(from, owner);
 
         // If the chain_id is not supported, this fails
+        assert(Mapping::contains(supported_chains, chain_id));
         Mapping::remove(supported_chains, chain_id);
     }
 
@@ -382,6 +385,7 @@ program token_bridge_v0001.aleo {
         assert_eq(from, owner);
 
         // If service does not exist, this is expected to fail
+        assert(Mapping::contains(supported_services, service));
         Mapping::remove(supported_services, service);
     }
 

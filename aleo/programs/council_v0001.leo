@@ -99,6 +99,7 @@ program council_v0001.aleo {
     }
 
     finalize update_member_key(existing_member: address, new_member: address) {
+        assert(Mapping::contains(members, existing_member));
         Mapping::remove(members, existing_member);
         Mapping::set(members, new_member, true);
     }
@@ -308,6 +309,7 @@ program council_v0001.aleo {
         assert(new_threshold >= 1u8 && new_threshold < current_members_count);
 
         // Execute the proposal
+        assert(Mapping::contains(members, existing_member));
         Mapping::remove(members, existing_member);
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u8);

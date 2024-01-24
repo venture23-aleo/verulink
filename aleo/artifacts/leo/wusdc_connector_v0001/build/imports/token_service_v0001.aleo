@@ -110,6 +110,8 @@ finalize remove_chain_ts:
     input r1 as u128.public;
     get owner_TS[true] into r2;
     assert.eq r0 r2;
+    contains token_service_contracts[r1] into r3;
+    assert.eq r3 true;
     remove token_service_contracts[r1];
 
 
@@ -147,6 +149,8 @@ finalize remove_token_ts:
     input r1 as address.public;
     get owner_TS[true] into r2;
     assert.eq r0 r2;
+    contains max_outgoing_percentage[r1] into r3;
+    assert.eq r3 true;
     remove max_outgoing_percentage[r1];
     remove minimum_transfers[r1];
     remove token_connectors[r1];
