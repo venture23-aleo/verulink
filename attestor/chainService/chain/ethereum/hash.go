@@ -7,10 +7,29 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 )
 
 func hash(sp *chain.ScreenedPacket) string {
-	packet := sp.Packet
+	packet := abi.PacketLibraryInPacket{
+		Version:  big.NewInt(int64(sp.Packet.Version)),
+		Sequence: big.NewInt(int64(sp.Packet.Sequence)),
+		SourceTokenService: abi.PacketLibraryOutNetworkAddress{
+			ChainId: big.NewInt(int64(sp.Packet.Source.ChainID)),
+			Addr:    sp.Packet.Source.Address,
+		},
+		DestTokenService: abi.PacketLibraryInNetworkAddress{
+			ChainId: big.NewInt(int64(sp.Packet.Destination.ChainID)),
+			Addr:    common.HexToAddress(sp.Packet.Destination.Address),
+		},
+		Message: abi.PacketLibraryInTokenMessage{
+			SenderAddress:    sp.Packet.Message.SenderAddress,
+			DestTokenAddress: common.HexToAddress(sp.Packet.Message.DestTokenAddress),
+			Amount:           sp.Packet.Message.Amount,
+			ReceiverAddress:  common.HexToAddress(sp.Packet.Message.ReceiverAddress),
+		},
+		Height: big.NewInt(int64(sp.Packet.Height)),
+	}
 
 	versionBytes := make([]byte, 32)
 	packet.Version.FillBytes(versionBytes)
@@ -21,21 +40,21 @@ func hash(sp *chain.ScreenedPacket) string {
 	amountBytes := make([]byte, 32)
 	packet.Message.Amount.FillBytes(amountBytes)
 	srcChainIDBytes := make([]byte, 32)
-	packet.Source.ChainID.FillBytes(srcChainIDBytes)
+	packet.SourceTokenService.ChainId.FillBytes(srcChainIDBytes)
 	dstChainIDBytes := make([]byte, 32)
-	packet.Destination.ChainID.FillBytes(dstChainIDBytes)
+	packet.DestTokenService.ChainId.FillBytes(dstChainIDBytes)
 
-	hash := crypto.Keccak256Hash(
+	pktHash := crypto.Keccak256Hash(
 		versionBytes,
 		sequenceBytes,
 		srcChainIDBytes,
-		[]byte(packet.Source.Address),
+		[]byte(packet.SourceTokenService.Addr),
 		dstChainIDBytes,
-		common.Hex2Bytes(packet.Destination.Address),
+		packet.DestTokenService.Addr.Bytes(),
 		[]byte(packet.Message.SenderAddress),
-		common.Hex2Bytes(packet.Message.DestTokenAddress),
+		packet.Message.DestTokenAddress.Bytes(),
 		amountBytes,
-		common.Hex2Bytes(packet.Message.ReceiverAddress),
+		packet.Message.ReceiverAddress.Bytes(),
 		heightBytes,
 	)
 
@@ -48,6 +67,8 @@ func hash(sp *chain.ScreenedPacket) string {
 		nay.FillBytes(voteByte)
 	}
 
-	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(hash))), hash.Bytes(), voteByte)
+	hashOfPktHashAndVote := crypto.Keccak256Hash(pktHash.Bytes(), voteByte)
+
+	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(pktHash))), hashOfPktHashAndVote.Bytes())
 	return finalHash.Hex()
 }
