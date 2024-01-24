@@ -6,6 +6,9 @@ import (
 	"os"
 	"os/signal"
 
+	_ "github.com/venture23-aleo/attestor/chainService/chain/aleo"
+	_ "github.com/venture23-aleo/attestor/chainService/chain/ethereum"
+
 	"github.com/venture23-aleo/attestor/chainService/config"
 	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/relay"
