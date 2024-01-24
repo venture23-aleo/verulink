@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"time"
 
-	ethBind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
@@ -36,45 +35,12 @@ type Client struct {
 	name              string
 	address           string
 	eth               *ethclient.Client
-	bridge            abi.ABIInterface
+	bridge            *abi.Bridge
 	minRequiredGasFee uint64
 	waitDur           time.Duration
 	nextBlockHeight   uint64
 	chainID           *big.Int
 	rpcEndpoint       string
-}
-
-func (cl *Client) GetPktWithSeq(ctx context.Context, dstChainID uint32, seqNum uint64) (*chain.Packet, error) {
-	destChainIDBig := &big.Int{}
-	destChainIDBig.SetUint64(uint64(dstChainID))
-	sequenceNumber := &big.Int{}
-	sequenceNumber.SetUint64(seqNum)
-
-	ethpacket, err := cl.bridge.OutgoingPackets(&ethBind.CallOpts{Context: ctx}, destChainIDBig, sequenceNumber)
-	if err != nil {
-		return nil, err
-	}
-
-	packet := &chain.Packet{
-		Version: ethpacket.Version,
-		Destination: chain.NetworkAddress{
-			ChainID: ethpacket.DestTokenService.ChainId,
-			Address: ethpacket.DestTokenService.Addr,
-		},
-		Source: chain.NetworkAddress{
-			ChainID: ethpacket.SourceTokenService.ChainId,
-			Address: string(ethpacket.SourceTokenService.Addr.Bytes()),
-		},
-		Sequence: ethpacket.Sequence,
-		Message: chain.Message{
-			DestTokenAddress: ethpacket.Message.DestTokenAddress,
-			Amount:           ethpacket.Message.Amount,
-			ReceiverAddress:  ethpacket.Message.ReceiverAddress,
-			SenderAddress:    string(ethpacket.Message.SenderAddress.Bytes()),
-		},
-		Height: ethpacket.Height,
-	}
-	return packet, nil
 }
 
 func (cl *Client) Name() string {
@@ -98,12 +64,15 @@ func (cl *Client) createNamespaces() error {
 }
 
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
+	fmt.Println("parse eth block")
 	sc := ethCommon.HexToAddress(cl.address)
 
 	ctxBlk, cancel := context.WithCancel(ctx)
 	defer cancel()
+
 	block, err := cl.eth.BlockByNumber(ctxBlk, big.NewInt(int64(height)))
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -111,13 +80,13 @@ func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.
 	defer cancel()
 	receipts, err := getTxReceipts(ctxRecpt, cl.eth, block)
 	if err != nil {
-		return nil, err	
+		return nil, err
 	}
-	packets, err := getRelayReceipts(cl.bridge.(*abi.Bridge), sc, receipts)
+	packets, err := getRelayReceipts(cl.bridge, sc, receipts)
 	if err != nil {
 		return nil, err
 	}
-	return packets, nil 
+	return packets, nil
 }
 
 func getRelayReceipts(bridgeClient *abi.Bridge, contract ethCommon.Address, receipts ethTypes.Receipts) ([]*chain.Packet, error) {
@@ -127,15 +96,33 @@ func getRelayReceipts(bridgeClient *abi.Bridge, contract ethCommon.Address, rece
 			if !bytes.Equal(log.Address.Bytes(), contract.Bytes()) {
 				continue
 			}
-			packet, err := bridgeClient.ParsePacketDispatched(*log)
+			packetDispatched, err := bridgeClient.ParsePacketDispatched(*log)
 			if err != nil {
 				return nil, err
 			}
-			_=packet
-			// append after converting to common packet 
+			commonPacket := &chain.Packet{
+				Version: packetDispatched.Packet.Version,
+				Sequence: packetDispatched.Packet.Sequence,
+				Destination: chain.NetworkAddress{
+					ChainID: packetDispatched.Packet.DestTokenService.ChainId,
+					Address: packetDispatched.Packet.DestTokenService.Addr,
+				},
+				Source: chain.NetworkAddress{
+					ChainID: packetDispatched.Packet.SourceTokenService.ChainId,
+					Address: string(packetDispatched.Packet.SourceTokenService.Addr.Bytes()),
+				},
+				Message: chain.Message{
+					DestTokenAddress: packetDispatched.Packet.Message.DestTokenAddress,
+					SenderAddress: string(packetDispatched.Packet.Message.SenderAddress.Bytes()),
+					Amount: packetDispatched.Packet.Message.Amount,
+					ReceiverAddress: packetDispatched.Packet.Message.ReceiverAddress,
+				},
+				Height: packetDispatched.Packet.Height,
+			}
+			packets = append(packets, commonPacket)
 		}
 	}
-	return packets, nil 
+	return packets, nil
 }
 
 func getTxReceipts(ctx context.Context, ethClient *ethclient.Client, hb *ethTypes.Block) (ethTypes.Receipts, error) {
@@ -165,12 +152,14 @@ outerFor:
 				switch {
 				case q.err != nil:
 					counter++
+					fmt.Println("counter is ", counter)
 					q.err = nil
 					q.receipt = nil
 					queryCh <- q
 				case q.receipt != nil:
 					receipts = append(receipts, q.receipt)
 					if len(receipts) == cap(queryCh) {
+						fmt.Println("when does it close??")
 						close(queryCh)
 						break outerFor
 					} else {
