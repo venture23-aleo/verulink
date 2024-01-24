@@ -9,10 +9,6 @@ type keyConstraint interface {
 	int64 | uint64 | ~string | ~[]byte | *big.Int
 }
 
-type byteConstraint interface {
-	Byte() []byte
-}
-
 func getKeyByteForKeyConstraint[T keyConstraint](key T) (k []byte) {
 	var i interface{} = key
 	switch v := i.(type) {

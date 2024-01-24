@@ -18,7 +18,7 @@ func screen(p *chain.Packet) (isWhite bool) {
 	addr2 := p.Destination.Address
 	// send both addresses to chain analysis
 	_, _, _, _ = chain1, chain2, addr1, addr2
-	return false
+	return true
 }
 
 func storeWhiteStatus(pkt *chain.Packet, isWhite bool) error {

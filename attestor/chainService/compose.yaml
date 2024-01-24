@@ -21,6 +21,7 @@ services:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
+      MODE: dev
 
 configs:
   attestor_config:

@@ -2,43 +2,27 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 
 	_ "github.com/venture23-aleo/attestor/chainService/chain/aleo"
 	_ "github.com/venture23-aleo/attestor/chainService/chain/ethereum"
+
 	"github.com/venture23-aleo/attestor/chainService/config"
 	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/relay"
 	"github.com/venture23-aleo/attestor/chainService/store"
 )
 
-// flags
-var (
-	configFile string
-	devMode    bool
-)
-
-func init() {
-	flag.StringVar(&configFile, "config", "", "config file")
-	flag.BoolVar(&devMode, "mode", true, "Set mode. Especially useful for logging")
-}
-
 func main() {
-	flag.Parse()
-	err := config.LoadConfig(configFile)
+	err := config.InitConfig()
 	if err != nil {
 		fmt.Println("Error while loading config. ", err)
 		os.Exit(1)
 	}
 
-	if devMode {
-		logger.InitLogging(logger.Development, config.GetConfig().LogConfig)
-	} else {
-		logger.InitLogging(logger.Production, config.GetConfig().LogConfig)
-	}
+	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().LogConfig)
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
@@ -52,5 +36,4 @@ func main() {
 	}
 
 	relay.StartRelay(ctx, config.GetConfig())
-
 }

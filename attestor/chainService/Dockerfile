@@ -22,6 +22,11 @@ WORKDIR /
 COPY --from=attestor /attestor/attestor .
 COPY ./config.yaml .
 ENV DB_PATH=/db
-ENV LOG_PATH=/log
+ENV LOG_PATH=/log/attestor.log
 ENV LOG_ENC=json
-ENTRYPOINT [ "./attestor --config config.yaml --db ${DB_PATH} --log_path ${LOG_PATH}} --log_enc ${LOG_ENC}" ]
+ENTRYPOINT [ "./attestor",\
+                            "--config config.yaml", \
+                            "--db ${DB_PATH}",\
+                            "--log_path ${LOG_PATH}",\
+                            "--log_enc ${LOG_ENC}", \
+                            "--mode ${MODE}"]

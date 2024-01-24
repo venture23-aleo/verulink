@@ -14,7 +14,7 @@ type IClient interface {
 }
 
 type NetworkAddress struct {
-	ChainID *big.Int
+	ChainID uint32
 	Address string
 }
 
@@ -34,12 +34,12 @@ func (m Message) String() string {
 }
 
 type Packet struct {
-	Version     *big.Int
+	Version     uint8
 	Source      NetworkAddress
 	Destination NetworkAddress
-	Sequence    *big.Int
+	Sequence    uint64
 	Message     Message
-	Height      *big.Int
+	Height      uint64
 }
 
 func (p *Packet) GetSha256Hash() string {

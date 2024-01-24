@@ -6,15 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
+	"strings"
 	"time"
 
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"go.uber.org/zap"
 
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/attestor/chainService/config"
+	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/venture23-aleo/attestor/chainService/chain"
@@ -27,8 +31,13 @@ const (
 
 // Namespaces
 const (
-	baseSeqNumNameSpace  = "ethereum_bsns"
-	retryPacketNamespace = "ethereum_rpns"
+	baseSeqNumNameSpacePrefix  = "ethereum_bsns"
+	retryPacketNamespacePrefix = "ethereum_rpns"
+)
+
+var (
+	baseSeqNamespaces     []string
+	retryPacketNamespaces []string
 )
 
 type Client struct {
@@ -39,7 +48,7 @@ type Client struct {
 	minRequiredGasFee uint64
 	waitDur           time.Duration
 	nextBlockHeight   uint64
-	chainID           *big.Int
+	chainID           uint32
 	rpcEndpoint       string
 }
 
@@ -51,16 +60,8 @@ func (cl *Client) GetSourceChain() (string, string) {
 	return cl.name, cl.address
 }
 
-func (cl *Client) GetChainID() *big.Int {
+func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
-}
-
-func (cl *Client) createNamespaces() error {
-	err := store.CreateNamespace(baseSeqNumNameSpace)
-	if err != nil {
-		return err
-	}
-	return store.CreateNamespace(retryPacketNamespace)
 }
 
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
@@ -101,23 +102,23 @@ func getRelayReceipts(bridgeClient *abi.Bridge, contract ethCommon.Address, rece
 				return nil, err
 			}
 			commonPacket := &chain.Packet{
-				Version: packetDispatched.Packet.Version,
-				Sequence: packetDispatched.Packet.Sequence,
+				Version:  uint8(packetDispatched.Packet.Version.Uint64()),
+				Sequence: packetDispatched.Packet.Sequence.Uint64(),
 				Destination: chain.NetworkAddress{
-					ChainID: packetDispatched.Packet.DestTokenService.ChainId,
+					ChainID: uint32(packetDispatched.Packet.DestTokenService.ChainId.Uint64()),
 					Address: packetDispatched.Packet.DestTokenService.Addr,
 				},
 				Source: chain.NetworkAddress{
-					ChainID: packetDispatched.Packet.SourceTokenService.ChainId,
+					ChainID: uint32(packetDispatched.Packet.SourceTokenService.ChainId.Uint64()),
 					Address: string(packetDispatched.Packet.SourceTokenService.Addr.Bytes()),
 				},
 				Message: chain.Message{
 					DestTokenAddress: packetDispatched.Packet.Message.DestTokenAddress,
-					SenderAddress: string(packetDispatched.Packet.Message.SenderAddress.Bytes()),
-					Amount: packetDispatched.Packet.Message.Amount,
-					ReceiverAddress: packetDispatched.Packet.Message.ReceiverAddress,
+					SenderAddress:    string(packetDispatched.Packet.Message.SenderAddress.Bytes()),
+					Amount:           packetDispatched.Packet.Message.Amount,
+					ReceiverAddress:  packetDispatched.Packet.Message.ReceiverAddress,
 				},
-				Height: packetDispatched.Packet.Height,
+				Height: packetDispatched.Packet.Height.Uint64(),
 			}
 			packets = append(packets, commonPacket)
 		}
@@ -184,11 +185,6 @@ outerFor:
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
-	err := cl.createNamespaces()
-	if err != nil {
-		panic(err)
-	}
-
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
@@ -213,6 +209,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(time.Hour) // todo: define in config
+	index := 0
 	defer ticker.Stop()
 	for {
 		select {
@@ -221,23 +218,31 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		case <-ticker.C:
 		}
 
+		if index == len(retryPacketNamespaces) {
+			index = 0
+		}
+		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this is the most efficient approach.
-		pkt, err := store.RetrieveAndDeleteFirstPacket(retryPacketNamespace)
+		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], 10)
 		if err != nil {
 			//log error
-			continue
+			goto indIncr
 		}
-		if pkt != nil {
+
+		for _, pkt := range pkts {
 			ch <- pkt
 		}
+
+	indIncr:
+		index++
 	}
 }
 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
-	// also fill gap and put in retry feed
 	ticker := time.NewTicker(time.Hour * 2)
+	index := 0
 	defer ticker.Stop()
 	for {
 		select {
@@ -246,15 +251,25 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		case <-ticker.C:
 		}
 
-		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(baseSeqNumNameSpace)
+		if index == len(baseSeqNamespaces) {
+			index = 0
+		}
+		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
+			zap.String("namespace", baseSeqNamespaces[index]))
+
+		ns := baseSeqNamespaces[index]
+		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
+		chainID, _ := strconv.ParseUint(chainIDStr, 10, 32)
+		// segragate sequence numbers as per target chain
+		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(ns)
 		if !shouldFetch {
 			continue
 		}
 
 		// seqNum is less useful for ethereum
 		// We should now parse all the blocks between startHeight and Endheight including end height
+		startSeqNum, endSeqNum := seqHeightRanges[0][0], seqHeightRanges[0][1]
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
-		endSeqNum := seqHeightRanges[0][1]
 	L1:
 		for i := startHeight; i <= endHeight; i++ {
 			pkts, err := cl.parseBlock(ctx, i)
@@ -263,7 +278,14 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 				continue // retry the same block if err
 			}
 			for _, pkt := range pkts {
-				if pkt.Sequence.Uint64() == endSeqNum {
+				if pkt.Destination.ChainID != uint32(chainID) {
+					continue
+				}
+				if pkt.Sequence <= startSeqNum {
+					continue
+				}
+
+				if pkt.Sequence == endSeqNum {
 					break L1
 				}
 				ch <- pkt
@@ -278,26 +300,37 @@ func (cl *Client) managePacket(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pkt := <-retryCh:
-			err := store.StoreRetryPacket(retryPacketNamespace, pkt)
+			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
+			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
+			ns := retryPacketNamespacePrefix + chainID
+			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
-				_ = err
-				// TODO: log error
+				logger.GetLogger().Error(
+					"error while storing packet info",
+					zap.Error(err),
+					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			err := store.StoreBaseSeqNum(baseSeqNumNameSpace, pkt.Sequence.Uint64(), pkt.Height.Uint64())
+			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
+			ns := baseSeqNumNameSpacePrefix + chainID
+			logger.GetLogger().Info("Updating base seq num",
+				zap.String("namespace", ns),
+				zap.Uint32("source_chain_id", pkt.Source.ChainID),
+				zap.Uint32("dest_chain_id", pkt.Destination.ChainID),
+				zap.Uint64("pkt_seq_num", pkt.Sequence),
+			)
+			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
 			if err != nil {
-				_ = err
-				// TODO: log error
+				logger.GetLogger().Error(
+					"error while storing packet info",
+					zap.Error(err),
+					zap.String("namespace", ns))
 			}
 		}
 	}
 }
 
-func NewClient(cfg *config.ChainConfig) chain.IClient {
-	/*
-		Initialize eth client and panic if any error occurs.
-		nextSeq should start from 1
-	*/
+func NewClient(cfg *config.ChainConfig, _ map[string]uint32) chain.IClient {
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
@@ -308,6 +341,21 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
+	}
+
+	destChains := getDestChains()
+	var namespaces []string
+	for _, destChain := range destChains {
+		rns := retryPacketNamespacePrefix + destChain
+		bns := baseSeqNumNameSpacePrefix + destChain
+		namespaces = append(namespaces, rns, bns)
+
+		retryPacketNamespaces = append(retryPacketNamespaces, rns)
+		baseSeqNamespaces = append(baseSeqNamespaces, bns)
+	}
+	err = store.CreateNamespaces(namespaces)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create namespaces. Error: %s", err.Error()))
 	}
 
 	name := cfg.Name
@@ -326,7 +374,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		bridge:          bridgeClient,
 		waitDur:         waitDur,
 		chainID:         cfg.ChainID,
-		nextBlockHeight: cfg.StartFrom,
+		nextBlockHeight: cfg.StartHeight,
 	}
 }
 
@@ -342,3 +390,7 @@ send it for it to be signed immediately.
 If not available in namespace then download block and parse and store the packet
 
 */
+
+func getDestChains() []string { // list of chain IDs
+	return []string{"2"}
+}

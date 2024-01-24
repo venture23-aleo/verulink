@@ -1,6 +1,11 @@
 package relay
 
-import "github.com/venture23-aleo/attestor/chainService/chain"
+import (
+	"context"
+	"time"
+
+	"github.com/venture23-aleo/attestor/chainService/chain"
+)
 
 // params
 const (
@@ -23,5 +28,25 @@ func sendToCollector(sp *chain.ScreenedPacket, signature string) error {
 
 	_ = params
 	// todo: need to send srcChainId, destChainID, packetSeqNum, signature and probably isWhite
+
+	// use common.AlreadyRelayedPacket{} error for already sent packet
 	return nil
+}
+
+func receivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
+	ticker := time.NewTicker(time.Hour * 12) // todo: take from config
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		_, _ = verifyPkt(ctx, nil)
+	}
+}
+
+func verifyPkt(ctx context.Context, pkt *chain.Packet) (bool, error) {
+	return false, nil
 }

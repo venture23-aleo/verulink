@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/attestor/chainService/logger"
 	"go.uber.org/zap"
 )
 
@@ -63,6 +64,22 @@ func RetrieveAndDeleteFirstPacket(namespace string) (pkt *chain.Packet, err erro
 	return
 }
 
+func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
+	s, err := retrieveAndDeleteNKeysFromFirst(namespace, n)
+	if err != nil {
+		return nil, err
+	}
+	pkts := make([]*chain.Packet, 0, n)
+	for _, b := range s {
+		pkt := new(chain.Packet)
+		if err := json.Unmarshal(b, pkt); err != nil {
+			return nil, err
+		}
+		pkts = append(pkts, pkt)
+	}
+	return pkts, nil
+}
+
 func RemoveKey[T keyConstraint](namespace string, key T, batch bool) error {
 	k := getKeyByteForKeyConstraint(key)
 	if batch {
@@ -108,22 +125,7 @@ func RetrieveNPackets(namespace string, n int) chan *chain.Packet {
 		for kv := range pktCh {
 			value := kv[1]
 			pkt := new(chain.Packet)
-			json.Unmarshal(value, pkt)
-			ch <- pkt
-		}
-		close(ch)
-	}()
-	return ch
-}
-
-func RetrieveNPacketsFromPrefix(namespace string, n int, prefix string) chan *chain.Packet {
-	pktCh := retrieveNKeyValuesAfterPrefix(namespace, n, prefix)
-	ch := make(chan *chain.Packet)
-	go func() {
-		for kv := range pktCh {
-			value := kv[1]
-			pkt := new(chain.Packet)
-			json.Unmarshal(value, pkt)
+			json.Unmarshal(value, pkt) // nolint
 			ch <- pkt
 		}
 		close(ch)
@@ -132,7 +134,7 @@ func RetrieveNPacketsFromPrefix(namespace string, n int, prefix string) chan *ch
 }
 
 // RetrieveNPackets retrieves n packets from first index
-// Caller should process sequence number range as semi-open end and height range as close end.
+// Caller should process sequence number range as open end and height range as close end.
 func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [[startSeqNum, EndSeqNum], [startHeight, endHeight]]
 	seqNumCh := retrieveNKeyValuesFromFirst(namespace, 1000)
 	kv, open := <-seqNumCh
@@ -170,7 +172,7 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 		go func(key []byte) {
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
-				// log error
+				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
 			}
 		}(key)
 	}

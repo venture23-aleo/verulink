@@ -135,7 +135,7 @@ func TestRemoveKey(t *testing.T) {
 	err = setupDB(namespace, data)
 	require.NoError(t, err)
 
-	RemoveKey[string](namespace, "key1", false)
+	RemoveKey[string](namespace, "key1", false) // nolint
 
 	value := get(namespace, []byte("key1"))
 	require.Nil(t, value)
