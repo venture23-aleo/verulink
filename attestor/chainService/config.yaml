@@ -6,7 +6,7 @@ chains:
   node_url: http://52.91.48.169|testnet3
   sequence_num_start:
     ethereum: 0
-    solana: 23 # solana is just for config example
+    # solana: 23 # solana is just for config example
   wait_time: 24h
 - name: ethereum
   chain_id: 1
