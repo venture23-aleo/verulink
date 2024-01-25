@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -28,6 +27,7 @@ const (
 	defaultWaitDur                       = 24 * time.Hour
 	ethereum                             = "ethereum"
 	defaultHeightDifferenceForFilterLogs = 100
+	avgBlockGenDur                       = time.Second * 12
 )
 
 // Namespaces
@@ -66,46 +66,39 @@ func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
-func (cl *Client) GetCurrentHeight(ctx context.Context) uint64 {
-	height, err := cl.eth.BlockNumber(ctx)
+func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) uint64 {
+	curHeight, err := cl.eth.BlockNumber(ctx)
 	if err != nil {
+		logger.GetLogger().Error("error while getting current height", zap.Error(err))
 		return 0
 	}
-	return height - uint64(cl.waitDur.Seconds())/12 // total number of blocks that has to be passed in the waiting duration
+	return curHeight - uint64(cl.waitDur/avgBlockGenDur) // total number of blocks that has to be passed in the waiting duration
 }
 
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
-	latestHeight := cl.GetCurrentHeight(ctx)
-
+	latestHeight := cl.blockHeightPriorWaitDur(ctx)
 	if height >= latestHeight {
-		// wait for sometime until the latest height passes the next block to be fetched
-		time.Sleep(time.Second + time.Second*time.Duration(height-latestHeight)*12)
-		return nil, errors.New("next height greater than latest height")
-	}
-
-	blockDifference := latestHeight - height
-	var filterLogsSlice [][]uint64
-	filterChunks := uint64(math.Ceil(float64(blockDifference) / defaultHeightDifferenceForFilterLogs))
-	startHeight := height
-
-	for i := 0; i < int(filterChunks); i++ {
-		if i == int(filterChunks)-1 {
-			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, latestHeight})
-			continue
-		} else {
-			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, startHeight + defaultHeightDifferenceForFilterLogs})
-			startHeight += defaultHeightDifferenceForFilterLogs
+		// retry after waiting for proper wait duration
+		time.Sleep(time.Duration(height-latestHeight) * avgBlockGenDur)
+		latestHeight = cl.blockHeightPriorWaitDur(ctx)
+		if height >= latestHeight {
+			return nil, errors.New("next height greater than latest height")
 		}
 	}
 
 	var packets []*chain.Packet
-	for _, v := range filterLogsSlice {
-		pkts, err := cl.filterPacketLogs(ctx, v[0], v[1])
+	for startHeight := height; startHeight <= latestHeight; startHeight += defaultHeightDifferenceForFilterLogs {
+		endHeight := startHeight + defaultHeightDifferenceForFilterLogs
+		if endHeight > latestHeight {
+			endHeight = latestHeight
+		}
+		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 		if err != nil {
 			return nil, err
 		}
 		packets = append(packets, pkts...)
 	}
+
 	return packets, nil
 }
 
