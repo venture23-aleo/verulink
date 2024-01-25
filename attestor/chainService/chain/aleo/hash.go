@@ -3,7 +3,6 @@ package aleo
 import (
 	"context"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
@@ -30,7 +29,7 @@ func hash(sp *chain.ScreenedPacket) string {
 	outputStrSp := strings.Split(outputStr, ":: ")
 	packetHash := outputStrSp[1]
 
-	aleoPacketWithScreening := constructAleoScreeningPacket(packetHash, strconv.FormatBool(sp.IsWhite))
+	aleoPacketWithScreening := constructAleoScreeningPacket(packetHash, getAleoBool(sp.IsWhite))
 
 	cmd = exec.CommandContext(ctx, aleohash, hashCommand, hashType, aleoPacketWithScreening, hashOutput)
 	output, err = cmd.Output()
@@ -41,4 +40,11 @@ func hash(sp *chain.ScreenedPacket) string {
 	outputStrSp = strings.Split(outputStr, ":: ")
 	packetHashWithScreening := outputStrSp[1]
 	return packetHashWithScreening
+}
+
+func getAleoBool(isWhite bool) string {
+	if isWhite {
+		return "true"
+	}
+	return "false"
 }
