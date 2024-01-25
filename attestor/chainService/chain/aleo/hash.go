@@ -3,7 +3,6 @@ package aleo
 import (
 	"context"
 	"os/exec"
-	"strings"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 )
@@ -25,9 +24,7 @@ func hash(sp *chain.ScreenedPacket) string {
 	if err != nil {
 		panic(err)
 	}
-	outputStr := string(output)
-	outputStrSp := strings.Split(outputStr, ":: ")
-	packetHash := outputStrSp[1]
+	packetHash := string(output)
 
 	aleoPacketWithScreening := constructAleoScreeningPacket(packetHash, getAleoBool(sp.IsWhite))
 
@@ -36,9 +33,7 @@ func hash(sp *chain.ScreenedPacket) string {
 	if err != nil {
 		panic(err)
 	}
-	outputStr = string(output)
-	outputStrSp = strings.Split(outputStr, ":: ")
-	packetHashWithScreening := outputStrSp[1]
+	packetHashWithScreening := string(output)
 	return packetHashWithScreening
 }
 
