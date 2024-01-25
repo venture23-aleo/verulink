@@ -32,7 +32,7 @@ func TestFilterLogs(t *testing.T) {
 
 	logs, err := client.eth.FilterLogs(context.Background(), eth.FilterQuery{
 		FromBlock: big.NewInt(5113030),
-		ToBlock:   big.NewInt(5114030),
+		ToBlock:   big.NewInt(5124030),
 		Addresses: []ethCommon.Address{contractAddress},
 		Topics: [][]ethCommon.Hash{
 			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")},

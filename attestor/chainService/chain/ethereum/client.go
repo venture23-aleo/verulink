@@ -26,7 +26,6 @@ import (
 const (
 	defaultWaitDur  = 24 * time.Hour
 	ethereum        = "ethereum"
-	blocksIn24Hours = 7117
 )
 
 // Namespaces
@@ -69,16 +68,16 @@ func (cl *Client) GetCurrentHeight(ctx context.Context) uint64 {
 	if err != nil {
 		return 0
 	}
-	return height - blocksIn24Hours
+	return height - uint64(cl.waitDur.Seconds()) / 12 // total number of blocks that has to be passed in the waiting duration
 }
 
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
 	latestHeight := cl.GetCurrentHeight(ctx)
 
-	if height > latestHeight {
+	if height >= latestHeight {
 		blockDifference := height - latestHeight
 		// wait for sometime until the latest height passes the next block to be fetched
-		time.Sleep(time.Second * time.Duration(blockDifference) * 12)
+		time.Sleep(time.Second + time.Second*time.Duration(blockDifference)*12)
 		return nil, errors.New("next height greater than latest height")
 	}
 
@@ -96,7 +95,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 		ToBlock:   toHeightBig,
 		Addresses: []ethCommon.Address{cl.address},
 		Topics: [][]ethCommon.Hash{
-			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")},
+			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")}, // TODO: cfg 
 		},
 	})
 	if err != nil {
@@ -106,7 +105,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 	for _, l := range logs {
 		packetDispatched, err := cl.bridge.ParsePacketDispatched(l)
 		if err != nil {
-			return nil, err
+			return nil, err // TODO: test to find out if error has to be thrown or just continue
 		}
 		commonPacket := &chain.Packet{
 			Version:  uint8(packetDispatched.Packet.Version.Uint64()),
@@ -128,6 +127,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 			Height: packetDispatched.Packet.Height.Uint64(),
 		}
 		packets = append(packets, commonPacket)
+		logger.GetLogger().Debug("packet fetched", zap.Uint64("sequence_number", commonPacket.Sequence))
 	}
 	return packets, nil
 }
@@ -220,9 +220,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
 	L1:
 		for i := startHeight; i <= endHeight; i++ {
-			pkts, err := cl.parseBlock(ctx, i)
+			pkts, err := cl.parseBlock(ctx, i)  // TODO: call filter logs directly
 			if err != nil {
-				i--
 				continue // retry the same block if err
 			}
 			for _, pkt := range pkts {
