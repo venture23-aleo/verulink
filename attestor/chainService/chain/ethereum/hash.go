@@ -1,63 +1,48 @@
 package ethereum
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/venture23-aleo/attestor/chainService/chain"
-	"github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 )
 
 func hash(sp *chain.ScreenedPacket) string {
-	packet := abi.PacketLibraryInPacket{
-		Version:  big.NewInt(int64(sp.Packet.Version)),
-		Sequence: big.NewInt(int64(sp.Packet.Sequence)),
-		SourceTokenService: abi.PacketLibraryOutNetworkAddress{
-			ChainId: big.NewInt(int64(sp.Packet.Source.ChainID)),
-			Addr:    sp.Packet.Source.Address,
-		},
-		DestTokenService: abi.PacketLibraryInNetworkAddress{
-			ChainId: big.NewInt(int64(sp.Packet.Destination.ChainID)),
-			Addr:    common.HexToAddress(sp.Packet.Destination.Address),
-		},
-		Message: abi.PacketLibraryInTokenMessage{
-			SenderAddress:    sp.Packet.Message.SenderAddress,
-			DestTokenAddress: common.HexToAddress(sp.Packet.Message.DestTokenAddress),
-			Amount:           sp.Packet.Message.Amount,
-			ReceiverAddress:  common.HexToAddress(sp.Packet.Message.ReceiverAddress),
-		},
-		Height: big.NewInt(int64(sp.Packet.Height)),
-	}
-
 	versionBytes := make([]byte, 32)
-	packet.Version.FillBytes(versionBytes)
+	binary.BigEndian.PutUint64(versionBytes[len(versionBytes)-8:], uint64(sp.Packet.Version))
+
 	sequenceBytes := make([]byte, 32)
-	packet.Sequence.FillBytes(sequenceBytes)
+	binary.BigEndian.PutUint64(sequenceBytes[len(sequenceBytes)-8:], sp.Packet.Sequence)
+
 	heightBytes := make([]byte, 32)
-	packet.Height.FillBytes(heightBytes)
+	binary.BigEndian.PutUint64(heightBytes[len(heightBytes)-8:], sp.Packet.Height)
+
 	amountBytes := make([]byte, 32)
-	packet.Message.Amount.FillBytes(amountBytes)
+	sp.Packet.Message.Amount.FillBytes(amountBytes)
+
 	srcChainIDBytes := make([]byte, 32)
-	packet.SourceTokenService.ChainId.FillBytes(srcChainIDBytes)
+	binary.BigEndian.PutUint64(srcChainIDBytes[len(srcChainIDBytes)-8:], uint64(sp.Packet.Source.ChainID))
+
 	dstChainIDBytes := make([]byte, 32)
-	packet.DestTokenService.ChainId.FillBytes(dstChainIDBytes)
+	binary.BigEndian.PutUint64(dstChainIDBytes[len(dstChainIDBytes)-8:], uint64(sp.Packet.Destination.ChainID))
 
 	pktHash := crypto.Keccak256Hash(
 		versionBytes,
 		sequenceBytes,
 		srcChainIDBytes,
-		[]byte(packet.SourceTokenService.Addr),
+		[]byte(sp.Packet.Source.Address),
 		dstChainIDBytes,
-		packet.DestTokenService.Addr.Bytes(),
-		[]byte(packet.Message.SenderAddress),
-		packet.Message.DestTokenAddress.Bytes(),
+		common.HexToAddress(sp.Packet.Destination.Address).Bytes(),
+		[]byte(sp.Packet.Message.SenderAddress),
+		common.HexToAddress(sp.Packet.Message.DestTokenAddress).Bytes(),
 		amountBytes,
-		packet.Message.ReceiverAddress.Bytes(),
+		common.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
 		heightBytes,
 	)
-
+	
 	voteByte := make([]byte, 1)
 	if sp.IsWhite {
 		yay := big.NewInt(1)
