@@ -12,6 +12,8 @@ const (
 	hashCommand = "hash"
 	hashType    = "bhp256"
 	hashOutput  = "field"
+	aleoTrue = "true"
+	aleoFalse = "false"
 )
 
 func hash(sp *chain.ScreenedPacket) string {
@@ -39,7 +41,7 @@ func hash(sp *chain.ScreenedPacket) string {
 
 func getAleoBool(isWhite bool) string {
 	if isWhite {
-		return "true"
+		return aleoTrue
 	}
-	return "false"
+	return aleoFalse
 }

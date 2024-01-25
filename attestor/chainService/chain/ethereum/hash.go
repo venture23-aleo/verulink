@@ -42,18 +42,21 @@ func hash(sp *chain.ScreenedPacket) string {
 		common.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
 		heightBytes,
 	)
-	
-	voteByte := make([]byte, 1)
-	if sp.IsWhite {
-		yay := big.NewInt(1)
-		yay.FillBytes(voteByte)
-	} else {
-		nay := big.NewInt(0)
-		nay.FillBytes(voteByte)
-	}
 
-	hashOfPktHashAndVote := crypto.Keccak256Hash(pktHash.Bytes(), voteByte)
+	hashOfPktHashAndVote := crypto.Keccak256Hash(pktHash.Bytes(), getEthBoolByte(sp.IsWhite))
 
 	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(pktHash))), hashOfPktHashAndVote.Bytes())
 	return finalHash.Hex()
+}
+
+func getEthBoolByte(b bool) []byte {
+    boolByte := make([]byte, 1)
+    if b {
+        yay := big.NewInt(1)
+        yay.FillBytes(boolByte)
+    } else {
+        nay := big.NewInt(0)
+        nay.FillBytes(boolByte)
+    }
+    return boolByte
 }
