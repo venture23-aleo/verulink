@@ -29,6 +29,12 @@ func TestHash(t *testing.T) {
 		},
 		Height: big.NewInt(55).Uint64(),
 	}
-	finalHash := hash(&chain.ScreenedPacket{Packet: commonPacket, IsWhite: true})
-	assert.Equal(t, "1233032529535352533537970719453602118145153682706641379905676168317090198721field", finalHash)
+	t.Run("happy path", func(t *testing.T) {
+		finalHash := hash(&chain.ScreenedPacket{Packet: commonPacket, IsWhite: true})
+		assert.Equal(t, "1233032529535352533537970719453602118145153682706641379905676168317090198721field", finalHash)
+	})
+	t.Run("different hash", func(t *testing.T) {
+		finalHash := hash(&chain.ScreenedPacket{Packet: commonPacket, IsWhite: false})
+		assert.NotEqual(t, "1233032529535352533537970719453602118145153682706641379905676168317090198721field", finalHash)
+	})
 }

@@ -28,6 +28,13 @@ func TestHash(t *testing.T) {
 		},
 		Height: uint64(100),
 	}
-	h := hash(&chain.ScreenedPacket{Packet: &packet, IsWhite: true})
-	assert.Equal(t, "0x01e80e351de9084e68e456b2f9fa18219ffc886f4bfc9e9ad629e5849263bb17", h)
+	t.Run("happy path", func(t *testing.T) {
+		h := hash(&chain.ScreenedPacket{Packet: &packet, IsWhite: true})
+		assert.Equal(t, "0x01e80e351de9084e68e456b2f9fa18219ffc886f4bfc9e9ad629e5849263bb17", h)
+	})
+	t.Run("different hash", func(t *testing.T) {
+		h := hash(&chain.ScreenedPacket{Packet: &packet, IsWhite: false})
+		assert.NotEqual(t, "0x01e80e351de9084e68e456b2f9fa18219ffc886f4bfc9e9ad629e5849263bb17", h)
+	})
+	
 }
