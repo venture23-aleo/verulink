@@ -12,7 +12,10 @@ const (
 	hashCommand = "hash"
 	hashType    = "bhp256"
 	hashOutput  = "field"
-	aleoTrue = "true"
+)
+
+const (
+	aleoTrue  = "true"
 	aleoFalse = "false"
 )
 
@@ -22,19 +25,15 @@ func hash(sp *chain.ScreenedPacket) string {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, aleohash, hashCommand, hashType, aleoPacket, hashOutput)
-	output, err := cmd.Output()
-	if err != nil {
-		panic(err)
-	}
+	output, _ := cmd.Output()
+
 	packetHash := string(output)
 
 	aleoPacketWithScreening := constructAleoScreeningPacket(packetHash, getAleoBool(sp.IsWhite))
 
 	cmd = exec.CommandContext(ctx, aleohash, hashCommand, hashType, aleoPacketWithScreening, hashOutput)
-	output, err = cmd.Output()
-	if err != nil {
-		panic(err)
-	}
+	output, _ = cmd.Output()
+
 	packetHashWithScreening := string(output)
 	return packetHashWithScreening
 }
