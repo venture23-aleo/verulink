@@ -30,5 +30,5 @@ dependencies = []
 name = "wusdc_holding_v0001"
 location = "local"
 path = "../wusdc_holding_v0001"
-checksum = "7021f35be13196e6791431b790ee8efe2a177aa2cc6adda156b9d2ceaae3257c"
+checksum = "d0075da31a52594039962ace1ab4e710a25410912e4023cf7a8b68ddf732ca7e"
 dependencies = ["wusdc_token_v0001.aleo"]

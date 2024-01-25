@@ -114,7 +114,7 @@ program wusdc_connector_v0001.aleo {
     // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator
     // For Ethereum Sepolia testnet, chain_id: `eth:11155111` -> 28556963657430695
     inline origin_chain_id() -> u128 {
-        return 27236160417u128;
+        return 28556963657430695u128;
     }
 
     // Contract Address of the original token on the origin chain

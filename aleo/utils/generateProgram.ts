@@ -8,9 +8,11 @@ const tokenTemplate = fs.readFileSync('programs/templates/token_program.ejs').to
 const holdingTemplate = fs.readFileSync('programs/templates/token_holding.ejs').toString();
 const connectorTemplate = fs.readFileSync('programs/templates/token_connector.ejs').toString();
 
+const sepoliaChainId = 11155111
+const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
+
 const name = "USD Coin"
 const symbol = "USDC"
-const ethMainnetChainId = encodeNetworkChainId("evm", 1);
 const ethTokenAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 const ethTsContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 
@@ -28,7 +30,7 @@ const connectorData = {
     connectorVersion: "_v0001",
     tokenServiceVersion: "_v0001",
     councilVersion: "_v0001",
-    originChainId: ethMainnetChainId.toString() + 'u128',
+    originChainId: ethChainId.toString() + 'u128',
     originTokenAddress: '[' + evm2AleoArr(ethTokenAddr).map((x) => x.toString() + 'u8').join(',') + ']',
     originTokenServiceAddress: '[' + evm2AleoArr(ethTsContractAddr).map((x) => x.toString() + 'u8').join(',') + ']',
     nameInArray: '[' + string2AleoArr(name, 32).map((x) => x.toString() + 'u8').join(',') + ']',

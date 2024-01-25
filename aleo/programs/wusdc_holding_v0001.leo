@@ -52,6 +52,7 @@ program wusdc_holding_v0001.aleo {
     }
 
     finalize hold_fund(from: address, user: address, amount: u128) {
+        // Assert only owner can hold fund
         let owner: address = Mapping::get(owner_holding, true);
         assert_eq(from, owner);
 
@@ -63,13 +64,13 @@ program wusdc_holding_v0001.aleo {
 
     transition release_fund(public user: address, public amount: u128) {
         wusdc_token_v0001.aleo/transfer_public(user, amount);
-        return then finalize(user, amount, self.caller);
+        return then finalize(self.caller, user, amount);
     }
 
-    finalize release_fund(user: address, amount: u128, caller: address) {
+    finalize release_fund(from: address, user: address, amount: u128) {
         // Assert only owner can release fund
         let owner: address = Mapping::get(owner_holding, true);
-        assert_eq(owner, caller);
+        assert_eq(from, owner);
 
         let held_amount: u128 = Mapping::get(holdings, user);
 

@@ -190,12 +190,14 @@ describe("Token Connector", () => {
         }
 
         if (!isWusdcSupported) {
-          const supportWusdcTx = await tokenService.support_token_ts(
+          const supportWusdcTx = await tokenService.add_token_ts(
             wusdcTokenAddr,
             wusdcConnectorAddr,
             BigInt(100), // minimum transfer
+            BigInt(10000000000), // maximum transfer
             100_00, // outgoing percentage
-            1 // (timeframe)
+            1, // (timeframe)
+            BigInt(10000000000) // max liquidity for no cap
           );
           // @ts-ignore
           await supportWusdcTx.wait();

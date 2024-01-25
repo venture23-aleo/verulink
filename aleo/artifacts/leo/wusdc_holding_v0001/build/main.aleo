@@ -60,17 +60,17 @@ function release_fund:
     input r0 as address.public;
     input r1 as u128.public;
     call wusdc_token_v0001.aleo/transfer_public r0 r1 into r2;
-    async release_fund r2 r0 r1 self.caller into r3;
+    async release_fund r2 self.caller r0 r1 into r3;
     output r3 as wusdc_holding_v0001.aleo/release_fund.future;
 
 finalize release_fund:
     input r0 as wusdc_token_v0001.aleo/transfer_public.future;
     input r1 as address.public;
-    input r2 as u128.public;
-    input r3 as address.public;
+    input r2 as address.public;
+    input r3 as u128.public;
     await r0;
     get owner_holding[true] into r4;
-    assert.eq r4 r3;
-    get holdings[r1] into r5;
-    sub r5 r2 into r6;
-    set r6 into holdings[r1];
+    assert.eq r1 r4;
+    get holdings[r2] into r5;
+    sub r5 r3 into r6;
+    set r6 into holdings[r2];

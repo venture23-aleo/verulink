@@ -28,10 +28,10 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
     /// * receiver: address - Receiver on the packet in Aleo
     /// * actual_receiver: address - Address where the token is minted on Aleo
     /// * amount: u128 - Amount to be minted on Aleo
-    /// * `sequence`: u32 - Sequence no for this chain on the source chain
-    /// * `height`: u32 - Height of the source chain where the packet originated
-    /// * `signers`: [address; 5] - Addresses of the attestors who have signed the packet
-    /// * `signs`: [signature; 5] - Signatures of the attestors after signing the packet
+    /// * sequence: u32 - Sequence no for this chain on the source chain
+    /// * height: u32 - Height of the source chain where the packet originated
+    /// * signers: [address; 5] - Addresses of the attestors who have signed the packet
+    /// * signs: [signature; 5] - Signatures of the attestors after signing the packet
     transition <%=symbol%>_receive(
         public sender: [u8; 32], 
         public receiver: address, 
@@ -82,7 +82,7 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
             receiver, 
             amount, 
             origin_chain_id(), 
-            origin_usdc_address(), 
+            origin_token_address(), 
             origin_token_service_address()
         );
 

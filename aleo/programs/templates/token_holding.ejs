@@ -48,15 +48,13 @@ program <%=symbol%>_holding<%=holdingVersion%>.aleo {
 
 
     transition hold_fund(public user: address, public amount: u128) {
-        // Assert that only token service program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
         return then finalize(self.caller, user, amount);
     }
 
     finalize hold_fund(from: address, user: address, amount: u128) {
-        assert_eq(Mapping::get(owner_holding, true), from);
+        // Assert only owner can hold fund
+        let owner: address = Mapping::get(owner_holding, true);
+        assert_eq(from, owner);
 
         let held_amount: u128 = Mapping::get_or_use(holdings, user, 0u128);
 
@@ -66,13 +64,13 @@ program <%=symbol%>_holding<%=holdingVersion%>.aleo {
 
     transition release_fund(public user: address, public amount: u128) {
         <%=symbol%>_token<%=tokenVersion%>.aleo/transfer_public(user, amount);
-        return then finalize(user, amount, self.caller);
+        return then finalize(self.caller, user, amount);
     }
 
-    finalize release_fund(user: address, amount: u128, caller: address) {
+    finalize release_fund(from: address, user: address, amount: u128) {
         // Assert only owner can release fund
         let owner: address = Mapping::get(owner_holding, true);
-        assert_eq(owner, caller);
+        assert_eq(from, owner);
 
         let held_amount: u128 = Mapping::get(holdings, user);
 
