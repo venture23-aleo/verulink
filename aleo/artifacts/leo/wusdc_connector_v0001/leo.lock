@@ -9,14 +9,14 @@ dependencies = []
 name = "token_service_v0001"
 location = "local"
 path = "../token_service_v0001"
-checksum = "dc7f86306150060c359516506fa979b2667dadaf1382a0db81d8cd549a2cda64"
+checksum = "dc808f6ec74a136b32cc0c69fe5f52a058f093cfe80d8dd8caa077afe36ea3f6"
 dependencies = ["token_bridge_v0001.aleo"]
 
 [[package]]
 name = "council_v0001"
 location = "local"
 path = "../council_v0001"
-checksum = "b4a1734ca0c2da693734078af294d8ba5df3b9d035423e34f5ede423b33a2b03"
+checksum = "a4558e19befa7048a1449e244b0529fa6e946682874524b877cbaa39a7d9e547"
 dependencies = ["token_bridge_v0001.aleo", "token_service_v0001.aleo"]
 
 [[package]]
@@ -30,5 +30,5 @@ dependencies = []
 name = "wusdc_holding_v0001"
 location = "local"
 path = "../wusdc_holding_v0001"
-checksum = "ff736112271a95a6bf1d6e8e982763e4146f6b754888db8728b8f965eb6706fa"
+checksum = "7021f35be13196e6791431b790ee8efe2a177aa2cc6adda156b9d2ceaae3257c"
 dependencies = ["wusdc_token_v0001.aleo"]

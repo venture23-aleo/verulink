@@ -13,6 +13,7 @@ program token_service_v0001.aleo;
 struct OutgoingPercentageInTime:
     outgoing_percentage as u16;
     timeframe as u32;
+    max_no_cap as u128;
 
 
 mapping owner_TS:
@@ -30,7 +31,12 @@ mapping token_connectors:
 	value as address.public;
 
 
-mapping minimum_transfers:
+mapping min_transfers:
+	key as address.public;
+	value as u128.public;
+
+
+mapping max_transfers:
 	key as address.public;
 	value as u128.public;
 
@@ -38,11 +44,6 @@ mapping minimum_transfers:
 mapping max_outgoing_percentage:
 	key as address.public;
 	value as OutgoingPercentageInTime.public;
-
-
-mapping maximum_liquidity_for_no_cap:
-	key as address.public;
-	value as u32.public;
 
 
 mapping last_token_update:
@@ -80,27 +81,34 @@ finalize transfer_ownership_ts:
     set r1 into owner_TS[true];
 
 
-function support_token_ts:
+function add_token_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u128.public;
-    input r3 as u16.public;
-    input r4 as u32.public;
-    async support_token_ts self.caller r0 r1 r2 r3 r4 into r5;
-    output r5 as token_service_v0001.aleo/support_token_ts.future;
+    input r3 as u128.public;
+    input r4 as u16.public;
+    input r5 as u32.public;
+    input r6 as u128.public;
+    gte r3 r2 into r7;
+    assert.eq r7 true;
+    async add_token_ts self.caller r0 r1 r2 r3 r4 r5 r6 into r8;
+    output r8 as token_service_v0001.aleo/add_token_ts.future;
 
-finalize support_token_ts:
+finalize add_token_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as address.public;
     input r3 as u128.public;
-    input r4 as u16.public;
-    input r5 as u32.public;
-    get owner_TS[true] into r6;
-    assert.eq r0 r6;
-    cast r4 r5 into r7 as OutgoingPercentageInTime;
-    set r7 into max_outgoing_percentage[r1];
-    set r3 into minimum_transfers[r1];
+    input r4 as u128.public;
+    input r5 as u16.public;
+    input r6 as u32.public;
+    input r7 as u128.public;
+    get owner_TS[true] into r8;
+    assert.eq r0 r8;
+    cast r5 r6 r7 into r9 as OutgoingPercentageInTime;
+    set r9 into max_outgoing_percentage[r1];
+    set r3 into min_transfers[r1];
+    set r4 into max_transfers[r1];
     set r2 into token_connectors[r1];
 
 
@@ -117,7 +125,7 @@ finalize remove_token_ts:
     contains max_outgoing_percentage[r1] into r3;
     assert.eq r3 true;
     remove max_outgoing_percentage[r1];
-    remove minimum_transfers[r1];
+    remove min_transfers[r1];
     remove token_connectors[r1];
 
 
@@ -136,39 +144,56 @@ finalize update_connector_ts:
     set r2 into token_connectors[r1];
 
 
-function update_minimum_transfer_ts:
+function update_min_transfer_ts:
     input r0 as address.public;
     input r1 as u128.private;
-    async update_minimum_transfer_ts self.caller r0 r1 into r2;
-    output r2 as token_service_v0001.aleo/update_minimum_transfer_ts.future;
+    async update_min_transfer_ts self.caller r0 r1 into r2;
+    output r2 as token_service_v0001.aleo/update_min_transfer_ts.future;
 
-finalize update_minimum_transfer_ts:
+finalize update_min_transfer_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u128.public;
     get owner_TS[true] into r3;
     assert.eq r0 r3;
-    set r2 into minimum_transfers[r1];
+    set r2 into min_transfers[r1];
+
+
+function update_max_transfer_ts:
+    input r0 as address.public;
+    input r1 as u128.private;
+    async update_max_transfer_ts self.caller r0 r1 into r2;
+    output r2 as token_service_v0001.aleo/update_max_transfer_ts.future;
+
+finalize update_max_transfer_ts:
+    input r0 as address.public;
+    input r1 as address.public;
+    input r2 as u128.public;
+    get owner_TS[true] into r3;
+    assert.eq r0 r3;
+    set r2 into max_transfers[r1];
 
 
 function update_outgoing_percentage_ts:
     input r0 as address.public;
-    input r1 as u16.private;
-    input r2 as u32.private;
-    lte r1 100_00u16 into r3;
-    assert.eq r3 true;
-    async update_outgoing_percentage_ts self.caller r0 r1 r2 into r4;
-    output r4 as token_service_v0001.aleo/update_outgoing_percentage_ts.future;
+    input r1 as u16.public;
+    input r2 as u32.public;
+    input r3 as u128.public;
+    lte r1 100_00u16 into r4;
+    assert.eq r4 true;
+    async update_outgoing_percentage_ts self.caller r0 r1 r2 r3 into r5;
+    output r5 as token_service_v0001.aleo/update_outgoing_percentage_ts.future;
 
 finalize update_outgoing_percentage_ts:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u16.public;
     input r3 as u32.public;
-    get owner_TS[true] into r4;
-    assert.eq r0 r4;
-    cast r2 r3 into r5 as OutgoingPercentageInTime;
-    set r5 into max_outgoing_percentage[r1];
+    input r4 as u128.public;
+    get owner_TS[true] into r5;
+    assert.eq r0 r5;
+    cast r2 r3 r4 into r6 as OutgoingPercentageInTime;
+    set r6 into max_outgoing_percentage[r1];
 
 
 
@@ -199,51 +224,55 @@ finalize token_send:
     input r3 as u128.public;
     await r0;
     get token_connectors[r2] into r4;
-    assert.eq r4 r1;
-    get minimum_transfers[r2] into r5;
+    assert.eq r1 r4;
+    get min_transfers[r2] into r5;
     gte r3 r5 into r6;
     assert.eq r6 true;
-    get total_supply[r2] into r7;
-    get max_outgoing_percentage[r2] into r8;
-    sub 100_00u16 r8.outgoing_percentage into r9;
-    lte r9 100_00u16 into r10;
-    assert.eq r10 true;
-    cast r9 into r11 as u128;
-    mul r7 r11 into r12;
-    cast 100_00u16 into r13 as u128;
-    div r12 r13 into r14;
-    get.or_use last_token_update[r2] 0u32 into r15;
-    get.or_use last_min_supply[r2] r14 into r16;
-    sub 100_00u16 r8.outgoing_percentage into r17;
-    lte r17 100_00u16 into r18;
-    assert.eq r18 true;
-    cast r17 into r19 as u128;
-    mul r7 r19 into r20;
-    cast 100_00u16 into r21 as u128;
-    div r20 r21 into r22;
-    lte r8.outgoing_percentage 100_00u16 into r23;
-    assert.eq r23 true;
-    cast r8.outgoing_percentage into r24 as u128;
-    mul r7 r24 into r25;
-    cast 100_00u16 into r26 as u128;
-    div r25 r26 into r27;
-    sub block.height r15 into r28;
-    cast r28 into r29 as u128;
-    mul r27 r29 into r30;
-    cast r8.timeframe into r31 as u128;
-    div r30 r31 into r32;
-    gt r16 r32 into r33;
-    sub.w r16 r32 into r34;
-    ternary r33 r34 0u128 into r35;
-    gt r35 r22 into r36;
-    ternary r36 r35 r22 into r37;
-    sub r7 r3 into r38;
-    gte r38 r37 into r39;
-    assert.eq r39 true;
+    get max_transfers[r2] into r7;
+    lte r3 r7 into r8;
+    assert.eq r8 true;
+    get total_supply[r2] into r9;
+    get max_outgoing_percentage[r2] into r10;
+    gte r9 r10.max_no_cap into r11;
+    sub 100_00u16 r10.outgoing_percentage into r12;
+    lte r12 100_00u16 into r13;
+    assert.eq r13 true;
+    cast r12 into r14 as u128;
+    mul r9 r14 into r15;
+    cast 100_00u16 into r16 as u128;
+    div r15 r16 into r17;
+    get.or_use last_token_update[r2] 0u32 into r18;
+    get.or_use last_min_supply[r2] r17 into r19;
+    sub 100_00u16 r10.outgoing_percentage into r20;
+    lte r20 100_00u16 into r21;
+    assert.eq r21 true;
+    cast r20 into r22 as u128;
+    mul r9 r22 into r23;
+    cast 100_00u16 into r24 as u128;
+    div r23 r24 into r25;
+    lte r10.outgoing_percentage 100_00u16 into r26;
+    assert.eq r26 true;
+    cast r10.outgoing_percentage into r27 as u128;
+    mul r9 r27 into r28;
+    cast 100_00u16 into r29 as u128;
+    div r28 r29 into r30;
+    sub block.height r18 into r31;
+    cast r31 into r32 as u128;
+    mul r30 r32 into r33;
+    cast r10.timeframe into r34 as u128;
+    div r33 r34 into r35;
+    gt r19 r35 into r36;
+    sub.w r19 r35 into r37;
+    ternary r36 r37 0u128 into r38;
+    gt r38 r25 into r39;
+    ternary r39 r38 r25 into r40;
+    sub r9 r3 into r41;
+    gte r41 r40 into r42;
+    assert.eq r42 true;
     set block.height into last_token_update[r2];
-    set r37 into last_min_supply[r2];
-    sub r7 r3 into r40;
-    set r40 into total_supply[r2];
+    set r40 into last_min_supply[r2];
+    sub r9 r3 into r43;
+    set r43 into total_supply[r2];
 
 
 function token_receive:

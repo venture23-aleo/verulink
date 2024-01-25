@@ -25,12 +25,14 @@ import {
   TbDisableServiceLeo,
   TsTransferOwnership,
   TsTransferOwnershipLeo,
-  TsSupportToken,
-  TsSupportTokenLeo,
+  TsAddToken,
+  TsAddTokenLeo,
   TsRemoveToken,
   TsRemoveTokenLeo,
-  TsUpdateMinimumTransfer,
-  TsUpdateMinimumTransferLeo,
+  TsUpdateMinTransfer,
+  TsUpdateMinTransferLeo,
+  TsUpdateMaxTransfer,
+  TsUpdateMaxTransferLeo,
   TsUpdateOutgoingPercentage,
   TsUpdateOutgoingPercentageLeo,
   HoldingRelease,
@@ -150,14 +152,16 @@ export function getTsTransferOwnership(tsTransferOwnership: TsTransferOwnershipL
   return result;
 }
 
-export function getTsSupportToken(tsSupportToken: TsSupportTokenLeo): TsSupportToken {
-  const result: TsSupportToken = {
-    id: leo2js.u32(tsSupportToken.id),
-    token_id: leo2js.address(tsSupportToken.token_id),
-    connector: leo2js.address(tsSupportToken.connector),
-    minimum_transfer: leo2js.u128(tsSupportToken.minimum_transfer),
-    outgoing_percentage: leo2js.u16(tsSupportToken.outgoing_percentage),
-    time: leo2js.u32(tsSupportToken.time),
+export function getTsAddToken(tsAddToken: TsAddTokenLeo): TsAddToken {
+  const result: TsAddToken = {
+    id: leo2js.u32(tsAddToken.id),
+    token_id: leo2js.address(tsAddToken.token_id),
+    connector: leo2js.address(tsAddToken.connector),
+    min_transfer: leo2js.u128(tsAddToken.min_transfer),
+    max_transfer: leo2js.u128(tsAddToken.max_transfer),
+    outgoing_percentage: leo2js.u16(tsAddToken.outgoing_percentage),
+    time: leo2js.u32(tsAddToken.time),
+    max_no_cap: leo2js.u128(tsAddToken.max_no_cap),
   }
   return result;
 }
@@ -170,11 +174,20 @@ export function getTsRemoveToken(tsRemoveToken: TsRemoveTokenLeo): TsRemoveToken
   return result;
 }
 
-export function getTsUpdateMinimumTransfer(tsUpdateMinimumTransfer: TsUpdateMinimumTransferLeo): TsUpdateMinimumTransfer {
-  const result: TsUpdateMinimumTransfer = {
-    id: leo2js.u32(tsUpdateMinimumTransfer.id),
-    token_id: leo2js.address(tsUpdateMinimumTransfer.token_id),
-    minimum_transfer: leo2js.u128(tsUpdateMinimumTransfer.minimum_transfer),
+export function getTsUpdateMinTransfer(tsUpdateMinTransfer: TsUpdateMinTransferLeo): TsUpdateMinTransfer {
+  const result: TsUpdateMinTransfer = {
+    id: leo2js.u32(tsUpdateMinTransfer.id),
+    token_id: leo2js.address(tsUpdateMinTransfer.token_id),
+    min_transfer: leo2js.u128(tsUpdateMinTransfer.min_transfer),
+  }
+  return result;
+}
+
+export function getTsUpdateMaxTransfer(tsUpdateMaxTransfer: TsUpdateMaxTransferLeo): TsUpdateMaxTransfer {
+  const result: TsUpdateMaxTransfer = {
+    id: leo2js.u32(tsUpdateMaxTransfer.id),
+    token_id: leo2js.address(tsUpdateMaxTransfer.token_id),
+    max_transfer: leo2js.u128(tsUpdateMaxTransfer.max_transfer),
   }
   return result;
 }
@@ -185,6 +198,7 @@ export function getTsUpdateOutgoingPercentage(tsUpdateOutgoingPercentage: TsUpda
     token_id: leo2js.address(tsUpdateOutgoingPercentage.token_id),
     outgoing_percentage: leo2js.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
     timeframe: leo2js.u32(tsUpdateOutgoingPercentage.timeframe),
+    max_no_cap: leo2js.u128(tsUpdateOutgoingPercentage.max_no_cap),
   }
   return result;
 }

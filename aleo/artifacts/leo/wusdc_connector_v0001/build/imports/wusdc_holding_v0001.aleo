@@ -50,7 +50,7 @@ finalize hold_fund:
     input r1 as address.public;
     input r2 as u128.public;
     get owner_holding[true] into r3;
-    assert.eq r3 r0;
+    assert.eq r0 r3;
     get.or_use holdings[r1] 0u128 into r4;
     add r4 r2 into r5;
     set r5 into holdings[r1];

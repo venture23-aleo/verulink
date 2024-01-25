@@ -68,28 +68,36 @@ struct TsTransferOwnership:
     id as u32;
     new_owner as address;
 
-struct TsSupportToken:
+struct TsAddToken:
     id as u32;
     token_id as address;
     connector as address;
-    minimum_transfer as u128;
+    min_transfer as u128;
+    max_transfer as u128;
     outgoing_percentage as u16;
     time as u32;
+    max_no_cap as u128;
 
 struct TsRemoveToken:
     id as u32;
     token_id as address;
 
-struct TsUpdateMinimumTransfer:
+struct TsUpdateMinTransfer:
     id as u32;
     token_id as address;
-    minimum_transfer as u128;
+    min_transfer as u128;
+
+struct TsUpdateMaxTransfer:
+    id as u32;
+    token_id as address;
+    max_transfer as u128;
 
 struct TsUpdateOutgoingPercentage:
     id as u32;
     token_id as address;
     outgoing_percentage as u16;
     timeframe as u32;
+    max_no_cap as u128;
 
 struct HoldingRelease:
     id as u32;
@@ -554,16 +562,18 @@ function ts_support_token:
     input r1 as address.public;
     input r2 as address.public;
     input r3 as u128.public;
-    input r4 as u16.public;
-    input r5 as u32.public;
-    cast r0 r1 r2 r3 r4 r5 into r6 as TsSupportToken;
-    hash.bhp256 r6 into r7 as field;
-    call token_service_v0001.aleo/support_token_ts r1 r2 r3 r4 r5 into r8;
-    async ts_support_token r8 r7 into r9;
-    output r9 as council_v0001.aleo/ts_support_token.future;
+    input r4 as u128.public;
+    input r5 as u16.public;
+    input r6 as u32.public;
+    input r7 as u128.public;
+    cast r0 r1 r2 r3 r4 r5 r6 r7 into r8 as TsAddToken;
+    hash.bhp256 r8 into r9 as field;
+    call token_service_v0001.aleo/add_token_ts r1 r2 r3 r4 r5 r6 r7 into r10;
+    async ts_support_token r10 r9 into r11;
+    output r11 as council_v0001.aleo/ts_support_token.future;
 
 finalize ts_support_token:
-    input r0 as token_service_v0001.aleo/support_token_ts.future;
+    input r0 as token_service_v0001.aleo/add_token_ts.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -599,18 +609,42 @@ finalize ts_remove_token:
     set true into proposal_executed[r1];
 
 
-function ts_update_minimum_transfer:
+function ts_update_min_transfer:
     input r0 as u32.public;
     input r1 as address.public;
     input r2 as u128.public;
-    cast r0 r1 r2 into r3 as TsUpdateMinimumTransfer;
+    cast r0 r1 r2 into r3 as TsUpdateMinTransfer;
     hash.bhp256 r3 into r4 as field;
-    call token_service_v0001.aleo/update_minimum_transfer_ts r1 r2 into r5;
-    async ts_update_minimum_transfer r5 r4 into r6;
-    output r6 as council_v0001.aleo/ts_update_minimum_transfer.future;
+    call token_service_v0001.aleo/update_min_transfer_ts r1 r2 into r5;
+    async ts_update_min_transfer r5 r4 into r6;
+    output r6 as council_v0001.aleo/ts_update_min_transfer.future;
 
-finalize ts_update_minimum_transfer:
-    input r0 as token_service_v0001.aleo/update_minimum_transfer_ts.future;
+finalize ts_update_min_transfer:
+    input r0 as token_service_v0001.aleo/update_min_transfer_ts.future;
+    input r1 as field.public;
+    await r0;
+    get settings[true] into r2;
+    get proposal_vote_counts[r1] into r3;
+    gte r3 r2 into r4;
+    assert.eq r4 true;
+    contains proposal_executed[r1] into r5;
+    not r5 into r6;
+    assert.eq r6 true;
+    set true into proposal_executed[r1];
+
+
+function ts_update_max_transfer:
+    input r0 as u32.public;
+    input r1 as address.public;
+    input r2 as u128.public;
+    cast r0 r1 r2 into r3 as TsUpdateMaxTransfer;
+    hash.bhp256 r3 into r4 as field;
+    call token_service_v0001.aleo/update_max_transfer_ts r1 r2 into r5;
+    async ts_update_max_transfer r5 r4 into r6;
+    output r6 as council_v0001.aleo/ts_update_max_transfer.future;
+
+finalize ts_update_max_transfer:
+    input r0 as token_service_v0001.aleo/update_max_transfer_ts.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -628,11 +662,12 @@ function ts_update_outgoing_percentage:
     input r1 as address.public;
     input r2 as u16.public;
     input r3 as u32.public;
-    cast r0 r1 r2 r3 into r4 as TsUpdateOutgoingPercentage;
-    hash.bhp256 r4 into r5 as field;
-    call token_service_v0001.aleo/update_outgoing_percentage_ts r1 r2 r3 into r6;
-    async ts_update_outgoing_percentage r6 r5 into r7;
-    output r7 as council_v0001.aleo/ts_update_outgoing_percentage.future;
+    input r4 as u128.public;
+    cast r0 r1 r2 r3 r4 into r5 as TsUpdateOutgoingPercentage;
+    hash.bhp256 r5 into r6 as field;
+    call token_service_v0001.aleo/update_outgoing_percentage_ts r1 r2 r3 r4 into r7;
+    async ts_update_outgoing_percentage r7 r6 into r8;
+    output r8 as council_v0001.aleo/ts_update_outgoing_percentage.future;
 
 finalize ts_update_outgoing_percentage:
     input r0 as token_service_v0001.aleo/update_outgoing_percentage_ts.future;

@@ -4,7 +4,6 @@ import token_bridge_v0001.aleo;
 
 program token_service_v0001.aleo {
 
-    // TODO: Check if this makes sense as global variable instead of per_token basis
     struct OutgoingPercentageInTime {
         // Percentage represented as basis points
         // For example: 10% = 10_00u16
@@ -12,7 +11,10 @@ program token_service_v0001.aleo {
         // Defined in terms of block height
         // Info: 360 blocks per hour (approx)
         // Reference: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/network/src/lib.rs#L115
-        timeframe: u32 
+        timeframe: u32,
+        // Maximum liquidity after which we do not care about max_outgoing_percentage
+        // This is required because as the liquidity is drained, it becomes harder to drain more
+        max_no_cap: u128
     }
 
     /// Stores the owner of this program
@@ -31,16 +33,16 @@ program token_service_v0001.aleo {
 
     /// Stores the minimum amount that can be transferred via Token Service
     /// Key is address of the token program
-    mapping minimum_transfers: address => u128;
+    mapping min_transfers: address => u128;
+
+    /// Stores the minimum amount that can be transferred via Token Service
+    /// Key is address of the token program
+    mapping max_transfers: address => u128;
 
     /// Stores the maximum percentage that can be transferred in the given timeframe
     /// Key is the address of the token program
     mapping max_outgoing_percentage: address => OutgoingPercentageInTime;
     
-    /// Stores maximum liquidity after which we do not care about max_outgoing_percentage
-    /// Key is the address of the token program
-    mapping maximum_liquidity_for_no_cap: address => u32;
-
     /// Tracks the last time (in block height) when the token was minted/burned
     /// Key is the address of the token program
     mapping last_token_update: address => u32;
@@ -89,29 +91,34 @@ program token_service_v0001.aleo {
     }
 
     //////////////////////////////////
-    ///// Support/Remove Token ///////
+    ///// Add/Remove Token ///////
     //////////////////////////////////
 
-    transition support_token_ts(
+    transition add_token_ts(
         public token_id: address, 
         public token_connector: address, 
-        public minimum_transfer: u128, 
+        public min_transfer: u128, 
+        public max_transfer: u128, 
         public outgoing_percentage: u16, 
-        public timeframe: u32
+        public timeframe: u32,
+        public max_no_cap: u128
     ) {
         // TODO: 
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
-        return then finalize(self.caller, token_id, token_connector, minimum_transfer, outgoing_percentage, timeframe);
+        assert(max_transfer >= min_transfer);
+        return then finalize(self.caller, token_id, token_connector, min_transfer, max_transfer, outgoing_percentage, timeframe, max_no_cap);
     }
 
-    finalize support_token_ts(
+    finalize add_token_ts(
         from: address, 
         token_id: address, 
         token_connector: address, 
-        minimum_transfer: u128, 
+        min_transfer: u128, 
+        max_transfer: u128,
         outgoing_percentage: u16, 
-        timeframe: u32
+        timeframe: u32,
+        max_no_cap: u128
     ) {
         // Get the owner address
         // If program not initialized, this fails
@@ -120,12 +127,14 @@ program token_service_v0001.aleo {
 
         let outgoing_percentage_in_time: OutgoingPercentageInTime = OutgoingPercentageInTime {
             outgoing_percentage,
-            timeframe
+            timeframe,
+            max_no_cap
         };
 
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
 
-        Mapping::set(minimum_transfers, token_id, minimum_transfer);
+        Mapping::set(min_transfers, token_id, min_transfer);
+        Mapping::set(max_transfers, token_id, max_transfer);
         
         Mapping::set(token_connectors, token_id, token_connector);
     }
@@ -142,7 +151,7 @@ program token_service_v0001.aleo {
 
         assert(Mapping::contains(max_outgoing_percentage, token_id));
         Mapping::remove(max_outgoing_percentage, token_id);
-        Mapping::remove(minimum_transfers, token_id);
+        Mapping::remove(min_transfers, token_id);
         Mapping::remove(token_connectors, token_id);
     }
 
@@ -163,37 +172,56 @@ program token_service_v0001.aleo {
     ///// Update Minimum Transfer ///////
     ////////////////////////////////////
 
-    transition update_minimum_transfer_ts(public token_id: address, minimum_transfer: u128) {
-        return then finalize(self.caller, token_id, minimum_transfer);
+    transition update_min_transfer_ts(public token_id: address, min_transfer: u128) {
+        return then finalize(self.caller, token_id, min_transfer);
     }
 
-    finalize update_minimum_transfer_ts(from: address, token_id: address, minimum_transfer: u128) {
+    finalize update_min_transfer_ts(from: address, token_id: address, min_transfer: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
-        Mapping::set(minimum_transfers, token_id, minimum_transfer);
+        Mapping::set(min_transfers, token_id, min_transfer);
     }
+
+    /////////////////////////////////////
+    ///// Update Maximum Transfer ///////
+    ////////////////////////////////////
+
+    transition update_max_transfer_ts(public token_id: address, max_transfer: u128) {
+        return then finalize(self.caller, token_id, max_transfer);
+    }
+
+    finalize update_max_transfer_ts(from: address, token_id: address, max_transfer: u128) {
+        // Get the owner address
+        // If program not initialized, this fails
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(from, owner);
+
+        Mapping::set(max_transfers, token_id, max_transfer);
+    }
+
 
 
     ////////////////////////////////////////
     ///// Update Outgoing Percentage ///////
     ////////////////////////////////////////
 
-    transition update_outgoing_percentage_ts(public token_id: address, outgoing_percentage: u16, timeframe: u32) {
+    transition update_outgoing_percentage_ts(public token_id: address, public outgoing_percentage: u16, public timeframe: u32, public max_no_cap: u128) {
         assert(outgoing_percentage <= HUNDRED_PERCENTAGE);
-        return then finalize(self.caller, token_id, outgoing_percentage, timeframe);
+        return then finalize(self.caller, token_id, outgoing_percentage, timeframe, max_no_cap);
     }
 
-    finalize update_outgoing_percentage_ts(from: address, token_id: address, outgoing_percentage: u16, timeframe: u32) {
+    finalize update_outgoing_percentage_ts(from: address, token_id: address, outgoing_percentage: u16, timeframe: u32, max_no_cap: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
         let outgoing_percentage_in_time: OutgoingPercentageInTime = OutgoingPercentageInTime {
             outgoing_percentage,
-            timeframe
+            timeframe,
+            max_no_cap
         };
 
         Mapping::set(max_outgoing_percentage, token_id, outgoing_percentage_in_time);
@@ -227,13 +255,16 @@ program token_service_v0001.aleo {
         return then finalize (self.caller, token_id, amount);
     }
 
-    finalize token_send(connector: address, wrapped_addr: address, amount: u128) {
+    finalize token_send(from: address, wrapped_addr: address, amount: u128) {
 
         let token_connector: address = Mapping::get(token_connectors, wrapped_addr);
-        assert_eq(token_connector, connector);
+        assert_eq(from, token_connector);
 
-        let min_amount: u128 = Mapping::get(minimum_transfers, wrapped_addr);
+        let min_amount: u128 = Mapping::get(min_transfers, wrapped_addr);
         assert(amount >= min_amount);
+
+        let max_amount: u128 = Mapping::get(max_transfers, wrapped_addr);
+        assert(amount <= max_amount);
 
         // TODO: 
         // 1. handle fees
@@ -241,27 +272,30 @@ program token_service_v0001.aleo {
         let current_supply: u128 = Mapping::get(total_supply, wrapped_addr);
         
         let outgoing_percentage_in_time: OutgoingPercentageInTime = Mapping::get(max_outgoing_percentage, wrapped_addr);
-        let percentage_in_basis_points: u16 = outgoing_percentage_in_time.outgoing_percentage;
-        let token_timeframe: u32 = outgoing_percentage_in_time.timeframe;
-        let min_required_supply: u128 = get_x_percent_of_y(HUNDRED_PERCENTAGE - percentage_in_basis_points, current_supply);
-        let last_update: u32 = Mapping::get_or_use(last_token_update, wrapped_addr, 0u32);
-        let last_min_required_supply: u128 = Mapping::get_or_use(last_min_supply, wrapped_addr, min_required_supply);
 
-        let current_block_height: u32 = block.height;
+        if (current_supply >= outgoing_percentage_in_time.max_no_cap) {
+            let percentage_in_basis_points: u16 = outgoing_percentage_in_time.outgoing_percentage;
+            let token_timeframe: u32 = outgoing_percentage_in_time.timeframe;
+            let min_required_supply: u128 = get_x_percent_of_y(HUNDRED_PERCENTAGE - percentage_in_basis_points, current_supply);
+            let last_update: u32 = Mapping::get_or_use(last_token_update, wrapped_addr, 0u32);
+            let last_min_required_supply: u128 = Mapping::get_or_use(last_min_supply, wrapped_addr, min_required_supply);
 
-        let new_min_required_supply: u128 = get_new_min_required_supply(
-            current_supply, 
-            amount, 
-            current_block_height, 
-            last_update, 
-            last_min_required_supply, 
-            percentage_in_basis_points, 
-            token_timeframe
-        );
+            let current_block_height: u32 = block.height;
 
-        Mapping::set(last_token_update, wrapped_addr, block.height);
-        Mapping::set(last_min_supply, wrapped_addr, new_min_required_supply);
-        
+            let new_min_required_supply: u128 = get_new_min_required_supply(
+                current_supply, 
+                amount, 
+                current_block_height, 
+                last_update, 
+                last_min_required_supply, 
+                percentage_in_basis_points, 
+                token_timeframe
+            );
+
+            Mapping::set(last_token_update, wrapped_addr, block.height);
+            Mapping::set(last_min_supply, wrapped_addr, new_min_required_supply);
+        }
+
         // Decrease the total supply
         Mapping::set(total_supply, wrapped_addr, current_supply - amount);
     }

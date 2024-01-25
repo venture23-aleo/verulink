@@ -48,15 +48,12 @@ program wusdc_holding_v0001.aleo {
 
 
     transition hold_fund(public user: address, public amount: u128) {
-        // Assert that only token service program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
         return then finalize(self.caller, user, amount);
     }
 
     finalize hold_fund(from: address, user: address, amount: u128) {
-        assert_eq(Mapping::get(owner_holding, true), from);
+        let owner: address = Mapping::get(owner_holding, true);
+        assert_eq(from, owner);
 
         let held_amount: u128 = Mapping::get_or_use(holdings, user, 0u128);
 

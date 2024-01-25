@@ -14,9 +14,10 @@ import {
   TbEnableService,
   TbDisableService,
   TsTransferOwnership,
-  TsSupportToken,
+  TsAddToken,
   TsRemoveToken,
-  TsUpdateMinimumTransfer,
+  TsUpdateMinTransfer,
+  TsUpdateMaxTransfer,
   TsUpdateOutgoingPercentage,
   HoldingRelease,
   ConnectorUpdate,
@@ -46,9 +47,10 @@ import {
   getTbEnableServiceLeo,
   getTbDisableServiceLeo,
   getTsTransferOwnershipLeo,
-  getTsSupportTokenLeo,
+  getTsAddTokenLeo,
   getTsRemoveTokenLeo,
-  getTsUpdateMinimumTransferLeo,
+  getTsUpdateMinTransferLeo,
+  getTsUpdateMaxTransferLeo,
   getTsUpdateOutgoingPercentageLeo,
   getHoldingReleaseLeo,
   getConnectorUpdateLeo,
@@ -78,9 +80,10 @@ import {
   getTbEnableService,
   getTbDisableService,
   getTsTransferOwnership,
-  getTsSupportToken,
+  getTsAddToken,
   getTsRemoveToken,
-  getTsUpdateMinimumTransfer,
+  getTsUpdateMinTransfer,
+  getTsUpdateMaxTransfer,
   getTsUpdateOutgoingPercentage,
   getHoldingRelease,
   getConnectorUpdate,
@@ -355,15 +358,17 @@ export class Council_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_support_token(r0: number, r1: string, r2: string, r3: bigint, r4: number, r5: number) {
+  async ts_support_token(r0: number, r1: string, r2: string, r3: bigint, r4: bigint, r5: number, r6: number, r7: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.address(r2);
     const r3Leo = js2leo.u128(r3);
-    const r4Leo = js2leo.u16(r4);
-    const r5Leo = js2leo.u32(r5);
+    const r4Leo = js2leo.u128(r4);
+    const r5Leo = js2leo.u16(r5);
+    const r6Leo = js2leo.u32(r6);
+    const r7Leo = js2leo.u128(r7);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo, r5Leo, r6Leo, r7Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'ts_support_token',
@@ -385,7 +390,7 @@ export class Council_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_update_minimum_transfer(r0: number, r1: string, r2: bigint) {
+  async ts_update_min_transfer(r0: number, r1: string, r2: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u128(r2);
@@ -393,19 +398,34 @@ export class Council_v0001Contract {
     const params = [r0Leo, r1Leo, r2Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'ts_update_minimum_transfer',
+      transition: 'ts_update_min_transfer',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async ts_update_outgoing_percentage(r0: number, r1: string, r2: number, r3: number) {
+  async ts_update_max_transfer(r0: number, r1: string, r2: bigint) {
+    const r0Leo = js2leo.u32(r0);
+    const r1Leo = js2leo.address(r1);
+    const r2Leo = js2leo.u128(r2);
+
+    const params = [r0Leo, r1Leo, r2Leo]
+    const result = await zkRun({
+      config: this.config,
+      transition: 'ts_update_max_transfer',
+      params,
+    });
+    if (this.config.mode === "execute") return result;
+  }
+
+  async ts_update_outgoing_percentage(r0: number, r1: string, r2: number, r3: number, r4: bigint) {
     const r0Leo = js2leo.u32(r0);
     const r1Leo = js2leo.address(r1);
     const r2Leo = js2leo.u16(r2);
     const r3Leo = js2leo.u32(r3);
+    const r4Leo = js2leo.u128(r4);
 
-    const params = [r0Leo, r1Leo, r2Leo, r3Leo]
+    const params = [r0Leo, r1Leo, r2Leo, r3Leo, r4Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'ts_update_outgoing_percentage',

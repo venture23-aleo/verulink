@@ -45,6 +45,7 @@ program wusdc_connector_v0001.aleo;
 
 
 
+
 function initialize_wusdc:
     cast  85u8 83u8 68u8 32u8 67u8 111u8 105u8 110u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 into r0 as [u8; 32u32];
     cast  85u8 83u8 68u8 67u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 into r1 as [u8; 16u32];

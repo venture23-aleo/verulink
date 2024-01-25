@@ -8,6 +8,7 @@ export function getOutgoingPercentageInTime(outgoingPercentageInTime: OutgoingPe
   const result: OutgoingPercentageInTime = {
     outgoing_percentage: leo2js.u16(outgoingPercentageInTime.outgoing_percentage),
     timeframe: leo2js.u32(outgoingPercentageInTime.timeframe),
+    max_no_cap: leo2js.u128(outgoingPercentageInTime.max_no_cap),
   }
   return result;
 }

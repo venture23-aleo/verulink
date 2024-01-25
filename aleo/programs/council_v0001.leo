@@ -673,38 +673,44 @@ program council_v0001.aleo {
 
 
     //////////////////////////////////////////////
-    ///////  Token Service: Support Token ////////
+    ///////  Token Service: Add Token ////////
     //////////////////////////////////////////////
 
-    struct TsSupportToken {
+    struct TsAddToken {
         id: u32,
         token_id: address,
         connector: address,
-        minimum_transfer: u128,
+        min_transfer: u128,
+        max_transfer: u128,
         outgoing_percentage: u16,
-        time: u32
+        time: u32,
+        max_no_cap: u128
     }
 
     transition ts_support_token(
         public id: u32, 
         public token_id: address, 
         public connector: address, 
-        public minimum_transfer: u128, 
+        public min_transfer: u128, 
+        public max_transfer: u128, 
         public outgoing_percentage: u16, 
-        public time: u32
+        public time: u32,
+        public max_no_cap: u128
     ) {
-        let proposal: TsSupportToken  = TsSupportToken {
+        let proposal: TsAddToken  = TsAddToken {
             id,
             token_id,
             connector,
-            minimum_transfer,
+            min_transfer,
+            max_transfer,
             outgoing_percentage,
-            time
+            time,
+            max_no_cap
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/support_token_ts(token_id, connector, minimum_transfer, outgoing_percentage, time);
+        token_service_v0001.aleo/add_token_ts(token_id, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
 
         return then finalize(proposal_hash);
     }
@@ -767,31 +773,31 @@ program council_v0001.aleo {
     ///////  Token Service: Update Minimum Transfer ////////
     ////////////////////////////////////////////////////////
 
-    struct TsUpdateMinimumTransfer {
+    struct TsUpdateMinTransfer {
         id: u32,
         token_id: address,
-        minimum_transfer: u128,
+        min_transfer: u128,
     }
 
-    transition ts_update_minimum_transfer(
+    transition ts_update_min_transfer(
         public id: u32, 
         public token_id: address, 
-        public minimum_transfer: u128, 
+        public min_transfer: u128, 
     ) {
-        let proposal: TsUpdateMinimumTransfer  = TsUpdateMinimumTransfer {
+        let proposal: TsUpdateMinTransfer  = TsUpdateMinTransfer {
             id,
             token_id,
-            minimum_transfer,
+            min_transfer,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/update_minimum_transfer_ts(token_id, minimum_transfer);
+        token_service_v0001.aleo/update_min_transfer_ts(token_id, min_transfer);
 
         return then finalize(proposal_hash);
     }
 
-    finalize ts_update_minimum_transfer(proposal_hash: field) {
+    finalize ts_update_min_transfer(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -807,6 +813,51 @@ program council_v0001.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
     }
 
+    ////////////////////////////////////////////////////////
+    ///////  Token Service: Update Maximum Transfer ////////
+    ////////////////////////////////////////////////////////
+
+    struct TsUpdateMaxTransfer {
+        id: u32,
+        token_id: address,
+        max_transfer: u128,
+    }
+
+    transition ts_update_max_transfer(
+        public id: u32, 
+        public token_id: address, 
+        public max_transfer: u128, 
+    ) {
+        let proposal: TsUpdateMaxTransfer  = TsUpdateMaxTransfer {
+            id,
+            token_id,
+            max_transfer,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service_v0001.aleo/update_max_transfer_ts(token_id, max_transfer);
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize ts_update_max_transfer(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+
     ///////////////////////////////////////////////////////////
     ///////  Token Service: Update Outgoing Percentage ////////
     ///////////////////////////////////////////////////////////
@@ -815,25 +866,28 @@ program council_v0001.aleo {
         id: u32,
         token_id: address,
         outgoing_percentage: u16,
-        timeframe: u32
+        timeframe: u32,
+        max_no_cap: u128
     }
 
     transition ts_update_outgoing_percentage(
         public id: u32, 
         public token_id: address, 
         public outgoing_percentage: u16, 
-        public timeframe: u32
+        public timeframe: u32,
+        public max_no_cap: u128
     ) {
         let proposal: TsUpdateOutgoingPercentage  = TsUpdateOutgoingPercentage {
             id,
             token_id,
             outgoing_percentage,
-            timeframe
+            timeframe,
+            max_no_cap
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/update_outgoing_percentage_ts(token_id, outgoing_percentage, timeframe);
+        token_service_v0001.aleo/update_outgoing_percentage_ts(token_id, outgoing_percentage, timeframe, max_no_cap);
 
         return then finalize(proposal_hash);
     }

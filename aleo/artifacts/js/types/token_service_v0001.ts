@@ -24,10 +24,12 @@ import {
 export interface OutgoingPercentageInTime {
   outgoing_percentage: number;
   timeframe: number;
+  max_no_cap: bigint;
 }
 
 export const leoOutgoingPercentageInTimeSchema = z.object({
   outgoing_percentage: leoU16Schema,
   timeframe: leoU32Schema,
+  max_no_cap: leoU128Schema,
 });
 export type OutgoingPercentageInTimeLeo = z.infer < typeof leoOutgoingPercentageInTimeSchema > ;

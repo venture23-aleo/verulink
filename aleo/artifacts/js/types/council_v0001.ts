@@ -172,24 +172,28 @@ export const leoTsTransferOwnershipSchema = z.object({
 });
 export type TsTransferOwnershipLeo = z.infer < typeof leoTsTransferOwnershipSchema > ;
 
-export interface TsSupportToken {
+export interface TsAddToken {
   id: number;
   token_id: string;
   connector: string;
-  minimum_transfer: bigint;
+  min_transfer: bigint;
+  max_transfer: bigint;
   outgoing_percentage: number;
   time: number;
+  max_no_cap: bigint;
 }
 
-export const leoTsSupportTokenSchema = z.object({
+export const leoTsAddTokenSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
   connector: leoAddressSchema,
-  minimum_transfer: leoU128Schema,
+  min_transfer: leoU128Schema,
+  max_transfer: leoU128Schema,
   outgoing_percentage: leoU16Schema,
   time: leoU32Schema,
+  max_no_cap: leoU128Schema,
 });
-export type TsSupportTokenLeo = z.infer < typeof leoTsSupportTokenSchema > ;
+export type TsAddTokenLeo = z.infer < typeof leoTsAddTokenSchema > ;
 
 export interface TsRemoveToken {
   id: number;
@@ -202,24 +206,38 @@ export const leoTsRemoveTokenSchema = z.object({
 });
 export type TsRemoveTokenLeo = z.infer < typeof leoTsRemoveTokenSchema > ;
 
-export interface TsUpdateMinimumTransfer {
+export interface TsUpdateMinTransfer {
   id: number;
   token_id: string;
-  minimum_transfer: bigint;
+  min_transfer: bigint;
 }
 
-export const leoTsUpdateMinimumTransferSchema = z.object({
+export const leoTsUpdateMinTransferSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
-  minimum_transfer: leoU128Schema,
+  min_transfer: leoU128Schema,
 });
-export type TsUpdateMinimumTransferLeo = z.infer < typeof leoTsUpdateMinimumTransferSchema > ;
+export type TsUpdateMinTransferLeo = z.infer < typeof leoTsUpdateMinTransferSchema > ;
+
+export interface TsUpdateMaxTransfer {
+  id: number;
+  token_id: string;
+  max_transfer: bigint;
+}
+
+export const leoTsUpdateMaxTransferSchema = z.object({
+  id: leoU32Schema,
+  token_id: leoAddressSchema,
+  max_transfer: leoU128Schema,
+});
+export type TsUpdateMaxTransferLeo = z.infer < typeof leoTsUpdateMaxTransferSchema > ;
 
 export interface TsUpdateOutgoingPercentage {
   id: number;
   token_id: string;
   outgoing_percentage: number;
   timeframe: number;
+  max_no_cap: bigint;
 }
 
 export const leoTsUpdateOutgoingPercentageSchema = z.object({
@@ -227,6 +245,7 @@ export const leoTsUpdateOutgoingPercentageSchema = z.object({
   token_id: leoAddressSchema,
   outgoing_percentage: leoU16Schema,
   timeframe: leoU32Schema,
+  max_no_cap: leoU128Schema,
 });
 export type TsUpdateOutgoingPercentageLeo = z.infer < typeof leoTsUpdateOutgoingPercentageSchema > ;
 
