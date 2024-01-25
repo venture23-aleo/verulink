@@ -77,7 +77,7 @@ function wusdc_receive:
     input r7 as [signature; 5u32].public;
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r8 as [u8; 32u32];
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r9 as [u8; 32u32];
-    call token_service_v0001.aleo/token_receive 28556963657430695u128 r8 r9 aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r0 r1 r2 r3 r4 r5 r6 r7 into r10;
+    call token_service_v0001.aleo/token_receive 27236160417u128 r8 r9 aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j r0 r1 r2 r3 r4 r5 r6 r7 into r10;
     call wusdc_token_v0001.aleo/mint_public r2 r3 into r11;
     is.eq r1 r2 into r12;
     not r12 into r13;
@@ -104,7 +104,7 @@ function wusdc_send:
     call wusdc_token_v0001.aleo/burn_public self.caller r1 into r2;
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r3 as [u8; 32u32];
     cast  0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 160u8 184u8 105u8 145u8 198u8 33u8 139u8 54u8 193u8 209u8 157u8 74u8 46u8 158u8 176u8 206u8 54u8 6u8 235u8 72u8 into r4 as [u8; 32u32];
-    call token_service_v0001.aleo/token_send aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j self.caller r0 r1 28556963657430695u128 r3 r4 into r5;
+    call token_service_v0001.aleo/token_send aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j self.caller r0 r1 27236160417u128 r3 r4 into r5;
     async wusdc_send r2 r5 into r6;
     output r6 as wusdc_connector_v0001.aleo/wusdc_send.future;
 

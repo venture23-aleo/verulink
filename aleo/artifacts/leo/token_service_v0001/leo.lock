@@ -1,6 +1,6 @@
 [[package]]
 name = "token_bridge_v0001"
-network = "testnet3"
-location = "network"
+location = "local"
+path = "../token_bridge_v0001"
 checksum = "887d86a212ed2d1ca1e308852e0705dd7f95ff508687983a09da2d2290efdc21"
 dependencies = []

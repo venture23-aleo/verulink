@@ -19,10 +19,13 @@
   },
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
+    "@types/ejs": "^3.1.5",
     "aleo-hasher": "^0.1.2",
+    "aleo-program-to-address": "^0.1.0",
     "aleo-signer": "^0.1.1",
     "axios": "^1.6.5",
     "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
     "zod": "^3.22.4"
   },
   "author": "",

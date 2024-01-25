@@ -1,6 +1,6 @@
 [[package]]
 name = "wusdc_token_v0001"
-network = "testnet3"
-location = "network"
+location = "local"
+path = "../wusdc_token_v0001"
 checksum = "fafc38f430dae23520aade115e0a13edf303a6f3bdfa673e7f37ee873863c500"
 dependencies = []

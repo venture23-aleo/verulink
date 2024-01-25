@@ -1,1 +1,1 @@
-{"program":"wusdc_holding_v0001.aleo","version":"0.0.0","description":"","license":"MIT","dependencies":[{"name":"wusdc_token_v0001.aleo","location":"network","endpoint":"http://localhost:3030","network":"testnet3"}]}
+{"program":"wusdc_holding_v0001.aleo","version":"0.0.0","description":"","license":"MIT","dependencies":[{"name":"wusdc_token_v0001.aleo","location":"local","path":"../wusdc_token_v0001"}]}

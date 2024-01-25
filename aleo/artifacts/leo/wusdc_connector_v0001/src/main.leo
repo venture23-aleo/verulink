@@ -46,11 +46,13 @@ program wusdc_connector_v0001.aleo {
         token_service_v0001.aleo/token_receive(
             origin_chain_id(), 
             origin_token_service_address(), 
-            origin_usdc_address(), 
+            origin_token_address(), 
             WUSDC_TOKEN, 
-            sender, receiver, 
+            sender, 
+            receiver, 
             actual_receiver, 
-            amount, sequence, 
+            amount, 
+            sequence, 
             height, 
             signers, 
             signs
@@ -80,7 +82,7 @@ program wusdc_connector_v0001.aleo {
             receiver, 
             amount, 
             origin_chain_id(), 
-            origin_usdc_address(), 
+            origin_token_address(), 
             origin_token_service_address()
         );
 
@@ -112,21 +114,21 @@ program wusdc_connector_v0001.aleo {
     // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator
     // For Ethereum Sepolia testnet, chain_id: `eth:11155111` -> 28556963657430695
     inline origin_chain_id() -> u128 {
-        return 28556963657430695u128;
+        return 27236160417u128;
     }
 
     // Contract Address of the original token on the origin chain
     // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
     // Example: Contract Address of USDC on Ethereum
-    // For EVM Chains, 20 bytes is formated as following:
-    inline origin_usdc_address() -> [u8; 32] {
+    // For EVM Chains, 20 bytes is formatted as following:
+    inline origin_token_address() -> [u8; 32] {
         return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,160u8,184u8,105u8,145u8,198u8,33u8,139u8,54u8,193u8,209u8,157u8,74u8,46u8,158u8,176u8,206u8,54u8,6u8,235u8,72u8];
     }
 
     // Token Service Contract Address of the original token on the origin chain
     // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
     // Example: Contract Address of USDC on Ethereum
-    // For EVM Chains, 20 bytes is formated as following:
+    // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_service_address() -> [u8; 32] {
         return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,160u8,184u8,105u8,145u8,198u8,33u8,139u8,54u8,193u8,209u8,157u8,74u8,46u8,158u8,176u8,206u8,54u8,6u8,235u8,72u8];
     }
@@ -137,7 +139,7 @@ program wusdc_connector_v0001.aleo {
     // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
     // Storing in const? Error [ETYC0372080]: The value of a const declaration must be a literal
     inline name() -> [u8; 32] {
-        return [ 85u8, 83u8, 68u8, 32u8, 67u8, 111u8, 105u8, 110u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8 ];
+        return [85u8,83u8,68u8,32u8,67u8,111u8,105u8,110u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
     }
 
     // Symbol of the token
@@ -145,7 +147,7 @@ program wusdc_connector_v0001.aleo {
     // Example: `USDC` is represented as following (hex):
     // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
     inline symbol() -> [u8; 16] {
-        return [ 85u8, 83u8, 68u8, 67u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8 ];
+        return [85u8,83u8,68u8,67u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
     }
 
     // Decimals of the token

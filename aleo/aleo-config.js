@@ -3,7 +3,7 @@ dotenv.config();
 
 export default {
   accounts: [process.env.ALEO_PRIVATE_KEY],
-  mode: "execute",
+  mode: "evaluate",
   mainnet: {},
   networks: {
     testnet3: {
