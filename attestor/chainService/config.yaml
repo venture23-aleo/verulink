@@ -14,6 +14,7 @@ chains:
   node_url: https://rpc.sepolia.org
   start_height: 1
   wait_time: 24h
+  filter_topic: '0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9'
 db_path: db
 consume_packet_workers: 10 # Default is 10
 log:

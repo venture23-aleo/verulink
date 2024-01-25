@@ -51,6 +51,7 @@ type Client struct {
 	nextBlockHeight   uint64
 	chainID           uint32
 	rpcEndpoint       string
+	filterTopic       ethCommon.Hash
 }
 
 func (cl *Client) Name() string {
@@ -115,7 +116,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 		ToBlock:   toHeightBig,
 		Addresses: []ethCommon.Address{cl.address},
 		Topics: [][]ethCommon.Hash{
-			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")}, // TODO: cfg
+			{cl.filterTopic},
 		},
 	})
 	if err != nil {
@@ -342,6 +343,7 @@ func NewClient(cfg *config.ChainConfig, _ map[string]uint32) chain.IClient {
 		waitDur:         waitDur,
 		chainID:         cfg.ChainID,
 		nextBlockHeight: cfg.StartHeight,
+		filterTopic:     ethCommon.HexToHash(cfg.FilterTopic),
 	}
 }
 
