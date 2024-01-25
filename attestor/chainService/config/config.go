@@ -43,6 +43,7 @@ type ChainConfig struct {
 	DestChains     []string          `yaml:"dest_chains"`
 	StartSeqNum    map[string]uint64 `yaml:"sequence_num_start"` // useful for aleo
 	StartHeight    uint64            `yaml:"start_height"`       // useful for ethereum
+	FilterTopic    string            `yaml:"filter_topic"`       // useful for ethereum
 }
 
 type Config struct {

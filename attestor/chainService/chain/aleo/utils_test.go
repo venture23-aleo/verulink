@@ -147,14 +147,14 @@ func TestParseMessage(t *testing.T) {
 func TestParseAleoPacket(t *testing.T) {
 	t.Run("case: happy test", func(t *testing.T) {
 		expectedPacket := chain.Packet{
-			Version:  uint64(0),
-			Sequence: uint64(1),
+			Version:  uint8(big.NewInt(0).Uint64()),
+			Sequence: big.NewInt(1).Uint64(),
 			Source: chain.NetworkAddress{
-				ChainID: uint32(2),
+				ChainID: uint32(big.NewInt(2).Uint64()),
 				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 			},
 			Destination: chain.NetworkAddress{
-				ChainID: uint32(1),
+				ChainID: uint32(big.NewInt(01).Uint64()),
 				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
 			},
 			Message: chain.Message{
@@ -163,7 +163,7 @@ func TestParseAleoPacket(t *testing.T) {
 				Amount:           big.NewInt(102),
 				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
 			},
-			Height: uint64(55),
+			Height: big.NewInt(55).Uint64(),
 		}
 		s := dumpPktToAleoPacketString(expectedPacket)
 		a, err := parseMessage(s)
@@ -175,14 +175,14 @@ func TestParseAleoPacket(t *testing.T) {
 
 	t.Run("case: error in parsing", func(t *testing.T) {
 		expectedPacket := chain.Packet{
-			Version:  uint64(0),
-			Sequence: uint64(1),
+			Version:  uint8(big.NewInt(0).Uint64()),
+			Sequence: big.NewInt(1).Uint64(),
 			Source: chain.NetworkAddress{
-				ChainID: uint32(2),
+				ChainID: uint32(big.NewInt(2).Uint64()),
 				Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 			},
 			Destination: chain.NetworkAddress{
-				ChainID: uint32(1),
+				ChainID: uint32(big.NewInt(1).Uint64()),
 				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
 			},
 			Message: chain.Message{
@@ -191,7 +191,7 @@ func TestParseAleoPacket(t *testing.T) {
 				Amount:           big.NewInt(102),
 				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
 			},
-			Height: uint64(55),
+			Height: big.NewInt(55).Uint64(),
 		}
 		s := dumpPktToAleoPacketString(expectedPacket)
 		a, err := parseMessage(s)
@@ -242,14 +242,14 @@ func TestParseAleoPacket(t *testing.T) {
 func TestConstructAleoPacket(t *testing.T) {
 	modelAleoPacket := "{ version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ] }, destination: { chain_id: 2u32, addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px }, message: { token: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, sender: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ], receiver: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, amount: 102u64 }, height: 55u32 }"
 	commonPacket := &chain.Packet{
-		Version:  uint64(0),
-		Sequence: uint64(1),
+		Version:  uint8(big.NewInt(0).Uint64()),
+		Sequence: big.NewInt(1).Uint64(),
 		Source: chain.NetworkAddress{
-			ChainID: uint32(1),
+			ChainID: uint32(big.NewInt(1).Uint64()),
 			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
 		},
 		Destination: chain.NetworkAddress{
-			ChainID: uint32(2),
+			ChainID: uint32(big.NewInt(2).Uint64()),
 			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px", // converting address of form [0u8, 0u8, ..., 176u8] to str
 		},
 		Message: chain.Message{
@@ -258,7 +258,7 @@ func TestConstructAleoPacket(t *testing.T) {
 			Amount:           big.NewInt(102),
 			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 		},
-		Height: uint64(55),
+		Height: big.NewInt(55).Uint64(),
 	}
 
 	aleoPacket := constructAleoPacket(commonPacket)

@@ -34,7 +34,7 @@ func (m Message) String() string {
 }
 
 type Packet struct {
-	Version     uint64
+	Version     uint8
 	Source      NetworkAddress
 	Destination NetworkAddress
 	Sequence    uint64
