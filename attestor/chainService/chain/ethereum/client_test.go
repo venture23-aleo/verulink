@@ -3,6 +3,7 @@ package ethereum
 import (
 	"context"
 	"fmt"
+	"math"
 	"math/big"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/stretchr/testify/assert"
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 )
 
@@ -50,4 +52,26 @@ func TestFilterLogs(t *testing.T) {
 		_ = packet
 	}
 
+}
+
+func TestFilterChunks(t *testing.T) {
+	var filterLogsSlice [][]uint64
+
+	var height uint64 = 100
+	var latestHeight uint64 = 150
+
+	var blockDifference uint64 = latestHeight - height
+	filterChunks := uint64(math.Ceil(float64(blockDifference) / defaultHeightDifferenceForFilterLogs))
+
+	startHeight := height
+	for i := 0; i < int(filterChunks); i++ {
+		if i == int(filterChunks)-1 {
+			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, latestHeight})
+			continue
+		} else {
+			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, startHeight + defaultHeightDifferenceForFilterLogs})
+			startHeight += defaultHeightDifferenceForFilterLogs
+		}
+	}
+	assert.Equal(t, [][]uint64{{100, 150}}, filterLogsSlice)
 }

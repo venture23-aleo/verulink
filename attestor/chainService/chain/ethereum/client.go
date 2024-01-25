@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -24,8 +25,9 @@ import (
 )
 
 const (
-	defaultWaitDur  = 24 * time.Hour
-	ethereum        = "ethereum"
+	defaultWaitDur                       = 24 * time.Hour
+	ethereum                             = "ethereum"
+	defaultHeightDifferenceForFilterLogs = 100
 )
 
 // Namespaces
@@ -68,22 +70,40 @@ func (cl *Client) GetCurrentHeight(ctx context.Context) uint64 {
 	if err != nil {
 		return 0
 	}
-	return height - uint64(cl.waitDur.Seconds()) / 12 // total number of blocks that has to be passed in the waiting duration
+	return height - uint64(cl.waitDur.Seconds())/12 // total number of blocks that has to be passed in the waiting duration
 }
 
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
 	latestHeight := cl.GetCurrentHeight(ctx)
 
 	if height >= latestHeight {
-		blockDifference := height - latestHeight
 		// wait for sometime until the latest height passes the next block to be fetched
-		time.Sleep(time.Second + time.Second*time.Duration(blockDifference)*12)
+		time.Sleep(time.Second + time.Second*time.Duration(height-latestHeight)*12)
 		return nil, errors.New("next height greater than latest height")
 	}
 
-	packets, err := cl.filterPacketLogs(ctx, height, latestHeight)
-	if err != nil {
-		return nil, err
+	blockDifference := latestHeight - height
+	var filterLogsSlice [][]uint64
+	filterChunks := uint64(math.Ceil(float64(blockDifference) / defaultHeightDifferenceForFilterLogs))
+	startHeight := height
+
+	for i := 0; i < int(filterChunks); i++ {
+		if i == int(filterChunks)-1 {
+			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, latestHeight})
+			continue
+		} else {
+			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, startHeight + defaultHeightDifferenceForFilterLogs})
+			startHeight += defaultHeightDifferenceForFilterLogs
+		}
+	}
+
+	var packets []*chain.Packet
+	for _, v := range filterLogsSlice {
+		pkts, err := cl.filterPacketLogs(ctx, v[0], v[1])
+		if err != nil {
+			return nil, err
+		}
+		packets = append(packets, pkts...)
 	}
 	return packets, nil
 }
@@ -95,7 +115,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 		ToBlock:   toHeightBig,
 		Addresses: []ethCommon.Address{cl.address},
 		Topics: [][]ethCommon.Hash{
-			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")}, // TODO: cfg 
+			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")}, // TODO: cfg
 		},
 	})
 	if err != nil {
@@ -220,7 +240,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
 	L1:
 		for i := startHeight; i <= endHeight; i++ {
-			pkts, err := cl.parseBlock(ctx, i)  // TODO: call filter logs directly
+			pkts, err := cl.parseBlock(ctx, i) // TODO: call filter logs directly
 			if err != nil {
 				continue // retry the same block if err
 			}
