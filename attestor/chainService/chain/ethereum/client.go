@@ -1,7 +1,6 @@
 package ethereum
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -17,16 +16,17 @@ import (
 	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
 
+	ether "github.com/ethereum/go-ethereum"
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/venture23-aleo/attestor/chainService/chain"
 )
 
 const (
-	defaultWaitDur = 24 * time.Hour
-	ethereum       = "ethereum"
+	defaultWaitDur  = 24 * time.Hour
+	ethereum        = "ethereum"
+	blocksIn24Hours = 7117
 )
 
 // Namespaces
@@ -42,7 +42,7 @@ var (
 
 type Client struct {
 	name              string
-	address           string
+	address           ethCommon.Address
 	eth               *ethclient.Client
 	bridge            *abi.Bridge
 	minRequiredGasFee uint64
@@ -57,131 +57,79 @@ func (cl *Client) Name() string {
 }
 
 func (cl *Client) GetSourceChain() (string, string) {
-	return cl.name, cl.address
+	return cl.name, cl.address.Hex()
 }
 
 func (cl *Client) GetChainID() uint32 {
 	return cl.chainID
 }
 
+func (cl *Client) GetCurrentHeight(ctx context.Context) uint64 {
+	height, err := cl.eth.BlockNumber(ctx)
+	if err != nil {
+		return 0
+	}
+	return height - blocksIn24Hours
+}
+
 func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
-	fmt.Println("parse eth block")
-	sc := ethCommon.HexToAddress(cl.address)
+	latestHeight := cl.GetCurrentHeight(ctx)
 
-	ctxBlk, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	block, err := cl.eth.BlockByNumber(ctxBlk, big.NewInt(int64(height)))
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
+	if height > latestHeight {
+		blockDifference := height - latestHeight
+		// wait for sometime until the latest height passes the next block to be fetched
+		time.Sleep(time.Second * time.Duration(blockDifference) * 12)
+		return nil, errors.New("next height greater than latest height")
 	}
 
-	ctxRecpt, cancel := context.WithCancel(ctx)
-	defer cancel()
-	receipts, err := getTxReceipts(ctxRecpt, cl.eth, block)
-	if err != nil {
-		return nil, err
-	}
-	packets, err := getRelayReceipts(cl.bridge, sc, receipts)
+	packets, err := cl.filterPacketLogs(ctx, height, latestHeight)
 	if err != nil {
 		return nil, err
 	}
 	return packets, nil
 }
 
-func getRelayReceipts(bridgeClient *abi.Bridge, contract ethCommon.Address, receipts ethTypes.Receipts) ([]*chain.Packet, error) {
-	packets := []*chain.Packet{}
-	for _, receipt := range receipts {
-		for _, log := range receipt.Logs {
-			if !bytes.Equal(log.Address.Bytes(), contract.Bytes()) {
-				continue
-			}
-			packetDispatched, err := bridgeClient.ParsePacketDispatched(*log)
-			if err != nil {
-				return nil, err
-			}
-			commonPacket := &chain.Packet{
-				Version:  uint8(packetDispatched.Packet.Version.Uint64()),
-				Sequence: packetDispatched.Packet.Sequence.Uint64(),
-				Destination: chain.NetworkAddress{
-					ChainID: uint32(packetDispatched.Packet.DestTokenService.ChainId.Uint64()),
-					Address: packetDispatched.Packet.DestTokenService.Addr,
-				},
-				Source: chain.NetworkAddress{
-					ChainID: uint32(packetDispatched.Packet.SourceTokenService.ChainId.Uint64()),
-					Address: string(packetDispatched.Packet.SourceTokenService.Addr.Bytes()),
-				},
-				Message: chain.Message{
-					DestTokenAddress: packetDispatched.Packet.Message.DestTokenAddress,
-					SenderAddress:    string(packetDispatched.Packet.Message.SenderAddress.Bytes()),
-					Amount:           packetDispatched.Packet.Message.Amount,
-					ReceiverAddress:  packetDispatched.Packet.Message.ReceiverAddress,
-				},
-				Height: packetDispatched.Packet.Height.Uint64(),
-			}
-			packets = append(packets, commonPacket)
+func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uint64) ([]*chain.Packet, error) {
+	fromHeightBig, toHeightBig := big.NewInt(int64(fromHeight)), big.NewInt(int64(toHeight))
+	logs, err := cl.eth.FilterLogs(ctx, ether.FilterQuery{
+		FromBlock: fromHeightBig,
+		ToBlock:   toHeightBig,
+		Addresses: []ethCommon.Address{cl.address},
+		Topics: [][]ethCommon.Hash{
+			{ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9")},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	packets := make([]*chain.Packet, 0)
+	for _, l := range logs {
+		packetDispatched, err := cl.bridge.ParsePacketDispatched(l)
+		if err != nil {
+			return nil, err
 		}
+		commonPacket := &chain.Packet{
+			Version:  uint8(packetDispatched.Packet.Version.Uint64()),
+			Sequence: packetDispatched.Packet.Sequence.Uint64(),
+			Destination: chain.NetworkAddress{
+				ChainID: uint32(packetDispatched.Packet.DestTokenService.ChainId.Uint64()),
+				Address: packetDispatched.Packet.DestTokenService.Addr,
+			},
+			Source: chain.NetworkAddress{
+				ChainID: uint32(packetDispatched.Packet.SourceTokenService.ChainId.Uint64()),
+				Address: string(packetDispatched.Packet.SourceTokenService.Addr.Bytes()),
+			},
+			Message: chain.Message{
+				DestTokenAddress: packetDispatched.Packet.Message.DestTokenAddress,
+				ReceiverAddress:  packetDispatched.Packet.Message.ReceiverAddress,
+				SenderAddress:    string(packetDispatched.Packet.Message.SenderAddress.Bytes()),
+				Amount:           packetDispatched.Packet.Message.Amount,
+			},
+			Height: packetDispatched.Packet.Height.Uint64(),
+		}
+		packets = append(packets, commonPacket)
 	}
 	return packets, nil
-}
-
-func getTxReceipts(ctx context.Context, ethClient *ethclient.Client, hb *ethTypes.Block) (ethTypes.Receipts, error) {
-	txhs := hb.Transactions()
-	receipts := make(ethTypes.Receipts, 0, len(txhs))
-
-	type receiptStruct struct {
-		txHash  ethCommon.Hash
-		receipt *ethTypes.Receipt
-		err     error
-	}
-	receiptCh := make(chan *receiptStruct, len(txhs))
-	queryCh := make(chan *receiptStruct, cap(receiptCh))
-
-	for _, v := range hb.Transactions() {
-		queryCh <- &receiptStruct{txHash: v.Hash(), receipt: nil, err: nil}
-	}
-	counter := 0
-
-outerFor:
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			for q := range queryCh {
-				switch {
-				case q.err != nil:
-					counter++
-					fmt.Println("counter is ", counter)
-					q.err = nil
-					q.receipt = nil
-					queryCh <- q
-				case q.receipt != nil:
-					receipts = append(receipts, q.receipt)
-					if len(receipts) == cap(queryCh) {
-						fmt.Println("when does it close??")
-						close(queryCh)
-						break outerFor
-					} else {
-						continue
-					}
-				default:
-					go func(txReceipt *receiptStruct) {
-						r, err := ethClient.TransactionReceipt(ctx, txReceipt.txHash)
-						if err != nil || r == nil {
-							txReceipt.err = errors.Join(errors.New("failed"), err)
-							queryCh <- txReceipt
-						}
-						txReceipt.receipt = r
-						queryCh <- txReceipt
-					}(q)
-				}
-
-			}
-		}
-	}
-	return receipts, nil
 }
 
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
@@ -369,7 +317,7 @@ func NewClient(cfg *config.ChainConfig, _ map[string]uint32) chain.IClient {
 
 	return &Client{
 		name:            name,
-		address:         cfg.BridgeContract,
+		address:         ethCommon.HexToAddress(cfg.BridgeContract),
 		eth:             ethclient,
 		bridge:          bridgeClient,
 		waitDur:         waitDur,
