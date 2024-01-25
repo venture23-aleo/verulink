@@ -1,2 +1,2 @@
 go.work*
-rust/aleo_hash/target
+attestor/rust/aleo_hash/target
