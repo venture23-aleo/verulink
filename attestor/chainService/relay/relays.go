@@ -36,6 +36,10 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	}
 
 	pktCh := make(chan *chain.Packet)
+	go func() {
+		<-ctx.Done()
+		close(pktCh)
+	}()
 	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
 	go receivePktsFromCollector(ctx, pktCh)
 	consumePackets(ctx, pktCh)
@@ -86,7 +90,10 @@ func consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
 		case guideCh <- struct{}{}:
 		}
 
-		pkt := <-pktCh
+		pkt, ok := <-pktCh
+		if !ok {
+			return
+		}
 		go func() {
 			defer func() {
 				<-guideCh
