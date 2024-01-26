@@ -17,6 +17,7 @@ import (
 
 	ether "github.com/ethereum/go-ethereum"
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/venture23-aleo/attestor/chainService/chain"
@@ -39,16 +40,85 @@ var (
 	baseSeqNamespaces     []string
 	retryPacketNamespaces []string
 )
+type iEthClient interface {
+	GetCurrentBlock(ctx context.Context) (uint64, error)
+	FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error)
+} 
+
+type ethClient struct {
+	eth *ethclient.Client
+}
+
+func NewEthClient(rpcEndPoint string) iEthClient{
+	rpc, err := rpc.Dial(rpcEndPoint)
+	if err != nil {
+		panic(err)
+	}
+	
+	return &ethClient{
+		eth: ethclient.NewClient(rpc),
+	}
+}
+
+
+func (eth *ethClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
+	currentBlock, err := eth.eth.BlockNumber(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return currentBlock, nil
+}
+
+func (eth *ethClient) FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error) {
+	logs, err := eth.eth.FilterLogs(ctx, ether.FilterQuery{
+		FromBlock: big.NewInt(int64(fromHeight)),
+		ToBlock: big.NewInt(int64(toHeight)),
+		Addresses: []ethCommon.Address{contractAddress},
+		Topics: [][]ethCommon.Hash{{topics}},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return logs, err
+}
+
+
+type iBridgeClient interface {
+	ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error)
+}
+
+type bridgeClient struct {
+	bridge *abi.Bridge
+}
+
+func NewBridgeClient(contractAddress ethCommon.Address, ethClient *ethclient.Client) (iBridgeClient, error){
+	bridge, err := abi.NewBridge(contractAddress, ethClient)
+	if err != nil {
+		return nil, err
+	}
+	return &bridgeClient {
+		bridge: bridge,
+	}, nil 
+}
+
+func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error) {
+	packetDispatched, err := brcl.bridge.ParsePacketDispatched(log)
+	if err != nil {
+		return nil, err
+	}
+	return packetDispatched, nil
+}
+
 
 type Client struct {
-	name            string
-	address         ethCommon.Address
-	eth             *ethclient.Client
-	bridge          *abi.Bridge
-	waitDur         time.Duration
-	nextBlockHeight uint64
-	chainID         *big.Int
-	filterTopic     ethCommon.Hash
+	name              string
+	address           ethCommon.Address
+	eth               iEthClient
+	bridge            iBridgeClient
+	waitDur           time.Duration
+	nextBlockHeight   uint64
+	chainID           *big.Int
+	filterTopic       ethCommon.Hash
 }
 
 func (cl *Client) Name() string {
@@ -64,9 +134,9 @@ func (cl *Client) GetChainID() *big.Int {
 }
 
 func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) uint64 {
-	curHeight, err := cl.eth.BlockNumber(ctx)
+	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
-		logger.GetLogger().Error("error while getting current height", zap.Error(err))
+		logger.GetLogger().Error("error while getting current height")
 		return 0
 	}
 	return curHeight - uint64(cl.waitDur/avgBlockGenDur) // total number of blocks that has to be passed in the waiting duration
@@ -100,15 +170,7 @@ func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.
 }
 
 func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uint64) ([]*chain.Packet, error) {
-	fromHeightBig, toHeightBig := big.NewInt(int64(fromHeight)), big.NewInt(int64(toHeight))
-	logs, err := cl.eth.FilterLogs(ctx, ether.FilterQuery{
-		FromBlock: fromHeightBig,
-		ToBlock:   toHeightBig,
-		Addresses: []ethCommon.Address{cl.address},
-		Topics: [][]ethCommon.Hash{
-			{cl.filterTopic},
-		},
-	})
+	logs, err := cl.eth.FilterLogs(ctx, fromHeight, toHeight, cl.address, cl.filterTopic) 
 	if err != nil {
 		return nil, err
 	}
@@ -288,14 +350,9 @@ func (cl *Client) managePacket(ctx context.Context) {
 }
 
 func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
-	rpc, err := rpc.Dial(cfg.NodeUrl)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
-	}
-
-	ethclient := ethclient.NewClient(rpc)
+	ethclient := NewEthClient(cfg.NodeUrl)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
-	bridgeClient, err := abi.NewBridge(contractAddress, ethclient)
+	bridgeClient, err := abi.NewBridge(contractAddress, ethclient.(*ethClient).eth)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
 	}
