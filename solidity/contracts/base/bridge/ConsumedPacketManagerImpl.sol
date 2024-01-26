@@ -21,9 +21,11 @@ abstract contract ConsumedPacketManagerImpl {
     function _recover(bytes32 packetHash, uint8 v, bytes32 r, bytes32 s, PacketLibrary.Vote tryVote) internal pure returns (address) {
         bytes32 prefixedHash = keccak256(
             abi.encodePacked(
-                "\x19Ethereum Signed Message:\n32", 
-                packetHash, 
-                tryVote
+                "\x19Ethereum Signed Message:\n32",
+                keccak256(abi.encodePacked(
+                    packetHash, 
+                    tryVote
+                ))
             )
         );
         return ecrecover(prefixedHash, v, r, s);
