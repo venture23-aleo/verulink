@@ -221,7 +221,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
 		chainID := new(big.Int)
-		chainID, _ = chainID.SetString(chainIDStr, 10)
+		chainID.SetString(chainIDStr, 10)
 		// segragate sequence numbers as per target chain
 		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(ns)
 		if !shouldFetch {
@@ -262,7 +262,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
-			ns := retryPacketNamespacePrefix +  pkt.Destination.ChainID.String()
+			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -274,8 +274,8 @@ func (cl *Client) managePacket(ctx context.Context) {
 			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
-				zap.Any("source_chain_id", pkt.Source.ChainID),
-				zap.Any("dest_chain_id", pkt.Destination.ChainID),
+				zap.String("source_chain_id", pkt.Source.ChainID.String()),
+				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)

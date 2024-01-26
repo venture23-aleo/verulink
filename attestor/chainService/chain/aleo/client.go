@@ -228,8 +228,8 @@ func (cl *Client) managePacket(ctx context.Context) {
 			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
-				zap.Any("source_chain_id", pkt.Source.ChainID),
-				zap.Any("dest_chain_id", pkt.Destination.ChainID),
+				zap.String("source_chain_id", pkt.Source.ChainID.String()),
+				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, 0)

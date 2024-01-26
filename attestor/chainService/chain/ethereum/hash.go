@@ -24,10 +24,10 @@ func hash(sp *chain.ScreenedPacket) string {
 	sp.Packet.Message.Amount.FillBytes(amountBytes)
 
 	srcChainIDBytes := make([]byte, 32)
-	srcChainIDBytes = sp.Packet.Source.ChainID.FillBytes(srcChainIDBytes)
+	sp.Packet.Source.ChainID.FillBytes(srcChainIDBytes)
 
 	dstChainIDBytes := make([]byte, 32)
-	dstChainIDBytes = sp.Packet.Destination.ChainID.FillBytes(dstChainIDBytes)
+	sp.Packet.Destination.ChainID.FillBytes(dstChainIDBytes)
 
 	pktHash := crypto.Keccak256Hash(
 		versionBytes,
@@ -50,13 +50,13 @@ func hash(sp *chain.ScreenedPacket) string {
 }
 
 func getEthBoolByte(b bool) []byte {
-    boolByte := make([]byte, 1)
-    if b {
-        yay := big.NewInt(1)
-        yay.FillBytes(boolByte)
-    } else {
-        nay := big.NewInt(0)
-        nay.FillBytes(boolByte)
-    }
-    return boolByte
+	boolByte := make([]byte, 1)
+	if b {
+		yay := big.NewInt(1)
+		yay.FillBytes(boolByte)
+	} else {
+		nay := big.NewInt(0)
+		nay.FillBytes(boolByte)
+	}
+	return boolByte
 }
