@@ -73,6 +73,26 @@ func setupDB(nameSpace string, data map[interface{}]interface{}) error {
 	return nil
 }
 
+func TestCreateNamespaces(t *testing.T) {
+	dbRemover, err := setTestDB()
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+
+	namespace := "testCreateNamespaces"
+	err = setupDB(namespace, nil)
+	require.NoError(t, err)
+
+	namespaces := []string{
+		"ns1",
+		"ns2",
+		"ns3",
+		"ns4",
+	}
+	err = CreateNamespaces(namespaces)
+	require.NoError(t, err)
+
+}
+
 func TestStoreRetryPacket(t *testing.T) {
 	dbRemover, err := setTestDB()
 	require.NoError(t, err)
@@ -234,4 +254,134 @@ func TestExistInGivenNamespace(t *testing.T) {
 	require.True(t, isExist)
 	isExist = ExistInGivenNamespace(namespace, "nonExistingKey")
 	require.False(t, isExist)
+}
+
+func TestRetrieveAndDeleteFirstPacket(t *testing.T) {
+	dbRemover, err := setTestDB()
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+	ns := "testExistInGivenNamespace"
+	err = setupDB(ns, nil)
+	require.NoError(t, err)
+
+	pkts := []chain.Packet{
+		{
+			Sequence: 1,
+			Height:   12,
+		}, {
+			Sequence: 2,
+			Height:   13,
+		},
+	}
+
+	for _, pkt := range pkts {
+		err := StoreRetryPacket(ns, &pkt)
+		require.NoError(t, err)
+	}
+
+	pkt, err := RetrieveAndDeleteFirstPacket(ns)
+	require.NoError(t, err)
+	require.Equal(t, *pkt, pkts[0])
+
+	pkt, err = RetrieveAndDeleteFirstPacket(ns)
+	require.NoError(t, err)
+	require.Equal(t, *pkt, pkts[1])
+
+	pkt, err = RetrieveAndDeleteFirstPacket(ns)
+	require.Error(t, err)
+}
+
+func TestRetrieveAndDeleteNPackets(t *testing.T) {
+	dbRemover, err := setTestDB()
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+	ns := "testRetrieveAndDeleteNPackets"
+	err = setupDB(ns, nil)
+	require.NoError(t, err)
+
+	pkts := []*chain.Packet{}
+	for i := 1; i <= 10; i++ {
+		pkt := &chain.Packet{Sequence: uint64(i)}
+		err := StoreRetryPacket(ns, pkt)
+		require.NoError(t, err)
+		pkts = append(pkts, pkt)
+	}
+
+	pkts, err = RetrieveAndDeleteNPackets(ns, 2)
+	require.NoError(t, err)
+	for i := 0; i < 2; i++ {
+		require.EqualValues(t, i+1, pkts[i].Sequence)
+	}
+
+	pkts, err = RetrieveAndDeleteNPackets(ns, 10)
+	require.NoError(t, err)
+	require.Len(t, pkts, 8)
+	for i := range pkts {
+		require.EqualValues(t, i+3, pkts[i].Sequence)
+	}
+}
+
+func TestPruneBaseSeqNum(t *testing.T) {
+	dbRemover, err := setTestDB()
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+	ns := "testPruneBaseSeqNum"
+	err = setupDB(ns, nil)
+	require.NoError(t, err)
+
+	_, shouldFetch := PruneBaseSeqNum(ns)
+	require.False(t, shouldFetch)
+
+	m := map[uint64]uint64{}
+	for i := uint64(1); i < 20; i++ {
+		m[i] = i + 10
+	}
+
+	skipSeqNum := uint64(10)
+	for k, v := range m {
+		if k == skipSeqNum {
+			continue
+		}
+		err = StoreBaseSeqNum(ns, k, v)
+		require.NoError(t, err)
+	}
+
+	for i := 0; i < 2; i++ {
+		a, shouldFetch := PruneBaseSeqNum(ns)
+		require.True(t, shouldFetch)
+		require.Equal(t, skipSeqNum-1, a[0][0])
+		require.Equal(t, skipSeqNum+1, a[0][1])
+	}
+
+	err = StoreBaseSeqNum(ns, skipSeqNum, m[skipSeqNum])
+	require.NoError(t, err)
+	_, shouldFetch = PruneBaseSeqNum(ns)
+	require.False(t, shouldFetch)
+}
+
+func TestGetAndDeleteWhiteStatus(t *testing.T) {
+	dbRemover, err := setTestDB()
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+	ns := "testGetAndDeleteWhiteStatus"
+	err = setupDB(ns, nil)
+	require.NoError(t, err)
+
+	key1, key2 := "myPacket1", "myPacket2"
+	err = StoreWhiteStatus(ns, key1, true)
+	require.NoError(t, err)
+	err = StoreWhiteStatus(ns, key2, false)
+	require.NoError(t, err)
+
+	isWhite, err := GetAndDeleteWhiteStatus(ns, key1)
+	require.NoError(t, err)
+	require.True(t, isWhite)
+
+	isWhite, err = GetAndDeleteWhiteStatus(ns, key2)
+	require.NoError(t, err)
+	require.False(t, isWhite)
+
+	isWhite, err = GetAndDeleteWhiteStatus(ns, key1)
+	require.Error(t, err)
+	require.False(t, isWhite)
 }
