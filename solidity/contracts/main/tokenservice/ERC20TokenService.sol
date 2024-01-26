@@ -4,34 +4,35 @@ pragma solidity ^0.8.19;
 import {IERC20TokenBridge} from "../../common/interface/bridge/IERC20TokenBridge.sol";
 import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
 import {Pausable} from "../../common/Pausable.sol";
-import {BlackListService} from "../../base/tokenservice/BlackListService.sol";
 import {ERC20TokenSupport} from "../../base/tokenservice/ERC20TokenSupport.sol";
-import {Holding} from "../Holding.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import "../../common/libraries/Lib.sol";
+import {Holding} from "../Holding.sol";
+import {BlackListService} from "./BlackListService.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract ERC20TokenService is 
-    Pausable, 
-    BlackListService, 
+    Pausable,
     ERC20TokenSupport, 
     Initializable
 {
     address erc20Bridge;
+    IBlackListService blackListService;
     Holding holding;
     PacketLibrary.InNetworkAddress public self;
 
     function initialize(address bridge, 
         uint256 _chainId, 
-        address _usdc, 
-        address _usdt,
-        address _owner
+        address _owner,
+        address _blackListService
     ) public virtual initializer {
+        super._initialize(_owner);
         erc20Bridge = bridge;
         self = PacketLibrary.InNetworkAddress(
             _chainId, 
             address(this)
         );
-        BlackListService.initialize(_owner, _usdc, _usdt);
+        blackListService = IBlackListService(_blackListService);
     }
 
     function tokenType() public pure returns (string memory) {
@@ -45,7 +46,7 @@ contract ERC20TokenService is
     function _packetify(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) 
         internal view returns (PacketLibrary.OutPacket memory packet)
     {
-        require(!isBlackListed(msg.sender), "Sender Blacklisted");
+        require(!blackListService.isBlackListed(msg.sender), "Sender Blacklisted");
         require(isEnabledToken(tokenAddress,destChainId), "Token not supported");
         require(isAmountInRange(tokenAddress, amount), "Transfer amount not in range");
 
@@ -82,7 +83,7 @@ contract ERC20TokenService is
         require(isEnabledToken(tokenAddress, packet.sourceTokenService.chainId), "Invalid Token");
         PacketLibrary.Vote quorum = IERC20TokenBridge(erc20Bridge).consume(packet, sigs);
 
-        if(PacketLibrary.Vote.NAY == quorum || isBlackListed(receiver)) {
+        if(PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
             if(tokenAddress == address(0)) {
                 // eth lock
                 holding.lockETH{value:amount}(receiver, tokenAddress, amount);

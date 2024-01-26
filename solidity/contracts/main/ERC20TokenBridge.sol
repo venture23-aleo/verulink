@@ -27,7 +27,7 @@ contract ERC20TokenBridge is
         address _owner,
         uint256 _destChainId
     ) public initializer {
-        super.initialize(_owner);
+        super._initialize(_owner);
         destinationChainId = _destChainId;       
     }
 

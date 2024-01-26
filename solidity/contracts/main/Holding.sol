@@ -19,7 +19,7 @@ contract Holding is Pausable, Initializable {
     address public tokenService;
 
     function initialize(address _owner, address _tokenService) public initializer {
-        super.initialize(_owner);
+        super._initialize(_owner);
         tokenService = _tokenService;
     }
 

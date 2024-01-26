@@ -13,9 +13,9 @@ abstract contract Ownable is Upgradeable {
         _;
     }
 
-    function initialize(
+    function _initialize(
         address __owner
-    ) public virtual {
+    ) internal {
         _owner_ = __owner;
     }
 

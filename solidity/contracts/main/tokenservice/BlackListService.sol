@@ -2,9 +2,10 @@
 pragma solidity ^0.8.19;
 
 import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {Ownable} from "../../common/Ownable.sol";
 
-abstract contract BlackListService is Ownable {
+abstract contract BlackListService is IBlackListService, Ownable {
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
@@ -23,7 +24,7 @@ abstract contract BlackListService is Ownable {
     address internal usdt;
 
     function initialize(address _owner, address _usdc, address _usdt) public {
-        super.initialize(_owner);
+        super._initialize(_owner);
         usdc = _usdc;
         usdt = _usdt;
     }
@@ -32,13 +33,16 @@ abstract contract BlackListService is Ownable {
         emit BlackListAdded(account);
         blackLists[account] = true;
     }
+
     function removeFromBlackList(address account) external onlyOwner onlyProxy {
         emit BlackListRemoved(account);
         delete blackLists[account];
     }
-    function isBlackListed(address account) public view onlyProxy returns (bool) {
+
+    function isBlackListed(address account) public view override onlyProxy returns (bool) {
         return (blackLists[account] || 
             IERC20(usdc).isBlacklisted(account) ||
-            IERC20(usdt).getBlackListStatus(account));
+            IERC20(usdt).getBlackListStatus(account)
+        );
     }
 }
