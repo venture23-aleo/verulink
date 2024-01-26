@@ -41,16 +41,14 @@ var (
 )
 
 type Client struct {
-	name              string
-	address           ethCommon.Address
-	eth               *ethclient.Client
-	bridge            *abi.Bridge
-	minRequiredGasFee uint64
-	waitDur           time.Duration
-	nextBlockHeight   uint64
-	chainID           *big.Int
-	rpcEndpoint       string
-	filterTopic       ethCommon.Hash
+	name            string
+	address         ethCommon.Address
+	eth             *ethclient.Client
+	bridge          *abi.Bridge
+	waitDur         time.Duration
+	nextBlockHeight uint64
+	chainID         *big.Int
+	filterTopic     ethCommon.Hash
 }
 
 func (cl *Client) Name() string {
