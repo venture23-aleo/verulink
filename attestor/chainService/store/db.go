@@ -60,6 +60,7 @@ func RetrieveAndDeleteFirstPacket(namespace string) (pkt *chain.Packet, err erro
 	if err != nil {
 		return nil, err
 	}
+	pkt = new(chain.Packet)
 	err = json.Unmarshal(a[1], pkt)
 	return
 }
@@ -69,7 +70,7 @@ func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error)
 	if err != nil {
 		return nil, err
 	}
-	pkts := make([]*chain.Packet, 0, n)
+	pkts := make([]*chain.Packet, 0, len(s))
 	for _, b := range s {
 		pkt := new(chain.Packet)
 		if err := json.Unmarshal(b, pkt); err != nil {
@@ -94,22 +95,6 @@ func GetFirstKey[T keyConstraint](namespace string, keyType T) T {
 		return keyType
 	}
 	return convertKey(keyType, key)
-}
-
-func GetPacket[T keyConstraint](namespace string, key T, logger *zap.Logger) *chain.Packet {
-	k := getKeyByteForKeyConstraint(key)
-	v := get(namespace, k)
-	if v == nil {
-		return nil
-	}
-	pkt := new(chain.Packet)
-	if err := json.Unmarshal(v, pkt); err != nil {
-		if logger != nil {
-			logger.Error(err.Error())
-		}
-		return nil
-	}
-	return pkt
 }
 
 func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
