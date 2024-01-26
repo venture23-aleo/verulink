@@ -4,13 +4,15 @@ pragma solidity ^0.8.19;
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {IERC20TokenBridge} from "./common/interface/bridge/IERC20TokenBridge.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
-import {Ownable} from "./common/Ownable.sol";
+import {Pausable} from "./common/Pausable.sol";
 import {BlackListService} from "./base/tokenservice/BlackListService.sol";
 import {ERC20TokenSupport} from "./base/tokenservice/ERC20TokenSupport.sol";
 import {Holding} from "./Holding.sol";
 import "./common/libraries/Lib.sol";
 
-contract ERC20TokenService is Ownable, BlackListService, 
+contract ERC20TokenService is 
+    Pausable, 
+    BlackListService, 
     ERC20TokenSupport, 
     Initializable
 {
@@ -60,17 +62,17 @@ contract ERC20TokenService is Ownable, BlackListService,
         return packet;
     }
 
-    function transfer(string memory receiver, uint256 destChainId) external payable {
+    function transfer(string memory receiver, uint256 destChainId) external whenNotPaused payable {
         IERC20TokenBridge(erc20Bridge).sendMessage(_packetify(address(0), msg.value, receiver, destChainId));
     }
 
-    function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external {
+    function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external whenNotPaused {
         require(tokenAddress != address(0), "Only ERC20 Tokens");
         require(IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         IERC20TokenBridge(erc20Bridge).sendMessage(_packetify(tokenAddress, amount, receiver, destChainId));
     }
 
-    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external {
+    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external whenNotPaused {
         require(packet.destTokenService.addr == address(this),"Invalid Token Service");
         
         address receiver = packet.message.receiverAddress;

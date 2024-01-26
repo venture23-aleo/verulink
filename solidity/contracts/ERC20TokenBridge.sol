@@ -3,14 +3,14 @@ pragma solidity ^0.8.19;
 
 import "./common/libraries/Lib.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
-import {Ownable} from "./common/Ownable.sol";
+import {Pausable} from "./common/Pausable.sol";
 import {AttestorManager} from "./base/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "./base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "./base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "./base/bridge/OutgoingPacketManagerImpl.sol";
 
 contract ERC20TokenBridge is 
-    Ownable,
+    Pausable,
     AttestorManager,
     BridgeTokenServiceManager,
     ConsumedPacketManagerImpl,
@@ -45,12 +45,19 @@ contract ERC20TokenBridge is
         return isAttestor(signer);
     }
 
-    function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) public onlyProxy returns (PacketLibrary.Vote){
+    function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) public 
+    onlyProxy 
+    whenNotPaused 
+    returns (PacketLibrary.Vote)
+    {
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 
-    function sendMessage(PacketLibrary.OutPacket memory packet) public override onlyProxy {
+    function sendMessage(PacketLibrary.OutPacket memory packet) public override 
+    onlyProxy 
+    whenNotPaused 
+    {
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         super.sendMessage(packet);

@@ -30,7 +30,6 @@ abstract contract ConsumedPacketManagerImpl {
     }
 
     function _splitSignature(bytes memory sig) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
-        require(sig.length == 65);
 
         assembly {
             // first 32 bytes, after the length prefix.
@@ -39,6 +38,10 @@ abstract contract ConsumedPacketManagerImpl {
             s := mload(add(sig, 64))
             // final byte (first byte of the next 32 bytes).
             v := byte(0, mload(add(sig, 96)))
+        }
+
+        if (v < 27) {
+            v += 27;
         }
 
         return (v, r, s);
@@ -54,6 +57,7 @@ abstract contract ConsumedPacketManagerImpl {
         bytes32 s;
 
         for(uint256 i = 0; i < sigs.length; i++) {
+            require(sigs[i].length == 65, "Invalid Signature Length");
             (v,r,s) = _splitSignature(sigs[i]);
             signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.YEA);
             if(_validateAttestor(signer)) {

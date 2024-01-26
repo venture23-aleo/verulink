@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "./common/Ownable.sol";
+import {Pausable} from "./common/Pausable.sol";
 import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
-contract Holding is Ownable, Initializable {
+contract Holding is Pausable, Initializable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);
@@ -27,7 +27,7 @@ contract Holding is Ownable, Initializable {
         tokenService = _tokenService;
     }
 
-    function lock(address user, address token, uint256 amount) public {
+    function lock(address user, address token, uint256 amount) public whenNotPaused {
         require(
             msg.sender == tokenService,
             "Caller is not registered Token Service"
@@ -36,7 +36,7 @@ contract Holding is Ownable, Initializable {
         emit Locked(user, token, amount);
     }
 
-    function lockETH(address user, address token, uint256 amount) public payable {
+    function lockETH(address user, address token, uint256 amount) public whenNotPaused payable {
         require(msg.value > 0, "Requires ETH Transfer");
         require(
             msg.sender == tokenService,
@@ -57,7 +57,7 @@ contract Holding is Ownable, Initializable {
         emit Unlocked(user, token, amount);
     }
 
-    function release(address user, address token, uint256 amount) public {
+    function release(address user, address token, uint256 amount) public whenNotPaused {
         require(unlocked[user][token] >= amount, "Insufficient amount");
         unlocked[user][token] -= amount;
         emit Released(user, token, amount);

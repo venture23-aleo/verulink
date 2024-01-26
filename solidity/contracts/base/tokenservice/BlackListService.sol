@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
 import {Ownable} from "../../common/Ownable.sol";
 
-contract BlackListService is Ownable {
+abstract contract BlackListService is Ownable {
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
