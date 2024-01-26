@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	common "github.com/venture23-aleo/attestor/chainService/common"
@@ -18,14 +19,14 @@ const (
 )
 
 var (
-	chainIDToChainName         = map[uint32]string{}
+	chainIDToChainName         = map[*big.Int]string{}
 	RegisteredClients          = map[string]ClientFunc{}
 	RegisteredHashers          = map[string]HashFunc{}
 	RegisteredRetryChannels    = map[string]chan *chain.Packet{}
 	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 )
 
-type ClientFunc func(cfg *config.ChainConfig, m map[string]uint32) chain.IClient
+type ClientFunc func(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient
 type HashFunc func(sp *chain.ScreenedPacket) string
 
 func StartRelay(ctx context.Context, cfg *config.Config) {
@@ -43,7 +44,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
 
-	m := make(map[string]uint32)
+	m := make(map[string]*big.Int)
 	for _, chainCfg := range cfgs {
 		m[chainCfg.Name] = chainCfg.ChainID
 		chainIDToChainName[chainCfg.ChainID] = chainCfg.Name

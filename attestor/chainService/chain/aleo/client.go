@@ -2,7 +2,7 @@ package aleo
 
 import (
 	"context"
-	"strconv"
+	"math/big"
 	"strings"
 	"sync"
 	"time"
@@ -38,9 +38,9 @@ type Client struct {
 	programID  string
 	queryUrl   string
 	network    string
-	chainID    uint32
+	chainID    *big.Int
 	waitDur    time.Duration
-	destChains map[uint32]uint64 // keeps record of sequence number of all dest chains
+	destChains map[*big.Int]uint64 // keeps record of sequence number of all dest chains
 }
 
 type aleoPacket struct {
@@ -64,7 +64,7 @@ type aleoMessage struct {
 	sender   string
 }
 
-func (cl *Client) getPktWithSeq(ctx context.Context, dst uint32, seqNum uint64) (*chain.Packet, error) {
+func (cl *Client) getPktWithSeq(ctx context.Context, dst *big.Int, seqNum uint64) (*chain.Packet, error) {
 	mappingKey := constructOutMappingKey(dst, seqNum)
 	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, outPacket, mappingKey)
 	if err != nil {
@@ -90,7 +90,7 @@ func (cl *Client) Name() string {
 	return cl.name
 }
 
-func (cl *Client) GetChainID() uint32 {
+func (cl *Client) GetChainID() *big.Int {
 	return cl.chainID
 }
 
@@ -151,9 +151,10 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		)
 		ns := baseSeqNamespaces[index]
 		chainIdStr := strings.Replace(ns, baseSeqNumNameSpacePrefix, "", 1)
-		chainID, err := strconv.ParseUint(chainIdStr, 10, 32)
-		if err != nil {
-			logger.GetLogger().Error("Error while parsing uint", zap.Error(err))
+		chainID := new(big.Int)
+		chainID, ok := chainID.SetString(chainIdStr, 10)
+		if !ok {
+			logger.GetLogger().Error("Error while parsing uint")
 			goto indIncr
 		}
 		seqHeightRanges, shouldFetch = store.PruneBaseSeqNum(ns)
@@ -163,7 +164,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		startSeqNum, endSeqNum = seqHeightRanges[0][0], seqHeightRanges[0][1]
 		for i := startSeqNum; i < endSeqNum; i++ {
-			pkt, err := cl.getPktWithSeq(ctx, uint32(chainID), i)
+			pkt, err := cl.getPktWithSeq(ctx, chainID, i)
 			if err != nil {
 				// log/handle error
 				continue
@@ -215,8 +216,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding packet to retry namespace", zap.Any("packet", pkt))
-			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
-			ns := retryPacketNamespacePrefix + chainID
+			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -225,12 +225,11 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
-			ns := baseSeqNumNameSpacePrefix + chainID
+			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
-				zap.Uint32("source_chain_id", pkt.Source.ChainID),
-				zap.Uint32("dest_chain_id", pkt.Destination.ChainID),
+				zap.Any("source_chain_id", pkt.Source.ChainID),
+				zap.Any("dest_chain_id", pkt.Destination.ChainID),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, 0)
@@ -244,7 +243,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 	}
 }
 
-func NewClient(cfg *config.ChainConfig, m map[string]uint32) chain.IClient {
+func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 
 	urlSlice := strings.Split(cfg.NodeUrl, "|")
 	if len(urlSlice) != 2 {
@@ -282,7 +281,7 @@ func NewClient(cfg *config.ChainConfig, m map[string]uint32) chain.IClient {
 		waitDur = defaultWaitDur
 	}
 
-	destChainsSeqMap := make(map[uint32]uint64, 0)
+	destChainsSeqMap := make(map[*big.Int]uint64, 0)
 	for chainName, seqNum := range cfg.StartSeqNum {
 		chainID, ok := m[chainName]
 		if !ok {

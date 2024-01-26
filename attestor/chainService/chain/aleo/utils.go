@@ -11,7 +11,7 @@ import (
 	"github.com/venture23-aleo/attestor/chainService/chain"
 )
 
-func constructOutMappingKey(dst uint32, seqNum uint64) (mappingKey string) {
+func constructOutMappingKey(dst *big.Int, seqNum uint64) (mappingKey string) {
 	return fmt.Sprintf("{chain_id:%du32,sequence:%du32}", dst, seqNum)
 }
 
@@ -137,7 +137,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	if !sourceChainIDOk {
 		return nil, errors.New("failed to parse version")
 	}
-	pkt.Source.ChainID = uint32(sourceChainID.Uint64())
+	pkt.Source.ChainID = sourceChainID
 	pkt.Source.Address = packet.source.address
 
 	destChainID := new(big.Int)
@@ -146,7 +146,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 		return nil, errors.New("failed to parse version")
 	}
 
-	pkt.Destination.ChainID = uint32(destChainID.Uint64())
+	pkt.Destination.ChainID = destChainID
 
 	var err error
 	pkt.Destination.Address, err = parseAleoEthAddrToHexString(packet.destination.address)

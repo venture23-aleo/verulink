@@ -14,7 +14,7 @@ type IClient interface {
 }
 
 type NetworkAddress struct {
-	ChainID uint32
+	ChainID *big.Int
 	Address string
 }
 

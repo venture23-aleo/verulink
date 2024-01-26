@@ -13,11 +13,11 @@ func TestHash(t *testing.T) {
 		Version:  uint8(1),
 		Sequence: uint64(1),
 		Source: chain.NetworkAddress{
-			ChainID: uint32(2),
+			ChainID: big.NewInt(2),
 			Address: "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27",
 		},
 		Destination: chain.NetworkAddress{
-			ChainID: uint32(1),
+			ChainID: big.NewInt(1),
 			Address: "0x2D9B1dF35e4fAc995377aD7f7a84070CD36400Ff",
 		},
 		Message: chain.Message{

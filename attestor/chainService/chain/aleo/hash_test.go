@@ -14,11 +14,11 @@ func TestHash(t *testing.T) {
 		Version:  uint8(0),
 		Sequence: big.NewInt(1).Uint64(),
 		Source: chain.NetworkAddress{
-			ChainID: uint32(big.NewInt(1).Uint64()),
+			ChainID: big.NewInt(1),
 			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
 		},
 		Destination: chain.NetworkAddress{
-			ChainID: uint32(big.NewInt(2).Uint64()),
+			ChainID: big.NewInt(2),
 			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px", // converting address of form [0u8, 0u8, ..., 176u8] to str
 		},
 		Message: chain.Message{

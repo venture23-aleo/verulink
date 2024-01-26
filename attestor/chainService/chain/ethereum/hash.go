@@ -24,10 +24,10 @@ func hash(sp *chain.ScreenedPacket) string {
 	sp.Packet.Message.Amount.FillBytes(amountBytes)
 
 	srcChainIDBytes := make([]byte, 32)
-	binary.BigEndian.PutUint64(srcChainIDBytes[len(srcChainIDBytes)-8:], uint64(sp.Packet.Source.ChainID))
+	srcChainIDBytes = sp.Packet.Source.ChainID.FillBytes(srcChainIDBytes)
 
 	dstChainIDBytes := make([]byte, 32)
-	binary.BigEndian.PutUint64(dstChainIDBytes[len(dstChainIDBytes)-8:], uint64(sp.Packet.Destination.ChainID))
+	dstChainIDBytes = sp.Packet.Destination.ChainID.FillBytes(dstChainIDBytes)
 
 	pktHash := crypto.Keccak256Hash(
 		versionBytes,

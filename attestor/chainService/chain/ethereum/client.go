@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +48,7 @@ type Client struct {
 	minRequiredGasFee uint64
 	waitDur           time.Duration
 	nextBlockHeight   uint64
-	chainID           uint32
+	chainID           *big.Int
 	rpcEndpoint       string
 	filterTopic       ethCommon.Hash
 }
@@ -62,7 +61,7 @@ func (cl *Client) GetSourceChain() (string, string) {
 	return cl.name, cl.address.Hex()
 }
 
-func (cl *Client) GetChainID() uint32 {
+func (cl *Client) GetChainID() *big.Int {
 	return cl.chainID
 }
 
@@ -125,11 +124,11 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 			Version:  uint8(packetDispatched.Packet.Version.Uint64()),
 			Sequence: packetDispatched.Packet.Sequence.Uint64(),
 			Destination: chain.NetworkAddress{
-				ChainID: uint32(packetDispatched.Packet.DestTokenService.ChainId.Uint64()),
+				ChainID: packetDispatched.Packet.DestTokenService.ChainId,
 				Address: packetDispatched.Packet.DestTokenService.Addr,
 			},
 			Source: chain.NetworkAddress{
-				ChainID: uint32(packetDispatched.Packet.SourceTokenService.ChainId.Uint64()),
+				ChainID: packetDispatched.Packet.SourceTokenService.ChainId,
 				Address: string(packetDispatched.Packet.SourceTokenService.Addr.Bytes()),
 			},
 			Message: chain.Message{
@@ -221,7 +220,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
-		chainID, _ := strconv.ParseUint(chainIDStr, 10, 32)
+		chainID := new(big.Int)
+		chainID, _ = chainID.SetString(chainIDStr, 10)
 		// segragate sequence numbers as per target chain
 		seqHeightRanges, shouldFetch := store.PruneBaseSeqNum(ns)
 		if !shouldFetch {
@@ -239,7 +239,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 				continue // retry the same block if err
 			}
 			for _, pkt := range pkts {
-				if pkt.Destination.ChainID != uint32(chainID) {
+				if pkt.Destination.ChainID.Cmp(chainID) != 0 {
 					continue
 				}
 				if pkt.Sequence <= startSeqNum {
@@ -262,8 +262,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
-			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
-			ns := retryPacketNamespacePrefix + chainID
+			ns := retryPacketNamespacePrefix +  pkt.Destination.ChainID.String()
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -272,12 +271,11 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			chainID := strconv.FormatUint(uint64(pkt.Destination.ChainID), 10)
-			ns := baseSeqNumNameSpacePrefix + chainID
+			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
-				zap.Uint32("source_chain_id", pkt.Source.ChainID),
-				zap.Uint32("dest_chain_id", pkt.Destination.ChainID),
+				zap.Any("source_chain_id", pkt.Source.ChainID),
+				zap.Any("dest_chain_id", pkt.Destination.ChainID),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
@@ -291,7 +289,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 	}
 }
 
-func NewClient(cfg *config.ChainConfig, _ map[string]uint32) chain.IClient {
+func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create ethereum rpc client. Error: %s", err.Error()))
