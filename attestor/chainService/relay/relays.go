@@ -49,6 +49,8 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 
 	r := relay{
 		collector: collector.GetCollector(),
+		signer:    signer.GetSigner(),
+		screener:  addressscreener.GetScreener(),
 	}
 
 	go r.initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
