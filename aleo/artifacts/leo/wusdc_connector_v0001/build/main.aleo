@@ -86,9 +86,10 @@ function wusdc_receive:
     is.eq r2 aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr793djuxgsxsnf37q8 into r15;
     or r14 r15 into r16;
     assert.eq r16 true;
-    call wusdc_holding_v0001.aleo/hold_fund r1 r3 into r17;
-    async wusdc_receive r10 r11 r17 into r18;
-    output r18 as wusdc_connector_v0001.aleo/wusdc_receive.future;
+    ternary r13 r3 0u128 into r17;
+    call wusdc_holding_v0001.aleo/hold_fund r1 r17 into r18;
+    async wusdc_receive r10 r11 r18 into r19;
+    output r19 as wusdc_connector_v0001.aleo/wusdc_receive.future;
 
 finalize wusdc_receive:
     input r0 as token_service_v0001.aleo/token_receive.future;

@@ -65,10 +65,14 @@ program wusdc_connector_v0001.aleo {
         // And additional checks are not required
         let check_required: bool = !(receiver == actual_receiver);
 
+        let held_amount: u128 = 0u128;
+
         if check_required {
+            held_amount = amount;
             assert_eq(actual_receiver, WUSDC_HOLDING);
-            wusdc_holding_v0001.aleo/hold_fund(receiver, amount);
         }
+
+        wusdc_holding_v0001.aleo/hold_fund(receiver, held_amount);
 
     }
 

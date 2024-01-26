@@ -27,7 +27,7 @@ program wusdc_holding_v0001.aleo {
     }
 
     ///////////////////////////////
-    ///// Transfer Ownership ///////
+    ///// Transfer Ownership //////
     ///////////////////////////////
 
     /// Update the existing owner program
@@ -74,7 +74,7 @@ program wusdc_holding_v0001.aleo {
 
         let held_amount: u128 = Mapping::get(holdings, user);
 
-        // Increase the held amount for the token_user
+        // Decrease the held amount for the token_user
         Mapping::set(holdings, user, held_amount - amount);
     }
 

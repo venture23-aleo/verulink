@@ -9,5 +9,5 @@ dependencies = []
 name = "token_service_v0001"
 location = "local"
 path = "../token_service_v0001"
-checksum = "dc808f6ec74a136b32cc0c69fe5f52a058f093cfe80d8dd8caa077afe36ea3f6"
+checksum = "443e591206ec917d3803227625ff4a9480e83955359f666d130f4eb60fb031a0"
 dependencies = ["token_bridge_v0001.aleo"]

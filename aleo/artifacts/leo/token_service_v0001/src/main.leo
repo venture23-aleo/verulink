@@ -285,6 +285,7 @@ program token_service_v0001.aleo {
             let new_min_required_supply: u128 = get_new_min_required_supply(
                 current_supply, 
                 amount, 
+                min_required_supply,
                 current_block_height, 
                 last_update, 
                 last_min_required_supply, 
@@ -370,20 +371,16 @@ program token_service_v0001.aleo {
         return z;
     }
 
-    // TODO: verify this logic
     inline get_new_min_required_supply(
         current_supply: u128, 
         transfer_amount: u128, 
+        min_required_supply: u128,
         current_block: u32, 
         last_update: u32, 
         last_min_required_supply: u128, 
         percentage: u16, 
         timeframe: u32 
     ) -> u128 {
-        // If percentage = 10
-        // then min_required_supply = 90% of current_supply
-        let min_required_supply: u128 = get_x_percent_of_y(HUNDRED_PERCENTAGE - percentage, current_supply);
-
         // If percentage = 10
         // then max_withdraw = 10% of current_supply
         let max_withdraw_in_timeframe: u128 = get_x_percent_of_y(percentage, current_supply);

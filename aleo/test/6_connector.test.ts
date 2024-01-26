@@ -5,10 +5,13 @@ import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { Wusdc_holding_v0001Contract } from "../artifacts/js/wusdc_holding_v0001";
 import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
 
-import { InPacket, PacketId } from "../artifacts/js/types";
+import * as js2leo from "../artifacts/js/js2leo";
+import { HoldingRelease, InPacket, PacketId } from "../artifacts/js/types";
 
 import {
   ALEO_ZERO_ADDRESS,
+  THRESHOLD_INDEX,
+  TOTAL_PROPOSALS_INDEX,
   aleoChainId,
   aleoTsProgramAddr,
   aleoUser1,
@@ -21,9 +24,15 @@ import {
   ethUser,
   usdcContractAddr,
   wusdcConnectorAddr,
+  wusdcHoldingAddr,
   wusdcTokenAddr,
 } from "./mockData";
-import { aleoArr2Evm, evm2AleoArr, signPacket } from "../utils/utils";
+import {
+  aleoArr2Evm,
+  evm2AleoArr,
+  hashStruct,
+  signPacket,
+} from "../utils/utils";
 import { Address, PrivateKey } from "@aleohq/sdk";
 
 const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
@@ -178,6 +187,28 @@ describe("Token Connector", () => {
     );
 
     test(
+      "Initialize Council",
+      async () => {
+        let isCouncilInitialized = true;
+        try {
+          const threshold = await council.settings(THRESHOLD_INDEX)
+        } catch (err) {
+          isCouncilInitialized = false;
+        }
+
+        if (!isCouncilInitialized) {
+          const initializeTx = await council.initialize(
+            [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5], 1
+          );
+          // @ts-ignore
+          await initializeTx.wait();
+        }
+      },
+      TIMEOUT
+    );
+
+
+    test(
       "Token Service: Support New Token",
       async () => {
         let isWusdcSupported = true;
@@ -275,7 +306,7 @@ describe("Token Connector", () => {
           initialBalance = BigInt(0);
         }
 
-        const signature = signPacket(packet, bridge.config.privateKey);
+        const signature = signPacket(packet, true, bridge.config.privateKey);
 
         const signers = [
           Address.from_private_key(
@@ -348,6 +379,217 @@ describe("Token Connector", () => {
         expect(aleoArr2Evm(outPacket.destination.addr)).toBe(ethTsContractAddr);
       },
       TIMEOUT
+    );
+
+  });
+
+  describe("Screening Failed Path", () => {
+    const incomingSequence = BigInt(
+      Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+    );
+    const incomingAmount = BigInt(10000);
+    const incomingHeight = 10;
+    let userInitialBalance = BigInt(0);
+    let holdingProgramInitialBalance = BigInt(0);
+    let initialHeldAmount = BigInt(0);
+
+    // Create a packet
+    const packet: InPacket = {
+      version: 0,
+      sequence: incomingSequence,
+      source: {
+        chain_id: ethChainId,
+        addr: evm2AleoArr(ethTsContractAddr),
+      },
+      destination: {
+        chain_id: aleoChainId,
+        addr: aleoTsProgramAddr,
+      },
+      message: {
+        token: wusdcTokenAddr,
+        sender: evm2AleoArr(ethUser),
+        receiver: aleoUser1,
+        amount: incomingAmount,
+      },
+      height: incomingHeight,
+    };
+
+    test("Ensure proper setup", async () => {
+      expect(await bridge.owner_TB(true)).toBe(aleoUser1);
+      expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
+      expect(await wusdcToken.token_owner(true)).toBe(wusdcConnectorAddr);
+      expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnectorAddr);
+    });
+
+    test(
+      "Receive wUSDC must collect the amount in holding program",
+      async () => {
+        try {
+          userInitialBalance = await wusdcToken.account(aleoUser1);
+        } catch (e) {
+          userInitialBalance = BigInt(0);
+        }
+
+        try {
+          holdingProgramInitialBalance = await wusdcToken.account(
+            wusdcHoldingAddr
+          );
+        } catch (e) {
+          holdingProgramInitialBalance = BigInt(0);
+        }
+
+        try {
+          initialHeldAmount = await wusdcHolding.holdings(aleoUser1);
+        } catch (e) {
+          initialHeldAmount = BigInt(0);
+        }
+
+        const signature = signPacket(packet, false, bridge.config.privateKey);
+
+        const signers = [
+          Address.from_private_key(
+            PrivateKey.from_string(bridge.config.privateKey)
+          ).to_string(),
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+        ];
+
+        const signs = [signature, signature, signature, signature, signature];
+
+        const tx = await wusdcConnecter.wusdc_receive(
+          evm2AleoArr(ethUser), // sender
+          aleoUser1, // receiver
+          wusdcHoldingAddr, // actual receiver
+          incomingAmount,
+          incomingSequence,
+          incomingHeight,
+          signers,
+          signs
+        );
+
+        // @ts-ignore
+        await tx.wait();
+
+        let userFinalBalance = BigInt(0);
+        let holdingProgramFinalBalance = BigInt(0);
+        let finalHeldAmount = BigInt(0);
+
+        try {
+          userFinalBalance = await wusdcToken.account(aleoUser1);
+        } catch (e) {
+          userFinalBalance = BigInt(0);
+        }
+
+        try {
+          holdingProgramFinalBalance = await wusdcToken.account(
+            wusdcHoldingAddr
+          );
+        } catch (e) {
+          holdingProgramFinalBalance = BigInt(0);
+        }
+
+        try {
+          finalHeldAmount = await wusdcHolding.holdings(aleoUser1);
+        } catch (e) {
+          finalHeldAmount = BigInt(0);
+        }
+
+        console.log(`User: ${userInitialBalance} -> ${userFinalBalance}`)
+        expect(userFinalBalance).toBe(userInitialBalance);
+        console.log(`Holding: ${holdingProgramInitialBalance} -> ${holdingProgramFinalBalance}`)
+        expect(holdingProgramFinalBalance).toBe(
+          holdingProgramInitialBalance + incomingAmount
+        );
+        console.log(`Held Amount: ${initialHeldAmount} -> ${finalHeldAmount}`)
+        expect(finalHeldAmount).toBe(initialHeldAmount + incomingAmount);
+      },
+      TIMEOUT
+    );
+
+    test(
+      "Release held amount",
+      async () => {
+        try {
+          userInitialBalance = await wusdcToken.account(aleoUser1);
+        } catch (e) {
+          userInitialBalance = BigInt(0);
+        }
+
+        try {
+          holdingProgramInitialBalance = await wusdcToken.account(
+            wusdcHoldingAddr
+          );
+        } catch (e) {
+          holdingProgramInitialBalance = BigInt(0);
+        }
+
+        try {
+          initialHeldAmount = await wusdcHolding.holdings(aleoUser1);
+        } catch (e) {
+          initialHeldAmount = BigInt(0);
+        }
+
+        let proposalId = parseInt( (await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1
+        const releaseFundProposal: HoldingRelease = {
+          id: proposalId,
+          token_id: wusdcTokenAddr,
+          connector: wusdcConnectorAddr,
+          receiver: aleoUser1,
+          amount: initialHeldAmount,
+        };
+        const releaseFundProposalHash = hashStruct(
+          js2leo.getHoldingReleaseLeo(releaseFundProposal)
+        );
+        let tx = await council.propose(proposalId, releaseFundProposalHash);
+
+        // @ts-ignore
+        await tx.wait();
+
+        tx = await wusdcConnecter.wusdc_release(
+          proposalId,
+          aleoUser1,
+          initialHeldAmount
+        );
+
+        // @ts-ignore
+        await tx.wait();
+
+        let userFinalBalance = BigInt(0);
+        let holdingProgramFinalBalance = BigInt(0);
+        let finalHeldAmount = BigInt(0);
+
+        try {
+          userFinalBalance = await wusdcToken.account(aleoUser1);
+        } catch (e) {
+          userFinalBalance = BigInt(0);
+        }
+
+        try {
+          holdingProgramFinalBalance = await wusdcToken.account(
+            wusdcHoldingAddr
+          );
+        } catch (e) {
+          holdingProgramFinalBalance = BigInt(0);
+        }
+
+        try {
+          finalHeldAmount = await wusdcHolding.holdings(aleoUser1);
+        } catch (e) {
+          finalHeldAmount = BigInt(0);
+        }
+
+        console.log(`User: ${userInitialBalance} -> ${userFinalBalance}`)
+        expect(userFinalBalance).toBe(userInitialBalance + initialHeldAmount);
+        console.log(`Holding: ${holdingProgramInitialBalance} -> ${holdingProgramFinalBalance}`)
+        expect(holdingProgramFinalBalance).toBe(
+          holdingProgramInitialBalance - initialHeldAmount
+        );
+        console.log(`Held Amount: ${initialHeldAmount} -> ${finalHeldAmount}`)
+        expect(finalHeldAmount).toBe(BigInt(0));
+      },
+      TIMEOUT * 2
     );
   });
 
