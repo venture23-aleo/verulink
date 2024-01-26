@@ -6,7 +6,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+
+	"github.com/venture23-aleo/attestor/chainService/config"
 )
+
+type ClientFunc func(cfg *config.ChainConfig, m map[string]*big.Int) IClient
+type HashFunc func(sp *ScreenedPacket) string
 
 type IClient interface {
 	Name() string
