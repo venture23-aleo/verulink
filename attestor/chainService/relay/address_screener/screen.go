@@ -41,6 +41,6 @@ func SetupScreenService() error {
 	sc = &screenService{}
 	return nil
 }
-func GetScreenService() ScreenI {
+func GetScreener() ScreenI {
 	return sc
 }
