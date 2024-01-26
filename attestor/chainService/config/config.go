@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"math/big"
 	"os"
 	"path/filepath"
 	"time"
@@ -35,7 +36,7 @@ func init() {
 
 type ChainConfig struct {
 	Name           string            `yaml:"name"`
-	ChainID        uint32            `yaml:"chain_id"`
+	ChainID        *big.Int            `yaml:"chain_id"`
 	BridgeContract string            `yaml:"bridge_contract"`
 	NodeUrl        string            `yaml:"node_url"`
 	WaitDuration   time.Duration     `yaml:"wait_duration"`
