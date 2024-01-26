@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
+import {IERC20TokenBridge} from "../../common/interface/bridge/IERC20TokenBridge.sol";
+import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
+import {Pausable} from "../../common/Pausable.sol";
+import {BlackListService} from "../../base/tokenservice/BlackListService.sol";
+import {ERC20TokenSupport} from "../../base/tokenservice/ERC20TokenSupport.sol";
+import {Holding} from "../Holding.sol";
+import "../../common/libraries/Lib.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
-import {IERC20TokenBridge} from "./common/interface/bridge/IERC20TokenBridge.sol";
-import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
-import {Pausable} from "./common/Pausable.sol";
-import {BlackListService} from "./base/tokenservice/BlackListService.sol";
-import {ERC20TokenSupport} from "./base/tokenservice/ERC20TokenSupport.sol";
-import {Holding} from "./Holding.sol";
-import "./common/libraries/Lib.sol";
 
 contract ERC20TokenService is 
     Pausable, 
@@ -25,7 +25,7 @@ contract ERC20TokenService is
         address _usdc, 
         address _usdt,
         address _owner
-    ) public initializer {
+    ) public virtual initializer {
         erc20Bridge = bridge;
         self = PacketLibrary.InNetworkAddress(
             _chainId, 

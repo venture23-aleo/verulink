@@ -46,14 +46,14 @@ abstract contract ERC20TokenSupport is Ownable {
         return amount >= token.minValue && amount <= token.maxValue;
     }
 
-    function addToken(
+    function _addToken(
         address tokenAddress,
         uint256 destChainId,
         string memory destTokenAddress,
         string memory destTokenService,
         uint256 min,
         uint256 max
-    ) public onlyOwner onlyProxy {
+    ) internal {
         require(
             !isSupportedToken(tokenAddress, destChainId),
             "Token already supported"
@@ -68,6 +68,17 @@ abstract contract ERC20TokenSupport is Ownable {
         );
         supportedTokens[tokenAddress] = token;
         emit TokenAdded(token, destChainId);
+    }    
+
+    function addToken(
+        address tokenAddress,
+        uint256 destChainId,
+        string memory destTokenAddress,
+        string memory destTokenService,
+        uint256 min,
+        uint256 max
+    ) public virtual onlyOwner onlyProxy {
+        _addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
     }
 
     function removeToken(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {ERC20TokenBridge} from "../../ERC20TokenBridge.sol";
+import {ERC20TokenBridge} from "../../main/ERC20TokenBridge.sol";
 import {Ownable} from "../../common/Ownable.sol";
 
 contract ERC20TokenBridgeV2 is ERC20TokenBridge {

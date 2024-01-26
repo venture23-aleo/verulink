@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {ERC20TokenService} from "../../ERC20TokenService.sol";
+import {ERC20TokenService} from "../../main/tokenservice/ERC20TokenService.sol";
 import {Ownable} from "../../common/Ownable.sol";
 
 contract ERC20TokenServiceV2 is ERC20TokenService {

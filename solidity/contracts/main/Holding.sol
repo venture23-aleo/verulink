@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Pausable} from "./common/Pausable.sol";
-import {IERC20} from "./common/interface/tokenservice/IERC20.sol";
+import {Pausable} from "../common/Pausable.sol";
+import {IERC20} from "../common/interface/tokenservice/IERC20.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract Holding is Pausable, Initializable {

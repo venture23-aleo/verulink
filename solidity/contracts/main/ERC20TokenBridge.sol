@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import "./common/libraries/Lib.sol";
+import "../common/libraries/Lib.sol";
+import {Pausable} from "../common/Pausable.sol";
+import {AttestorManager} from "../base/bridge/AttestorManager.sol";
+import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
+import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
+import {OutgoingPacketManagerImpl} from "../base/bridge/OutgoingPacketManagerImpl.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
-import {Pausable} from "./common/Pausable.sol";
-import {AttestorManager} from "./base/bridge/AttestorManager.sol";
-import {BridgeTokenServiceManager} from "./base/bridge/BridgeTokenServiceManager.sol";
-import {ConsumedPacketManagerImpl} from "./base/bridge/ConsumedPacketManagerImpl.sol";
-import {OutgoingPacketManagerImpl} from "./base/bridge/OutgoingPacketManagerImpl.sol";
 
 contract ERC20TokenBridge is 
     Pausable,
