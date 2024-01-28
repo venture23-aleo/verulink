@@ -179,6 +179,7 @@ func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err erro
 				return err
 			}
 			s = append(s, v)
+			count++
 		}
 		return nil
 	})
