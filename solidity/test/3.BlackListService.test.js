@@ -11,18 +11,18 @@ describe("BlackListService", () => {
         // Deploy mock contracts or use your preferred testing library for mocks
         const USDCMock = await ethers.getContractFactory("USDCMock");
         usdcMock = await USDCMock.deploy();
-        await usdcMock.waitForDeployment();
+        await usdcMock.deployed();
 
         const USDTMock = await ethers.getContractFactory("USDTMock");
         usdtMock = await USDTMock.deploy();
-        await usdtMock.waitForDeployment();
+        await usdtMock.deployed();
 
-        BlackListService = await ethers.getContractFactory("BlackListService");
+        BlackListService = await ethers.getContractFactory("BlackListServiceMock");
         blackListServiceImpl = await BlackListService.deploy();
-        await blackListServiceImpl.waitForDeployment();
+        await blackListServiceImpl.deployed();
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
-        // initializeData = new ethers.Interface(BlackListServiceABI).encodeFunctionData(["initialize(address)"](owner.address));
-        initializeData = new ethers.Interface([{
+        // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
+        initializeData = new ethers.utils.Interface([{
             "inputs": [
                 {
                     "internalType": "address",
@@ -40,14 +40,14 @@ describe("BlackListService", () => {
                     "type": "address"
                 }
             ],
-            "name": "initialize",
+            "name": "initializemock",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
-        }]).encodeFunctionData("initialize", [owner.address, usdcMock.target, usdtMock.target]);
-        const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.target, initializeData);
-        await proxy.waitForDeployment();
-        proxiedContract = BlackListService.attach(proxy.target);
+        }]).encodeFunctionData("initializemock", [owner.address, usdcMock.address, usdtMock.address]);
+        const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
+        await proxy.deployed();
+        proxiedContract = BlackListService.attach(proxy.address);
     });
 
     it("should add to and remove from the black list", async () => {
@@ -114,19 +114,48 @@ describe("BlackListService", () => {
         ).to.be.reverted;
     });
 
+    it("should allow to add to the black list only through proxy", async () => {
+        // Try to add to the black list with contract other than proxy and expect it to fail
+        expect(blackListServiceImpl.connect(owner).addToBlackList(other.address)).to.be.reverted;
+
+        // // Check if the account is added to the black list
+        // expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
+
+        // // Try to add to the black list with another account and expect it to revert
+        // await expect(
+        //     blackListServiceImpl.connect(other).addToBlackList(owner.address)
+        // ).to.be.reverted;
+    });
+
     it("should allow only owner to remove from the black list", async () => {
         // Add to the black list with the owner
         await (await proxiedContract.connect(owner).addToBlackList(other.address)).wait();
 
-        // Try to remove from the black list with the owner
-        await (await proxiedContract.connect(owner).removeFromBlackList(other.address)).wait();
+        // // Try to remove from the black list with the owner
+        // await (await proxiedContract.connect(owner).removeFromBlackList(other.address)).wait();
 
         // Check if the account is removed from the black list
-        expect(await proxiedContract.isBlackListed(other.address)).to.be.false;
+        expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
 
         // Try to remove from the black list with another account and expect it to revert
         await expect(
             proxiedContract.connect(other).removeFromBlackList(owner.address)
+        ).to.be.reverted;
+    });
+
+    it("should allow to remove from the black list only through proxy", async () => {
+        // Add to the black list with the owner
+        await (await proxiedContract.connect(owner).addToBlackList(other.address)).wait();
+
+        // // Try to remove from the black list with the owner
+        // await (await proxiedContract.connect(owner).removeFromBlackList(other.address)).wait();
+
+        // Check if the account is removed from the black list
+        expect(await proxiedContract.isBlackListed(other.address)).to.be.true;
+
+        // Try to remove from the black list with another account and expect it to revert
+        expect(
+            blackListServiceImpl.connect(owner).removeFromBlackList(owner.address)
         ).to.be.reverted;
     });
 

@@ -8,7 +8,6 @@ import {ERC20TokenSupport} from "../../base/tokenservice/ERC20TokenSupport.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import "../../common/libraries/Lib.sol";
 import {Holding} from "../Holding.sol";
-import {BlackListService} from "./BlackListService.sol";
 import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract ERC20TokenService is 

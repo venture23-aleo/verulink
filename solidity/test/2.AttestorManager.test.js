@@ -12,16 +12,16 @@ describe('AttestorManager', () => {
         [owner, attestor, other, signer] = await ethers.getSigners();
 
         // Deploy AttestorManager
-        AttestorManager = await ethers.getContractFactory("AttestorManager");
+        AttestorManager = await ethers.getContractFactory("AttestorManagerMock");
         let abi = AttestorManager.interface.format();
 
         attestorManagerImpl = await AttestorManager.deploy();
-        await attestorManagerImpl.waitForDeployment();
+        await attestorManagerImpl.deployed();
         AttestorManagerProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.Interface(abi).encodeFunctionData("initialize", [owner.address]);
-        const proxy = await AttestorManagerProxy.deploy(attestorManagerImpl.target, initializeData);
-        await proxy.waitForDeployment();
-        proxiedV1 = AttestorManager.attach(proxy.target);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("initializemock", [owner.address]);
+        const proxy = await AttestorManagerProxy.deploy(attestorManagerImpl.address, initializeData);
+        await proxy.deployed();
+        proxiedV1 = AttestorManager.attach(proxy.address);
     });
 
     // Test deployment and initialization
@@ -46,6 +46,14 @@ describe('AttestorManager', () => {
         expect(newQuorum).to.equal(quorumRequired);
     });
 
+    it('should call addAttestor only through proxy', async () => {
+        const newAttestor = ethers.Wallet.createRandom().address;
+        const quorumRequired = 2;
+
+        // Add attestor
+        expect(attestorManagerImpl.addAttestor(newAttestor, quorumRequired)).to.be.reverted;
+    });
+
     it('should add attestors in batch by Owner', async () => {
         const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
         const quorumRequired = 2;
@@ -63,6 +71,14 @@ describe('AttestorManager', () => {
         // Check if the quorum was updated
         const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
+    });
+
+    it('should call addAttestors only through proxy', async () => {
+        const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
+        const quorumRequired = 2;
+
+        // Add attestors
+        expect(attestorManagerImpl.addAttestors(attestors, quorumRequired)).to.be.reverted;
     });
 
     it('should add attestors in batch by a non-owner', async () => {
@@ -102,7 +118,7 @@ describe('AttestorManager', () => {
     // Test attempting to add an attestor with zero address
     it('should revert when trying to add an attestor with zero address', async () => {
         // Attempt to add an attestor with zero address
-        expect(proxiedV1.addAttestor(ethers.ZeroAddress, 2)).to.be.revertedWith('Zero Address');
+        expect(proxiedV1.addAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('Zero Address');
     });
 
     // Test removing an attestor
@@ -125,6 +141,17 @@ describe('AttestorManager', () => {
         expect(newQuorum).to.equal(quorumRequired);
     });
 
+    it('should call removeAttestor only through proxy', async () => {
+        const newAttestor = ethers.Wallet.createRandom().address;
+        const quorumRequired = 2;
+
+        // Add attestor
+        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+
+        // Remove attestor
+        expect(attestorManagerImpl.removeAttestor(newAttestor, quorumRequired)).to.be.reverted;
+    });
+
     // Test attempting to remove a non-existing attestor
     it('should revert when trying to remove a non-existing attestor', async () => {
         const nonExistingAttestor = ethers.Wallet.createRandom().address;
@@ -136,7 +163,7 @@ describe('AttestorManager', () => {
     // Test attempting to remove an attestor with zero address
     it('should revert when trying to remove an attestor with zero address', async () => {
         // Attempt to remove an attestor with zero address
-        expect(proxiedV1.removeAttestor(ethers.ZeroAddress, 2)).to.be.revertedWith('Unknown Attestor');
+        expect(proxiedV1.removeAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('Unknown Attestor');
     });
 
     // Test onlyOwner modifier for addAttestor function

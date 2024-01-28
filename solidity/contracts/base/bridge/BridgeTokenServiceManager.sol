@@ -7,7 +7,7 @@ abstract contract BridgeTokenServiceManager is Ownable {
     event TokenServiceAdded(address tokenService);
     event TokenServiceRemoved(address tokenService);
 
-    mapping(address => bool) tokenServices;
+    mapping(address => bool) public tokenServices;
 
     function isRegisteredTokenService(address _service) public view onlyProxy returns(bool) {
         return tokenServices[_service];

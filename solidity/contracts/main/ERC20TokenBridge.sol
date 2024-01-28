@@ -21,7 +21,7 @@ contract ERC20TokenBridge is
     
     event ChainUpdated(uint256 oldDestinationChainId, uint256 newDestinationChainId);
 
-    uint256 destinationChainId;
+    uint256 public destinationChainId;
 
     function initialize(
         address _owner,
