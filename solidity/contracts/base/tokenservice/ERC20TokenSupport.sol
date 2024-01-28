@@ -14,7 +14,7 @@ abstract contract ERC20TokenSupport is Ownable {
         bool enabled;
     }
 
-    mapping(address => Token) supportedTokens;
+    mapping(address => Token) public supportedTokens;
 
     event TokenAdded(Token token, uint256 destChainId);
     event TokenRemoved(address token, uint256 destChainId);
