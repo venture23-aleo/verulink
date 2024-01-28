@@ -40,26 +40,26 @@ var (
 	baseSeqNamespaces     []string
 	retryPacketNamespaces []string
 )
+
 type iEthClient interface {
 	GetCurrentBlock(ctx context.Context) (uint64, error)
 	FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error)
-} 
+}
 
 type ethClient struct {
 	eth *ethclient.Client
 }
 
-func NewEthClient(rpcEndPoint string) iEthClient{
+func NewEthClient(rpcEndPoint string) iEthClient {
 	rpc, err := rpc.Dial(rpcEndPoint)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	return &ethClient{
 		eth: ethclient.NewClient(rpc),
 	}
 }
-
 
 func (eth *ethClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
 	currentBlock, err := eth.eth.BlockNumber(ctx)
@@ -72,16 +72,15 @@ func (eth *ethClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
 func (eth *ethClient) FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error) {
 	logs, err := eth.eth.FilterLogs(ctx, ether.FilterQuery{
 		FromBlock: big.NewInt(int64(fromHeight)),
-		ToBlock: big.NewInt(int64(toHeight)),
+		ToBlock:   big.NewInt(int64(toHeight)),
 		Addresses: []ethCommon.Address{contractAddress},
-		Topics: [][]ethCommon.Hash{{topics}},
+		Topics:    [][]ethCommon.Hash{{topics}},
 	})
 	if err != nil {
 		return nil, err
 	}
 	return logs, err
 }
-
 
 type iBridgeClient interface {
 	ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error)
@@ -91,14 +90,14 @@ type bridgeClient struct {
 	bridge *abi.Bridge
 }
 
-func NewBridgeClient(contractAddress ethCommon.Address, ethClient *ethclient.Client) (iBridgeClient, error){
+func NewBridgeClient(contractAddress ethCommon.Address, ethClient *ethclient.Client) (iBridgeClient, error) {
 	bridge, err := abi.NewBridge(contractAddress, ethClient)
 	if err != nil {
 		return nil, err
 	}
-	return &bridgeClient {
+	return &bridgeClient{
 		bridge: bridge,
-	}, nil 
+	}, nil
 }
 
 func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error) {
@@ -109,16 +108,16 @@ func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacke
 	return packetDispatched, nil
 }
 
-
 type Client struct {
-	name              string
-	address           ethCommon.Address
-	eth               iEthClient
-	bridge            iBridgeClient
-	waitDur           time.Duration
-	nextBlockHeight   uint64
-	chainID           *big.Int
-	filterTopic       ethCommon.Hash
+	name               string
+	address            ethCommon.Address
+	eth                iEthClient
+	bridge             iBridgeClient
+	waitDur            time.Duration
+	nextBlockHeight    uint64
+	chainID            *big.Int
+	filterTopic        ethCommon.Hash
+	retryPacketWaitDur time.Duration
 }
 
 func (cl *Client) Name() string {
@@ -170,7 +169,7 @@ func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.
 }
 
 func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uint64) ([]*chain.Packet, error) {
-	logs, err := cl.eth.FilterLogs(ctx, fromHeight, toHeight, cl.address, cl.filterTopic) 
+	logs, err := cl.eth.FilterLogs(ctx, fromHeight, toHeight, cl.address, cl.filterTopic)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +228,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 }
 
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
-	ticker := time.NewTicker(time.Hour) // todo: define in config
+	ticker := time.NewTicker(cl.retryPacketWaitDur) // todo: define in config
 	index := 0
 	defer ticker.Stop()
 	for {
@@ -382,14 +381,15 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	}
 
 	return &Client{
-		name:            name,
-		address:         ethCommon.HexToAddress(cfg.BridgeContract),
-		eth:             ethclient,
-		bridge:          bridgeClient,
-		waitDur:         waitDur,
-		chainID:         cfg.ChainID,
-		nextBlockHeight: cfg.StartHeight,
-		filterTopic:     ethCommon.HexToHash(cfg.FilterTopic),
+		name:               name,
+		address:            ethCommon.HexToAddress(cfg.BridgeContract),
+		eth:                ethclient,
+		bridge:             bridgeClient,
+		waitDur:            waitDur,
+		chainID:            cfg.ChainID,
+		nextBlockHeight:    cfg.StartHeight,
+		filterTopic:        ethCommon.HexToHash(cfg.FilterTopic),
+		retryPacketWaitDur: time.Second, // TODO: put the duration in config.yaml
 	}
 }
 
