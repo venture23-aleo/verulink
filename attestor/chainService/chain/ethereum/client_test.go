@@ -148,7 +148,7 @@ type mockBridgeClient struct {
 	getDispatchedPacket func() (*abi.BridgePacketDispatched, error)
 }
 
-func (mckBridgeCl *mockBridgeClient)  ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error) {
+func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error) {
 	if mckBridgeCl.getDispatchedPacket != nil {
 		return mckBridgeCl.getDispatchedPacket()
 	}
@@ -158,34 +158,34 @@ func (mckBridgeCl *mockBridgeClient)  ParsePacketDispatched(log types.Log) (*abi
 func TestParseBlocks(t *testing.T) {
 	t.Logf("case: happy path parsing")
 	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding: "console",
+		Encoding:   "console",
 		OutputPath: "log",
 	})
 	defer os.Remove("log")
 	client := &Client{
 		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) {return 10, nil},
-			getLogs: func() ([]types.Log, error) {return []types.Log{types.Log{}}, nil},
+			getCurHeight: func() (uint64, error) { return 10, nil },
+			getLogs:      func() ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
 		},
 		bridge: &mockBridgeClient{
 			getDispatchedPacket: func() (*abi.BridgePacketDispatched, error) {
 				return &abi.BridgePacketDispatched{
 					Packet: abi.PacketLibraryOutPacket{
-						Version: common.Big0,
+						Version:  common.Big0,
 						Sequence: common.Big1,
 						SourceTokenService: abi.PacketLibraryInNetworkAddress{
 							ChainId: common.Big1,
-							Addr: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
 						},
 						DestTokenService: abi.PacketLibraryOutNetworkAddress{
 							ChainId: common.Big2,
-							Addr: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 						},
 						Message: abi.PacketLibraryOutTokenMessage{
-							SenderAddress: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
 							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-							Amount: big.NewInt(100),
-							ReceiverAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Amount:           big.NewInt(100),
+							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 						},
 						Height: big.NewInt(55),
 					},
@@ -198,11 +198,11 @@ func TestParseBlocks(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, packets)
 	modelPacket := &chain.Packet{
-		Version: uint8(0),
+		Version:  uint8(0),
 		Sequence: uint64(1),
 		Source: chain.NetworkAddress{
 			ChainID: common.Big1,
-			Address: string(common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Bytes()),
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
 		},
 		Destination: chain.NetworkAddress{
 			ChainID: common.Big2,
@@ -210,9 +210,9 @@ func TestParseBlocks(t *testing.T) {
 		},
 		Message: chain.Message{
 			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress: string(common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Bytes()),
-			Amount: big.NewInt(100),
-			ReceiverAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 		},
 		Height: uint64(55),
 	}
@@ -223,43 +223,42 @@ func TestParseBlocksError(t *testing.T) {
 	t.Logf("case: error while filtering packets")
 	client := &Client{
 		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) {return 10, nil},
+			getCurHeight: func() (uint64, error) { return 10, nil },
 		},
 		bridge: &mockBridgeClient{},
 	}
 	packets, err := client.parseBlock(context.Background(), 10)
 	assert.Nil(t, packets)
 	assert.NotNil(t, err)
-} 
-
+}
 
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
 
 	client := &Client{
 		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) {return 10, nil},
-			getLogs: func() ([]types.Log, error) {return []types.Log{types.Log{}}, nil},
+			getCurHeight: func() (uint64, error) { return 10, nil },
+			getLogs:      func() ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
 		},
 		bridge: &mockBridgeClient{
 			getDispatchedPacket: func() (*abi.BridgePacketDispatched, error) {
 				return &abi.BridgePacketDispatched{
 					Packet: abi.PacketLibraryOutPacket{
-						Version: common.Big0,
+						Version:  common.Big0,
 						Sequence: common.Big1,
 						SourceTokenService: abi.PacketLibraryInNetworkAddress{
 							ChainId: common.Big1,
-							Addr: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
 						},
 						DestTokenService: abi.PacketLibraryOutNetworkAddress{
 							ChainId: common.Big2,
-							Addr: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 						},
 						Message: abi.PacketLibraryOutTokenMessage{
-							SenderAddress: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
 							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-							Amount: big.NewInt(100),
-							ReceiverAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Amount:           big.NewInt(100),
+							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 						},
 						Height: big.NewInt(55),
 					},
@@ -271,11 +270,11 @@ func TestFeedPacket(t *testing.T) {
 	go client.FeedPacket(context.Background(), pktCh)
 
 	modelPacket := &chain.Packet{
-		Version: uint8(0),
+		Version:  uint8(0),
 		Sequence: uint64(1),
 		Source: chain.NetworkAddress{
 			ChainID: common.Big1,
-			Address: string(common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Bytes()),
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
 		},
 		Destination: chain.NetworkAddress{
 			ChainID: common.Big2,
@@ -283,16 +282,16 @@ func TestFeedPacket(t *testing.T) {
 		},
 		Message: chain.Message{
 			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress: string(common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Bytes()),
-			Amount: big.NewInt(100),
-			ReceiverAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 		},
 		Height: uint64(55),
 	}
 
 	assert.Equal(t, uint64(10), client.nextBlockHeight)
 
-	pkt := <- pktCh
+	pkt := <-pktCh
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
@@ -300,5 +299,61 @@ func TestFeedPacket(t *testing.T) {
 }
 
 func TestRetryFeed(t *testing.T) {
-	
+
+	cfg := &config.ChainConfig{
+		Name:           "ethereum",
+		ChainID:        big.NewInt(1),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://rpc.sepolia.org",
+		WaitDuration:   time.Hour * 24,
+		DestChains:     []string{"2"},
+		StartSeqNum: map[string]uint64{
+			"2": 1,
+		},
+		StartHeight: 100,
+		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+	}
+	err := store.InitKVStore("db")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove("db")
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "log",
+	})
+	defer os.Remove("log")
+
+	client := NewClient(cfg, map[string]*big.Int{})
+	assert.Equal(t, client.Name(), "ethereum")
+
+	// store packet in retry bucket 
+	modelPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: common.Big1,
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: common.Big2,
+			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Height: uint64(55),
+	}
+
+	store.StoreRetryPacket("ethereum_rpns2", modelPacket)
+	packetCh := make(chan *chain.Packet)
+
+	go client.(*Client).retryFeed(context.Background(), packetCh)
+
+	pkt := <-packetCh
+	assert.Equal(t, pkt, modelPacket)
 }
+
