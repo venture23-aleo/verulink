@@ -327,7 +327,7 @@ func TestRetryFeed(t *testing.T) {
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
 
-	// store packet in retry bucket 
+	// store packet in retry bucket
 	modelPacket := &chain.Packet{
 		Version:  uint8(0),
 		Sequence: uint64(1),
@@ -356,4 +356,134 @@ func TestRetryFeed(t *testing.T) {
 	pkt := <-packetCh
 	assert.Equal(t, pkt, modelPacket)
 }
+
+func TestManagePacket(t *testing.T) {
+	t.Log("case: manage packet that comes in retry ch")
+	cfg := &config.ChainConfig{
+		Name:           "ethereum",
+		ChainID:        big.NewInt(1),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://rpc.sepolia.org",
+		WaitDuration:   time.Hour * 24,
+		DestChains:     []string{"2"},
+		StartSeqNum: map[string]uint64{
+			"2": 1,
+		},
+		StartHeight: 100,
+		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+	}
+	os.Mkdir("tmp", 0777)
+	store.InitKVStore("tmp/db")
+
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "tmp/log",
+	})
+	defer os.RemoveAll("tmp/")
+
+	client := NewClient(cfg, map[string]*big.Int{})
+	assert.Equal(t, client.Name(), "ethereum")
+
+	// store packet in retry bucket
+	modelPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: common.Big1,
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: common.Big2,
+			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Height: uint64(55),
+	}
+
+	go client.(*Client).managePacket(context.Background())
+	time.Sleep(time.Second) // wait to make the receiver ready before sending
+	go func() {
+		retryCh <- modelPacket
+	}()
+	time.Sleep(time.Second) // wait to fill in the database
+	storedPacket := store.RetrieveNPackets("ethereum_rpns2", 1)
+
+L1:
+	for {
+		select {
+		case pkt := <-storedPacket:
+			assert.Equal(t, pkt, modelPacket)
+			break L1
+		default:
+			continue
+		}
+	}
+}
+
+func TestManagePacket2(t *testing.T) {
+	t.Log("case: manage packet that comes in completed ch")
+	cfg := &config.ChainConfig{
+		Name:           "ethereum",
+		ChainID:        big.NewInt(1),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://rpc.sepolia.org",
+		WaitDuration:   time.Hour * 24,
+		DestChains:     []string{"2"},
+		StartSeqNum: map[string]uint64{
+			"2": 1,
+		},
+		StartHeight: 100,
+		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+	}
+	os.Mkdir("tmp", 0777)
+	store.InitKVStore("tmp/db")
+
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "tmp/log",
+	})
+	defer os.RemoveAll("tmp/")
+
+	client := NewClient(cfg, map[string]*big.Int{})
+	assert.Equal(t, client.Name(), "ethereum")
+
+	// store packet in retry bucket
+	modelPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: common.Big1,
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: common.Big2,
+			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Height: uint64(55),
+	}
+
+	go client.(*Client).managePacket(context.Background())
+	time.Sleep(time.Second) // wait to make the receiver ready before sending
+	go func() {
+		completedCh <- modelPacket
+	}()
+	time.Sleep(time.Second) // wait to fill in the database
+	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix + modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
+	assert.True(t, exists)
+
+	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix + modelPacket.Destination.ChainID.String(), 1)
+	assert.Equal(t, uint64(1), key)
+}
+
 
