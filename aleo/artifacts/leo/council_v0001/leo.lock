@@ -1,13 +1,13 @@
 [[package]]
 name = "token_bridge_v0001"
-location = "local"
-path = "../token_bridge_v0001"
+network = "testnet3"
+location = "network"
 checksum = "887d86a212ed2d1ca1e308852e0705dd7f95ff508687983a09da2d2290efdc21"
 dependencies = []
 
 [[package]]
 name = "token_service_v0001"
-location = "local"
-path = "../token_service_v0001"
-checksum = "443e591206ec917d3803227625ff4a9480e83955359f666d130f4eb60fb031a0"
+network = "testnet3"
+location = "network"
+checksum = "8e8aa8189520c1171597c7c5fc60d1205c32bbde5103cbf442278e98e0267e77"
 dependencies = ["token_bridge_v0001.aleo"]

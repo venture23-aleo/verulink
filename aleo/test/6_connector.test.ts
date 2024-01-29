@@ -187,28 +187,6 @@ describe("Token Connector", () => {
     );
 
     test(
-      "Initialize Council",
-      async () => {
-        let isCouncilInitialized = true;
-        try {
-          const threshold = await council.settings(THRESHOLD_INDEX)
-        } catch (err) {
-          isCouncilInitialized = false;
-        }
-
-        if (!isCouncilInitialized) {
-          const initializeTx = await council.initialize(
-            [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5], 1
-          );
-          // @ts-ignore
-          await initializeTx.wait();
-        }
-      },
-      TIMEOUT
-    );
-
-
-    test(
       "Token Service: Support New Token",
       async () => {
         let isWusdcSupported = true;
@@ -420,6 +398,29 @@ describe("Token Connector", () => {
       expect(await wusdcToken.token_owner(true)).toBe(wusdcConnectorAddr);
       expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnectorAddr);
     });
+
+    test(
+      "Initialize Council",
+      async () => {
+        let isCouncilInitialized = true;
+        try {
+          const threshold = await council.settings(THRESHOLD_INDEX)
+        } catch (err) {
+          isCouncilInitialized = false;
+        }
+
+        if (!isCouncilInitialized) {
+          const initializeTx = await council.initialize(
+            [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5], 1
+          );
+          // @ts-ignore
+          await initializeTx.wait();
+        }
+      },
+      TIMEOUT
+    );
+
+
 
     test(
       "Receive wUSDC must collect the amount in holding program",

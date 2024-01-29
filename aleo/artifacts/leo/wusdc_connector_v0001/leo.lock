@@ -1,34 +1,34 @@
 [[package]]
 name = "token_bridge_v0001"
-location = "local"
-path = "../token_bridge_v0001"
+network = "testnet3"
+location = "network"
 checksum = "887d86a212ed2d1ca1e308852e0705dd7f95ff508687983a09da2d2290efdc21"
 dependencies = []
 
 [[package]]
 name = "token_service_v0001"
-location = "local"
-path = "../token_service_v0001"
-checksum = "443e591206ec917d3803227625ff4a9480e83955359f666d130f4eb60fb031a0"
+network = "testnet3"
+location = "network"
+checksum = "8e8aa8189520c1171597c7c5fc60d1205c32bbde5103cbf442278e98e0267e77"
 dependencies = ["token_bridge_v0001.aleo"]
 
 [[package]]
 name = "council_v0001"
-location = "local"
-path = "../council_v0001"
+network = "testnet3"
+location = "network"
 checksum = "a4558e19befa7048a1449e244b0529fa6e946682874524b877cbaa39a7d9e547"
 dependencies = ["token_bridge_v0001.aleo", "token_service_v0001.aleo"]
 
 [[package]]
 name = "wusdc_token_v0001"
-location = "local"
-path = "../wusdc_token_v0001"
+network = "testnet3"
+location = "network"
 checksum = "fafc38f430dae23520aade115e0a13edf303a6f3bdfa673e7f37ee873863c500"
 dependencies = []
 
 [[package]]
 name = "wusdc_holding_v0001"
-location = "local"
-path = "../wusdc_holding_v0001"
+network = "testnet3"
+location = "network"
 checksum = "d0075da31a52594039962ace1ab4e710a25410912e4023cf7a8b68ddf732ca7e"
 dependencies = ["wusdc_token_v0001.aleo"]
