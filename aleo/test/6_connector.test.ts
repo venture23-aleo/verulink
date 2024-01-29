@@ -159,7 +159,7 @@ describe("Token Connector", () => {
         }
 
         if (!isEthSupported) {
-          const addEthChainTx = await bridge.enable_chain_tb(ethChainId);
+          const addEthChainTx = await bridge.add_chain_tb(ethChainId);
           // @ts-ignore
           await addEthChainTx.wait();
         }
@@ -226,7 +226,7 @@ describe("Token Connector", () => {
         }
 
         if (!isServiceEnabled) {
-          const supportServiceTx = await bridge.enable_service_tb(
+          const supportServiceTx = await bridge.add_service_tb(
             aleoTsProgramAddr
           );
           // @ts-ignore
