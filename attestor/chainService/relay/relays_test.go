@@ -2,6 +2,7 @@ package relay
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"math"
 	"math/big"
@@ -209,6 +210,147 @@ func TestConsumePackets(t *testing.T) {
 }
 
 func TestProcessPackets(t *testing.T) {
+	t.Run("test normal flow", func(t *testing.T) {
+		ethChainID := big.NewInt(1)
+		aleoChainID := big.NewInt(math.MaxInt64)
+		chainIDToChainName = map[*big.Int]string{
+			ethChainID:  "ethereum",
+			aleoChainID: "aleo",
+		}
+
+		ethCh := make(chan *chain.Packet)
+		aleoCh := make(chan *chain.Packet)
+		RegisteredCompleteChannels["ethereum"] = ethCh
+		RegisteredCompleteChannels["aleo"] = aleoCh
+
+		r := relay{
+			collector: &collectorTest{
+				sendToCollector: func(sp *chain.ScreenedPacket, signature string) error {
+					return nil
+				},
+			},
+			signer: &signTest{
+				signScreenedPacket: func(sp *chain.ScreenedPacket, hash chain.HashFunc) (string, error) {
+					return "signature", nil
+				},
+			},
+			screener: &screenTest{
+				screen: func() bool { return true },
+			},
+		}
+
+		ethSeqNum := 23
+		aleoSeqNum := 32
+		go r.processPacket(&chain.Packet{
+			Sequence:    uint64(ethSeqNum),
+			Source:      chain.NetworkAddress{ChainID: ethChainID},
+			Destination: chain.NetworkAddress{ChainID: aleoChainID},
+		})
+
+		go r.processPacket(&chain.Packet{
+			Sequence:    uint64(aleoSeqNum),
+			Source:      chain.NetworkAddress{ChainID: aleoChainID},
+			Destination: chain.NetworkAddress{ChainID: ethChainID},
+		})
+
+		pkt := <-ethCh
+		require.EqualValues(t, ethSeqNum, pkt.Sequence)
+		pkt = <-aleoCh
+		require.EqualValues(t, aleoSeqNum, pkt.Sequence)
+	})
+
+	t.Run("test sign error flow", func(t *testing.T) {
+		ethChainID := big.NewInt(1)
+		aleoChainID := big.NewInt(math.MaxInt64)
+		chainIDToChainName = map[*big.Int]string{
+			ethChainID:  "ethereum",
+			aleoChainID: "aleo",
+		}
+
+		ethCh := make(chan *chain.Packet)
+		aleoCh := make(chan *chain.Packet)
+		RegisteredRetryChannels["ethereum"] = ethCh
+		RegisteredRetryChannels["aleo"] = aleoCh
+
+		r := relay{
+			signer: &signTest{
+				signScreenedPacket: func(sp *chain.ScreenedPacket, hash chain.HashFunc) (string, error) {
+					return "", errors.New("error")
+				},
+			},
+			screener: &screenTest{
+				screen: func() bool { return true },
+			},
+		}
+
+		ethSeqNum := 23
+		aleoSeqNum := 32
+		go r.processPacket(&chain.Packet{
+			Sequence:    uint64(ethSeqNum),
+			Source:      chain.NetworkAddress{ChainID: ethChainID},
+			Destination: chain.NetworkAddress{ChainID: aleoChainID},
+		})
+
+		go r.processPacket(&chain.Packet{
+			Sequence:    uint64(aleoSeqNum),
+			Source:      chain.NetworkAddress{ChainID: aleoChainID},
+			Destination: chain.NetworkAddress{ChainID: ethChainID},
+		})
+
+		pkt := <-ethCh
+		require.EqualValues(t, ethSeqNum, pkt.Sequence)
+		pkt = <-aleoCh
+		require.EqualValues(t, aleoSeqNum, pkt.Sequence)
+	})
+
+	t.Run("test collector error flow", func(t *testing.T) {
+		ethChainID := big.NewInt(1)
+		aleoChainID := big.NewInt(math.MaxInt64)
+		chainIDToChainName = map[*big.Int]string{
+			ethChainID:  "ethereum",
+			aleoChainID: "aleo",
+		}
+
+		ethCh := make(chan *chain.Packet)
+		aleoCh := make(chan *chain.Packet)
+		RegisteredRetryChannels["ethereum"] = ethCh
+		RegisteredRetryChannels["aleo"] = aleoCh
+
+		r := relay{
+			collector: &collectorTest{
+				sendToCollector: func(sp *chain.ScreenedPacket, signature string) error {
+					return errors.New("error")
+				},
+			},
+			signer: &signTest{
+				signScreenedPacket: func(sp *chain.ScreenedPacket, hash chain.HashFunc) (string, error) {
+					return "signature", nil
+				},
+			},
+			screener: &screenTest{
+				screen: func() bool { return true },
+			},
+		}
+
+		ethSeqNum := 23
+		aleoSeqNum := 32
+		go r.processPacket(&chain.Packet{
+			Sequence:    uint64(ethSeqNum),
+			Source:      chain.NetworkAddress{ChainID: ethChainID},
+			Destination: chain.NetworkAddress{ChainID: aleoChainID},
+		})
+
+		go r.processPacket(&chain.Packet{
+			Sequence:    uint64(aleoSeqNum),
+			Source:      chain.NetworkAddress{ChainID: aleoChainID},
+			Destination: chain.NetworkAddress{ChainID: ethChainID},
+		})
+
+		pkt := <-ethCh
+		require.EqualValues(t, ethSeqNum, pkt.Sequence)
+		pkt = <-aleoCh
+		require.EqualValues(t, aleoSeqNum, pkt.Sequence)
+	})
 
 }
 
