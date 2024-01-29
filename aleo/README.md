@@ -61,3 +61,21 @@ This program is responsible for holding disputed funds and transfers.
 
 ## Token Connector
 This program acts as a connector between `Token Service` and `Token Holding` & `Token Program`. Since, Aleo has no support for interfaces yet, the connector is used.
+
+
+## Ownership and Upgradeability
+
+Each of the above program has a owner that performs admin functions. The owner can be set during initialization and the ownership can be transferred only from the current owner. 
+
+|Programs |Owner |
+----------|-------
+Token Bridge | Council
+Token Service | Council
+Token Program | Token Connector
+Token Holding | Token Connector
+Token Connector | Council
+
+### Council Program
+Council is a separate program that acts as a multisig to perform admin functions. Functions from council can be executed only if threshold of members (of council) vote to perform a particular action.
+
+Since our architecture features a single token bridge and token service program, the council imports these programs. However, as each token is deployed separately (as ARC20 token) and new tokens can be added over time, the token connector imports the council instead. If we move from a council program to a general multisig (maybe from [Puzzle](https://puzzle.online/)), there is no need to update the token bridge and token service but the for each token, new connector program needs to be deployed.
