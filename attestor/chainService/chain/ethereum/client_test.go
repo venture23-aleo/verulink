@@ -227,7 +227,7 @@ func TestFeedPacket(t *testing.T) {
 			},
 		},
 		nextBlockHeight:    10,
-		retryPacketWaitDur: time.Second,
+		retryPacketWaitDur: time.Hour,
 	}
 	go client.FeedPacket(context.Background(), pktCh)
 
