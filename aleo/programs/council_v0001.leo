@@ -858,36 +858,36 @@ program council_v0001.aleo {
     }
 
 
-    ///////////////////////////////////////////////////////////
-    ///////  Token Service: Update Outgoing Percentage ////////
-    ///////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////
+    ///////  Token Service: Update Withdrawal Limit ////////
+    ////////////////////////////////////////////////////////
 
-    struct TsUpdateOutgoingPercentage {
+    struct TsUpdateWithdrawalLimit {
         id: u32,
         token_id: address,
-        outgoing_percentage: u16,
-        timeframe: u32,
-        max_no_cap: u128
+        percentage: u16,
+        duration: u32,
+        threshold_no_limit: u128
     }
 
     transition ts_update_outgoing_percentage(
         public id: u32, 
         public token_id: address, 
-        public outgoing_percentage: u16, 
-        public timeframe: u32,
-        public max_no_cap: u128
+        public percentage: u16, 
+        public duration: u32,
+        public threshold_no_limit: u128
     ) {
-        let proposal: TsUpdateOutgoingPercentage  = TsUpdateOutgoingPercentage {
+        let proposal: TsUpdateWithdrawalLimit  = TsUpdateWithdrawalLimit {
             id,
             token_id,
-            outgoing_percentage,
-            timeframe,
-            max_no_cap
+            percentage,
+            duration,
+            threshold_no_limit
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/update_outgoing_percentage_ts(token_id, outgoing_percentage, timeframe, max_no_cap);
+        token_service_v0001.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
 
         return then finalize(proposal_hash);
     }

@@ -92,12 +92,12 @@ struct TsUpdateMaxTransfer:
     token_id as address;
     max_transfer as u128;
 
-struct TsUpdateOutgoingPercentage:
+struct TsUpdateWithdrawalLimit:
     id as u32;
     token_id as address;
-    outgoing_percentage as u16;
-    timeframe as u32;
-    max_no_cap as u128;
+    percentage as u16;
+    duration as u32;
+    threshold_no_limit as u128;
 
 struct HoldingRelease:
     id as u32;
@@ -663,14 +663,14 @@ function ts_update_outgoing_percentage:
     input r2 as u16.public;
     input r3 as u32.public;
     input r4 as u128.public;
-    cast r0 r1 r2 r3 r4 into r5 as TsUpdateOutgoingPercentage;
+    cast r0 r1 r2 r3 r4 into r5 as TsUpdateWithdrawalLimit;
     hash.bhp256 r5 into r6 as field;
-    call token_service_v0001.aleo/update_outgoing_percentage_ts r1 r2 r3 r4 into r7;
+    call token_service_v0001.aleo/update_withdrawal_limit r1 r2 r3 r4 into r7;
     async ts_update_outgoing_percentage r7 r6 into r8;
     output r8 as council_v0001.aleo/ts_update_outgoing_percentage.future;
 
 finalize ts_update_outgoing_percentage:
-    input r0 as token_service_v0001.aleo/update_outgoing_percentage_ts.future;
+    input r0 as token_service_v0001.aleo/update_withdrawal_limit.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

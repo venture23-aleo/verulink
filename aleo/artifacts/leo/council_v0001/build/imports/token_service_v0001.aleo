@@ -10,10 +10,10 @@ program token_service_v0001.aleo;
 
 
 
-struct OutgoingPercentageInTime:
-    outgoing_percentage as u16;
-    timeframe as u32;
-    max_no_cap as u128;
+struct WithdrawalLimit:
+    percentage as u16;
+    duration as u32;
+    threshold_no_limit as u128;
 
 
 mapping owner_TS:
@@ -41,17 +41,22 @@ mapping max_transfers:
 	value as u128.public;
 
 
-mapping max_outgoing_percentage:
+mapping token_withdrawal_limits:
 	key as address.public;
-	value as OutgoingPercentageInTime.public;
+	value as WithdrawalLimit.public;
 
 
-mapping last_token_update:
+mapping token_snapshot_withdrawal:
+	key as address.public;
+	value as u128.public;
+
+
+mapping token_snapshot_height:
 	key as address.public;
 	value as u32.public;
 
 
-mapping last_min_supply:
+mapping token_amount_withdrawn:
 	key as address.public;
 	value as u128.public;
 
@@ -105,8 +110,8 @@ finalize add_token_ts:
     input r7 as u128.public;
     get owner_TS[true] into r8;
     assert.eq r0 r8;
-    cast r5 r6 r7 into r9 as OutgoingPercentageInTime;
-    set r9 into max_outgoing_percentage[r1];
+    cast r5 r6 r7 into r9 as WithdrawalLimit;
+    set r9 into token_withdrawal_limits[r1];
     set r3 into min_transfers[r1];
     set r4 into max_transfers[r1];
     set r2 into token_connectors[r1];
@@ -122,9 +127,9 @@ finalize remove_token_ts:
     input r1 as address.public;
     get owner_TS[true] into r2;
     assert.eq r0 r2;
-    contains max_outgoing_percentage[r1] into r3;
+    contains token_withdrawal_limits[r1] into r3;
     assert.eq r3 true;
-    remove max_outgoing_percentage[r1];
+    remove token_withdrawal_limits[r1];
     remove min_transfers[r1];
     remove token_connectors[r1];
 
@@ -174,17 +179,17 @@ finalize update_max_transfer_ts:
     set r2 into max_transfers[r1];
 
 
-function update_outgoing_percentage_ts:
+function update_withdrawal_limit:
     input r0 as address.public;
     input r1 as u16.public;
     input r2 as u32.public;
     input r3 as u128.public;
     lte r1 100_00u16 into r4;
     assert.eq r4 true;
-    async update_outgoing_percentage_ts self.caller r0 r1 r2 r3 into r5;
-    output r5 as token_service_v0001.aleo/update_outgoing_percentage_ts.future;
+    async update_withdrawal_limit self.caller r0 r1 r2 r3 into r5;
+    output r5 as token_service_v0001.aleo/update_withdrawal_limit.future;
 
-finalize update_outgoing_percentage_ts:
+finalize update_withdrawal_limit:
     input r0 as address.public;
     input r1 as address.public;
     input r2 as u16.public;
@@ -192,14 +197,8 @@ finalize update_outgoing_percentage_ts:
     input r4 as u128.public;
     get owner_TS[true] into r5;
     assert.eq r0 r5;
-    cast r2 r3 r4 into r6 as OutgoingPercentageInTime;
-    set r6 into max_outgoing_percentage[r1];
-
-
-
-
-
-
+    cast r2 r3 r4 into r6 as WithdrawalLimit;
+    set r6 into token_withdrawal_limits[r1];
 
 
 
@@ -231,35 +230,33 @@ finalize token_send:
     get max_transfers[r2] into r7;
     lte r3 r7 into r8;
     assert.eq r8 true;
-    get total_supply[r2] into r9;
-    get max_outgoing_percentage[r2] into r10;
-    gte r9 r10.max_no_cap into r11;
-    get.or_use last_token_update[r2] block.height into r12;
-    get.or_use last_min_supply[r2] 0u128 into r13;
-    lte r10.outgoing_percentage 100_00u16 into r14;
-    assert.eq r14 true;
-    cast r10.outgoing_percentage into r15 as u128;
-    mul r9 r15 into r16;
-    cast 100_00u16 into r17 as u128;
-    div r16 r17 into r18;
-    sub r9 r18 into r19;
-    sub block.height r12 into r20;
-    cast r20 into r21 as u128;
-    mul r18 r21 into r22;
-    cast r10.timeframe into r23 as u128;
-    div r22 r23 into r24;
-    gt r13 r24 into r25;
-    sub.w r13 r24 into r26;
-    ternary r25 r26 0u128 into r27;
-    gt r19 r27 into r28;
-    ternary r28 r19 r27 into r29;
-    sub r9 r3 into r30;
-    gte r30 r29 into r31;
-    assert.eq r31 true;
-    set block.height into last_token_update[r2];
-    set r29 into last_min_supply[r2];
-    sub r9 r3 into r32;
-    set r32 into total_supply[r2];
+    get token_withdrawal_limits[r2] into r9;
+    get total_supply[r2] into r10;
+    lte r9.percentage 100_00u16 into r11;
+    assert.eq r11 true;
+    cast r9.percentage into r12 as u128;
+    mul r10 r12 into r13;
+    cast 100_00u16 into r14 as u128;
+    div r13 r14 into r15;
+    get.or_use token_snapshot_withdrawal[r2] r15 into r16;
+    get.or_use token_snapshot_height[r2] 0u32 into r17;
+    get.or_use token_amount_withdrawn[r2] 0u128 into r18;
+    sub block.height r17 into r19;
+    gt r19 r9.duration into r20;
+    add r18 r3 into r21;
+    ternary r20 r15 r16 into r22;
+    ternary r20 block.height r17 into r23;
+    ternary r20 r3 r21 into r24;
+    gte r10 r9.threshold_no_limit into r25;
+    lte r24 r22 into r26;
+    not r25 into r27;
+    or r27 r26 into r28;
+    assert.eq r28 true;
+    set r22 into token_snapshot_withdrawal[r2];
+    set r23 into token_snapshot_height[r2];
+    set r24 into token_amount_withdrawn[r2];
+    sub r10 r3 into r29;
+    set r29 into total_supply[r2];
 
 
 function token_receive:

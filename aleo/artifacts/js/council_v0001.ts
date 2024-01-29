@@ -18,7 +18,7 @@ import {
   TsRemoveToken,
   TsUpdateMinTransfer,
   TsUpdateMaxTransfer,
-  TsUpdateOutgoingPercentage,
+  TsUpdateWithdrawalLimit,
   HoldingRelease,
   ConnectorUpdate,
   ExternalProposal,
@@ -31,7 +31,7 @@ import {
   PacketId,
   PacketIdWithAttestor,
   InPacketWithScreening,
-  OutgoingPercentageInTime,
+  WithdrawalLimit,
 } from "./types";
 import {
   getProposalVoteLeo,
@@ -51,7 +51,7 @@ import {
   getTsRemoveTokenLeo,
   getTsUpdateMinTransferLeo,
   getTsUpdateMaxTransferLeo,
-  getTsUpdateOutgoingPercentageLeo,
+  getTsUpdateWithdrawalLimitLeo,
   getHoldingReleaseLeo,
   getConnectorUpdateLeo,
   getExternalProposalLeo,
@@ -64,7 +64,7 @@ import {
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
   getInPacketWithScreeningLeo,
-  getOutgoingPercentageInTimeLeo,
+  getWithdrawalLimitLeo,
 } from './js2leo';
 import {
   getProposalVote,
@@ -84,7 +84,7 @@ import {
   getTsRemoveToken,
   getTsUpdateMinTransfer,
   getTsUpdateMaxTransfer,
-  getTsUpdateOutgoingPercentage,
+  getTsUpdateWithdrawalLimit,
   getHoldingRelease,
   getConnectorUpdate,
   getExternalProposal,
@@ -97,7 +97,7 @@ import {
   getPacketId,
   getPacketIdWithAttestor,
   getInPacketWithScreening,
-  getOutgoingPercentageInTime,
+  getWithdrawalLimit,
 } from './leo2js';
 import {
   zkRun,

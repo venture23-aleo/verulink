@@ -9,5 +9,5 @@ dependencies = []
 name = "token_service_v0001"
 network = "testnet3"
 location = "network"
-checksum = "8e8aa8189520c1171597c7c5fc60d1205c32bbde5103cbf442278e98e0267e77"
+checksum = "a3c8f93d317f6c9c9710e11a3a3cd85a873d5b5ccac634661a9c326a86275e62"
 dependencies = ["token_bridge_v0001.aleo"]

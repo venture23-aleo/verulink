@@ -21,15 +21,15 @@ import {
   LeoArray
 } from "./leo-types";
 
-export interface OutgoingPercentageInTime {
-  outgoing_percentage: number;
-  timeframe: number;
-  max_no_cap: bigint;
+export interface WithdrawalLimit {
+  percentage: number;
+  duration: number;
+  threshold_no_limit: bigint;
 }
 
-export const leoOutgoingPercentageInTimeSchema = z.object({
-  outgoing_percentage: leoU16Schema,
-  timeframe: leoU32Schema,
-  max_no_cap: leoU128Schema,
+export const leoWithdrawalLimitSchema = z.object({
+  percentage: leoU16Schema,
+  duration: leoU32Schema,
+  threshold_no_limit: leoU128Schema,
 });
-export type OutgoingPercentageInTimeLeo = z.infer < typeof leoOutgoingPercentageInTimeSchema > ;
+export type WithdrawalLimitLeo = z.infer < typeof leoWithdrawalLimitSchema > ;

@@ -232,22 +232,22 @@ export const leoTsUpdateMaxTransferSchema = z.object({
 });
 export type TsUpdateMaxTransferLeo = z.infer < typeof leoTsUpdateMaxTransferSchema > ;
 
-export interface TsUpdateOutgoingPercentage {
+export interface TsUpdateWithdrawalLimit {
   id: number;
   token_id: string;
-  outgoing_percentage: number;
-  timeframe: number;
-  max_no_cap: bigint;
+  percentage: number;
+  duration: number;
+  threshold_no_limit: bigint;
 }
 
-export const leoTsUpdateOutgoingPercentageSchema = z.object({
+export const leoTsUpdateWithdrawalLimitSchema = z.object({
   id: leoU32Schema,
   token_id: leoAddressSchema,
-  outgoing_percentage: leoU16Schema,
-  timeframe: leoU32Schema,
-  max_no_cap: leoU128Schema,
+  percentage: leoU16Schema,
+  duration: leoU32Schema,
+  threshold_no_limit: leoU128Schema,
 });
-export type TsUpdateOutgoingPercentageLeo = z.infer < typeof leoTsUpdateOutgoingPercentageSchema > ;
+export type TsUpdateWithdrawalLimitLeo = z.infer < typeof leoTsUpdateWithdrawalLimitSchema > ;
 
 export interface HoldingRelease {
   id: number;

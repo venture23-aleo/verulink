@@ -1,7 +1,4 @@
 import {
-  getOutgoingPercentageInTime
-} from './token_service_v0001';
-import {
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -13,6 +10,9 @@ import {
   getInPacketWithScreening
 } from './token_bridge_v0001';
 import {
+  getWithdrawalLimit
+} from './token_service_v0001';
+import {
   getProposalVote,
   getAddMember,
   getRemoveMember,
@@ -30,7 +30,7 @@ import {
   getTsRemoveToken,
   getTsUpdateMinTransfer,
   getTsUpdateMaxTransfer,
-  getTsUpdateOutgoingPercentage,
+  getTsUpdateWithdrawalLimit,
   getHoldingRelease,
   getConnectorUpdate,
   getExternalProposal
@@ -42,7 +42,6 @@ import {
 } from './wusdc_token_v0001';
 
 export {
-  getOutgoingPercentageInTime,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -52,6 +51,7 @@ export {
   getPacketId,
   getPacketIdWithAttestor,
   getInPacketWithScreening,
+  getWithdrawalLimit,
   getProposalVote,
   getAddMember,
   getRemoveMember,
@@ -69,7 +69,7 @@ export {
   getTsRemoveToken,
   getTsUpdateMinTransfer,
   getTsUpdateMaxTransfer,
-  getTsUpdateOutgoingPercentage,
+  getTsUpdateWithdrawalLimit,
   getHoldingRelease,
   getConnectorUpdate,
   getExternalProposal,

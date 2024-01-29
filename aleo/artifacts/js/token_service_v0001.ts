@@ -1,13 +1,13 @@
 import * as js2leo from './js2leo/common';
 import * as leo2js from './leo2js/common';
 import {
-  OutgoingPercentageInTime,
+  WithdrawalLimit,
 } from "./types";
 import {
-  getOutgoingPercentageInTimeLeo,
+  getWithdrawalLimitLeo,
 } from './js2leo';
 import {
-  getOutgoingPercentageInTime,
+  getWithdrawalLimit,
 } from './leo2js';
 import {
   zkRun,
@@ -150,7 +150,7 @@ export class Token_service_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async update_outgoing_percentage_ts(r0: string, r1: number, r2: number, r3: bigint) {
+  async update_withdrawal_limit(r0: string, r1: number, r2: number, r3: bigint) {
     const r0Leo = js2leo.address(r0);
     const r1Leo = js2leo.u16(r1);
     const r2Leo = js2leo.u32(r2);
@@ -159,7 +159,7 @@ export class Token_service_v0001Contract {
     const params = [r0Leo, r1Leo, r2Leo, r3Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'update_outgoing_percentage_ts',
+      transition: 'update_withdrawal_limit',
       params,
     });
     if (this.config.mode === "execute") return result;
@@ -266,37 +266,49 @@ export class Token_service_v0001Contract {
     return leo2js.u128(result);
   }
 
-  async max_outgoing_percentage(key: string): Promise < OutgoingPercentageInTime > {
+  async token_withdrawal_limits(key: string): Promise < WithdrawalLimit > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'max_outgoing_percentage',
+      transition: 'token_withdrawal_limits',
       params,
     });
-    return getOutgoingPercentageInTime(result);
+    return getWithdrawalLimit(result);
   }
 
-  async last_token_update(key: string): Promise < number > {
+  async token_snapshot_withdrawal(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'last_token_update',
+      transition: 'token_snapshot_withdrawal',
+      params,
+    });
+    return leo2js.u128(result);
+  }
+
+  async token_snapshot_height(key: string): Promise < number > {
+    const keyLeo = js2leo.address(key);
+
+    const params = [keyLeo]
+    const result = await zkGetMapping({
+      config: this.config,
+      transition: 'token_snapshot_height',
       params,
     });
     return leo2js.u32(result);
   }
 
-  async last_min_supply(key: string): Promise < bigint > {
+  async token_amount_withdrawn(key: string): Promise < bigint > {
     const keyLeo = js2leo.address(key);
 
     const params = [keyLeo]
     const result = await zkGetMapping({
       config: this.config,
-      transition: 'last_min_supply',
+      transition: 'token_amount_withdrawn',
       params,
     });
     return leo2js.u128(result);

@@ -1,9 +1,4 @@
 import {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo
-} from './token_service_v0001';
-import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -33,6 +28,11 @@ import {
   InPacketWithScreeningLeo
 } from './token_bridge_v0001';
 import {
+  WithdrawalLimit,
+  leoWithdrawalLimitSchema,
+  WithdrawalLimitLeo
+} from './token_service_v0001';
+import {
   ProposalVote,
   leoProposalVoteSchema,
   ProposalVoteLeo,
@@ -84,9 +84,9 @@ import {
   TsUpdateMaxTransfer,
   leoTsUpdateMaxTransferSchema,
   TsUpdateMaxTransferLeo,
-  TsUpdateOutgoingPercentage,
-  leoTsUpdateOutgoingPercentageSchema,
-  TsUpdateOutgoingPercentageLeo,
+  TsUpdateWithdrawalLimit,
+  leoTsUpdateWithdrawalLimitSchema,
+  TsUpdateWithdrawalLimitLeo,
   HoldingRelease,
   leoHoldingReleaseSchema,
   HoldingReleaseLeo,
@@ -110,9 +110,6 @@ import {
 } from './wusdc_token_v0001';
 
 export {
-  OutgoingPercentageInTime,
-  leoOutgoingPercentageInTimeSchema,
-  OutgoingPercentageInTimeLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -140,6 +137,9 @@ export {
   InPacketWithScreening,
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo,
+  WithdrawalLimit,
+  leoWithdrawalLimitSchema,
+  WithdrawalLimitLeo,
   ProposalVote,
   leoProposalVoteSchema,
   ProposalVoteLeo,
@@ -191,9 +191,9 @@ export {
   TsUpdateMaxTransfer,
   leoTsUpdateMaxTransferSchema,
   TsUpdateMaxTransferLeo,
-  TsUpdateOutgoingPercentage,
-  leoTsUpdateOutgoingPercentageSchema,
-  TsUpdateOutgoingPercentageLeo,
+  TsUpdateWithdrawalLimit,
+  leoTsUpdateWithdrawalLimitSchema,
+  TsUpdateWithdrawalLimitLeo,
   HoldingRelease,
   leoHoldingReleaseSchema,
   HoldingReleaseLeo,

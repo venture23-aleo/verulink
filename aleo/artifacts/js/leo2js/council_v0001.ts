@@ -33,8 +33,8 @@ import {
   TsUpdateMinTransferLeo,
   TsUpdateMaxTransfer,
   TsUpdateMaxTransferLeo,
-  TsUpdateOutgoingPercentage,
-  TsUpdateOutgoingPercentageLeo,
+  TsUpdateWithdrawalLimit,
+  TsUpdateWithdrawalLimitLeo,
   HoldingRelease,
   HoldingReleaseLeo,
   ConnectorUpdate,
@@ -192,13 +192,13 @@ export function getTsUpdateMaxTransfer(tsUpdateMaxTransfer: TsUpdateMaxTransferL
   return result;
 }
 
-export function getTsUpdateOutgoingPercentage(tsUpdateOutgoingPercentage: TsUpdateOutgoingPercentageLeo): TsUpdateOutgoingPercentage {
-  const result: TsUpdateOutgoingPercentage = {
-    id: leo2js.u32(tsUpdateOutgoingPercentage.id),
-    token_id: leo2js.address(tsUpdateOutgoingPercentage.token_id),
-    outgoing_percentage: leo2js.u16(tsUpdateOutgoingPercentage.outgoing_percentage),
-    timeframe: leo2js.u32(tsUpdateOutgoingPercentage.timeframe),
-    max_no_cap: leo2js.u128(tsUpdateOutgoingPercentage.max_no_cap),
+export function getTsUpdateWithdrawalLimit(tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimitLeo): TsUpdateWithdrawalLimit {
+  const result: TsUpdateWithdrawalLimit = {
+    id: leo2js.u32(tsUpdateWithdrawalLimit.id),
+    token_id: leo2js.address(tsUpdateWithdrawalLimit.token_id),
+    percentage: leo2js.u16(tsUpdateWithdrawalLimit.percentage),
+    duration: leo2js.u32(tsUpdateWithdrawalLimit.duration),
+    threshold_no_limit: leo2js.u128(tsUpdateWithdrawalLimit.threshold_no_limit),
   }
   return result;
 }

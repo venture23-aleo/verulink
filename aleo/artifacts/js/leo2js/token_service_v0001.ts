@@ -1,14 +1,14 @@
 import {
-  OutgoingPercentageInTime,
-  OutgoingPercentageInTimeLeo,
+  WithdrawalLimit,
+  WithdrawalLimitLeo,
 } from "../types";
 
 import * as leo2js from "./common";
-export function getOutgoingPercentageInTime(outgoingPercentageInTime: OutgoingPercentageInTimeLeo): OutgoingPercentageInTime {
-  const result: OutgoingPercentageInTime = {
-    outgoing_percentage: leo2js.u16(outgoingPercentageInTime.outgoing_percentage),
-    timeframe: leo2js.u32(outgoingPercentageInTime.timeframe),
-    max_no_cap: leo2js.u128(outgoingPercentageInTime.max_no_cap),
+export function getWithdrawalLimit(withdrawalLimit: WithdrawalLimitLeo): WithdrawalLimit {
+  const result: WithdrawalLimit = {
+    percentage: leo2js.u16(withdrawalLimit.percentage),
+    duration: leo2js.u32(withdrawalLimit.duration),
+    threshold_no_limit: leo2js.u128(withdrawalLimit.threshold_no_limit),
   }
   return result;
 }
