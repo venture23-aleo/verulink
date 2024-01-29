@@ -1,7 +1,7 @@
 # Architecture Overview
 This document provides overview of the implementation of Aleo programs for Aleo-Eth Multisig bridge. The overall architecture is discussed [here](../docs/architecture_overview.md).
 
-There are five main programs on Aleo that make up the bridge.
+There are five main programs on Aleo that make up the bridge on Aleo.
 1. Token Bridge
 2. Token Service
 3. Token Program
@@ -78,4 +78,4 @@ Token Connector | Council
 ### Council Program
 Council is a separate program that acts as a multisig to perform admin functions. Functions from council can be executed only if threshold of members (of council) vote to perform a particular action.
 
-Since our architecture features a single token bridge and token service program, the council imports these programs. However, as each token is deployed separately (as ARC20 token) and new tokens can be added over time, the token connector imports the council instead. If we move from a council program to a general multisig (maybe from [Puzzle](https://puzzle.online/)), there is no need to update the token bridge and token service but the for each token, new connector program needs to be deployed.
+Since our architecture features a single token bridge and token service program, the council imports these programs. However, as each token is deployed separately (as ARC20 token) and new tokens can be added over time, the token connector imports the council instead. If we move from a council program to a general multisig, there is no need to update the token bridge and token service but the for each token, new connector program needs to be deployed.
