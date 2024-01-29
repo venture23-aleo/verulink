@@ -1,4 +1,7 @@
 import {
+  getOutgoingPercentageInTime
+} from './token_service_v0001';
+import {
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -9,9 +12,6 @@ import {
   getPacketIdWithAttestor,
   getInPacketWithScreening
 } from './token_bridge_v0001';
-import {
-  getOutgoingPercentageInTime
-} from './token_service_v0001';
 import {
   getProposalVote,
   getAddMember,
@@ -42,6 +42,7 @@ import {
 } from './wusdc_token_v0001';
 
 export {
+  getOutgoingPercentageInTime,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -51,7 +52,6 @@ export {
   getPacketId,
   getPacketIdWithAttestor,
   getInPacketWithScreening,
-  getOutgoingPercentageInTime,
   getProposalVote,
   getAddMember,
   getRemoveMember,

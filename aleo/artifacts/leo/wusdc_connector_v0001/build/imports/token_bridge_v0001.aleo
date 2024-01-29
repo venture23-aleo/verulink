@@ -482,15 +482,6 @@ finalize receive:
     get.or_use in_packet_attestations[r2] 0u8 into r48;
     add r48 r4 into r49;
     set r49 into in_packet_attestations[r2];
-    get attestor_settings[true] into r50;
-    cast r0 r1 into r51 as PacketId;
-    contains in_packet_hash[r51] into r52;
-    not r52 into r53;
-    add r48 r4 into r54;
-    gte r54 r50 into r55;
-    and r53 r55 into r56;
-    set r2 into in_packet_hash[r51];
-    set false into in_packet_consumed[r51];
 
 
 function consume:

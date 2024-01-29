@@ -569,27 +569,6 @@ program token_bridge_v0001.aleo {
         // Increase the attestation by valid_signs
         Mapping::set(in_packet_attestations, packet_hash_with_screening, packet_attestation_count + valid_signs);
 
-        // Get the threshold
-        // If bridge is not initialized, this should fail
-        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
-
-        let packet_id: PacketId = PacketId {
-            chain_id: source_chain_id,
-            sequence
-        };
-
-        // Check if the packet exists
-        let packet_id_exists: bool = Mapping::contains(in_packet_hash, packet_id);
-
-        if (!packet_id_exists && packet_attestation_count + valid_signs >= threshold) {
-            // If the threshold is met, set the packet_id
-            // Alternatively, store the entire packet
-            Mapping::set(in_packet_hash, packet_id, packet_hash_with_screening);
-
-            // Mark the packet as not consumed
-            Mapping::set(in_packet_consumed, packet_id, false);
-        }
-
     }
 
 
