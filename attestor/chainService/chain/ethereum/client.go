@@ -393,19 +393,6 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	}
 }
 
-/*
-Send packet immediately for it to be signed and sent to public database
-If it fails to sign or send to public database, then send to retry namespace
-Have a go routine to update base sequence number
-For ethereum it should store it as seqNum:Height
-For aleo it can store it as seqNum:nil
-
-While updating baseseq num, if it finds any gap then it gets packet from retry namespace and
-send it for it to be signed immediately.
-If not available in namespace then download block and parse and store the packet
-
-*/
-
 func getDestChains() []string { // list of chain IDs
 	return []string{"2"}
 }
