@@ -15,14 +15,14 @@ import {
   TbRemoveAttestorLeo,
   TbUpdateThreshold,
   TbUpdateThresholdLeo,
-  TbEnableChain,
-  TbEnableChainLeo,
-  TbDisableChain,
-  TbDisableChainLeo,
-  TbEnableService,
-  TbEnableServiceLeo,
-  TbDisableService,
-  TbDisableServiceLeo,
+  TbAddChain,
+  TbAddChainLeo,
+  TbRemoveChain,
+  TbRemoveChainLeo,
+  TbAddService,
+  TbAddServiceLeo,
+  TbRemoveService,
+  TbRemoveServiceLeo,
   TsTransferOwnership,
   TsTransferOwnershipLeo,
   TsAddToken,
@@ -112,34 +112,34 @@ export function getTbUpdateThresholdLeo(tbUpdateThreshold: TbUpdateThreshold): T
   return result;
 }
 
-export function getTbEnableChainLeo(tbEnableChain: TbEnableChain): TbEnableChainLeo {
-  const result: TbEnableChainLeo = {
-    id: js2leo.u32(tbEnableChain.id),
-    chain_id: js2leo.u128(tbEnableChain.chain_id),
+export function getTbAddChainLeo(tbAddChain: TbAddChain): TbAddChainLeo {
+  const result: TbAddChainLeo = {
+    id: js2leo.u32(tbAddChain.id),
+    chain_id: js2leo.u128(tbAddChain.chain_id),
   }
   return result;
 }
 
-export function getTbDisableChainLeo(tbDisableChain: TbDisableChain): TbDisableChainLeo {
-  const result: TbDisableChainLeo = {
-    id: js2leo.u32(tbDisableChain.id),
-    chain_id: js2leo.u128(tbDisableChain.chain_id),
+export function getTbRemoveChainLeo(tbRemoveChain: TbRemoveChain): TbRemoveChainLeo {
+  const result: TbRemoveChainLeo = {
+    id: js2leo.u32(tbRemoveChain.id),
+    chain_id: js2leo.u128(tbRemoveChain.chain_id),
   }
   return result;
 }
 
-export function getTbEnableServiceLeo(tbEnableService: TbEnableService): TbEnableServiceLeo {
-  const result: TbEnableServiceLeo = {
-    id: js2leo.u32(tbEnableService.id),
-    service: js2leo.address(tbEnableService.service),
+export function getTbAddServiceLeo(tbAddService: TbAddService): TbAddServiceLeo {
+  const result: TbAddServiceLeo = {
+    id: js2leo.u32(tbAddService.id),
+    service: js2leo.address(tbAddService.service),
   }
   return result;
 }
 
-export function getTbDisableServiceLeo(tbDisableService: TbDisableService): TbDisableServiceLeo {
-  const result: TbDisableServiceLeo = {
-    id: js2leo.u32(tbDisableService.id),
-    service: js2leo.address(tbDisableService.service),
+export function getTbRemoveServiceLeo(tbRemoveService: TbRemoveService): TbRemoveServiceLeo {
+  const result: TbRemoveServiceLeo = {
+    id: js2leo.u32(tbRemoveService.id),
+    service: js2leo.address(tbRemoveService.service),
   }
   return result;
 }

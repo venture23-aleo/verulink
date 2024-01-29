@@ -157,49 +157,49 @@ export class Token_bridge_v0001Contract {
     if (this.config.mode === "execute") return result;
   }
 
-  async enable_chain_tb(r0: bigint) {
+  async add_chain_tb(r0: bigint) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'enable_chain_tb',
+      transition: 'add_chain_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async disable_chain_tb(r0: bigint) {
+  async remove_chain_tb(r0: bigint) {
     const r0Leo = js2leo.u128(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'disable_chain_tb',
+      transition: 'remove_chain_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async enable_service_tb(r0: string) {
+  async add_service_tb(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'enable_service_tb',
+      transition: 'add_service_tb',
       params,
     });
     if (this.config.mode === "execute") return result;
   }
 
-  async disable_service_tb(r0: string) {
+  async remove_service_tb(r0: string) {
     const r0Leo = js2leo.address(r0);
 
     const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
-      transition: 'disable_service_tb',
+      transition: 'remove_service_tb',
       params,
     });
     if (this.config.mode === "execute") return result;

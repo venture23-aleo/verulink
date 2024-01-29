@@ -48,19 +48,19 @@ struct TbUpdateThreshold:
     id as u32;
     new_threshold as u8;
 
-struct TbEnableChain:
+struct TbAddChain:
     id as u32;
     chain_id as u128;
 
-struct TbDisableChain:
+struct TbRemoveChain:
     id as u32;
     chain_id as u128;
 
-struct TbEnableService:
+struct TbAddService:
     id as u32;
     service as address;
 
-struct TbDisableService:
+struct TbRemoveService:
     id as u32;
     service as address;
 
@@ -445,14 +445,14 @@ finalize tb_update_threshold:
 function tb_enable_chain:
     input r0 as u32.public;
     input r1 as u128.public;
-    cast r0 r1 into r2 as TbEnableChain;
+    cast r0 r1 into r2 as TbAddChain;
     hash.bhp256 r2 into r3 as field;
-    call token_bridge_v0001.aleo/enable_chain_tb r1 into r4;
+    call token_bridge_v0001.aleo/add_chain_tb r1 into r4;
     async tb_enable_chain r4 r3 into r5;
     output r5 as council_v0001.aleo/tb_enable_chain.future;
 
 finalize tb_enable_chain:
-    input r0 as token_bridge_v0001.aleo/enable_chain_tb.future;
+    input r0 as token_bridge_v0001.aleo/add_chain_tb.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -468,14 +468,14 @@ finalize tb_enable_chain:
 function disapprove_chain_bridge:
     input r0 as u32.public;
     input r1 as u128.public;
-    cast r0 r1 into r2 as TbDisableChain;
+    cast r0 r1 into r2 as TbRemoveChain;
     hash.bhp256 r2 into r3 as field;
-    call token_bridge_v0001.aleo/disable_chain_tb r1 into r4;
+    call token_bridge_v0001.aleo/remove_chain_tb r1 into r4;
     async disapprove_chain_bridge r4 r3 into r5;
     output r5 as council_v0001.aleo/disapprove_chain_bridge.future;
 
 finalize disapprove_chain_bridge:
-    input r0 as token_bridge_v0001.aleo/disable_chain_tb.future;
+    input r0 as token_bridge_v0001.aleo/remove_chain_tb.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -491,14 +491,14 @@ finalize disapprove_chain_bridge:
 function tb_enable_service:
     input r0 as u32.public;
     input r1 as address.public;
-    cast r0 r1 into r2 as TbEnableService;
+    cast r0 r1 into r2 as TbAddService;
     hash.bhp256 r2 into r3 as field;
-    call token_bridge_v0001.aleo/enable_service_tb r1 into r4;
+    call token_bridge_v0001.aleo/add_service_tb r1 into r4;
     async tb_enable_service r4 r3 into r5;
     output r5 as council_v0001.aleo/tb_enable_service.future;
 
 finalize tb_enable_service:
-    input r0 as token_bridge_v0001.aleo/enable_service_tb.future;
+    input r0 as token_bridge_v0001.aleo/add_service_tb.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;
@@ -514,14 +514,14 @@ finalize tb_enable_service:
 function tb_disable_service:
     input r0 as u32.public;
     input r1 as address.public;
-    cast r0 r1 into r2 as TbEnableService;
+    cast r0 r1 into r2 as TbAddService;
     hash.bhp256 r2 into r3 as field;
-    call token_bridge_v0001.aleo/disable_service_tb r1 into r4;
+    call token_bridge_v0001.aleo/remove_service_tb r1 into r4;
     async tb_disable_service r4 r3 into r5;
     output r5 as council_v0001.aleo/tb_disable_service.future;
 
 finalize tb_disable_service:
-    input r0 as token_bridge_v0001.aleo/disable_service_tb.future;
+    input r0 as token_bridge_v0001.aleo/remove_service_tb.future;
     input r1 as field.public;
     await r0;
     get settings[true] into r2;

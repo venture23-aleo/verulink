@@ -245,12 +245,12 @@ finalize update_threshold_tb:
     set r1 into attestor_settings[true];
 
 
-function enable_chain_tb:
+function add_chain_tb:
     input r0 as u128.public;
-    async enable_chain_tb self.caller r0 into r1;
-    output r1 as token_bridge_v0001.aleo/enable_chain_tb.future;
+    async add_chain_tb self.caller r0 into r1;
+    output r1 as token_bridge_v0001.aleo/add_chain_tb.future;
 
-finalize enable_chain_tb:
+finalize add_chain_tb:
     input r0 as address.public;
     input r1 as u128.public;
     get owner_TB[true] into r2;
@@ -258,12 +258,12 @@ finalize enable_chain_tb:
     set true into supported_chains[r1];
 
 
-function disable_chain_tb:
+function remove_chain_tb:
     input r0 as u128.public;
-    async disable_chain_tb self.caller r0 into r1;
-    output r1 as token_bridge_v0001.aleo/disable_chain_tb.future;
+    async remove_chain_tb self.caller r0 into r1;
+    output r1 as token_bridge_v0001.aleo/remove_chain_tb.future;
 
-finalize disable_chain_tb:
+finalize remove_chain_tb:
     input r0 as address.public;
     input r1 as u128.public;
     get owner_TB[true] into r2;
@@ -273,12 +273,12 @@ finalize disable_chain_tb:
     remove supported_chains[r1];
 
 
-function enable_service_tb:
+function add_service_tb:
     input r0 as address.public;
-    async enable_service_tb self.caller r0 into r1;
-    output r1 as token_bridge_v0001.aleo/enable_service_tb.future;
+    async add_service_tb self.caller r0 into r1;
+    output r1 as token_bridge_v0001.aleo/add_service_tb.future;
 
-finalize enable_service_tb:
+finalize add_service_tb:
     input r0 as address.public;
     input r1 as address.public;
     get owner_TB[true] into r2;
@@ -286,12 +286,12 @@ finalize enable_service_tb:
     set true into supported_services[r1];
 
 
-function disable_service_tb:
+function remove_service_tb:
     input r0 as address.public;
-    async disable_service_tb self.caller r0 into r1;
-    output r1 as token_bridge_v0001.aleo/disable_service_tb.future;
+    async remove_service_tb self.caller r0 into r1;
+    output r1 as token_bridge_v0001.aleo/remove_service_tb.future;
 
-finalize disable_service_tb:
+finalize remove_service_tb:
     input r0 as address.public;
     input r1 as address.public;
     get owner_TB[true] into r2;

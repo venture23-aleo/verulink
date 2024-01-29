@@ -117,49 +117,49 @@ export const leoTbUpdateThresholdSchema = z.object({
 });
 export type TbUpdateThresholdLeo = z.infer < typeof leoTbUpdateThresholdSchema > ;
 
-export interface TbEnableChain {
+export interface TbAddChain {
   id: number;
   chain_id: bigint;
 }
 
-export const leoTbEnableChainSchema = z.object({
+export const leoTbAddChainSchema = z.object({
   id: leoU32Schema,
   chain_id: leoU128Schema,
 });
-export type TbEnableChainLeo = z.infer < typeof leoTbEnableChainSchema > ;
+export type TbAddChainLeo = z.infer < typeof leoTbAddChainSchema > ;
 
-export interface TbDisableChain {
+export interface TbRemoveChain {
   id: number;
   chain_id: bigint;
 }
 
-export const leoTbDisableChainSchema = z.object({
+export const leoTbRemoveChainSchema = z.object({
   id: leoU32Schema,
   chain_id: leoU128Schema,
 });
-export type TbDisableChainLeo = z.infer < typeof leoTbDisableChainSchema > ;
+export type TbRemoveChainLeo = z.infer < typeof leoTbRemoveChainSchema > ;
 
-export interface TbEnableService {
+export interface TbAddService {
   id: number;
   service: string;
 }
 
-export const leoTbEnableServiceSchema = z.object({
+export const leoTbAddServiceSchema = z.object({
   id: leoU32Schema,
   service: leoAddressSchema,
 });
-export type TbEnableServiceLeo = z.infer < typeof leoTbEnableServiceSchema > ;
+export type TbAddServiceLeo = z.infer < typeof leoTbAddServiceSchema > ;
 
-export interface TbDisableService {
+export interface TbRemoveService {
   id: number;
   service: string;
 }
 
-export const leoTbDisableServiceSchema = z.object({
+export const leoTbRemoveServiceSchema = z.object({
   id: leoU32Schema,
   service: leoAddressSchema,
 });
-export type TbDisableServiceLeo = z.infer < typeof leoTbDisableServiceSchema > ;
+export type TbRemoveServiceLeo = z.infer < typeof leoTbRemoveServiceSchema > ;
 
 export interface TsTransferOwnership {
   id: number;

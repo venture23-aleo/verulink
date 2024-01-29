@@ -478,24 +478,24 @@ program council_v0001.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
     }
 
-    ///////////////////////////////////////
-    /////// Bridge: Enable Chain ////////
-    //////////////////////////////////////
+    //////////////////////////////////
+    /////// Bridge: Add Chain ////////
+    //////////////////////////////////
 
-    struct TbEnableChain {
+    struct TbAddChain {
         id: u32,
         chain_id: u128
     }
 
     transition tb_enable_chain(public id: u32, public chain_id: u128) {
-        let proposal: TbEnableChain = TbEnableChain {
+        let proposal: TbAddChain = TbAddChain {
             id,
             chain_id
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0001.aleo/enable_chain_tb(chain_id);
+        token_bridge_v0001.aleo/add_chain_tb(chain_id);
 
         return then finalize(proposal_hash);
     }
@@ -517,23 +517,23 @@ program council_v0001.aleo {
     }
 
     ///////////////////////////////////////
-    /////// Bridge: Disable Chain /////////
+    /////// Bridge: Remove Chain /////////
     ///////////////////////////////////////
 
-    struct TbDisableChain {
+    struct TbRemoveChain {
         id: u32,
         chain_id: u128
     }
 
     transition disapprove_chain_bridge(public id: u32, public chain_id: u128) {
-        let proposal: TbDisableChain = TbDisableChain {
+        let proposal: TbRemoveChain = TbRemoveChain {
             id,
             chain_id
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0001.aleo/disable_chain_tb(chain_id);
+        token_bridge_v0001.aleo/remove_chain_tb(chain_id);
 
         return then finalize(proposal_hash);
     }
@@ -556,23 +556,23 @@ program council_v0001.aleo {
 
 
     ///////////////////////////////////////
-    /////// Bridge: Enable Service ////////
+    /////// Bridge: Add Service ////////
     ///////////////////////////////////////
 
-    struct TbEnableService {
+    struct TbAddService {
         id: u32,
         service: address
     }
 
     transition tb_enable_service(public id: u32, public service: address) {
-        let proposal: TbEnableService = TbEnableService {
+        let proposal: TbAddService = TbAddService {
             id,
             service
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0001.aleo/enable_service_tb(service);
+        token_bridge_v0001.aleo/add_service_tb(service);
 
         return then finalize(proposal_hash);
     }
@@ -595,23 +595,23 @@ program council_v0001.aleo {
     }
 
     ///////////////////////////////////////
-    /////// Bridge: Disable Service ////////
+    /////// Bridge: Remove Service ////////
     ///////////////////////////////////////
 
-    struct TbDisableService {
+    struct TbRemoveService {
         id: u32,
         service: address
     }
 
     transition tb_disable_service(public id: u32, public service: address) {
-        let proposal: TbEnableService = TbEnableService {
+        let proposal: TbAddService = TbAddService {
             id,
             service
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0001.aleo/disable_service_tb(service);
+        token_bridge_v0001.aleo/remove_service_tb(service);
 
         return then finalize(proposal_hash);
     }

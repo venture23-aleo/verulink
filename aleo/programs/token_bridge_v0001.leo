@@ -228,9 +228,9 @@ program token_bridge_v0001.aleo {
         Mapping::set(owner_TB, true, new_owner);
     }
 
-    //////////////////////////////
-    ///// Add/Remove Attestor ////
-    //////////////////////////////
+    /////////////////////////////////////
+    ///// Add/Remove/Update Attestor ////
+    /////////////////////////////////////
 
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
@@ -316,16 +316,16 @@ program token_bridge_v0001.aleo {
         Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
     }
 
-    //////////////////////////////////////
-    ////// Enable/Disable Chains /////
-    //////////////////////////////////////
+    //////////////////////////////
+    ////// Add/Remove Chains /////
+    //////////////////////////////
 
     /// Support a new chain by the bridge
-    transition enable_chain_tb(public chain_id: u128) {
+    transition add_chain_tb(public chain_id: u128) {
         return then finalize(self.caller, chain_id);
     }
 
-    finalize enable_chain_tb(from: address, chain_id: u128) {
+    finalize add_chain_tb(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, true);
@@ -335,11 +335,11 @@ program token_bridge_v0001.aleo {
     }
 
     /// Remove chain supported by the bridge
-    transition disable_chain_tb(public chain_id: u128) {
+    transition remove_chain_tb(public chain_id: u128) {
         return then finalize(self.caller, chain_id);
     }
 
-    finalize disable_chain_tb(from: address, chain_id: u128) {
+    finalize remove_chain_tb(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, true);
@@ -351,18 +351,18 @@ program token_bridge_v0001.aleo {
     }
 
 
-    //////////////////////////////////
-    //// Enable/Disable Service //////
-    //////////////////////////////////
+    //////////////////////////////
+    //// Add/Remove Service //////
+    //////////////////////////////
 
     /// Add a new supported service program to the bridge program
     /// Only the supported service program can call publish/consume on bridge program
     /// Can only be called from owner
-    transition enable_service_tb(public service: address) {
+    transition add_service_tb(public service: address) {
         return then finalize(self.caller, service);
     }
 
-    finalize enable_service_tb(from: address, service: address) {
+    finalize add_service_tb(from: address, service: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, true);
@@ -374,11 +374,11 @@ program token_bridge_v0001.aleo {
     /// Remove an existing service program from the bridge program
     /// Removing the program program prevents it from calling publish/consume on bridge program
     /// Can only be called from owner
-    transition disable_service_tb(public service: address) {
+    transition remove_service_tb(public service: address) {
         return then finalize(self.caller, service);
     }
 
-    finalize disable_service_tb(from: address, service: address) {
+    finalize remove_service_tb(from: address, service: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, true);
@@ -466,18 +466,20 @@ program token_bridge_v0001.aleo {
             addr: destination_service_contract
         };
 
+        let message: MsgTokenSend = MsgTokenSend {
+            sender,
+            token,
+            receiver,
+            amount
+        };
+
         // Construct
         let packet: OutPacket = OutPacket {
             version: VERSION,
             sequence: target_sequence_no,
             source,
             destination,
-            message: MsgTokenSend {
-                sender,
-                token,
-                receiver,
-                amount
-            },
+            message,
             height: block.height
         };
 
