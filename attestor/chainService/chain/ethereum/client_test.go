@@ -3,15 +3,13 @@ package ethereum
 import (
 	"context"
 	"errors"
-	"fmt"
-	"math"
 	"math/big"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/attestor/chainService/chain"
@@ -21,54 +19,9 @@ import (
 	"github.com/venture23-aleo/attestor/chainService/store"
 )
 
-func TestFilterLogs(t *testing.T) {
-	ethclient := NewEthClient("")
-	contractAddress := ethCommon.HexToAddress("0x718721F8A5D3491357965190f5444Ef8B3D37553")
-	bridgeClient, err := abi.NewBridge(contractAddress, ethclient.(*ethClient).eth)
-	if err != nil {
-		panic(err)
-	}
-	client := &Client{
-		eth:    ethclient,
-		bridge: bridgeClient,
-	}
-
-	logs, err := client.eth.FilterLogs(context.Background(), 5113030, 5124030, contractAddress, ethCommon.HexToHash("0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9"))
-	if err != nil {
-		panic(err)
-	}
-	for _, v := range logs {
-		packet, err := client.bridge.ParsePacketDispatched(v)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		_ = packet
-	}
-
-}
-
-func TestFilterChunks(t *testing.T) {
-	var filterLogsSlice [][]uint64
-
-	var height uint64 = 100
-	var latestHeight uint64 = 150
-
-	var blockDifference uint64 = latestHeight - height
-	filterChunks := uint64(math.Ceil(float64(blockDifference) / defaultHeightDifferenceForFilterLogs))
-
-	startHeight := height
-	for i := 0; i < int(filterChunks); i++ {
-		if i == int(filterChunks)-1 {
-			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, latestHeight})
-			continue
-		} else {
-			filterLogsSlice = append(filterLogsSlice, []uint64{startHeight, startHeight + defaultHeightDifferenceForFilterLogs})
-			startHeight += defaultHeightDifferenceForFilterLogs
-		}
-	}
-	assert.Equal(t, [][]uint64{{100, 150}}, filterLogsSlice)
-}
+var (
+	testMutex = sync.Mutex{}
+)
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
@@ -107,6 +60,12 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientUninitializedDB(t *testing.T) {
+	err := store.InitKVStore("db")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove("db")
+	store.CloseDB()
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
 		ChainID:        big.NewInt(1),
@@ -233,6 +192,8 @@ func TestParseBlocksError(t *testing.T) {
 }
 
 func TestFeedPacket(t *testing.T) {
+	testMutex.Lock()
+	defer testMutex.Unlock()
 	pktCh := make(chan *chain.Packet)
 
 	client := &Client{
@@ -265,7 +226,8 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeight: 10,
+		nextBlockHeight:    10,
+		retryPacketWaitDur: time.Second,
 	}
 	go client.FeedPacket(context.Background(), pktCh)
 
@@ -299,6 +261,8 @@ func TestFeedPacket(t *testing.T) {
 }
 
 func TestRetryFeed(t *testing.T) {
+	testMutex.Lock()
+	defer testMutex.Unlock()
 
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -358,6 +322,8 @@ func TestRetryFeed(t *testing.T) {
 }
 
 func TestManagePacket(t *testing.T) {
+	testMutex.Lock()
+	defer testMutex.Unlock()
 	t.Log("case: manage packet that comes in retry ch")
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -426,6 +392,8 @@ L1:
 }
 
 func TestManagePacket2(t *testing.T) {
+	testMutex.Lock()
+	defer testMutex.Unlock()
 	t.Log("case: manage packet that comes in completed ch")
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -479,11 +447,9 @@ func TestManagePacket2(t *testing.T) {
 		completedCh <- modelPacket
 	}()
 	time.Sleep(time.Second) // wait to fill in the database
-	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix + modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
+	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)
 
-	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix + modelPacket.Destination.ChainID.String(), 1)
+	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
 }
-
-
