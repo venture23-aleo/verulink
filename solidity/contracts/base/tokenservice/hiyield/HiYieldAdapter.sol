@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Pausable} from "../../../common/Pausable.sol";
-import {IERC20} from "../../../common/interface/tokenservice/IERC20.sol";
+import {IIERC20} from "../../../common/interface/tokenservice/IIERC20.sol";
 
 abstract contract HiYieldAdapter is Pausable {
     address _usdc_;
@@ -13,6 +13,6 @@ abstract contract HiYieldAdapter is Pausable {
     }
 
     function approve(uint256 amount) external onlyOwner onlyProxy whenNotPaused {
-        require(IERC20(_usdc_).approve(_owner_, amount));
+        require(IIERC20(_usdc_).approve(_owner_, amount));
     }
 }

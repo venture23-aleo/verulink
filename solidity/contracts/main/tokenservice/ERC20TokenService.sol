@@ -7,7 +7,7 @@ import {ERC20TokenSupport} from "../../base/tokenservice/ERC20TokenSupport.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {PacketLibrary} from "../../common/libraries/Lib.sol";
 import {Holding} from "../Holding.sol";
-import {IERC20, IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
+import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract ERC20TokenService is 
@@ -69,7 +69,7 @@ contract ERC20TokenService is
 
     function transfer(address tokenAddress, uint256 amount, string memory receiver, uint256 destChainId) external whenNotPaused {
         require(tokenAddress != address(0), "Only ERC20 Tokens");
-        require(IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
+        require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         IERC20TokenBridge(erc20Bridge).sendMessage(_packetify(tokenAddress, amount, receiver, destChainId));
     }
 
