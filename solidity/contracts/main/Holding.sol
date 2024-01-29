@@ -35,21 +35,24 @@ contract Holding is Pausable, Initializable {
         delete supportedTokenServices[_tokenService];
     }
 
-    function lock(address user, address token, uint256 amount) public whenNotPaused {
+    function _lock(address user, address token, uint256 amount) internal whenNotPaused {
         require(
             supportedTokenServices[msg.sender],
             "Unknown TokenService"
         );
-        if(token != address(0)) {
-            IIERC20(token).transferFrom(msg.sender, address(this), amount);
-        }
         locked[user][token] += amount;
         emit Locked(user, token, amount);
     }
 
+    function lock(address user, address token, uint256 amount) public {
+        require(token != address(0), "Zero Address");
+        require(IIERC20(token).transferFrom(msg.sender, address(this), amount), "Token Transfer Failed");
+        _lock(user,token,amount);
+    }
+
     function lock(address user) public payable {
         require(msg.value > 0, "Requires ETH Transfer");
-        lock(user, address(0), msg.value);
+        _lock(user, address(0), msg.value);
     }
 
     function unlock(
@@ -63,16 +66,22 @@ contract Holding is Pausable, Initializable {
         emit Unlocked(user, token, amount);
     }
 
-    function release(address user, address token, uint256 amount) public whenNotPaused {
+    function _release(address user, address token, uint256 amount) internal whenNotPaused {
+        require(user != address(0), "Zero Address");
         require(unlocked[user][token] >= amount, "Insufficient amount");
         unlocked[user][token] -= amount;
         emit Released(user, token, amount);
-        if(token == address(0)) {
-            // eth transfer
-            (bool sent,) = user.call{value: amount}("");
-            require(sent, "ETH Released Failed");
-        }else {
-            require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
-        }
+    }
+
+    function release(address user, address token, uint256 amount) public {
+        require(token != address(0), "Zero Token Address");
+        _release(user, token, amount);
+        require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
+    }
+
+    function release(address user, uint256 amount) public {
+        _release(user, address(0), amount);
+        (bool sent,) = user.call{value: amount}("");
+        require(sent, "ETH Release Failed");
     }
 }

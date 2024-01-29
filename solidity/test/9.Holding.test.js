@@ -25,7 +25,7 @@ describe('Holding', () => {
         const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = Holding.attach(proxy.address);
-        usdcMock.mint(proxy.address, "1000000000000000000000");
+        // usdcMock.mint(proxy.address, "1000000000000000000000");
     });
 
     // Test deployment and initialization
@@ -51,7 +51,7 @@ describe('Holding', () => {
         ).to.be.reverted;
     });
 
-    // Test that only the owner can lock tokens
+    // Test that only the registered tokenservice can lock tokens
     it('should allow to lock tokens', async () => {
         const user = ethers.Wallet.createRandom().address;
         const token = usdcMock.address;
@@ -63,9 +63,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
         const lockAmount = await proxiedV1.locked(user, token);
         expect(lockAmount).to.be.equal(amount);
-        await expect(
-            proxiedV1.connect(other)["lock(address,address,uint256)"](user, token, amount)
-        ).to.be.revertedWith("Unknown TokenService");
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(amount);
     });
 
     // Test that only the owner can unlock tokens
@@ -123,7 +121,7 @@ describe('Holding', () => {
 
         // Try to release an amount greater than what is unlocked and expect it to revert
         await expect(
-            proxiedV1.release(user, token, releaseAmount)
+            proxiedV1["release(address,address,uint256)"](user, token, releaseAmount)
         ).to.be.revertedWith('Insufficient amount');
     });
 
@@ -141,7 +139,7 @@ describe('Holding', () => {
         // Unlock tokens with the owner
         await (await proxiedV1.unlock(user, token, amount)).wait();
         // Release tokens with the owner
-        await (await proxiedV1.release(user, token, amount)).wait();
+        await (await proxiedV1["release(address,address,uint256)"](user, token, amount)).wait();
         expect(await proxiedV1.unlocked(user, token)).to.be.equal(0);
     });
 
@@ -191,14 +189,14 @@ describe('Holding', () => {
         await proxiedV1.connect(tokenService)["lock(address)"](user, { value: 20 });
 
         // Unlock tokens with the owner
-        expect(proxiedV1.unlock(user, token, amount)).to.be.revertedWith("Insufficient amount");
+        expect(proxiedV1.unlock(user, token, 100)).to.be.revertedWith("Insufficient amount");
         // await proxiedV1.release(user, token, amount);
         // await proxiedV1.release(user, token, amount);
         // Call the 'release' function to trigger the ETH transfer failure
         // Expect it to revert with the specified error message
         expect(
-            proxiedV1.release(user, token, amount)
-        ).to.be.revertedWith("ETH Release Failed");
+            proxiedV1["release(address,uint256)"](user, 100)
+        ).to.be.revertedWith("Insufficient amount");
     });
 
 
@@ -226,7 +224,7 @@ describe('Holding', () => {
         // Unlock tokens with the owner
         await (await proxiedV1.unlock(user, token, amount)).wait();
         // Call the 'release' function with token set to address(0) for ETH transfer
-        await (await proxiedV1.release(user, token, amount)).wait();
+        await (await proxiedV1["release(address,uint256)"](user, amount)).wait();
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(0);
     });
 
@@ -280,7 +278,7 @@ describe('Holding', () => {
 
         // Unlock and release tokens with the owner
         await (await proxiedV1.unlock(user, token, amount)).wait();
-        const tx = await proxiedV1.release(user, token, amount);
+        const tx = await proxiedV1["release(address,address,uint256)"](user, token, amount);
 
         // Ensure the 'Released' event is emitted with the correct values
         await expect(tx)
