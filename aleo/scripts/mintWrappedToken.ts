@@ -30,11 +30,10 @@ const wusdcConnecter = new Wusdc_connector_v0001Contract({
   priorityFee: 10_000,
 });
 
-const mintWrappedToken = async (aleoUser: string) => {
+const mintWrappedToken = async (aleoUser: string, amount: bigint) => {
   const incomingSequence = BigInt(
     Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
   );
-  const incomingAmount = BigInt(10000);
   const incomingHeight = 10;
   let initialBalance = BigInt(0);
 
@@ -54,16 +53,22 @@ const mintWrappedToken = async (aleoUser: string) => {
       token: wusdcTokenAddr,
       sender: evm2AleoArr(ethUser),
       receiver: aleoUser,
-      amount: incomingAmount,
+      amount: amount,
     },
     height: incomingHeight,
   };
 
-  const signature = signPacket(packet, bridge.config.privateKey);
+  const signature = signPacket(
+    packet,
+    true, // screening passed
+    bridge.config.privateKey
+  );
   const signatures = [signature, signature, signature, signature, signature];
 
   const signers = [
-    Address.from_private_key(PrivateKey.from_string(bridge.config.privateKey)).to_string(),
+    Address.from_private_key(
+      PrivateKey.from_string(bridge.config.privateKey)
+    ).to_string(),
     ALEO_ZERO_ADDRESS,
     ALEO_ZERO_ADDRESS,
     ALEO_ZERO_ADDRESS,
@@ -79,7 +84,7 @@ const mintWrappedToken = async (aleoUser: string) => {
     evm2AleoArr(ethUser), // sender
     aleoUser, // receiver
     aleoUser, // actual receiver
-    incomingAmount,
+    amount,
     incomingSequence,
     incomingHeight,
     signers,
@@ -93,6 +98,7 @@ const mintWrappedToken = async (aleoUser: string) => {
   console.log(`Balance of ${aleoUser}: ${initialBalance} -> ${finalBalance}`);
 };
 
-const aleoUser = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px"
-// mintWrappedTokenWithAttest(aleoUser);
-mintWrappedToken(aleoUser);
+mintWrappedToken(
+  "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px", 
+  BigInt(100_000)
+);
