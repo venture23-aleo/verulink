@@ -62,7 +62,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 	store.CloseDB()
 	cfg := &config.ChainConfig{
 		Name:           "aleo",
-		ChainID:        big.NewInt(1),
+		ChainID:        big.NewInt(2),
 		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:        "https://node.url|testnet3",
 		WaitDuration:   time.Hour * 24,
@@ -104,7 +104,7 @@ func (mckAleoCl *mockAleoClient) Send(ctx context.Context, aleoPacket, privateKe
 	return nil
 }
 
-func TestGetPktWithSeq(t *testing.T) {
+func TestFeedPacket(t *testing.T) {
 	t.Logf("case: happy path parsing")
 	logger.InitLogging("debug", &config.LoggerConfig{
 		Encoding:   "console",
@@ -133,7 +133,7 @@ func TestGetPktWithSeq(t *testing.T) {
 	}
 
 	expectedPacket := &chain.Packet{
-		Version: uint8(0),
+		Version:  uint8(0),
 		Sequence: uint64(1),
 		Source: chain.NetworkAddress{
 			ChainID: big.NewInt(2),
@@ -145,9 +145,9 @@ func TestGetPktWithSeq(t *testing.T) {
 		},
 		Message: chain.Message{
 			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
-			SenderAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			Amount: big.NewInt(102),
-			ReceiverAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
 		},
 		Height: uint64(55),
 	}
@@ -176,5 +176,186 @@ func TestGetPktWithSeq(t *testing.T) {
 	assert.Equal(t, pkt, expectedPacket)
 }
 
+func TestRetryFeed(t *testing.T) {
+	cfg := &config.ChainConfig{
+		Name:           "aleo",
+		ChainID:        big.NewInt(2),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		WaitDuration:   time.Hour * 24,
+		DestChains:     []string{"1"},
+		StartSeqNum: map[string]uint64{
+			"2": 1,
+		},
+		StartHeight: 100,
+		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+	}
+	err := store.InitKVStore("db")
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove("db")
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "log",
+	})
+	defer os.Remove("log")
 
+	client := NewClient(cfg, map[string]*big.Int{"2": big.NewInt(2)})
 
+	// store packet in retry bucket
+	modelPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: big.NewInt(2),
+			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: big.NewInt(1),
+			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Height: uint64(55),
+	}
+
+	store.StoreRetryPacket("aleo_rpns1", modelPacket)
+	packetCh := make(chan *chain.Packet)
+
+	go client.(*Client).retryFeed(context.Background(), packetCh)
+
+	pkt := <-packetCh
+	assert.Equal(t, pkt, modelPacket)
+}
+
+func TestManagePacket(t *testing.T) {
+	t.Log("case: manage packet that comes in retry ch")
+	cfg := &config.ChainConfig{
+		Name:           "aleo",
+		ChainID:        big.NewInt(2),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		WaitDuration:   time.Hour * 24,
+		DestChains:     []string{"1"},
+		StartSeqNum: map[string]uint64{
+			"2": 1,
+		},
+		StartHeight: 100,
+		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+	}
+	os.Mkdir("tmp", 0777)
+	store.InitKVStore("tmp/db")
+
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "tmp/log",
+	})
+	defer os.RemoveAll("tmp/")
+
+	client := NewClient(cfg, map[string]*big.Int{"2": big.NewInt(2)})
+
+	// store packet in retry bucket
+	modelPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: big.NewInt(2),
+			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: big.NewInt(1),
+			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Height: uint64(55),
+	}
+
+	go client.(*Client).managePacket(context.Background())
+	time.Sleep(time.Second) // wait to make the receiver ready before sending
+	go func() {
+		retryCh <- modelPacket
+	}()
+	time.Sleep(time.Second) // wait to fill in the database
+	storedPacket := store.RetrieveNPackets("aleo_rpns1", 1)
+
+L1:
+	for {
+		select {
+		case pkt := <-storedPacket:
+			assert.Equal(t, pkt, modelPacket)
+			break L1
+		default:
+			continue
+		}
+	}
+}
+
+func TestManagePacket2(t *testing.T) {
+	t.Log("case: manage packet that comes in completed ch")
+	cfg := &config.ChainConfig{
+		Name:           "aleo",
+		ChainID:        big.NewInt(2),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		WaitDuration:   time.Hour * 24,
+		DestChains:     []string{"1"},
+		StartSeqNum: map[string]uint64{
+			"2": 1,
+		},
+		StartHeight: 100,
+		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+	}
+	os.Mkdir("tmp", 0777)
+	store.InitKVStore("tmp/db")
+
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "tmp/log",
+	})
+	defer os.RemoveAll("tmp/")
+
+	client := NewClient(cfg,  map[string]*big.Int{"2": big.NewInt(2)})
+
+	// store packet in retry bucket
+	modelPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: big.NewInt(2),
+			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: big.NewInt(1),
+			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Height: uint64(55),
+	}
+
+	go client.(*Client).managePacket(context.Background())
+	time.Sleep(time.Second) // wait to make the receiver ready before sending
+	go func() {
+		completedCh <- modelPacket
+	}()
+	time.Sleep(time.Second) // wait to fill in the database
+	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
+	assert.True(t, exists)
+
+	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
+	assert.Equal(t, uint64(1), key)
+}
