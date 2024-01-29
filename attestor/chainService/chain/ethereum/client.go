@@ -188,12 +188,12 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 			},
 			Source: chain.NetworkAddress{
 				ChainID: packetDispatched.Packet.SourceTokenService.ChainId,
-				Address: string(packetDispatched.Packet.SourceTokenService.Addr.Bytes()),
+				Address: packetDispatched.Packet.SourceTokenService.Addr.Hex(),
 			},
 			Message: chain.Message{
 				DestTokenAddress: packetDispatched.Packet.Message.DestTokenAddress,
 				ReceiverAddress:  packetDispatched.Packet.Message.ReceiverAddress,
-				SenderAddress:    string(packetDispatched.Packet.Message.SenderAddress.Bytes()),
+				SenderAddress:    packetDispatched.Packet.Message.SenderAddress.Hex(),
 				Amount:           packetDispatched.Packet.Message.Amount,
 			},
 			Height: packetDispatched.Packet.Height.Uint64(),
