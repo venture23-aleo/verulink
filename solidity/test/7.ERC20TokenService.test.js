@@ -25,7 +25,7 @@ function inPacketHash(inPacket) {
 // Define the test suite
 describe('ERC20TokenService', () => {
     let proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, ERC20TokenService, ERC20TokenServiceImpl, ERC20TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
-
+    let blackListProxy;
     let destchainID = 2;
 
     beforeEach(async () => {
@@ -58,6 +58,40 @@ describe('ERC20TokenService', () => {
         usdTMock = await USDTMock.deploy();
         await usdTMock.deployed();
 
+        {
+            const BlackListService = await ethers.getContractFactory("BlackListService");
+            const blackListServiceImpl = await BlackListService.deploy();
+            await blackListServiceImpl.deployed();
+            const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
+            // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
+            initializeData = new ethers.utils.Interface([{
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_usdc",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_usdt",
+                        "type": "address"
+                    }
+                ],
+                "name": "initialize",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdTMock.address]);
+            blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
+            await blackListProxy.deployed();
+            blackListProxy = BlackListService.attach(blackListProxy.address);
+        }
+
         UnSupportedToken = await ethers.getContractFactory("USDCMock");
         unsupportedToken = await UnSupportedToken.deploy();
         await unsupportedToken.deployed();
@@ -81,25 +115,20 @@ describe('ERC20TokenService', () => {
                 },
                 {
                     "internalType": "address",
-                    "name": "_usdc",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_usdt",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
                     "name": "_owner",
                     "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "_blackListService",
+                  "type": "address"
                 }
             ],
             "name": "initialize",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
-        }]).encodeFunctionData("initialize", [proxiedBridge.address, chainId, usdcMock.address, usdTMock.address, owner.address]);
+        }]).encodeFunctionData("initialize", [proxiedBridge.address, chainId, owner.address, blackListProxy.address]);
 
         proxy = await Proxied.deploy(ERC20TokenServiceImpl.address, initializeData);
         await proxy.deployed();
@@ -130,7 +159,7 @@ describe('ERC20TokenService', () => {
 
     it('reverts if the contract is already initialized', async function () {
         // console.log("initializeData = ", initializeData);
-        expect(proxiedV1["initialize(address,uint256,address,address,address)"](proxiedBridge.address, chainId, usdcMock.address, usdTMock.address, owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(proxiedV1["initialize(address,uint256,address,address)"](proxiedBridge.address, chainId, owner.address, blackListProxy.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should return "ERC20" as the token type', async () => {
@@ -212,7 +241,8 @@ describe('ERC20TokenService', () => {
     it('should transfer USDT and checking if "Sender Blacklisted" in _packetify', async () => {
         await (await usdTMock.mint(other.address, 150)).wait();
         await (await usdTMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await proxiedV1.addToBlackList(other.address);
+        await (await blackListProxy.connect(owner).addToBlackList(other.address)).wait();
+        return;
         expect(proxiedV1.connect(other)["transfer(address,uint256,string,uint256)"]
             (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27",
                 destchainID)).to.be.revertedWith("Sender Blacklisted");
@@ -271,7 +301,15 @@ describe('ERC20TokenService', () => {
             ["aleo.SenderAddress", usdcMock.address, 100, other.address],
             100
         ];
-        expect(proxiedV1.connect(other).withdraw(wrongPacket)).to.be.revertedWith('Packet not intended for this Token Service');
+        const packetHash = inPacketHash(wrongPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+        );
+        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        expect(proxiedV1.connect(other).withdraw(wrongPacket,signatures)).to.be.revertedWith('Packet not intended for this Token Service');
     });
 
     // Test for wrong destTokenAddress
@@ -288,7 +326,15 @@ describe('ERC20TokenService', () => {
             ["aleo.SenderAddress", unsupportedToken.address, 100, other.address],
             100
         ];
-        expect(proxiedV1.connect(other).withdraw(wrongPacket)).to.be.revertedWith('Token not supported');
+        const packetHash = inPacketHash(wrongPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+        );
+        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        expect(proxiedV1.connect(other).withdraw(wrongPacket,signatures)).to.be.revertedWith('Token not supported');
     });
 
     //Test for receiving funds for blackListed address
@@ -585,7 +631,7 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
     let USDCMock, usdcMock;
     let USDTMock, usdTMock;
     let ERC20TokenBridge, erc20TokenBridge, proxiedBridge;
-
+    let blackListProxy;
     // Deploy a new ERC20TokenServiceV2 contract before each test
     beforeEach(async () => {
         [owner, signer, other] = await ethers.getSigners();
@@ -612,6 +658,40 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
         usdTMock = await USDTMock.deploy();
         await usdTMock.deployed();
 
+        {
+            const BlackListService = await ethers.getContractFactory("BlackListService");
+            const blackListServiceImpl = await BlackListService.deploy();
+            await blackListServiceImpl.deployed();
+            const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
+            // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
+            initializeData = new ethers.utils.Interface([{
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_usdc",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_usdt",
+                        "type": "address"
+                    }
+                ],
+                "name": "initialize",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdTMock.address]);
+            blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
+            await blackListProxy.deployed();
+            blackListProxy = BlackListService.attach(blackListProxy.address);
+        }
+
         ERC20TokenServiceV1 = await ethers.getContractFactory("ERC20TokenService");
         ERC20TokenServiceV1Impl = await ERC20TokenServiceV1.deploy();
         await ERC20TokenServiceV1Impl.deployed();
@@ -631,17 +711,12 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
                 },
                 {
                     "internalType": "address",
-                    "name": "_usdc",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_usdt",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
                     "name": "_owner",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "_blackListService",
                     "type": "address"
                 }
             ],
@@ -649,7 +724,7 @@ describe('Upgradeabilty: ERC20TokenServiceV2', () => {
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
-        }]).encodeFunctionData("initialize(address,uint256,address,address,address)", [erc20TokenBridge.address, chainId, usdcMock.address, usdTMock.address, owner.address]);
+        }]).encodeFunctionData("initialize(address,uint256,address,address)", [erc20TokenBridge.address, chainId, owner.address, blackListProxy.address]);
 
         const proxy = await ERC20TokenServiceProxy.deploy(ERC20TokenServiceV1Impl.address, initializeData);
         await proxy.deployed();

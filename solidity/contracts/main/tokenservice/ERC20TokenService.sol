@@ -2,13 +2,13 @@
 pragma solidity ^0.8.19;
 
 import {IERC20TokenBridge} from "../../common/interface/bridge/IERC20TokenBridge.sol";
-import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
 import {Pausable} from "../../common/Pausable.sol";
 import {ERC20TokenSupport} from "../../base/tokenservice/ERC20TokenSupport.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
-import "../../common/libraries/Lib.sol";
+import {PacketLibrary} from "../../common/libraries/Lib.sol";
 import {Holding} from "../Holding.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {IERC20, IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
+import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract ERC20TokenService is 
     Pausable,
@@ -20,7 +20,8 @@ contract ERC20TokenService is
     Holding holding;
     PacketLibrary.InNetworkAddress public self;
 
-    function initialize(address bridge, 
+    function initialize(
+        address bridge, 
         uint256 _chainId, 
         address _owner,
         address _blackListService
@@ -85,9 +86,9 @@ contract ERC20TokenService is
         if(PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
             if(tokenAddress == address(0)) {
                 // eth lock
-                holding.lockETH{value:amount}(receiver, tokenAddress, amount);
+                holding.lock{value:amount}(receiver);
             }else {
-                IERC20(tokenAddress).transfer(address(holding), amount);
+                require(IIERC20(tokenAddress).increaseAllowance(address(holding), amount),"Token allowance failed");
                 holding.lock(receiver, tokenAddress, amount);
             }
         }else if(quorum == PacketLibrary.Vote.YEA){
@@ -96,7 +97,7 @@ contract ERC20TokenService is
                 (bool sent,) = receiver.call{value: amount}("");
                 require(sent, "ETH Withdraw Failed");
             }else {
-                require(IERC20(tokenAddress).transfer(receiver, amount), "Withdraw Failed");
+                require(IIERC20(tokenAddress).transfer(receiver, amount), "Withdraw Failed");
             }  
         }else {
             revert("Insufficient Quorum");

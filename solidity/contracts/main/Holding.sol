@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 import {Pausable} from "../common/Pausable.sol";
-import {IERC20} from "../common/interface/tokenservice/IERC20.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {IIERC20} from "../common/interface/tokenservice/IIERC20.sol";
+import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract Holding is Pausable, Initializable {
 
@@ -16,34 +16,40 @@ contract Holding is Pausable, Initializable {
 
     mapping(address => mapping(address => uint256)) public unlocked;
 
-    address public tokenService;
+    mapping(address => bool) public supportedTokenServices;
 
     function initialize(address _owner, address _tokenService) public initializer {
         super._initialize(_owner);
-        tokenService = _tokenService;
+        supportedTokenServices[_tokenService] = true;
     }
 
-    function updateTokenService(address _tokenService) public onlyOwner {
-        tokenService = _tokenService;
+    function addTokenService(address _tokenService) public onlyOwner {
+        require(_tokenService != address(0), "Zero Address");
+        require(!supportedTokenServices[_tokenService], "Known TokenService");
+        supportedTokenServices[_tokenService] = true;
+    }
+
+    function removeTokenService(address _tokenService) public onlyOwner {
+        require(_tokenService != address(0), "Zero Address");
+        require(!supportedTokenServices[_tokenService], "UnKnown TokenService");
+        delete supportedTokenServices[_tokenService];
     }
 
     function lock(address user, address token, uint256 amount) public whenNotPaused {
         require(
-            msg.sender == tokenService,
-            "Caller is not registered Token Service"
+            supportedTokenServices[msg.sender],
+            "Unknown TokenService"
         );
+        if(token != address(0)) {
+            IIERC20(token).transferFrom(msg.sender, address(this), amount);
+        }
         locked[user][token] += amount;
         emit Locked(user, token, amount);
     }
 
-    function lockETH(address user, address token, uint256 amount) public whenNotPaused payable {
+    function lock(address user) public payable {
         require(msg.value > 0, "Requires ETH Transfer");
-        require(
-            msg.sender == tokenService,
-            "Caller is not registered Token Service"
-        );
-        locked[user][token] += amount;
-        emit Locked(user, token, amount);
+        lock(user, address(0), msg.value);
     }
 
     function unlock(
@@ -66,7 +72,7 @@ contract Holding is Pausable, Initializable {
             (bool sent,) = user.call{value: amount}("");
             require(sent, "ETH Released Failed");
         }else {
-            require(IERC20(token).transfer(user, amount), "ERC20 Release Failed");
+            require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
         }
     }
 }

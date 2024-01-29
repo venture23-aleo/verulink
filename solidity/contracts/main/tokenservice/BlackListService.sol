@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {IERC20} from "../../common/interface/tokenservice/IERC20.sol";
+import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {Ownable} from "../../common/Ownable.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 
-contract BlackListService is IBlackListService, Ownable, Initializable {
+contract BlackListService is Ownable, IBlackListService, Initializable {
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
@@ -42,8 +42,8 @@ contract BlackListService is IBlackListService, Ownable, Initializable {
 
     function isBlackListed(address account) public view override onlyProxy returns (bool) {
         return (blackLists[account] || 
-            IERC20(usdc).isBlacklisted(account) ||
-            IERC20(usdt).getBlackListStatus(account)
+            IIERC20(usdc).isBlacklisted(account) ||
+            IIERC20(usdt).getBlackListStatus(account)
         );
     }
 }

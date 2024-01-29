@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import "../../libraries/Lib.sol";
+import {PacketLibrary} from  "../../libraries/Lib.sol";
 
-abstract contract IERC20TokenBridge {
+interface IERC20TokenBridge {
 
     event PacketDispatched(PacketLibrary.OutPacket packet);
     event PacketArrived(PacketLibrary.InPacket packet);
 
-    function sendMessage(PacketLibrary.OutPacket memory packet) external virtual;
-    function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external virtual returns (PacketLibrary.Vote);
+    function sendMessage(PacketLibrary.OutPacket memory packet) external;
+    function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external returns (PacketLibrary.Vote);
 }

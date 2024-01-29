@@ -1,18 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-interface IERC20 {
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    
-    function approve(address spender, uint256 amount) external returns (bool);
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-    function balanceOf(address account) external view returns (uint256);
-
-    function allowance(
-        address owner,
-        address spender
-    ) external view returns (uint256);
+interface IIERC20 is IERC20 {
+   function increaseAllowance(address spender, uint256 addedValue) external returns (bool);
+   function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);
 
     /* USDC function to check blacklist 
        IMP: IS NOT A STANDARD ERC20 FUNCTION

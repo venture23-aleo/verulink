@@ -14,7 +14,7 @@ describe('Ownable', () => {
         ownableInstance = await OwnableImpl.deploy();
         await ownableInstance.deployed();
         Proxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(OwnableImpl.interface.format()).encodeFunctionData("initializemock", [owner.address]);
+        initializeData = new ethers.utils.Interface(OwnableImpl.interface.format()).encodeFunctionData("initialize", [owner.address]);
         const proxy = await Proxy.deploy(ownableInstance.address, initializeData);
         await proxy.deployed();
         proxiedOwner = OwnableImpl.attach(proxy.address);

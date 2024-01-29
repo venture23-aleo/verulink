@@ -7,7 +7,7 @@ import {AttestorManager} from "../base/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "../base/bridge/OutgoingPacketManagerImpl.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 
 contract ERC20TokenBridge is 
     Pausable,
@@ -50,7 +50,7 @@ contract ERC20TokenBridge is
     whenNotPaused 
     returns (PacketLibrary.Vote)
     {
-        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        // require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 

@@ -17,7 +17,7 @@ describe("BlackListService", () => {
         usdtMock = await USDTMock.deploy();
         await usdtMock.deployed();
 
-        BlackListService = await ethers.getContractFactory("BlackListServiceMock");
+        BlackListService = await ethers.getContractFactory("BlackListService");
         blackListServiceImpl = await BlackListService.deploy();
         await blackListServiceImpl.deployed();
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
@@ -40,11 +40,11 @@ describe("BlackListService", () => {
                     "type": "address"
                 }
             ],
-            "name": "initializemock",
+            "name": "initialize",
             "outputs": [],
             "stateMutability": "nonpayable",
             "type": "function"
-        }]).encodeFunctionData("initializemock", [owner.address, usdcMock.address, usdtMock.address]);
+        }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdtMock.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxiedContract = BlackListService.attach(proxy.address);
