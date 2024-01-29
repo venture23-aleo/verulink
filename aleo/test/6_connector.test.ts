@@ -244,6 +244,7 @@ describe("Token Connector", () => {
     const incomingAmount = BigInt(10000);
     const incomingHeight = 10;
     let initialBalance = BigInt(0);
+    let initialSupply = BigInt(0);
     let outgoingSequence = BigInt(1);
     let outgoingAmount = BigInt(101);
 
@@ -283,6 +284,11 @@ describe("Token Connector", () => {
         } catch (e) {
           initialBalance = BigInt(0);
         }
+        try {
+          initialSupply = await tokenService.total_supply(wusdcTokenAddr);
+        } catch (e) {
+          initialSupply = BigInt(0);
+        }
 
         const signature = signPacket(packet, true, bridge.config.privateKey);
 
@@ -314,6 +320,10 @@ describe("Token Connector", () => {
 
         let finalBalance = await wusdcToken.account(aleoUser1);
         expect(finalBalance).toBe(initialBalance + incomingAmount);
+
+        let finalSupply = await tokenService.total_supply(wusdcTokenAddr);
+        expect(finalSupply).toBe(initialSupply + incomingAmount);
+
       },
       TIMEOUT
     );
@@ -329,6 +339,8 @@ describe("Token Connector", () => {
           outgoingSequence = BigInt(1);
         }
 
+        initialSupply = await tokenService.total_supply(wusdcTokenAddr);
+
         const tx = await wusdcConnecter.wusdc_send(
           evm2AleoArr(ethUser),
           outgoingAmount
@@ -338,6 +350,9 @@ describe("Token Connector", () => {
 
         const finalBalance = await wusdcToken.account(aleoUser1);
         expect(finalBalance).toBe(initialBalance - outgoingAmount);
+
+        const finalSupply = await tokenService.total_supply(wusdcTokenAddr);
+        expect(finalSupply).toBe(initialSupply - outgoingAmount);
 
         const packetKey: PacketId = {
           chain_id: ethChainId,
