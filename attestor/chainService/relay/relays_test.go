@@ -58,8 +58,12 @@ func getHasher(h *testHash) func(sp *chain.ScreenedPacket) string {
 
 func TestInitPacketFeeder(t *testing.T) {
 	t.Run("normal flow", func(t *testing.T) {
-		dbRemover := setupDB(t, "./bolt.db")
-		t.Cleanup(dbRemover)
+		dbRemover := setupDB(t, "./normal-flow-bolt.db")
+		t.Cleanup(func() {
+			dbRemover()
+			RegisteredClients = make(map[string]chain.ClientFunc)
+			RegisteredHashers = make(map[string]chain.HashFunc)
+		})
 
 		startedToFeedAleoPkt := false
 		startedToFeedEthereumPkt := false
@@ -125,8 +129,11 @@ func TestInitPacketFeeder(t *testing.T) {
 	})
 
 	t.Run("should panic for undefined hash function", func(t *testing.T) {
-		dbRemover := setupDB(t, "./bolt.db")
-		t.Cleanup(dbRemover)
+		dbRemover := setupDB(t, "./undefined-hash-func-bolt.db")
+		t.Cleanup(func() {
+			dbRemover()
+			RegisteredClients = make(map[string]chain.ClientFunc)
+		})
 		RegisteredClients["aleo"] = getClient(&feeder{name: "aleo", feed: func() {
 			for {
 				time.Sleep(time.Second)
