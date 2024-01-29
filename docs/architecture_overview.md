@@ -55,11 +55,6 @@ The design of the platform relies on following assumptions to be correct.
 ### Trustable Participants
 It is assumed that the parties that will be running the attestor for the bridge can be trusted because of their self-interest and reputation. It is assumed the majority of participants (3 out of 5) wont collude to attack the bridge.
 
-
-### Message Delivery Is Sponsored
-It is assumed that the fee required for delivery of messages is sponsored by the participants that will be running the attestor nodes. 
-
-
 ## Common Data Structures
 All components of bridge agree to some common data structures which are as follows:
 
@@ -68,8 +63,8 @@ It is the data structure that should allow us to point to any resource in any ne
 Can also be represented as single string url as : `{chain_id}/{address}`.
 ```rust
 pub struct NetworkAddress {
-    pub chain_id:128,
-    pub address:String,
+    pub chain_id: u128,
+    pub address: String,
 }
 ```
 
@@ -105,12 +100,12 @@ It consists of all the information that is required for the components in our br
 
 ```rust
 pub struct Packet{
-    version:u8,
-    destination:NetworkAddress,
-    source:NetworkAddress,
-    sequence:u64,
-    message:TokenMessage,
-    height:String,
+    version: u8,
+    destination: NetworkAddress,
+    source: NetworkAddress,
+    sequence: u64,
+    message: TokenMessage,
+    height: String,
 }
 
 ```
@@ -171,8 +166,6 @@ pub trait TokenServiceContract{
     pub fn add_to_blacklist(address: String);
     pub fn remove_from_blacklist(address: String);
 }
-
-
 ```
 **Transfer:** This method will be invoked by the frontend/user to transfer assets from one chain to another. User will provide the target chain_id, recipient address of the target chain, asset in the current chain and the amount that needs to be transferred. For verified request token service contract will construct TokenMessage and call send_message on bridge contract with the token service contract of target chain as destination. Token contract will also update the TVL data.
 
