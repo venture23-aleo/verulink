@@ -12,7 +12,7 @@ import (
 )
 
 func constructOutMappingKey(dst *big.Int, seqNum uint64) (mappingKey string) {
-	return fmt.Sprintf("{chain_id:%du32,sequence:%du32}", dst, seqNum)
+	return fmt.Sprintf("{chain_id:%du128,sequence:%du64}", dst, seqNum)
 }
 
 // after splitting we get the message in the form [key1:value1,key2:value2, ...]
@@ -141,7 +141,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt.Source.Address = packet.source.address
 
 	destChainID := new(big.Int)
-	destChainID, destChainIDOk := destChainID.SetString(strings.Replace(packet.destination.chainID, "u32", "", 1), 10)
+	destChainID, destChainIDOk := destChainID.SetString(strings.Replace(packet.destination.chainID, "u128", "", 1), 10)
 	if !destChainIDOk {
 		return nil, errors.New("failed to parse version")
 	}
@@ -171,7 +171,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	}
 
 	height := new(big.Int)
-	height, heightOk := height.SetString(strings.Replace(packet.height, "u32", "", 1), 10)
+	height, heightOk := height.SetString(strings.Replace(packet.height, "u64", "", 1), 10)
 	if !heightOk {
 		return nil, errors.New("failed to parse version")
 	}
@@ -185,11 +185,11 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 // "{version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: <source contract address in the form of len 32 long byte array in which eth address is represented by the last 20 bytes>}....}
 func constructAleoPacket(msg *chain.Packet) string {
 	return fmt.Sprintf(
-		"{ version: %du8, sequence: %du32, "+
-			"source: { chain_id: %du32, addr: %s }, "+
-			"destination: { chain_id: %du32, addr: %s }, "+
+		"{ version: %du8, sequence: %du64, "+
+			"source: { chain_id: %du128, addr: %s }, "+
+			"destination: { chain_id: %du128, addr: %s }, "+
 			"message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, "+
-			"height: %du32 }",
+			"height: %du64 }",
 		msg.Version, msg.Sequence, msg.Source.ChainID,
 		constructEthAddressForAleoParameter(msg.Source.Address),
 		msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress,
