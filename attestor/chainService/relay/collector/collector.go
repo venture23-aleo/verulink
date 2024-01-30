@@ -1,4 +1,4 @@
-package relay
+package collector
 
 import (
 	"context"
@@ -16,8 +16,17 @@ const (
 	isWhite     = "is_white"
 )
 
-func sendToCollector(sp *chain.ScreenedPacket, signature string) error {
+type CollectorI interface {
+	SendToCollector(sp *chain.ScreenedPacket, signature string) error
+	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet)
+}
 
+var collc collector
+
+type collector struct {
+}
+
+func (c *collector) SendToCollector(sp *chain.ScreenedPacket, signature string) error {
 	params := map[string]interface{}{
 		srcChainID:  sp.Packet.Source.ChainID,
 		destChainID: sp.Packet.Destination.ChainID,
@@ -33,7 +42,7 @@ func sendToCollector(sp *chain.ScreenedPacket, signature string) error {
 	return nil
 }
 
-func receivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
+func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(time.Hour * 12) // todo: take from config
 	defer ticker.Stop()
 	for {
@@ -43,10 +52,19 @@ func receivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
 		case <-ticker.C:
 		}
 
-		_, _ = verifyPkt(ctx, nil)
+		_, _ = c.verifyPkt(ctx, nil)
 	}
 }
 
-func verifyPkt(ctx context.Context, pkt *chain.Packet) (bool, error) {
+// This method might be moved to other packages as well.
+func (c *collector) verifyPkt(ctx context.Context, pkt *chain.Packet) (bool, error) {
 	return false, nil
+}
+
+func GetCollector() CollectorI {
+	return &collc
+}
+
+func SetupCollector( /*params*/ ) error {
+	return nil
 }

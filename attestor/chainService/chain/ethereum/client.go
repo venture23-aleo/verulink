@@ -41,16 +41,18 @@ var (
 	retryPacketNamespaces []string
 )
 
-type iEthClient interface {
+type ethClientI interface {
 	GetCurrentBlock(ctx context.Context) (uint64, error)
-	FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error)
+	FilterLogs(
+		ctx context.Context, fromHeight uint64, toHeight uint64,
+		contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error)
 }
 
 type ethClient struct {
 	eth *ethclient.Client
 }
 
-func NewEthClient(rpcEndPoint string) iEthClient {
+func NewEthClient(rpcEndPoint string) ethClientI {
 	rpc, err := rpc.Dial(rpcEndPoint)
 	if err != nil {
 		panic(err)
@@ -69,7 +71,10 @@ func (eth *ethClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
 	return currentBlock, nil
 }
 
-func (eth *ethClient) FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error) {
+func (eth *ethClient) FilterLogs(
+	ctx context.Context, fromHeight uint64, toHeight uint64,
+	contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error) {
+
 	logs, err := eth.eth.FilterLogs(ctx, ether.FilterQuery{
 		FromBlock: big.NewInt(int64(fromHeight)),
 		ToBlock:   big.NewInt(int64(toHeight)),
@@ -111,7 +116,7 @@ func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacke
 type Client struct {
 	name               string
 	address            ethCommon.Address
-	eth                iEthClient
+	eth                ethClientI
 	bridge             iBridgeClient
 	waitDur            time.Duration
 	nextBlockHeight    uint64
@@ -392,19 +397,6 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		retryPacketWaitDur: time.Second, // TODO: put the duration in config.yaml
 	}
 }
-
-/*
-Send packet immediately for it to be signed and sent to public database
-If it fails to sign or send to public database, then send to retry namespace
-Have a go routine to update base sequence number
-For ethereum it should store it as seqNum:Height
-For aleo it can store it as seqNum:nil
-
-While updating baseseq num, if it finds any gap then it gets packet from retry namespace and
-send it for it to be signed immediately.
-If not available in namespace then download block and parse and store the packet
-
-*/
 
 func getDestChains() []string { // list of chain IDs
 	return []string{"2"}
