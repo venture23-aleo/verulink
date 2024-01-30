@@ -129,11 +129,17 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 
 	curKey, curHeight := kv[0], kv[1]
 	curBaseSeqNum := binary.BigEndian.Uint64(curKey)
-	curBaseHeight := binary.BigEndian.Uint64(curHeight)
+	curBaseHeight := uint64(0)
+	if len(curHeight) != 0 {
+		curBaseHeight = binary.BigEndian.Uint64(curHeight)
+	}
 	var toDeleteKeys [][]byte
 	for kv := range seqNumCh {
 		nextSeqNum := binary.BigEndian.Uint64(kv[0])
-		nextHeight := binary.BigEndian.Uint64(kv[1])
+		nextHeight := uint64(0)
+		if len(kv[1]) != 0 {
+			nextHeight = binary.BigEndian.Uint64(kv[1])
+		}
 		if nextSeqNum == curBaseSeqNum+1 {
 			curBaseSeqNum = nextSeqNum
 			curBaseHeight = nextHeight
