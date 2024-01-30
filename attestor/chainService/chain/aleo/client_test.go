@@ -165,12 +165,16 @@ func TestFeedPacket(t *testing.T) {
 				return nil, errors.New("error")
 			},
 		},
-		retryPacketWaitDur: time.Hour,
-		destChains:         map[*big.Int]uint64{big.NewInt(1): 1},
+		retryPacketWaitDur:  time.Hour,
+		destChains:          map[*big.Int]uint64{big.NewInt(1): 1},
+		pruneBaseSeqWaitDur: time.Hour,
 	}
 	pktCh := make(chan *chain.Packet)
 
-	go client.FeedPacket(context.Background(), pktCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() 
+
+	go client.FeedPacket(ctx, pktCh)
 
 	pkt := <-pktCh
 	assert.Equal(t, pkt, expectedPacket)
@@ -279,8 +283,9 @@ func TestManagePacket(t *testing.T) {
 		},
 		Height: uint64(55),
 	}
-
-	go client.(*Client).managePacket(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() 
+	go client.(*Client).managePacket(ctx)
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
 	go func() {
 		for {
@@ -317,6 +322,7 @@ func TestManagePacket2(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
+
 	os.Mkdir("tmp", 0777)
 	store.InitKVStore("tmp/db")
 
@@ -348,8 +354,9 @@ func TestManagePacket2(t *testing.T) {
 		},
 		Height: uint64(55),
 	}
-
-	go client.(*Client).managePacket(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() 
+	go client.(*Client).managePacket(ctx)
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
 	go func() {
 		for {
@@ -362,4 +369,88 @@ func TestManagePacket2(t *testing.T) {
 
 	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
+}
+
+func TestPruneBaseSeqNumber(t *testing.T) {
+	aleoPacket := &aleoPacket{
+		version:  "0u8",
+		sequence: "10u64",
+		source: aleoPacketNetworkAddress{
+			chainID: "2u128",
+			address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		destination: aleoPacketNetworkAddress{
+			chainID: "1u128",
+			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
+		},
+		message: aleoMessage{
+			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
+			sender:   "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			amount:   "102u64",
+			receiver: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
+		},
+		height: "55u64",
+	}
+
+	os.Mkdir("tmp", 0777)
+	store.InitKVStore("tmp/db")
+
+	logger.InitLogging("debug", &config.LoggerConfig{
+		Encoding:   "console",
+		OutputPath: "tmp/log",
+	})
+	defer os.RemoveAll("tmp/")
+
+	expectedPacket := &chain.Packet{
+		Version:  uint8(0),
+		Sequence: uint64(10),
+		Source: chain.NetworkAddress{
+			ChainID: big.NewInt(2),
+			Address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: big.NewInt(1),
+			Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+			SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			Amount:           big.NewInt(102),
+			ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+		},
+		Height: uint64(55),
+	}
+
+	aleoPacketString := dumpAleoPacket(aleoPacket, false)
+	client := &Client{
+		aleoClient: &mockAleoClient{
+			getPkt: func(key string) (map[string]string, error) {
+				if key == "{chain_id:1u128,sequence:9u64}" || key == "{chain_id:1u128,sequence:10u64}" || key == "{chain_id:1u128,sequence:11u64}" {
+					m := make(map[string]string)
+					m[key] = aleoPacketString
+					return m, nil
+				}
+				return nil, errors.New("error")
+			},
+		},
+		retryPacketWaitDur:  time.Hour,
+		destChains:          map[*big.Int]uint64{big.NewInt(1): 1},
+		pruneBaseSeqWaitDur: time.Second,
+	}
+
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"1")
+	store.CreateNamespace(baseSeqNamespaces[0])
+
+	for i := 0; i < 15; i++ {
+		if i < 10 || i > 12 {
+			store.StoreBaseSeqNum(baseSeqNamespaces[0], uint64(i), 0)
+		}
+	}
+
+	pktCh := make(chan *chain.Packet)
+
+	go client.pruneBaseSeqNum(context.Background(), pktCh)
+
+	pkt := <-pktCh
+	assert.Equal(t, expectedPacket, pkt)
 }
