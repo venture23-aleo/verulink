@@ -204,10 +204,10 @@ The multisig will be used to deploy contracts, upgrade contracts and update cont
 ### DB Service
 DB service is the publicly read-accessible database where only the attestors are allowed to have write-access in certain format. Attestor will pick up the packet from the bridge contract, analyzes/validates it and send the signature to this database. Users shall collect signatures from this database and send it to the target contract where upon threshold requirement met, user's funds shall be unlocked/minted in the target smart-contract.
 
-It is the db-service that makes bypass transactional cost that atttestors had to bear otherwise.
+It is the db-service that helps bypass transactional cost that atttestors had to bear otherwise.
 
 ### Attestor
-Attestor is the bridge component that will be responsible for detecting new messages, validating addresses in them through chain-analysis and broadcasting signature to the common database for users to collect and send them to the target network by calling the target bridge contract.
+Attestor is the bridge component that will be responsible for detecting new messages, validating addresses in them through chain-analysis and broadcasting signature to the common database service. Users can collect and send them to the target network by calling the target bridge contract.
 
 Note that Attestors will pick up the packet only after certain duration after it is created so that chain-analysis have enough time to capture addresses in the packet in it's radar. As of now we have considered this duration to be 24 hours.
 
@@ -273,7 +273,7 @@ This key will be used in attestor machine instance to sign the relevant messages
 This key will be used to participate in multisig processes like updating attestor list,updating blacklist and upgrading the contract and deploying the contract as well.
 
 ## Fee Management
-The fee required to relay messages from one end to another is free now as attesstos don't have to make transactions to the chain. Rather they pull the packet, validate it against chain-analysis and signs the packet with the tag(black/white). Since every attestor will be relaying the message to target chain it becomes possible to drain attestors of their funds by transferring very dust amounts frequently. To overcome this we will set a minimum amount that can be bridged out or bridged in. This can also be overcome by adding message passing fee on the transaction cost itself as well once we have the swap metrics between Aleo/Eth pair.
+The fee required to relay messages from one end to another is free now as attesstos don't have to make transactions to the chain. Rather they pull the packet, validate it against chain-analysis and signs the packet with the tag(black/white). We might need to charge user for the operational cost beared by attestors in future. As of now, bridge fee is zero.
 
 ## System Error And Recovery
 The platform being a stateful application, it is imperative that following measures are taken for fault tolerance.
