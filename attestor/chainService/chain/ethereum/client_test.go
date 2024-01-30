@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	testMutex = sync.Mutex{}
+	testMutex = &sync.Mutex{}
 )
 
 func TestNewClient(t *testing.T) {
@@ -281,12 +281,12 @@ func TestRetryFeed(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	defer os.Remove("db")
+	// defer os.Remove("db")
 	logger.InitLogging("debug", &config.LoggerConfig{
 		Encoding:   "console",
 		OutputPath: "log",
 	})
-	defer os.Remove("log")
+	// defer os.Remove("log")
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -345,7 +345,7 @@ func TestManagePacket(t *testing.T) {
 		Encoding:   "console",
 		OutputPath: "tmp/log",
 	})
-	defer os.RemoveAll("tmp/")
+	// defer os.RemoveAll("tmp/")
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -373,18 +373,20 @@ func TestManagePacket(t *testing.T) {
 
 	go client.(*Client).managePacket(context.Background())
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
+
 	go func() {
-		retryCh <- modelPacket
+		for {
+			retryCh <- modelPacket
+		}
 	}()
 	time.Sleep(time.Second) // wait to fill in the database
 	storedPacket := store.RetrieveNPackets("ethereum_rpns2", 1)
 
-L1:
 	for {
 		select {
 		case pkt := <-storedPacket:
 			assert.Equal(t, pkt, modelPacket)
-			break L1
+			return
 		default:
 			continue
 		}
@@ -408,14 +410,6 @@ func TestManagePacket2(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	defer os.RemoveAll("tmp/")
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -444,7 +438,9 @@ func TestManagePacket2(t *testing.T) {
 	go client.(*Client).managePacket(context.Background())
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
 	go func() {
-		completedCh <- modelPacket
+		for {
+			completedCh <- modelPacket
+		}
 	}()
 	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
@@ -452,4 +448,9 @@ func TestManagePacket2(t *testing.T) {
 
 	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
+}
+
+func TestRemoveDBandLogging(t *testing.T) {
+	os.RemoveAll("tmp/")
+	os.Remove("db")
 }
