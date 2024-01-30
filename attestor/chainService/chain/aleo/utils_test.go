@@ -66,10 +66,8 @@ func TestConstructEthAddressForAleo(t *testing.T) {
 	t.Run("happy path construction", func(t *testing.T) {
 		modelEthAddress := "[ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ]"
 		ethAddress := ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0")
-		ethAddrBt := ethAddress.Bytes()
-		ethAddrStr := string(ethAddrBt)
 
-		ethAddressForAleo := constructEthAddressForAleoParameter(ethAddrStr)
+		ethAddressForAleo := constructEthAddressForAleoParameter(ethAddress.Hex())
 		assert.Equal(t, modelEthAddress, ethAddressForAleo)
 	})
 }
@@ -155,13 +153,13 @@ func TestParseAleoPacket(t *testing.T) {
 			},
 			Destination: chain.NetworkAddress{
 				ChainID: big.NewInt(01),
-				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
+				Address: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(), // converting address of form [0u8, 0u8, ..., 176u8] to str
 			},
 			Message: chain.Message{
-				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				DestTokenAddress: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 				Amount:           big.NewInt(102),
-				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				ReceiverAddress:  ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 			},
 			Height: big.NewInt(55).Uint64(),
 		}
@@ -266,10 +264,6 @@ func TestConstructAleoPacket(t *testing.T) {
 }
 
 func dumpPktToAleoPacketString(pkt chain.Packet) string {
-	pkt.Destination.Address = string(ethCommon.HexToAddress(pkt.Destination.Address).Bytes())
-	pkt.Message.DestTokenAddress = string(ethCommon.HexToAddress(pkt.Message.DestTokenAddress).Bytes())
-	pkt.Message.ReceiverAddress = string(ethCommon.HexToAddress(pkt.Message.ReceiverAddress).Bytes())
-
 	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du64 ,\\n  "+
 		"source: {\\n    chain_id: %du128,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %du128,\\n    addr: %s},\\n  "+

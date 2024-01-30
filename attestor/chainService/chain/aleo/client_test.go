@@ -283,7 +283,9 @@ func TestManagePacket(t *testing.T) {
 	go client.(*Client).managePacket(context.Background())
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
 	go func() {
-		retryCh <- modelPacket
+		for {
+			retryCh <- modelPacket
+		}
 	}()
 	time.Sleep(time.Second) // wait to fill in the database
 	storedPacket := store.RetrieveNPackets("aleo_rpns1", 1)
@@ -324,7 +326,7 @@ func TestManagePacket2(t *testing.T) {
 	})
 	defer os.RemoveAll("tmp/")
 
-	client := NewClient(cfg,  map[string]*big.Int{"2": big.NewInt(2)})
+	client := NewClient(cfg, map[string]*big.Int{"2": big.NewInt(2)})
 
 	// store packet in retry bucket
 	modelPacket := &chain.Packet{
@@ -350,7 +352,9 @@ func TestManagePacket2(t *testing.T) {
 	go client.(*Client).managePacket(context.Background())
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
 	go func() {
-		completedCh <- modelPacket
+		for {
+			completedCh <- modelPacket
+		}
 	}()
 	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
