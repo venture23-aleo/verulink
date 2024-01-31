@@ -26,6 +26,11 @@ describe('Ownable', () => {
         expect(contractOwner).to.equal(owner.address);
     });
 
+    // Test for second time initialize and revert
+    it('should not initialize contract for second time', async () => {
+        expect(proxiedOwner["initialize(address)"](owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
+    });
+
     it('should call owner() only through proxy', async () => {
         expect(ownableInstance.connect(owner).owner()).to.be.reverted;
     });

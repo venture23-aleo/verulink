@@ -31,7 +31,7 @@ contract Holding is Pausable, Initializable {
 
     function removeTokenService(address _tokenService) public onlyOwner {
         require(_tokenService != address(0), "Zero Address");
-        require(!supportedTokenServices[_tokenService], "UnKnown TokenService");
+        require(supportedTokenServices[_tokenService], "UnKnown TokenService");
         delete supportedTokenServices[_tokenService];
     }
 
@@ -81,7 +81,7 @@ contract Holding is Pausable, Initializable {
 
     function release(address user, uint256 amount) public {
         _release(user, address(0), amount);
-        (bool sent,) = user.call{value: amount}("");
-        require(sent, "ETH Release Failed");
+        user.call{value: amount}("");
+        // require(sent, "ETH Release Failed");
     }
 }

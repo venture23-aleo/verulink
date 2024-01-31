@@ -24,4 +24,16 @@ contract USDCMock is ERC20 {
     function removeBlackList(address account) external {
         delete blackLists[account];
     }
+
+    function transfer(address to, uint256 value) public override returns (bool) {
+        if(isBlacklisted(msg.sender) || isBlacklisted(to)) {return false;}
+        super.transfer(to, value);
+        return true;
+    }
+
+    function transferFrom (address sender, address to, uint256 value) public override returns (bool) {
+        if(isBlacklisted(sender) || isBlacklisted(to)) {return false;}
+        super.transferFrom(sender, to, value);
+        return true;
+    }
 }

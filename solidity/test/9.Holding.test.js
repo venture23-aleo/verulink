@@ -44,11 +44,50 @@ describe('Holding', () => {
 
         // Update token service with the owner
         await (await proxiedV1["addTokenService(address)"](newTokenService)).wait();
+        expect(await proxiedV1.supportedTokenServices(newTokenService)).to.equal(true);
 
         // Try to update token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).addTokenService(newTokenService)
         ).to.be.reverted;
+
+        // Try to update existed token service and expect it to revert
+        await expect(
+            proxiedV1.addTokenService(newTokenService)
+        ).to.be.revertedWith("Known TokenService");  
+
+        // Try to update token service with zero address and expect it to revert 
+        await expect(
+            proxiedV1.addTokenService("0x0000000000000000000000000000000000000000")
+        ).to.be.revertedWith("Zero Address");  
+    });
+
+    // Test that only the owner can remove the token service
+    it('should allow only owner to remove the token service', async () => {
+        const newTokenService = ethers.Wallet.createRandom().address;
+    
+        // Update token service with the owner
+        await (await proxiedV1["addTokenService(address)"](newTokenService)).wait();
+
+        // Try to update token service with another account and expect it to revert
+        await expect(
+            proxiedV1.connect(other).removeTokenService(newTokenService)
+        ).to.be.reverted;
+
+        const tx = await proxiedV1.removeTokenService(newTokenService);
+        await tx.wait();
+
+        expect(await proxiedV1.supportedTokenServices(newTokenService)).to.equal(false);
+
+        // try to remove non-exist token service and expect it to revert
+        await expect(
+            proxiedV1.removeTokenService(newTokenService)
+        ).to.be.revertedWith("UnKnown TokenService");
+        
+        // Try to update remove token service as zero address as parameter and expect it to revert 
+        await expect(
+            proxiedV1.removeTokenService("0x0000000000000000000000000000000000000000")
+        ).to.be.revertedWith("Zero Address");  
     });
 
     // Test that only the registered tokenservice can lock tokens
@@ -64,7 +103,26 @@ describe('Holding', () => {
         const lockAmount = await proxiedV1.locked(user, token);
         expect(lockAmount).to.be.equal(amount);
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(amount);
+
+        // Try to lock token as zero address as parameter for token address and expect it to revert 
+        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Address");  
     });
+
+
+    // Test for fail case of Token Transfer Failed
+    it('should not allow to lock tokens if token transfer failed', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.address;
+        const amount = 100;
+
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+        // add to blackist
+        const tx = await (await usdcMock.addBlackList(proxiedV1.address)).wait();
+        // Lock tokens with the owner
+        expect (proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Token Transfer Failed");
+    });
+
 
     // Test that only the owner can unlock tokens
     it('should allow only owner to unlock tokens', async () => {
@@ -141,7 +199,68 @@ describe('Holding', () => {
         // Release tokens with the owner
         await (await proxiedV1["release(address,address,uint256)"](user, token, amount)).wait();
         expect(await proxiedV1.unlocked(user, token)).to.be.equal(0);
+
+        // Try to release token as zero address as parameter for token address and expect it to revert 
+        await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Token Address"); 
     });
+
+    // Test for contract is paused and then tried to release
+    it('should not release if contract is paused', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.address;
+        const amount = 50;
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+    
+        // Lock tokens with the owner
+        await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
+    
+        // Unlock tokens with the owner
+        await (await proxiedV1.unlock(user, token, amount)).wait();
+        // contract is paued here
+        const tx = await proxiedV1.pause();
+        // Release tokens with the owner, should revert back
+        expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.reverted;
+    });
+
+    // Test for holding contract is blacklisted before releasing
+    it('should not release in case of ERC20 Token Transfer Failed', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.address;
+        const amount = 50;
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+    
+        // Lock tokens with the owner
+        await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
+    
+        // Unlock tokens with the owner
+        await (await proxiedV1.unlock(user, token, amount)).wait();
+        // contract is blackListed here to make it fail on token transfer
+        const tx = await usdcMock.addBlackList(proxiedV1.address);
+        // Release tokens with the owner, should revert back
+        expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("ERC20 Release Failed");
+    });
+
+    // Test for holding contract is blacklisted before releasing
+    it('should not release in case of zero address user', async () => {
+        const user = ethers.constants.AddressZero;
+        const token = usdcMock.address;
+        const amount = 50;
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+    
+        // Lock tokens with the owner
+        await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
+    
+        // Unlock tokens with the owner
+        await (await proxiedV1.unlock(user, token, amount)).wait();
+
+        // Release tokens with the owner, should revert back
+        expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Zero Address");
+    });
+
+
 
     // it('should revert if ERC20 token transfer fails', async () => {
     //     const user = ethers.Wallet.createRandom().address;
@@ -170,6 +289,14 @@ describe('Holding', () => {
         const lockedBalance = await proxiedV1.locked(other.address, tokenAddress);
         expect(lockedBalance).to.equal(amount);
     });
+
+    it('should not lock if contract is paused', async() => {
+        const tx = await proxiedV1.pause();
+        await tx.wait();
+        // lock reverted due to pause 
+        expect(proxiedV1.connect(tokenService)["lock(address)"](other.address, { value: 100 })).to.be.reverted;
+
+    })
 
     it('should allow only registered Token Service to lock ETH for a user', async () => {
         const amount = 100;
