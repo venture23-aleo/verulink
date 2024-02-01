@@ -2,7 +2,6 @@ package ethereum
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -145,34 +144,6 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) uint64 {
 		return 0
 	}
 	return curHeight - uint64(cl.waitDur/avgBlockGenDur) // total number of blocks that has to be passed in the waiting duration
-}
-
-func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
-	latestHeight := cl.blockHeightPriorWaitDur(ctx)
-	if height > latestHeight {
-		// retry after waiting for proper wait duration
-		time.Sleep(time.Duration(height-latestHeight) * avgBlockGenDur)
-		latestHeight = cl.blockHeightPriorWaitDur(ctx)
-		if height > latestHeight {
-			return nil, errors.New("next height greater than latest height")
-		}
-	}
-
-	var packets []*chain.Packet
-
-	for startHeight := height; startHeight <= latestHeight; startHeight += defaultHeightDifferenceForFilterLogs {
-		endHeight := startHeight + defaultHeightDifferenceForFilterLogs
-		if endHeight > latestHeight {
-			endHeight = latestHeight
-		}
-		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
-		if err != nil {
-			return nil, err
-		}
-		packets = append(packets, pkts...)
-	}
-
-	return packets, nil
 }
 
 func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uint64) ([]*chain.Packet, error) {
