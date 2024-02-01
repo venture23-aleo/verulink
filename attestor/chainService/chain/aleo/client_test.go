@@ -165,7 +165,7 @@ func TestFeedPacket(t *testing.T) {
 
 	aleoPacketString := dumpAleoPacket(aleoPacket, false)
 
-	dstChainId := big.NewInt(1)
+	dstChainId := big.NewInt(1).String()
 
 	client := &Client{
 		aleoClient: &mockAleoClient{
@@ -179,7 +179,7 @@ func TestFeedPacket(t *testing.T) {
 			},
 		},
 		retryPacketWaitDur:  time.Hour,
-		destChains:          map[*big.Int]uint64{dstChainId: uint64(1)},
+		destChains:          map[string]uint64{dstChainId: uint64(1)},
 		pruneBaseSeqWaitDur: time.Hour,
 	}
 	pktCh := make(chan *chain.Packet)
@@ -394,7 +394,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 			},
 		},
 		retryPacketWaitDur:  time.Hour,
-		destChains:          map[*big.Int]uint64{big.NewInt(1): 1},
+		destChains:          map[string]uint64{big.NewInt(1).String(): 1},
 		pruneBaseSeqWaitDur: time.Second,
 	}
 
