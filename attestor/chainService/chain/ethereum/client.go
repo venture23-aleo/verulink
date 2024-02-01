@@ -216,21 +216,31 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case <-ticker.C:
 		}
 
-		pkts, err := cl.parseBlock(ctx, cl.nextBlockHeight)
+		startHeight := cl.nextBlockHeight
+		endHeight := cl.blockHeightPriorWaitDur(ctx)
+		if endHeight > startHeight+defaultHeightDifferenceForFilterLogs {
+			endHeight = startHeight + defaultHeightDifferenceForFilterLogs
+		}
+
+		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 		if err != nil {
-			continue // retry if err
+			logger.GetLogger().Error(err.Error())
+			continue
 		}
 		for _, pkt := range pkts {
 			ch <- pkt
 		}
-		cl.nextBlockHeight++
+		cl.nextBlockHeight = endHeight
 	}
 }
 
@@ -299,11 +309,18 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		startSeqNum, endSeqNum := seqHeightRanges[0][0], seqHeightRanges[0][1]
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
 	L1:
-		for i := startHeight; i <= endHeight; i++ {
-			pkts, err := cl.parseBlock(ctx, i) // TODO: call filter logs directly
-			if err != nil {
-				continue // retry the same block if err
+		for s := startHeight; s <= endHeight; s += defaultHeightDifferenceForFilterLogs {
+			e := s + defaultHeightDifferenceForFilterLogs
+			if e > endHeight {
+				e = endHeight
 			}
+
+			pkts, err := cl.filterPacketLogs(ctx, s, e)
+			if err != nil {
+				logger.GetLogger().Error(err.Error())
+				break
+			}
+
 			for _, pkt := range pkts {
 				if pkt.Destination.ChainID.Cmp(chainID) != 0 {
 					continue
