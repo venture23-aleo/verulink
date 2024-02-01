@@ -153,10 +153,12 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeight:           10,
+		nextBlockHeight:           9,
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
+		feedPktWaitDur:            time.Nanosecond,
 	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -182,13 +184,13 @@ func TestFeedPacket(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	assert.Equal(t, uint64(10), client.nextBlockHeight)
+	assert.Equal(t, uint64(9), client.nextBlockHeight)
 
 	pkt := <-pktCh
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(11), client.nextBlockHeight)
+	assert.Equal(t, uint64(10), client.nextBlockHeight)
 }
 
 func TestRetryFeed(t *testing.T) {
@@ -321,6 +323,9 @@ func TestManagePacket(t *testing.T) {
 
 func TestManagePacket2(t *testing.T) {
 	t.Log("case: manage packet that comes in completed ch")
+	dbRemover, err := setupDB("tmp/test-manage-packet.db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
 		ChainID:        big.NewInt(1),
@@ -377,10 +382,11 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(dbRemover)
 
+	var eventLogs []types.Log
 	client := &Client{
 		eth: &mockEthClient{
 			getCurHeight: func() (uint64, error) { return 50, nil },
-			getLogs:      func(height uint64) ([]types.Log, error) { return []types.Log{types.Log{BlockNumber: height}}, nil },
+			getLogs:      func(height uint64) ([]types.Log, error) { return eventLogs, nil },
 		},
 		bridge: &mockBridgeClient{
 			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
@@ -426,6 +432,10 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	for i := 10; i < 13; i++ {
+		eventLogs = append(eventLogs, types.Log{BlockNumber: uint64(i)})
+	}
 
 	go client.pruneBaseSeqNum(ctx, pktCh)
 
