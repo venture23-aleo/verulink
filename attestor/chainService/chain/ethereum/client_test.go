@@ -5,7 +5,7 @@ import (
 	"errors"
 	"math/big"
 	"os"
-	"sync"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,13 +15,24 @@ import (
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
+	_ "github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
 )
 
-var (
-	testMutex = &sync.Mutex{}
-)
+func setupDB(p string) (func(), error) {
+	d := filepath.Dir(p)
+	err := os.MkdirAll(d, 0777)
+	if err != nil {
+		return nil, err
+	}
+	err = store.InitKVStore(p)
+	if err != nil {
+		return nil, err
+	}
+	return func() {
+		os.RemoveAll(p)
+	}, nil
+}
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
@@ -38,21 +49,17 @@ func TestNewClient(t *testing.T) {
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("happy path", func(t *testing.T) {
-		err := store.InitKVStore("db")
-		if err != nil {
-			panic(err)
-		}
-		defer os.Remove("db")
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(dbRemover)
 		client := NewClient(cfg, map[string]*big.Int{})
 		assert.Equal(t, client.Name(), "ethereum")
 	})
 
 	t.Run("case: invalid node url", func(t *testing.T) {
-		err := store.InitKVStore("db")
-		if err != nil {
-			panic(err)
-		}
-		defer os.Remove("db")
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(dbRemover)
 		wrongCfg := *cfg
 		wrongCfg.NodeUrl = "wrong node url"
 		assert.Panics(t, func() { NewClient(&wrongCfg, map[string]*big.Int{}) })
@@ -60,11 +67,9 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientUninitializedDB(t *testing.T) {
-	err := store.InitKVStore("db")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove("db")
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
 	store.CloseDB()
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -116,11 +121,11 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 
 func TestParseBlocks(t *testing.T) {
 	t.Logf("case: happy path parsing")
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "log",
-	})
-	defer os.Remove("log")
+
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
+
 	client := &Client{
 		eth: &mockEthClient{
 			getCurHeight: func() (uint64, error) { return 10, nil },
@@ -192,8 +197,6 @@ func TestParseBlocksError(t *testing.T) {
 }
 
 func TestFeedPacket(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
 	pktCh := make(chan *chain.Packet)
 
 	client := &Client{
@@ -229,7 +232,10 @@ func TestFeedPacket(t *testing.T) {
 		nextBlockHeight:    10,
 		retryPacketWaitDur: time.Hour,
 	}
-	go client.FeedPacket(context.Background(), pktCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go client.FeedPacket(ctx, pktCh)
 
 	modelPacket := &chain.Packet{
 		Version:  uint8(0),
@@ -261,9 +267,6 @@ func TestFeedPacket(t *testing.T) {
 }
 
 func TestRetryFeed(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
-
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
 		ChainID:        big.NewInt(1),
@@ -277,16 +280,9 @@ func TestRetryFeed(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
-	err := store.InitKVStore("db")
-	if err != nil {
-		panic(err)
-	}
-	// defer os.Remove("db")
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "log",
-	})
-	// defer os.Remove("log")
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -312,18 +308,39 @@ func TestRetryFeed(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	store.StoreRetryPacket("ethereum_rpns2", modelPacket)
+	for i := 0; i < 10; i++ {
+		modelPacket.Sequence = uint64(i + 1)
+		store.StoreRetryPacket("ethereum_rpns2", modelPacket)
+	}
+
 	packetCh := make(chan *chain.Packet)
 
-	go client.(*Client).retryFeed(context.Background(), packetCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	pkt := <-packetCh
-	assert.Equal(t, pkt, modelPacket)
+	go client.(*Client).retryFeed(ctx, packetCh)
+
+	for i := 0; i < 10; i++ {
+		pkt := <-packetCh
+		assert.Equal(t, pkt.Sequence, uint64(i + 1))
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			assert.True(t, true)
+			return
+		case pkt := <-packetCh:
+			_ = pkt
+			assert.True(t, false)
+		}
+	}
 }
 
 func TestManagePacket(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
 	t.Log("case: manage packet that comes in retry ch")
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -338,14 +355,9 @@ func TestManagePacket(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	// defer os.RemoveAll("tmp/")
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -371,31 +383,18 @@ func TestManagePacket(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	go client.(*Client).managePacket(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go client.(*Client).managePacket(ctx)
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
-
-	go func() {
-		for {
-			retryCh <- modelPacket
-		}
-	}()
+	retryCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
 	storedPacket := store.RetrieveNPackets("ethereum_rpns2", 1)
-
-	for {
-		select {
-		case pkt := <-storedPacket:
-			assert.Equal(t, pkt, modelPacket)
-			return
-		default:
-			continue
-		}
-	}
+	pkt := <-storedPacket
+	assert.Equal(t, pkt, modelPacket)
 }
 
 func TestManagePacket2(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
 	t.Log("case: manage packet that comes in completed ch")
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -435,22 +434,15 @@ func TestManagePacket2(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	go client.(*Client).managePacket(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go client.(*Client).managePacket(ctx)
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	go func() {
-		for {
-			completedCh <- modelPacket
-		}
-	}()
+	completedCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)
 
 	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
-}
-
-func TestRemoveDBandLogging(t *testing.T) {
-	os.RemoveAll("tmp/")
-	os.Remove("db")
 }
