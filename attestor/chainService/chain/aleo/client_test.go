@@ -227,7 +227,11 @@ func TestRetryFeed(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	store.StoreRetryPacket("aleo_rpns1", modelPacket)
+	for i := 0; i < 10; i++ {
+		modelPacket.Sequence = uint64(i + 1)
+		store.StoreRetryPacket("aleo_rpns1", modelPacket)
+	}
+
 	packetCh := make(chan *chain.Packet)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -235,8 +239,25 @@ func TestRetryFeed(t *testing.T) {
 
 	go client.retryFeed(ctx, packetCh)
 
-	pkt := <-packetCh
-	assert.Equal(t, pkt, modelPacket)
+	for i := 0; i < 10; i++ {
+		pkt := <-packetCh
+		assert.Equal(t, pkt.Sequence, uint64(i+1))
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			assert.True(t, true)
+			return
+		case pkt := <-packetCh:
+			_ = pkt
+			assert.True(t, false)
+		}
+	}
+
 }
 
 func TestManagePacket(t *testing.T) {
