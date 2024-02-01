@@ -6,17 +6,35 @@ import (
 	"math/big"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	_ "github.com/venture23-aleo/attestor/chainService/logger"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	"github.com/venture23-aleo/attestor/chainService/chain/aleo/rpc"
 	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
 )
+
+func setupDB(p string) (func(), error) {
+	d := filepath.Dir(p)
+	err := os.MkdirAll(d, 0777)
+	if err != nil {
+		return nil, err
+	}
+	err = store.InitKVStore(p)
+	if err != nil {
+		return nil, err
+	}
+	return func() {
+		os.RemoveAll(p)
+	}, nil
+}
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
@@ -33,21 +51,19 @@ func TestNewClient(t *testing.T) {
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("happy path", func(t *testing.T) {
-		err := store.InitKVStore("db")
-		if err != nil {
-			panic(err)
-		}
-		defer os.Remove("db")
+		dbRemover, err := setupDB("db")
+		require.NoError(t, err)
+		t.Cleanup(dbRemover)
+
 		client := NewClient(cfg, map[string]*big.Int{"2": big.NewInt(2)})
 		assert.Equal(t, client.Name(), "aleo")
 	})
 
 	t.Run("case: invalid node url", func(t *testing.T) {
-		err := store.InitKVStore("db")
-		if err != nil {
-			panic(err)
-		}
-		defer os.Remove("db")
+		dbRemover, err := setupDB("db")
+		require.NoError(t, err)
+		t.Cleanup(dbRemover)
+
 		wrongCfg := *cfg
 		wrongCfg.NodeUrl = "wrong node url"
 		assert.Panics(t, func() { NewClient(&wrongCfg, map[string]*big.Int{}) })
@@ -55,11 +71,10 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientUninitializedDB(t *testing.T) {
-	err := store.InitKVStore("db")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove("db")
+	dbRemover, err := setupDB("db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+
 	store.CloseDB()
 	cfg := &config.ChainConfig{
 		Name:           "aleo",
@@ -106,12 +121,7 @@ func (mckAleoCl *mockAleoClient) Send(ctx context.Context, aleoPacket, privateKe
 }
 
 func TestFeedPacket(t *testing.T) {
-	t.Logf("case: happy path parsing")
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "log",
-	})
-	defer os.Remove("log")
+	t.Log("case: happy path parsing")
 
 	aleoPacket := &aleoPacket{
 		version:  "0u8",
@@ -187,16 +197,9 @@ func TestFeedPacket(t *testing.T) {
 }
 
 func TestRetryFeed(t *testing.T) {
-	err := store.InitKVStore("db")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove("db")
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "log",
-	})
-	defer os.Remove("log")
+	dbRemover, err := setupDB("db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := &Client{
 		retryPacketWaitDur:  time.Second,
@@ -262,15 +265,9 @@ func TestRetryFeed(t *testing.T) {
 
 func TestManagePacket(t *testing.T) {
 	t.Log("case: manage packet that comes in retry ch")
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	defer os.RemoveAll("tmp/")
-
+	dbRemover, err := setupDB("tmp/db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
@@ -301,34 +298,27 @@ func TestManagePacket(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go client.managePacket(ctx)
-	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	go func() {
-		retryCh <- modelPacket
-	}()
-	time.Sleep(time.Second) // wait to fill in the database
-	storedPacket, err := store.RetrieveAndDeleteNPackets("aleo_rpns1", 1)
-	assert.NotNil(t, storedPacket)
-	assert.Nil(t, err)
-	assert.Equal(t, storedPacket[0], modelPacket)
+	retryCh <- modelPacket
+	time.Sleep(time.Millisecond * 10) // wait to fill in the database
+	pkts, err := store.RetrieveAndDeleteNPackets("aleo_rpns1", 1)
+	assert.NoError(t, err)
+	assert.Len(t, pkts, 1)
+	assert.Equal(t, pkts[0], modelPacket)
 }
 
 func TestManagePacket2(t *testing.T) {
 	t.Log("case: manage packet that comes in completed ch")
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	defer os.RemoveAll("tmp/")
+	dbRemover, err := setupDB("tmp/db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
 	}
 
-	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
+	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
+	assert.NoError(t, err)
 
 	// store packet in retry bucket
 	modelPacket := &chain.Packet{
@@ -350,15 +340,15 @@ func TestManagePacket2(t *testing.T) {
 		},
 		Height: uint64(55),
 	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go client.managePacket(ctx)
-	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	go func() {
-		completedCh <- modelPacket
-	}()
-	time.Sleep(time.Second) // wait to fill in the database
-	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
+
+	completedCh <- modelPacket
+	time.Sleep(time.Millisecond * 10) // wait to fill in the database
+	exists := store.ExistInGivenNamespace(
+		baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)
 
 	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
@@ -386,14 +376,9 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		height: "55u64",
 	}
 
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	defer os.RemoveAll("tmp/")
+	dbRemover, err := setupDB("tmp/db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := &Client{
 		aleoClient: &mockAleoClient{
