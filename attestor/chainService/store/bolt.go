@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"fmt"
 
 	"go.etcd.io/bbolt"
 )
@@ -180,6 +181,9 @@ func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err erro
 			}
 			s = append(s, v)
 			count++
+		}
+		if count == 0 {
+			return fmt.Errorf("empty bucket: %s", bucket)
 		}
 		return nil
 	})
