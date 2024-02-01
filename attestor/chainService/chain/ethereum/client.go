@@ -121,6 +121,7 @@ type Client struct {
 	nextBlockHeight           uint64
 	chainID                   *big.Int
 	filterTopic               ethCommon.Hash
+	feedPktWaitDur            time.Duration
 	retryPacketWaitDur        time.Duration
 	pruneBaseSeqNumberWaitDur time.Duration
 }
@@ -187,7 +188,12 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
-	ticker := time.NewTicker(time.Minute)
+	dur := cl.feedPktWaitDur
+	if dur == 0 {
+		dur = time.Minute
+	}
+	ticker := time.NewTicker(dur)
+
 	defer ticker.Stop()
 
 	for {
