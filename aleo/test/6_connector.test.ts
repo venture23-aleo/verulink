@@ -130,6 +130,7 @@ describe("Token Connector", () => {
     test(
       "Initialize Token Service",
       async () => {
+
         let isTokenServiceInitialized = true;
         try {
           const owner = await tokenService.owner_TS(true);

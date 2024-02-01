@@ -1,67 +1,46 @@
-import * as js2leo from './js2leo/common';
-import * as leo2js from './leo2js/common';
 import {
   token,
   Approval,
-  TokenInfo,
+  TokenInfo
 } from "./types";
+
 import {
   gettokenLeo,
   getApprovalLeo,
-  getTokenInfoLeo,
-} from './js2leo';
+  getTokenInfoLeo
+} from "./js2leo";
+
 import {
   gettoken,
   getApproval,
-  getTokenInfo,
-} from './leo2js';
+  getTokenInfo
+} from "./leo2js";
+
 import {
   zkRun,
   ContractConfig,
   snarkDeploy,
-  zkGetMapping
-} from './utils';
+  zkGetMapping,
+  js2leo,
+  leo2js
+} from "@aleojs/core";
 
-import networkConfig from '../../aleo-config';
+import {
+  BaseContract
+} from "../../contract/base-contract";
 
-export class Wusdc_token_v0001Contract {
+export class Wusdc_token_v0001Contract extends BaseContract {
 
   config: ContractConfig;
 
   constructor(config: ContractConfig = {}) {
+    super(config);
     this.config = {
+      ...this.config,
       appName: 'wusdc_token_v0001',
       contractPath: 'artifacts/leo/wusdc_token_v0001',
       fee: '0.01'
     };
-    this.config = {
-      ...this.config,
-      ...config
-    };
-    if (!config.networkName)
-      this.config.networkName = networkConfig.defaultNetwork;
-
-    const networkName = this.config.networkName;
-    if (networkName) {
-      if (!networkConfig?.networks[networkName])
-        throw Error(`Network config not defined for ${ networkName }.Please add the config in aleo - config.js file in root directory`)
-
-      this.config = {
-        ...this.config,
-        network: networkConfig.networks[networkName]
-      };
-    }
-
-    if (!this.config.privateKey)
-      this.config.privateKey = networkConfig.networks[networkName].accounts[0];
-  }
-
-  async deploy(): Promise < any > {
-    const result = await snarkDeploy({
-      config: this.config,
-    });
-
-    return result;
   }
   async initialize_token(r0: Array < number > , r1: Array < number > , r2: number) {
     const r0Leo = js2leo.arr2string(js2leo.array(r0, js2leo.u8));

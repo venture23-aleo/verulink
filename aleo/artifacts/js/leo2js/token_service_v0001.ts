@@ -1,9 +1,12 @@
 import {
   WithdrawalLimit,
-  WithdrawalLimitLeo,
+  leoWithdrawalLimitSchema,
+  WithdrawalLimitLeo
 } from "../types";
 
-import * as leo2js from "./common";
+import {
+  leo2js
+} from "@aleojs/core";
 export function getWithdrawalLimit(withdrawalLimit: WithdrawalLimitLeo): WithdrawalLimit {
   const result: WithdrawalLimit = {
     percentage: leo2js.u16(withdrawalLimit.percentage),

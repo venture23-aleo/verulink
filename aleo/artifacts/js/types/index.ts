@@ -1,4 +1,9 @@
 import {
+  WithdrawalLimit,
+  leoWithdrawalLimitSchema,
+  WithdrawalLimitLeo
+} from './token_service_v0001';
+import {
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -27,11 +32,6 @@ import {
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo
 } from './token_bridge_v0001';
-import {
-  WithdrawalLimit,
-  leoWithdrawalLimitSchema,
-  WithdrawalLimitLeo
-} from './token_service_v0001';
 import {
   ProposalVote,
   leoProposalVoteSchema,
@@ -110,6 +110,9 @@ import {
 } from './wusdc_token_v0001';
 
 export {
+  WithdrawalLimit,
+  leoWithdrawalLimitSchema,
+  WithdrawalLimitLeo,
   AleoProgram,
   leoAleoProgramSchema,
   AleoProgramLeo,
@@ -137,9 +140,6 @@ export {
   InPacketWithScreening,
   leoInPacketWithScreeningSchema,
   InPacketWithScreeningLeo,
-  WithdrawalLimit,
-  leoWithdrawalLimitSchema,
-  WithdrawalLimitLeo,
   ProposalVote,
   leoProposalVoteSchema,
   ProposalVoteLeo,

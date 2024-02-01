@@ -1,4 +1,7 @@
 import {
+  getWithdrawalLimitLeo
+} from './token_service_v0001';
+import {
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -9,9 +12,6 @@ import {
   getPacketIdWithAttestorLeo,
   getInPacketWithScreeningLeo
 } from './token_bridge_v0001';
-import {
-  getWithdrawalLimitLeo
-} from './token_service_v0001';
 import {
   getProposalVoteLeo,
   getAddMemberLeo,
@@ -42,6 +42,7 @@ import {
 } from './wusdc_token_v0001';
 
 export {
+  getWithdrawalLimitLeo,
   getAleoProgramLeo,
   getForeignContractLeo,
   getMsgTokenReceiveLeo,
@@ -51,7 +52,6 @@ export {
   getPacketIdLeo,
   getPacketIdWithAttestorLeo,
   getInPacketWithScreeningLeo,
-  getWithdrawalLimitLeo,
   getProposalVoteLeo,
   getAddMemberLeo,
   getRemoveMemberLeo,

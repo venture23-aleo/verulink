@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
+    "@aleojs/core": "^0.1.1",
     "@types/ejs": "^3.1.5",
     "aleo-hasher": "^0.1.2",
     "aleo-program-to-address": "^0.1.0",

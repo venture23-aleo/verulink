@@ -1,3 +1,9 @@
+import { js2leo as js2leoCommon} from '@aleojs/core';
+import { leo2js as leo2jsCommon } from '@aleojs/core';
+
+import { InPacket, InPacketWithScreening, MsgTokenReceive } from '../artifacts/js/types';
+import * as js2leo from "../artifacts/js/js2leo";
+
 // Convert EVM address to the representation used in Aleo
 // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
 // For EVM Chains, 20 bytes is formatted as following:
@@ -81,8 +87,6 @@ export const decodeNetworkChainId = (encodedChainId: number | bigint) => {
   };
 };
 
-import * as js2leoCommon from '../artifacts/js/js2leo/common';
-import * as leo2jsCommon from '../artifacts/js/leo2js/common';
 
 import { hash } from "aleo-hasher";
 export const hashStruct = (struct: any): bigint => {
@@ -93,9 +97,6 @@ export const hashStruct = (struct: any): bigint => {
 }
 
 import {sign} from "aleo-signer"
-import { InPacket, InPacketWithScreening, MsgTokenReceive } from '../artifacts/js/types';
-
-import * as js2leo from "../artifacts/js/js2leo";
 export const signPacket = (packet: InPacket, screening_passed: boolean, privateKey: string) => {
 
     const packetHash = hashStruct(js2leo.getInPacketLeo(packet));

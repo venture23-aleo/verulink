@@ -19,7 +19,7 @@ import {
   leoTxSchema,
   leoSignatureSchema,
   LeoArray
-} from "./leo-types";
+} from "@aleojs/core";
 
 export interface ProposalVote {
   proposal: bigint;

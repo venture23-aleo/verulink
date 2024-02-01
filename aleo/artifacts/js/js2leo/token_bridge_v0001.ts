@@ -1,25 +1,36 @@
 import {
   AleoProgram,
+  leoAleoProgramSchema,
   AleoProgramLeo,
   ForeignContract,
+  leoForeignContractSchema,
   ForeignContractLeo,
   MsgTokenReceive,
+  leoMsgTokenReceiveSchema,
   MsgTokenReceiveLeo,
   MsgTokenSend,
+  leoMsgTokenSendSchema,
   MsgTokenSendLeo,
   InPacket,
+  leoInPacketSchema,
   InPacketLeo,
   OutPacket,
+  leoOutPacketSchema,
   OutPacketLeo,
   PacketId,
+  leoPacketIdSchema,
   PacketIdLeo,
   PacketIdWithAttestor,
+  leoPacketIdWithAttestorSchema,
   PacketIdWithAttestorLeo,
   InPacketWithScreening,
-  InPacketWithScreeningLeo,
+  leoInPacketWithScreeningSchema,
+  InPacketWithScreeningLeo
 } from "../types";
 
-import * as js2leo from "./common";
+import {
+  js2leo
+} from "@aleojs/core";
 export function getAleoProgramLeo(aleoProgram: AleoProgram): AleoProgramLeo {
   const result: AleoProgramLeo = {
     chain_id: js2leo.u128(aleoProgram.chain_id),

@@ -1,13 +1,18 @@
 import {
   token,
+  leoTokenSchema,
   tokenLeo,
   Approval,
+  leoApprovalSchema,
   ApprovalLeo,
   TokenInfo,
-  TokenInfoLeo,
+  leoTokenInfoSchema,
+  TokenInfoLeo
 } from "../types";
 
-import * as js2leo from "./common";
+import {
+  js2leo
+} from "@aleojs/core";
 export function gettokenLeo(token: token): tokenLeo {
   const result: tokenLeo = {
     owner: js2leo.privateField(js2leo.address(token.owner)),

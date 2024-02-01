@@ -130,13 +130,13 @@ program token_service_v0001.aleo {
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
-        let outgoing_percentage_in_time: WithdrawalLimit = WithdrawalLimit {
+        let withdrawal_limit: WithdrawalLimit = WithdrawalLimit {
             percentage,
             duration,
             threshold_no_limit
         };
 
-        Mapping::set(token_withdrawal_limits, token_id, outgoing_percentage_in_time);
+        Mapping::set(token_withdrawal_limits, token_id, withdrawal_limit);
 
         Mapping::set(min_transfers, token_id, min_transfer);
         Mapping::set(max_transfers, token_id, max_transfer);
@@ -223,13 +223,13 @@ program token_service_v0001.aleo {
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
-        let outgoing_percentage_in_time: WithdrawalLimit = WithdrawalLimit {
+        let withdrawal_limit: WithdrawalLimit = WithdrawalLimit {
             percentage,
             duration,
             threshold_no_limit
         };
 
-        Mapping::set(token_withdrawal_limits, token_id, outgoing_percentage_in_time);
+        Mapping::set(token_withdrawal_limits, token_id, withdrawal_limit);
     }
 
     /////////////////////////////
