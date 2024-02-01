@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
