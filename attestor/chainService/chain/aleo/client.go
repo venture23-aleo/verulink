@@ -254,7 +254,11 @@ func (cl *Client) GetMissedPacket(
 	ctx context.Context, missedPkt *chain.MissedPacket) (
 	*chain.Packet, error) {
 
-	return nil, nil
+	pkt, err := cl.getPktWithSeq(ctx, missedPkt.TargetChainID, missedPkt.SeqNum)
+	if err != nil {
+		return nil, err
+	}
+	return pkt, err
 }
 
 func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
