@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/attestor/chainService/config"
@@ -91,7 +92,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 
 type mockEthClient struct {
 	getCurHeight func() (uint64, error)
-	getLogs      func() ([]types.Log, error)
+	getLogs      func(height uint64) ([]types.Log, error)
 }
 
 func (mckEthCl *mockEthClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
@@ -103,18 +104,18 @@ func (mckEthCl *mockEthClient) GetCurrentBlock(ctx context.Context) (uint64, err
 
 func (mckEthCl *mockEthClient) FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress common.Address, topics common.Hash) ([]types.Log, error) {
 	if mckEthCl.getLogs != nil {
-		return mckEthCl.getLogs()
+		return mckEthCl.getLogs(fromHeight)
 	}
 	return nil, errors.New("error")
 }
 
 type mockBridgeClient struct {
-	getDispatchedPacket func() (*abi.BridgePacketDispatched, error)
+	getDispatchedPacket func(logs types.Log) (*abi.BridgePacketDispatched, error)
 }
 
 func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error) {
 	if mckBridgeCl.getDispatchedPacket != nil {
-		return mckBridgeCl.getDispatchedPacket()
+		return mckBridgeCl.getDispatchedPacket(log)
 	}
 	return nil, errors.New("error")
 }
@@ -129,10 +130,10 @@ func TestParseBlocks(t *testing.T) {
 	client := &Client{
 		eth: &mockEthClient{
 			getCurHeight: func() (uint64, error) { return 10, nil },
-			getLogs:      func() ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
+			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
 		},
 		bridge: &mockBridgeClient{
-			getDispatchedPacket: func() (*abi.BridgePacketDispatched, error) {
+			getDispatchedPacket: func(logs types.Log) (*abi.BridgePacketDispatched, error) {
 				return &abi.BridgePacketDispatched{
 					Packet: abi.PacketLibraryOutPacket{
 						Version:  common.Big0,
@@ -202,10 +203,10 @@ func TestFeedPacket(t *testing.T) {
 	client := &Client{
 		eth: &mockEthClient{
 			getCurHeight: func() (uint64, error) { return 10, nil },
-			getLogs:      func() ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
+			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
 		},
 		bridge: &mockBridgeClient{
-			getDispatchedPacket: func() (*abi.BridgePacketDispatched, error) {
+			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
 				return &abi.BridgePacketDispatched{
 					Packet: abi.PacketLibraryOutPacket{
 						Version:  common.Big0,
@@ -229,8 +230,9 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeight:    10,
-		retryPacketWaitDur: time.Hour,
+		nextBlockHeight:           10,
+		retryPacketWaitDur:        time.Hour,
+		pruneBaseSeqNumberWaitDur: time.Hour,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -322,7 +324,7 @@ func TestRetryFeed(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		pkt := <-packetCh
-		assert.Equal(t, pkt.Sequence, uint64(i + 1))
+		assert.Equal(t, pkt.Sequence, uint64(i+1))
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second*2)
@@ -445,4 +447,67 @@ func TestManagePacket2(t *testing.T) {
 
 	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
+}
+
+func TestPruneBaseSeqNumber(t *testing.T) {
+	dbRemover, err := setupDB("tmp/db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+
+	client := &Client{
+		eth: &mockEthClient{
+			getCurHeight: func() (uint64, error) { return 50, nil },
+			getLogs:      func(height uint64) ([]types.Log, error) { return []types.Log{types.Log{BlockNumber: height}}, nil },
+		},
+		bridge: &mockBridgeClient{
+			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
+				return &abi.BridgePacketDispatched{
+					Packet: abi.PacketLibraryOutPacket{
+						Version:  common.Big0,
+						Sequence: big.NewInt(int64(log.BlockNumber)),
+						SourceTokenService: abi.PacketLibraryInNetworkAddress{
+							ChainId: common.Big1,
+							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+						},
+						DestTokenService: abi.PacketLibraryOutNetworkAddress{
+							ChainId: common.Big2,
+							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Message: abi.PacketLibraryOutTokenMessage{
+							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Amount:           big.NewInt(100),
+							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Height: big.NewInt(55),
+					},
+				}, nil
+			},
+		},
+		nextBlockHeight:           10,
+		retryPacketWaitDur:        time.Hour,
+		pruneBaseSeqNumberWaitDur: time.Second,
+		waitDur:                   time.Second,
+	}
+
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
+	store.CreateNamespace(baseSeqNamespaces[0])
+
+	for i := 0; i < 15; i++ {
+		if i < 10 || i > 12 {
+			store.StoreBaseSeqNum(baseSeqNamespaces[0], uint64(i), uint64(i))
+		}
+	}
+
+	pktCh := make(chan *chain.Packet)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go client.pruneBaseSeqNum(ctx, pktCh)
+
+	for i := 10; i < 13; i++ {
+		pkt := <-pktCh
+		assert.Equal(t, pkt.Sequence, uint64(i))
+	}
 }
