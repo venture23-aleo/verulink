@@ -209,12 +209,12 @@ func TestConsumePackets(t *testing.T) {
 
 	t.Run("test packet consumption", func(t *testing.T) {
 		t.Cleanup(func() {
-			chainIDToChain = map[*big.Int]chain.IClient{}
+			chainIDToChain = map[string]chain.IClient{}
 		})
 
 		chainID := big.NewInt(1)
-		chainIDToChain = map[*big.Int]chain.IClient{
-			chainID: &feeder{},
+		chainIDToChain = map[string]chain.IClient{
+			chainID.String(): &feeder{},
 		}
 		cleaner := setupConfig(t)
 		t.Cleanup(cleaner)
@@ -245,9 +245,9 @@ func TestProcessPackets(t *testing.T) {
 	t.Run("test normal flow", func(t *testing.T) {
 		ethChainID := big.NewInt(1)
 		aleoChainID := big.NewInt(math.MaxInt64)
-		chainIDToChain = map[*big.Int]chain.IClient{
-			ethChainID:  &feeder{name: "ethereum"},
-			aleoChainID: &feeder{name: "aleo"},
+		chainIDToChain = map[string]chain.IClient{
+			ethChainID.String():  &feeder{name: "ethereum"},
+			aleoChainID.String(): &feeder{name: "aleo"},
 		}
 
 		ethCh := make(chan *chain.Packet)
@@ -294,9 +294,9 @@ func TestProcessPackets(t *testing.T) {
 	t.Run("test sign error flow", func(t *testing.T) {
 		ethChainID := big.NewInt(1)
 		aleoChainID := big.NewInt(math.MaxInt64)
-		chainIDToChain = map[*big.Int]chain.IClient{
-			ethChainID:  &feeder{name: "ethereum"},
-			aleoChainID: &feeder{name: "aleo"},
+		chainIDToChain = map[string]chain.IClient{
+			ethChainID.String():  &feeder{name: "ethereum"},
+			aleoChainID.String(): &feeder{name: "aleo"},
 		}
 
 		ethCh := make(chan *chain.Packet)
@@ -338,9 +338,9 @@ func TestProcessPackets(t *testing.T) {
 	t.Run("test collector error flow", func(t *testing.T) {
 		ethChainID := big.NewInt(1)
 		aleoChainID := big.NewInt(math.MaxInt64)
-		chainIDToChain = map[*big.Int]chain.IClient{
-			ethChainID:  &feeder{name: "ethereum"},
-			aleoChainID: &feeder{name: "aleo"},
+		chainIDToChain = map[string]chain.IClient{
+			ethChainID.String():  &feeder{name: "ethereum"},
+			aleoChainID.String(): &feeder{name: "aleo"},
 		}
 
 		ethCh := make(chan *chain.Packet)
@@ -388,7 +388,7 @@ func TestProcessPackets(t *testing.T) {
 
 func TestProcessMissedPacket(t *testing.T) {
 	t.Cleanup(func() {
-		chainIDToChain = map[*big.Int]chain.IClient{}
+		chainIDToChain = map[string]chain.IClient{}
 	})
 
 	pktCh := make(chan *chain.Packet)
@@ -396,8 +396,8 @@ func TestProcessMissedPacket(t *testing.T) {
 
 	r := relay{}
 	srcChainID := big.NewInt(1)
-	chainIDToChain = map[*big.Int]chain.IClient{
-		srcChainID: &feeder{
+	chainIDToChain = map[string]chain.IClient{
+		srcChainID.String(): &feeder{
 			getMissedPacket: func() (*chain.Packet, error) {
 				return &chain.Packet{}, nil
 			},

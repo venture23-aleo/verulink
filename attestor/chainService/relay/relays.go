@@ -29,7 +29,7 @@ var (
 )
 
 var (
-	chainIDToChain = map[*big.Int]chain.IClient{}
+	chainIDToChain = map[string]chain.IClient{}
 )
 
 type relay struct {
@@ -80,7 +80,7 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 			panic(fmt.Sprintf("hash undefined for chain %s", chainCfg.Name))
 		}
 		chain := RegisteredClients[chainCfg.Name](chainCfg, m)
-		chainIDToChain[chainCfg.ChainID] = chain
+		chainIDToChain[chainCfg.ChainID.String()] = chain
 		ch <- chain
 	}
 
@@ -123,7 +123,7 @@ func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) 
 }
 
 func (r *relay) processPacket(pkt *chain.Packet) {
-	srcChainName := chainIDToChain[pkt.Source.ChainID].Name()
+	srcChainName := chainIDToChain[pkt.Source.ChainID.String()].Name()
 	var (
 		err     error
 		isWhite bool
@@ -149,7 +149,7 @@ func (r *relay) processPacket(pkt *chain.Packet) {
 		Packet:  pkt,
 		IsWhite: isWhite,
 	}
-	destChainName := chainIDToChain[pkt.Destination.ChainID].Name()
+	destChainName := chainIDToChain[pkt.Destination.ChainID.String()].Name()
 	signature, err := r.signer.SignScreenedPacket(sp, RegisteredHashers[destChainName])
 	if err != nil {
 		logger.GetLogger().Error(
@@ -179,7 +179,7 @@ func (relay) processMissedPacket(ctx context.Context,
 		}
 
 		missedPkt := <-missedPktCh
-		srcChain := chainIDToChain[missedPkt.SourceChainID]
+		srcChain := chainIDToChain[missedPkt.SourceChainID.String()]
 		pkt, err := srcChain.GetMissedPacket(ctx, missedPkt)
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",
