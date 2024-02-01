@@ -126,7 +126,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 
 	sequence := new(big.Int)
 	sequence, sequenceOk := sequence.SetString(strings.Replace(packet.sequence, "u64", "", 1), 10)
-	if !sequenceOk  {
+	if !sequenceOk {
 		return nil, errors.New("failed to parse sequence")
 	}
 	pkt.Sequence = sequence.Uint64()
@@ -206,7 +206,7 @@ func constructAleoScreeningPacket(packetHash, screening string) string {
 // first 12 fields are padded with "0u8"
 func constructEthAddressForAleoParameter(serviceContract string) string {
 	aleoAddress := "[ "
-	serviceContractByte := []byte(serviceContract)
+	serviceContractByte := ethCommon.HexToAddress(serviceContract).Bytes()
 	lenDifference := 32 - len(serviceContractByte)
 	for i := 0; i < lenDifference; i++ { // left pad the return by 0 if the len of byte array of address is smaller than 32
 		aleoAddress += "0u8, "

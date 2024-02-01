@@ -57,7 +57,7 @@ func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 func TestConstructOutMappingKey(t *testing.T) {
 	d := big.NewInt(23)
 	seqNum := uint64(32)
-	expectedString := fmt.Sprintf("{chain_id:%du32,sequence:%du32}", d, seqNum)
+	expectedString := fmt.Sprintf("{chain_id:%du128,sequence:%du64}", d, seqNum)
 	actual := constructOutMappingKey(d, seqNum)
 	require.Equal(t, expectedString, actual)
 }
@@ -66,10 +66,8 @@ func TestConstructEthAddressForAleo(t *testing.T) {
 	t.Run("happy path construction", func(t *testing.T) {
 		modelEthAddress := "[ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ]"
 		ethAddress := ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0")
-		ethAddrBt := ethAddress.Bytes()
-		ethAddrStr := string(ethAddrBt)
 
-		ethAddressForAleo := constructEthAddressForAleoParameter(ethAddrStr)
+		ethAddressForAleo := constructEthAddressForAleoParameter(ethAddress.Hex())
 		assert.Equal(t, modelEthAddress, ethAddressForAleo)
 	})
 }
@@ -155,13 +153,13 @@ func TestParseAleoPacket(t *testing.T) {
 			},
 			Destination: chain.NetworkAddress{
 				ChainID: big.NewInt(01),
-				Address: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0", // converting address of form [0u8, 0u8, ..., 176u8] to str
+				Address: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(), // converting address of form [0u8, 0u8, ..., 176u8] to str
 			},
 			Message: chain.Message{
-				DestTokenAddress: "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				DestTokenAddress: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 				SenderAddress:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 				Amount:           big.NewInt(102),
-				ReceiverAddress:  "0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0",
+				ReceiverAddress:  ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 			},
 			Height: big.NewInt(55).Uint64(),
 		}
@@ -240,13 +238,13 @@ func TestParseAleoPacket(t *testing.T) {
 }
 
 func TestConstructAleoPacket(t *testing.T) {
-	modelAleoPacket := "{ version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ] }, destination: { chain_id: 2u32, addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px }, message: { token: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, sender: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ], receiver: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, amount: 102u64 }, height: 55u32 }"
+	modelAleoPacket := "{ version: 0u8, sequence: 1u64, source: { chain_id: 1u128, addr: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ] }, destination: { chain_id: 2u128, addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px }, message: { token: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, sender: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ], receiver: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, amount: 102u64 }, height: 55u64 }"
 	commonPacket := &chain.Packet{
 		Version:  uint8(big.NewInt(0).Uint64()),
 		Sequence: big.NewInt(1).Uint64(),
 		Source: chain.NetworkAddress{
 			ChainID: big.NewInt(1),
-			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			Address: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 		},
 		Destination: chain.NetworkAddress{
 			ChainID: big.NewInt(2),
@@ -254,7 +252,7 @@ func TestConstructAleoPacket(t *testing.T) {
 		},
 		Message: chain.Message{
 			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			SenderAddress:    ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 			Amount:           big.NewInt(102),
 			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 		},
@@ -266,10 +264,6 @@ func TestConstructAleoPacket(t *testing.T) {
 }
 
 func dumpPktToAleoPacketString(pkt chain.Packet) string {
-	pkt.Destination.Address = string(ethCommon.HexToAddress(pkt.Destination.Address).Bytes())
-	pkt.Message.DestTokenAddress = string(ethCommon.HexToAddress(pkt.Message.DestTokenAddress).Bytes())
-	pkt.Message.ReceiverAddress = string(ethCommon.HexToAddress(pkt.Message.ReceiverAddress).Bytes())
-
 	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du64 ,\\n  "+
 		"source: {\\n    chain_id: %du128,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %du128,\\n    addr: %s},\\n  "+

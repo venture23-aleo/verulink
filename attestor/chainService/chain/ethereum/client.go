@@ -2,7 +2,6 @@ package ethereum
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -114,15 +113,17 @@ func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacke
 }
 
 type Client struct {
-	name               string
-	address            ethCommon.Address
-	eth                ethClientI
-	bridge             iBridgeClient
-	waitDur            time.Duration
-	nextBlockHeight    uint64
-	chainID            *big.Int
-	filterTopic        ethCommon.Hash
-	retryPacketWaitDur time.Duration
+	name                      string
+	address                   ethCommon.Address
+	eth                       ethClientI
+	bridge                    iBridgeClient
+	waitDur                   time.Duration
+	nextBlockHeight           uint64
+	chainID                   *big.Int
+	filterTopic               ethCommon.Hash
+	feedPktWaitDur            time.Duration
+	retryPacketWaitDur        time.Duration
+	pruneBaseSeqNumberWaitDur time.Duration
 }
 
 func (cl *Client) Name() string {
@@ -144,33 +145,6 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) uint64 {
 		return 0
 	}
 	return curHeight - uint64(cl.waitDur/avgBlockGenDur) // total number of blocks that has to be passed in the waiting duration
-}
-
-func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.Packet, err error) {
-	latestHeight := cl.blockHeightPriorWaitDur(ctx)
-	if height > latestHeight {
-		// retry after waiting for proper wait duration
-		time.Sleep(time.Duration(height-latestHeight) * avgBlockGenDur)
-		latestHeight = cl.blockHeightPriorWaitDur(ctx)
-		if height > latestHeight {
-			return nil, errors.New("next height greater than latest height")
-		}
-	}
-
-	var packets []*chain.Packet
-	for startHeight := height; startHeight <= latestHeight; startHeight += defaultHeightDifferenceForFilterLogs {
-		endHeight := startHeight + defaultHeightDifferenceForFilterLogs
-		if endHeight > latestHeight {
-			endHeight = latestHeight
-		}
-		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
-		if err != nil {
-			return nil, err
-		}
-		packets = append(packets, pkts...)
-	}
-
-	return packets, nil
 }
 
 func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uint64) ([]*chain.Packet, error) {
@@ -214,21 +188,36 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
+	dur := cl.feedPktWaitDur
+	if dur == 0 {
+		dur = time.Minute
+	}
+	ticker := time.NewTicker(dur)
+
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
+		case <-ticker.C:
 		}
 
-		pkts, err := cl.parseBlock(ctx, cl.nextBlockHeight)
+		startHeight := cl.nextBlockHeight
+		endHeight := cl.blockHeightPriorWaitDur(ctx)
+		if endHeight > startHeight+defaultHeightDifferenceForFilterLogs {
+			endHeight = startHeight + defaultHeightDifferenceForFilterLogs
+		}
+
+		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 		if err != nil {
-			continue // retry if err
+			logger.GetLogger().Error(err.Error())
+			continue
 		}
 		for _, pkt := range pkts {
 			ch <- pkt
 		}
-		cl.nextBlockHeight++
+		cl.nextBlockHeight = endHeight
 	}
 }
 
@@ -266,7 +255,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 }
 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
-	ticker := time.NewTicker(time.Hour * 2)
+	ticker := time.NewTicker(cl.pruneBaseSeqNumberWaitDur)
 	index := 0
 	defer ticker.Stop()
 	for {
@@ -297,11 +286,18 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		startSeqNum, endSeqNum := seqHeightRanges[0][0], seqHeightRanges[0][1]
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
 	L1:
-		for i := startHeight; i <= endHeight; i++ {
-			pkts, err := cl.parseBlock(ctx, i) // TODO: call filter logs directly
-			if err != nil {
-				continue // retry the same block if err
+		for s := startHeight; s <= endHeight; s += defaultHeightDifferenceForFilterLogs {
+			e := s + defaultHeightDifferenceForFilterLogs
+			if e > endHeight {
+				e = endHeight
 			}
+
+			pkts, err := cl.filterPacketLogs(ctx, s, e)
+			if err != nil {
+				logger.GetLogger().Error(err.Error())
+				break
+			}
+
 			for _, pkt := range pkts {
 				if pkt.Destination.ChainID.Cmp(chainID) != 0 {
 					continue
@@ -393,15 +389,16 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	}
 
 	return &Client{
-		name:               name,
-		address:            ethCommon.HexToAddress(cfg.BridgeContract),
-		eth:                ethclient,
-		bridge:             bridgeClient,
-		waitDur:            waitDur,
-		chainID:            cfg.ChainID,
-		nextBlockHeight:    cfg.StartHeight,
-		filterTopic:        ethCommon.HexToHash(cfg.FilterTopic),
-		retryPacketWaitDur: time.Second, // TODO: put the duration in config.yaml
+		name:                      name,
+		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
+		eth:                       ethclient,
+		bridge:                    bridgeClient,
+		waitDur:                   waitDur,
+		chainID:                   cfg.ChainID,
+		nextBlockHeight:           cfg.StartHeight,
+		filterTopic:               ethCommon.HexToHash(cfg.FilterTopic),
+		retryPacketWaitDur:        time.Second, // TODO: put the duration in config.yaml
+		pruneBaseSeqNumberWaitDur: time.Second, // TODO: put duration from config
 	}
 }
 

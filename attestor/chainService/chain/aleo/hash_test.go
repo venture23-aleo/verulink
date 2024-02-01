@@ -15,7 +15,7 @@ func TestHash(t *testing.T) {
 		Sequence: big.NewInt(1).Uint64(),
 		Source: chain.NetworkAddress{
 			ChainID: big.NewInt(1),
-			Address: string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			Address: ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 		},
 		Destination: chain.NetworkAddress{
 			ChainID: big.NewInt(2),
@@ -23,7 +23,7 @@ func TestHash(t *testing.T) {
 		},
 		Message: chain.Message{
 			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    string(ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Bytes()),
+			SenderAddress:    ethCommon.HexToAddress("0x14779F992B2F2c42b8660Ffa42DBcb3C7C9930B0").Hex(),
 			Amount:           big.NewInt(102),
 			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 		},
@@ -31,10 +31,10 @@ func TestHash(t *testing.T) {
 	}
 	t.Run("happy path", func(t *testing.T) {
 		finalHash := hash(&chain.ScreenedPacket{Packet: commonPacket, IsWhite: true})
-		assert.Equal(t, "1233032529535352533537970719453602118145153682706641379905676168317090198721field", finalHash)
+		assert.Equal(t, "965289127478199287509144158737315792843553725373473399525563303359225541187field", finalHash)
 	})
 	t.Run("different hash", func(t *testing.T) {
 		finalHash := hash(&chain.ScreenedPacket{Packet: commonPacket, IsWhite: false})
-		assert.NotEqual(t, "1233032529535352533537970719453602118145153682706641379905676168317090198721field", finalHash)
+		assert.Equal(t, "3830212223962807708336052234352294606019807226537223585344124391998398466547field", finalHash)
 	})
 }

@@ -5,23 +5,35 @@ import (
 	"errors"
 	"math/big"
 	"os"
-	"sync"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/attestor/chainService/chain"
 	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
+	_ "github.com/venture23-aleo/attestor/chainService/logger"
 	"github.com/venture23-aleo/attestor/chainService/store"
 )
 
-var (
-	testMutex = sync.Mutex{}
-)
+func setupDB(p string) (func(), error) {
+	d := filepath.Dir(p)
+	err := os.MkdirAll(d, 0777)
+	if err != nil {
+		return nil, err
+	}
+	err = store.InitKVStore(p)
+	if err != nil {
+		return nil, err
+	}
+	return func() {
+		os.RemoveAll(p)
+	}, nil
+}
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
@@ -38,21 +50,17 @@ func TestNewClient(t *testing.T) {
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("happy path", func(t *testing.T) {
-		err := store.InitKVStore("db")
-		if err != nil {
-			panic(err)
-		}
-		defer os.Remove("db")
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(dbRemover)
 		client := NewClient(cfg, map[string]*big.Int{})
 		assert.Equal(t, client.Name(), "ethereum")
 	})
 
 	t.Run("case: invalid node url", func(t *testing.T) {
-		err := store.InitKVStore("db")
-		if err != nil {
-			panic(err)
-		}
-		defer os.Remove("db")
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(dbRemover)
 		wrongCfg := *cfg
 		wrongCfg.NodeUrl = "wrong node url"
 		assert.Panics(t, func() { NewClient(&wrongCfg, map[string]*big.Int{}) })
@@ -60,11 +68,9 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewClientUninitializedDB(t *testing.T) {
-	err := store.InitKVStore("db")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove("db")
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
 	store.CloseDB()
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -86,7 +92,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 
 type mockEthClient struct {
 	getCurHeight func() (uint64, error)
-	getLogs      func() ([]types.Log, error)
+	getLogs      func(height uint64) ([]types.Log, error)
 }
 
 func (mckEthCl *mockEthClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
@@ -98,111 +104,32 @@ func (mckEthCl *mockEthClient) GetCurrentBlock(ctx context.Context) (uint64, err
 
 func (mckEthCl *mockEthClient) FilterLogs(ctx context.Context, fromHeight uint64, toHeight uint64, contractAddress common.Address, topics common.Hash) ([]types.Log, error) {
 	if mckEthCl.getLogs != nil {
-		return mckEthCl.getLogs()
+		return mckEthCl.getLogs(fromHeight)
 	}
 	return nil, errors.New("error")
 }
 
 type mockBridgeClient struct {
-	getDispatchedPacket func() (*abi.BridgePacketDispatched, error)
+	getDispatchedPacket func(logs types.Log) (*abi.BridgePacketDispatched, error)
 }
 
 func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error) {
 	if mckBridgeCl.getDispatchedPacket != nil {
-		return mckBridgeCl.getDispatchedPacket()
+		return mckBridgeCl.getDispatchedPacket(log)
 	}
 	return nil, errors.New("error")
 }
 
-func TestParseBlocks(t *testing.T) {
-	t.Logf("case: happy path parsing")
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "log",
-	})
-	defer os.Remove("log")
-	client := &Client{
-		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) { return 10, nil },
-			getLogs:      func() ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
-		},
-		bridge: &mockBridgeClient{
-			getDispatchedPacket: func() (*abi.BridgePacketDispatched, error) {
-				return &abi.BridgePacketDispatched{
-					Packet: abi.PacketLibraryOutPacket{
-						Version:  common.Big0,
-						Sequence: common.Big1,
-						SourceTokenService: abi.PacketLibraryInNetworkAddress{
-							ChainId: common.Big1,
-							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
-						},
-						DestTokenService: abi.PacketLibraryOutNetworkAddress{
-							ChainId: common.Big2,
-							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-						},
-						Message: abi.PacketLibraryOutTokenMessage{
-							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
-							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-							Amount:           big.NewInt(100),
-							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-						},
-						Height: big.NewInt(55),
-					},
-				}, nil
-			},
-		},
-	}
-
-	packets, err := client.parseBlock(context.Background(), 10)
-	assert.Nil(t, err)
-	assert.NotNil(t, packets)
-	modelPacket := &chain.Packet{
-		Version:  uint8(0),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: common.Big1,
-			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: common.Big2,
-			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Message: chain.Message{
-			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-			Amount:           big.NewInt(100),
-			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Height: uint64(55),
-	}
-	assert.Equal(t, []*chain.Packet{modelPacket}, packets)
-}
-
-func TestParseBlocksError(t *testing.T) {
-	t.Logf("case: error while filtering packets")
-	client := &Client{
-		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) { return 10, nil },
-		},
-		bridge: &mockBridgeClient{},
-	}
-	packets, err := client.parseBlock(context.Background(), 10)
-	assert.Nil(t, packets)
-	assert.NotNil(t, err)
-}
-
 func TestFeedPacket(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
 	pktCh := make(chan *chain.Packet)
 
 	client := &Client{
 		eth: &mockEthClient{
 			getCurHeight: func() (uint64, error) { return 10, nil },
-			getLogs:      func() ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
+			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
 		},
 		bridge: &mockBridgeClient{
-			getDispatchedPacket: func() (*abi.BridgePacketDispatched, error) {
+			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
 				return &abi.BridgePacketDispatched{
 					Packet: abi.PacketLibraryOutPacket{
 						Version:  common.Big0,
@@ -226,10 +153,16 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeight:    10,
-		retryPacketWaitDur: time.Hour,
+		nextBlockHeight:           9,
+		retryPacketWaitDur:        time.Hour,
+		pruneBaseSeqNumberWaitDur: time.Hour,
+		feedPktWaitDur:            time.Nanosecond,
 	}
-	go client.FeedPacket(context.Background(), pktCh)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go client.FeedPacket(ctx, pktCh)
 
 	modelPacket := &chain.Packet{
 		Version:  uint8(0),
@@ -251,19 +184,16 @@ func TestFeedPacket(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	assert.Equal(t, uint64(10), client.nextBlockHeight)
+	assert.Equal(t, uint64(9), client.nextBlockHeight)
 
 	pkt := <-pktCh
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(11), client.nextBlockHeight)
+	assert.Equal(t, uint64(10), client.nextBlockHeight)
 }
 
 func TestRetryFeed(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
-
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
 		ChainID:        big.NewInt(1),
@@ -277,16 +207,9 @@ func TestRetryFeed(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
-	err := store.InitKVStore("db")
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove("db")
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "log",
-	})
-	defer os.Remove("log")
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -312,18 +235,39 @@ func TestRetryFeed(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	store.StoreRetryPacket("ethereum_rpns2", modelPacket)
+	for i := 0; i < 10; i++ {
+		modelPacket.Sequence = uint64(i + 1)
+		store.StoreRetryPacket("ethereum_rpns2", modelPacket)
+	}
+
 	packetCh := make(chan *chain.Packet)
 
-	go client.(*Client).retryFeed(context.Background(), packetCh)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	pkt := <-packetCh
-	assert.Equal(t, pkt, modelPacket)
+	go client.(*Client).retryFeed(ctx, packetCh)
+
+	for i := 0; i < 10; i++ {
+		pkt := <-packetCh
+		assert.Equal(t, pkt.Sequence, uint64(i+1))
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			assert.True(t, true)
+			return
+		case pkt := <-packetCh:
+			_ = pkt
+			assert.True(t, false)
+		}
+	}
 }
 
 func TestManagePacket(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
 	t.Log("case: manage packet that comes in retry ch")
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
@@ -338,14 +282,9 @@ func TestManagePacket(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	defer os.RemoveAll("tmp/")
+	dbRemover, err := setupDB("db")
+	assert.NoError(t, err)
+	t.Cleanup(dbRemover)
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -371,30 +310,22 @@ func TestManagePacket(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	go client.(*Client).managePacket(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go client.(*Client).managePacket(ctx)
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	go func() {
-		retryCh <- modelPacket
-	}()
+	retryCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
 	storedPacket := store.RetrieveNPackets("ethereum_rpns2", 1)
-
-L1:
-	for {
-		select {
-		case pkt := <-storedPacket:
-			assert.Equal(t, pkt, modelPacket)
-			break L1
-		default:
-			continue
-		}
-	}
+	pkt := <-storedPacket
+	assert.Equal(t, pkt, modelPacket)
 }
 
 func TestManagePacket2(t *testing.T) {
-	testMutex.Lock()
-	defer testMutex.Unlock()
 	t.Log("case: manage packet that comes in completed ch")
+	dbRemover, err := setupDB("tmp/test-manage-packet.db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
 	cfg := &config.ChainConfig{
 		Name:           "ethereum",
 		ChainID:        big.NewInt(1),
@@ -408,14 +339,6 @@ func TestManagePacket2(t *testing.T) {
 		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
-	os.Mkdir("tmp", 0777)
-	store.InitKVStore("tmp/db")
-
-	logger.InitLogging("debug", &config.LoggerConfig{
-		Encoding:   "console",
-		OutputPath: "tmp/log",
-	})
-	defer os.RemoveAll("tmp/")
 
 	client := NewClient(cfg, map[string]*big.Int{})
 	assert.Equal(t, client.Name(), "ethereum")
@@ -441,15 +364,83 @@ func TestManagePacket2(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	go client.(*Client).managePacket(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go client.(*Client).managePacket(ctx)
 	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	go func() {
-		completedCh <- modelPacket
-	}()
+	completedCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)
 
 	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
+}
+
+func TestPruneBaseSeqNumber(t *testing.T) {
+	dbRemover, err := setupDB("tmp/db")
+	require.NoError(t, err)
+	t.Cleanup(dbRemover)
+
+	var eventLogs []types.Log
+	client := &Client{
+		eth: &mockEthClient{
+			getCurHeight: func() (uint64, error) { return 50, nil },
+			getLogs:      func(height uint64) ([]types.Log, error) { return eventLogs, nil },
+		},
+		bridge: &mockBridgeClient{
+			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
+				return &abi.BridgePacketDispatched{
+					Packet: abi.PacketLibraryOutPacket{
+						Version:  common.Big0,
+						Sequence: big.NewInt(int64(log.BlockNumber)),
+						SourceTokenService: abi.PacketLibraryInNetworkAddress{
+							ChainId: common.Big1,
+							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+						},
+						DestTokenService: abi.PacketLibraryOutNetworkAddress{
+							ChainId: common.Big2,
+							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Message: abi.PacketLibraryOutTokenMessage{
+							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Amount:           big.NewInt(100),
+							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Height: big.NewInt(55),
+					},
+				}, nil
+			},
+		},
+		nextBlockHeight:           10,
+		retryPacketWaitDur:        time.Hour,
+		pruneBaseSeqNumberWaitDur: time.Second,
+		waitDur:                   time.Second,
+	}
+
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
+	store.CreateNamespace(baseSeqNamespaces[0])
+
+	for i := 0; i < 15; i++ {
+		if i < 10 || i > 12 {
+			store.StoreBaseSeqNum(baseSeqNamespaces[0], uint64(i), uint64(i))
+		}
+	}
+
+	pktCh := make(chan *chain.Packet)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	for i := 10; i < 13; i++ {
+		eventLogs = append(eventLogs, types.Log{BlockNumber: uint64(i)})
+	}
+
+	go client.pruneBaseSeqNum(ctx, pktCh)
+
+	for i := 10; i < 13; i++ {
+		pkt := <-pktCh
+		assert.Equal(t, pkt.Sequence, uint64(i))
+	}
 }

@@ -33,15 +33,16 @@ var (
 )
 
 type Client struct {
-	aleoClient         aleoRpc.IAleoRPC
-	name               string
-	programID          string
-	queryUrl           string
-	network            string
-	chainID            *big.Int
-	waitDur            time.Duration
-	destChains         map[*big.Int]uint64 // keeps record of sequence number of all dest chains
-	retryPacketWaitDur time.Duration
+	aleoClient          aleoRpc.IAleoRPC
+	name                string
+	programID           string
+	queryUrl            string
+	network             string
+	chainID             *big.Int
+	waitDur             time.Duration
+	destChains          map[string]uint64 // keeps record of sequence number of all dest chains
+	retryPacketWaitDur  time.Duration
+	pruneBaseSeqWaitDur time.Duration
 }
 
 type aleoPacket struct {
@@ -112,9 +113,14 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 		wg.Add(len(cl.destChains))
 		for dst := range cl.destChains {
 			dst := dst
+			dstBig := new(big.Int)
+			dstBig, ok := dstBig.SetString(dst, 10)
+			if !ok {
+				panic("could not parse chainID")
+			}
 			go func() {
 				defer wg.Done()
-				pkt, err := cl.getPktWithSeq(ctx, dst, cl.destChains[dst])
+				pkt, err := cl.getPktWithSeq(ctx, dstBig, cl.destChains[dst])
 				if err != nil {
 					// log error
 					return
@@ -130,7 +136,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
 	// also fill gap and put in retry feed
-	ticker := time.NewTicker(time.Hour * 2)
+	ticker := time.NewTicker(cl.pruneBaseSeqWaitDur)
 	index := 0
 	defer ticker.Stop()
 	for {
@@ -289,25 +295,26 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		waitDur = defaultWaitDur
 	}
 
-	destChainsSeqMap := make(map[*big.Int]uint64, 0)
+	destChainsSeqMap := make(map[string]uint64, 0)
 	for chainName, seqNum := range cfg.StartSeqNum {
 		chainID, ok := m[chainName]
 		if !ok {
 			panic("missing start sequence number information")
 		}
-		destChainsSeqMap[chainID] = seqNum
+		destChainsSeqMap[chainID.String()] = seqNum
 	}
 
 	return &Client{
-		queryUrl:           urlSlice[0],
-		network:            urlSlice[1],
-		aleoClient:         aleoClient,
-		waitDur:            waitDur,
-		chainID:            cfg.ChainID,
-		programID:          cfg.BridgeContract,
-		name:               name,
-		destChains:         destChainsSeqMap,
-		retryPacketWaitDur: time.Second, // TODO: include in config
+		queryUrl:            urlSlice[0],
+		network:             urlSlice[1],
+		aleoClient:          aleoClient,
+		waitDur:             waitDur,
+		chainID:             cfg.ChainID,
+		programID:           cfg.BridgeContract,
+		name:                name,
+		destChains:          destChainsSeqMap,
+		retryPacketWaitDur:  time.Second, // TODO: include in config
+		pruneBaseSeqWaitDur: time.Second, // TODO: include in config
 	}
 }
 
