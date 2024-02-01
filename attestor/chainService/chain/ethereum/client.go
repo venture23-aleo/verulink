@@ -353,7 +353,20 @@ func (cl *Client) GetMissedPacket(
 	ctx context.Context, missedPkt *chain.MissedPacket) (
 	*chain.Packet, error) {
 
-	return nil, nil
+	pkts, err := cl.filterPacketLogs(ctx, missedPkt.Height, missedPkt.Height)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pkt := range pkts {
+
+		if pkt.Sequence == missedPkt.SeqNum &&
+			pkt.Destination.ChainID == missedPkt.TargetChainID {
+
+			return pkt, nil
+		}
+	}
+	return nil, errors.New("packet not found")
 }
 
 func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
