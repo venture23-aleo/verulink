@@ -13,9 +13,16 @@ import (
 type ClientFunc func(cfg *config.ChainConfig, m map[string]*big.Int) IClient
 type HashFunc func(sp *ScreenedPacket) string
 
+type Getter interface {
+	GetMissedPacket(
+		ctx context.Context, missedPkt *MissedPacket) (
+		*Packet, error)
+}
+
 type IClient interface {
 	Name() string
 	FeedPacket(ctx context.Context, ch chan<- *Packet)
+	Getter
 }
 
 type NetworkAddress struct {
@@ -45,6 +52,17 @@ type Packet struct {
 	Sequence    uint64
 	Message     Message
 	Height      uint64
+	// isMissed specify that this packet was somehow missed and db-service administrator has
+	// requested attestors to re-process it
+	isMissed bool
+}
+
+func (p *Packet) IsMissed() bool {
+	return p.isMissed
+}
+
+func (p *Packet) SetMissed(isMissed bool) {
+	p.isMissed = isMissed
 }
 
 func (p *Packet) GetSha256Hash() string {
@@ -60,7 +78,10 @@ type ScreenedPacket struct {
 	IsWhite bool
 }
 
-type QueuedMessage struct {
-	RetryCount int8 // balance, network timeout,
-	Message    *Packet
+type MissedPacket struct {
+	TargetChainID *big.Int
+	SourceChainID *big.Int
+	SeqNum        uint64
+	Height        uint64
+	TxnID         string
 }

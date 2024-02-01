@@ -22,11 +22,14 @@ const (
 )
 
 var (
-	chainIDToChainName         = map[*big.Int]string{}
 	RegisteredClients          = map[string]chain.ClientFunc{}
 	RegisteredHashers          = map[string]chain.HashFunc{}
 	RegisteredRetryChannels    = map[string]chan *chain.Packet{}
 	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
+)
+
+var (
+	chainIDToChain = map[*big.Int]chain.IClient{}
 )
 
 type relay struct {
@@ -53,8 +56,10 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 		screener:  addressscreener.GetScreener(),
 	}
 
+	missedPktCh := make(chan *chain.MissedPacket)
 	go r.initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
-	go r.collector.ReceivePktsFromCollector(ctx, pktCh)
+	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
+	go r.processMissedPacket(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
 }
 
@@ -64,7 +69,6 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 	m := make(map[string]*big.Int)
 	for _, chainCfg := range cfgs {
 		m[chainCfg.Name] = chainCfg.ChainID
-		chainIDToChainName[chainCfg.ChainID] = chainCfg.Name
 	}
 
 	for _, chainCfg := range cfgs {
@@ -75,7 +79,9 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 		if _, ok := RegisteredHashers[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("hash undefined for chain %s", chainCfg.Name))
 		}
-		ch <- RegisteredClients[chainCfg.Name](chainCfg, m)
+		chain := RegisteredClients[chainCfg.Name](chainCfg, m)
+		chainIDToChain[chainCfg.ChainID] = chain
+		ch <- chain
 	}
 
 	for chain := range ch {
@@ -117,13 +123,16 @@ func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) 
 }
 
 func (r *relay) processPacket(pkt *chain.Packet) {
-	srcChainName := chainIDToChainName[pkt.Source.ChainID]
+	srcChainName := chainIDToChain[pkt.Source.ChainID].Name()
 	var (
 		err     error
 		isWhite bool
 	)
 
 	defer func() {
+		if pkt.IsMissed() { // Skip post processing for packets delivered from collector(db-service)
+			return
+		}
 		if err != nil {
 			RegisteredRetryChannels[srcChainName] <- pkt
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
@@ -140,7 +149,7 @@ func (r *relay) processPacket(pkt *chain.Packet) {
 		Packet:  pkt,
 		IsWhite: isWhite,
 	}
-	destChainName := chainIDToChainName[pkt.Destination.ChainID]
+	destChainName := chainIDToChain[pkt.Destination.ChainID].Name()
 	signature, err := r.signer.SignScreenedPacket(sp, RegisteredHashers[destChainName])
 	if err != nil {
 		logger.GetLogger().Error(
@@ -156,5 +165,28 @@ func (r *relay) processPacket(pkt *chain.Packet) {
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
+	}
+}
+
+func (relay) processMissedPacket(ctx context.Context,
+	missedPktCh <-chan *chain.MissedPacket, pktCh chan<- *chain.Packet) {
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		missedPkt := <-missedPktCh
+		srcChain := chainIDToChain[missedPkt.SourceChainID]
+		pkt, err := srcChain.GetMissedPacket(ctx, missedPkt)
+		if err != nil {
+			logger.GetLogger().Error("Error while getting missed packet",
+				zap.Any("missed_packet", missedPkt), zap.Error(err))
+			continue
+		}
+		pkt.SetMissed(true)
+		pktCh <- pkt
 	}
 }
