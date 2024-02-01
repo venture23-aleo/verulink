@@ -258,7 +258,7 @@ func (cl *Client) GetMissedPacket(
 	if err != nil {
 		return nil, err
 	}
-	return pkt, err
+	return pkt, nil
 }
 
 func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
