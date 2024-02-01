@@ -114,15 +114,16 @@ func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacke
 }
 
 type Client struct {
-	name               string
-	address            ethCommon.Address
-	eth                ethClientI
-	bridge             iBridgeClient
-	waitDur            time.Duration
-	nextBlockHeight    uint64
-	chainID            *big.Int
-	filterTopic        ethCommon.Hash
-	retryPacketWaitDur time.Duration
+	name                      string
+	address                   ethCommon.Address
+	eth                       ethClientI
+	bridge                    iBridgeClient
+	waitDur                   time.Duration
+	nextBlockHeight           uint64
+	chainID                   *big.Int
+	filterTopic               ethCommon.Hash
+	retryPacketWaitDur        time.Duration
+	pruneBaseSeqNumberWaitDur time.Duration
 }
 
 func (cl *Client) Name() string {
@@ -158,6 +159,7 @@ func (cl *Client) parseBlock(ctx context.Context, height uint64) (pkts []*chain.
 	}
 
 	var packets []*chain.Packet
+
 	for startHeight := height; startHeight <= latestHeight; startHeight += defaultHeightDifferenceForFilterLogs {
 		endHeight := startHeight + defaultHeightDifferenceForFilterLogs
 		if endHeight > latestHeight {
@@ -266,7 +268,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 }
 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
-	ticker := time.NewTicker(time.Hour * 2)
+	ticker := time.NewTicker(cl.pruneBaseSeqNumberWaitDur)
 	index := 0
 	defer ticker.Stop()
 	for {
@@ -393,15 +395,16 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	}
 
 	return &Client{
-		name:               name,
-		address:            ethCommon.HexToAddress(cfg.BridgeContract),
-		eth:                ethclient,
-		bridge:             bridgeClient,
-		waitDur:            waitDur,
-		chainID:            cfg.ChainID,
-		nextBlockHeight:    cfg.StartHeight,
-		filterTopic:        ethCommon.HexToHash(cfg.FilterTopic),
-		retryPacketWaitDur: time.Second, // TODO: put the duration in config.yaml
+		name:                      name,
+		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
+		eth:                       ethclient,
+		bridge:                    bridgeClient,
+		waitDur:                   waitDur,
+		chainID:                   cfg.ChainID,
+		nextBlockHeight:           cfg.StartHeight,
+		filterTopic:               ethCommon.HexToHash(cfg.FilterTopic),
+		retryPacketWaitDur:        time.Second, // TODO: put the duration in config.yaml
+		pruneBaseSeqNumberWaitDur: time.Second, // TODO: put duration from config
 	}
 }
 
