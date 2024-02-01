@@ -13,16 +13,12 @@ import (
 type ClientFunc func(cfg *config.ChainConfig, m map[string]*big.Int) IClient
 type HashFunc func(sp *ScreenedPacket) string
 
-type Getter interface {
-	GetMissedPacket(
-		ctx context.Context, missedPkt *MissedPacket) (
-		*Packet, error)
-}
-
 type IClient interface {
 	Name() string
 	FeedPacket(ctx context.Context, ch chan<- *Packet)
-	Getter
+	GetMissedPacket(
+		ctx context.Context, missedPkt *MissedPacket) (
+		*Packet, error)
 }
 
 type NetworkAddress struct {
