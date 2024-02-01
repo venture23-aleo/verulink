@@ -242,9 +242,9 @@ func TestRetryFeed(t *testing.T) {
 
 	go client.retryFeed(ctx, packetCh)
 
-	for i := 0; i < 10; i++ {
+	for i := 1; i <= 10; i++ {
 		pkt := <-packetCh
-		assert.Equal(t, pkt.Sequence, uint64(i+1))
+		assert.Equal(t, pkt.Sequence, uint64(i))
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second*2)
@@ -253,11 +253,9 @@ func TestRetryFeed(t *testing.T) {
 	for {
 		select {
 		case <-ctx.Done():
-			assert.True(t, true)
 			return
-		case pkt := <-packetCh:
-			_ = pkt
-			assert.True(t, false)
+		case <-packetCh:
+			assert.FailNow(t, "fail")
 		}
 	}
 
