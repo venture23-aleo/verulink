@@ -18,7 +18,7 @@ const (
 
 type CollectorI interface {
 	SendToCollector(sp *chain.ScreenedPacket, signature string) error
-	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet)
+	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
 var collc collector
@@ -42,7 +42,7 @@ func (c *collector) SendToCollector(sp *chain.ScreenedPacket, signature string) 
 	return nil
 }
 
-func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
+func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
 	ticker := time.NewTicker(time.Hour * 12) // todo: take from config
 	defer ticker.Stop()
 	for {
@@ -52,13 +52,9 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		case <-ticker.C:
 		}
 
-		_, _ = c.verifyPkt(ctx, nil)
+		// todo: retrieve multiple packets
+		ch <- &chain.MissedPacket{}
 	}
-}
-
-// This method might be moved to other packages as well.
-func (c *collector) verifyPkt(ctx context.Context, pkt *chain.Packet) (bool, error) {
-	return false, nil
 }
 
 func GetCollector() CollectorI {

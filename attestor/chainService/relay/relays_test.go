@@ -27,8 +27,9 @@ func setupDB(t *testing.T, p string) func() {
 }
 
 type feeder struct {
-	name string
-	feed func()
+	name            string
+	feed            func()
+	getMissedPacket func() (*chain.Packet, error)
 }
 
 func (f *feeder) FeedPacket(ctx context.Context, pktCh chan<- *chain.Packet) {
@@ -39,6 +40,20 @@ func (f *feeder) FeedPacket(ctx context.Context, pktCh chan<- *chain.Packet) {
 
 func (f *feeder) Name() string {
 	return f.name
+}
+
+func (f *feeder) GetMissedPacket(ctx context.Context, m *chain.MissedPacket) (*chain.Packet, error) {
+	if f.getMissedPacket != nil {
+		return f.getMissedPacket()
+	}
+	return nil, errors.New("not implemented")
+}
+
+func (f *feeder) GetPacket(
+	ctx context.Context, targetChain *big.Int, seqNum, height uint64, txnID string) (
+	*chain.Packet, error) {
+
+	return nil, nil
 }
 
 func getClient(f *feeder) func(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
@@ -193,6 +208,14 @@ log:
 func TestConsumePackets(t *testing.T) {
 
 	t.Run("test packet consumption", func(t *testing.T) {
+		t.Cleanup(func() {
+			chainIDToChain = map[*big.Int]chain.IClient{}
+		})
+
+		chainID := big.NewInt(1)
+		chainIDToChain = map[*big.Int]chain.IClient{
+			chainID: &feeder{},
+		}
 		cleaner := setupConfig(t)
 		t.Cleanup(cleaner)
 
@@ -207,11 +230,13 @@ func TestConsumePackets(t *testing.T) {
 		ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
 		defer cncl()
 
-		pktCh <- &chain.Packet{}
+		pktCh <- &chain.Packet{
+			Source: chain.NetworkAddress{ChainID: chainID},
+		}
 		select {
 		case <-ctx.Done():
 			require.Fail(t, "packet not consumed")
-		case pktCh <- &chain.Packet{}:
+		case pktCh <- &chain.Packet{Source: chain.NetworkAddress{ChainID: chainID}}:
 		}
 	})
 }
@@ -220,9 +245,9 @@ func TestProcessPackets(t *testing.T) {
 	t.Run("test normal flow", func(t *testing.T) {
 		ethChainID := big.NewInt(1)
 		aleoChainID := big.NewInt(math.MaxInt64)
-		chainIDToChainName = map[*big.Int]string{
-			ethChainID:  "ethereum",
-			aleoChainID: "aleo",
+		chainIDToChain = map[*big.Int]chain.IClient{
+			ethChainID:  &feeder{name: "ethereum"},
+			aleoChainID: &feeder{name: "aleo"},
 		}
 
 		ethCh := make(chan *chain.Packet)
@@ -269,9 +294,9 @@ func TestProcessPackets(t *testing.T) {
 	t.Run("test sign error flow", func(t *testing.T) {
 		ethChainID := big.NewInt(1)
 		aleoChainID := big.NewInt(math.MaxInt64)
-		chainIDToChainName = map[*big.Int]string{
-			ethChainID:  "ethereum",
-			aleoChainID: "aleo",
+		chainIDToChain = map[*big.Int]chain.IClient{
+			ethChainID:  &feeder{name: "ethereum"},
+			aleoChainID: &feeder{name: "aleo"},
 		}
 
 		ethCh := make(chan *chain.Packet)
@@ -313,9 +338,9 @@ func TestProcessPackets(t *testing.T) {
 	t.Run("test collector error flow", func(t *testing.T) {
 		ethChainID := big.NewInt(1)
 		aleoChainID := big.NewInt(math.MaxInt64)
-		chainIDToChainName = map[*big.Int]string{
-			ethChainID:  "ethereum",
-			aleoChainID: "aleo",
+		chainIDToChain = map[*big.Int]chain.IClient{
+			ethChainID:  &feeder{name: "ethereum"},
+			aleoChainID: &feeder{name: "aleo"},
 		}
 
 		ethCh := make(chan *chain.Packet)
@@ -361,9 +386,43 @@ func TestProcessPackets(t *testing.T) {
 
 }
 
+func TestProcessMissedPacket(t *testing.T) {
+	t.Cleanup(func() {
+		chainIDToChain = map[*big.Int]chain.IClient{}
+	})
+
+	pktCh := make(chan *chain.Packet)
+	missedPktCh := make(chan *chain.MissedPacket)
+
+	r := relay{}
+	srcChainID := big.NewInt(1)
+	chainIDToChain = map[*big.Int]chain.IClient{
+		srcChainID: &feeder{
+			getMissedPacket: func() (*chain.Packet, error) {
+				return &chain.Packet{}, nil
+			},
+		},
+	}
+
+	go r.processMissedPacket(context.TODO(), missedPktCh, pktCh)
+
+	missedPktCh <- &chain.MissedPacket{
+		SourceChainID: srcChainID,
+	}
+
+	ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
+	defer cncl()
+	select {
+	case <-ctx.Done():
+		t.FailNow()
+	case pkt := <-pktCh:
+		require.True(t, pkt.IsMissed())
+	}
+}
+
 type collectorTest struct {
 	sendToCollector          func(sp *chain.ScreenedPacket, signature string) error
-	receivePktsFromCollector func(ctx context.Context, ch chan<- *chain.Packet)
+	receivePktsFromCollector func(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
 func (c *collectorTest) SendToCollector(sp *chain.ScreenedPacket, signature string) error {
@@ -373,7 +432,7 @@ func (c *collectorTest) SendToCollector(sp *chain.ScreenedPacket, signature stri
 	return nil
 }
 
-func (c *collectorTest) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.Packet) {
+func (c *collectorTest) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
 	if c.receivePktsFromCollector != nil {
 		c.receivePktsFromCollector(ctx, ch)
 	}

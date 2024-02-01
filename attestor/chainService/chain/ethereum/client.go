@@ -353,6 +353,13 @@ func (cl *Client) managePacket(ctx context.Context) {
 	}
 }
 
+func (cl *Client) GetMissedPacket(
+	ctx context.Context, missedPkt *chain.MissedPacket) (
+	*chain.Packet, error) {
+
+	return nil, nil
+}
+
 func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
