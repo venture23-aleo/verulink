@@ -227,7 +227,7 @@ Note that Attestors will pick up the packet only after certain duration after it
 ![Bridge](images/bridge.png)
 
 #### Architecture Overview
-![Architecture](images/contained.png)
+![Architecture](images/arch.jpg)
 
 
 
