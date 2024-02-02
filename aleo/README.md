@@ -44,17 +44,15 @@ USDC Contract Address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 is represented
 [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 160, 184, 105, 145, 198, 33, 139, 54, 193, 209, 157, 74, 46, 158, 176, 206, 54, 6, 235, 72 ]
 
 ## Token Bridge
-`Packet` is published, received (or attested) and consumed in the token bridge. When attestors find a packet on some other chain, they call `attest` on this chain with the entire `Packet` as argument.
-Supported services such as `Token Service` program can then consume these packets to mint corresponding tokens. Similarly, supported services can `publish` messages that will be transferred to the destination chain.
-
-It has the following functions:
+[`Packet`](../docs/architecture_overview.md#packet) is published, received and consumed in the token bridge. When attestors find a packet on some other chain, they sign the `Packet` and publishes the signature on the database. The users can then collect those signatures from the database and can directly consume those packets to mint corresponding assets via supported services such as `Token Service` program.
+Similarly, supported services can `publish` messages that will be transferred to the destination chain. It has the following functions:
 
 
 ## Token Service
 Token Service validates the incoming messages and passes it to the Token Bridge to `publish` or `consume`.
 
 ## Token Program
-This is the [ARC20 token](https://github.com/AleoHQ/ARCs/discussions/42) that represents bridged tokens on Aleo
+This is the [ARC20 token](https://github.com/AleoHQ/ARCs/discussions/42) that represents bridged tokens on Aleo.
 
 ## Token Holding
 This program is responsible for holding disputed funds and transfers.
