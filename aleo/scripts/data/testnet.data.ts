@@ -9,10 +9,6 @@ console.log("Aleo Testnet3 Id", aleoChainId)
 // USDC Contract Address on Ethereum
 export const usdcContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 
-export const wusdcTokenAddr = "aleo1h2hds9hqjjp9swqwvmy0kdarg72myk307kszu2jga7efd04afqfqmcwl4j";
-export const wusdcConnectorAddr = "aleo19aner4k7m4nlg9av2t7cl3tpdlvytzc6wgwwp36pm76hmw4jmspsmcqte0";
-export const wusdcHoldingAddr = "aleo1qdd7ly83nst3fte50325sxzv9jfwr2sh3fn3gl5tr793djuxgsxsnf37q8"
-
 // User Address on Ethereum
 export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
