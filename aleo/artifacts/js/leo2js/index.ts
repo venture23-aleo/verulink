@@ -1,7 +1,4 @@
 import {
-  getWithdrawalLimit
-} from './token_service_v0001';
-import {
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -12,6 +9,9 @@ import {
   getPacketIdWithAttestor,
   getInPacketWithScreening
 } from './token_bridge_v0001';
+import {
+  getWithdrawalLimit
+} from './token_service_v0001';
 import {
   getProposalVote,
   getAddMember,
@@ -42,7 +42,6 @@ import {
 } from './wusdc_token_v0001';
 
 export {
-  getWithdrawalLimit,
   getAleoProgram,
   getForeignContract,
   getMsgTokenReceive,
@@ -52,6 +51,7 @@ export {
   getPacketId,
   getPacketIdWithAttestor,
   getInPacketWithScreening,
+  getWithdrawalLimit,
   getProposalVote,
   getAddMember,
   getRemoveMember,

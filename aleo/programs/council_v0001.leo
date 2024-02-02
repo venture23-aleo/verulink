@@ -2,6 +2,8 @@
 import token_bridge_v0001.aleo;
 import token_service_v0001.aleo;
 
+// proposal_hash -> Proposal: String
+
 program council_v0001.aleo {
 
     struct ProposalVote {
@@ -150,7 +152,7 @@ program council_v0001.aleo {
     /////// Vote ///////
     ////////////////////
 
-    transition vote(proposal_hash: field, public new_threshold: u8) {
+    transition vote(public proposal_hash: field) {
         let from: address = self.caller;
 
         let proposal_sign: field = BHP256::hash_to_field(

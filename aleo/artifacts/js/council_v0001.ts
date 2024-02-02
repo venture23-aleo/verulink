@@ -164,11 +164,10 @@ export class Council_v0001Contract extends BaseContract {
     if (this.config.mode === "execute") return result;
   }
 
-  async vote(r0: bigint, r1: number) {
+  async vote(r0: bigint) {
     const r0Leo = js2leo.field(r0);
-    const r1Leo = js2leo.u8(r1);
 
-    const params = [r0Leo, r1Leo]
+    const params = [r0Leo]
     const result = await zkRun({
       config: this.config,
       transition: 'vote',

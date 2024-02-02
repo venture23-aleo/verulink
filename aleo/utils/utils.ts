@@ -24,6 +24,8 @@ export const evm2AleoArr = (evmAddr: string) => {
   return paddedDecimalArray;
 };
 
+console.log(evm2AleoArr("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266").map((x) => x.toString() + 'u8').join(','))
+
 export const aleoArr2Evm = (decimalArray: number[] ): string => {
   const hexString: string = decimalArray.slice( - EVM_ADDR_SIZE)
     .map((num) => num.toString(16).padStart(2, "0"))

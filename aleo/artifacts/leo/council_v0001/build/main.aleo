@@ -227,12 +227,11 @@ finalize propose:
 
 
 function vote:
-    input r0 as field.private;
-    input r1 as u8.public;
-    cast r0 self.caller into r2 as ProposalVote;
-    hash.bhp256 r2 into r3 as field;
-    async vote self.caller r0 r3 into r4;
-    output r4 as council_v0001.aleo/vote.future;
+    input r0 as field.public;
+    cast r0 self.caller into r1 as ProposalVote;
+    hash.bhp256 r1 into r2 as field;
+    async vote self.caller r0 r2 into r3;
+    output r3 as council_v0001.aleo/vote.future;
 
 finalize vote:
     input r0 as address.public;
