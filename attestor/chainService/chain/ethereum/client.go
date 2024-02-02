@@ -411,8 +411,8 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		chainID:                   cfg.ChainID,
 		nextBlockHeight:           cfg.StartHeight,
 		filterTopic:               ethCommon.HexToHash(cfg.FilterTopic),
-		retryPacketWaitDur:        time.Second, // TODO: put the duration in config.yaml
-		pruneBaseSeqNumberWaitDur: time.Second, // TODO: put duration from config
+		retryPacketWaitDur:        cfg.RetryPacketWaitDuration,         
+		pruneBaseSeqNumberWaitDur: cfg.PruneBasseSeqNumberWaitDuration, 
 	}
 }
 

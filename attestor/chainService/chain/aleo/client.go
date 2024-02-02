@@ -317,8 +317,8 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		programID:           cfg.BridgeContract,
 		name:                name,
 		destChains:          destChainsSeqMap,
-		retryPacketWaitDur:  time.Second, // TODO: include in config
-		pruneBaseSeqWaitDur: time.Second, // TODO: include in config
+		retryPacketWaitDur:  cfg.RetryPacketWaitDuration, 
+		pruneBaseSeqWaitDur: cfg.PruneBasseSeqNumberWaitDuration, 
 	}
 }
 
