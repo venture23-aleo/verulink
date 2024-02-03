@@ -1,6 +1,0 @@
-[[package]]
-name = "token_bridge_v0001"
-network = "testnet3"
-location = "network"
-checksum = "ba5983ac370f0f49fb35016421b4231b0c74ea249c4e80f6e9eca92ec3f03878"
-dependencies = []

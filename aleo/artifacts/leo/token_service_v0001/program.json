@@ -1,1 +1,0 @@
-{"program":"token_service_v0001.aleo","version":"0.0.0","description":"","license":"MIT","dependencies":[{"name":"token_bridge_v0001.aleo","location":"network","endpoint":"http://localhost:3030","network":"testnet3"}]}
