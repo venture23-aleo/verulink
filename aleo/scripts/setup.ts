@@ -1,14 +1,15 @@
 import { TbAddChain, TsAddToken, TbAddService } from "../artifacts/js/types";
-import { evm2AleoArr, hashStruct } from "../utils/utils";
 
 import * as js2leo from '../artifacts/js/js2leo';
-import { TOTAL_PROPOSALS_INDEX, aleoTsProgramAddr, aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilProgramAddr, councilThreshold, ethChainId, ethTsContractAddr, wusdcConnectorAddr, wusdcTokenAddr } from "./testnet.data";
+import { aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5, councilThreshold, ethChainId, ethTsContractAddr } from "./testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
 import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { Wusdc_holding_v0001Contract } from "../artifacts/js/wusdc_holding_v0001";
 import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
+import { hashStruct } from "../utils/hash";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,12 +40,12 @@ const setup = async () => {
   await bridge.initialize_tb(
     1,
     [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-    councilProgramAddr
+    council.address()
   ); // 818_271
-  await tokenService.initialize_ts(councilProgramAddr); // 117_842
+  await tokenService.initialize_ts(council.address()); // 117_842
 
   // TokenBridge: Add Ethereum Chain
-  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tbEnableChain: TbAddChain = {
     id: proposalId,
     chain_id: ethChainId
@@ -53,7 +54,7 @@ const setup = async () => {
   tx = await council.propose(proposalId, tbEnableChainProposalHash); // 477_914
   await tx.wait()
 
-  await council.tb_enable_chain(
+  await council.tb_add_chain(
     tbEnableChain.id,
     tbEnableChain.chain_id,
   ) // 301_747
@@ -71,11 +72,11 @@ const setup = async () => {
   await wusdcConnecter.initialize_wusdc(); // 239_906
 
   // TokenService: Support new token
-  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsAddToken: TsAddToken = {
     id: proposalId,
-    token_address: wusdcTokenAddr,
-    connector: wusdcConnectorAddr,
+    token_address: wusdcToken.address(),
+    connector: wusdcConnecter.address(),
     min_transfer: BigInt(100),
     max_transfer: BigInt(100_000),
     outgoing_percentage: 100_00,
@@ -98,10 +99,10 @@ const setup = async () => {
   await tx.wait()
 
   // Bridge: EnableService
-  proposalId = parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+  proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tbAddService: TbAddService = {
     id: proposalId,
-    service: aleoTsProgramAddr
+    service: tokenService.address()
   };
   const tbEnableServiceHash = hashStruct(js2leo.getTbAddServiceLeo(tbAddService));
   await council.propose(proposalId, tbEnableServiceHash);

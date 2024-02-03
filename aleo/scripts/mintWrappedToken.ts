@@ -1,21 +1,21 @@
 import { InPacket, TbAddAttestor } from "../artifacts/js/types";
-import { evm2AleoArr, hashStruct, signPacket } from "../utils/utils";
 
 import * as js2leo from "../artifacts/js/js2leo";
 
 import {
   aleoChainId,
-  aleoTsProgramAddr,
   ethChainId,
   ethUser,
-  wusdcTokenAddr,
 } from "./testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { ethTsContractAddr } from "./testnet.data";
 import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
-import { ALEO_ZERO_ADDRESS } from "../test/mockData";
 import { Address, PrivateKey } from "@aleohq/sdk";
+import { evm2AleoArr } from "../utils/ethAddress";
+import { signPacket } from "../utils/sign";
+import { ALEO_ZERO_ADDRESS } from "../utils/constants";
+import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
 
 const bridge = new Token_bridge_v0001Contract({
   mode: "execute",
@@ -26,6 +26,10 @@ const wusdcToken = new Wusdc_token_v0001Contract({
   priorityFee: 10_000,
 });
 const wusdcConnecter = new Wusdc_connector_v0001Contract({
+  mode: "execute",
+  priorityFee: 10_000,
+});
+const tokenService = new Token_service_v0001Contract({
   mode: "execute",
   priorityFee: 10_000,
 });
@@ -47,10 +51,10 @@ const mintWrappedToken = async (aleoUser: string, amount: bigint) => {
     },
     destination: {
       chain_id: aleoChainId,
-      addr: aleoTsProgramAddr,
+      addr: tokenService.address(),
     },
     message: {
-      token: wusdcTokenAddr,
+      token: wusdcToken.address(),
       sender: evm2AleoArr(ethUser),
       receiver: aleoUser,
       amount: amount,

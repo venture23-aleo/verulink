@@ -1,15 +1,13 @@
 import {
   TbAddAttestor,
 } from "../artifacts/js/types";
-import { hashStruct } from "../utils/utils";
+import { hashStruct } from "../utils/hash";
 
 import * as js2leo from "../artifacts/js/js2leo";
 
-import {
-  TOTAL_PROPOSALS_INDEX, councilProgramAddr,
-} from "./testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
+import { BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
 
 const addAttestor = async (newAttestorAddress: string, newThreshold: number) => {
   const bridge = new Token_bridge_v0001Contract({
@@ -21,17 +19,17 @@ const addAttestor = async (newAttestorAddress: string, newThreshold: number) => 
     priorityFee: 10_000,
   });
 
-  const currentThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-  const currentTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);  
+  const currentThreshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX);
+  const currentTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);  
   const currentOwner = await bridge.owner_TB(true);
   console.log(currentOwner)
-  console.log(councilProgramAddr)
+  console.log(council.address())
 
   console.log("Current Threshold", currentThreshold)
   console.log("Current Total Attestors", currentTotalAttestors)
 
   const proposalId =
-    parseInt((await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+    parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const addAttestor: TbAddAttestor = {
     id: proposalId,
     new_attestor: newAttestorAddress,
@@ -57,8 +55,8 @@ const addAttestor = async (newAttestorAddress: string, newThreshold: number) => 
 
   const isProposalExecuted = await council.proposal_executed(addAttestorHash)
   const isAttestor = await bridge.attestors(newAttestorAddress)
-  const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX)
-  const updatedTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX)
+  const updatedThreshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)
+  const updatedTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX)
 
   console.log("Proposal Executed", isProposalExecuted)
   console.log("Attestor Added", isAttestor)
