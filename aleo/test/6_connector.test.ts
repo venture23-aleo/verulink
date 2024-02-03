@@ -191,7 +191,7 @@ describe("Token Connector", () => {
     );
 
     test(
-      "Token Service: Support New Token",
+      "Token Service: Add New Token",
       async () => {
         let isWusdcSupported = true;
         try {

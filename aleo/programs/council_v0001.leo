@@ -489,7 +489,7 @@ program council_v0001.aleo {
         chain_id: u128
     }
 
-    transition tb_enable_chain(public id: u32, public chain_id: u128) {
+    transition tb_add_chain(public id: u32, public chain_id: u128) {
         let proposal: TbAddChain = TbAddChain {
             id,
             chain_id
@@ -502,7 +502,7 @@ program council_v0001.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize tb_enable_chain(proposal_hash: field) {
+    finalize tb_add_chain(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
