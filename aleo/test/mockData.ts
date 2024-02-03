@@ -1,13 +1,4 @@
-// import { getWrappedTokenInfoLeo } from "../artifacts/js/js2leo";
-// import {
-//   TokenInfo,
-//   WTForeignContract,
-//   WrappedTokenInfo,
-// } from "../artifacts/js/types";
-// import * as js2leoCommon from "../artifacts/js/js2leo/common";
-// import * as leo2jsCommon from "../artifacts/js/leo2js/common";
-import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from "../utils/utils";
-// import { hash } from "aleo-hasher";
+import { encodeNetworkChainId } from "../utils/chainId";
 
 const sepoliaChainId = 11155111
 export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
@@ -34,7 +25,6 @@ export const aleoUser7 = "aleo1tvuwdl7remyvccqypa5lzehrdd5tnqpuy49jv7h6uw5au67pk
 export const councilThreshold = 1;
 
 export const TOTAL_PROPOSALS_INDEX = 0;
-
 
 export const normalThreshold = 1; // Any range between 1 and 5
 export const lowThreshold = 0; // Any number <= 0
