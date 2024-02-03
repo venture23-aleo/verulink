@@ -1,8 +1,9 @@
 import * as ejs from 'ejs';
 
 import * as fs from 'fs';
-import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from './utils';
+import { encodeNetworkChainId} from '../../utils/chainId';
 import { to_address } from 'aleo-program-to-address';
+import { evm2AleoArr, string2AleoArr } from '../../utils/ethAddress';
 
 const tokenTemplate = fs.readFileSync('programs/templates/token_program.ejs').toString();
 const holdingTemplate = fs.readFileSync('programs/templates/token_holding.ejs').toString();

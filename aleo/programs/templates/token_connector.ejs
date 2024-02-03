@@ -65,10 +65,14 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
         // And additional checks are not required
         let check_required: bool = !(receiver == actual_receiver);
 
+        let held_amount: u128 = 0u128;
+
         if check_required {
+            held_amount = amount;
             assert_eq(actual_receiver, <%=symbol.toUpperCase()%>_HOLDING);
-            <%=symbol%>_holding<%=holdingVersion%>.aleo/hold_fund(receiver, amount);
         }
+
+        <%=symbol%>_holding<%=holdingVersion%>.aleo/hold_fund(receiver, held_amount);
 
     }
 
