@@ -42,4 +42,10 @@ export class BaseContract {
     address(): string {
         return to_address(`${this.config.appName}.aleo`);
     }
+
+    getAccounts(): any {
+        return [
+            networkConfig.networks[this.config.networkName].accounts[0]
+        ]
+    }
 }

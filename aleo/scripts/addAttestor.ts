@@ -7,10 +7,9 @@ import * as js2leo from "../artifacts/js/js2leo";
 
 import {
   TOTAL_PROPOSALS_INDEX, councilProgramAddr,
-} from "./data/testnet.data";
+} from "./testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
-import { THRESHOLD_INDEX, TOTAL_ATTESTORS_INDEX } from "../test/mockData";
 
 const addAttestor = async (newAttestorAddress: string, newThreshold: number) => {
   const bridge = new Token_bridge_v0001Contract({

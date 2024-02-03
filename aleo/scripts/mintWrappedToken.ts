@@ -9,9 +9,9 @@ import {
   ethChainId,
   ethUser,
   wusdcTokenAddr,
-} from "./data/testnet.data";
+} from "./testnet.data";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { ethTsContractAddr } from "./data/testnet.data";
+import { ethTsContractAddr } from "./testnet.data";
 import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
 import { ALEO_ZERO_ADDRESS } from "../test/mockData";
