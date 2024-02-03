@@ -9,9 +9,6 @@ import * as js2leo from "../artifacts/js/js2leo";
 import { HoldingRelease, InPacket, PacketId } from "../artifacts/js/types";
 
 import {
-  ALEO_ZERO_ADDRESS,
-  THRESHOLD_INDEX,
-  TOTAL_PROPOSALS_INDEX,
   aleoChainId,
   aleoUser1,
   aleoUser2,
@@ -23,13 +20,11 @@ import {
   ethUser,
   usdcContractAddr,
 } from "./mockData";
-import {
-  aleoArr2Evm,
-  evm2AleoArr,
-  hashStruct,
-  signPacket,
-} from "../utils/utils";
 import { Address, PrivateKey } from "@aleohq/sdk";
+import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
+import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
+import { signPacket } from "../utils/sign";
+import { hashStruct } from "../utils/hash";
 
 const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
 const tokenService = new Token_service_v0001Contract({ mode: "execute" });
@@ -39,13 +34,6 @@ const wusdcHolding = new Wusdc_holding_v0001Contract({ mode: "execute" });
 const wusdcConnector = new Wusdc_connector_v0001Contract({ mode: "execute" });
 
 const TIMEOUT = 100_000; // 100 seconds
-
-const BRIDGE_THRESHOLD_INDEX = 1;
-const BRIDGE_TOTAL_ATTESTORS_INDEX = 2;
-const BRIDGE_PAUSABILITY_INDEX = 3;
-
-const PAUSED_VALUE = 0;
-const UNPAUSED_VALUE = 1;
 
 describe("Token Connector", () => {
   describe("Deployment", () => {
@@ -246,7 +234,7 @@ describe("Token Connector", () => {
         let isPaused = true;
         try {
           let value = await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX);
-          isPaused = value == PAUSED_VALUE
+          isPaused = value == BRIDGE_PAUSED_VALUE
         } catch (err) {
           isPaused = false;
         }
@@ -298,7 +286,7 @@ describe("Token Connector", () => {
       expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
       expect(await wusdcToken.token_owner(true)).toBe(wusdcConnector.address());
       expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnector.address());
-      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(UNPAUSED_VALUE);
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
     });
 
     test(
@@ -444,7 +432,7 @@ describe("Token Connector", () => {
       async () => {
         let isCouncilInitialized = true;
         try {
-          const threshold = await council.settings(THRESHOLD_INDEX)
+          const threshold = await council.settings(COUNCIL_THRESHOLD_INDEX)
         } catch (err) {
           isCouncilInitialized = false;
         }
@@ -572,7 +560,7 @@ describe("Token Connector", () => {
           initialHeldAmount = BigInt(0);
         }
 
-        let proposalId = parseInt( (await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1
+        let proposalId = parseInt( (await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1
         const releaseFundProposal: HoldingRelease = {
           id: proposalId,
           token_address: wusdcToken.address(),

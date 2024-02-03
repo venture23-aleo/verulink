@@ -1,4 +1,4 @@
-import { encodeNetworkChainId, evm2AleoArr, string2AleoArr } from "../utils/utils";
+import { encodeNetworkChainId } from "../utils/chainId";
 
 const sepoliaChainId = 11155111
 export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
@@ -23,5 +23,3 @@ export const aleoUser4 = "aleo1u4y9ntu2yegz29w4rppwvyzddyfw6scnzklf59q4ngjs5h6vq
 export const aleoUser5 = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"
 
 export const councilThreshold = 1;
-
-export const TOTAL_PROPOSALS_INDEX = 0;

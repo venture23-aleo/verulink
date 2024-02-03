@@ -31,11 +31,6 @@ export const lowThreshold = 0; // Any number <= 0
 export const highThreshold = 6; // Any number above 5
 export const newThreshold = 2;
 
-export const THRESHOLD_INDEX = true;
-export const TOTAL_MEMBERS_INDEX = false;
-
-export const TOTAL_ATTESTORS_INDEX = false;
-
 export const nullError = `Cannot read properties of null (reading 'replace')`;
 export const nullError2 = `Cannot read properties of null (reading 'map')`;
 export const nullError3 = `Cannot read properties of null (reading 'outgoing_percentage')`;
@@ -46,5 +41,3 @@ export const height = 10;
 
 export const outgoing_percentage_in_time = {"outgoing_percentage": 10000, "timeframe": 1}
 export const minimum_transfer = BigInt(100);
-
-export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";
