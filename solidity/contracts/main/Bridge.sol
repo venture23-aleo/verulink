@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import "../common/libraries/Lib.sol";
+import {PacketLibrary} from "../common/libraries/PacketLibrary.sol";
 import {Pausable} from "../common/Pausable.sol";
 import {AttestorManager} from "../base/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "../base/bridge/OutgoingPacketManagerImpl.sol";
 import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract ERC20TokenBridge is 
+contract Bridge is 
     Pausable,
     AttestorManager,
     BridgeTokenServiceManager,
     ConsumedPacketManagerImpl,
     OutgoingPacketManagerImpl,
-    Initializable
+    Initializable,
+    Upgradeable
 {
     using PacketLibrary for PacketLibrary.InPacket;
     
@@ -31,11 +33,15 @@ contract ERC20TokenBridge is
         destinationChainId = _destChainId;       
     }
 
-    function isSupportedChain(uint256 destChainId) public view onlyProxy returns (bool) {
+    function _authorizeUpgrade(address) internal view override {
+        require(msg.sender == _owner_);
+    }
+
+    function isSupportedChain(uint256 destChainId) public view returns (bool) {
         return destinationChainId == destChainId;
     }
 
-    function updateDestinationChainId(uint256 newDestChainId) public onlyOwner onlyProxy {
+    function updateDestinationChainId(uint256 newDestChainId) public onlyOwner {
         require(!isSupportedChain(newDestChainId), "Destination Chain already supported");
         emit ChainUpdated(destinationChainId, newDestChainId);
         destinationChainId = newDestChainId;
@@ -45,19 +51,16 @@ contract ERC20TokenBridge is
         return isAttestor(signer);
     }
 
-    function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) public 
-    onlyProxy 
-    whenNotPaused 
-    returns (PacketLibrary.Vote)
+    function consume(
+        PacketLibrary.InPacket memory packet, 
+        bytes[] memory sigs
+    ) public whenNotPaused returns (PacketLibrary.Vote)
     {
-        // require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 
-    function sendMessage(PacketLibrary.OutPacket memory packet) public override 
-    onlyProxy 
-    whenNotPaused 
-    {
+    function sendMessage(PacketLibrary.OutPacket memory packet) public override whenNotPaused {
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         super.sendMessage(packet);

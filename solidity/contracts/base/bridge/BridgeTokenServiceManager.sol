@@ -9,18 +9,18 @@ abstract contract BridgeTokenServiceManager is Ownable {
 
     mapping(address => bool) public tokenServices;
 
-    function isRegisteredTokenService(address _service) public view onlyProxy returns(bool) {
+    function isRegisteredTokenService(address _service) public view returns(bool) {
         return tokenServices[_service];
     }
 
-    function addTokenService(address _service) external onlyOwner onlyProxy {
+    function addTokenService(address _service) external onlyOwner {
         require(_service != address(0), "Zero Address");
         require(!isRegisteredTokenService(_service), "Token Service already exists");
         tokenServices[_service] = true;
         emit TokenServiceAdded(_service);
     }
 
-    function removeTokenService(address _service) external onlyOwner onlyProxy {
+    function removeTokenService(address _service) external onlyOwner {
         require(isRegisteredTokenService(_service), "Unknown Token Service");
         delete tokenServices[_service];
         emit TokenServiceRemoved(_service);

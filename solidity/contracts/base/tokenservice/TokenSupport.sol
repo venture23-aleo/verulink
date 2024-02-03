@@ -2,13 +2,17 @@
 pragma solidity ^0.8.19;
 
 import {Ownable} from "../../common/Ownable.sol";
-import "../../common/libraries/Lib.sol";
+import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
+import {IVaultService} from "../../common/interface/tokenservice/IVaultService.sol";
 
-abstract contract ERC20TokenSupport is Ownable {
+abstract contract TokenSupport is Ownable {
+    uint256 public destChainId;
+
     struct Token {
         address tokenAddress;
-        PacketLibrary.OutNetworkAddress destTokenAddress;
-        PacketLibrary.OutNetworkAddress destTokenService;
+        IVaultService vault;
+        string destTokenAddress;
+        string destTokenService;
         uint256 minValue;
         uint256 maxValue;
         bool enabled;
@@ -23,45 +27,49 @@ abstract contract ERC20TokenSupport is Ownable {
     event TokenMinValueUpdated(address token, uint256 destChainId, uint256 oldMinValue, uint256 newMinValue);
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
+    function _initialize(address _owner, uint256 _destChainId) public {
+        super._initialize(_owner);
+        destChainId = _destChainId;
+    }
 
     function isSupportedToken(
-        address token,
-        uint256 destChainId
-    ) public view onlyProxy returns (bool) {
+        address token
+    ) public view returns (bool) {
         return
-            supportedTokens[token].destTokenAddress.chainId ==
-            destChainId;
+            address(supportedTokens[token].vault) != address(0);
     }
 
     function isEnabledToken(
-        address token,
-        uint256 destChainId
-    ) public view onlyProxy returns (bool) {
+        address token
+    ) public view returns (bool) {
         return
-            supportedTokens[token].enabled && isSupportedToken(token, destChainId);
+            supportedTokens[token].enabled && isSupportedToken(token);
     }
 
-    function isAmountInRange(address tokenAddress, uint256 amount) public view onlyProxy returns (bool) {
+    function isAmountInRange(address tokenAddress, uint256 amount) public view returns (bool) {
         Token memory token = supportedTokens[tokenAddress];
         return amount >= token.minValue && amount <= token.maxValue;
     }
 
     function _addToken(
         address tokenAddress,
-        uint256 destChainId,
+        uint256 _destChainId,
+        address vault,
         string memory destTokenAddress,
         string memory destTokenService,
         uint256 min,
         uint256 max
     ) internal {
         require(
-            !isSupportedToken(tokenAddress, destChainId),
+            !isSupportedToken(tokenAddress),
             "Token already supported"
         );
+        require(_destChainId == destChainId, "Target Chain Mismatch");
         Token memory token = Token(
             tokenAddress,
-            PacketLibrary.OutNetworkAddress(destChainId, destTokenAddress),
-            PacketLibrary.OutNetworkAddress(destChainId, destTokenService),
+            IVaultService(vault),
+            destTokenAddress,
+            destTokenService,
             min,
             max,
             true
@@ -72,56 +80,60 @@ abstract contract ERC20TokenSupport is Ownable {
 
     function addToken(
         address tokenAddress,
-        uint256 destChainId,
+        uint256 _destChainId,
+        address vault,
         string memory destTokenAddress,
         string memory destTokenService,
         uint256 min,
         uint256 max
-    ) public virtual onlyOwner onlyProxy {
-        _addToken(tokenAddress, destChainId, destTokenAddress, destTokenService, min, max);
+    ) public virtual onlyOwner {
+        _addToken(tokenAddress, _destChainId, vault, destTokenAddress, destTokenService, min, max);
     }
 
     function removeToken(
         address tokenAddress,
-        uint256 destChainId
-    ) public onlyOwner onlyProxy {
+        uint256 _destChainId
+    ) public onlyOwner {
         require(
-            isSupportedToken(tokenAddress, destChainId),
+            isSupportedToken(tokenAddress),
             "Token not supported"
         );
-        emit TokenRemoved(tokenAddress, destChainId);
+        require(_destChainId == destChainId, "Target Chain Mismatch");
+        emit TokenRemoved(tokenAddress, _destChainId);
         delete supportedTokens[tokenAddress];
     }
 
     function enable(
         address tokenAddress,
-        uint256 destChainId
-    ) public onlyOwner onlyProxy {
+        uint256 _destChainId
+    ) public onlyOwner {
         require(
-            isEnabledToken(tokenAddress, destChainId),
+            !isEnabledToken(tokenAddress),
             "Token not enabled"
         );
+        require(_destChainId == destChainId, "Target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = true;
-        emit TokenEnabled(tokenAddress, destChainId);
+        emit TokenEnabled(tokenAddress, _destChainId);
     }
 
     function disable(
         address tokenAddress,
-        uint256 destChainId
-    ) public onlyOwner onlyProxy {
-        require(isEnabledToken(tokenAddress, destChainId), "Token not enabled");
+        uint256 _destChainId
+    ) public onlyOwner {
+        require(isEnabledToken(tokenAddress), "Token not enabled");
+        require(_destChainId == destChainId, "Target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = false;
-        emit TokenDisabled(tokenAddress, destChainId);
+        emit TokenDisabled(tokenAddress, _destChainId);
     }
 
-    function updateMinValue(address tokenAddress, uint256 destChainId, uint256 minValue) public onlyOwner onlyProxy {
-        require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
+    function updateMinValue(address tokenAddress, uint256 minValue) public onlyOwner {
+        require(isSupportedToken(tokenAddress), "Token not supported");
         emit TokenMinValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].minValue, minValue);
         supportedTokens[tokenAddress].minValue = minValue;
     }
 
-    function updateMaxValue(address tokenAddress, uint256 destChainId, uint256 maxValue) public onlyOwner onlyProxy {
-        require(isSupportedToken(tokenAddress, destChainId), "Token not supported");
+    function updateMaxValue(address tokenAddress, uint256 maxValue) public onlyOwner {
+        require(isSupportedToken(tokenAddress), "Token not supported");
         emit TokenMaxValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].maxValue, maxValue);
         supportedTokens[tokenAddress].maxValue = maxValue;
     }

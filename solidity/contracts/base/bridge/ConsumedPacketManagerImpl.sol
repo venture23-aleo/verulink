@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import "../../common/libraries/Lib.sol";
+import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 
 abstract contract ConsumedPacketManagerImpl {
 

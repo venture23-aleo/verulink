@@ -4,8 +4,9 @@ pragma solidity ^0.8.19;
 import {Pausable} from "../common/Pausable.sol";
 import {IIERC20} from "../common/interface/tokenservice/IIERC20.sol";
 import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Holding is Pausable, Initializable {
+contract Holding is Pausable, Initializable, Upgradeable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);
@@ -23,6 +24,10 @@ contract Holding is Pausable, Initializable {
         supportedTokenServices[_tokenService] = true;
     }
 
+    function _authorizeUpgrade(address) internal view override {
+        require(msg.sender == _owner_);
+    }
+
     function addTokenService(address _tokenService) public onlyOwner {
         require(_tokenService != address(0), "Zero Address");
         require(!supportedTokenServices[_tokenService], "Known TokenService");
@@ -35,7 +40,7 @@ contract Holding is Pausable, Initializable {
         delete supportedTokenServices[_tokenService];
     }
 
-    function _lock(address user, address token, uint256 amount) internal whenNotPaused {
+    function _lock(address user, address token, uint256 amount) internal {
         require(
             supportedTokenServices[msg.sender],
             "Unknown TokenService"
@@ -81,7 +86,7 @@ contract Holding is Pausable, Initializable {
 
     function release(address user, uint256 amount) public {
         _release(user, address(0), amount);
-        user.call{value: amount}("");
-        // require(sent, "ETH Release Failed");
+        (bool sent,) = user.call{value: amount}("");
+        require(sent, "ETH Release Failed");
     }
 }

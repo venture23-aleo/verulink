@@ -5,8 +5,9 @@ import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {Ownable} from "../../common/Ownable.sol";
 import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract BlackListService is Ownable, IBlackListService, Initializable {
+contract BlackListService is Ownable, IBlackListService, Initializable, Upgradeable {
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
@@ -30,17 +31,21 @@ contract BlackListService is Ownable, IBlackListService, Initializable {
         usdt = _usdt;
     }
 
-    function addToBlackList(address account) external onlyOwner onlyProxy {
+    function _authorizeUpgrade(address) internal view override {
+        require(msg.sender == _owner_);
+    }
+
+    function addToBlackList(address account) external onlyOwner {
         emit BlackListAdded(account);
         blackLists[account] = true;
     }
 
-    function removeFromBlackList(address account) external onlyOwner onlyProxy {
+    function removeFromBlackList(address account) external onlyOwner {
         emit BlackListRemoved(account);
         delete blackLists[account];
     }
 
-    function isBlackListed(address account) public view override onlyProxy returns (bool) {
+    function isBlackListed(address account) public view override returns (bool) {
         return (blackLists[account] || 
             IIERC20(usdc).isBlacklisted(account) ||
             IIERC20(usdt).getBlackListStatus(account)

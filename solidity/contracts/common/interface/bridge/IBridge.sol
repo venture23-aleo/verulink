@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {PacketLibrary} from  "../../libraries/Lib.sol";
+import {PacketLibrary} from  "../../libraries/PacketLibrary.sol";
 
-interface IERC20TokenBridge {
+interface IBridge {
 
     event PacketDispatched(PacketLibrary.OutPacket packet);
     event PacketArrived(PacketLibrary.InPacket packet);

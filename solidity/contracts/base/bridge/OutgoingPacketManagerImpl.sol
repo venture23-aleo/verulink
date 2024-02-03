@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import "../../common/libraries/Lib.sol";
+import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 
-contract OutgoingPacketManagerImpl  {
+abstract contract OutgoingPacketManagerImpl  {
     using PacketLibrary for PacketLibrary.OutPacket;
 
     event PacketDispatched(PacketLibrary.OutPacket packet);
