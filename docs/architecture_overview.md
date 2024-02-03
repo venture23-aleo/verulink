@@ -243,7 +243,7 @@ Note that Attestors will pick up the packet only after certain duration after it
 7. Aleo contract checks threshold signature requirement and if it meets the requirement it mints the token for the user.
 
 #### Notes:
-1. The Ethereum that wants to lock assets (on Step 1) are checked against blacklisted addresses for OFAC compliance.
+1. The Ethereum user that wants to lock assets (on Step 1) are checked against blacklisted addresses for OFAC compliance.
 2. The address to mint is specified on the message itself. So anyone is able to call the mint method and the wrapped asset will be minted on the right Aleo address.
 3. Once minted, the message is marked as consumed on Bridge contract (on Aleo) and cannot be used again. This prevents double spending.
 
@@ -283,9 +283,9 @@ The platform being a stateful application, it is imperative that following measu
 
 ## Safeguarding Against Disaster
 To address disasters that may occur outside of the system itself following measures can be taken beforehand.
-- *Min Wait time on Signing Packets*: Attestor will only process packets that has been created some duration ago. For now we have discussed to move with 24 hours duation. This is done for addresses in the packets to come under chain-analysis radar so that attestor can tag packet as black/white.
+- *Min Wait time on Signing Packets*: Attestor will only process packets that has been created some duration ago. For now we have discussed to move with 24 hours duration. This is done for addresses in the packets to come under chain-analysis radar so that attestor can tag packet as black/white.
 - *Max Limits On Withdrawals*: Token specific limits will be defined on token service contract to disable withdrawal of large funds in a single transaction. Such withdrawals can only be completed by intervention from the council multisig.
-- *Min Limits On Transfer*: Since message delivery is being sponsored by attestors it opens up an abuse vector where user can transfer dust amounts to target chain to drain attestor of their gas fees. This can be checked by defining minimium transfer value for each token type.
+
 
 - *Immediate Blacklisting* : Maintain onchain blacklist of users so that malicious actors can be stopped abruptly.
 - *Pausability By Governance*: In case of any forseen threats or attacks, council multisig can pause bridge contracts and token contracts to protect user's funds.
