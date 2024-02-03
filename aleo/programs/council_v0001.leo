@@ -371,7 +371,6 @@ program council_v0001.aleo {
         new_threshold: u8
     }
 
-    // TODO: Change name to co_add_attestor
     transition tb_add_attestor(public id: u32, public new_attestor: address, new_threshold: u8) {
         let proposal: TbAddAttestor = TbAddAttestor {
             id,

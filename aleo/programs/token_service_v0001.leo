@@ -108,9 +108,6 @@ program token_service_v0001.aleo {
         public duration: u32,
         public threshold_no_limit: u128
     ) {
-        // TODO: 
-        // 1. handle limits - max amounts that can be withdrawn in given time
-        // 2. handle fees
         assert(max_transfer >= min_transfer);
         return then finalize(self.caller, token_address, token_connector, min_transfer, max_transfer, percentage, duration, threshold_no_limit);
     }
@@ -250,11 +247,6 @@ program token_service_v0001.aleo {
         // self.signer = tx.origin
         // self.caller = msg.sender
         assert_neq(self.signer, self.caller);
-
-        // TODO
-        // 1. Handle fees 
-        //   a. Percentage / Flat fee
-        //   b. Based on token being transferred / credits
 
         // call publish on bridge contract
         token_bridge_v0001.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, sender, receiver, amount);
