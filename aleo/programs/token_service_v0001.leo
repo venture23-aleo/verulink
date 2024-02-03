@@ -100,7 +100,7 @@ program token_service_v0001.aleo {
     //////////////////////////////////
 
     transition add_token_ts(
-        public token_id: address, 
+        public token_address: address, 
         public token_connector: address, 
         public min_transfer: u128, 
         public max_transfer: u128, 
@@ -112,12 +112,12 @@ program token_service_v0001.aleo {
         // 1. handle limits - max amounts that can be withdrawn in given time
         // 2. handle fees
         assert(max_transfer >= min_transfer);
-        return then finalize(self.caller, token_id, token_connector, min_transfer, max_transfer, percentage, duration, threshold_no_limit);
+        return then finalize(self.caller, token_address, token_connector, min_transfer, max_transfer, percentage, duration, threshold_no_limit);
     }
 
     finalize add_token_ts(
         from: address, 
-        token_id: address, 
+        token_address: address, 
         token_connector: address, 
         min_transfer: u128, 
         max_transfer: u128,
@@ -136,40 +136,40 @@ program token_service_v0001.aleo {
             threshold_no_limit
         };
 
-        Mapping::set(token_withdrawal_limits, token_id, withdrawal_limit);
+        Mapping::set(token_withdrawal_limits, token_address, withdrawal_limit);
 
-        Mapping::set(min_transfers, token_id, min_transfer);
-        Mapping::set(max_transfers, token_id, max_transfer);
+        Mapping::set(min_transfers, token_address, min_transfer);
+        Mapping::set(max_transfers, token_address, max_transfer);
         
-        Mapping::set(token_connectors, token_id, token_connector);
+        Mapping::set(token_connectors, token_address, token_connector);
     }
 
-    transition remove_token_ts(public token_id: address) {
-        return then finalize(self.caller, token_id);
+    transition remove_token_ts(public token_address: address) {
+        return then finalize(self.caller, token_address);
     }
 
-    finalize remove_token_ts(from: address, token_id: address) {
+    finalize remove_token_ts(from: address, token_address: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
-        assert(Mapping::contains(token_withdrawal_limits, token_id));
-        Mapping::remove(token_withdrawal_limits, token_id);
-        Mapping::remove(min_transfers, token_id);
-        Mapping::remove(token_connectors, token_id);
+        assert(Mapping::contains(token_withdrawal_limits, token_address));
+        Mapping::remove(token_withdrawal_limits, token_address);
+        Mapping::remove(min_transfers, token_address);
+        Mapping::remove(token_connectors, token_address);
     }
 
-    transition update_connector_ts(token_id: address, new_token_connector: address) { 
-        return then finalize(self.caller, token_id, new_token_connector);
+    transition update_connector_ts(token_address: address, new_token_connector: address) { 
+        return then finalize(self.caller, token_address, new_token_connector);
     }
 
-    finalize update_connector_ts(from: address, token_id: address, new_token_connector: address) {
+    finalize update_connector_ts(from: address, token_address: address, new_token_connector: address) {
         // If the token is not supported, this fails
-        let current_token_connector: address = Mapping::get(token_connectors, token_id);
+        let current_token_connector: address = Mapping::get(token_connectors, token_address);
         assert_eq(from, current_token_connector);
 
-        Mapping::set(token_connectors, token_id, new_token_connector);
+        Mapping::set(token_connectors, token_address, new_token_connector);
     }
 
 
@@ -177,34 +177,34 @@ program token_service_v0001.aleo {
     ///// Update Minimum Transfer ///////
     ////////////////////////////////////
 
-    transition update_min_transfer_ts(public token_id: address, min_transfer: u128) {
-        return then finalize(self.caller, token_id, min_transfer);
+    transition update_min_transfer_ts(public token_address: address, min_transfer: u128) {
+        return then finalize(self.caller, token_address, min_transfer);
     }
 
-    finalize update_min_transfer_ts(from: address, token_id: address, min_transfer: u128) {
+    finalize update_min_transfer_ts(from: address, token_address: address, min_transfer: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
-        Mapping::set(min_transfers, token_id, min_transfer);
+        Mapping::set(min_transfers, token_address, min_transfer);
     }
 
     /////////////////////////////////////
     ///// Update Maximum Transfer ///////
     ////////////////////////////////////
 
-    transition update_max_transfer_ts(public token_id: address, max_transfer: u128) {
-        return then finalize(self.caller, token_id, max_transfer);
+    transition update_max_transfer_ts(public token_address: address, max_transfer: u128) {
+        return then finalize(self.caller, token_address, max_transfer);
     }
 
-    finalize update_max_transfer_ts(from: address, token_id: address, max_transfer: u128) {
+    finalize update_max_transfer_ts(from: address, token_address: address, max_transfer: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
-        Mapping::set(max_transfers, token_id, max_transfer);
+        Mapping::set(max_transfers, token_address, max_transfer);
     }
 
 
@@ -213,12 +213,12 @@ program token_service_v0001.aleo {
     ///// Update Withdrawal Limit ///////
     /////////////////////////////////////
 
-    transition update_withdrawal_limit(public token_id: address, public percentage: u16, public duration: u32, public threshold_no_limit: u128) {
+    transition update_withdrawal_limit(public token_address: address, public percentage: u16, public duration: u32, public threshold_no_limit: u128) {
         assert(percentage <= HUNDRED_PERCENTAGE);
-        return then finalize(self.caller, token_id, percentage, duration, threshold_no_limit);
+        return then finalize(self.caller, token_address, percentage, duration, threshold_no_limit);
     }
 
-    finalize update_withdrawal_limit(from: address, token_id: address, percentage: u16, duration: u32, threshold_no_limit: u128) {
+    finalize update_withdrawal_limit(from: address, token_address: address, percentage: u16, duration: u32, threshold_no_limit: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TS, true);
@@ -229,7 +229,7 @@ program token_service_v0001.aleo {
             threshold_no_limit
         };
 
-        Mapping::set(token_withdrawal_limits, token_id, withdrawal_limit);
+        Mapping::set(token_withdrawal_limits, token_address, withdrawal_limit);
     }
 
     /////////////////////////////
@@ -237,7 +237,7 @@ program token_service_v0001.aleo {
     /////////////////////////////
 
     transition token_send(
-        public token_id: address, 
+        public token_address: address, 
         public sender: address, 
         public receiver: [u8; 32], 
         public amount: u128, 
@@ -259,7 +259,7 @@ program token_service_v0001.aleo {
         // call publish on bridge contract
         token_bridge_v0001.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, sender, receiver, amount);
 
-        return then finalize (self.caller, token_id, amount);
+        return then finalize (self.caller, token_address, amount);
     }
 
     finalize token_send(from: address, wrapped_addr: address, amount: u128) {
@@ -310,7 +310,7 @@ program token_service_v0001.aleo {
         public source_chain_id: u128, 
         public source_token_service_address: [u8; 32], 
         public source_token_address: [u8; 32], 
-        public token_id: address, 
+        public token_address: address, 
         public sender: [u8; 32], 
         public receiver: address, 
         public actual_receiver: address, 
@@ -332,7 +332,7 @@ program token_service_v0001.aleo {
         token_bridge_v0001.aleo/consume(
             source_chain_id, 
             source_token_service_address, 
-            token_id, sender, 
+            token_address, sender, 
             receiver, 
             actual_receiver, 
             amount, 
@@ -342,16 +342,16 @@ program token_service_v0001.aleo {
             signs
         );
 
-        return then finalize(self.caller, token_id, amount);
+        return then finalize(self.caller, token_address, amount);
     }
 
-    finalize token_receive(connector: address, token_id: address, amount: u128) {
-        let token_connector: address = Mapping::get(token_connectors, token_id);
+    finalize token_receive(connector: address, token_address: address, amount: u128) {
+        let token_connector: address = Mapping::get(token_connectors, token_address);
         assert_eq(token_connector, connector);
 
         // Increase the total supply
-        let current_supply: u128 = Mapping::get_or_use(total_supply, token_id, 0u128);
-        Mapping::set(total_supply, token_id, current_supply + amount);
+        let current_supply: u128 = Mapping::get_or_use(total_supply, token_address, 0u128);
+        Mapping::set(total_supply, token_address, current_supply + amount);
 
     }
 

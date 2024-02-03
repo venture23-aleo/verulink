@@ -680,7 +680,7 @@ program council_v0001.aleo {
 
     struct TsAddToken {
         id: u32,
-        token_id: address,
+        token_address: address,
         connector: address,
         min_transfer: u128,
         max_transfer: u128,
@@ -691,7 +691,7 @@ program council_v0001.aleo {
 
     transition ts_support_token(
         public id: u32, 
-        public token_id: address, 
+        public token_address: address, 
         public connector: address, 
         public min_transfer: u128, 
         public max_transfer: u128, 
@@ -701,7 +701,7 @@ program council_v0001.aleo {
     ) {
         let proposal: TsAddToken  = TsAddToken {
             id,
-            token_id,
+            token_address,
             connector,
             min_transfer,
             max_transfer,
@@ -712,7 +712,7 @@ program council_v0001.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/add_token_ts(token_id, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
+        token_service_v0001.aleo/add_token_ts(token_address, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
 
         return then finalize(proposal_hash);
     }
@@ -739,18 +739,18 @@ program council_v0001.aleo {
 
     struct TsRemoveToken {
         id: u32,
-        token_id: address,
+        token_address: address,
     }
 
-    transition ts_remove_token(public id: u32, public token_id: address) {
+    transition ts_remove_token(public id: u32, public token_address: address) {
         let proposal: TsRemoveToken  = TsRemoveToken {
             id,
-            token_id,
+            token_address,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/remove_token_ts(token_id);
+        token_service_v0001.aleo/remove_token_ts(token_address);
 
         return then finalize(proposal_hash);
     }
@@ -777,24 +777,24 @@ program council_v0001.aleo {
 
     struct TsUpdateMinTransfer {
         id: u32,
-        token_id: address,
+        token_address: address,
         min_transfer: u128,
     }
 
     transition ts_update_min_transfer(
         public id: u32, 
-        public token_id: address, 
+        public token_address: address, 
         public min_transfer: u128, 
     ) {
         let proposal: TsUpdateMinTransfer  = TsUpdateMinTransfer {
             id,
-            token_id,
+            token_address,
             min_transfer,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/update_min_transfer_ts(token_id, min_transfer);
+        token_service_v0001.aleo/update_min_transfer_ts(token_address, min_transfer);
 
         return then finalize(proposal_hash);
     }
@@ -821,24 +821,24 @@ program council_v0001.aleo {
 
     struct TsUpdateMaxTransfer {
         id: u32,
-        token_id: address,
+        token_address: address,
         max_transfer: u128,
     }
 
     transition ts_update_max_transfer(
         public id: u32, 
-        public token_id: address, 
+        public token_address: address, 
         public max_transfer: u128, 
     ) {
         let proposal: TsUpdateMaxTransfer  = TsUpdateMaxTransfer {
             id,
-            token_id,
+            token_address,
             max_transfer,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/update_max_transfer_ts(token_id, max_transfer);
+        token_service_v0001.aleo/update_max_transfer_ts(token_address, max_transfer);
 
         return then finalize(proposal_hash);
     }
@@ -866,7 +866,7 @@ program council_v0001.aleo {
 
     struct TsUpdateWithdrawalLimit {
         id: u32,
-        token_id: address,
+        token_address: address,
         percentage: u16,
         duration: u32,
         threshold_no_limit: u128
@@ -874,14 +874,14 @@ program council_v0001.aleo {
 
     transition ts_update_outgoing_percentage(
         public id: u32, 
-        public token_id: address, 
+        public token_address: address, 
         public percentage: u16, 
         public duration: u32,
         public threshold_no_limit: u128
     ) {
         let proposal: TsUpdateWithdrawalLimit  = TsUpdateWithdrawalLimit {
             id,
-            token_id,
+            token_address,
             percentage,
             duration,
             threshold_no_limit
@@ -889,7 +889,7 @@ program council_v0001.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0001.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
+        token_service_v0001.aleo/update_withdrawal_limit(token_address, percentage, duration, threshold_no_limit);
 
         return then finalize(proposal_hash);
     }
@@ -916,7 +916,7 @@ program council_v0001.aleo {
 
     struct HoldingRelease {
         id: u32,
-        token_id: address,
+        token_address: address,
         connector: address,
         receiver: address,
         amount: u128
@@ -924,13 +924,13 @@ program council_v0001.aleo {
 
     transition holding_release(
         public id: u32,
-        public token_id: address,
+        public token_address: address,
         public receiver: address,
         public amount: u128
     ) {
         let proposal: HoldingRelease  = HoldingRelease {
             id,
-            token_id,
+            token_address,
             connector: self.caller,
             receiver,
             amount
@@ -962,19 +962,19 @@ program council_v0001.aleo {
 
     struct ConnectorUpdate {
         id: u32,
-        token_id: address,
+        token_address: address,
         connector: address,
         new_connector: address
     }
 
     transition connector_update (
         public id: u32,
-        public token_id: address,
+        public token_address: address,
         public new_connector: address,
     ) {
         let proposal: ConnectorUpdate  = ConnectorUpdate {
             id,
-            token_id,
+            token_address,
             connector: self.caller,
             new_connector
         };
