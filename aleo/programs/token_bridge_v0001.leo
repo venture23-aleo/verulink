@@ -107,9 +107,10 @@ program token_bridge_v0001.aleo {
     }
 
     /// Stores the threshold and the total attestors
-    /// key = true : returns the threshold
-    /// key = false : returns the total attestors
-    mapping attestor_settings: bool => u8;
+    /// key = 1u8 : returns the threshold attestations for `InPacket`
+    /// key = 2u8 : returns the total attestors
+    /// key = 3u8 : returns 0u8 if the bridge is paused, 1u8 otherwise
+    mapping bridge_settings: u8 => u8;
 
     /// Stores the owner of this program
     /// The owner can be another program or wallet
@@ -159,9 +160,12 @@ program token_bridge_v0001.aleo {
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
-    const THRESHOLD_INDEX: bool = true;
-    const TOTAL_ATTESTORS_INDEX: bool = false;
+    const THRESHOLD_INDEX: u8 = 1u8;
+    const TOTAL_ATTESTORS_INDEX: u8 = 2u8;
+    const PAUSABILITY_INDEX: u8 = 3u8;
 
+    const PAUSED_VALUE: u8 = 0u8;
+    const UNPAUSED_VALUE: u8 = 1u8;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -194,10 +198,10 @@ program token_bridge_v0001.aleo {
 
     finalize initialize_tb(threshold: u8, initial_attestors: [address; 5], owner: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(attestor_settings, THRESHOLD_INDEX));
+        assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
-        Mapping::set(attestor_settings, THRESHOLD_INDEX, threshold);
-        Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, 5u8);
+        Mapping::set(bridge_settings, THRESHOLD_INDEX, threshold);
+        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, 5u8);
 
         // Set the initial attestors
         for i: u8 in 0u8..5u8 {
@@ -206,6 +210,9 @@ program token_bridge_v0001.aleo {
 
         // Set the owner
         Mapping::set(owner_TB, true, owner);
+
+        // Initialize the bridge as paused
+        Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
     }
 
     ////////////////////////////////
@@ -245,14 +252,14 @@ program token_bridge_v0001.aleo {
         let owner: address = Mapping::get(owner_TB, true);
         assert_eq(from, owner);
 
-        let current_threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
-        let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
+        let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
+        let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
         assert(new_threshold >= current_threshold && new_threshold <= total_attestors + 1u8);
 
         assert(!Mapping::contains(attestors, new_attestor));
         Mapping::set(attestors, new_attestor, true);
-        Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
-        Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, total_attestors + 1u8);
+        Mapping::set(bridge_settings, THRESHOLD_INDEX, new_threshold);
+        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, total_attestors + 1u8);
     }
 
     /// Remove an existing attestor from the bridge program
@@ -267,16 +274,16 @@ program token_bridge_v0001.aleo {
         let owner: address = Mapping::get(owner_TB, true);
         assert_eq(from, owner);
 
-        let current_threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
-        let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
+        let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
+        let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
         assert(new_threshold >= 1u8 && new_threshold < total_attestors );
         assert(total_attestors >= 2u8);
 
         // If attestor does not exist, this is expected to fail
         assert(Mapping::contains(attestors, attestor));
         Mapping::remove(attestors, attestor);
-        Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
-        Mapping::set(attestor_settings, TOTAL_ATTESTORS_INDEX, total_attestors - 1u8);
+        Mapping::set(bridge_settings, THRESHOLD_INDEX, new_threshold);
+        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, total_attestors - 1u8);
     }
 
     /// Update attestor key to a new address
@@ -309,11 +316,11 @@ program token_bridge_v0001.aleo {
         let owner: address = Mapping::get(owner_TB, true);
         assert_eq(from, owner);
 
-        let total_attestors: u8 = Mapping::get(attestor_settings, TOTAL_ATTESTORS_INDEX);
+        let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
         assert(new_threshold >= 1u8 && new_threshold <= total_attestors);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(attestor_settings, THRESHOLD_INDEX, new_threshold);
+        Mapping::set(bridge_settings, THRESHOLD_INDEX, new_threshold);
     }
 
     //////////////////////////////
@@ -389,6 +396,41 @@ program token_bridge_v0001.aleo {
         Mapping::remove(supported_services, service);
     }
 
+    //////////////////////////////////
+    //// Pause / Unpause Bridge //////
+    //////////////////////////////////
+
+    /// Pauses the bridge
+    /// There can be no transfers when the bridge is paused
+    transition pause_tb() {
+        return then finalize(self.caller);
+    }
+
+    finalize pause_tb(from: address) {
+        // Get the owner address
+        // If program not initialized, this fails
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
+
+        Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
+    }
+
+    /// Unpauses the bridge
+    /// There can be transfers only when the bridge is unpaused
+    transition unpause_tb() {
+        return then finalize(self.caller);
+    }
+
+    finalize unpause_tb(from: address) {
+        // Get the owner address
+        // If program not initialized, this fails
+        let owner: address = Mapping::get(owner_TB, true);
+        assert_eq(from, owner);
+
+        Mapping::set(bridge_settings, PAUSABILITY_INDEX, UNPAUSED_VALUE);
+    }
+
+
     /// Publishes a message to be picked up by attestors to forward to the destination chain.
     /// This transition must be called from one of the service supported by the bridge.
     ///
@@ -443,6 +485,9 @@ program token_bridge_v0001.aleo {
         receiver: [u8; 32], 
         amount: u128
     ) {
+        // Assert that the bridge is unpaused
+        assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
+
         // Assert that the packet is being sent to supported chain.
         assert(Mapping::get(supported_chains, destination_chain_id));
 
@@ -546,6 +591,9 @@ program token_bridge_v0001.aleo {
         screening_passed: bool, 
         packet_attestor_keys: [field; 5]
     ) {
+
+        // Assert that the bridge is unpaused
+        assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
 
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, source_chain_id));
@@ -669,6 +717,9 @@ program token_bridge_v0001.aleo {
         packet_attestor_keys: [field; 5], 
         screening_passed: bool
     ) {
+        // Assert that the bridge is unpaused
+        assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
+
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, chain_id));
 
@@ -690,7 +741,7 @@ program token_bridge_v0001.aleo {
 
         // Get the threshold
         // If bridge is not initialized, this should fail
-        let threshold: u8 = Mapping::get(attestor_settings, THRESHOLD_INDEX);
+        let threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
 
         // Ensure enough attestation for the packet
         let packet_attestation: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8) + valid_signs;

@@ -635,6 +635,81 @@ program council_v0001.aleo {
 
     }
 
+    //////////////////////////////
+    /////// Bridge: Pause ////////
+    //////////////////////////////
+
+    struct TbPause {
+        id: u32,
+    }
+
+    transition tb_pause(public id: u32) {
+        let proposal: TbPause = TbPause {
+            id,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge_v0001.aleo/pause_tb();
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize tb_pause(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+
+    }
+
+    //////////////////////////////
+    /////// Bridge: Unpause ////////
+    //////////////////////////////
+
+    struct TbUnpause {
+        id: u32,
+    }
+
+    transition tb_unpause(public id: u32) {
+        let proposal: TbUnpause = TbUnpause {
+            id,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_bridge_v0001.aleo/unpause_tb();
+
+        return then finalize(proposal_hash);
+    }
+
+    finalize tb_unpause(proposal_hash: field) {
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        // Get the votes for the proposal
+        let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+
+    }
+
+
     //////////////////////////////////////////////
     /////// Token Service: Transfer Ownership ////
     //////////////////////////////////////////////

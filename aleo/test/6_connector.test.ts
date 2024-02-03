@@ -40,6 +40,13 @@ const wusdcConnector = new Wusdc_connector_v0001Contract({ mode: "execute" });
 
 const TIMEOUT = 100_000; // 100 seconds
 
+const BRIDGE_THRESHOLD_INDEX = 1;
+const BRIDGE_TOTAL_ATTESTORS_INDEX = 2;
+const BRIDGE_PAUSABILITY_INDEX = 3;
+
+const PAUSED_VALUE = 0;
+const UNPAUSED_VALUE = 1;
+
 describe("Token Connector", () => {
   describe("Deployment", () => {
     test(
@@ -105,7 +112,7 @@ describe("Token Connector", () => {
         const owner = aleoUser1;
         let isBridgeInitialized = true;
         try {
-          threshold = await bridge.attestor_settings(true);
+          threshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX);
         } catch (err) {
           isBridgeInitialized = false;
         }
@@ -232,6 +239,26 @@ describe("Token Connector", () => {
       },
       TIMEOUT
     );
+
+    test(
+      "Token Bridge: Unpause",
+      async () => {
+        let isPaused = true;
+        try {
+          let value = await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX);
+          isPaused = value == PAUSED_VALUE
+        } catch (err) {
+          isPaused = false;
+        }
+
+        if (!isPaused) {
+          const unpauseTx = await bridge.unpause_tb();
+          // @ts-ignore
+          await unpauseTx.wait();
+        }
+      },
+      TIMEOUT
+    );
   });
 
   describe("Happy Path", () => {
@@ -271,6 +298,7 @@ describe("Token Connector", () => {
       expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
       expect(await wusdcToken.token_owner(true)).toBe(wusdcConnector.address());
       expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnector.address());
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(UNPAUSED_VALUE);
     });
 
     test(
@@ -547,7 +575,7 @@ describe("Token Connector", () => {
         let proposalId = parseInt( (await council.proposals(TOTAL_PROPOSALS_INDEX)).toString()) + 1
         const releaseFundProposal: HoldingRelease = {
           id: proposalId,
-          token_id: wusdcToken.address(),
+          token_address: wusdcToken.address(),
           connector: wusdcConnector.address(),
           receiver: aleoUser1,
           amount: initialHeldAmount,
