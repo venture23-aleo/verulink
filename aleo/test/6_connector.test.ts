@@ -98,12 +98,7 @@ describe("Token Connector", () => {
       async () => {
         let threshold = 1;
         const owner = aleoUser1;
-        let isBridgeInitialized = true;
-        try {
-          threshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX);
-        } catch (err) {
-          isBridgeInitialized = false;
-        }
+        const isBridgeInitialized = (await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX, 0)) != 0;
 
         if (!isBridgeInitialized) {
           const initializeTx = await bridge.initialize_tb(
@@ -122,13 +117,7 @@ describe("Token Connector", () => {
       "Initialize Token Service",
       async () => {
 
-        let isTokenServiceInitialized = true;
-        try {
-          const owner = await tokenService.owner_TS(true);
-        } catch (err) {
-          isTokenServiceInitialized = false;
-        }
-
+        const isTokenServiceInitialized = (await tokenService.owner_TS(true, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isTokenServiceInitialized) {
           const initializeTx = await tokenService.initialize_ts(
             aleoUser1 // owner
@@ -143,13 +132,7 @@ describe("Token Connector", () => {
     test(
       "Token Bridge: Enable Ethereum Chain",
       async () => {
-        let isEthSupported = true;
-        try {
-          isEthSupported = await bridge.supported_chains(ethChainId);
-        } catch (err) {
-          isEthSupported = false;
-        }
-
+        const isEthSupported = (await bridge.supported_chains(ethChainId, false));
         if (!isEthSupported) {
           const addEthChainTx = await bridge.add_chain_tb(ethChainId);
           // @ts-ignore
@@ -162,13 +145,7 @@ describe("Token Connector", () => {
     test(
       "Initialize WUSDC",
       async () => {
-        let isTokenInitialized = true;
-        try {
-          const owner = await wusdcToken.token_owner(true);
-        } catch (err) {
-          isTokenInitialized = false;
-        }
-
+        let isTokenInitialized = (await wusdcToken.token_owner(true, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isTokenInitialized) {
           const initializeTx = await wusdcConnector.initialize_wusdc();
           // @ts-ignore
@@ -181,15 +158,7 @@ describe("Token Connector", () => {
     test(
       "Token Service: Add New Token",
       async () => {
-        let isWusdcSupported = true;
-        try {
-          const wusdcConnector = await tokenService.token_connectors(
-            wusdcToken.address()
-          );
-        } catch (err) {
-          isWusdcSupported = false;
-        }
-
+        const isWusdcSupported = (await tokenService.token_connectors(wusdcToken.address(), ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isWusdcSupported) {
           const supportWusdcTx = await tokenService.add_token_ts(
             wusdcToken.address(),
@@ -210,14 +179,8 @@ describe("Token Connector", () => {
     test(
       "Token Bridge: Enable Service",
       async () => {
-        let isServiceEnabled = true;
-        try {
-          isServiceEnabled = await bridge.supported_services(tokenService.address());
-        } catch (err) {
-          isServiceEnabled = false;
-        }
-
-        if (!isServiceEnabled) {
+        const isTokenServiceEnabled = await bridge.supported_services(tokenService.address(), false);
+        if (!isTokenServiceEnabled) {
           const supportServiceTx = await bridge.add_service_tb(
             tokenService.address()
           );
@@ -231,14 +194,7 @@ describe("Token Connector", () => {
     test(
       "Token Bridge: Unpause",
       async () => {
-        let isPaused = true;
-        try {
-          let value = await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX);
-          isPaused = value == BRIDGE_PAUSED_VALUE
-        } catch (err) {
-          isPaused = false;
-        }
-
+        const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
         if (!isPaused) {
           const unpauseTx = await bridge.unpause_tb();
           // @ts-ignore
@@ -255,9 +211,6 @@ describe("Token Connector", () => {
     );
     const incomingAmount = BigInt(10000);
     const incomingHeight = 10;
-    let initialBalance = BigInt(0);
-    let initialSupply = BigInt(0);
-    let outgoingSequence = BigInt(1);
     let outgoingAmount = BigInt(101);
 
     // Create a packet
@@ -292,17 +245,8 @@ describe("Token Connector", () => {
     test(
       "Receive wUSDC",
       async () => {
-        try {
-          initialBalance = await wusdcToken.account(aleoUser1);
-        } catch (e) {
-          initialBalance = BigInt(0);
-        }
-        try {
-          initialSupply = await tokenService.total_supply(wusdcToken.address());
-        } catch (e) {
-          initialSupply = BigInt(0);
-        }
-
+        const initialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+        const initialSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
         const signature = signPacket(packet, true, bridge.config.privateKey);
 
         const signers = [
@@ -345,14 +289,8 @@ describe("Token Connector", () => {
       "Transfer wUSDC",
       async () => {
         const initialBalance = await wusdcToken.account(aleoUser1);
-
-        try {
-          outgoingSequence = await bridge.sequences(ethChainId);
-        } catch (e) {
-          outgoingSequence = BigInt(1);
-        }
-
-        initialSupply = await tokenService.total_supply(wusdcToken.address());
+        const outgoingSequence = await bridge.sequences(ethChainId, BigInt(1));
+        const initialSupply = await tokenService.total_supply(wusdcToken.address());
 
         const tx = await wusdcConnector.wusdc_send(
           evm2AleoArr(ethUser),
@@ -430,12 +368,7 @@ describe("Token Connector", () => {
     test(
       "Initialize Council",
       async () => {
-        let isCouncilInitialized = true;
-        try {
-          const threshold = await council.settings(COUNCIL_THRESHOLD_INDEX)
-        } catch (err) {
-          isCouncilInitialized = false;
-        }
+        let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
 
         if (!isCouncilInitialized) {
           const initializeTx = await council.initialize(
@@ -453,25 +386,9 @@ describe("Token Connector", () => {
     test(
       "Receive wUSDC must collect the amount in holding program",
       async () => {
-        try {
-          userInitialBalance = await wusdcToken.account(aleoUser1);
-        } catch (e) {
-          userInitialBalance = BigInt(0);
-        }
-
-        try {
-          holdingProgramInitialBalance = await wusdcToken.account(
-            wusdcHolding.address()
-          );
-        } catch (e) {
-          holdingProgramInitialBalance = BigInt(0);
-        }
-
-        try {
-          initialHeldAmount = await wusdcHolding.holdings(aleoUser1);
-        } catch (e) {
-          initialHeldAmount = BigInt(0);
-        }
+        const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+        const holdingProgramInitialBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0))
+        const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
 
         const signature = signPacket(packet, false, bridge.config.privateKey);
 
@@ -501,37 +418,14 @@ describe("Token Connector", () => {
         // @ts-ignore
         await tx.wait();
 
-        let userFinalBalance = BigInt(0);
-        let holdingProgramFinalBalance = BigInt(0);
-        let finalHeldAmount = BigInt(0);
+        const userFinalBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+        const holdingProgramFinalBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
+        const finalHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
 
-        try {
-          userFinalBalance = await wusdcToken.account(aleoUser1);
-        } catch (e) {
-          userFinalBalance = BigInt(0);
-        }
-
-        try {
-          holdingProgramFinalBalance = await wusdcToken.account(
-            wusdcHolding.address()
-          );
-        } catch (e) {
-          holdingProgramFinalBalance = BigInt(0);
-        }
-
-        try {
-          finalHeldAmount = await wusdcHolding.holdings(aleoUser1);
-        } catch (e) {
-          finalHeldAmount = BigInt(0);
-        }
-
-        console.log(`User: ${userInitialBalance} -> ${userFinalBalance}`)
         expect(userFinalBalance).toBe(userInitialBalance);
-        console.log(`Holding: ${holdingProgramInitialBalance} -> ${holdingProgramFinalBalance}`)
         expect(holdingProgramFinalBalance).toBe(
           holdingProgramInitialBalance + incomingAmount
         );
-        console.log(`Held Amount: ${initialHeldAmount} -> ${finalHeldAmount}`)
         expect(finalHeldAmount).toBe(initialHeldAmount + incomingAmount);
       },
       TIMEOUT
@@ -540,25 +434,10 @@ describe("Token Connector", () => {
     test(
       "Release held amount",
       async () => {
-        try {
-          userInitialBalance = await wusdcToken.account(aleoUser1);
-        } catch (e) {
-          userInitialBalance = BigInt(0);
-        }
 
-        try {
-          holdingProgramInitialBalance = await wusdcToken.account(
-            wusdcHolding.address()
-          );
-        } catch (e) {
-          holdingProgramInitialBalance = BigInt(0);
-        }
-
-        try {
-          initialHeldAmount = await wusdcHolding.holdings(aleoUser1);
-        } catch (e) {
-          initialHeldAmount = BigInt(0);
-        }
+        const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+        const holdingProgramInitialBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
+        const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
 
         let proposalId = parseInt( (await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1
         const releaseFundProposal: HoldingRelease = {
@@ -585,37 +464,16 @@ describe("Token Connector", () => {
         // @ts-ignore
         await tx.wait();
 
-        let userFinalBalance = BigInt(0);
-        let holdingProgramFinalBalance = BigInt(0);
-        let finalHeldAmount = BigInt(0);
+        const userFinalBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+        const holdingProgramFinalBalance = await wusdcToken.account(
+          wusdcHolding.address(), BigInt(0)
+        );
+        const finalHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
 
-        try {
-          userFinalBalance = await wusdcToken.account(aleoUser1);
-        } catch (e) {
-          userFinalBalance = BigInt(0);
-        }
-
-        try {
-          holdingProgramFinalBalance = await wusdcToken.account(
-            wusdcHolding.address()
-          );
-        } catch (e) {
-          holdingProgramFinalBalance = BigInt(0);
-        }
-
-        try {
-          finalHeldAmount = await wusdcHolding.holdings(aleoUser1);
-        } catch (e) {
-          finalHeldAmount = BigInt(0);
-        }
-
-        console.log(`User: ${userInitialBalance} -> ${userFinalBalance}`)
         expect(userFinalBalance).toBe(userInitialBalance + initialHeldAmount);
-        console.log(`Holding: ${holdingProgramInitialBalance} -> ${holdingProgramFinalBalance}`)
         expect(holdingProgramFinalBalance).toBe(
           holdingProgramInitialBalance - initialHeldAmount
         );
-        console.log(`Held Amount: ${initialHeldAmount} -> ${finalHeldAmount}`)
         expect(finalHeldAmount).toBe(BigInt(0));
       },
       TIMEOUT * 2
