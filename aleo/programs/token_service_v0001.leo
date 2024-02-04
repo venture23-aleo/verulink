@@ -152,9 +152,10 @@ program token_service_v0001.aleo {
         assert_eq(from, owner);
 
         assert(Mapping::contains(token_withdrawal_limits, token_address));
+        Mapping::remove(token_connectors, token_address);
         Mapping::remove(token_withdrawal_limits, token_address);
         Mapping::remove(min_transfers, token_address);
-        Mapping::remove(token_connectors, token_address);
+        Mapping::remove(max_transfers, token_address);
     }
 
     transition update_connector_ts(token_address: address, new_token_connector: address) { 
