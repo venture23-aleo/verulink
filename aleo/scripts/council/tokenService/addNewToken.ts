@@ -1,9 +1,9 @@
-import { ProposalVote, TbAddChain, TsAddToken } from "../../../artifacts/js/types";
+import { TsAddToken } from "../../../artifacts/js/types";
 import { hashStruct } from "../../../utils/hash";
 
 import * as js2leo from '../../../artifacts/js/js2leo';
 import { Council_v0001Contract } from "../../../artifacts/js/council_v0001";
-import { ALEO_ZERO_ADDRESS, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { Token_service_v0001Contract } from "../../../artifacts/js/token_service_v0001";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 

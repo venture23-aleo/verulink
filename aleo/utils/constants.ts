@@ -4,7 +4,7 @@ export const COUNCIL_TOTAL_PROPOSALS_INDEX = 0;
 
 export const BRIDGE_THRESHOLD_INDEX = 1;
 export const BRIDGE_TOTAL_ATTESTORS_INDEX = 2;
-export const BRIDGE_PAUSABILITY_INDEX = 1;
+export const BRIDGE_PAUSABILITY_INDEX = 3;
 
 export const BRIDGE_PAUSED_VALUE = 0;
 export const BRIDGE_UNPAUSED_VALUE = 1;

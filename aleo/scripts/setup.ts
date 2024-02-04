@@ -4,6 +4,7 @@ import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v
 import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
+import { execUnpause, proposeUnpause } from "./council/bridge/unpause";
 import { execAddToken, proposeAddToken } from "./council/tokenService/addNewToken";
 
 import { deployMainPrograms } from "./deployment/mainPrograms";
@@ -82,6 +83,10 @@ const setup = async () => {
     tokenService.address()
   );
   await execAddService(enableTokenServiceProposalId, tokenService.address());
+
+  // Token Bridge: Unpause
+  const unpauseBridgeProposalId = await proposeUnpause();
+  await execUnpause(unpauseBridgeProposalId);
 
 };
 

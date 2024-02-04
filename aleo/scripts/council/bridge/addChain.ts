@@ -1,10 +1,10 @@
-import { ProposalVote, TbAddChain } from "../../../artifacts/js/types";
+import { TbAddChain } from "../../../artifacts/js/types";
 import { hashStruct } from "../../../utils/hash";
 
 import * as js2leo from '../../../artifacts/js/js2leo';
 import { Token_bridge_v0001Contract } from "../../../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../../../artifacts/js/council_v0001";
-import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 
 const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
