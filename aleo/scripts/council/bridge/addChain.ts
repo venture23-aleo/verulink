@@ -9,16 +9,16 @@ import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, COUNCIL_TOTAL_PRO
 const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0001Contract({mode: "execute", priorityFee: 10_000});
 
-const proposeAddChain = async (newChainId: bigint) => {
+export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
 
-  console.log(`Proposing to add ${newChainId}`)
-  const isChainIdSupported = await bridge.supported_chains(newChainId);
+  console.log(`👍 Proposing to add chainId: ${newChainId}`)
+  const isChainIdSupported = await bridge.supported_chains(newChainId, false);
   if (isChainIdSupported) {
     throw Error(`ChainId ${newChainId} is already supported!`);
   }
 
   const voter = council.getAccounts()[0];
-  const isMember = await council.members(voter);
+  const isMember = await council.members(voter, false);
   if (!isMember) {
     throw Error(`${voter} is not a valid council member`);
   }
@@ -40,12 +40,13 @@ const proposeAddChain = async (newChainId: bigint) => {
   const totalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX);
   console.log(`Votes: ${addChainVotes} / ${totalAttestors} total votes`);
   console.log(`Votes: ${addChainVotes} / ${threshold} for execution`);
+  return proposalId
 };
 
-const voteAddChain = async (proposalId: number, newChainId: bigint) => {
+export const voteAddChain = async (proposalId: number, newChainId: bigint) => {
 
-  console.log(`Voting to add ${newChainId}`)
-  const isChainIdSupported = await bridge.supported_chains(newChainId);
+  console.log(`👍 Voting to add chainId: ${newChainId}`)
+  const isChainIdSupported = await bridge.supported_chains(newChainId, false);
   if (isChainIdSupported) {
     throw Error(`ChainId ${newChainId} is already supported!`);
   }
@@ -57,7 +58,7 @@ const voteAddChain = async (proposalId: number, newChainId: bigint) => {
   const tbAddChainProposalHash = hashStruct(js2leo.getTbAddChainLeo(tbAddChain)); 
 
   const voter = council.getAccounts()[0];
-  const isMember = await council.members(voter);
+  const isMember = await council.members(voter, false);
   if (!isMember) {
     throw Error(`${voter} is not a valid council member`);
   }
@@ -86,12 +87,17 @@ const voteAddChain = async (proposalId: number, newChainId: bigint) => {
 
 }
 
-const execAddChain = async (proposalId: number, newChainId: bigint) => {
+export const execAddChain = async (proposalId: number, newChainId: bigint) => {
 
   console.log(`Adding chainId ${newChainId}`)
-  let isChainIdSupported = await bridge.supported_chains(newChainId);
+  let isChainIdSupported = await bridge.supported_chains(newChainId, false);
   if (isChainIdSupported) {
     throw Error(`ChainId ${newChainId} is already supported!`);
+  }
+
+  const bridgeOwner = await bridge.owner_TB(true);
+  if (bridgeOwner != council.address()) {
+    throw Error("Council is not the owner of bridge program");
   }
 
   const tbAddChain: TbAddChain = {
@@ -99,7 +105,12 @@ const execAddChain = async (proposalId: number, newChainId: bigint) => {
     chain_id: newChainId
   };
   const tbAddChainProposalHash = hashStruct(js2leo.getTbAddChainLeo(tbAddChain)); 
-  const addChainVotes = await council.proposal_vote_counts(tbAddChainProposalHash);
+
+  const addChainVotes = await council.proposal_vote_counts(tbAddChainProposalHash, 0);
+  if (addChainVotes == 0) {
+    throw Error("Proposal not found");
+  }
+
   const threshold = await council.settings(COUNCIL_THRESHOLD_INDEX);
 
   const canExecuteProposal = addChainVotes >= threshold;
@@ -108,7 +119,7 @@ const execAddChain = async (proposalId: number, newChainId: bigint) => {
     throw Error(`Threshold not met. Need at least ${threshold} - ${addChainVotes} more votes.`);
   }
 
-  const proposalAlreadyExecuted = await council.proposal_executed(tbAddChainProposalHash);
+  const proposalAlreadyExecuted = await council.proposal_executed(tbAddChainProposalHash, false);
   if (proposalAlreadyExecuted) {
     throw Error(`Proposal has already been executed`);
   }
@@ -126,5 +137,6 @@ const execAddChain = async (proposalId: number, newChainId: bigint) => {
     throw Error('Something went wrong!');
   }
 
+  console.log(` ✅ ChainId: ${newChainId} added successfully.`)
 
 }

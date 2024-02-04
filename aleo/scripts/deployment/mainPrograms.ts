@@ -2,32 +2,37 @@ import { Token_bridge_v0001Contract } from "../../artifacts/js/token_bridge_v000
 import { Token_service_v0001Contract } from "../../artifacts/js/token_service_v0001";
 import { Council_v0001Contract } from "../../artifacts/js/council_v0001";
 
-const deployMainPrograms = async () => {
+export const deployMainPrograms = async (initialAttestors: string[], initialCouncilMembers: string[], initialAttestorThreshold: number, initialCouncilThreshold: number) => {
 
   const bridge = new Token_bridge_v0001Contract({mode: "execute", priorityFee: 10_000});
   const tokenService = new Token_service_v0001Contract({mode: "execute", priorityFee: 10_000});
   const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
 
-  let tx
-
   // Deploy token bridge
-  tx = await bridge.deploy(); // 19_840_000
-  await tx.wait()
+  const bridgeDeployTx = await bridge.deploy(); // 19_840_000
+  await bridgeDeployTx.wait()
 
   // Deploy token service
-  tx = await tokenService.deploy(); // 14_051_000
-  await tx.wait();
+  const tokenServiceDeployTx = await tokenService.deploy(); // 14_051_000
+  await tokenServiceDeployTx.wait();
 
   // Deploy council
-  tx = await council.deploy(); // 29_917_000
-  await tx.wait();
+  const councilDeployTx = await council.deploy(); // 29_917_000
+  await councilDeployTx.wait();
 
-  // TODO: Initialize bridge
+  // Initialize council
+  const initializeCouncilTx = await council.initialize(initialCouncilMembers, initialCouncilThreshold);
+  // @ts-ignore
+  await initializeCouncilTx.wait()
+  
 
-  // TODO: Initialize token service
+  const initializeBridgeTx = await bridge.initialize_tb(initialAttestorThreshold, initialAttestors, council.address());
+  // @ts-ignore
+  await initializeBridgeTx.wait()
 
-  // TODO: Initialize council
+  // Initialize token service
+  const initializeTokenServiceTx = await tokenService.initialize_ts(council.address());
+  // @ts-ignore
+  await initializeTokenServiceTx.wait();
   
 };
-
-deployMainPrograms();
