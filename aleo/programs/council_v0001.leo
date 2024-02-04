@@ -565,7 +565,7 @@ program council_v0001.aleo {
         service: address
     }
 
-    transition tb_enable_service(public id: u32, public service: address) {
+    transition tb_add_service(public id: u32, public service: address) {
         let proposal: TbAddService = TbAddService {
             id,
             service
@@ -578,7 +578,7 @@ program council_v0001.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize tb_enable_service(proposal_hash: field) {
+    finalize tb_add_service(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -604,7 +604,7 @@ program council_v0001.aleo {
         service: address
     }
 
-    transition tb_disable_service(public id: u32, public service: address) {
+    transition tb_remove_service(public id: u32, public service: address) {
         let proposal: TbAddService = TbAddService {
             id,
             service
@@ -617,7 +617,7 @@ program council_v0001.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize tb_disable_service(proposal_hash: field) {
+    finalize tb_remove_service(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
