@@ -195,7 +195,7 @@ describe("Token Connector", () => {
       "Token Bridge: Unpause",
       async () => {
         const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
-        if (!isPaused) {
+        if (isPaused) {
           const unpauseTx = await bridge.unpause_tb();
           // @ts-ignore
           await unpauseTx.wait();
@@ -240,6 +240,8 @@ describe("Token Connector", () => {
       expect(await wusdcToken.token_owner(true)).toBe(wusdcConnector.address());
       expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnector.address());
       expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+      expect(await bridge.supported_chains(ethChainId)).toBe(true);
+      expect(await bridge.supported_services(tokenService.address())).toBe(true);
     });
 
     test(
@@ -333,9 +335,6 @@ describe("Token Connector", () => {
     );
     const incomingAmount = BigInt(10000);
     const incomingHeight = 10;
-    let userInitialBalance = BigInt(0);
-    let holdingProgramInitialBalance = BigInt(0);
-    let initialHeldAmount = BigInt(0);
 
     // Create a packet
     const packet: InPacket = {
@@ -380,8 +379,6 @@ describe("Token Connector", () => {
       },
       TIMEOUT
     );
-
-
 
     test(
       "Receive wUSDC must collect the amount in holding program",

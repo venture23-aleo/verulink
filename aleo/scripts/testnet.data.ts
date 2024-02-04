@@ -1,7 +1,7 @@
 import { encodeNetworkChainId } from "../utils/chainId";
 
 const sepoliaChainId = 11155111
-export const ethChainId = encodeNetworkChainId("eth", 1);
+export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 export const aleoChainId = encodeNetworkChainId("aleo", 3);
 
 // USDC Contract Address on Ethereum
