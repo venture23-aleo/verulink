@@ -213,7 +213,7 @@ Note that Attestors will pick up the packet only after certain duration after it
 
  Each attestor entity will be running their own full node of the involved chains and listen for incoming messages. Attestors do not have knowledge of other attestors in the network and are concerned only with verifying messages it has seen in the network. It will follow the following steps to make sure that the messages are delivered infallibly.
 
-![Attestor Workflow](images/attestor.png)
+![Attestor Workflow](images/attestorArch.png)
 
 #### Workflow Steps
  - Listen/Poll for new packets from source chain contract.
@@ -227,7 +227,7 @@ Note that Attestors will pick up the packet only after certain duration after it
 ![Bridge](images/bridge.png)
 
 #### Architecture Overview
-![Architecture](images/arch.jpg)
+![Architecture](images/bridgeArch.png)
 
 
 
