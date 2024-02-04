@@ -1,2 +1,2 @@
 # aleo-bridge
-Aleo and Ethereum Bridge
+Aleo and Ethereum Bridge.
