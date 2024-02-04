@@ -763,7 +763,7 @@ program council_v0001.aleo {
         max_no_cap: u128
     }
 
-    transition ts_support_token(
+    transition ts_add_token(
         public id: u32, 
         public token_address: address, 
         public connector: address, 
@@ -791,7 +791,7 @@ program council_v0001.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize ts_support_token(proposal_hash: field) {
+    finalize ts_add_token(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
