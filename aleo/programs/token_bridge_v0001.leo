@@ -20,67 +20,69 @@ program token_bridge_v0001.aleo {
         addr: [u8; 32]
     }
 
-    struct MsgTokenReceive {
-        // Program Address of the wrapped asset on Aleo; Ex: wUSDC
-        token: address,
-        // Address of the sender on the origin chain
-        // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
-        // For EVM Chains, 20 bytes is formated as following:
-        // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
-        sender: [u8; 32],
-        // Address of the receiver on Aleo
-        receiver: address,
-        // Amount to mint on Aleo
-        amount: u128
-    }
-
-    struct MsgTokenSend {
+    struct OutTokenMessage {
+        // Address of the sender on this chain
+        sender_address: address,
         // Contract Address of the Asset on origin chain; Ex: USDC on Ethereum
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
         // For EVM Chains, 20 bytes is formated as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
-        token: [u8; 32],
-        // Address of the sender on this chain
-        sender: address,
+        dest_token_address: [u8; 32],
+        // Amount to unlock on origin chain
+        amount: u128
         // Address of the receiver on origin chain
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
         // For EVM Chains, 20 bytes is formated as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
-        receiver: [u8; 32],
-        // Amount to unlock on origin chain
-        amount: u128
+        receiver_address: [u8; 32],
     }
 
+
+    struct InTokenMessage {
+        // Address of the sender on the origin chain
+        // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+        // For EVM Chains, 20 bytes is formated as following:
+        // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
+        sender_address: [u8; 32],
+        // Program Address of the wrapped asset on Aleo; Ex: wUSDC
+        dest_token_address: address,
+        // Amount to mint on Aleo
+        amount: u128
+        // Address of the receiver on Aleo
+        receiver_address: address,
+    }
+
+
+    struct OutPacket {
+        // Packet versioning for future enhancements or changes
+        version: u8,
+        // Service Program where the packet originated
+        source: AleoProgram,
+        // Service Contract where the packet should be consumed
+        destination: ForeignContract,
+        // Sequence no of the packet for destination chain
+        sequence: u64,
+        // Hash of the message. Message can be found in service program
+        message: OutTokenMessage,
+        // Height where the packet is published
+        height: u32
+    }
 
     struct InPacket {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for this chain on source chain
-        sequence: u64,
-        // Service Contract where the packet originated
         source: ForeignContract,
         // Destination Program where the packet should be consumed
         destination: AleoProgram,
         // Full message token
-        message: MsgTokenReceive,
+        sequence: u64,
+        // Service Contract where the packet originated
+        message: InTokenMessage,
         // Height on the source chain where the packet originated
         height: u32
     }
 
-    struct OutPacket {
-        // Packet versioning for future enhancements or changes
-        version: u8,
-        // Sequence no of the packet for destination chain
-        sequence: u64,
-        // Service Program where the packet originated
-        source: AleoProgram,
-        // Service Contract where the packet should be consumed
-        destination: ForeignContract,
-        // Hash of the message. Message can be found in service program
-        message: MsgTokenSend,
-        // Height where the packet is published
-        height: u32
-    }
 
     struct PacketId {
         // Chain Id where the packet originated
@@ -480,9 +482,9 @@ program token_bridge_v0001.aleo {
         source_service_program: address, 
         destination_chain_id: u128, 
         destination_service_contract: [u8; 32], 
-        token: [u8;32], 
-        sender: address, 
-        receiver: [u8; 32], 
+        dest_token_address: [u8;32], 
+        sender_address: address, 
+        receiver_address: [u8; 32], 
         amount: u128
     ) {
         // Assert that the bridge is unpaused
@@ -511,19 +513,19 @@ program token_bridge_v0001.aleo {
             addr: destination_service_contract
         };
 
-        let message: MsgTokenSend = MsgTokenSend {
-            sender,
-            token,
-            receiver,
-            amount
+        let message: OutTokenMessage = OutTokenMessage {
+            sender_address,
+            dest_token_address,
+            amount,
+            receiver_address,
         };
 
         // Construct
         let packet: OutPacket = OutPacket {
             version: VERSION,
-            sequence: target_sequence_no,
             source,
             destination,
+            sequence: target_sequence_no,
             message,
             height: block.height
         };
@@ -638,9 +640,9 @@ program token_bridge_v0001.aleo {
     transition consume(
         public source_chain_id: u128, 
         public source_service_contract: [u8;32], 
-        public token: address, 
-        public sender: [u8; 32], 
-        public receiver: address, 
+        public dest_token_address: address, 
+        public sender_address: [u8; 32], 
+        public receiver_address: address, 
         public actual_receiver: address, 
         public amount: u128, 
         public sequence: u64, 
@@ -664,25 +666,25 @@ program token_bridge_v0001.aleo {
             addr: self.caller
         };
 
-        let message: MsgTokenReceive = MsgTokenReceive {
-            token,
-            sender,
-            receiver,
-            amount
+        let message: InTokenMessage = InTokenMessage {
+            sender_address,
+            dest_token_address,
+            amount,
+            receiver_address
         };
 
         let in_packet: InPacket = InPacket {
             version: VERSION,
-            sequence,
             source,
             destination,
+            sequence,
             message,
             height
         };
 
         let packet_hash: field = BHP256::hash_to_field(in_packet);
 
-        let screening_passed: bool = receiver == actual_receiver;
+        let screening_passed: bool = receiver_address == actual_receiver;
 
         let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
             packet_hash,

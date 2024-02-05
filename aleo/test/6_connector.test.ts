@@ -38,7 +38,6 @@ const createRandomPacket = (receiver: string, amount: bigint): InPacket => {
   // Create a packet
   const packet: InPacket = {
     version: 0,
-    sequence: incomingSequence,
     source: {
       chain_id: ethChainId,
       addr: evm2AleoArr(ethTsContractAddr),
@@ -48,11 +47,12 @@ const createRandomPacket = (receiver: string, amount: bigint): InPacket => {
       addr: tokenService.address(),
     },
     message: {
-      token: wusdcToken.address(),
-      sender: evm2AleoArr(ethUser),
-      receiver,
-      amount: amount,
+      dest_token_address: wusdcToken.address(),
+      sender_address: evm2AleoArr(ethUser),
+      amount,
+      receiver_address: receiver,
     },
+    sequence: incomingSequence,
     height: incomingHeight,
   };
 
@@ -63,7 +63,7 @@ const createRandomPacket = (receiver: string, amount: bigint): InPacket => {
 describe("Token Connector", () => {
 
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcConnector.getAccounts();
-  const aleoUser5 = new PrivateKey().to_string();
+  const aleoUser5 = new PrivateKey().to_address().to_string();
 
   describe("Deployment", () => {
     test(
@@ -318,9 +318,9 @@ describe("Token Connector", () => {
         };
         const outPacket = await bridge.out_packets(packetKey);
 
-        expect(aleoArr2Evm(outPacket.message.token)).toBe(usdcContractAddr);
-        expect(outPacket.message.sender).toBe(aleoUser1);
-        expect(aleoArr2Evm(outPacket.message.receiver)).toBe(
+        expect(aleoArr2Evm(outPacket.message.dest_token_address)).toBe(usdcContractAddr);
+        expect(outPacket.message.sender_address).toBe(aleoUser1);
+        expect(aleoArr2Evm(outPacket.message.receiver_address)).toBe(
           ethUser.toLocaleLowerCase()
         );
         expect(outPacket.message.amount).toBe(outgoingAmount);
