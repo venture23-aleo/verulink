@@ -53,6 +53,10 @@ export class BaseContract {
         return accounts
     }
 
+    getDefaultAccount(): string {
+        return PrivateKey.from_string(this.config.privateKey).to_address().to_string()
+    }
+
     // TODO: Handle properly
     connect(account: string) {
         const accounts = this.config.network.accounts.map((pvtKey) => {
@@ -62,12 +66,7 @@ export class BaseContract {
         if (accountIndex == -1) {
             throw Error(`Account ${account} not found!`);
         } else {
-            const privateKeys = this.config.network.accounts;
-            const accountPrivateKey = privateKeys[accountIndex];
-            const defaultPrivateKey = privateKeys[0];
-            privateKeys[0] = accountPrivateKey;
-            privateKeys[accountIndex] = defaultPrivateKey;
-            this.config.network.accounts = privateKeys;
+            this.config.privateKey = this.config.network.accounts[accountIndex];
         }
     }
 
