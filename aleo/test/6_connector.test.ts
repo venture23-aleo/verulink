@@ -7,11 +7,6 @@ import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v
 
 import {
   aleoChainId,
-  aleoUser1,
-  aleoUser2,
-  aleoUser3,
-  aleoUser4,
-  aleoUser5,
   ethChainId,
   ethTsContractAddr,
   ethUser,
@@ -35,7 +30,7 @@ const wusdcConnector = new Wusdc_connector_v0001Contract({ mode: "execute" });
 
 const TIMEOUT = 100_000; // 100 seconds
 
-const createRandomPacket = (amount: bigint): InPacket => {
+const createRandomPacket = (receiver: string, amount: bigint): InPacket => {
   const incomingSequence = BigInt(
     Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
   );
@@ -55,7 +50,7 @@ const createRandomPacket = (amount: bigint): InPacket => {
     message: {
       token: wusdcToken.address(),
       sender: evm2AleoArr(ethUser),
-      receiver: aleoUser1,
+      receiver,
       amount: amount,
     },
     height: incomingHeight,
@@ -66,6 +61,10 @@ const createRandomPacket = (amount: bigint): InPacket => {
 
 
 describe("Token Connector", () => {
+
+  const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcConnector.getAccounts();
+  const aleoUser5 = new PrivateKey().to_string();
+
   describe("Deployment", () => {
     test(
       "Deploy Bridge",
@@ -251,7 +250,7 @@ describe("Token Connector", () => {
       "Receive wUSDC",
       async () => {
         const amount = BigInt(100_000);
-        const packet = createRandomPacket(amount);
+        const packet = createRandomPacket(aleoUser1, amount);
         const initialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const initialSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
         const signature = signPacket(packet, true, bridge.config.privateKey);
@@ -362,7 +361,7 @@ describe("Token Connector", () => {
     test(
       "Receive wUSDC must collect the amount in holding program",
       async () => {
-        const packet = createRandomPacket(BigInt(100_000));
+        const packet = createRandomPacket(aleoUser1, BigInt(100_000));
         const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const holdingProgramInitialBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0))
         const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
@@ -460,12 +459,138 @@ describe("Token Connector", () => {
   describe("Update governance", () => {
     test.todo("Successful case");
   });
-  describe("Token Receive", () => {
-    test("Pass an invalid signature", async () => {
 
-    });
+  describe("Token Receive", () => {
+    test.failing("Pass an invalid signature - must fail", async () => {
+        const amount = BigInt(100_000);
+        const packet = createRandomPacket(aleoUser1, amount);
+        const signature = signPacket(packet, true, bridge.config.privateKey);
+
+        const signers = [
+          Address.from_private_key(
+            PrivateKey.from_string(bridge.config.privateKey)
+          ).to_string(),
+          aleoUser2,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+        ];
+
+        const signs = [signature, signature, signature, signature, signature];
+
+        const tx = await wusdcConnector.wusdc_receive(
+          evm2AleoArr(ethUser), // sender
+          aleoUser1, // receiver
+          aleoUser1, // actual receiver
+          packet.message.amount,
+          packet.sequence,
+          packet.height,
+          signers,
+          signs
+        );
+    }, TIMEOUT);
+
+    test("Pass a valid signature from invalid attestor - must fail", async () => {
+        const wallet = new PrivateKey();
+        const amount = BigInt(100_000);
+        const packet = createRandomPacket(aleoUser1, amount);
+        const signature1 = signPacket(packet, true, bridge.config.privateKey);
+
+        const signature2 = signPacket(packet, true, wallet.to_string());
+
+        const signers = [
+          Address.from_private_key(
+            PrivateKey.from_string(bridge.config.privateKey)
+          ).to_string(),
+          wallet.to_address().to_string(),
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+        ];
+
+        const signs = [signature1, signature2, signature1, signature1, signature1];
+
+        const tx = await wusdcConnector.wusdc_receive(
+          evm2AleoArr(ethUser), // sender
+          aleoUser1, // receiver
+          aleoUser1, // actual receiver
+          packet.message.amount,
+          packet.sequence,
+          packet.height,
+          signers,
+          signs
+        );
+        // @ts-ignore
+        const txReceipt = await tx.wait();
+        expect(txReceipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+    test("Pass valid signature from valid attestor twice - must fail", async () => {
+        const amount = BigInt(100_000);
+        const packet = createRandomPacket(aleoUser1, amount);
+
+        const signature1 = signPacket(packet, true, bridge.config.privateKey);
+
+        const signers = [
+          aleoUser1,
+          aleoUser1,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+        ];
+
+        const signs = [signature1, signature1, signature1, signature1, signature1];
+
+        const tx = await wusdcConnector.wusdc_receive(
+          evm2AleoArr(ethUser), // sender
+          aleoUser1, // receiver
+          aleoUser1, // actual receiver
+          packet.message.amount,
+          packet.sequence,
+          packet.height,
+          signers,
+          signs
+        );
+        // @ts-ignore
+        const txReceipt = await tx.wait();
+        expect(txReceipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+    test("Pass all ZERO_ALEO_ADDRESS - (threshold not met) must fail", async () => {
+        const amount = BigInt(100_000);
+        const packet = createRandomPacket(aleoUser1, amount);
+
+        const signature1 = signPacket(packet, true, bridge.config.privateKey);
+
+        const signers = [
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+          ALEO_ZERO_ADDRESS,
+        ];
+
+        const signs = [signature1, signature1, signature1, signature1, signature1];
+
+        const tx = await wusdcConnector.wusdc_receive(
+          evm2AleoArr(ethUser), // sender
+          aleoUser1, // receiver
+          aleoUser1, // actual receiver
+          packet.message.amount,
+          packet.sequence,
+          packet.height,
+          signers,
+          signs
+        );
+        // @ts-ignore
+        const txReceipt = await tx.wait();
+        expect(txReceipt.error).toBeTruthy();
+    }, TIMEOUT);
+
   });
+
   describe("Token Send", () => {
     test.todo("So many cases to look at");
   });
+
 });
