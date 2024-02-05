@@ -133,12 +133,12 @@ program token_service_v0001.aleo {
             threshold_no_limit
         };
 
+        assert(!Mapping::contains(token_connectors, token_address));
+        Mapping::set(token_connectors, token_address, token_connector);
         Mapping::set(token_withdrawal_limits, token_address, withdrawal_limit);
-
         Mapping::set(min_transfers, token_address, min_transfer);
         Mapping::set(max_transfers, token_address, max_transfer);
         
-        Mapping::set(token_connectors, token_address, token_connector);
     }
 
     transition remove_token_ts(public token_address: address) {
@@ -151,7 +151,7 @@ program token_service_v0001.aleo {
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(from, owner);
 
-        assert(Mapping::contains(token_withdrawal_limits, token_address));
+        assert(Mapping::contains(token_connectors, token_address));
         Mapping::remove(token_connectors, token_address);
         Mapping::remove(token_withdrawal_limits, token_address);
         Mapping::remove(min_transfers, token_address);

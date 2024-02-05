@@ -1,11 +1,10 @@
-import { TsAddToken } from "../../../artifacts/js/types";
 import { hashStruct } from "../../../utils/hash";
-
-import * as js2leo from '../../../artifacts/js/js2leo';
 import { Council_v0001Contract } from "../../../artifacts/js/council_v0001";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { Token_service_v0001Contract } from "../../../artifacts/js/token_service_v0001";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
+import { TsAddToken } from "../../../artifacts/js/types/council_v0001";
+import { getTsAddTokenLeo } from "../../../artifacts/js/js2leo/council_v0001";
 
 const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
 const tokenService = new Token_service_v0001Contract({mode: "execute", priorityFee: 10_000});
@@ -43,7 +42,7 @@ export const proposeAddToken = async (
     time: timeframe,
     max_no_cap: maxNoCap
   };
-  const tbAddTokenProposalHash = hashStruct(js2leo.getTsAddTokenLeo(tsAddToken)); 
+  const tbAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken)); 
 
   const proposeAddChainTx = await council.propose(proposalId, tbAddTokenProposalHash);
   
@@ -84,7 +83,7 @@ export const voteAddToken = async (
     time: timeframe,
     max_no_cap: maxNoCap
   };
-  const tsAddTokenProposalHash = hashStruct(js2leo.getTsAddTokenLeo(tsAddToken)); 
+  const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken)); 
 
   validateVote(tsAddTokenProposalHash, voter);
 
@@ -131,7 +130,7 @@ export const execAddToken = async (
     time: timeframe,
     max_no_cap: maxNoCap
   };
-  const tsAddTokenProposalHash = hashStruct(js2leo.getTsAddTokenLeo(tsAddToken)); 
+  const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken)); 
 
   validateExecution(tsAddTokenProposalHash);
 

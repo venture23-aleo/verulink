@@ -1,11 +1,11 @@
-import { TbAddService } from "../../../artifacts/js/types";
 import { hashStruct } from "../../../utils/hash";
 
-import * as js2leo from '../../../artifacts/js/js2leo';
 import { Token_bridge_v0001Contract } from "../../../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../../../artifacts/js/council_v0001";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
+import { TbAddService } from "../../../artifacts/js/types/council_v0001";
+import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/council_v0001";
 
 const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0001Contract({mode: "execute", priorityFee: 10_000});
@@ -29,7 +29,7 @@ export const proposeAddService = async (tokenService: string): Promise<number> =
     id: proposalId,
     service: tokenService
   };
-  const tbAddTokenServiceProposalHash = hashStruct(js2leo.getTbAddServiceLeo(tbAddService)); 
+  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
 
   const proposeAddTokenServiceTx = await council.propose(proposalId, tbAddTokenServiceProposalHash); // 477_914
   
@@ -56,7 +56,7 @@ export const voteAddService = async (proposalId: number, tokenService: string) =
     id: proposalId,
     service: tokenService
   };
-  const tbAddTokenServiceProposalHash = hashStruct(js2leo.getTbAddServiceLeo(tbAddService)); 
+  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
 
   const voter = council.getAccounts()[0];
 
@@ -92,7 +92,7 @@ export const execAddService = async (proposalId: number, tokenService: string) =
     id: proposalId,
     service: tokenService
   };
-  const tbAddTokenServiceProposalHash = hashStruct(js2leo.getTbAddServiceLeo(tbAddService)); 
+  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
 
   validateExecution(tbAddTokenServiceProposalHash);
 

@@ -1,11 +1,11 @@
-import { TbAddChain } from "../../../artifacts/js/types";
 import { hashStruct } from "../../../utils/hash";
 
-import * as js2leo from '../../../artifacts/js/js2leo';
 import { Token_bridge_v0001Contract } from "../../../artifacts/js/token_bridge_v0001";
 import { Council_v0001Contract } from "../../../artifacts/js/council_v0001";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
+import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/council_v0001";
+import { TbAddChain } from "../../../artifacts/js/types/council_v0001";
 
 const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0001Contract({mode: "execute", priorityFee: 10_000});
@@ -26,7 +26,7 @@ export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
     id: proposalId,
     chain_id: newChainId
   };
-  const tbAddChainProposalHash = hashStruct(js2leo.getTbAddChainLeo(tbAddChain)); 
+  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
 
   const proposeAddChainTx = await council.propose(proposalId, tbAddChainProposalHash); // 477_914
   
@@ -50,7 +50,7 @@ export const voteAddChain = async (proposalId: number, newChainId: bigint) => {
     id: proposalId,
     chain_id: newChainId
   };
-  const tbAddChainProposalHash = hashStruct(js2leo.getTbAddChainLeo(tbAddChain)); 
+  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
 
   const voter = council.getAccounts()[0];
   validateVote(tbAddChainProposalHash, voter);
@@ -81,7 +81,7 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
     id: proposalId,
     chain_id: newChainId
   };
-  const tbAddChainProposalHash = hashStruct(js2leo.getTbAddChainLeo(tbAddChain)); 
+  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
 
   validateExecution(tbAddChainProposalHash);
 

@@ -1,9 +1,9 @@
-import { ProposalVote, TbAddChain } from "../../artifacts/js/types";
 import { hashStruct } from "../../utils/hash";
 
-import * as js2leo from '../../artifacts/js/js2leo';
 import { Council_v0001Contract } from "../../artifacts/js/council_v0001";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../../utils/constants";
+import { ProposalVote } from "../../artifacts/js/types/council_v0001";
+import { getProposalVoteLeo } from "../../artifacts/js/js2leo/council_v0001";
 
 const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
 
@@ -30,7 +30,7 @@ export const validateVote = async (proposalHash: bigint, voter: string) => {
     proposal: proposalHash,
     member: voter
   }
-  const tbAddChainVoteHash = hashStruct(js2leo.getProposalVoteLeo(proposalVote));
+  const tbAddChainVoteHash = hashStruct(getProposalVoteLeo(proposalVote));
   const hasAlreadyVoted = await council.proposal_votes(tbAddChainVoteHash);
 
   if (hasAlreadyVoted) {
