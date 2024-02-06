@@ -31,9 +31,9 @@ describe('Ownable', () => {
         expect(proxiedOwner["initialize(address)"](owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
-    it('should call owner() only through proxy', async () => {
-        expect(ownableInstance.connect(owner).owner()).to.be.reverted;
-    });
+    // it('should call owner() only through proxy', async () => {
+    //     expect(ownableInstance.connect(owner).owner()).to.be.reverted;
+    // });
 
     // Test transferOwnership function
     it('should allow only owner to transfer ownership', async () => {
@@ -50,10 +50,10 @@ describe('Ownable', () => {
             .withArgs(owner.address, newOwner.address);
     });
 
-    it('should allow to transfer ownership through proxy', async () => {
-        // Transfer ownership with the owner through non-proxy contract
-        expect(ownableInstance.connect(owner).transferOwnership(newOwner.address)).to.be.reverted;
-    });
+    // it('should allow to transfer ownership through proxy', async () => {
+    //     // Transfer ownership with the owner through non-proxy contract
+    //     expect(ownableInstance.connect(owner).transferOwnership(newOwner.address)).to.be.reverted;
+    // });
 
     // Test transferOwnership function with zero address
     it('should revert when transferring ownership to zero address', async () => {

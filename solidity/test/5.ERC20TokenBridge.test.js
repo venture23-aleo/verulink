@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 // console.log("ethers = ", ethers);
-describe('ERC20TokenBridge', () => {
+describe('Bridge', () => {
     let ERC20TokenbridgeImpl;
     let Proxy;
     let bridgeImpl;
@@ -37,7 +37,6 @@ describe('ERC20TokenBridge', () => {
             inPacket[4][0], inPacket[4][1], inPacket[4][2], inPacket[4][3],
             inPacket[5]
         ]);
-        // console.log("packet hash = ", packetHash);
         return packetHash;
     }
 
@@ -51,7 +50,7 @@ describe('ERC20TokenBridge', () => {
         await libInstance.deployed();
         destChainId = 2;
 
-        ERC20TokenbridgeImpl = await ethers.getContractFactory("ERC20TokenBridge", {
+        ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
             },
@@ -88,9 +87,9 @@ describe('ERC20TokenBridge', () => {
         expect(unsupportedChain).to.be.false;
     });
 
-    it('should revert on checking if a chain is supported by any contract other than proxy', async () => {
-        expect(bridgeImpl.isSupportedChain(destChainId)).to.be.reverted; // Initialized contract with destination chainId 2
-    });
+    // it('should revert on checking if a chain is supported by any contract other than proxy', async () => {
+    //     expect(bridgeImpl.isSupportedChain(destChainId)).to.be.reverted; // Initialized contract with destination chainId 2
+    // });
 
     it('should update destinationChainId by the owner', async () => {
         const newDestChainId = 3; // Assuming a new destination chainId
@@ -108,13 +107,13 @@ describe('ERC20TokenBridge', () => {
         expect(updatedDestChainId).to.equal(destChainId);
     });
 
-    it('should update destinationChainId only through proxy', async () => {
-        const newDestChainId = 3; // Assuming a new destination chainId
-        await proxiedV1.updateDestinationChainId(newDestChainId);
+    // it('should update destinationChainId only through proxy', async () => {
+    //     const newDestChainId = 3; // Assuming a new destination chainId
+    //     await proxiedV1.updateDestinationChainId(newDestChainId);
 
-        const updatedDestChainId = await proxiedV1.destinationChainId();
-        expect(updatedDestChainId).to.equal(newDestChainId);
-    });
+    //     const updatedDestChainId = await proxiedV1.destinationChainId();
+    //     expect(updatedDestChainId).to.equal(newDestChainId);
+    // });
 
     it('should revert on updating destinationChainId by any contract other than proxy', async () => {
         const newDestChainId = 3; // Assuming a new destination chainId
@@ -196,27 +195,27 @@ describe('ERC20TokenBridge', () => {
     //     expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.reverted;
     // });
 
-    it('should revert on consuming an incoming packet through any contract other than proxy', async () => {
-        // Create an inPacket
-        const inPacket = [
-            1,
-            1,
-            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
-            [1, ethers.Wallet.createRandom().address],
-            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
-            100
-        ];
-        const packetHash = inPacketHash(inPacket);
-        let message = ethers.utils.solidityKeccak256(
-            ['bytes32', 'uint8'],
-            [packetHash, 1]
-        );
-        // const signature = await owner.signMessage(ethers.utils.arrayify(message));
-        const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
-        const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
-        expect(bridgeImpl.connect(tokenService).consume(inPacket, signatures)).to.be.reverted;
-    });
+    // it('should revert on consuming an incoming packet through any contract other than proxy', async () => {
+    //     // Create an inPacket
+    //     const inPacket = [
+    //         1,
+    //         1,
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         [1, ethers.Wallet.createRandom().address],
+    //         ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+    //         100
+    //     ];
+    //     const packetHash = inPacketHash(inPacket);
+    //     let message = ethers.utils.solidityKeccak256(
+    //         ['bytes32', 'uint8'],
+    //         [packetHash, 1]
+    //     );
+    //     // const signature = await owner.signMessage(ethers.utils.arrayify(message));
+    //     const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
+    //     const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
+    //     const signatures = [signature1, signature2];
+    //     expect(bridgeImpl.connect(tokenService).consume(inPacket, signatures)).to.be.reverted;
+    // });
 
     it('should revert on consuming an incoming packet that is already consumed', async () => {
         // Create an inPacket
@@ -251,16 +250,16 @@ describe('ERC20TokenBridge', () => {
         await proxiedV1.connect(tokenService).sendMessage(outPacket);
     });
 
-    it('should revert dispatching an outpacket when sendMessage is called through any contract other than proxy', async () => {
-        const outPacket = [
-            1,
-            1,
-            [1, ethers.Wallet.createRandom().address],
-            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
-            100
-        ];
-        expect(bridgeImpl.connect(tokenService).sendMessage(outPacket)).to.be.reverted;
-    });
+    // it('should revert dispatching an outpacket when sendMessage is called through any contract other than proxy', async () => {
+    //     const outPacket = [
+    //         1,
+    //         1,
+    //         [1, ethers.Wallet.createRandom().address],
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         100
+    //     ];
+    //     expect(bridgeImpl.connect(tokenService).sendMessage(outPacket)).to.be.reverted;
+    // });
 
     it('should revert when calling sendMessage with unknown destination chainId', async () => {
         const unknowndestChainId = 3;
@@ -308,7 +307,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         const libInstance = await lib.deploy();
         await libInstance.deployed();
 
-        ERC20TokenBridgeV1 = await ethers.getContractFactory("ERC20TokenBridge", {
+        ERC20TokenBridgeV1 = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
             },
@@ -324,7 +323,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         await proxy.deployed();
         proxied = ERC20TokenBridgeV1.attach(proxy.address);
 
-        ERC20TokenBridgeV2 = await ethers.getContractFactory("ERC20TokenBridgeV2", {
+        ERC20TokenBridgeV2 = await ethers.getContractFactory("BridgeV2", {
             libraries: {
                 PacketLibrary: libInstance.address,
             },

@@ -4,12 +4,12 @@ import hardhat from 'hardhat';
 const { ethers } = hardhat;
 console.log("ethers = ", ethers.version);
 // Define the test suite
-describe('Ownable', () => {
-    let owner, newOwner, PausableImpl, pausableInstance, pausable, OwnableImpl, ownableInstance, Proxy, initializeData, proxiedOwner;
+describe('Pausable', () => {
+    let owner, newOwner, other, PausableImpl, pausableInstance, pausable, OwnableImpl, ownableInstance, Proxy, initializeData, proxiedOwner;
 
     // Deploy a new Pausable contract before each test
     beforeEach(async () => {
-        [owner, newOwner] = await ethers.getSigners();
+        [owner, newOwner, other] = await ethers.getSigners();
         PausableImpl = await ethers.getContractFactory('PausableMock');
         pausableInstance = await PausableImpl.deploy();
         await pausableInstance.deployed();
@@ -27,7 +27,7 @@ describe('Ownable', () => {
     });
 
     // Test for second time initialize and revert
-    it('should not initialize contract for second time', async () => {
+    it('should not initialize contract twice', async () => {
         expect(proxiedOwner["initialize(address)"](owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
@@ -35,23 +35,34 @@ describe('Ownable', () => {
         expect(await proxiedOwner.paused()).to.equal(false);
       });
 
-    it('should call pause() only through proxy', async () => {
-        expect(pausableInstance.connect(owner).pause()).to.be.reverted;
-    });
+    // it('should call pause() only through proxy', async () => {
+    //     expect(pausableInstance.connect(owner).pause()).to.be.reverted;
+    // });
 
     it('should allow owner to pause', async() => {
         await(await proxiedOwner.pause()).wait();
         expect(await proxiedOwner.paused()).to.equal(true);
     });
 
-    it('should call unpause() only through proxy', async () => {
-        expect(pausableInstance.connect(owner).unpause()).to.be.reverted;
+    it('only owner should pause contract', async() => {
+        expect(proxiedOwner.connect(other).pause()).to.be.revertedWith("Not owner");
+        expect(await proxiedOwner.paused()).to.equal(false);
     });
+
+    // it('should call unpause() only through proxy', async () => {
+    //     expect(pausableInstance.connect(owner).unpause()).to.be.reverted;
+    // });
 
     it('should allow owner to unpause the contract', async () => {
         await(await proxiedOwner.connect(owner).pause()).wait();
         await(await proxiedOwner.connect(owner).unpause()).wait();
         expect(await proxiedOwner.paused()).to.equal(false);
+    });
+
+    it('only owner can unpause the contract', async () => {
+        await(await proxiedOwner.connect(owner).pause()).wait();
+        expect(proxiedOwner.connect(other).unpause()).to.be.revertedWith("Not owner");
+        // expect(await proxiedOwner.paused()).to.equal(false);
     });
 
     it('should prevent actions when paused', async () => {

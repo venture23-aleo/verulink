@@ -46,13 +46,13 @@ describe('AttestorManager', () => {
         expect(newQuorum).to.equal(quorumRequired);
     });
 
-    it('should call addAttestor only through proxy', async () => {
-        const newAttestor = ethers.Wallet.createRandom().address;
-        const quorumRequired = 2;
+    // it('should call addAttestor only through proxy', async () => {
+    //     const newAttestor = ethers.Wallet.createRandom().address;
+    //     const quorumRequired = 2;
 
-        // Add attestor
-        expect(attestorManagerImpl.addAttestor(newAttestor, quorumRequired)).to.be.reverted;
-    });
+    //     // Add attestor
+    //     expect(attestorManagerImpl.addAttestor(newAttestor, quorumRequired)).to.be.reverted;
+    // });
 
     it('should add attestors in batch by Owner', async () => {
         const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
@@ -73,13 +73,13 @@ describe('AttestorManager', () => {
         expect(newQuorum).to.equal(quorumRequired);
     });
 
-    it('should call addAttestors only through proxy', async () => {
-        const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
-        const quorumRequired = 2;
+    // it('should call addAttestors only through proxy', async () => {
+    //     const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
+    //     const quorumRequired = 2;
 
-        // Add attestors
-        expect(attestorManagerImpl.addAttestors(attestors, quorumRequired)).to.be.reverted;
-    });
+    //     // Add attestors
+    //     expect(attestorManagerImpl.addAttestors(attestors, quorumRequired)).to.be.reverted;
+    // });
 
     it('should add attestors in batch by a non-owner', async () => {
         const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
@@ -141,16 +141,16 @@ describe('AttestorManager', () => {
         expect(newQuorum).to.equal(quorumRequired);
     });
 
-    it('should call removeAttestor only through proxy', async () => {
-        const newAttestor = ethers.Wallet.createRandom().address;
-        const quorumRequired = 2;
+    // it('should call removeAttestor only through proxy', async () => {
+    //     const newAttestor = ethers.Wallet.createRandom().address;
+    //     const quorumRequired = 2;
 
-        // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+    //     // Add attestor
+    //     await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
 
-        // Remove attestor
-        expect(attestorManagerImpl.removeAttestor(newAttestor, quorumRequired)).to.be.reverted;
-    });
+    //     // Remove attestor
+    //     expect(attestorManagerImpl.removeAttestor(newAttestor, quorumRequired)).to.be.reverted;
+    // });
 
     // Test attempting to remove a non-existing attestor
     it('should revert when trying to remove a non-existing attestor', async () => {

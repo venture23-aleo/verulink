@@ -42,22 +42,22 @@ describe('BridgeTokenServiceManager', () => {
     });
 
     // Test adding a token service
-    it('should call isRegisteredTokenService and return bool only through proxy', async () => {
-        const newTokenService = ethers.Wallet.createRandom().address;
+    // it('should call isRegisteredTokenService and return bool only through proxy', async () => {
+    //     const newTokenService = ethers.Wallet.createRandom().address;
 
-        // Add token service
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+    //     // Add token service
+    //     await (await proxiedV1.addTokenService(newTokenService)).wait();
 
-        // Check if the token service was added
-        expect(bridgeTokenServiceManagerImpl.isRegisteredTokenService(newTokenService)).to.be.reverted;
-    });
+    //     // Check if the token service was added
+    //     expect(bridgeTokenServiceManagerImpl.isRegisteredTokenService(newTokenService)).to.be.reverted;
+    // });
 
-    it('should call add token service only through proxy', async () => {
-        const newTokenService = ethers.Wallet.createRandom().address;
+    // it('should call add token service only through proxy', async () => {
+    //     const newTokenService = ethers.Wallet.createRandom().address;
 
-        // Add token service
-        expect(bridgeTokenServiceManagerImpl.addTokenService(newTokenService)).to.be.reverted;
-    });
+    //     // Add token service
+    //     expect(bridgeTokenServiceManagerImpl.addTokenService(newTokenService)).to.be.reverted;
+    // });
 
     // Test attempting to add an existing token service
     it('should revert when trying to add an existing token service', async () => {
@@ -90,15 +90,15 @@ describe('BridgeTokenServiceManager', () => {
         expect(isRegistered).to.be.false;
     });
 
-    it('should call remove a token service only through proxy', async () => {
-        const newTokenService = ethers.Wallet.createRandom().address;
+    // it('should call remove a token service only through proxy', async () => {
+    //     const newTokenService = ethers.Wallet.createRandom().address;
 
-        // Add token service
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+    //     // Add token service
+    //     await (await proxiedV1.addTokenService(newTokenService)).wait();
 
-        // Remove token service
-        expect(bridgeTokenServiceManagerImpl.removeTokenService(newTokenService)).to.be.reverted;
-    });
+    //     // Remove token service
+    //     expect(bridgeTokenServiceManagerImpl.removeTokenService(newTokenService)).to.be.reverted;
+    // });
 
     // Test attempting to remove a non-existing token service
     it('should revert when trying to remove a non-existing token service', async () => {

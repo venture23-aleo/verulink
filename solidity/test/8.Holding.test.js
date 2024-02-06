@@ -260,24 +260,6 @@ describe('Holding', () => {
         expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Zero Address");
     });
 
-
-
-    // it('should revert if ERC20 token transfer fails', async () => {
-    //     const user = ethers.Wallet.createRandom().address;
-    //     const token = usdcMock.address;
-    //     const amount = 50;
-    //     // await usdcMock.mint(proxiedV1.address, amount);
-    //     // Lock tokens with the owner
-    //     await (await proxiedV1.connect(tokenService).lock(user, token, amount)).wait();
-
-    //     // Unlock tokens with the owner
-    //     await (await proxiedV1.unlock(user, token, amount)).wait();
-    //     // Release tokens with the owner
-    //     // await proxiedV1.release(user, token, amount);
-    //     // await proxiedV1.release(user, token, amount);
-    //     expect(proxiedV1.release(user, token, amount)).to.be.revertedWith("ERC20 Release Failed");
-    // });
-
     // Test lockETH function
     it('should allow Token Service to lock ETH for a user', async () => {
         const amount = 100;
@@ -320,7 +302,7 @@ describe('Holding', () => {
         // await proxiedV1.release(user, token, amount);
         // await proxiedV1.release(user, token, amount);
         // Call the 'release' function to trigger the ETH transfer failure
-        // Expect it to revert with the specified error message
+        // Expect it to revert with an error message
         expect(
             proxiedV1["release(address,uint256)"](user, 100)
         ).to.be.revertedWith("Insufficient amount");
@@ -416,11 +398,11 @@ describe('Holding', () => {
 
 // Define the test suite for HoldingV2
 describe('Upgradeabilty: HoldingV2', () => {
-    let owner, HoldingV2, holdingV1Impl, HoldingProxy, initializeData, proxied, tokenService, HoldingV1, holdingV2Impl, upgradeData;
+    let owner, other, HoldingV2, holdingV1Impl, HoldingProxy, initializeData, proxied, tokenService, HoldingV1, holdingV2Impl, upgradeData;
 
     // Deploy a new HoldingV2 contract before each test
     beforeEach(async () => {
-        [owner, tokenService] = await ethers.getSigners();
+        [owner, tokenService, other] = await ethers.getSigners();
         HoldingV1 = await ethers.getContractFactory("Holding");
         holdingV1Impl = await HoldingV1.deploy();
         await holdingV1Impl.deployed();
@@ -452,6 +434,10 @@ describe('Upgradeabilty: HoldingV2', () => {
     it('should set the correct value', async () => {
         const val = await proxied.val();
         expect(val).to.equal(5);
+    });
+
+    it('only owner should be able to upgrade', async () => {
+        expect(proxied.connect(other).upgradeToAndCall(holdingV2Impl.address, upgradeData)).to.be.revertedWith("Only owner can upgrade");
     });
 
     it('reverts if the contract is initialized twice', async function () {
