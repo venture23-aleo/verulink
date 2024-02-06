@@ -8,7 +8,7 @@ chains:
       dest_chains:
         - "1"
       sequence_num_start:
-        "ethereum": 1
+        "1": 1
       start_height: 0
       filter_topic: ""
       retry_packet_wait_duration: 1m0s
@@ -22,7 +22,7 @@ chains:
       dest_chains:
         - "2"
       sequence_num_start:
-        "aleo": 1
+        "2": 1
       start_height: 100
       filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
       retry_packet_wait_duration: 1m0s

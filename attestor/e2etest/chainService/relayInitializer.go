@@ -1,10 +1,19 @@
 package chainservice
 
 import (
+	"archive/tar"
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"log"
 	"math/big"
 	"os"
 	"time"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 	"gopkg.in/yaml.v3"
 )
 
@@ -69,6 +78,13 @@ func WriteE2EConifg() {
 				PruneBasseSeqNumberWaitDuration: time.Minute,
 			},
 		},
+		LogConfig: &LoggerConfig{
+			Encoding:   "console",
+			OutputPath: "log",
+		},
+		DBPath:              "db",
+		ConsumePacketWorker: 50,
+		Mode:                "dev",
 	}
 	file, err := os.Create("config.yaml")
 	if err != nil {
@@ -82,3 +98,103 @@ func WriteE2EConifg() {
 		panic(err)
 	}
 }
+
+func BuildRelayImage() {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Fatal(err, " :unable to init client")
+	}
+
+	buf := new(bytes.Buffer)
+	tw := tar.NewWriter(buf)
+	defer tw.Close()
+
+	dockerFile := "Dockerfile"
+	err = os.Setenv("DOCKER_API_VERSION", "1.43")
+	if err != nil {
+		panic(err)
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	err = os.Chdir(home + "/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/")
+	if err != nil {
+		panic(err)
+	}
+	dockerFileReader, err := os.Open(dockerFile) // path to docker file
+	if err != nil {
+		log.Fatal(err, " :unable to open Dockerfile")
+	}
+	readDockerFile, err := io.ReadAll(dockerFileReader)
+	if err != nil {
+		log.Fatal(err, " :unable to read dockerfile")
+	}
+
+	tarHeader := &tar.Header{
+		Name: dockerFile,
+		Size: int64(len(readDockerFile)),
+	}
+	err = tw.WriteHeader(tarHeader)
+	if err != nil {
+		log.Fatal(err, " :unable to write tar header")
+	}
+	_, err = tw.Write(readDockerFile)
+	if err != nil {
+		log.Fatal(err, " :unable to write tar body")
+	}
+	dockerFileTarReader := bytes.NewReader(buf.Bytes())
+
+	imageBuildResponse, err := cli.ImageBuild(
+		ctx,
+		dockerFileTarReader,
+		types.ImageBuildOptions{
+			Context:    dockerFileTarReader,
+			Dockerfile: dockerFile,
+			Version:    types.BuilderVersion("1"),
+			Remove:     true})
+	if err != nil {
+		log.Fatal(err, " :unable to build docker image")
+	}
+	defer imageBuildResponse.Body.Close()
+	_, err = io.Copy(os.Stdout, imageBuildResponse.Body)
+	if err != nil {
+		log.Fatal(err, " :unable to read image build response")
+	}
+}
+
+func RunRelayImage() {
+	client, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := client.ContainerCreate(context.Background(), &container.Config{
+		Image:   "attestor",
+		Volumes: map[string]struct{}{"${PWD}/config.yaml:/config.yaml": {}},
+		Cmd:     []string{"/chainService", "-config", "/config.yaml"},
+	}, nil, nil, nil, "")
+	if err != nil {
+		panic(err)
+	}
+	err = client.ContainerStart(context.Background(), res.ID, container.StartOptions{})
+	if err != nil {
+		panic(err)
+	}
+	c, err := client.ContainerInspect(context.Background(), res.ID)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v", c)
+}
+
+// db service
+// run image with config
+
+// test conditions:
+// eth down
+// aleo down
+// db down
+// self down
+// db service message in queue
