@@ -66,7 +66,7 @@ contract TokenService is
     {
         require(!blackListService.isBlackListed(msg.sender), "Sender Blacklisted");
         require(isEnabledToken(tokenAddress), "Token not supported");
-        require(isAmountInRange(tokenAddress, amount), "Transfer amount not in range");
+        require(isAmountInRange(tokenAddress, amount), "Amount out of range");
 
         packet.sourceTokenService = self;
         packet.destTokenService = PacketLibrary.OutNetworkAddress(
@@ -109,7 +109,7 @@ contract TokenService is
                 // eth lock
                 holding.lock{value:amount}(receiver);
             }else {
-                require(IIERC20(tokenAddress).increaseAllowance(address(holding), amount),"Token allowance failed");
+                require(IIERC20(tokenAddress).transfer(address(holding), amount),"Token transfer failed");
                 holding.lock(receiver, tokenAddress, amount);
             }
         }else if(quorum == PacketLibrary.Vote.YEA){

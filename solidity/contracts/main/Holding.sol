@@ -51,7 +51,6 @@ contract Holding is Pausable, Initializable, Upgradeable {
 
     function lock(address user, address token, uint256 amount) public {
         require(token != address(0), "Zero Address");
-        require(IIERC20(token).transferFrom(msg.sender, address(this), amount), "Token Transfer Failed");
         _lock(user,token,amount);
     }
 
