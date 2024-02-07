@@ -288,19 +288,6 @@ program token_bridge_v0001.aleo {
         Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, total_attestors - 1u8);
     }
 
-    /// Update attestor key to a new address
-    /// Attestor can use this transition to update their key to a new address
-    /// This is useful in key-rotation of an attestor without any overhead from council
-    transition update_attestor_key(new_attestor: address) {
-        return then finalize (self.caller, new_attestor);
-    }
-
-    finalize update_attestor_key(existing_attestor: address, new_attestor: address) {
-        assert(Mapping::contains(attestors, existing_attestor));
-        Mapping::remove(attestors, existing_attestor);
-        Mapping::set(attestors, new_attestor, true);
-    }
-
     //////////////////////////////
     ///// Update Threshold ///////
     //////////////////////////////
