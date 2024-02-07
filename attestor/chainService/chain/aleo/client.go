@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/venture23-aleo/attestor/chainService/chain"
-	aleoRpc "github.com/venture23-aleo/attestor/chainService/chain/aleo/rpc"
-	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
-	"github.com/venture23-aleo/attestor/chainService/store"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	aleoRpc "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo/rpc"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 	"go.uber.org/zap"
 )
 

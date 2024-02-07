@@ -1,0 +1,8 @@
+chains:
+  - name: "aleo"
+    chain_id: "chain id"
+  - name: "ethereum"
+    chain_id: "chain id"
+cred:
+  username: "username"
+  password: "password"

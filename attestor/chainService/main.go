@@ -6,13 +6,13 @@ import (
 	"os"
 	"os/signal"
 
-	_ "github.com/venture23-aleo/attestor/chainService/chain/aleo"
-	_ "github.com/venture23-aleo/attestor/chainService/chain/ethereum"
+	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo"
+	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum"
 
-	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
-	"github.com/venture23-aleo/attestor/chainService/relay"
-	"github.com/venture23-aleo/attestor/chainService/store"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
 func main() {

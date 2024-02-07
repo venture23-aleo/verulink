@@ -10,7 +10,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
 func dumpAleoPacket(pkt *aleoPacket, malform bool) string {

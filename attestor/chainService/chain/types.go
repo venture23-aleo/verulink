@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/venture23-aleo/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 )
 
 type ClientFunc func(cfg *config.ChainConfig, m map[string]*big.Int) IClient
@@ -22,8 +22,8 @@ type IClient interface {
 }
 
 type NetworkAddress struct {
-	ChainID *big.Int
-	Address string
+	ChainID *big.Int `json:"chain_id"`
+	Address string   `json:"address"`
 }
 
 func (n NetworkAddress) String() string {
@@ -31,10 +31,10 @@ func (n NetworkAddress) String() string {
 }
 
 type Message struct {
-	DestTokenAddress string
-	SenderAddress    string
-	Amount           *big.Int
-	ReceiverAddress  string
+	DestTokenAddress string   `json:"dest_token_address"`
+	SenderAddress    string   `json:"sender_address"`
+	Amount           *big.Int `json:"amount"`
+	ReceiverAddress  string   `json:"receiver_address"`
 }
 
 func (m Message) String() string {
@@ -42,12 +42,12 @@ func (m Message) String() string {
 }
 
 type Packet struct {
-	Version     uint8
-	Source      NetworkAddress
-	Destination NetworkAddress
-	Sequence    uint64
-	Message     Message
-	Height      uint64
+	Version     uint8          `json:"version"`
+	Source      NetworkAddress `json:"source"`
+	Destination NetworkAddress `json:"destination"`
+	Sequence    uint64         `json:"sequence"`
+	Message     Message        `json:"message"`
+	Height      uint64         `json:"height"`
 	// isMissed specify that this packet was somehow missed and db-service administrator has
 	// requested attestors to re-process it
 	isMissed bool
@@ -70,14 +70,15 @@ func (p *Packet) GetSha256Hash() string {
 }
 
 type ScreenedPacket struct {
-	Packet  *Packet
-	IsWhite bool
+	Packet  *Packet `json:"packet"`
+	IsWhite bool    `json:"is_white"`
 }
 
 type MissedPacket struct {
-	TargetChainID *big.Int
-	SourceChainID *big.Int
-	SeqNum        uint64
-	Height        uint64
-	TxnID         string
+	TargetChainID *big.Int `json:"target_chain_id"`
+	SourceChainID *big.Int `json:"source_chain_id"`
+	SeqNum        uint64   `json:"seq_num"`
+	Height        uint64   `json:"height"`
+	TxnID         string   `json:"txn_id"`
+	IsLast        bool     `json:"-"`
 }

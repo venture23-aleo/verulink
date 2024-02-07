@@ -2,6 +2,7 @@
 chains:
 - name: aleo
   chain_id: 2
+  wallet_address: "address" # wallet indentifier
   bridge_contract: bridge.aleo
   node_url: http://52.91.48.169|testnet3
   sequence_num_start:
@@ -10,6 +11,7 @@ chains:
   wait_time: 24h
 - name: ethereum
   chain_id: 1
+  wallet_address: "address"
   bridge_contract: '0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758'
   node_url: https://rpc.sepolia.org
   start_height: 1
@@ -21,3 +23,14 @@ log:
   encoding: console
   output_path: relays.log
 mode: dev # dev/prod
+signing_service:
+  host: "host name"
+  port: 6579
+  endpoint: "/sign"
+  scheme: "communication scheme" # https, http, rpc, etc.
+  username: "user name"
+  password: "password"
+  ping_endpoint: "/ping"
+collector_service:
+  uri: https://collector.service.uri
+  collector_wait_dur: 12h

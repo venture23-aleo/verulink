@@ -9,6 +9,10 @@ use std::{str::FromStr, env};
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.len()<2{
+        help();
+        return;
+    }
     match args[1].as_str() {
         "sign"=> {
             if args.len() != 4 {
@@ -27,7 +31,7 @@ pub fn main() {
             let hash = hash(args[2].as_str(), args[3].as_str(), args[4].as_str());
             print!("{}", hash);
         },
-        _=>panic!("invalid command"),
+        _=>help(),
     }
 }
 

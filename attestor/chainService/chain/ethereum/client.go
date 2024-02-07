@@ -10,17 +10,17 @@ import (
 
 	"go.uber.org/zap"
 
-	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
-	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
-	"github.com/venture23-aleo/attestor/chainService/store"
+	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 
 	ether "github.com/ethereum/go-ethereum"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
 const (

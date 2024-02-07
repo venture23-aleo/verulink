@@ -5,10 +5,10 @@ x-logpath: &l
   /log
 
 services:
-  attestor:
-    build: .
+  chainservice:
+    build: ./chainService
     configs:
-      - source: attestor_config
+      - source: chainService_config
         target: config.yaml
     volumes:
       - type: volume
@@ -23,10 +23,17 @@ services:
       LOG_ENC: json
       MODE: dev
 
-configs:
-  attestor_config:
-    file: ./config.yaml
+  signingservice:
+    build: ./signingService
+    configs:
+      - source: signingService_config
+        target: config.yaml
 
+configs:
+  chainService_config:
+    file: ./chainService/config.yaml
+  signingService_config:
+    file: ./signingService/config.yaml
 volumes:
   db-path:
   log-path:

@@ -5,12 +5,17 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
+	ethCommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
-func hash(sp *chain.ScreenedPacket) string {
+func HashAndSign(sp *chainService.ScreenedPacket) (signature string, err error) {
+	return sign(hash(sp))
+}
+
+func hash(sp *chainService.ScreenedPacket) string {
 	versionBytes := make([]byte, 32)
 	binary.BigEndian.PutUint64(versionBytes[len(versionBytes)-8:], uint64(sp.Packet.Version))
 
@@ -35,11 +40,11 @@ func hash(sp *chain.ScreenedPacket) string {
 		srcChainIDBytes,
 		[]byte(sp.Packet.Source.Address),
 		dstChainIDBytes,
-		common.HexToAddress(sp.Packet.Destination.Address).Bytes(),
+		ethCommon.HexToAddress(sp.Packet.Destination.Address).Bytes(),
 		[]byte(sp.Packet.Message.SenderAddress),
-		common.HexToAddress(sp.Packet.Message.DestTokenAddress).Bytes(),
+		ethCommon.HexToAddress(sp.Packet.Message.DestTokenAddress).Bytes(),
 		amountBytes,
-		common.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
+		ethCommon.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
 		heightBytes,
 	)
 

@@ -13,11 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/attestor/chainService/chain"
-	abi "github.com/venture23-aleo/attestor/chainService/chain/ethereum/abi"
-	"github.com/venture23-aleo/attestor/chainService/config"
-	_ "github.com/venture23-aleo/attestor/chainService/logger"
-	"github.com/venture23-aleo/attestor/chainService/store"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
 func setupDB(p string) (func(), error) {
