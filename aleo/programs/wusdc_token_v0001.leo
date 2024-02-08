@@ -44,21 +44,24 @@ program wusdc_token_v0001.aleo {
     // Store the information about the token
     mapping info: bool => TokenInfo;
 
+    const OWNER_INDEX: bool = true;
+    const INFO_INDEX: bool = true;
+
     ///////////////////////////////////////////
     /////// Initialization & Governance ///////
     ///////////////////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_token(name: [u8; 32], symbol: [u8; 16], decimals: u8) {
+    transition initialize_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8) {
         return then finalize(self.caller, name, symbol, decimals);
     }
 
     finalize initialize_token(owner: address, name: [u8; 32], symbol: [u8; 16], decimals: u8) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(token_owner, true));
+        assert(!Mapping::contains(token_owner, OWNER_INDEX));
 
         // Set the council program
-        Mapping::set(token_owner, true, owner);
+        Mapping::set(token_owner, OWNER_INDEX, owner);
 
         let token_info: TokenInfo = TokenInfo {
             name,
@@ -115,7 +118,7 @@ program wusdc_token_v0001.aleo {
     finalize burn_public(burner: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(token_owner, true);
+        let owner: address = Mapping::get(token_owner, OWNER_INDEX);
 
         // Only governace can burn
         assert_eq(burner, owner);

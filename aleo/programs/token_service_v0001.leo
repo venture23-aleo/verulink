@@ -56,6 +56,8 @@ program token_service_v0001.aleo {
     /// Key is the address of the token program
     mapping token_amount_withdrawn: address => u128;
 
+    const OWNER_INDEX: bool = true;
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
@@ -68,10 +70,10 @@ program token_service_v0001.aleo {
 
     finalize initialize_ts(owner: address) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(owner_TS, true));
+        assert(!Mapping::contains(owner_TS, OWNER_INDEX));
 
         // Set the owner program
-        Mapping::set(owner_TS, true, owner);
+        Mapping::set(owner_TS, OWNER_INDEX, owner);
 
     }
 
@@ -80,19 +82,18 @@ program token_service_v0001.aleo {
     ////////////////////////////////
 
     /// Update the existing owner
-    /// Can only be called from owner program
-    transition transfer_ownership_ts(public new_governance: address) {
-        return then finalize(self.caller, new_governance);
+    /// Can only be called by owner
+    transition transfer_ownership_ts(public new_owner: address) {
+        return then finalize(self.caller, new_owner);
     }
 
-    finalize transfer_ownership_ts(from: address, new_governance: address) {
+    finalize transfer_ownership_ts(from: address, new_owner: address) {
         // Get the owner address
-        // If program not initialized, this fails
-        let governance: address = Mapping::get(owner_TS, true);
-        assert_eq(from, governance);
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
 
-        // If attestor does not exist, this is expected to fail
-        Mapping::set(owner_TS, true, new_governance);
+        Mapping::set(owner_TS, OWNER_INDEX, new_owner);
     }
 
     //////////////////////////////////
@@ -123,8 +124,8 @@ program token_service_v0001.aleo {
         threshold_no_limit: u128
     ) {
         // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
         let withdrawal_limit: WithdrawalLimit = WithdrawalLimit {
@@ -147,8 +148,8 @@ program token_service_v0001.aleo {
 
     finalize remove_token_ts(from: address, token_address: address) {
         // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
         assert(Mapping::contains(token_connectors, token_address));
@@ -163,7 +164,7 @@ program token_service_v0001.aleo {
     }
 
     finalize update_connector_ts(from: address, token_address: address, new_token_connector: address) {
-        // If the token is not supported, this fails
+        // If the token is not supported, this must fail
         let current_token_connector: address = Mapping::get(token_connectors, token_address);
         assert_eq(from, current_token_connector);
 
@@ -181,8 +182,8 @@ program token_service_v0001.aleo {
 
     finalize update_min_transfer_ts(from: address, token_address: address, min_transfer: u128) {
         // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
         Mapping::set(min_transfers, token_address, min_transfer);
@@ -198,8 +199,8 @@ program token_service_v0001.aleo {
 
     finalize update_max_transfer_ts(from: address, token_address: address, max_transfer: u128) {
         // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
         Mapping::set(max_transfers, token_address, max_transfer);
@@ -218,8 +219,8 @@ program token_service_v0001.aleo {
 
     finalize update_withdrawal_limit(from: address, token_address: address, percentage: u16, duration: u32, threshold_no_limit: u128) {
         // Get the owner address
-        // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TS, true);
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
         let withdrawal_limit: WithdrawalLimit = WithdrawalLimit {
             percentage,
@@ -325,7 +326,8 @@ program token_service_v0001.aleo {
         token_bridge_v0001.aleo/consume(
             source_chain_id, 
             source_token_service_address, 
-            token_address, sender, 
+            token_address, 
+            sender, 
             receiver, 
             actual_receiver, 
             amount, 

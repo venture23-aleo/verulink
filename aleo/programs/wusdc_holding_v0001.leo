@@ -2,12 +2,14 @@ import wusdc_token_v0001.aleo;
 
 program wusdc_holding_v0001.aleo {
 
+    mapping holdings: address => u128;
+
     // mapping used as variable
     // true: address of owner 
     // false: Null
     mapping owner_holding: bool => address;
 
-    mapping holdings: address => u128;
+    const OWNER_INDEX: bool = true;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -20,10 +22,10 @@ program wusdc_holding_v0001.aleo {
 
     finalize initialize_holding(connector: address) {
         // Assert holding program has not been initialized before
-        assert(!Mapping::contains(owner_holding, true));
+        assert(!Mapping::contains(owner_holding, OWNER_INDEX));
 
         // Set the owner program
-        Mapping::set(owner_holding, true, connector);
+        Mapping::set(owner_holding, OWNER_INDEX, connector);
     }
 
     ///////////////////////////////
@@ -39,11 +41,11 @@ program wusdc_holding_v0001.aleo {
     finalize transfer_ownership_holding(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_holding, true);
+        let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(owner_holding, true, new_owner);
+        Mapping::set(owner_holding, OWNER_INDEX, new_owner);
     }
 
 
@@ -53,7 +55,7 @@ program wusdc_holding_v0001.aleo {
 
     finalize hold_fund(from: address, user: address, amount: u128) {
         // Assert only owner can hold fund
-        let owner: address = Mapping::get(owner_holding, true);
+        let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
         let held_amount: u128 = Mapping::get_or_use(holdings, user, 0u128);
@@ -69,7 +71,7 @@ program wusdc_holding_v0001.aleo {
 
     finalize release_fund(from: address, user: address, amount: u128) {
         // Assert only owner can release fund
-        let owner: address = Mapping::get(owner_holding, true);
+        let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
         let held_amount: u128 = Mapping::get(holdings, user);

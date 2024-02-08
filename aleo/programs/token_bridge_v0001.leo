@@ -169,6 +169,8 @@ program token_bridge_v0001.aleo {
     const PAUSED_VALUE: u8 = 0u8;
     const UNPAUSED_VALUE: u8 = 1u8;
 
+    const OWNER_INDEX: bool = true;
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
@@ -211,7 +213,7 @@ program token_bridge_v0001.aleo {
         }
 
         // Set the owner
-        Mapping::set(owner_TB, true, owner);
+        Mapping::set(owner_TB, OWNER_INDEX, owner);
 
         // Initialize the bridge as paused
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
@@ -230,11 +232,11 @@ program token_bridge_v0001.aleo {
     finalize transfer_ownership_tb(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let current_owner: address = Mapping::get(owner_TB, true);
+        let current_owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, current_owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(owner_TB, true, new_owner);
+        Mapping::set(owner_TB, OWNER_INDEX, new_owner);
     }
 
     /////////////////////////////////////
@@ -251,7 +253,7 @@ program token_bridge_v0001.aleo {
     finalize add_attestor_tb(from: address, new_attestor: address, new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
@@ -273,7 +275,7 @@ program token_bridge_v0001.aleo {
     finalize remove_attestor_tb(from: address, attestor: address, new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
@@ -302,7 +304,7 @@ program token_bridge_v0001.aleo {
     finalize update_threshold_tb(from: address, new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
@@ -324,7 +326,7 @@ program token_bridge_v0001.aleo {
     finalize add_chain_tb(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         Mapping::set(supported_chains, chain_id, true);
@@ -338,7 +340,7 @@ program token_bridge_v0001.aleo {
     finalize remove_chain_tb(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         // If the chain_id is not supported, this fails
@@ -361,7 +363,7 @@ program token_bridge_v0001.aleo {
     finalize add_service_tb(from: address, service: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         Mapping::set(supported_services, service, true);
@@ -377,7 +379,7 @@ program token_bridge_v0001.aleo {
     finalize remove_service_tb(from: address, service: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         // If service does not exist, this is expected to fail
@@ -398,7 +400,7 @@ program token_bridge_v0001.aleo {
     finalize pause_tb(from: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
@@ -413,7 +415,7 @@ program token_bridge_v0001.aleo {
     finalize unpause_tb(from: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(owner_TB, true);
+        let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, UNPAUSED_VALUE);
