@@ -64,6 +64,7 @@ contract TokenService is
     function _packetify(address tokenAddress, uint256 amount, string memory receiver) 
         internal view returns (PacketLibrary.OutPacket memory packet)
     {
+        require(PacketLibrary.strlen(receiver) == 63, "Wrong receiver Address");
         require(!blackListService.isBlackListed(msg.sender), "Sender Blacklisted");
         require(isEnabledToken(tokenAddress), "Token not supported");
         require(isAmountInRange(tokenAddress, amount), "Amount out of range");
