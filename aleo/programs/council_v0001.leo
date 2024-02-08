@@ -42,8 +42,9 @@ program council_v0001.aleo {
     const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
 
     const THRESHOLD_INDEX: bool = true;
-
     const TOTAL_MEMBERS_INDEX: bool = false;
+
+    const INITIAL_TOTAL_MEMBERS: u8 = 5u8;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -54,7 +55,7 @@ program council_v0001.aleo {
     transition initialize(public initial_members: [address; 5], public threshold: u8) {
         
         // Sanity check for threhsold
-        assert(threshold >= 1u8 && threshold <= 5u8 );
+        assert(threshold >= 1u8 && threshold <= INITIAL_TOTAL_MEMBERS );
 
         // Assert that the members are different
         assert_neq(initial_members[0u8], initial_members[1u8]);
@@ -79,13 +80,13 @@ program council_v0001.aleo {
         assert(!Mapping::contains(settings, true));
 
         // Set the initial members
-        for i: u8 in 0u8..5u8 {
+        for i: u8 in 0u8..INITIAL_TOTAL_MEMBERS {
             Mapping::set(members, initial_members[i], true);
         }
 
         // Set the initial initial values
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
-        Mapping::set(settings, TOTAL_MEMBERS_INDEX, 5u8);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, INITIAL_TOTAL_MEMBERS);
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
     }
 

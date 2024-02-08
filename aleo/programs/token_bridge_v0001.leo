@@ -171,6 +171,8 @@ program token_bridge_v0001.aleo {
 
     const OWNER_INDEX: bool = true;
 
+    const INITIAL_TOTAL_ATTESTORS: u8 = 5u8;
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
@@ -180,7 +182,7 @@ program token_bridge_v0001.aleo {
     transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public owner: address) {
 
         // Sanity check for threshold
-        assert(threshold >= 1u8 && threshold <= 5u8 );
+        assert(threshold >= 1u8 && threshold <= INITIAL_TOTAL_ATTESTORS );
 
         // Assert all attestors are different
         assert_neq(initial_attestors[0u8], initial_attestors[1u8]);
@@ -205,10 +207,10 @@ program token_bridge_v0001.aleo {
         assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
         Mapping::set(bridge_settings, THRESHOLD_INDEX, threshold);
-        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, 5u8);
+        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, INITIAL_TOTAL_ATTESTORS);
 
         // Set the initial attestors
-        for i: u8 in 0u8..5u8 {
+        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
             Mapping::set(attestors, initial_attestors[i], true);
         }
 
@@ -587,7 +589,7 @@ program token_bridge_v0001.aleo {
         // Assert that the packet is being received from supported chain.
         assert(Mapping::get(supported_chains, source_chain_id));
 
-        for i: u8 in 0u8..5u8 {
+        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
             if (i < valid_signs) {
                 // Assert that the attestors signing are valid
                 assert(Mapping::contains(attestors, signers[i]));
@@ -715,7 +717,7 @@ program token_bridge_v0001.aleo {
         // Assert that the packet is being consumed from one of the supported services
         assert(Mapping::get(supported_services, from));
 
-        for i: u8 in 0u8..5u8 {
+        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
             if (i < valid_signs) {
                 // Assert that the attestors signing are valid
                 assert(Mapping::contains(attestors, signers[i]));
@@ -755,7 +757,7 @@ program token_bridge_v0001.aleo {
     /// If the address is *NOT* ZERO_ADDRESS and the signature does not match, it throws an error
     function get_valid_signatures_count(msg: field, signers: [address; 5], signs: [signature; 5]) -> u8 {
         let count: u8 = 0u8;
-        for i: u8 in 0u8..5u8 {
+        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
             if (signers[i] != ZERO_ADDRESS) {
                 assert(signature::verify(signs[i], signers[i], msg));
                 count = count + 1u8;
