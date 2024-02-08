@@ -64,7 +64,7 @@ program token_service_v0001.aleo {
 
     /// Initialize the token service program
     /// Note: This function must be allowed to be called only once.
-    transition initialize_ts(owner: address) {
+    transition initialize_ts(public owner: address) {
         return then finalize(owner);
     }
 
@@ -159,7 +159,7 @@ program token_service_v0001.aleo {
         Mapping::remove(max_transfers, token_address);
     }
 
-    transition update_connector_ts(token_address: address, new_token_connector: address) { 
+    transition update_connector_ts(public token_address: address, public new_token_connector: address) { 
         return then finalize(self.caller, token_address, new_token_connector);
     }
 
@@ -176,7 +176,7 @@ program token_service_v0001.aleo {
     ///// Update Minimum Transfer ///////
     ////////////////////////////////////
 
-    transition update_min_transfer_ts(public token_address: address, min_transfer: u128) {
+    transition update_min_transfer_ts(public token_address: address, public min_transfer: u128) {
         return then finalize(self.caller, token_address, min_transfer);
     }
 
@@ -193,7 +193,7 @@ program token_service_v0001.aleo {
     ///// Update Maximum Transfer ///////
     ////////////////////////////////////
 
-    transition update_max_transfer_ts(public token_address: address, max_transfer: u128) {
+    transition update_max_transfer_ts(public token_address: address, public max_transfer: u128) {
         return then finalize(self.caller, token_address, max_transfer);
     }
 
@@ -314,6 +314,8 @@ program token_service_v0001.aleo {
         signers: [address; 5], 
         signs: [signature; 5]
     ) {
+        public signers: [address; 5], 
+        public signs: [signature; 5]
 
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020

@@ -269,11 +269,11 @@ program token_bridge_v0001.aleo {
 
     /// Remove an existing attestor from the bridge program
     /// Can only be called from owner
-    transition remove_attestor_tb(public attestor: address, new_threshold: u8) {
+    transition remove_attestor_tb(public attestor: address, public new_threshold: u8) {
         return then finalize(self.caller, attestor, new_threshold);
     }
 
-    finalize remove_attestor_tb(from: address, attestor: address, new_threshold: u8) {
+    finalize remove_attestor_tb(from: address, attestor: address, public new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -301,7 +301,7 @@ program token_bridge_v0001.aleo {
         return then finalize(self.caller, new_threshold);
     }
 
-    finalize update_threshold_tb(from: address, new_threshold: u8) {
+    finalize update_threshold_tb(from: address, public new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -639,6 +639,8 @@ program token_bridge_v0001.aleo {
         signers: [address; 5], 
         signs: [signature; 5]
     ) {
+        public signers: [address; 5], 
+        public signs: [signature; 5]
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin

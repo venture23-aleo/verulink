@@ -223,7 +223,7 @@ program council_v0001.aleo {
         new_threshold: u8
     }
 
-    transition remove_member(public id: u32, public existing_member: address, new_threshold: u8) {
+    transition remove_member(public id: u32, public existing_member: address, public new_threshold: u8) {
         let proposal: RemoveMember = RemoveMember {
             id,
             existing_member,
@@ -354,7 +354,7 @@ program council_v0001.aleo {
         new_threshold: u8
     }
 
-    transition tb_add_attestor(public id: u32, public new_attestor: address, new_threshold: u8) {
+    transition tb_add_attestor(public id: u32, public new_attestor: address, public new_threshold: u8) {
         let proposal: TbAddAttestor = TbAddAttestor {
             id,
             new_attestor,
@@ -394,7 +394,7 @@ program council_v0001.aleo {
         new_threshold: u8
     }
 
-    transition tb_remove_attestor(public id: u32, public existing_attestor: address, new_threshold: u8) {
+    transition tb_remove_attestor(public id: u32, public existing_attestor: address, public new_threshold: u8) {
         let proposal: TbRemoveAttestor = TbRemoveAttestor {
             id,
             existing_attestor,
