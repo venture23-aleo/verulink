@@ -16,10 +16,9 @@ const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 const ProxyContract = await ethers.getContractFactory("ProxyContract");
 const bytecode = ProxyContract.bytecode;
 
-const chainId = 2;
+const chainId = 1;
+const destChainId = 2;
 const bridgeAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-const usdcAddress = "0x13ab54435913454568ee88021E39e8F029159f46";
-const usdtAddress = "0x694791a385243e222C94Fd4dd37568895Fcb7096";
 const ownerAddress = process.env.SAFE_ADDRESS;
 
 const tokenserviceimplementationAddress = process.env.TOKENSERVICEIMPLEMENTATION_ADDRESS;
@@ -36,18 +35,18 @@ const initializeData = new ethers.utils.Interface([{
             "type": "uint256"
         },
         {
-            "internalType": "address",
-            "name": "_usdc",
-            "type": "address"
-        },
-        {
-            "internalType": "address",
-            "name": "_usdt",
-            "type": "address"
+            "internalType": "uint256",
+            "name": "_destChainId",
+            "type": "uint256"
         },
         {
             "internalType": "address",
             "name": "_owner",
+            "type": "address"
+        },
+        {
+            "internalType": "address",
+            "name": "_blackListService",
             "type": "address"
         }
     ],
@@ -55,7 +54,7 @@ const initializeData = new ethers.utils.Interface([{
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-}]).encodeFunctionData("initialize", [bridgeAddress, chainId, usdcAddress, usdtAddress, ownerAddress]);
+}]).encodeFunctionData("initialize", [bridgeAddress, chainId, destChainId, ownerAddress, process.env.BLACKLISTSERVICEPROXY_ADDRESS]);
 const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenserviceimplementationAddress, initializeData]);
 
 // Encode deployment

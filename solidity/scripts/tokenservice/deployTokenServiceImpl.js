@@ -13,7 +13,7 @@ const provider = new ethers.providers.JsonRpcProvider(
     "https://rpc2.sepolia.org"
 );
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-const ERC20TokenService = await ethers.getContractFactory("ERC20TokenService");
+const ERC20TokenService = await ethers.getContractFactory("TokenService");
 const bytecode = ERC20TokenService.bytecode;
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
 const deployCallData = deployerInterface.encodeFunctionData("performCreate", [

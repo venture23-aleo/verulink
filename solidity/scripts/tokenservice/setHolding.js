@@ -12,7 +12,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 );
 console.log("ethers version = ", ethers.version);
 
-async function addToken(signer) {
+async function setHolding(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -23,11 +23,11 @@ async function addToken(signer) {
     ethAdapter,
   });
 
-  const accountToberemovedFromBlackListed = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
+  const new_holding = process.env.HOLDINGPROXY_ADDRESS;
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
-  const ERC20TokenService = await ethers.getContractFactory("ERC20TokenService");
+  const ERC20TokenService = await ethers.getContractFactory("TokenService");
   const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("removeFromBlackList", [accountToberemovedFromBlackListed]);
+  const calldata = iface.encodeFunctionData("setHolding", [new_holding]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -58,4 +58,4 @@ async function addToken(signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addToken(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+setHolding(new ethers.Wallet(process.env.SECRET_KEY1, provider));
