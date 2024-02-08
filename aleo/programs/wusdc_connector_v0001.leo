@@ -26,7 +26,6 @@ program wusdc_connector_v0001.aleo {
     /// # Arguments:
     /// * sender: [u8; 32] - Address of the sender on source chain (Ethereum)
     /// * receiver: address - Receiver on the packet in Aleo
-    /// * actual_receiver: address - Address where the token is minted on Aleo
     /// * amount: u128 - Amount to be minted on Aleo
     /// * sequence: u32 - Sequence no for this chain on the source chain
     /// * height: u32 - Height of the source chain where the packet originated
@@ -35,7 +34,6 @@ program wusdc_connector_v0001.aleo {
     transition wusdc_receive(
         public sender: [u8; 32], 
         public receiver: address, 
-        public actual_receiver: address, 
         public amount: u128, 
         public sequence: u64, 
         public height: u64, 
@@ -43,14 +41,13 @@ program wusdc_connector_v0001.aleo {
         public signs: [signature; 5]
     ) {
 
-        token_service_v0001.aleo/token_receive(
+        let screening_passed: bool = token_service_v0001.aleo/token_receive(
             origin_chain_id(), 
             origin_token_service_address(), 
             origin_token_address(), 
             WUSDC_TOKEN, 
             sender, 
             receiver, 
-            actual_receiver, 
             amount, 
             sequence, 
             height, 
@@ -58,23 +55,19 @@ program wusdc_connector_v0001.aleo {
             signs
         );
 
-        wusdc_token_v0001.aleo/mint_public(actual_receiver, amount);
-
-        // If the packet did not pass the screening, the `actual_receiver` must be the holding program
-        // In case the packet passed the screening, the receiver and the actual receiver are the same address.
-        // And additional checks are not required
-        let check_required: bool = !(receiver == actual_receiver);
-
+        let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
-
-        if check_required {
+        if (!screening_passed) {
+            actual_receiver = WUSDC_HOLDING;
             held_amount = amount;
-            assert_eq(actual_receiver, WUSDC_HOLDING);
         }
+
+        wusdc_token_v0001.aleo/mint_public(actual_receiver, amount);
 
         wusdc_holding_v0001.aleo/hold_fund(receiver, held_amount);
 
     }
+
 
     transition wusdc_send(public receiver: [u8; 32], public amount: u128) {
 

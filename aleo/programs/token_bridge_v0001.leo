@@ -575,15 +575,12 @@ program token_bridge_v0001.aleo {
         public dest_token_address: address, 
         public sender_address: [u8; 32], 
         public receiver_address: address, 
-        public actual_receiver: address, 
         public amount: u128, 
         public sequence: u64, 
         public height: u64, 
-        signers: [address; 5], 
-        signs: [signature; 5]
-    ) {
         public signers: [address; 5], 
         public signs: [signature; 5]
+    ) -> bool {
         // Assert that only a program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
         // self.signer = tx.origin
@@ -618,27 +615,15 @@ program token_bridge_v0001.aleo {
 
         let packet_hash: field = BHP256::hash_to_field(in_packet);
 
-        let screening_passed: bool = receiver_address == actual_receiver;
+        let (screening_passed, votes): (bool, u8) = get_majority_count(packet_hash, signers , signs);
 
-        let packet_hash_with_screening: field = BHP256::hash_to_field(InPacketWithScreening {
-            packet_hash,
-            screening_passed
-        });
-
-        let valid_signs: u8 = get_valid_signatures_count(packet_hash_with_screening, signers , signs );
-
-        let packet_attestor_keys: [field; 5] = get_packet_attestor_keys(source_chain_id, sequence, signers);
-
-        return then finalize (
+        return screening_passed then finalize (
             self.caller, 
             source_chain_id, 
             sequence, 
-            packet_hash_with_screening, 
             signers, 
             signs, 
-            valid_signs, 
-            packet_attestor_keys, 
-            screening_passed
+            votes,
         );
     }
 
@@ -646,12 +631,9 @@ program token_bridge_v0001.aleo {
         from: address, 
         chain_id: u128, 
         sequence: u64 , 
-        packet_hash_with_screening: field, 
         signers: [address; 5], 
         signs: [signature; 5], 
-        valid_signs: u8, 
-        packet_attestor_keys: [field; 5], 
-        screening_passed: bool
+        votes: u8, 
     ) {
         // Assert that the bridge is unpaused
         assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
@@ -662,17 +644,9 @@ program token_bridge_v0001.aleo {
         // Assert that the packet is being consumed from one of the supported services
         assert(Mapping::get(supported_services, from));
 
-        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
-            if (i < valid_signs) {
-                // Assert that the attestors signing are valid
-                assert(Mapping::contains(attestors, signers[i]));
-                
-                // Assert attestor can only vote once for given (chain_id, sequence)
-                assert(!Mapping::contains(in_packet_attestors, packet_attestor_keys[i]));
-
-                // Mark the packet as signed by attestor
-                Mapping::set(in_packet_attestors, packet_attestor_keys[i], screening_passed);
-            }
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            // Assert that the attestors signing are valid
+            assert(Mapping::contains(attestors, signers[i]));
         }
 
         // Get the threshold
@@ -680,8 +654,7 @@ program token_bridge_v0001.aleo {
         let threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
 
         // Ensure enough attestation for the packet
-        let packet_attestation: u8 = Mapping::get_or_use(in_packet_attestations, packet_hash_with_screening, 0u8) + valid_signs;
-        assert(packet_attestation >= threshold);
+        assert(votes >= threshold);
 
         let packet_id: PacketId = PacketId {
             chain_id,
@@ -694,15 +667,15 @@ program token_bridge_v0001.aleo {
 
         // Consume the packet
         Mapping::set(in_packet_consumed, packet_id, true);
-
     }
+
 
 
     /// Returns the number of valid signatures
     /// If the address is *NOT* ZERO_ADDRESS and the signature does not match, it throws an error
     function get_valid_signatures_count(msg: field, signers: [address; 5], signs: [signature; 5]) -> u8 {
         let count: u8 = 0u8;
-        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             if (signers[i] != ZERO_ADDRESS) {
                 assert(signature::verify(signs[i], signers[i], msg));
                 count = count + 1u8;
@@ -711,38 +684,72 @@ program token_bridge_v0001.aleo {
         return count;
     }
 
-    /// Returns the packet attestor keys for the given PacketId(chain_id, sequence) and the signers
-    function get_packet_attestor_keys(chain_id: u128, sequence: u64, signers: [address; 5]) -> [field; 5] {
-        let packet_attestor_keys: [field; 5] = [
-            BHP256::hash_to_field(PacketIdWithAttestor {
-                chain_id,
-                sequence,
-                attestor: signers[0u8]
-            }),
-            BHP256::hash_to_field(PacketIdWithAttestor {
-                chain_id,
-                sequence,
-                attestor: signers[1u8]
-            }),
-            BHP256::hash_to_field(PacketIdWithAttestor {
-                chain_id,
-                sequence,
-                attestor: signers[2u8]
-            }),
-            BHP256::hash_to_field(PacketIdWithAttestor {
-                chain_id,
-                sequence,
-                attestor: signers[3u8]
-            }),
-            BHP256::hash_to_field(PacketIdWithAttestor {
-                chain_id,
-                sequence,
-                attestor: signers[4u8]
-            })
-        ];
-        return packet_attestor_keys;
+    function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (bool, u8) {
+        // Assert all signers are different
+        let unique_signers: u8 = 0u8;
+        if (signers[0u8] != ZERO_ADDRESS) {
+            assert(signers[0u8] != signers[1u8]);
+            assert_neq(signers[0u8], signers[1u8]);
+            assert_neq(signers[0u8], signers[2u8]);
+            assert_neq(signers[0u8], signers[3u8]);
+            assert_neq(signers[0u8], signers[4u8]);
+            unique_signers += 1u8;
+        }
+
+        if (signers[1u8] != ZERO_ADDRESS) {
+            assert_neq(signers[1u8], signers[2u8]);
+            assert_neq(signers[1u8], signers[3u8]);
+            assert_neq(signers[1u8], signers[4u8]);
+            unique_signers += 1u8;
+        }
+
+        if (signers[2u8] != ZERO_ADDRESS) {
+            assert_neq(signers[2u8], signers[3u8]);
+            assert_neq(signers[2u8], signers[4u8]);
+            unique_signers += 1u8;
+        }
+
+        if (signers[3u8] != ZERO_ADDRESS) {
+            assert_neq(signers[3u8], signers[4u8]);
+            unique_signers += 1u8;
+        }
+
+        if (signers[4u8] != ZERO_ADDRESS) {
+            unique_signers += 1u8;
+        }
+
+        let yay_count: u8 = 0u8;
+        let nay_count: u8 = 0u8;
+
+        let packet_hash_with_yay: field = BHP256::hash_to_field(InPacketWithScreening {
+            packet_hash,
+            screening_passed: true
+        });
+
+        let packet_hash_with_nay: field = BHP256::hash_to_field(InPacketWithScreening {
+            packet_hash,
+            screening_passed: false
+        });
+
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            if (signers[i] != ZERO_ADDRESS) {
+                let yay: bool = signature::verify(signs[i], signers[i], packet_hash_with_yay);
+                let nay: bool = signature::verify(signs[i], signers[i], packet_hash_with_nay);
+                assert(yay | nay);
+                if (yay) { yay_count = yay_count + 1u8; }
+                if (nay) { nay_count = nay_count + 1u8; }
+            }
+        }
+
+        assert(yay_count != nay_count);
+
+        assert_eq(unique_signers, yay_count + nay_count);
+
+        if (yay_count > nay_count) {
+            return (true, yay_count);
+        } else {
+            return (false, nay_count);
+        }
     }
 
 }
-
-

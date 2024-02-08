@@ -307,15 +307,12 @@ program token_service_v0001.aleo {
         public token_address: address, 
         public sender: [u8; 32], 
         public receiver: address, 
-        public actual_receiver: address, 
         public amount: u128, 
         public sequence_no_of_source_network: u64, 
         public height_of_source_network: u64, 
-        signers: [address; 5], 
-        signs: [signature; 5]
-    ) {
         public signers: [address; 5], 
         public signs: [signature; 5]
+    ) -> bool {
 
         // Assert that only a connector program can call this method
         // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
@@ -325,13 +322,12 @@ program token_service_v0001.aleo {
 
 
         // call consume on bridge
-        token_bridge_v0001.aleo/consume(
+        let screening_passed: bool = token_bridge_v0001.aleo/consume(
             source_chain_id, 
             source_token_service_address, 
             token_address, 
             sender, 
             receiver, 
-            actual_receiver, 
             amount, 
             sequence_no_of_source_network, 
             height_of_source_network, 
@@ -339,7 +335,7 @@ program token_service_v0001.aleo {
             signs
         );
 
-        return then finalize(self.caller, token_address, amount);
+        return screening_passed then finalize(self.caller, token_address, amount);
     }
 
     finalize token_receive(connector: address, token_address: address, amount: u128) {
@@ -351,6 +347,7 @@ program token_service_v0001.aleo {
         Mapping::set(total_supply, token_address, current_supply + amount);
 
     }
+
 
     const HUNDRED_PERCENTAGE: u16 = 100_00u16;
 
