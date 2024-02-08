@@ -1,34 +1,37 @@
-import { ethers, Wallet } from "ethers";
+import hardhat from 'hardhat';
+const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {TokenBridgeImplementationABI} from "../ABI/ABI.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://eth-goerli.g.alchemy.com/v2/fLCeKO4GA9Gc3js8MUt9Djy7WHCFxATq"
+  "https://rpc2.sepolia.org"
 );
+console.log("ethers version = ", ethers.version);
 
-// const safeAddress = process.env.SAFE_ADDRESS;
-
-async function addTokenService(safeAddress, senderAddress, signer) {
+async function addTokenService(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-goerli.safe.global",
+    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
     ethAdapter,
   });
 
-const tokenService = "0x914d6560FF059Faa153201CBE73C95b6660085F1";
-const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-const abi = TokenBridgeImplementationABI;
-  const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("addTokenService", [tokenService]);
+  const tokenService = "0x914d6560FF059Faa153201CBE73C95b6660085F1";
+  const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
+  const ERC20TokenbridgeImpl = await ethers.getContractFactory("ERC20TokenBridge", {
+    libraries: {
+      PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+    },
+  });
+  const iface = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format());
+  const calldata = iface.encodeFunctionData("updateTokenService", [tokenService]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -59,8 +62,4 @@ const abi = TokenBridgeImplementationABI;
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addTokenService(
-  process.env.SAFE_ADDRESS,
-  process.env.SENDER_ADDRESS,
-  new Wallet(process.env.SECRET_KEY1, provider)
-);
+addTokenService(new ethers.Wallet(process.env.SECRET_KEY1, provider));

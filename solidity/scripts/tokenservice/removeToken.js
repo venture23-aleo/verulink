@@ -1,34 +1,34 @@
-import { ethers, Wallet } from "ethers";
+import hardhat from 'hardhat';
+const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {tokenServiceImplementationABI} from "../ABI/ABI.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://eth-goerli.g.alchemy.com/v2/fLCeKO4GA9Gc3js8MUt9Djy7WHCFxATq"
+  "https://rpc2.sepolia.org"
 );
+console.log("ethers version = ", ethers.version);
 
-// const safeAddress = process.env.SAFE_ADDRESS;
-
-async function addToken(safeAddress, senderAddress, signer) {
+async function addToken(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-goerli.safe.global",
+    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
     ethAdapter,
   });
 
-  const tokenAddress = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557"; 
+  const tokenAddress = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
+  const destChainId = 2;
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
-  const abi = tokenServiceImplementationABI;
-  const iface = new ethers.utils.Interface(abi);
-  const calldata = iface.encodeFunctionData("removeToken", [tokenAddress]);
+  const ERC20TokenService = await ethers.getContractFactory("ERC20TokenService");
+  const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
+  const calldata = iface.encodeFunctionData("removeToken", [tokenAddress, destChainId]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -59,8 +59,4 @@ async function addToken(safeAddress, senderAddress, signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addToken(
-  process.env.SAFE_ADDRESS,
-  process.env.SENDER_ADDRESS,
-  new Wallet(process.env.SECRET_KEY1, provider)
-);
+addToken(new ethers.Wallet(process.env.SECRET_KEY1, provider));

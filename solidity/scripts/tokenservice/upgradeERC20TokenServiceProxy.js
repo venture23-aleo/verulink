@@ -3,7 +3,7 @@ import { ethers, Wallet } from "ethers";
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {CreateCallAbi, tokenServiceImplementationABI} from "../ABI/ABI.js";
+import { CreateCallAbi, tokenServiceImplementationABI } from "../ABI/ABI.js";
 
 dotenv.config();
 
@@ -55,4 +55,4 @@ const transactionConfig = {
     senderSignature: signature.data,
 };
 
-// await safeService.proposeTransaction(transactionConfig);
+await safeService.proposeTransaction(transactionConfig);

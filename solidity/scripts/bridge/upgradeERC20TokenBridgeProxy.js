@@ -1,23 +1,30 @@
 import * as dotenv from "dotenv";
-import { ethers, Wallet } from "ethers";
+import hardhat from 'hardhat';
+const { ethers } = hardhat;
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {CreateCallAbi, TokenBridgeImplementationABI} from "../ABI/ABI.js";
 
 dotenv.config();
 
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(
-    "https://eth-goerli.g.alchemy.com/v2/fLCeKO4GA9Gc3js8MUt9Djy7WHCFxATq"
+    "https://rpc2.sepolia.org"
 );
+console.log("ethers version = ", ethers.version);
+const ERC20TokenbridgeImpl = await ethers.getContractFactory("ERC20TokenBridge", {
+    libraries: {
+        PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+    },
+});
+
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 
-const tokenbridgenewImplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
+const tokenbridgenewImplementationAddress = process.env.TOKENBRIDGENEWIMPLEMENTATION_ADDRESS;
 const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
 
 // Encode deployment
-const deployerInterface = new ethers.utils.Interface(TokenBridgeImplementationABI);
+const deployerInterface = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format());
 const deployCallData = deployerInterface.encodeFunctionData("upgradeTo", [
     tokenbridgenewImplementationAddress
 ]);
@@ -27,12 +34,12 @@ const ethAdapter = new EthersAdapter({
     signerOrProvider: deployerSigner,
 });
 const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-goerli.safe.global",
+    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
     ethAdapter,
 });
 
 const txData = {
-    to: process.env.tokenbridgeProxyAddress,
+    to: tokenbridgeProxyAddress,
     value: "0",
     data: deployCallData,
 };
