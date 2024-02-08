@@ -80,11 +80,11 @@ program wusdc_token_v0001.aleo {
     finalize transfer_ownership_token(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(token_owner, true);
+        let owner: address = Mapping::get(token_owner, OWNER_INDEX);
         assert_eq(from, owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(token_owner, true, new_owner);
+        Mapping::set(token_owner, OWNER_INDEX, new_owner);
     }
 
 
@@ -96,13 +96,13 @@ program wusdc_token_v0001.aleo {
         return then finalize(self.caller, receiver, amount);
     }
 
-    finalize mint_public(minter: address, receiver: address, amount: u128) {
+    finalize mint_public(from: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(token_owner, true);
+        let owner: address = Mapping::get(token_owner, OWNER_INDEX);
 
         // Only owner can mint
-        assert_eq(minter, owner);
+        assert_eq(from, owner);
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.

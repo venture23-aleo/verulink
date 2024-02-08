@@ -246,7 +246,7 @@ program token_bridge_v0001.aleo {
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
     /// Can only be called from owner
-    transition add_attestor_tb(public new_attestor: address, new_threshold: u8) {
+    transition add_attestor_tb(public new_attestor: address, public new_threshold: u8) {
         return then finalize(self.caller, new_attestor, new_threshold);
     }
 
@@ -256,9 +256,8 @@ program token_bridge_v0001.aleo {
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
+        assert(new_threshold > 0u8);
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        assert(new_threshold >= current_threshold && new_threshold <= total_attestors + 1u8);
 
         assert(!Mapping::contains(attestors, new_attestor));
         Mapping::set(attestors, new_attestor, true);
@@ -280,8 +279,7 @@ program token_bridge_v0001.aleo {
 
         let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        assert(new_threshold >= 1u8 && new_threshold < total_attestors );
-        assert(total_attestors >= 2u8);
+        assert(new_threshold > 0u8);
 
         // If attestor does not exist, this is expected to fail
         assert(Mapping::contains(attestors, attestor));
@@ -698,7 +696,7 @@ program token_bridge_v0001.aleo {
     }
 
     finalize consume(
-        by: address, 
+        from: address, 
         chain_id: u128, 
         sequence: u64 , 
         packet_hash_with_screening: field, 
@@ -715,7 +713,7 @@ program token_bridge_v0001.aleo {
         assert(Mapping::get(supported_chains, chain_id));
 
         // Assert that the packet is being consumed from one of the supported services
-        assert(Mapping::get(supported_services, by));
+        assert(Mapping::get(supported_services, from));
 
         for i: u8 in 0u8..5u8 {
             if (i < valid_signs) {
