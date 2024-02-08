@@ -44,28 +44,31 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
     // Store the information about the token
     mapping info: bool => TokenInfo;
 
+    const OWNER_INDEX: bool = true;
+    const INFO_INDEX: bool = true;
+
     ///////////////////////////////////////////
     /////// Initialization & Governance ///////
     ///////////////////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_token(name: [u8; 32], symbol: [u8; 16], decimals: u8) {
+    transition initialize_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8) {
         return then finalize(self.caller, name, symbol, decimals);
     }
 
     finalize initialize_token(owner: address, name: [u8; 32], symbol: [u8; 16], decimals: u8) {
         // Assert bridge has not been initialized before
-        assert(!Mapping::contains(token_owner, true));
+        assert(!Mapping::contains(token_owner, OWNER_INDEX));
 
         // Set the council program
-        Mapping::set(token_owner, true, owner);
+        Mapping::set(token_owner, OWNER_INDEX, owner);
 
         let token_info: TokenInfo = TokenInfo {
             name,
             symbol,
             decimals
         };
-        Mapping::set(info, true, token_info);
+        Mapping::set(info, OWNER_INDEX, token_info);
     }
 
     /// Update the existing owner program
@@ -77,11 +80,11 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
     finalize transfer_ownership_token(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(token_owner, true);
+        let owner: address = Mapping::get(token_owner, OWNER_INDEX);
         assert_eq(from, owner);
 
         // If attestor does not exist, this is expected to fail
-        Mapping::set(token_owner, true, new_owner);
+        Mapping::set(token_owner, OWNER_INDEX, new_owner);
     }
 
 
@@ -93,13 +96,13 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
         return then finalize(self.caller, receiver, amount);
     }
 
-    finalize mint_public(minter: address, receiver: address, amount: u128) {
+    finalize mint_public(from: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(token_owner, true);
+        let owner: address = Mapping::get(token_owner, OWNER_INDEX);
 
         // Only owner can mint
-        assert_eq(minter, owner);
+        assert_eq(from, owner);
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.
@@ -112,13 +115,13 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
         return then finalize(self.caller, spender, amount);
     }
 
-    finalize burn_public(burner: address, receiver: address, amount: u128) {
+    finalize burn_public(from: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
-        let owner: address = Mapping::get(token_owner, true);
+        let owner: address = Mapping::get(token_owner, OWNER_INDEX);
 
-        // Only governace can burn
-        assert_eq(burner, owner);
+        // Only owner can burn
+        assert_eq(from, owner);
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.

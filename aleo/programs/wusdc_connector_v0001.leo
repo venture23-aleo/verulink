@@ -57,6 +57,7 @@ program wusdc_connector_v0001.aleo {
 
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
+
         if (!screening_passed) {
             actual_receiver = WUSDC_HOLDING;
             held_amount = amount;
@@ -67,7 +68,6 @@ program wusdc_connector_v0001.aleo {
         wusdc_holding_v0001.aleo/hold_fund(receiver, held_amount);
 
     }
-
 
     transition wusdc_send(public receiver: [u8; 32], public amount: u128) {
 

@@ -68,7 +68,7 @@ program wusdc_token_v0001.aleo {
             symbol,
             decimals
         };
-        Mapping::set(info, true, token_info);
+        Mapping::set(info, OWNER_INDEX, token_info);
     }
 
     /// Update the existing owner program
@@ -115,13 +115,13 @@ program wusdc_token_v0001.aleo {
         return then finalize(self.caller, spender, amount);
     }
 
-    finalize burn_public(burner: address, receiver: address, amount: u128) {
+    finalize burn_public(from: address, receiver: address, amount: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(token_owner, OWNER_INDEX);
 
-        // Only governace can burn
-        assert_eq(burner, owner);
+        // Only owner can burn
+        assert_eq(from, owner);
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.
