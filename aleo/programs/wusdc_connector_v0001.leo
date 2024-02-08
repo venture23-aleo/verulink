@@ -38,7 +38,7 @@ program wusdc_connector_v0001.aleo {
         public actual_receiver: address, 
         public amount: u128, 
         public sequence: u64, 
-        public height: u32, 
+        public height: u64, 
         public signers: [address; 5], 
         public signs: [signature; 5]
     ) {

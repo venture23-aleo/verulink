@@ -65,7 +65,7 @@ program token_bridge_v0001.aleo {
         // Hash of the message. Message can be found in service program
         message: OutTokenMessage,
         // Height where the packet is published
-        height: u32
+        height: u64
     }
 
     struct InPacket {
@@ -80,7 +80,7 @@ program token_bridge_v0001.aleo {
         // Service Contract where the packet originated
         message: InTokenMessage,
         // Height on the source chain where the packet originated
-        height: u32
+        height: u64
     }
 
 
@@ -516,7 +516,7 @@ program token_bridge_v0001.aleo {
             destination,
             sequence: target_sequence_no,
             message,
-            height: block.height
+            height: block.height as u64
         };
 
         // Update sequence
@@ -635,7 +635,7 @@ program token_bridge_v0001.aleo {
         public actual_receiver: address, 
         public amount: u128, 
         public sequence: u64, 
-        public height: u32, 
+        public height: u64, 
         signers: [address; 5], 
         signs: [signature; 5]
     ) {

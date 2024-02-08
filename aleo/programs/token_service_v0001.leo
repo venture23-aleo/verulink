@@ -310,7 +310,7 @@ program token_service_v0001.aleo {
         public actual_receiver: address, 
         public amount: u128, 
         public sequence_no_of_source_network: u64, 
-        public height_of_source_network: u32, 
+        public height_of_source_network: u64, 
         signers: [address; 5], 
         signs: [signature; 5]
     ) {
