@@ -3,6 +3,7 @@ const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
+
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -11,7 +12,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 );
 console.log("ethers version = ", ethers.version);
 
-async function addAttestor(signer) {
+async function updateDestinationChainId(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -22,17 +23,17 @@ async function addAttestor(signer) {
     ethAdapter,
   });
 
-  const attestor = "0x50Fb3B83A14edcBF070E9FB8D9395fb8587147da";
-  const newQuorumRequired = 2;
+  const newDestChainId = 3;
+
   const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
     },
   });
-  // console.log("ERC20TokenbridgeImpl = ", ERC20TokenbridgeImpl);
   const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
   const iface = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format());
-  const calldata = iface.encodeFunctionData("removeAttestor", [attestor, newQuorumRequired]);
+
+  const calldata = iface.encodeFunctionData("updateDestinationChainId", [newDestChainId]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -63,6 +64,4 @@ async function addAttestor(signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addAttestor(
-  new ethers.Wallet(process.env.SECRET_KEY1, provider)
-);
+updateDestinationChainId(new ethers.Wallet(process.env.SECRET_KEY1, provider));

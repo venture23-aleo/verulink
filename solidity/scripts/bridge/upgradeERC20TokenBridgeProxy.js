@@ -12,7 +12,7 @@ const provider = new ethers.providers.JsonRpcProvider(
     "https://rpc2.sepolia.org"
 );
 console.log("ethers version = ", ethers.version);
-const ERC20TokenbridgeImpl = await ethers.getContractFactory("ERC20TokenBridge", {
+const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
         PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
     },

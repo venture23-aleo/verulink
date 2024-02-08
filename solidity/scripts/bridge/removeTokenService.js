@@ -25,7 +25,7 @@ async function addTokenService(signer) {
 
   const tokenService = "0x914d6560FF059Faa153201CBE73C95b6660085F1";
   const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-  const ERC20TokenbridgeImpl = await ethers.getContractFactory("ERC20TokenBridge", {
+  const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
     },
