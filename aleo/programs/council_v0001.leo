@@ -332,13 +332,13 @@ program council_v0001.aleo {
     /////// Bridge: Transfer Ownership ////////
     ///////////////////////////////////////////
 
-    struct TbUpdateGovernance {
+    struct TbTransferOwnership {
         id: u32,
         new_owner: address
     }
 
-    transition tb_update_governance(public id: u32, public new_owner: address) {
-        let proposal: TbUpdateGovernance = TbUpdateGovernance {
+    transition tb_transfer_ownership(public id: u32, public new_owner: address) {
+        let proposal: TbTransferOwnership = TbTransferOwnership {
             id,
             new_owner
         };
@@ -350,7 +350,7 @@ program council_v0001.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize tb_update_governance(proposal_hash: field) {
+    finalize tb_transfer_ownership(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 

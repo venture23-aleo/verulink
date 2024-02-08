@@ -47,9 +47,9 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
     const OWNER_INDEX: bool = true;
     const INFO_INDEX: bool = true;
 
-    ///////////////////////////////////////////
-    /////// Initialization & Governance ///////
-    ///////////////////////////////////////////
+    //////////////////////////////
+    /////// Initialization ///////
+    //////////////////////////////
 
     // Initialize can only be called once
     transition initialize_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8) {
