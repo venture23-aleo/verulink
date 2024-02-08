@@ -44,7 +44,11 @@ program council_v0001.aleo {
     const THRESHOLD_INDEX: bool = true;
     const TOTAL_MEMBERS_INDEX: bool = false;
 
-    const INITIAL_TOTAL_MEMBERS: u8 = 5u8;
+    /// This is the maximum threshold that this council program can support
+    /// In case the threshold needs to be more than specified, new contract needs to be deployed
+    const SUPPORTED_THRESHOLD: u8 = 5u8;
+
+    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -54,39 +58,57 @@ program council_v0001.aleo {
     /// Note: This function must be allowed to be called only once.
     transition initialize(public initial_members: [address; 5], public threshold: u8) {
         
-        // Sanity check for threhsold
-        assert(threshold >= 1u8 && threshold <= INITIAL_TOTAL_MEMBERS );
+        let unique_members: u8 = 0u8;
 
         // Assert that the members are different
-        assert_neq(initial_members[0u8], initial_members[1u8]);
-        assert_neq(initial_members[0u8], initial_members[2u8]);
-        assert_neq(initial_members[0u8], initial_members[3u8]);
-        assert_neq(initial_members[0u8], initial_members[4u8]);
+        if (initial_members[0u8] != ZERO_ADDRESS) {
+            assert_neq(initial_members[0u8], initial_members[1u8]);
+            assert_neq(initial_members[0u8], initial_members[2u8]);
+            assert_neq(initial_members[0u8], initial_members[3u8]);
+            assert_neq(initial_members[0u8], initial_members[4u8]);
+            unique_members += 1u8;
+        }
 
-        assert_neq(initial_members[1u8], initial_members[2u8]);
-        assert_neq(initial_members[1u8], initial_members[3u8]);
-        assert_neq(initial_members[1u8], initial_members[4u8]);
+        if (initial_members[1u8] != ZERO_ADDRESS) {
+            assert_neq(initial_members[1u8], initial_members[2u8]);
+            assert_neq(initial_members[1u8], initial_members[3u8]);
+            assert_neq(initial_members[1u8], initial_members[4u8]);
+            unique_members += 1u8;
+        }
 
-        assert_neq(initial_members[2u8], initial_members[3u8]);
-        assert_neq(initial_members[2u8], initial_members[4u8]);
+        if (initial_members[2u8] != ZERO_ADDRESS) {
+            assert_neq(initial_members[2u8], initial_members[3u8]);
+            assert_neq(initial_members[2u8], initial_members[4u8]);
+            unique_members += 1u8;
+        }
 
-        assert_neq(initial_members[3u8], initial_members[4u8]);
+        if (initial_members[3u8] != ZERO_ADDRESS) {
+            assert_neq(initial_members[3u8], initial_members[4u8]);
+            unique_members += 1u8;
+        }
 
-        return then finalize(initial_members, threshold);
+        if (initial_members[4u8] != ZERO_ADDRESS) {
+            unique_members += 1u8;
+        }
+
+        // Sanity check for threhsold
+        assert(threshold >= 1u8 && threshold <= unique_members );
+
+        return then finalize(initial_members, threshold, unique_members);
     }
 
-    finalize initialize(initial_members: [address; 5], threshold: u8) {
+    finalize initialize(initial_members: [address; 5], threshold: u8, total: u8) {
         // Assert council has not been initialized before
         assert(!Mapping::contains(settings, true));
 
         // Set the initial members
-        for i: u8 in 0u8..INITIAL_TOTAL_MEMBERS {
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             Mapping::set(members, initial_members[i], true);
         }
 
         // Set the initial initial values
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
-        Mapping::set(settings, TOTAL_MEMBERS_INDEX, INITIAL_TOTAL_MEMBERS);
+        Mapping::set(settings, TOTAL_MEMBERS_INDEX, total);
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
     }
 

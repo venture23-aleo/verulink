@@ -171,7 +171,10 @@ program token_bridge_v0001.aleo {
 
     const OWNER_INDEX: bool = true;
 
-    const INITIAL_TOTAL_ATTESTORS: u8 = 5u8;
+    /// This is the maximum threshold that this bridge can support
+    /// In case the threshold needs to be more than specified, new contract needs to be deployed
+    /// To support threshold <= 5, we need to set ZERO_ADDRESS as a valid attestor
+    const SUPPORTED_THRESHOLD: u8 = 5u8;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -179,40 +182,60 @@ program token_bridge_v0001.aleo {
 
     /// Initialize the token bridge program
     /// Note: This function must be allowed to be called only once.
-    transition initialize_tb(public threshold: u8, public initial_attestors: [address; 5], public owner: address) {
+    transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) {
 
-        // Sanity check for threshold
-        assert(threshold >= 1u8 && threshold <= INITIAL_TOTAL_ATTESTORS );
+        let unique_attestors: u8 = 0u8;
 
         // Assert all attestors are different
-        assert_neq(initial_attestors[0u8], initial_attestors[1u8]);
-        assert_neq(initial_attestors[0u8], initial_attestors[2u8]);
-        assert_neq(initial_attestors[0u8], initial_attestors[3u8]);
-        assert_neq(initial_attestors[0u8], initial_attestors[4u8]);
+        if (initial_attestors[0u8] != ZERO_ADDRESS) {
+            assert(initial_attestors[0u8] != initial_attestors[1u8]);
+            assert_neq(initial_attestors[0u8], initial_attestors[1u8]);
+            assert_neq(initial_attestors[0u8], initial_attestors[2u8]);
+            assert_neq(initial_attestors[0u8], initial_attestors[3u8]);
+            assert_neq(initial_attestors[0u8], initial_attestors[4u8]);
+            unique_attestors += 1u8;
+        }
 
-        assert_neq(initial_attestors[1u8], initial_attestors[2u8]);
-        assert_neq(initial_attestors[1u8], initial_attestors[3u8]);
-        assert_neq(initial_attestors[1u8], initial_attestors[4u8]);
+        if (initial_attestors[1u8] != ZERO_ADDRESS) {
+            assert_neq(initial_attestors[1u8], initial_attestors[2u8]);
+            assert_neq(initial_attestors[1u8], initial_attestors[3u8]);
+            assert_neq(initial_attestors[1u8], initial_attestors[4u8]);
+            unique_attestors += 1u8;
+        }
 
-        assert_neq(initial_attestors[2u8], initial_attestors[3u8]);
-        assert_neq(initial_attestors[2u8], initial_attestors[4u8]);
+        if (initial_attestors[2u8] != ZERO_ADDRESS) {
+            assert_neq(initial_attestors[2u8], initial_attestors[3u8]);
+            assert_neq(initial_attestors[2u8], initial_attestors[4u8]);
+            unique_attestors += 1u8;
+        }
 
-        assert_neq(initial_attestors[3u8], initial_attestors[4u8]);
+        if (initial_attestors[3u8] != ZERO_ADDRESS) {
+            assert_neq(initial_attestors[3u8], initial_attestors[4u8]);
+            unique_attestors += 1u8;
+        }
 
-        return then finalize(threshold, initial_attestors, owner);
+        if (initial_attestors[4u8] != ZERO_ADDRESS) {
+            unique_attestors += 1u8;
+        }
+
+        // Sanity check for threshold
+        assert(threshold >= 1u8 && threshold <= unique_attestors );
+
+        return then finalize(initial_attestors, threshold, unique_attestors, owner);
     }
 
-    finalize initialize_tb(threshold: u8, initial_attestors: [address; 5], owner: address) {
+    finalize initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
         Mapping::set(bridge_settings, THRESHOLD_INDEX, threshold);
-        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, INITIAL_TOTAL_ATTESTORS);
+        Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, total);
 
         // Set the initial attestors
-        for i: u8 in 0u8..INITIAL_TOTAL_ATTESTORS {
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             Mapping::set(attestors, initial_attestors[i], true);
         }
+        Mapping::set(attestors, ZERO_ADDRESS, true);
 
         // Set the owner
         Mapping::set(owner_TB, OWNER_INDEX, owner);
