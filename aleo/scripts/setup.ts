@@ -1,7 +1,6 @@
 import { Council_v0001Contract } from "../artifacts/js/council_v0001";
 import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
 import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
-import { TbAddChain, TsAddToken, TbAddService } from "../artifacts/js/types";
 import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
 import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE } from "../utils/constants";

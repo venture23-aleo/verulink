@@ -11,6 +11,7 @@
     "test": "aleojs-cli-dev compile && node --no-warnings --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.json --detectOpenHandles"
   },
   "devDependencies": {
+    "@aleojs/cli": "^0.1.3",
     "@babel/preset-env": "^7.23.8",
     "@types/jest": "^29.5.11",
     "babel-jest": "^29.7.0",

@@ -26,7 +26,7 @@ export const deployMainPrograms = async (initialAttestors: string[], initialCoun
   await initializeCouncilTx.wait()
   
 
-  const initializeBridgeTx = await bridge.initialize_tb(initialAttestorThreshold, initialAttestors, council.address());
+  const initializeBridgeTx = await bridge.initialize_tb(initialAttestors, initialAttestorThreshold, council.address());
   // @ts-ignore
   await initializeBridgeTx.wait()
 

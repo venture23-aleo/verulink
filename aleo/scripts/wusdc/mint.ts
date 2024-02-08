@@ -1,5 +1,3 @@
-import { InPacket } from "../../artifacts/js/types";
-
 import {
   aleoChainId,
   ethChainId,
@@ -15,6 +13,7 @@ import { signPacket } from "../../utils/sign";
 import { ALEO_ZERO_ADDRESS } from "../../utils/constants";
 import { Token_service_v0001Contract } from "../../artifacts/js/token_service_v0001";
 import { validateSetup } from "../setup";
+import { InPacket } from "../../artifacts/js/types/token_bridge_v0001";
 
 const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
 const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
@@ -25,12 +24,11 @@ export const createPacket = (aleoUser: string, amount: bigint): InPacket => {
     const incomingSequence = BigInt(
       Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
     );
-    const incomingHeight = 10;
+    const incomingHeight = BigInt(10);
 
     // Create a packet
     const packet: InPacket = {
       version: 0,
-      sequence: incomingSequence,
       source: {
         chain_id: ethChainId,
         addr: evm2AleoArr(ethTsContractAddr),
@@ -40,11 +38,12 @@ export const createPacket = (aleoUser: string, amount: bigint): InPacket => {
         addr: tokenService.address(),
       },
       message: {
-        token: wusdcToken.address(),
-        sender: evm2AleoArr(ethUser),
-        receiver: aleoUser,
+        dest_token_address: wusdcToken.address(),
+        sender_address: evm2AleoArr(ethUser),
         amount: amount,
+        receiver_address: aleoUser,
       },
+      sequence: incomingSequence,
       height: incomingHeight,
     };
     return packet;
@@ -74,9 +73,8 @@ export const mintWrappedToken = async (aleoUser: string, amount: bigint) => {
 
   const initialBalance = await wusdcToken.account(aleoUser, BigInt(0));
   const tx = await wusdcConnecter.wusdc_receive(
-    packet.message.sender, // sender
-    packet.message.receiver, // receiver
-    packet.message.receiver, // actual receiver
+    packet.message.sender_address, // sender
+    packet.message.receiver_address, // receiver
     packet.message.amount,
     packet.sequence,
     packet.height,
