@@ -23,17 +23,18 @@ async function addToken(signer) {
     ethAdapter,
   });
 
-  const tokenAddress = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
+  const tokenAddress = process.env.USDC_ADDR;
+  const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS;
   const destChainId = 2;
   const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
   const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
   const min = 10;
-  const max = 150000000000;
+  const max = 990000000000000;
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
-  const ERC20TokenService = await ethers.getContractFactory("ERC20TokenService");
+  const ERC20TokenService = await ethers.getContractFactory("TokenService");
   const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("addToken", [tokenAddress, destChainId, destTokenAddress, destTokenService, min, max]);
+  const calldata = iface.encodeFunctionData("addToken", [tokenAddress, destChainId, vault, destTokenAddress, destTokenService, min, max]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,

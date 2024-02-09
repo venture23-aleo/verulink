@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 // import { ethers, Wallet } from "ethers";
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import Safe, { SafeFactory } from "@safe-global/protocol-kit";
+import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
 import {CreateCallAbi} from "../ABI/ABI.js";
@@ -13,27 +13,23 @@ const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(
     "https://rpc2.sepolia.org"
 );
+console.log("ethers version = ", ethers.version);
+
+// let deployer;
+// [deployer] = await ethers.getSigners();
+// console.log("deployer = ", deployer);
+// await libInstance.waitForDeployment();
+// console.log("deployerSigner = ", deployerSigner.address);
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-const ProxyContract = await ethers.getContractFactory("ProxyContract");
-const bytecode = ProxyContract.bytecode;
-const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
-    libraries: {
-        PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-    },
-});
+const HoldingImpl = await ethers.getContractFactory("Holding");
+// console.log("ERC20TokenbridgeImpl = ", ERC20TokenbridgeImpl.bytecode);
+const bytecode = HoldingImpl.bytecode;
 
-const destChainId = 2;
-
-const owner = process.env.SAFE_ADDRESS;
-const tokenbridgeimplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
-const initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("initialize", [owner, destChainId]);
-const _data  = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenbridgeimplementationAddress, initializeData]);
-// console.log("_data = ", _data);
 // Encode deployment
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
 const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
     0,
-    bytecode + _data.slice(2)
+    bytecode,
 ]);
 
 const ethAdapter = new EthersAdapter({

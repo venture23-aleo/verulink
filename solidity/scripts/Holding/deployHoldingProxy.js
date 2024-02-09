@@ -16,18 +16,13 @@ const provider = new ethers.providers.JsonRpcProvider(
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 const ProxyContract = await ethers.getContractFactory("ProxyContract");
 const bytecode = ProxyContract.bytecode;
-const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
-    libraries: {
-        PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-    },
-});
-
-const destChainId = 2;
+const HoldingImpl = await ethers.getContractFactory("Holding");
 
 const owner = process.env.SAFE_ADDRESS;
-const tokenbridgeimplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
-const initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("initialize", [owner, destChainId]);
-const _data  = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenbridgeimplementationAddress, initializeData]);
+const tokenservice = process.env.TOKENSERVICEPROXY_ADDRESS;
+const holdingimplementationAddress = process.env.HOLDINGIMPLEMENTATION_ADDRESS;
+const initializeData = new ethers.utils.Interface(HoldingImpl.interface.format()).encodeFunctionData("initialize", [owner, tokenservice]);
+const _data  = new ethers.utils.AbiCoder().encode(["address", "bytes"], [holdingimplementationAddress, initializeData]);
 // console.log("_data = ", _data);
 // Encode deployment
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);

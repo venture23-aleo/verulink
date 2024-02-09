@@ -1,11 +1,10 @@
 import * as dotenv from "dotenv";
-// import { ethers, Wallet } from "ethers";
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {CreateCallAbi} from "../ABI/ABI.js";
+import { CreateCallAbi } from "../ABI/ABI.js";
 
 dotenv.config();
 
@@ -16,19 +15,37 @@ const provider = new ethers.providers.JsonRpcProvider(
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 const ProxyContract = await ethers.getContractFactory("ProxyContract");
 const bytecode = ProxyContract.bytecode;
-const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
-    libraries: {
-        PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-    },
-});
 
-const destChainId = 2;
+const usdcAddress = process.env.USDC_ADDR;
+const usdtAddress = process.env.USDT_ADDR;
+const ownerAddress = process.env.SAFE_ADDRESS;
 
-const owner = process.env.SAFE_ADDRESS;
-const tokenbridgeimplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
-const initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("initialize", [owner, destChainId]);
-const _data  = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenbridgeimplementationAddress, initializeData]);
-// console.log("_data = ", _data);
+const tokenserviceimplementationAddress = process.env.BLACKLISTSERVICEIMPLEMENTATION_ADDRESS;
+const initializeData = new ethers.utils.Interface([{
+    "inputs": [
+        {
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+        },
+        {
+            "internalType": "address",
+            "name": "_usdc",
+            "type": "address"
+        },
+        {
+            "internalType": "address",
+            "name": "_usdt",
+            "type": "address"
+        }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+}]).encodeFunctionData("initialize", [ownerAddress, usdcAddress, usdtAddress]);
+const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenserviceimplementationAddress, initializeData]);
+
 // Encode deployment
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
 const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
@@ -44,7 +61,6 @@ const safeService = new SafeApiKit.default({
     txServiceUrl: "https://safe-transaction-sepolia.safe.global",
     ethAdapter,
 });
-
 const txData = {
     to: process.env.CREATECALL_CONTRACT_ADDRESS,
     value: "0",

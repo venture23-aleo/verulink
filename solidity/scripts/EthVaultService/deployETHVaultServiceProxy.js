@@ -4,7 +4,7 @@ const { ethers } = hardhat;
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {CreateCallAbi} from "../ABI/ABI.js";
+import { CreateCallAbi } from "../ABI/ABI.js";
 
 dotenv.config();
 
@@ -13,12 +13,37 @@ const provider = new ethers.providers.JsonRpcProvider(
     "https://rpc2.sepolia.org"
 );
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-const ERC20TokenService = await ethers.getContractFactory("ERC20TokenService");
-const bytecode = ERC20TokenService.bytecode;
+const ProxyContract = await ethers.getContractFactory("ProxyContract");
+const bytecode = ProxyContract.bytecode;
+
+const ownerAddress = process.env.SAFE_ADDRESS;
+
+const ETHVaultService = process.env.ETHVAULTSERVICEIMPL_ADDRESS;
+const initializeData = new ethers.utils.Interface([{
+    "inputs": [
+        {
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
+        },
+        {
+            "internalType": "address",
+            "name": "_owner",
+            "type": "address"
+        }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+}]).encodeFunctionData("initialize", ["ETHVAULT", ownerAddress]);
+const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [ETHVaultService, initializeData]);
+
+// Encode deployment
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
 const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
     0,
-    bytecode,
+    bytecode + _data.slice(2)
 ]);
 
 const ethAdapter = new EthersAdapter({
@@ -29,7 +54,6 @@ const safeService = new SafeApiKit.default({
     txServiceUrl: "https://safe-transaction-sepolia.safe.global",
     ethAdapter,
 });
-
 const txData = {
     to: process.env.CREATECALL_CONTRACT_ADDRESS,
     value: "0",

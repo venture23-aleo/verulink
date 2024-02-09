@@ -12,7 +12,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 );
 console.log("ethers version = ", ethers.version);
 
-async function addToken(signer) {
+async function disableToken(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -25,10 +25,11 @@ async function addToken(signer) {
 
   const tokenAddress = process.env.USDC_ADDR;
   const destChainId = 2;
+
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");
   const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("removeToken", [tokenAddress, destChainId]);
+  const calldata = iface.encodeFunctionData("disable", [tokenAddress, destChainId]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -59,4 +60,4 @@ async function addToken(signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addToken(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+disableToken(new ethers.Wallet(process.env.SECRET_KEY1, provider));

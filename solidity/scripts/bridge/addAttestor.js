@@ -24,7 +24,7 @@ async function addAttestor(signer) {
 
   const attestor = "0x50Fb3B83A14edcBF070E9FB8D9395fb8587147da";
   const newQuorumRequired = 2;
-  const ERC20TokenbridgeImpl = await ethers.getContractFactory("ERC20TokenBridge", {
+  const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
     },

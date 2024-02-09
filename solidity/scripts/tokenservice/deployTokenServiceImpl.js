@@ -1,5 +1,4 @@
 import * as dotenv from "dotenv";
-// import { ethers, Wallet } from "ethers";
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
@@ -14,26 +13,12 @@ const provider = new ethers.providers.JsonRpcProvider(
     "https://rpc2.sepolia.org"
 );
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-const ProxyContract = await ethers.getContractFactory("ProxyContract");
-const bytecode = ProxyContract.bytecode;
-const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
-    libraries: {
-        PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-    },
-});
-
-const destChainId = 2;
-
-const owner = process.env.SAFE_ADDRESS;
-const tokenbridgeimplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
-const initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("initialize", [owner, destChainId]);
-const _data  = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenbridgeimplementationAddress, initializeData]);
-// console.log("_data = ", _data);
-// Encode deployment
+const ERC20TokenService = await ethers.getContractFactory("TokenService");
+const bytecode = ERC20TokenService.bytecode;
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
 const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
     0,
-    bytecode + _data.slice(2)
+    bytecode,
 ]);
 
 const ethAdapter = new EthersAdapter({

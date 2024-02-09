@@ -16,34 +16,21 @@ const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 const ProxyContract = await ethers.getContractFactory("ProxyContract");
 const bytecode = ProxyContract.bytecode;
 
-const chainId = 2;
-const bridgeAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-const usdcAddress = "0x13ab54435913454568ee88021E39e8F029159f46";
-const usdtAddress = "0x694791a385243e222C94Fd4dd37568895Fcb7096";
+const tokenAddr = process.env.USDC_ADDR;
 const ownerAddress = process.env.SAFE_ADDRESS;
 
-const tokenserviceimplementationAddress = process.env.TOKENSERVICEIMPLEMENTATION_ADDRESS;
+const Erc20VaultService = process.env.ERC20VAULTSERVICEIMPL_ADDRESS;
 const initializeData = new ethers.utils.Interface([{
     "inputs": [
         {
             "internalType": "address",
-            "name": "bridge",
+            "name": "_token",
             "type": "address"
         },
         {
-            "internalType": "uint256",
-            "name": "_chainId",
-            "type": "uint256"
-        },
-        {
-            "internalType": "address",
-            "name": "_usdc",
-            "type": "address"
-        },
-        {
-            "internalType": "address",
-            "name": "_usdt",
-            "type": "address"
+            "internalType": "string",
+            "name": "_name",
+            "type": "string"
         },
         {
             "internalType": "address",
@@ -55,8 +42,8 @@ const initializeData = new ethers.utils.Interface([{
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-}]).encodeFunctionData("initialize", [bridgeAddress, chainId, usdcAddress, usdtAddress, ownerAddress]);
-const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenserviceimplementationAddress, initializeData]);
+}]).encodeFunctionData("initialize", [tokenAddr, "ERC20VAULT", ownerAddress]);
+const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [Erc20VaultService, initializeData]);
 
 // Encode deployment
 const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
