@@ -23,7 +23,7 @@ const wusdcConnecter = new Wusdc_connector_v0002Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
 
 const createPacket = (aleoUser: string, amount: bigint): InPacket => {
-  return createRandomPacket(aleoUser, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), usdcContractAddr, ethUser);
+  return createRandomPacket(aleoUser, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
 }
 
 export const mintWrappedToken = async (aleoUser: string, amount: bigint) => {

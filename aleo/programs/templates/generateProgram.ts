@@ -15,8 +15,8 @@ const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 
 const name = "USD Coin"
 const symbol = "USDC"
-const ethTokenAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-const ethTsContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+const ethTokenAddr = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79".toLowerCase()
+const ethTsContractAddr = "0xf2c1447b518b03e1Ab4ae47021365508871f0225".toLowerCase()
 
 const tokenData = {
     symbol: "wusdc",

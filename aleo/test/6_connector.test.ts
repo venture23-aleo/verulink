@@ -40,6 +40,8 @@ describe("Token Connector", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcConnector.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
 
+  const admin = council.address();
+
   describe("Deployment", () => {
     test(
       "Deploy Bridge",
@@ -212,13 +214,14 @@ describe("Token Connector", () => {
   describe("Happy Path", () => {
 
     test("Ensure proper setup", async () => {
-      expect(await bridge.owner_TB(true)).toBe(aleoUser1);
-      expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
+      expect(await bridge.owner_TB(true)).toBe(admin);
+      expect(await tokenService.owner_TS(true)).toBe(admin);
       expect(await wusdcToken.token_owner(true)).toBe(wusdcConnector.address());
       expect(await wusdcHolding.owner_holding(true)).toBe(wusdcConnector.address());
       expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
       expect(await bridge.supported_chains(ethChainId)).toBe(true);
       expect(await bridge.supported_services(tokenService.address())).toBe(true);
+      expect(await tokenService.token_connectors(wusdcToken.address())).toBe(wusdcConnector.address());
     });
 
     test(
