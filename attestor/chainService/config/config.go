@@ -45,7 +45,7 @@ type Config struct {
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
 	LogConfig              *LoggerConfig          `yaml:"log"`
 	DBPath                 string                 `yaml:"db_path"`
-	ConsumePacketWorker    int                    `yaml:"consume_packet_worker"`
+	ConsumePacketWorker    int                    `yaml:"consume_packet_workers"`
 	Mode                   string                 `yaml:"mode"`
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
