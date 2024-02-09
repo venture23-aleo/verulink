@@ -51,11 +51,6 @@ func main() {
 		return
 	}
 
-	err = readInputs()
-	if err != nil {
-		return
-	}
-
 	err = config.LoadConfig(configPath)
 	if err != nil {
 		return
@@ -65,6 +60,12 @@ func main() {
 		err = errors.New("Ahs(Aleo hasher+signer) command is not available")
 		return
 	}
+
+	err = readInputs()
+	if err != nil {
+		return
+	}
+
 	err = aleo.SetUpPrivateKey(aleoKeyPath, aleoDecryptKey)
 	if err != nil {
 		return
