@@ -246,6 +246,8 @@ func TestRetryFeed(t *testing.T) {
 			pkt := <-packetCh
 			assert.Equal(t, pkt.Sequence, i)
 		}
+		cancel()
+		time.Sleep(time.Millisecond)
 	})
 
 	t.Run("case: retry packets for multiple retry packet name space", func(t *testing.T) {
