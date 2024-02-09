@@ -17,23 +17,13 @@ const (
 	Production  = "prod"
 )
 
-// flags
-var (
-	configFile string
-	dbPath     string
-	logPath    string
-	logEnc     string
-	mode       string
-)
-
-func init() {
-	flag.StringVar(&configFile, "config", "", "config file")
-	flag.StringVar(&dbPath, "db-path", "", "directory path to store key-value db")
-	flag.StringVar(&logPath, "log-path", "", "file path to store logs")
-	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
-	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
+type ConfigArgs struct {
+	ConfigFile string
+	DBPath     string
+	LogPath    string
+	LogEnc     string
+	Mode       string
 }
-
 type ChainConfig struct {
 	Name                      string            `yaml:"name"`
 	ChainID                   *big.Int          `yaml:"chain_id"`
@@ -87,9 +77,9 @@ func GetConfig() *Config {
 	return config
 }
 
-func InitConfig() error {
+func InitConfig(cfgArgs *ConfigArgs) error {
 	flag.Parse()
-	b, err := os.ReadFile(configFile)
+	b, err := os.ReadFile(cfgArgs.ConfigFile)
 	if err != nil {
 		return err
 	}
@@ -108,33 +98,33 @@ func InitConfig() error {
 		config.ConsumePacketWorker = 10
 	}
 
-	if dbPath != "" {
-		err := validateDirectory(dbPath)
+	if cfgArgs.DBPath != "" {
+		err := validateDirectory(cfgArgs.DBPath)
 		if err != nil {
 			return err
 		}
-		file := filepath.Join(dbPath, "bolt.db")
+		file := filepath.Join(cfgArgs.DBPath, "bolt.db")
 		config.DBPath = file
 	} else if config.DBPath == "" {
 		config.DBPath = "./bolt.db"
 	}
 
-	if logPath != "" {
-		err := validatePath(logPath)
+	if cfgArgs.LogPath != "" {
+		err := validatePath(cfgArgs.LogPath)
 		if err != nil {
 			return err
 		}
-		config.LogConfig.OutputPath = logPath
+		config.LogConfig.OutputPath = filepath.Join(cfgArgs.LogPath, "attestor.log")
 	} else if config.LogConfig.OutputPath == "" {
 		config.LogConfig.OutputPath = "./attestor.log"
 	}
 
-	if logEnc != "" {
-		config.LogConfig.Encoding = logEnc
+	if cfgArgs.LogEnc != "" {
+		config.LogConfig.Encoding = cfgArgs.LogEnc
 	}
 
-	if mode != "" && mode == Production {
-		config.Mode = mode
+	if cfgArgs.Mode == Production {
+		config.Mode = cfgArgs.Mode
 	} else {
 		config.Mode = Development
 	}
@@ -144,13 +134,13 @@ func InitConfig() error {
 func validateDirectory(p string) error {
 	finfo, err := os.Stat(p)
 	if errors.Is(err, os.ErrNotExist) {
-		if err := os.MkdirAll(dbPath, 0666); err != nil {
+		if err := os.MkdirAll(p, 0666); err != nil {
 			return err
 		}
 		return nil
 	}
 	if !finfo.IsDir() {
-		return fmt.Errorf("invalid path %s. Should be directory", dbPath)
+		return fmt.Errorf("invalid path %s. Should be directory", p)
 	}
 	return nil
 }
@@ -158,8 +148,7 @@ func validateDirectory(p string) error {
 func validatePath(p string) error {
 	finfo, err := os.Stat(p)
 	if errors.Is(err, os.ErrNotExist) {
-		dir := filepath.Dir(p)
-		if err := os.MkdirAll(dir, 0666); err != nil {
+		if err := os.MkdirAll(p, 0666); err != nil {
 			return err
 		}
 		return nil
