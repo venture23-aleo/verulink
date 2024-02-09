@@ -17,6 +17,13 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
+func getConfigArgs(configFile, dbPath string) *config.ConfigArgs {
+	return &config.ConfigArgs{
+		ConfigFile: configFile,
+		DBPath:     dbPath,
+	}
+}
+
 func setupDB(t *testing.T, p string) func() {
 	err := store.InitKVStore(p)
 	require.NoError(t, err)
@@ -162,7 +169,8 @@ signing_service:
 	_, err = f.WriteString(configStr)
 	require.NoError(t, err)
 	flag.Set("config", configPath)
-	err = config.InitConfig()
+
+	err = config.InitConfig(getConfigArgs(configPath, p))
 	require.NoError(t, err)
 	return func() {
 		os.RemoveAll(p)
@@ -172,16 +180,35 @@ signing_service:
 func TestConsumePackets(t *testing.T) {
 
 	t.Run("test packet consumption", func(t *testing.T) {
+		cleaner := setupConfig(t)
 		t.Cleanup(func() {
+			cleaner()
 			chainIDToChain = map[string]chain.IClient{}
+			RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 		})
 
 		chainID := big.NewInt(1)
+		name := "ethereum"
 		chainIDToChain = map[string]chain.IClient{
-			chainID.String(): &feeder{},
+			chainID.String(): &feeder{name: name},
 		}
-		cleaner := setupConfig(t)
-		t.Cleanup(cleaner)
+
+		ctx, cncl := context.WithCancel(context.Background())
+		defer cncl()
+		completedCh := make(chan *chain.Packet)
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				<-completedCh
+			}
+		}()
+
+		RegisteredCompleteChannels[name] = completedCh
 
 		r := relay{
 			collector: &collectorTest{},
@@ -190,9 +217,8 @@ func TestConsumePackets(t *testing.T) {
 		}
 
 		pktCh := make(chan *chain.Packet)
-		go r.consumePackets(context.TODO(), pktCh)
-		ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
-		defer cncl()
+
+		go r.consumePackets(ctx, pktCh)
 
 		pktCh <- &chain.Packet{
 			Source: chain.NetworkAddress{ChainID: chainID},
@@ -202,6 +228,8 @@ func TestConsumePackets(t *testing.T) {
 			require.Fail(t, "packet not consumed")
 		case pktCh <- &chain.Packet{Source: chain.NetworkAddress{ChainID: chainID}}:
 		}
+		cncl()
+		time.Sleep(time.Millisecond)
 	})
 }
 
