@@ -37,7 +37,7 @@ const createRandomPacket = (receiver: string, amount: bigint): InPacket => {
   const incomingHeight = BigInt(Math.round(Math.random() * Math.pow(2,32) - 1))
   // Create a packet
   const packet: InPacket = {
-    version: 0,
+    version: BRIDGE_VERSION,
     source: {
       chain_id: ethChainId,
       addr: evm2AleoArr(ethTsContractAddr),

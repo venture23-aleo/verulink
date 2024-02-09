@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ContractConfig, snarkDeploy } from "@aleojs/core";
 import networkConfig from '../aleo-config'
 import { to_address } from "aleo-program-to-address";

@@ -9,4 +9,6 @@ export const BRIDGE_PAUSABILITY_INDEX = 3;
 export const BRIDGE_PAUSED_VALUE = 0;
 export const BRIDGE_UNPAUSED_VALUE = 1;
 
+export const BRIDGE_VERSION = 2;
+
 export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";

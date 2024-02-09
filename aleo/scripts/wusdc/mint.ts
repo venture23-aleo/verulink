@@ -28,7 +28,7 @@ export const createPacket = (aleoUser: string, amount: bigint): InPacket => {
 
     // Create a packet
     const packet: InPacket = {
-      version: 0,
+      version: BRIDGE_VERSION,
       source: {
         chain_id: ethChainId,
         addr: evm2AleoArr(ethTsContractAddr),
