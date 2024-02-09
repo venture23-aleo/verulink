@@ -30,33 +30,8 @@ const wusdcConnector = new Wusdc_connector_v0001Contract({ mode: "execute" });
 
 const TIMEOUT = 100_000; // 100 seconds
 
-const createRandomPacket = (receiver: string, amount: bigint): InPacket => {
-  const incomingSequence = BigInt(
-    Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-  );
-  const incomingHeight = BigInt(Math.round(Math.random() * Math.pow(2,32) - 1))
-  // Create a packet
-  const packet: InPacket = {
-    version: BRIDGE_VERSION,
-    source: {
-      chain_id: ethChainId,
-      addr: evm2AleoArr(ethTsContractAddr),
-    },
-    destination: {
-      chain_id: aleoChainId,
-      addr: tokenService.address(),
-    },
-    message: {
-      dest_token_address: wusdcToken.address(),
-      sender_address: evm2AleoArr(ethUser),
-      amount,
-      receiver_address: receiver,
-    },
-    sequence: incomingSequence,
-    height: incomingHeight,
-  };
-
-  return packet
+const createPacket = (receiver: string, amount: bigint): InPacket => {
+  return createRandomPacket(receiver, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
 }
 
 describe("Token Connector", () => {

@@ -20,33 +20,8 @@ const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
 const wusdcConnecter = new Wusdc_connector_v0001Contract({ mode: "execute" });
 const tokenService = new Token_service_v0001Contract({ mode: "execute" });
 
-export const createPacket = (aleoUser: string, amount: bigint): InPacket => {
-    const incomingSequence = BigInt(
-      Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-    );
-    const incomingHeight = BigInt(10);
-
-    // Create a packet
-    const packet: InPacket = {
-      version: BRIDGE_VERSION,
-      source: {
-        chain_id: ethChainId,
-        addr: evm2AleoArr(ethTsContractAddr),
-      },
-      destination: {
-        chain_id: aleoChainId,
-        addr: tokenService.address(),
-      },
-      message: {
-        dest_token_address: wusdcToken.address(),
-        sender_address: evm2AleoArr(ethUser),
-        amount: amount,
-        receiver_address: aleoUser,
-      },
-      sequence: incomingSequence,
-      height: incomingHeight,
-    };
-    return packet;
+const createPacket = (aleoUser: string, amount: bigint): InPacket => {
+  return createRandomPacket(aleoUser, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), usdcContractAddr, ethUser);
 }
 
 export const mintWrappedToken = async (aleoUser: string, amount: bigint) => {
