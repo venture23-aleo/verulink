@@ -151,6 +151,28 @@ describe('Bridge', () => {
         await proxiedV1.connect(tokenService).consume(inPacket, signatures);
     });
 
+    it('should not consume if contract is paused', async () => {
+        // Create an inPacket
+        const inPacket = [
+            1,
+            1,
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+            [1, ethers.Wallet.createRandom().address],
+            ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+            100
+        ];
+        const packetHash = inPacketHash(inPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+        );
+        const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        await(await proxiedV1.pause());
+        expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.reverted;
+    });
+
     it('should revert on consuming an incoming packet with an unknown token service', async () => {
         // Create an inPacket
         const inPacket = [
@@ -172,6 +194,7 @@ describe('Bridge', () => {
         const signatures = [signature1, signature2];
         expect(proxiedV1.connect(unknowntokenService).consume(inPacket, signatures)).to.be.revertedWith("Unknown Token Service");
     });
+
 
     // it('should revert on consuming an incoming packet when signature length is not 65', async () => {
     //     // Create an inPacket
@@ -248,6 +271,18 @@ describe('Bridge', () => {
             100
         ];
         await proxiedV1.connect(tokenService).sendMessage(outPacket);
+    });
+
+    it('should not dispatch an outgoing packet when sendMessage is called and contract is paused', async () => {
+        const outPacket = [
+            1,
+            1,
+            [1, ethers.Wallet.createRandom().address],
+            [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+            100
+        ];
+        await(await proxiedV1.pause());
+        expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.reverted;
     });
 
     // it('should revert dispatching an outpacket when sendMessage is called through any contract other than proxy', async () => {

@@ -26,6 +26,7 @@ describe('TokenService', () => {
     let proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, ERC20TokenServiceImpl, ERC20TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
     let blackListProxy;
     let erc20VaultServiceProxy;
+    let EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy, proxiedEthVaultService;
     let destchainID = 2;
 
     beforeEach(async () => {
@@ -125,6 +126,36 @@ describe('TokenService', () => {
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
             // console.log("vault proxy = ", erc20VaultServiceProxy.address);
+        }
+
+        {
+            EthVaultServiceImpl = await ethers.getContractFactory('EthVaultServiceMock');
+            ethVaultServiceInstance = await EthVaultServiceImpl.deploy();
+            await ethVaultServiceInstance.deployed();
+            EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
+    
+            initializeData = new ethers.utils.Interface([{
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "_name",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_owner",
+                        "type": "address"
+                    },
+    
+                ],
+                "name": "initialize",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }]).encodeFunctionData("initialize", ["ETH", owner.address]);
+            const ethVaultServiceProxy = await EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, initializeData);
+            await ethVaultServiceProxy.deployed();
+            proxiedEthVaultService = EthVaultServiceImpl.attach(ethVaultServiceProxy.address);
         }
 
         UnSupportedToken = await ethers.getContractFactory("USDCMock");
@@ -258,7 +289,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.addToken(tokenAddress, destChainId, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(100);
     });
@@ -640,6 +671,171 @@ describe('TokenService', () => {
         await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(0);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
+    });
+
+    it('should not withdraw if contract is paused', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        const packetHash = inPacketHash(inPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+        );
+        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
+        expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+        await (await proxiedV1.pause());
+        expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.reverted;
+    });
+
+    it('should not withdraw if token transfer is failed', async () => {
+        let NTToken = await ethers.getContractFactory("NonTransferableERC20Mock");
+        let nTToken = await NTToken.deploy();
+        await nTToken.deployed();
+
+        const tokenAddress = nTToken.address;
+        const destChainId = 2;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+
+        await proxiedV1.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        const packetHash = inPacketHash(inPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 2]
+        );
+        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith('Token transfer failed');
+    });
+
+    // it('should not withdraw if allowance is failed', async () => {
+    //     let FailedinPacket = [
+    //         1,
+    //         1,
+    //         [2, "aleo.TokenService"],
+    //         [7, proxiedV1.address],
+    //         ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+    //         100
+    //     ];
+    //     await (await usdcMock.mint(other.address, 150)).wait();
+    //     await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+    //     await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+    //         (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+    //     const packetHash = inPacketHash(FailedinPacket);
+    //     let message = ethers.utils.solidityKeccak256(
+    //         ['bytes32', 'uint8'],
+    //         [packetHash, 1]
+    //     );
+    //     const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+    //     const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+    //     const signatures = [signature1, signature2];
+    //     expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
+    //     expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+    //     await (await proxiedV1.connect(other).withdraw(FailedinPacket, signatures)).wait();
+    //     // expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(0);
+    //     // expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
+    // });
+
+    it('should not transferToVault if token is not supported', async () => {
+        const tokenAddress = ethers.constants.AddressZero;
+        expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).to.be.revertedWith("Token not supported");
+    });
+
+    it('should not transfer ETH from tokenservice to vault if given amount is greater than balance', async () => {
+        const tokenAddress = ethers.constants.AddressZero;
+        const destChainId = 2;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+        await proxiedV1.addToken(tokenAddress, destChainId, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
+        expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500)).to.be.revertedWith('ETH Transfer Failed');
+    });
+
+    it('should not transfer ETH from tokenservice to vault if contract is paused', async () => {
+        const tokenAddress = ethers.constants.AddressZero;
+        const destChainId = 2;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+        await proxiedV1.addToken(tokenAddress, destChainId, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await(await proxiedV1.pause());
+        expect (proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).to.be.reverted;
+    });
+
+    it('should not transfer ETH from tokenservice to vault by non-owner', async () => {
+        const tokenAddress = ethers.constants.AddressZero;
+        const destChainId = 2;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+        await proxiedV1.addToken(tokenAddress, destChainId, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
+        expect(proxiedV1.connect(other).transferToVault(tokenAddress, 50)).to.be.revertedWith('Not owner');
+    });
+
+    it('should transfer ETH from tokenservice to vault', async () => {
+        const tokenAddress = ethers.constants.AddressZero;
+        const destChainId = 2;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+        await proxiedV1.addToken(tokenAddress, destChainId, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
+        await( await proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).wait();
+        expect(await ethers.provider.getBalance(proxiedEthVaultService.address)).to.be.equal(50);
+    });
+
+
+    it('should transfer USDC', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        await( await proxiedV1.connect(owner).transferToVault(usdcMock.address, 50)).wait();
+        expect(await usdcMock.balanceOf(erc20VaultServiceProxy.address)).to.equal(50);
+    });
+
+    it('should not transfer USDC if wrong length aleo address is given', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jz")).to.be.revertedWith("Wrong receiver Address");
+    });
+
+    it('should not transfer USDC if wrong length aleo address is given', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27897")).to.be.revertedWith("Wrong receiver Address");
+    });
+
+    it('should not transfer USDC if given amount is greater than balance', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        expect(proxiedV1.connect(owner).transferToVault(usdcMock.address, 150)).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+    });
+
+    it('should not transfer USDC if contract is paused', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        await(await proxiedV1.pause());
+        expect (proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.reverted;
     });
 });
 

@@ -102,12 +102,19 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
         const lockAmount = await proxiedV1.locked(user, token);
         expect(lockAmount).to.be.equal(amount);
-        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(amount);
-
-        // Try to lock token as zero address as parameter for token address and expect it to revert 
-        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Address");  
     });
 
+    // Test that only the registered tokenservice can lock tokens
+    it('should not allow to lock tokens if token address is zero address', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = ethers.constants.AddressZero;
+        const amount = 100;
+
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+        // Lock tokens with the owner
+        expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith('Zero Address');
+    });
 
     // Test for fail case of Token Transfer Failed
     it('should not allow to lock tokens if token transfer failed', async () => {
@@ -188,8 +195,7 @@ describe('Holding', () => {
         const user = ethers.Wallet.createRandom().address;
         const token = usdcMock.address;
         const amount = 50;
-        await (await usdcMock.mint(tokenService.address, amount)).wait();
-        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+        await (await usdcMock.mint(proxiedV1.address, amount)).wait();
 
         // Lock tokens with the owner
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
@@ -199,6 +205,24 @@ describe('Holding', () => {
         // Release tokens with the owner
         await (await proxiedV1["release(address,address,uint256)"](user, token, amount)).wait();
         expect(await proxiedV1.unlocked(user, token)).to.be.equal(0);
+
+        // Try to release token as zero address as parameter for token address and expect it to revert 
+        await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Token Address"); 
+    });
+
+    it('should not allow to release tokens if zero address is given', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.address;
+        const amount = 50;
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.mint(proxiedV1.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+
+        // Lock tokens with the owner
+        await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
+
+        // Unlock tokens with the owner
+        await (await proxiedV1.unlock(user, token, amount)).wait();
 
         // Try to release token as zero address as parameter for token address and expect it to revert 
         await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Token Address"); 
@@ -337,6 +361,43 @@ describe('Holding', () => {
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(0);
     });
 
+    it('should not release ETH when token is address(0) and amount send is greater than balance', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = ethers.constants.AddressZero;
+        const amount = 100;
+
+        await (await proxiedV1.connect(tokenService)["lock(address)"](user, { value: amount })).wait();
+        expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(100);
+        // Unlock tokens with the owner
+        await (await proxiedV1.unlock(user, token, amount)).wait();
+        // Call the 'release' function with token set to address(0) for ETH transfer
+        expect(proxiedV1["release(address,uint256)"](user, 500)).to.be.revertedWith("Insufficient amount");
+    });
+
+    it('should not release ETH if something wrong happens', async () => {
+        Holding = await ethers.getContractFactory("HoldingMock");
+        holdingImpl = await Holding.deploy();
+        await holdingImpl.deployed();
+        let HoldingContractABI = Holding.interface.format();
+
+        HoldingProxy = await ethers.getContractFactory('ProxyContract');
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
+        const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
+        await proxy.deployed();
+        let proxiedHolding = Holding.attach(proxy.address);
+
+        const user = ethers.Wallet.createRandom().address;
+        const token = ethers.constants.AddressZero;
+        const amount = 100;
+
+        await (await proxiedHolding.connect(tokenService)["lock(address)"](user, { value: amount })).wait();
+        expect(await ethers.provider.getBalance(proxiedHolding.address)).to.be.equal(100);
+        // Unlock tokens with the owner
+        await (await proxiedHolding.unlock(user, token, 100)).wait();
+        await(await proxiedHolding.transferETH(other.address, 90)).wait();
+        expect(proxiedHolding["release(address,uint256)"](user, amount)).to.be.revertedWith("ETH Release Failed");
+    });
+
     // Test the 'Locked' event
     it('should emit a Locked event when locking tokens', async () => {
         const user = ethers.Wallet.createRandom().address;
@@ -380,6 +441,7 @@ describe('Holding', () => {
         const token = usdcMock.address;
         const amount = 30;
         await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.mint(proxiedV1.address, amount)).wait();
         await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
 
         // Lock tokens with the owner
