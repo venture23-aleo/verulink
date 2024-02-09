@@ -5,16 +5,16 @@ import { hashStruct } from "../utils/hash";
 
 import * as js2leo from "../artifacts/js/js2leo";
 
-import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { Council_v0001Contract } from "../artifacts/js/council_v0001";
+import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
+import { Council_v0002Contract } from "../artifacts/js/council_v0002";
 import { BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
 
 const addAttestor = async (newAttestorAddress: string, newThreshold: number) => {
-  const bridge = new Token_bridge_v0001Contract({
+  const bridge = new Token_bridge_v0002Contract({
     mode: "execute",
     priorityFee: 10_000,
   });
-  const council = new Council_v0001Contract({
+  const council = new Council_v0002Contract({
     mode: "execute",
     priorityFee: 10_000,
   });

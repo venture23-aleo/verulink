@@ -1,11 +1,11 @@
 import { hashStruct } from "../../utils/hash";
 
-import { Council_v0001Contract } from "../../artifacts/js/council_v0001";
+import { Council_v0002Contract } from "../../artifacts/js/council_v0002";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../../utils/constants";
-import { ProposalVote } from "../../artifacts/js/types/council_v0001";
-import { getProposalVoteLeo } from "../../artifacts/js/js2leo/council_v0001";
+import { ProposalVote } from "../../artifacts/js/types/council_v0002";
+import { getProposalVoteLeo } from "../../artifacts/js/js2leo/council_v0002";
 
-const council = new Council_v0001Contract({mode: "execute", priorityFee: 10_000});
+const council = new Council_v0002Contract({mode: "execute", priorityFee: 10_000});
 
 export const validateProposer = async (proposer: string) => {
   const isMember = await council.members(proposer, false);

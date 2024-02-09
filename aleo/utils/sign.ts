@@ -3,8 +3,8 @@ import { js2leo as js2leoCommon} from '@aleojs/core';
 import { sign, sign_verify } from "aleo-signer"
 
 import { hashStruct } from "./hash";
-import { InPacket, InPacketWithScreening } from '../artifacts/js/types/token_bridge_v0001';
-import { getInPacketLeo, getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/token_bridge_v0001';
+import { InPacket, InPacketWithScreening } from '../artifacts/js/types/token_bridge_v0002';
+import { getInPacketLeo, getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/token_bridge_v0002';
 
 export const signPacket = (packet: InPacket, screening_passed: boolean, privateKey: string) => {
 

@@ -52,29 +52,29 @@ import * as js2leoCommon from "../artifacts/js/js2leo/common";
 import * as leo2jsCommon from "../artifacts/js/leo2js/common";
 
 import { hash } from "aleo-hasher";
-import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
-import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
-import { Wusdc_holding_v0001Contract } from "../artifacts/js/wusdc_holding_v0001";
-import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
-import { Council_v0001Contract } from "../artifacts/js/council_v0001";
+import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
+import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
+import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
+import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
+import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
+import { Council_v0002Contract } from "../artifacts/js/council_v0002";
 
-const council = new Council_v0001Contract({ mode: "execute" });
-const council_fromNonMember = new Council_v0001Contract({
+const council = new Council_v0002Contract({ mode: "execute" });
+const council_fromNonMember = new Council_v0002Contract({
   mode: "execute",
   networkName: "testnet3",
   privateKey: "APrivateKey1zkpEhkVqeyXJuVLhfpwM1fmHZzHBAz8q1fqoC7ihD89QdGR",
 });
-const council_fromAnotherMember = new Council_v0001Contract({
+const council_fromAnotherMember = new Council_v0002Contract({
   mode: "execute",
   networkName: "testnet3",
   privateKey: "APrivateKey1zkp2RWGDcde3efb89rjhME1VYA8QMxcxep5DShNBR6n8Yjh",
 });
-const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
-const token_service = new Token_service_v0001Contract({ mode: "execute" });
-const wudc_connector = new Wusdc_connector_v0001Contract({ mode: "execute" });
-const wudc_holding = new Wusdc_holding_v0001Contract({ mode: "execute" });
-const wudc_token = new Wusdc_token_v0001Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
+const token_service = new Token_service_v0002Contract({ mode: "execute" });
+const wudc_connector = new Wusdc_connector_v0002Contract({ mode: "execute" });
+const wudc_holding = new Wusdc_holding_v0002Contract({ mode: "execute" });
+const wudc_token = new Wusdc_token_v0002Contract({ mode: "execute" });
 
 const hashStruct = (struct: any): bigint => {
   const structString = js2leoCommon.json(struct);
@@ -472,13 +472,8 @@ describe("Call to external programs", () => {
       await tx.wait();
 
       expect(await council.proposal_executed(removeAttestorHash)).toBe(true);
-      let errorMsgCouncil = `Cannot read properties of null (reading 'replace')`;
-      let errorMsg = "";
-      try {
-        await bridge.attestors(councilProgramAddr);
-      } catch (err) {
-        errorMsg = err.message;
-      }
+      const isAttestor = bridge.attestors(councilProgramAddr, false);
+      expect(isAttestor).toBe(false);
       expect(errorMsg).toContain(errorMsgCouncil);
       expect(await bridge.attestor_settings(THRESHOLD_INDEX)).toBe(
         normalThreshold

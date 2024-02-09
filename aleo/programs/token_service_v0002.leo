@@ -1,8 +1,8 @@
 // The 'token_service' program.
 
-import token_bridge_v0001.aleo;
+import token_bridge_v0002.aleo;
 
-program token_service_v0001.aleo {
+program token_service_v0002.aleo {
 
     struct WithdrawalLimit {
         // Withdrawal limit represented as basis points.
@@ -251,7 +251,7 @@ program token_service_v0001.aleo {
         assert_neq(self.signer, self.caller);
 
         // call publish on bridge contract
-        token_bridge_v0001.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, sender, receiver, amount);
+        token_bridge_v0002.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, sender, receiver, amount);
 
         return then finalize (self.caller, token_address, amount);
     }
@@ -322,7 +322,7 @@ program token_service_v0001.aleo {
 
 
         // call consume on bridge
-        let screening_passed: bool = token_bridge_v0001.aleo/consume(
+        let screening_passed: bool = token_bridge_v0002.aleo/consume(
             source_chain_id, 
             source_token_service_address, 
             token_address, 

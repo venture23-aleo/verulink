@@ -1,7 +1,7 @@
-import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001"
+import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002"
 import { string2AleoArr } from "../utils/string";
 
-const wusdcToken = new Wusdc_token_v0001Contract({mode: "execute"});
+const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
 
 const TIMEOUT = 100_000; // 100 seconds
 

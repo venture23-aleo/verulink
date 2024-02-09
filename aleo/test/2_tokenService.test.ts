@@ -1,6 +1,6 @@
-import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
-import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { Council_v0001Contract } from "../artifacts/js/council_v0001";
+import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
+import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
+import { Council_v0002Contract } from "../artifacts/js/council_v0002";
 
 import { InPacket, TsTransferOwnership } from "../artifacts/js/types";
 
@@ -24,9 +24,9 @@ import {
 
 import * as js2leo from "../artifacts/js/js2leo";
 
-const tokenService = new Token_service_v0001Contract({ mode: "execute" });
-const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
-const council = new Council_v0001Contract({ mode: "execute" });
+const tokenService = new Token_service_v0002Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
+const council = new Council_v0002Contract({ mode: "execute" });
 
 let tx, errorMsg, proposalId;
 

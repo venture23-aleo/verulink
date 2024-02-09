@@ -1,4 +1,4 @@
-import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
+import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
 import { InPacket, InPacketWithScreening, PacketIdWithAttestor } from "../artifacts/js/types";
 import {
   ALEO_ZERO_ADDRESS,
@@ -29,7 +29,7 @@ import * as js2leoCommon from '../artifacts/js/js2leo/common';
 import { sign } from "aleo-signer";
 import { Account, PrivateKey } from "@aleohq/sdk";
 
-const bridge = new Token_bridge_v0001Contract({mode: "execute"});
+const bridge = new Token_bridge_v0002Contract({mode: "execute"});
 
 const testTimeout = 1000_000;
 

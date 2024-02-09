@@ -1,9 +1,9 @@
-import { Council_v0001Contract } from "../artifacts/js/council_v0001";
-import { Token_bridge_v0001Contract } from "../artifacts/js/token_bridge_v0001";
-import { Token_service_v0001Contract } from "../artifacts/js/token_service_v0001";
-import { Wusdc_token_v0001Contract } from "../artifacts/js/wusdc_token_v0001";
-import { Wusdc_holding_v0001Contract } from "../artifacts/js/wusdc_holding_v0001";
-import { Wusdc_connector_v0001Contract } from "../artifacts/js/wusdc_connector_v0001";
+import { Council_v0002Contract } from "../artifacts/js/council_v0002";
+import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
+import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
+import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
+import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
+import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
 
 import {
   aleoChainId,
@@ -13,20 +13,21 @@ import {
   usdcContractAddr,
 } from "./mockData";
 import { Address, PrivateKey } from "@aleohq/sdk";
-import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
+import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, BRIDGE_VERSION, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
 import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import { hashStruct } from "../utils/hash";
-import { getHoldingReleaseLeo } from "../artifacts/js/js2leo/council_v0001";
-import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0001";
-import { HoldingRelease } from "../artifacts/js/types/council_v0001";
+import { getHoldingReleaseLeo } from "../artifacts/js/js2leo/council_v0002";
+import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
+import { HoldingRelease } from "../artifacts/js/types/council_v0002";
+import { createRandomPacket } from "../utils/packet";
 
-const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
-const tokenService = new Token_service_v0001Contract({ mode: "execute" });
-const council = new Council_v0001Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
-const wusdcHolding = new Wusdc_holding_v0001Contract({ mode: "execute" });
-const wusdcConnector = new Wusdc_connector_v0001Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
+const tokenService = new Token_service_v0002Contract({ mode: "execute" });
+const council = new Council_v0002Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
+const wusdcHolding = new Wusdc_holding_v0002Contract({ mode: "execute" });
+const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
 
 const TIMEOUT = 100_000; // 100 seconds
 
@@ -224,7 +225,7 @@ describe("Token Connector", () => {
       "Receive wUSDC",
       async () => {
         const amount = BigInt(100_000);
-        const packet = createRandomPacket(aleoUser1, amount);
+        const packet = createPacket(aleoUser1, amount);
         const initialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const initialSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
         const signature = signPacket(packet, true, bridge.config.privateKey);
@@ -334,7 +335,7 @@ describe("Token Connector", () => {
     test(
       "Receive wUSDC must collect the amount in holding program",
       async () => {
-        const packet = createRandomPacket(aleoUser1, BigInt(100_000));
+        const packet = createPacket(aleoUser1, BigInt(100_000));
         const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const holdingProgramInitialBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0))
         const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
@@ -435,7 +436,7 @@ describe("Token Connector", () => {
   describe("Token Receive", () => {
     test.failing("Pass an invalid signature - must fail", async () => {
         const amount = BigInt(100_000);
-        const packet = createRandomPacket(aleoUser1, amount);
+        const packet = createPacket(aleoUser1, amount);
         const signature = signPacket(packet, true, bridge.config.privateKey);
 
         const signers = [
@@ -463,7 +464,7 @@ describe("Token Connector", () => {
 
     test.failing("Pass valid signature from valid attestor twice - must fail", async () => {
         const amount = BigInt(100_000);
-        const packet = createRandomPacket(aleoUser1, amount);
+        const packet = createPacket(aleoUser1, amount);
 
         const signature1 = signPacket(packet, true, bridge.config.privateKey);
 
@@ -494,7 +495,7 @@ describe("Token Connector", () => {
     test.failing("Pass all ZERO_ALEO_ADDRESS - (threshold not met) must fail", async () => {
         // Note: This fails because the YAY and NO votes both are 0. i.e. YAY votes = NAY votes
         const amount = BigInt(100_000);
-        const packet = createRandomPacket(aleoUser1, amount);
+        const packet = createPacket(aleoUser1, amount);
 
         const signature1 = signPacket(packet, true, bridge.config.privateKey);
 
@@ -522,7 +523,7 @@ describe("Token Connector", () => {
     test("Pass a valid signature from invalid attestor - must fail", async () => {
         const wallet = new PrivateKey();
         const amount = BigInt(100_000);
-        const packet = createRandomPacket(aleoUser1, amount);
+        const packet = createPacket(aleoUser1, amount);
         const signature1 = signPacket(packet, true, bridge.config.privateKey);
 
         const signature2 = signPacket(packet, true, wallet.to_string());

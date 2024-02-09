@@ -2,23 +2,25 @@ import {
   aleoChainId,
   ethChainId,
   ethUser,
+  usdcContractAddr,
 } from "../testnet.data";
-import { Token_bridge_v0001Contract } from "../../artifacts/js/token_bridge_v0001";
+import { Token_bridge_v0002Contract } from "../../artifacts/js/token_bridge_v0002";
 import { ethTsContractAddr } from "../testnet.data";
-import { Wusdc_token_v0001Contract } from "../../artifacts/js/wusdc_token_v0001";
-import { Wusdc_connector_v0001Contract } from "../../artifacts/js/wusdc_connector_v0001";
+import { Wusdc_token_v0002Contract } from "../../artifacts/js/wusdc_token_v0002";
+import { Wusdc_connector_v0002Contract } from "../../artifacts/js/wusdc_connector_v0002";
 import { Address, PrivateKey } from "@aleohq/sdk";
 import { evm2AleoArr } from "../../utils/ethAddress";
 import { signPacket } from "../../utils/sign";
-import { ALEO_ZERO_ADDRESS } from "../../utils/constants";
-import { Token_service_v0001Contract } from "../../artifacts/js/token_service_v0001";
+import { ALEO_ZERO_ADDRESS, BRIDGE_VERSION } from "../../utils/constants";
+import { Token_service_v0002Contract } from "../../artifacts/js/token_service_v0002";
 import { validateSetup } from "../setup";
-import { InPacket } from "../../artifacts/js/types/token_bridge_v0001";
+import { InPacket } from "../../artifacts/js/types/token_bridge_v0002";
+import { createRandomPacket } from "../../utils/packet";
 
-const bridge = new Token_bridge_v0001Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0001Contract({ mode: "execute" });
-const wusdcConnecter = new Wusdc_connector_v0001Contract({ mode: "execute" });
-const tokenService = new Token_service_v0001Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
+const wusdcConnecter = new Wusdc_connector_v0002Contract({ mode: "execute" });
+const tokenService = new Token_service_v0002Contract({ mode: "execute" });
 
 const createPacket = (aleoUser: string, amount: bigint): InPacket => {
   return createRandomPacket(aleoUser, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), usdcContractAddr, ethUser);

@@ -1,5 +1,5 @@
 // The 'bridge' program.
-program token_bridge_v0001.aleo {
+program token_bridge_v0002.aleo {
 
     // Default Aleo Program
     struct AleoProgram {
@@ -158,7 +158,7 @@ program token_bridge_v0001.aleo {
     const ALEO_CHAIN_ID: u128 = 6694886634403u128;
 
     // Version of the bridge program
-    const VERSION: u8 = 0u8;
+    const VERSION: u8 = 2u8;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 

@@ -20,18 +20,18 @@ const ethTsContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 
 const tokenData = {
     symbol: "wusdc",
-    tokenVersion: "_v0001",
+    tokenVersion: "_v0002",
 }
 
 const holdingData = {
-    holdingVersion: "_v0001",
+    holdingVersion: "_v0002",
     ...tokenData
 }
 
 const connectorData = {
-    connectorVersion: "_v0001",
-    tokenServiceVersion: "_v0001",
-    councilVersion: "_v0001",
+    connectorVersion: "_v0002",
+    tokenServiceVersion: "_v0002",
+    councilVersion: "_v0002",
     originChainId: ethChainId.toString() + 'u128',
     originTokenAddress: '[' + evm2AleoArr(ethTokenAddr).map((x) => x.toString() + 'u8').join(',') + ']',
     originTokenServiceAddress: '[' + evm2AleoArr(ethTsContractAddr).map((x) => x.toString() + 'u8').join(',') + ']',
