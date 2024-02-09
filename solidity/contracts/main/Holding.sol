@@ -28,13 +28,13 @@ contract Holding is Pausable, Initializable, Upgradeable {
         require(msg.sender == _owner_);
     }
 
-    function addTokenService(address _tokenService) public onlyOwner {
+    function addTokenService(address _tokenService) external onlyOwner {
         require(_tokenService != address(0), "Zero Address");
         require(!supportedTokenServices[_tokenService], "Known TokenService");
         supportedTokenServices[_tokenService] = true;
     }
 
-    function removeTokenService(address _tokenService) public onlyOwner {
+    function removeTokenService(address _tokenService) external onlyOwner {
         require(_tokenService != address(0), "Zero Address");
         require(supportedTokenServices[_tokenService], "UnKnown TokenService");
         delete supportedTokenServices[_tokenService];
@@ -49,12 +49,12 @@ contract Holding is Pausable, Initializable, Upgradeable {
         emit Locked(user, token, amount);
     }
 
-    function lock(address user, address token, uint256 amount) public {
+    function lock(address user, address token, uint256 amount) external {
         require(token != address(0), "Zero Address");
         _lock(user,token,amount);
     }
 
-    function lock(address user) public payable {
+    function lock(address user) external payable {
         require(msg.value > 0, "Requires ETH Transfer");
         _lock(user, address(0), msg.value);
     }
@@ -63,7 +63,7 @@ contract Holding is Pausable, Initializable, Upgradeable {
         address user,
         address token,
         uint256 amount
-    ) public onlyOwner {
+    ) external onlyOwner {
         require(locked[user][token] >= amount, "Insufficient amount");
         locked[user][token] -= amount;
         unlocked[user][token] += amount;
@@ -77,13 +77,13 @@ contract Holding is Pausable, Initializable, Upgradeable {
         emit Released(user, token, amount);
     }
 
-    function release(address user, address token, uint256 amount) public {
+    function release(address user, address token, uint256 amount) external {
         require(token != address(0), "Zero Token Address");
         _release(user, token, amount);
         require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
     }
 
-    function release(address user, uint256 amount) public {
+    function release(address user, uint256 amount) external {
         _release(user, address(0), amount);
         (bool sent,) = user.call{value: amount}("");
         require(sent, "ETH Release Failed");

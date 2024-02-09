@@ -21,7 +21,7 @@ contract Erc20VaultService is VaultService, Initializable, Upgradeable {
         require(msg.sender == _owner_);
     }
 
-    function transfer(uint256 amount) public override onlyOwner returns (bool) {
+    function transfer(uint256 amount) external onlyOwner returns (bool) {
         require(IIERC20(token()).transfer(owner(), amount), "ERC20 Transfer Failed");
         return true;
     }

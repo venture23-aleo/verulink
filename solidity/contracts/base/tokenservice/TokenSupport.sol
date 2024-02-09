@@ -86,14 +86,14 @@ abstract contract TokenSupport is Ownable {
         string memory destTokenService,
         uint256 min,
         uint256 max
-    ) public virtual onlyOwner {
+    ) external virtual onlyOwner {
         _addToken(tokenAddress, _destChainId, vault, destTokenAddress, destTokenService, min, max);
     }
 
     function removeToken(
         address tokenAddress,
         uint256 _destChainId
-    ) public onlyOwner {
+    ) external onlyOwner {
         require(
             isSupportedToken(tokenAddress),
             "Token not supported"
@@ -106,7 +106,7 @@ abstract contract TokenSupport is Ownable {
     function enable(
         address tokenAddress,
         uint256 _destChainId
-    ) public onlyOwner {
+    ) external onlyOwner {
         require(
             !isEnabledToken(tokenAddress),
             "Token not enabled"
@@ -119,20 +119,20 @@ abstract contract TokenSupport is Ownable {
     function disable(
         address tokenAddress,
         uint256 _destChainId
-    ) public onlyOwner {
+    ) external onlyOwner {
         require(isEnabledToken(tokenAddress), "Token not enabled");
         require(_destChainId == destChainId, "Target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = false;
         emit TokenDisabled(tokenAddress, _destChainId);
     }
 
-    function updateMinValue(address tokenAddress, uint256 minValue) public onlyOwner {
+    function updateMinValue(address tokenAddress, uint256 minValue) external onlyOwner {
         require(isSupportedToken(tokenAddress), "Token not supported");
         emit TokenMinValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].minValue, minValue);
         supportedTokens[tokenAddress].minValue = minValue;
     }
 
-    function updateMaxValue(address tokenAddress, uint256 maxValue) public onlyOwner {
+    function updateMaxValue(address tokenAddress, uint256 maxValue) external onlyOwner {
         require(isSupportedToken(tokenAddress), "Token not supported");
         emit TokenMaxValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].maxValue, maxValue);
         supportedTokens[tokenAddress].maxValue = maxValue;

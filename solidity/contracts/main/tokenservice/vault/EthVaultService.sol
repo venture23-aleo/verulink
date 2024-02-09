@@ -18,7 +18,7 @@ contract EthVaultService is VaultService, Initializable, Upgradeable {
         require(msg.sender == _owner_);
     }
 
-    function transfer(uint256 amount) public override onlyOwner returns (bool) {
+    function transfer(uint256 amount) external onlyOwner returns (bool) {
         (bool sent,) = owner().call{value: amount}("");
         require(sent, "ETH approval Failed");
         return true;

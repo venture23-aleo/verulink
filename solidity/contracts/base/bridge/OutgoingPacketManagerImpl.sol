@@ -13,7 +13,7 @@ abstract contract OutgoingPacketManagerImpl  {
 
     uint256 public sequence;
 
-    function sendMessage(PacketLibrary.OutPacket memory packet) public virtual {
+    function _sendMessage(PacketLibrary.OutPacket memory packet) public {
         packet.version = 1;
         packet.sequence = ++sequence;
         outgoingPackets[packet.sequence] = packet.hash();

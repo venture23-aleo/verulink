@@ -46,11 +46,11 @@ contract TokenService is
         return "ERC20";
     }
 
-    function setHolding(Holding _holding) public onlyOwner {
+    function setHolding(Holding _holding) external onlyOwner {
         holding = _holding;
     }
 
-    function transferToVault(address token, uint256 amount) public onlyOwner {
+    function transferToVault(address token, uint256 amount) external onlyOwner {
         require(isEnabledToken(token), "Token not supported");
         address vault = address(supportedTokens[token].vault);
         if(token == address(0)) {

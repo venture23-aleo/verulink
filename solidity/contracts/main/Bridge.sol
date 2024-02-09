@@ -41,7 +41,7 @@ contract Bridge is
         return destinationChainId == destChainId;
     }
 
-    function updateDestinationChainId(uint256 newDestChainId) public onlyOwner {
+    function updateDestinationChainId(uint256 newDestChainId) external onlyOwner {
         require(!isSupportedChain(newDestChainId), "Destination Chain already supported");
         emit ChainUpdated(destinationChainId, newDestChainId);
         destinationChainId = newDestChainId;
@@ -54,15 +54,15 @@ contract Bridge is
     function consume(
         PacketLibrary.InPacket memory packet, 
         bytes[] memory sigs
-    ) public whenNotPaused returns (PacketLibrary.Vote)
+    ) external whenNotPaused returns (PacketLibrary.Vote)
     {
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 
-    function sendMessage(PacketLibrary.OutPacket memory packet) public override whenNotPaused {
+    function sendMessage(PacketLibrary.OutPacket memory packet) public whenNotPaused {
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
-        super.sendMessage(packet);
+        _sendMessage(packet);
     } 
 }
