@@ -28,6 +28,8 @@ const (
 	ethereum                             = "ethereum"
 	defaultHeightDifferenceForFilterLogs = 100
 	avgBlockGenDur                       = time.Second * 12
+	defaultRetryPacketWaitDur            = time.Hour * 12
+	defaultPruneBaseSeqWaitDur           = time.Hour * 6
 )
 
 // Namespaces
@@ -218,7 +220,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 		for _, pkt := range pkts {
 			ch <- pkt
 		}
-		cl.nextBlockHeight = endHeight
+		cl.nextBlockHeight = endHeight + 1
 	}
 }
 
@@ -233,9 +235,6 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		case <-ticker.C:
 		}
 
-		if index == len(retryPacketNamespaces) {
-			index = 0
-		}
 		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
@@ -251,7 +250,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 
 	indIncr:
-		index++
+		index = (index + 1) % len(retryPacketNamespaces)
 	}
 }
 
@@ -287,7 +286,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		startSeqNum, endSeqNum := seqHeightRanges[0][0], seqHeightRanges[0][1]
 		startHeight, endHeight := seqHeightRanges[1][0], seqHeightRanges[1][1]
 	L1:
-		for s := startHeight; s <= endHeight; s += defaultHeightDifferenceForFilterLogs {
+		for s := startHeight; s <= endHeight; s += defaultHeightDifferenceForFilterLogs + 1 {
 			e := s + defaultHeightDifferenceForFilterLogs
 			if e > endHeight {
 				e = endHeight
@@ -402,6 +401,16 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		waitDur = defaultWaitDur
 	}
 
+	retryPacketWaitDur := cfg.RetryPacketWaitDur
+	if retryPacketWaitDur == 0 {
+		retryPacketWaitDur = defaultRetryPacketWaitDur
+	}
+
+	pruneBaseSeqWaitDur := cfg.PruneBaseSeqNumberWaitDur
+	if pruneBaseSeqWaitDur == 0 {
+		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
+	}
+
 	return &Client{
 		name:                      name,
 		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
@@ -411,8 +420,9 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		chainID:                   cfg.ChainID,
 		nextBlockHeight:           cfg.StartHeight,
 		filterTopic:               ethCommon.HexToHash(cfg.FilterTopic),
-		retryPacketWaitDur:        time.Second, // TODO: put the duration in config.yaml
-		pruneBaseSeqNumberWaitDur: time.Second, // TODO: put duration from config
+		feedPktWaitDur:            waitDur,
+		retryPacketWaitDur:        retryPacketWaitDur,
+		pruneBaseSeqNumberWaitDur: pruneBaseSeqWaitDur,
 	}
 }
 

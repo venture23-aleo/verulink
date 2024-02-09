@@ -189,191 +189,241 @@ func TestFeedPacket(t *testing.T) {
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(10), client.nextBlockHeight)
+	assert.Equal(t, uint64(11), client.nextBlockHeight)
 }
 
 func TestRetryFeed(t *testing.T) {
-	cfg := &config.ChainConfig{
-		Name:           "ethereum",
-		ChainID:        big.NewInt(1),
-		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:        "https://rpc.sepolia.org",
-		WaitDuration:   time.Hour * 24,
-		DestChains:     []string{"2"},
-		StartSeqNum: map[string]uint64{
-			"2": 1,
-		},
-		StartHeight: 100,
-		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
-	}
-	dbRemover, err := setupDB("db")
-	assert.NoError(t, err)
-	t.Cleanup(dbRemover)
+	t.Run("case: retry packets for dstAleo retry packet name spaces", func(t *testing.T) {
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(func() {
+			dbRemover()
+			retryPacketNamespaces = nil
+		})
+		dstAleoNameSpace := retryPacketNamespacePrefix + "2"
+		err = store.CreateNamespace(dstAleoNameSpace)
+		assert.NoError(t, err)
+		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace)
 
-	client := NewClient(cfg, map[string]*big.Int{})
-	assert.Equal(t, client.Name(), "ethereum")
-
-	// store packet in retry bucket
-	modelPacket := &chain.Packet{
-		Version:  uint8(0),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: common.Big1,
-			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: common.Big2,
-			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Message: chain.Message{
-			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
-			Amount:           big.NewInt(100),
-			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Height: uint64(55),
-	}
-
-	for i := 0; i < 10; i++ {
-		modelPacket.Sequence = uint64(i + 1)
-		store.StoreRetryPacket("ethereum_rpns2", modelPacket)
-	}
-
-	packetCh := make(chan *chain.Packet)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go client.(*Client).retryFeed(ctx, packetCh)
-
-	for i := 0; i < 10; i++ {
-		pkt := <-packetCh
-		assert.Equal(t, pkt.Sequence, uint64(i+1))
-	}
-
-	ctx, cancel = context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
-
-	for {
-		select {
-		case <-ctx.Done():
-			assert.True(t, true)
-			return
-		case pkt := <-packetCh:
-			_ = pkt
-			assert.True(t, false)
+		client := &Client{
+			retryPacketWaitDur: time.Nanosecond,
 		}
-	}
+
+		// store packet in retry bucket
+		modelPacket := &chain.Packet{
+			Version:  uint8(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: common.Big1,
+				Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: common.Big2,
+				Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Message: chain.Message{
+				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+				Amount:           big.NewInt(100),
+				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Height: uint64(55),
+		}
+
+		for i := 0; i < 10; i++ {
+			modelPacket.Sequence = uint64(i + 1)
+			store.StoreRetryPacket(dstAleoNameSpace, modelPacket)
+		}
+
+		packetCh := make(chan *chain.Packet)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go client.retryFeed(ctx, packetCh)
+
+		for i := uint64(1); i <= 10; i++ {
+			pkt := <-packetCh
+			assert.Equal(t, pkt.Sequence, i)
+		}
+	})
+
+	t.Run("case: retry packets for multiple retry packet name space", func(t *testing.T) {
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(func() {
+			dbRemover()
+			retryPacketNamespaces = nil
+		})
+		dstAleoNameSpace := retryPacketNamespacePrefix + "2"
+		dstSolNameSpace := retryPacketNamespacePrefix + "3"
+		err = store.CreateNamespaces([]string{dstAleoNameSpace, dstSolNameSpace})
+		assert.NoError(t, err)
+		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace, dstSolNameSpace)
+
+		client := &Client{
+			retryPacketWaitDur: time.Nanosecond,
+		}
+
+		// store packet in retry bucket
+		modelPacket := &chain.Packet{
+			Version:  uint8(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: common.Big1,
+				Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: common.Big2,
+				Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Message: chain.Message{
+				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+				Amount:           big.NewInt(100),
+				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Height: uint64(55),
+		}
+
+		for i := 0; i < 15; i++ {
+			modelPacket.Sequence = uint64(i + 1)
+			modelPacket.Destination.ChainID = common.Big2
+			store.StoreRetryPacket(dstAleoNameSpace, modelPacket)
+
+			modelPacket.Sequence = uint64(i + 1)
+			modelPacket.Destination.ChainID = common.Big3
+			store.StoreRetryPacket(dstSolNameSpace, modelPacket)
+		}
+
+		packetCh := make(chan *chain.Packet)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go client.retryFeed(ctx, packetCh)
+
+		for i := uint64(1); i <= 20; i++ {
+			pkt := <-packetCh
+			if i <= 10 {
+				assert.Equal(t, pkt.Destination.ChainID.Uint64(), common.Big2.Uint64())
+			} else {
+				assert.Equal(t, pkt.Destination.ChainID.Uint64(), common.Big3.Uint64())
+			}
+		}
+		for i := uint64(1); i <= 10; i++ {
+			pkt := <-packetCh
+			if i <= 5 {
+				assert.Equal(t, pkt.Destination.ChainID.Uint64(), common.Big2.Uint64())
+			} else {
+				assert.Equal(t, pkt.Destination.ChainID.Uint64(), common.Big3.Uint64())
+			}
+		}
+		cancel()
+		time.Sleep(time.Millisecond)
+	})
+
 }
 
 func TestManagePacket(t *testing.T) {
 	t.Log("case: manage packet that comes in retry ch")
-	cfg := &config.ChainConfig{
-		Name:           "ethereum",
-		ChainID:        big.NewInt(1),
-		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:        "https://rpc.sepolia.org",
-		WaitDuration:   time.Hour * 24,
-		DestChains:     []string{"2"},
-		StartSeqNum: map[string]uint64{
-			"2": 1,
-		},
-		StartHeight: 100,
-		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
-	}
-	dbRemover, err := setupDB("db")
-	assert.NoError(t, err)
-	t.Cleanup(dbRemover)
 
-	client := NewClient(cfg, map[string]*big.Int{})
-	assert.Equal(t, client.Name(), "ethereum")
+	t.Run("test manage packet for retrynamespace", func(t *testing.T) {
 
-	// store packet in retry bucket
-	modelPacket := &chain.Packet{
-		Version:  uint8(0),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: common.Big1,
-			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: common.Big2,
-			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Message: chain.Message{
-			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
-			Amount:           big.NewInt(100),
-			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Height: uint64(55),
-	}
+		dbRemover, err := setupDB("db")
+		assert.NoError(t, err)
+		t.Cleanup(func() {
+			dbRemover()
+			retryPacketNamespaces = nil
+		})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go client.(*Client).managePacket(ctx)
-	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	retryCh <- modelPacket
-	time.Sleep(time.Second) // wait to fill in the database
-	storedPacket := store.RetrieveNPackets("ethereum_rpns2", 1)
-	pkt := <-storedPacket
-	assert.Equal(t, pkt, modelPacket)
-}
+		retryNs := retryPacketNamespacePrefix + "2"
+		retryPacketNamespaces = append(retryPacketNamespaces, retryNs)
 
-func TestManagePacket2(t *testing.T) {
-	t.Log("case: manage packet that comes in completed ch")
-	dbRemover, err := setupDB("tmp/test-manage-packet.db")
-	require.NoError(t, err)
-	t.Cleanup(dbRemover)
-	cfg := &config.ChainConfig{
-		Name:           "ethereum",
-		ChainID:        big.NewInt(1),
-		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:        "https://rpc.sepolia.org",
-		WaitDuration:   time.Hour * 24,
-		DestChains:     []string{"2"},
-		StartSeqNum: map[string]uint64{
-			"2": 1,
-		},
-		StartHeight: 100,
-		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
-	}
+		namespaces := []string{retryNs}
+		err = store.CreateNamespaces(namespaces)
+		assert.NoError(t, err)
+		client := new(Client)
 
-	client := NewClient(cfg, map[string]*big.Int{})
-	assert.Equal(t, client.Name(), "ethereum")
+		// store packet in retry bucket
+		modelPacket := &chain.Packet{
+			Version:  uint8(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: common.Big1,
+				Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: common.Big2,
+				Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Message: chain.Message{
+				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+				Amount:           big.NewInt(100),
+				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Height: uint64(55),
+		}
 
-	// store packet in retry bucket
-	modelPacket := &chain.Packet{
-		Version:  uint8(0),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: common.Big1,
-			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: common.Big2,
-			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Message: chain.Message{
-			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
-			Amount:           big.NewInt(100),
-			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Height: uint64(55),
-	}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go client.managePacket(ctx)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go client.(*Client).managePacket(ctx)
-	time.Sleep(time.Second) // wait to make the receiver ready before sending
-	completedCh <- modelPacket
-	time.Sleep(time.Second) // wait to fill in the database
-	exists := store.ExistInGivenNamespace[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
-	assert.True(t, exists)
+		retryCh <- modelPacket
+		time.Sleep(time.Second) // wait to fill in the database
+		pkt, err := store.RetrieveAndDeleteFirstPacket(retryNs)
+		assert.NoError(t, err)
+		assert.Equal(t, pkt, modelPacket)
+	})
 
-	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
-	assert.Equal(t, uint64(1), key)
+	t.Run("test manage packet for baseSeqNumNamespace", func(t *testing.T) {
+		dbRemover, err := setupDB("tmp/test-manage-packet.db")
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			dbRemover()
+			baseSeqNamespaces = nil
+		})
+		bseqNs := baseSeqNumNameSpacePrefix + "2"
+		baseSeqNamespaces = append(baseSeqNamespaces, bseqNs)
+
+		namespaces := []string{bseqNs}
+		err = store.CreateNamespaces(namespaces)
+		assert.NoError(t, err)
+
+		client := new(Client)
+		// store packet in retry bucket
+		modelPacket := &chain.Packet{
+			Version:  uint8(0),
+			Sequence: uint64(1),
+			Source: chain.NetworkAddress{
+				ChainID: common.Big1,
+				Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			},
+			Destination: chain.NetworkAddress{
+				ChainID: common.Big2,
+				Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Message: chain.Message{
+				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), // TODO: change aleo utils for constructing aleo packet
+				Amount:           big.NewInt(100),
+				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			},
+			Height: uint64(55),
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go client.managePacket(ctx)
+		completedCh <- modelPacket
+		time.Sleep(time.Second) // wait to fill in the database
+		exists := store.ExistInGivenNamespace[uint64](bseqNs, modelPacket.Sequence)
+		assert.True(t, exists)
+
+		key := store.GetFirstKey[uint64](bseqNs, 1)
+		assert.Equal(t, uint64(1), key)
+	})
 }
 
 func TestPruneBaseSeqNumber(t *testing.T) {

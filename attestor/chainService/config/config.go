@@ -35,17 +35,19 @@ func init() {
 }
 
 type ChainConfig struct {
-	Name           string            `yaml:"name"`
-	ChainID        *big.Int          `yaml:"chain_id"`
-	BridgeContract string            `yaml:"bridge_contract"`
-	NodeUrl        string            `yaml:"node_url"`
-	WaitDuration   time.Duration     `yaml:"wait_duration"`
-	WalletPath     string            `yaml:"wallet_path"`
-	DestChains     []string          `yaml:"dest_chains"`
-	WalletAddress  string            `yaml:"wallet_address"`
-	StartSeqNum    map[string]uint64 `yaml:"sequence_num_start"` // useful for aleo
-	StartHeight    uint64            `yaml:"start_height"`       // useful for ethereum
-	FilterTopic    string            `yaml:"filter_topic"`       // useful for ethereum
+	Name                      string            `yaml:"name"`
+	ChainID                   *big.Int          `yaml:"chain_id"`
+	BridgeContract            string            `yaml:"bridge_contract"`
+	NodeUrl                   string            `yaml:"node_url"`
+	WaitDuration              time.Duration     `yaml:"wait_duration"`
+	WalletPath                string            `yaml:"wallet_path"`
+	DestChains                []string          `yaml:"dest_chains"`
+	WalletAddress             string            `yaml:"wallet_address"`
+	StartSeqNum               map[string]uint64 `yaml:"sequence_num_start"` // useful for aleo
+	StartHeight               uint64            `yaml:"start_height"`       // useful for ethereum
+	FilterTopic               string            `yaml:"filter_topic"`       // useful for ethereum
+	RetryPacketWaitDur        time.Duration     `yaml:"retry_packet_wait_dur"`
+	PruneBaseSeqNumberWaitDur time.Duration     `yaml:"prune_base_seq_num_wait_dur"`
 }
 
 type Config struct {

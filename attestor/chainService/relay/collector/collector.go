@@ -8,26 +8,29 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
 )
 
-// params
 const (
+	signatureEndPoint   = "signature"
+	unconfirmedEndPoint = "unconfirmed"
+	aleoTrue            = "true"
+)
+
+// query params
+const (
+	address     = "address"
 	srcChainID  = "src_chain_id"
 	destChainID = "dest_chain_id"
 	seqNum      = "seq_num"
-	signature   = "signature"
 	isWhite     = "is_white"
-
-	queryKey     = "is_unconfirmed"
-	unconfirmed  = "unconfirmed"
-	address      = "address"
-	limit        = "limit"
-	limitSize    = "20"
-	limitSizeInt = 20
-	aleoTrue     = "true"
+	unconfirmed = "unconfirmed"
+	limit       = "limit"
+	limitSize   = 20
 )
 
 type CollectorI interface {
@@ -61,22 +64,21 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	if err != nil {
 		return err
 	}
-	u = u.JoinPath(unconfirmed)
+	u = u.JoinPath(signatureEndPoint)
 	queryParams := url.Values{}
-	queryParams.Set(queryKey, aleoTrue)
-	u.RawQuery = queryParams.Encode()
-
-	buf := bytes.NewBuffer(data)
-
-	req := &http.Request{
-		URL:  u,
-		Body: io.NopCloser(buf),
+	if sp.Packet.IsMissed() {
+		queryParams.Set(unconfirmed, "true")
 	}
+
+	u.RawQuery = queryParams.Encode()
+	buf := bytes.NewBuffer(data)
 
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
-
-	req = req.WithContext(ctx)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), io.NopCloser(buf))
+	if err != nil {
+		return err
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -126,11 +128,14 @@ func (c *collector) ReceivePktsFromCollector(
 		u = u.JoinPath(unconfirmed)
 		queryParams := url.Values{}
 		queryParams.Set(address, c.walletAddresses[nextAddressIndex])
-		queryParams.Set(limit, limitSize)
+		queryParams.Set(limit, strconv.Itoa(limitSize))
 		u.RawQuery = queryParams.Encode()
 
 		ctx, cncl := context.WithTimeout(ctx, time.Minute)
-		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		if err != nil {
+			goto postFor
+		}
 
 		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
@@ -151,18 +156,18 @@ func (c *collector) ReceivePktsFromCollector(
 		cncl()
 		resp.Body.Close()
 
-		if err != nil {
+		if err != nil { // for non nil error it should wait on ticker
+			logger.GetLogger().Error(err.Error())
+			shouldRefetch = false
 			continue
 		}
 
-		shouldRefetch = len(missedPackets) == limitSizeInt
-		if !shouldRefetch {
-			nextAddressIndex = (nextAddressIndex + 1) % len(c.walletAddresses)
-		}
-
+		shouldRefetch = len(missedPackets) == limitSize
 		if shouldRefetch {
 			lastInd := len(missedPackets) - 1
 			missedPackets[lastInd].IsLast = true
+		} else {
+			nextAddressIndex = (nextAddressIndex + 1) % len(c.walletAddresses)
 		}
 
 		for _, m := range missedPackets {

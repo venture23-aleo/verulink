@@ -103,22 +103,6 @@ func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 }
 
 // RetrieveNPackets retrieves n packets from first index
-func RetrieveNPackets(namespace string, n int) chan *chain.Packet {
-	pktCh := retrieveNKeyValuesFromFirst(namespace, n)
-	ch := make(chan *chain.Packet)
-	go func() {
-		for kv := range pktCh {
-			value := kv[1]
-			pkt := new(chain.Packet)
-			json.Unmarshal(value, pkt) // nolint
-			ch <- pkt
-		}
-		close(ch)
-	}()
-	return ch
-}
-
-// RetrieveNPackets retrieves n packets from first index
 // Caller should process sequence number range as open end and height range as close end.
 func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [[startSeqNum, EndSeqNum], [startHeight, endHeight]]
 	seqNumCh := retrieveNKeyValuesFromFirst(namespace, 1000)
