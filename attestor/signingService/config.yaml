@@ -1,8 +1,8 @@
 chains:
-  - name: "aleo"
-    chain_id: "chain id"
-  - name: "ethereum"
-    chain_id: "chain id"
+  - name: aleo
+    chain_id: 6694886634403
+  - name: ethereum
+    chain_id: 28556963657430695
 cred:
-  username: "username"
-  password: "password"
+  username: username
+  password: password

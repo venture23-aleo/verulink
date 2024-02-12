@@ -18,8 +18,8 @@ type ChainConfig struct {
 }
 
 type config struct {
-	chains []ChainConfig `yaml:"chains"`
-	cred   Cred          `yaml:"cred"`
+	Chains []ChainConfig `yaml:"chains"`
+	Cred   Cred          `yaml:"cred"`
 }
 
 var cfg *config
@@ -34,11 +34,11 @@ func LoadConfig(configPath string) error {
 }
 
 func GetChains() []ChainConfig {
-	chainCfgs := make([]ChainConfig, len(cfg.chains))
-	copy(chainCfgs, cfg.chains)
+	chainCfgs := make([]ChainConfig, len(cfg.Chains))
+	copy(chainCfgs, cfg.Chains)
 	return chainCfgs
 }
 
 func GetUsernamePassword() (string, string) {
-	return cfg.cred.Username, cfg.cred.Password
+	return cfg.Cred.Username, cfg.Cred.Password
 }
