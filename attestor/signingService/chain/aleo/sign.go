@@ -30,8 +30,8 @@ func SetUpPrivateKey(keyPath, decryptKey string) error {
 		return err
 	}
 
-	sKey = "private key"
-	_ = b
+	sKey = string(b)
+	// _ = b
 	return nil
 
 }

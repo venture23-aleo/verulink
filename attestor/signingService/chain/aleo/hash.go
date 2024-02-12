@@ -20,13 +20,17 @@ const (
 	aleoFalse = "false"
 )
 
-func HashAndSign(sp *chainService.ScreenedPacket) (signature string, err error) {
-	h, err := hash(sp)
+func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
+	hsh, err = hash(sp)
 	if err != nil {
-		return "", err
+		return
 	}
 
-	return sign(h)
+	signature, err = sign(hsh)
+	if err != nil {
+		return "", "", err
+	}
+	return
 }
 
 func hash(sp *chainService.ScreenedPacket) (hash string, err error) {
