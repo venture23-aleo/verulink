@@ -7,7 +7,7 @@ import {
 import { Token_bridge_v0002Contract } from "../../artifacts/js/token_bridge_v0002";
 import { ethTsContractAddr } from "../testnet.data";
 import { Wusdc_token_v0002Contract } from "../../artifacts/js/wusdc_token_v0002";
-import { Wusdc_connector_v0002Contract } from "../../artifacts/js/wusdc_connector_v0002";
+import { Wusdc_connector_v0003Contract } from "../../artifacts/js/wusdc_connector_v0003";
 import { Address, PrivateKey } from "@aleohq/sdk";
 import { evm2AleoArr } from "../../utils/ethAddress";
 import { signPacket } from "../../utils/sign";
@@ -19,7 +19,7 @@ import { createRandomPacket } from "../../utils/packet";
 
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
-const wusdcConnecter = new Wusdc_connector_v0002Contract({ mode: "execute" });
+const wusdcConnecter = new Wusdc_connector_v0003Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
 
 const createPacket = (aleoUser: string, amount: bigint): InPacket => {
@@ -49,7 +49,7 @@ export const mintWrappedToken = async (aleoUser: string, amount: bigint) => {
   console.log(signers);
 
   const initialBalance = await wusdcToken.account(aleoUser, BigInt(0));
-  const tx = await wusdcConnecter.wusdc_receive(
+  const [tx] = await wusdcConnecter.wusdc_receive(
     packet.message.sender_address, // sender
     packet.message.receiver_address, // receiver
     packet.message.amount,
@@ -59,8 +59,7 @@ export const mintWrappedToken = async (aleoUser: string, amount: bigint) => {
     signatures
   );
 
-  // @ts-ignore
-  await tx.wait();
+  await wusdcConnecter.wait(tx);
 
   let finalBalance = await wusdcToken.account(aleoUser);
   console.log(`Balance of ${aleoUser}: ${initialBalance} -> ${finalBalance}`);

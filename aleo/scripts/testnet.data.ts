@@ -5,13 +5,13 @@ export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 export const aleoChainId = encodeNetworkChainId("aleo", 3);
 
 // USDC Contract Address on Ethereum
-export const usdcContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+export const usdcContractAddr = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79".toLowerCase();
 
 // User Address on Ethereum
 export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+export const ethTsContractAddr = "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c".toLowerCase();
 
 // User address on Aleo
 export const aleoUser1 = "aleo1s567xd2j2ale8t008gf8cx82pn0784l2c22c7uemxtqcuf973cyqc6cz6t";
