@@ -1,5 +1,12 @@
+import { PrivateKey, ViewKey } from "@aleohq/sdk";
+import { gettoken } from "../artifacts/js/leo2js/wusdc_token_v0002";
+import { Approval, token, tokenLeo } from "../artifacts/js/types/wusdc_token_v0002";
 import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002"
 import { string2AleoArr } from "../utils/string";
+import { getApprovalLeo, gettokenLeo } from "../artifacts/js/js2leo/wusdc_token_v0002";
+import { config } from "dotenv";
+import { js2leo, leo2js, parseRecordString } from "@aleojs/core";
+import { hashStruct } from "../utils/hash";
 
 const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
 
@@ -7,52 +14,44 @@ const TIMEOUT = 100_000; // 100 seconds
 
 describe("Token", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
+
     describe("Setup", () => {
 
         test("Deploy", async () => {
             const tx = await wusdcToken.deploy();
-            await tx.wait();
+            await wusdcToken.wait(tx);
         }, TIMEOUT)
 
         test("Initialize", async () => {
-            const tx = await wusdcToken.initialize_token(
+            const [tx] = await wusdcToken.initialize_token(
                 string2AleoArr("USD Coin", 32),
                 string2AleoArr("USDC", 16),
                 6 // decimals
             )
-            // @ts-ignore
-            await tx.wait();
+            await wusdcToken.wait(tx);
         }, TIMEOUT)
+
     })
 
     describe("Mint Public", () => {
         test("Mints the right amount", async() => {
             const amount = BigInt(20_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
+            console.log(initialBalance)
 
-            const tx = await wusdcToken.mint_public(aleoUser2, amount);
-            // @ts-ignore
-            await tx.wait();
+            const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
+            await wusdcToken.wait(tx);
 
             const finalBalance = await wusdcToken.account(aleoUser2);
             expect(finalBalance).toBe(initialBalance + amount);
         }, TIMEOUT)
 
-        test("Can only be called from admin", async () => {
+        test.failing("Can only be called from admin", async () => {
             wusdcToken.connect(aleoUser3);
-
             const amount = BigInt(10_000);
-            const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
-
-            const tx = await wusdcToken.mint_public(aleoUser2, amount);
-            // @ts-ignore
-            const txReceipt = await tx.wait();
-            expect(txReceipt.error).toBeTruthy();
-
-            const finalBalance = await wusdcToken.account(aleoUser2);
-            expect(finalBalance).toBe(initialBalance);
+            const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
+            await wusdcToken.wait(tx);
         }, TIMEOUT)
-
     })
 
     describe("Burn Public", () => {
@@ -62,67 +61,159 @@ describe("Token", () => {
             const amount = BigInt(5_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
 
-            const tx = await wusdcToken.burn_public(aleoUser2, amount);
-            // @ts-ignore
-            const txReceipt = await tx.wait();
+            const [tx] = await wusdcToken.burn_public(aleoUser2, amount);
+            await wusdcToken.wait(tx);
 
             const finalBalance = await wusdcToken.account(aleoUser2);
             expect(finalBalance).toBe(initialBalance - amount);
 
-
         }, TIMEOUT)
-        test("Can only be called from admin", async () => {
-            wusdcToken.connect(aleoUser4);
-            const amount = BigInt(5_000);
+
+        test.failing("Burns less than balance - must fail", async () => {
+            const amount = BigInt(100_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
+            expect(initialBalance).toBeLessThan(amount);
 
-            const tx = await wusdcToken.burn_public(aleoUser2, amount);
-            // @ts-ignore
-            const txReceipt = await tx.wait();
-            expect(txReceipt.error).toBeTruthy();
+            const [tx] = await wusdcToken.burn_public(aleoUser2, amount);
+            await wusdcToken.wait(tx);
 
-            const finalBalance = await wusdcToken.account(aleoUser2);
-            expect(finalBalance).toBe(initialBalance);
-        })
+        }, TIMEOUT)
     })
 
-    describe("Transfer Public", () => {
-        test("Transfers the right amount from right wallet", async () => {
-            wusdcToken.connect(aleoUser2);
-            const aleoUser2InitialBalance = await wusdcToken.account(aleoUser2);
-            const aleoUser3InitialBalance = await wusdcToken.account(aleoUser3, BigInt(0));
+    describe("Public Transfers ", () => {
+        const sender = aleoUser2;
+        const receiverPrivateKey = new PrivateKey().to_string();
+        const receiver = PrivateKey.from_string(receiverPrivateKey).to_address().to_string();
+        test("Transfer Public", async () => {
+            wusdcToken.connect(sender);
+            const senderInitialBalance = await wusdcToken.account(sender);
+            const receiverInitialBalance = await wusdcToken.account(receiver, BigInt(0));
+
             const amount = BigInt(500);
-            expect(aleoUser2InitialBalance).toBeGreaterThanOrEqual(amount);
+            expect(senderInitialBalance).toBeGreaterThanOrEqual(amount);
 
-            const tx = await wusdcToken.transfer_public(aleoUser3, amount);
-            // @ts-ignore
-            await tx.wait();
+            wusdcToken.connect(sender);
+            const [tx] = await wusdcToken.transfer_public(receiver, amount);
+            await wusdcToken.wait(tx);
 
-            const aleoUser2FinalBalance = await wusdcToken.account(aleoUser2);
-            const aleoUser3FinalBalance = await wusdcToken.account(aleoUser3);
-            expect(aleoUser2FinalBalance).toBe(aleoUser2InitialBalance - amount);
-            expect(aleoUser3FinalBalance).toBe(aleoUser3InitialBalance + amount);
+            const senderFinalBalance = await wusdcToken.account(sender);
+            const receiverFinalBalance = await wusdcToken.account(receiver);
+            expect(senderFinalBalance).toBe(senderInitialBalance - amount);
+            expect(receiverFinalBalance).toBe(receiverInitialBalance + amount);
+        }, TIMEOUT)
+
+        test("Transfer Public To Private", async () => {
+            wusdcToken.connect(sender);
+            const senderInitialBalance = await wusdcToken.account(sender);
+
+            const amount = BigInt(100);
+            expect(senderInitialBalance).toBeGreaterThanOrEqual(amount);
+
+            const [recordString, tx] = await wusdcToken.transfer_public_to_private(receiver, amount);
+            await wusdcToken.wait(tx);
+
+            const tokenRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(receiverPrivateKey).to_view_key().decrypt(recordString)) as tokenLeo);
+            expect(tokenRecord.owner).toBe(receiver);
+            expect(tokenRecord.amount).toBe(amount);
+
+            const senderFinalBalance = await wusdcToken.account(sender);
+            expect(senderFinalBalance).toBe(senderInitialBalance - amount);
         }, TIMEOUT)
 
     })
-    describe("Transfer Private To Public", () => {
-        test.todo("Transfers the right amount")
-        test.todo("Can only be called from sender wallet")
+
+    describe("Private Transfers", () => {
+        const sender = aleoUser2;
+        const receiver = aleoUser4;
+        let tokenRecord: token;
+        let privateAmount = BigInt(100);
+
+        beforeEach( async () => {
+            wusdcToken.connect(sender);
+            const senderInitialBalance = await wusdcToken.account(sender);
+            expect(senderInitialBalance).toBeGreaterThanOrEqual(privateAmount);
+
+            const [recordString, tx] = await wusdcToken.transfer_public_to_private(aleoUser2, privateAmount);
+            await wusdcToken.wait(tx);
+            tokenRecord =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(recordString)) as tokenLeo);
+
+            const senderFinalBalance = await wusdcToken.account(sender);
+            expect(senderFinalBalance).toBe(senderInitialBalance - privateAmount);
+        }, TIMEOUT)
+
+        test("Transfer Private to Public", async () => {
+            const amount = BigInt(55);
+
+            const receiverInitialBalance = await wusdcToken.account(aleoUser4, BigInt(0));
+            const [remainingRecordString, pvtToPubTx] = await wusdcToken.transfer_private_to_public(tokenRecord, aleoUser4, amount);
+            await wusdcToken.wait(pvtToPubTx);
+            const receiverFinalBalance = await wusdcToken.account(aleoUser4);
+
+            const remainingRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(remainingRecordString)) as tokenLeo);
+            expect(remainingRecord.amount).toBe(tokenRecord.amount - amount);
+            expect(receiverFinalBalance).toBe(receiverInitialBalance + amount);
+        }, TIMEOUT)
+
+        test("Transfer Private", async () => {
+            const amount = BigInt(75);
+
+            const [senderRecordString, receiverRecordString, tx] = await wusdcToken.transfer_private(tokenRecord, receiver, amount);
+            await wusdcToken.wait(tx);
+
+            wusdcToken.connect(sender);
+            const senderRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(senderRecordString)) as tokenLeo);
+            
+            wusdcToken.connect(receiver);
+            const receiverRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(receiverRecordString)) as tokenLeo);
+
+            expect(senderRecord.amount).toBe(tokenRecord.amount - amount);
+            expect(receiverRecord.amount).toBe(amount);
+        }, TIMEOUT )
     })
-    describe("Transfer Public to Private", () => {
-        test.todo("Transfers the right amount")
-        test.todo("Can only be called from sender wallet")
+
+    describe("TransferFrom", () => {
+        const approver = aleoUser2;
+        const spender = aleoUser1;
+        const receiver = aleoUser4;
+        const amount = BigInt(100);
+
+        const approval: Approval = {
+            approver,
+            spender
+        };
+        const approvalHash = hashStruct(getApprovalLeo(approval));
+
+        test("Approve", async () => {
+            const initialApproval = await wusdcToken.approvals(approvalHash, BigInt(0));
+
+            wusdcToken.connect(approver);
+            const [tx] = await wusdcToken.approve_public(spender, amount);
+            await wusdcToken.wait(tx);
+
+            const finalApproval = await wusdcToken.approvals(approvalHash, BigInt(0));
+            expect(finalApproval).toBe(initialApproval + amount);
+
+        }, TIMEOUT)
+
+        test("Transfer", async () => {
+            const approverInitialBalance = await wusdcToken.account(approver);
+            const initialApproval = await wusdcToken.approvals(approvalHash, BigInt(0));
+            const receiverInitialbalance = await wusdcToken.account(receiver, BigInt(0));
+
+            wusdcToken.connect(spender);
+            const [tx] = await wusdcToken.transfer_from_public(approver, receiver, amount);
+            await wusdcToken.wait(tx);
+
+            const approverFinalBalance = await wusdcToken.account(approver);
+            const finalApproval = await wusdcToken.approvals(approvalHash, BigInt(0));
+            const receiverFinalbalance = await wusdcToken.account(receiver, BigInt(0));
+
+            expect(approverFinalBalance).toBe(approverInitialBalance - amount);
+            expect(receiverFinalbalance).toBe(receiverInitialbalance + amount);
+            expect(finalApproval).toBe(initialApproval - amount);
+
+        }, TIMEOUT)
+
     })
-    describe("Approve Public", () => {
-        test.todo("Approves the right amount")
-        test.todo("Can only be called from sender wallet")
-    })
-    describe("UnApprove Public", () => {
-        test.todo("Unapproves the right amount")
-        test.todo("Can only be called from sender wallet")
-    })
-    describe("Transfer from Public", () => {
-        test.todo("Transfers the spenders's right amount")
-        test.todo("Can only be called from approver wallet")
-    })
+
 })
