@@ -1,2 +1,7 @@
+# Ignore files for attestor
 go.work*
-attestor/signingService/rust/target
+**/rust/target
+**/*.log
+*.txt
+**/*UTC*
+**/*.db
