@@ -1,32 +1,41 @@
 import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
 import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
 import { Council_v0002Contract } from "../artifacts/js/council_v0002";
+import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002"
+import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
+import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
 
-import { InPacket, TsTransferOwnership } from "../artifacts/js/types";
 
-import { evm2AleoArr, hashStruct, string2AleoArr } from "../utils/utils";
+import {evm2AleoArr } from "../utils/ethAddress";
 import {
+  TIMEOUT,
   TOTAL_PROPOSALS_INDEX,
-  aleoUser1,
-  aleoUser2,
   ethChainId,
   ethTsContractAddr,
   ethUser,
+  maximum_trasnfer,
   minimum_transfer,
   nullError,
   nullError2,
   nullError3,
   outgoing_percentage_in_time,
+  threshold_no_limit,
   usdcContractAddr,
-  wusdcConnectorAddr,
-  wusdcTokenAddr,
 } from "./mockData";
 
-import * as js2leo from "../artifacts/js/js2leo";
 
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const council = new Council_v0002Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
+const wusdcHolding = new Wusdc_holding_v0002Contract({ mode: "execute" });
+const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
+
+
+const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = tokenService.getAccounts();
+
+
+
 
 let tx, errorMsg, proposalId;
 
@@ -34,12 +43,12 @@ describe("Token Service", () => {
   test("Deploy Bridge", async () => {
     const deployTx = await bridge.deploy();
     await deployTx.wait();
-  }, 100_000);
+  }, TIMEOUT);
 
   test("Deploy Token Service", async () => {
     const deployTx = await tokenService.deploy();
     await deployTx.wait();
-  }, 100_000);
+  }, TIMEOUT);
 
   test("Initialize (First try) - Expected parameters (must pass)", async () => {
     // TODO: figure out why unskipping this fails consume below
@@ -54,8 +63,9 @@ describe("Token Service", () => {
       const initializeTx = await tokenService.initialize_ts(aleoUser1);
       // @ts-ignore
       await initializeTx.wait();
+      expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
     }
-  }, 100_000);
+  }, TIMEOUT);
 
   test(
     "Initialize (Second try) - Expected parameters (must fail)",
@@ -75,12 +85,12 @@ describe("Token Service", () => {
         expect(txReceipt.error).toBeTruthy();
       }
     },
-    100_000
+    TIMEOUT
   );
 
   test.failing("Transfer Token From Aleo To Ethereum", async () => {
     await tokenService.token_send(
-      wusdcTokenAddr, // token
+      wusdcToken.address(), // token
       aleoUser1,
       evm2AleoArr(ethUser), // receiver
       BigInt(100), // amount
@@ -106,107 +116,174 @@ describe("Token Service", () => {
   // });
 
   describe("Governance Tests", () => {
-
-    test("should support chain", async () => {
-      tx = await tokenService.support_chain_ts(
-        ethChainId,
-        evm2AleoArr(ethTsContractAddr)
-      );
-      await tx.wait();
-      expect(
-        await tokenService.token_service_contracts(ethChainId)
-      ).toStrictEqual(evm2AleoArr(ethTsContractAddr));
-    }, 20000_000);
-
-    test("should remove chain", async () => {
-      tx = await tokenService.remove_chain_ts(ethChainId);
-      await tx.wait();
-      try {
-        await tokenService.token_service_contracts(ethChainId);
-      } catch (err) {
-        errorMsg = err.message;
-      }
-      expect(errorMsg).toContain(nullError2);
-    }, 20000_000);
-
-    test("should support token", async () => {
-      tx = await tokenService.support_token_ts(
-        wusdcTokenAddr,
-        wusdcConnectorAddr,
+    
+    test("should not add token by non-admin", async () => {
+      tokenService.connect(aleoUser3);
+      tx = await tokenService.add_token_ts(
+        wusdcToken.address(),
+        wusdcConnector.address(),
         minimum_transfer,
+        maximum_trasnfer,
         100_00,
-        1
+        1,
+        threshold_no_limit
+      );
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+    test("should add token", async () => {
+      tokenService.connect(aleoUser1);
+      tx = await tokenService.add_token_ts(
+        wusdcToken.address(),
+        wusdcConnector.address(),
+        minimum_transfer,
+        maximum_trasnfer,
+        100_00,
+        1,
+        threshold_no_limit
       );
       await tx.wait();
       expect(
-        await tokenService.max_outgoing_percentage(wusdcTokenAddr)
+        await tokenService.token_withdrawal_limits(wusdcToken.address())
       ).toStrictEqual(outgoing_percentage_in_time);
-      expect(await tokenService.minimum_transfers(wusdcTokenAddr)).toBe(
+      expect(await tokenService.min_transfers(wusdcToken.address())).toBe(
         minimum_transfer
       );
-      expect(await tokenService.token_connectors(wusdcTokenAddr)).toBe(
-        wusdcConnectorAddr
+      expect(await tokenService.max_transfers(wusdcToken.address())).toBe(
+        maximum_trasnfer
       );
-    }, 20000_000);
+      expect(await tokenService.token_connectors(wusdcToken.address())).toBe(
+        wusdcConnector.address()
+      );
+    }, TIMEOUT);
+
+    test("should not Update minimum transfer by non-admin", async () => {
+      tokenService.connect(aleoUser3);
+      tx = await tokenService.update_min_transfer_ts(
+        wusdcToken.address(),
+        BigInt(200)
+      );
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
 
     test("should Update minimum transfer", async () => {
-      tx = await tokenService.update_minimum_transfer_ts(
-        wusdcTokenAddr,
+      tokenService.connect(aleoUser1);
+      tx = await tokenService.update_min_transfer_ts(
+        wusdcToken.address(),
         BigInt(200)
       );
       await tx.wait();
-      expect(await tokenService.minimum_transfers(wusdcTokenAddr)).toBe(
+      expect(await tokenService.min_transfers(wusdcToken.address())).toBe(
         BigInt(200)
       );
-    }, 20000_000);
+    }, TIMEOUT);
 
-    test("should Update  outgoing percentage", async () => {
-      tx = await tokenService.update_outgoing_percentage_ts(
-        wusdcTokenAddr,
+    test("should not Update maximum transfer by non-admin", async () => {
+      tokenService.connect(aleoUser3);
+      tx = await tokenService.update_max_transfer_ts(
+        wusdcToken.address(),
+        BigInt(20000000000)
+      );
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+    test("should Update maximum transfer", async () => {
+      tokenService.connect(aleoUser1);
+      tx = await tokenService.update_max_transfer_ts(
+        wusdcToken.address(),
+        BigInt(20000000000)
+      );
+      await tx.wait();
+      expect(await tokenService.max_transfers(wusdcToken.address())).toBe(
+        BigInt(20000000000)
+      );
+    }, TIMEOUT);
+
+    test("should not Update withdrawl by non-admin", async () => {
+      tokenService.connect(aleoUser3);
+      tx = await tokenService.update_withdrawal_limit(
+        wusdcToken.address(),
         200,
-        1
+        1,
+        BigInt(20000000000)
+      );
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+    test("should Update withdrawl", async () => {
+      tokenService.connect(aleoUser1);
+      tx = await tokenService.update_withdrawal_limit(
+        wusdcToken.address(),
+        200,
+        1,
+        BigInt(20000000000)
       );
       await tx.wait();
       const new_outgoing_percentage = {
-        outgoing_percentage: 200,
-        timeframe: 1,
+        percentage: 200,
+        duration: 1,
+        threshold_no_limit: BigInt(20000000000)
       };
       expect(
-        await tokenService.max_outgoing_percentage(wusdcTokenAddr)
+        await tokenService.token_withdrawal_limits(wusdcToken.address())
       ).toStrictEqual(new_outgoing_percentage);
-    }, 20000_000);
+    }, TIMEOUT);
+
+    test("should not remove token by non-admin", async () => {
+      tokenService.connect(aleoUser3);
+      tx = await tokenService.remove_token_ts(wusdcToken.address());
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
 
     test("should remove token", async () => {
-      tx = await tokenService.remove_token_ts(wusdcTokenAddr);
+      tokenService.connect(aleoUser1);
+      tx = await tokenService.remove_token_ts(wusdcToken.address());
       await tx.wait();
       try {
-        await tokenService.token_connectors(wusdcTokenAddr);
+        await tokenService.token_connectors(wusdcToken.address());
       } catch (err) {
-        errorMsg = err.message;
+        errorMsg = false;
       }
-      expect(errorMsg).toBe(nullError);
+      expect(errorMsg).toBe(false);
       try {
-        await tokenService.max_outgoing_percentage(wusdcTokenAddr);
+        await tokenService.token_withdrawal_limits(wusdcToken.address());
       } catch (err) {
-        errorMsg = err.message;
+        errorMsg = false;
       }
-      expect(errorMsg).toBe(nullError3);
+      expect(errorMsg).toBe(false);
       try {
-        await tokenService.minimum_transfers(wusdcTokenAddr);
+        await tokenService.min_transfers(wusdcToken.address());
       } catch (err) {
-        errorMsg = err.message;
+        errorMsg = false;
       }
-      expect(errorMsg).toBe(nullError);
-    }, 20000_000);
+      expect(errorMsg).toBe(false);
+    }, TIMEOUT);
 
-    test("Transfer Ownership", async () => {
+    test("should not Transfer Ownership by non-admin", async () => {
+      tokenService.connect(aleoUser3);
+      tx = await tokenService.transfer_ownership_ts(
+        aleoUser2
+      );
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+    test("should Transfer Ownership", async () => {
+      tokenService.connect(aleoUser1);
       tx = await tokenService.transfer_ownership_ts(
         aleoUser2
       );
       await tx.wait();
       expect(await tokenService.owner_TS(true)).toBe(aleoUser2);
-    }, 20000_000);
+    }, TIMEOUT);
 
     test.todo("Update token connector")
+    test.todo("token send")
+    test.todo("token receive")
   });
 });

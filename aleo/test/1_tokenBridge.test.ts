@@ -1,479 +1,649 @@
 import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { InPacket, InPacketWithScreening, PacketIdWithAttestor } from "../artifacts/js/types";
+import { InPacket, InPacketWithScreening, PacketId, PacketIdWithAttestor } from "../artifacts/js/types/token_bridge_v0002";
+import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
+import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
+import { Council_v0002Contract } from "../artifacts/js/council_v0002";
+
+
 import {
   ALEO_ZERO_ADDRESS,
+  PAUSABILITY_INDEX,
   THRESHOLD_INDEX,
+  TIMEOUT,
   TOTAL_ATTESTORS_INDEX,
   aleoChainId,
-  aleoTsProgramAddr,
-  aleoUser1,
-  aleoUser2,
-  aleoUser3,
-  aleoUser4,
   aleoUser5,
   aleoUser6,
   aleoUser7,
-  councilProgramAddr,
   ethChainId,
   ethTsContractAddr,
   ethUser,
-  incomingSequence,
-  normalThreshold,
+  newThreshold,
+  new_chainId,
   usdcContractAddr,
-  wusdcTokenAddr,
 } from "./mockData";
 
-import { evm2AleoArr, hashStruct, signPacket } from "../utils/utils";
-import * as js2leo from "../artifacts/js/js2leo";
-import * as js2leoCommon from '../artifacts/js/js2leo/common';
+import {evm2AleoArr } from "../utils/ethAddress";
+import { signPacket } from "../utils/sign";
+import { hashStruct } from "../utils/hash";
+
 import { sign } from "aleo-signer";
-import { Account, PrivateKey } from "@aleohq/sdk";
 
 const bridge = new Token_bridge_v0002Contract({mode: "execute"});
+const tokenService = new Token_service_v0002Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
+const council = new Council_v0002Contract({ mode: "execute" });
+const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
 
-const testTimeout = 1000_000;
+
 
 describe("Token Bridge ", () => {
+  describe("Initialize", () => {
+    const normalThreshold = 2; // Any range between 1 and 5
+    const lowThreshold = 0; // Any number <= 0
+    const highThreshold = 6; // Any number above 5
+    const admin = aleoUser1;
+    console.log("admin", admin);
 
-  // describe("Initialize", () => {
-  //   const normalThreshold = 2; // Any range between 1 and 5
-  //   const lowThreshold = 0; // Any number <= 0
-  //   const highThreshold = 6; // Any number above 5
-  //   const admin = aleoUser1;
+    test("Deploy", async () => {
+      const deployTx = await bridge.deploy();
+      await deployTx.wait();
+    }, TIMEOUT);
 
-  //   test("Deploy", async () => {
-  //     const deployTx = await bridge.deploy();
-  //     await deployTx.wait();
-  //   }, testTimeout);
+    test.failing(
+      "Initialize - Threshold too low (must fail)",
+      async () => {
+        await bridge.initialize_tb(
+          [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
+          lowThreshold,
+          admin // governance
+        );
+      },
+      TIMEOUT
+    );
 
-  //   test.failing(
-  //     "Initialize - Threshold too low (must fail)",
-  //     async () => {
-  //       await bridge.initialize_tb(
-  //         lowThreshold,
-  //         [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-  //         admin // governance
-  //       );
-  //     },
-  //     testTimeout
-  //   );
+    test.failing(
+      "Initialize - Threshold too high (must fail)",
+      async () => {
+        await bridge.initialize_tb(
+          [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
+          highThreshold,
+          admin // governance
+        );
+      },
+      TIMEOUT
+    );
 
-  //   test.failing(
-  //     "Initialize - Threshold too high (must fail)",
-  //     async () => {
-  //       await bridge.initialize_tb(
-  //         highThreshold,
-  //         [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-  //         admin // governance
-  //       );
-  //     },
-  //     testTimeout
-  //   );
+    test.failing(
+      "Initialize - Repeated attestors (must fail)",
+      async () => {
+        await bridge.initialize_tb(
+          [aleoUser1, aleoUser2, aleoUser3, aleoUser3, aleoUser5],
+          highThreshold,
+          admin // governance
+        );
+      },
+      TIMEOUT
+    );
 
-  //   test.failing(
-  //     "Initialize - Repeated attestors (must fail)",
-  //     async () => {
-  //       await bridge.initialize_tb(
-  //         highThreshold,
-  //         [aleoUser1, aleoUser2, aleoUser3, aleoUser3, aleoUser5],
-  //         admin // governance
-  //       );
-  //     },
-  //     testTimeout
-  //   );
+    test("Initialize (First try) - Expected parameters (must pass)", async () => {
+      const initializeTx =  await bridge.initialize_tb(
+        [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
+        normalThreshold,
+        admin //governance
+      );
 
-  //   test("Initialize (First try) - Expected parameters (must pass)", async () => {
-  //     const initializeTx =  await bridge.initialize_tb(
-  //       normalThreshold,
-  //       [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-  //       admin //governance
-  //     );
+      // @ts-ignore
+      await initializeTx.wait();
+      expect(await bridge.bridge_settings(THRESHOLD_INDEX)).toBe(normalThreshold);
+      expect(await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX)).toBe(5);
+      expect(await bridge.attestors(aleoUser1)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser2)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser3)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser4)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser5)).toBeTruthy();
 
-  //     // @ts-ignore
-  //     const receipt = await initializeTx.wait();
-  //     console.log(receipt)
-  //   }, testTimeout);
+    }, TIMEOUT);
 
-    // test("Initialize (Second try) - Expected parameters (must fail)", async () => {
-    //   const initializeTx =  await bridge.initialize_tb(
-    //     normalThreshold,
-    //     [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
-    //     admin //governance
-    //   );
+    test("Initialize (Second try) - Expected parameters (must fail)", async () => {
+      const initializeTx =  await bridge.initialize_tb(
+        [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
+        normalThreshold,
+        admin //governance
+      );
+      // @ts-ignore
+      const receipt = await initializeTx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
 
-    //   // @ts-ignore
-    //   const receipt = await initializeTx.wait();
-    //   expect(receipt.error).toBeTruthy();
-    // }, testTimeout);
+  });
 
-  // });
+  describe("Pausability", () => {
 
-  // describe("Governance", () => {
+    test("should not unpause by non-owner", async() => {
+      bridge.connect(aleoUser3);
+      const tx = await bridge.unpause_tb();
+      // @ts-ignore
+      await tx.wait();
+      expect(await bridge.bridge_settings(PAUSABILITY_INDEX)).toBe(0);
+    }, TIMEOUT);
 
-  //   describe("Add Attestor", () => {
+    test("owner can unpause", async() => {
+      bridge.connect(aleoUser1);
+      const tx = await bridge.unpause_tb();
+      // @ts-ignore
+      await tx.wait();
+      expect(await bridge.bridge_settings(PAUSABILITY_INDEX)).toBe(1);
+    }, TIMEOUT);
 
-  //     test("Owner can add new attestor", async () => {
-  //       const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-  //       const threshold = await bridge.attestor_settings(THRESHOLD_INDEX)
-  //       const newThreshold = 2;
+    test("should not pause by non-owner", async() => {
+      bridge.connect(aleoUser3);
+      const tx = await bridge.pause_tb();
+      // @ts-ignore
+      await tx.wait();
+      expect(await bridge.bridge_settings(PAUSABILITY_INDEX)).toBe(1);
+    }, TIMEOUT);
 
-  //       let isAttestor = true;
+    test("owner can pause", async() => {
+      bridge.connect(aleoUser1);
+      const tx = await bridge.pause_tb();
+      // @ts-ignore
+      await tx.wait();
+      expect(await bridge.bridge_settings(PAUSABILITY_INDEX)).toBe(0);
+    }, TIMEOUT);
 
-  //       try {
-  //         await bridge.attestors(aleoUser6)
-  //       } catch (e) {
-  //         isAttestor = false
-  //       }
-  //       expect(isAttestor).toBe(false);
+    // simply unpausing contract 
+    test("owner can unpause", async() => {
+      const tx = await bridge.unpause_tb();
+      // @ts-ignore
+      await tx.wait();
+      expect(await bridge.bridge_settings(PAUSABILITY_INDEX)).toBe(1);
+    }, TIMEOUT);
+  });
 
-  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, newThreshold);
-  //       // @ts-ignore
-  //       await addAttestorTx.wait()
-  //       isAttestor = await bridge.attestors(aleoUser6);
-  //       expect(isAttestor).toBe(true);
+  describe("Governance", () => {
 
-  //       const newTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-  //       expect(newTotalAttestors).toBe(totalAttestors + 1);
+    describe("Add Attestor", () => {
 
-  //       const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-  //       expect(updatedThreshold).toBe(newThreshold);
+      test("Owner can add new attestor", async () => {
+        const totalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+        const threshold = await bridge.bridge_settings(THRESHOLD_INDEX);
+        const newThreshold = 2;
 
-  //     }, testTimeout)
+        let isAttestor = true;
 
-  //     test.skip("Other address cannot add attestor", async () => {
-  //       // TODO: add following syntax
-  //       // bridge.connect(aleoUser2).add_attestor_tb()
-  //     })
+        try {
+          await bridge.attestors(aleoUser6)
+        } catch (e) {
+          isAttestor = false
+        }
+        expect(isAttestor).toBe(false);
 
-  //     test.skip("Existing attestor cannot be added again", async () => {
-  //       const THRESHOLD_INDEX = true;
-  //       const threshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-  //       let isAttestor = true;
+        const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, newThreshold);
+        // @ts-ignore
+        await addAttestorTx.wait()
+        isAttestor = await bridge.attestors(aleoUser6);
+        expect(isAttestor).toBe(true);
 
-  //       try {
-  //         await bridge.attestors(aleoUser6)
-  //       } catch (e) {
-  //         isAttestor = false
-  //       }
-  //       expect(isAttestor).toBe(true);
+        const newTotalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+        expect(newTotalAttestors).toBe(totalAttestors + 1);
 
-  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, threshold);
-  //       // @ts-ignore
-  //       const txReceipt = await addAttestorTx.wait()
-  //       expect(txReceipt.error).toBeTruthy();
+        const updatedThreshold = await bridge.bridge_settings(THRESHOLD_INDEX);
+        expect(updatedThreshold).toBe(newThreshold);
 
-  //     }, testTimeout)
+      }, TIMEOUT)
 
-  //     test.skip("New threshold must be greater than or equal to existing threshold", async () => {
-  //       const THRESHOLD_INDEX = true;
-  //       const threshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-  //       let isAttestor = true;
+      test("Other address cannot add attestor", async () => {
+        bridge.connect(aleoUser3);
+        const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, newThreshold);
+        // @ts-ignore
+        const receipt = await addAttestorTx.wait();
+        expect(receipt.error).toBeTruthy();
+      }, TIMEOUT); 
 
-  //       try {
-  //         await bridge.attestors(aleoUser7)
-  //       } catch (e) {
-  //         isAttestor = false
-  //       }
-  //       expect(isAttestor).toBe(false);
+      test("Existing attestor cannot be added again", async () => {
+        bridge.connect(aleoUser1);
+        const threshold = await bridge.bridge_settings(THRESHOLD_INDEX);
+        let isAttestor = true;
 
-  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, threshold - 1);
-  //       // @ts-ignore
-  //       const txReceipt = await addAttestorTx.wait()
-  //       expect(txReceipt.error).toBeTruthy();
-  //     }, testTimeout)
+        try {
+          await bridge.attestors(aleoUser6)
+        } catch (e) {
+          isAttestor = false
+        }
+        expect(isAttestor).toBe(true);
 
-  //     test.skip("New threshold must be less than or equal to total attestors", async () => {
-  //       const TOTAL_ATTESTORS_INDEX = false;
-  //       const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-  //       let isAttestor = true;
-  //       try {
-  //         await bridge.attestors(aleoUser7)
-  //       } catch (e) {
-  //         isAttestor = false
-  //       }
+        const addAttestorTx = await bridge.add_attestor_tb(aleoUser6, threshold);
+        // @ts-ignore
+        const txReceipt = await addAttestorTx.wait()
+        expect(txReceipt.error).toBeTruthy();
 
-  //       expect(isAttestor).toBe(false);
-  //       const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, totalAttestors + 2);
-  //       // @ts-ignore
-  //       const txReceipt = await addAttestorTx.wait()
-  //       expect(txReceipt.error).toBeTruthy();
+      }, TIMEOUT)
 
-  //     }, testTimeout)
-
-  //   })
-
-  //   describe("Remove Attestor", () => {
-  //     test("Owner can remove attestor", async () => {
-  //       const totalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-  //       const newThreshold = 1
-
-  //       let isAttestor = await bridge.attestors(aleoUser6);
-  //       expect(isAttestor).toBe(true);
-
-  //       const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser6, newThreshold);
-  //       // @ts-ignore
-  //       await removeAttestorTx.wait()
-
-
-  //       isAttestor = true
-  //       try {
-  //         isAttestor = await bridge.attestors(aleoUser6);
-  //       } catch (e) {
-  //         isAttestor = false
-  //       }
-  //       expect(isAttestor).toBe(false);
-
-  //       const newTotalAttestors = await bridge.attestor_settings(TOTAL_ATTESTORS_INDEX);
-  //       expect(newTotalAttestors).toBe(totalAttestors - 1);
-  //     }, testTimeout)
-
-  //     test.todo("Other address cannot remove attestor")
-  //     test.todo("Only existing attestor can be removed")
-  //     test.todo("There must be at least two attestors to remove a attestor")
-  //     test.todo("New threshold must be greater than or equal to existing threshold")
-  //     test.todo("New threshold must be less than or equal to total attestors")
-  //   })
-
-  //   describe("Update threshold", () => {
-  //     test("Owner can update threshold", async () => {
-  //       const newThreshold = 3
-
-  //       const addAttestorTx = await bridge.update_threshold_tb(newThreshold);
-  //       // @ts-ignore
-  //       await addAttestorTx.wait()
-
-  //       const updatedThreshold = await bridge.attestor_settings(THRESHOLD_INDEX);
-  //       expect(updatedThreshold).toBe(newThreshold);
-  //     }, testTimeout)
-
-  //     test.todo("Other address cannot update threshold")
-  //     test.todo("New threshold must be greater than or equal to 1")
-  //     test.todo("New threshold must be less than or equal to total attestors")
-  //   })
-
-    // describe("Enable Chain", () => {
-    //   test("Owner can enable chain", async () => {
-
-    //     let isEthEnabled = false
-    //     try {
-    //       isEthEnabled = await bridge.supported_chains(ethChainId);
-    //     } catch (e) {
-    //       isEthEnabled = false
-    //     }
-    //     const enableChainTx = await bridge.enable_chain_tb(ethChainId);
-    //     // @ts-ignore
-    //     await enableChainTx.wait()
-
-    //     isEthEnabled = await bridge.supported_chains(ethChainId);
-    //     expect(isEthEnabled).toBe(true)
-    //   }, testTimeout)
-
-    //   test.todo("Other address cannot enable chain")
-    // })
-
-    // describe("Disable Chain", () => {
-    //   test.todo("Chain must be added earlier to be disabled")
-    //   test.todo("Other address cannot disable chain")
-
-    //   test("should consist a chain to disable that", async() => {
-    //     let isEthChainAvailable = true;
-    //     try {
-    //       isEthChainAvailable = await bridge.supported_chains(ethChainId);
-    //     } catch (e) {
-    //       isEthChainAvailable = false
-    //     }
-
-    //     if (!isEthChainAvailable) {
-    //       const disableChainTx = await bridge.disable_chain_tb(ethChainId);
-
-    //       // @ts-ignore
-    //       const receipt = await disableChainTx.wait();
-    //       expect(receipt.error).toBeTruthy();
-    //     } 
-    //   }, testTimeout);
-
-
-      // test("Owner can disable chain", async () => {
-
-      //   let isEthEnabled = false
-      //   try {
-      //     isEthEnabled = await bridge.supported_chains(ethChainId);
-      //   } catch (e) {
-      //     isEthEnabled = false
-      //   }
-      //   expect(isEthEnabled).toBe(true);
-      //   const enableChainTx = await bridge.disable_chain_tb(ethChainId);
+      // test("New threshold must be greater than or equal to existing threshold", async () => {
+      //   const threshold = await bridge.bridge_settings(THRESHOLD_INDEX);
+      //   const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, threshold - 1);
       //   // @ts-ignore
-      //   await enableChainTx.wait()
+      //   const txReceipt = await addAttestorTx.wait()
+      //   expect(txReceipt.error).toBeTruthy();
+      // }, TIMEOUT)
 
+      // test("New threshold must be less than or equal to total attestors", async () => {
+      //   const totalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+      //   let isAttestor = true;
       //   try {
-      //     isEthEnabled = await bridge.supported_chains(ethChainId);
+      //     await bridge.attestors(aleoUser7)
       //   } catch (e) {
-      //     isEthEnabled = false
+      //     isAttestor = false
       //   }
-      //   expect(isEthEnabled).toBe(false)
-      // }, testTimeout)
 
-      // test.todo("Owner can disable chain")
+      //   expect(isAttestor).toBe(false);
+      //   const addAttestorTx = await bridge.add_attestor_tb(aleoUser7, totalAttestors + 2);
+      //   // @ts-ignore
+      //   const txReceipt = await addAttestorTx.wait()
+      //   expect(txReceipt.error).toBeTruthy();
+
+      // }, TIMEOUT)
 
     })
 
-  //   describe("Enable Service", () => {
-  //     test("Owner can enable service", async () => {
+    describe("Remove Attestor", () => {
+      test("Owner can remove attestor", async () => {
+        const totalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+        const newThreshold = 1
 
-  //       let isTsEnabled = false
-  //       try {
-  //         isTsEnabled = await bridge.supported_services(aleoTsProgramAddr);
-  //       } catch (e) {
-  //         isTsEnabled = false
-  //       }
-  //       const enableServiceTx = await bridge.enable_service_tb(aleoTsProgramAddr);
-  //       // @ts-ignore
-  //       await enableServiceTx.wait()
+        let isAttestor = await bridge.attestors(aleoUser6);
+        expect(isAttestor).toBe(true);
 
-  //       isTsEnabled = await bridge.supported_services(aleoTsProgramAddr);
-  //       expect(isTsEnabled).toBe(true)
+        const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser6, newThreshold);
+        // @ts-ignore
+        await removeAttestorTx.wait()
 
-  //     }, testTimeout)
 
-  //     test.todo("Other address cannot enable service")
-  //   })
+        isAttestor = true
+        try {
+          isAttestor = await bridge.attestors(aleoUser6);
+        } catch (e) {
+          isAttestor = false
+        }
+        expect(isAttestor).toBe(false);
 
-  //   describe("Disable Service", () => {
-  //     test.todo("Service must be added earlier to be disabled")
-  //     test.todo("Other address cannot disable service")
-  //     test("Owner can disable service", async () => {
+        const newTotalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+        expect(newTotalAttestors).toBe(totalAttestors - 1);
+      }, TIMEOUT)
 
-  //       let isTsEnabled = false
-  //       try {
-  //         isTsEnabled = await bridge.supported_services(aleoTsProgramAddr);
-  //       } catch (e) {
-  //         isTsEnabled = false
-  //       }
-  //       expect(isTsEnabled).toBe(true);
-  //       const enableChainTx = await bridge.disable_service_tb(aleoTsProgramAddr);
-  //       // @ts-ignore
-  //       await enableChainTx.wait()
+      test("Remove non existing attestor", async () => {
+        const removeAttestorTxn = await bridge.remove_attestor_tb(aleoUser6, 5)
+        // @ts-ignore
+        const receipt = await removeAttestorTxn.wait();
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT)
 
-  //       try {
-  //         isTsEnabled = await bridge.supported_services(aleoTsProgramAddr);
-  //       } catch (e) {
-  //         isTsEnabled = false
-  //       }
-  //       expect(isTsEnabled).toBe(false)
-  //     }, testTimeout)
+      test("should not remove attestor if new threshold is less than current threshold", async() => {
+        const threshold = await bridge.bridge_settings(THRESHOLD_INDEX);
+        const updateThreshold = await bridge.update_threshold_tb(newThreshold);
+        // @ts-ignore
+        await updateThreshold.wait();
+        const removeAttestorTxn = await bridge.remove_attestor_tb(aleoUser3, threshold-1);
+        // @ts-ignore
+        const receipt = await removeAttestorTxn.wait();
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT);
 
-  //   })
+      // test("should not remove attestor if new threshold is greater than total attestor", async () => {
+      //   const totalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+      //   const removeAttestorTxn = await bridge.remove_attestor_tb(aleoUser3, totalAttestors+2);
+      //   // @ts-ignore
+      //   const receipt = await removeAttestorTxn.wait();
+      //   expect(receipt.error).toBe(true);
+      // }, TIMEOUT)
 
-  // })
+      test("should not remove attestor by non-admin", async ()=> {
+        bridge.connect(aleoUser3);
+        const removeAttestorTxn = await bridge.remove_attestor_tb(aleoUser3, 5)
+        // @ts-ignore
+        const receipt = await removeAttestorTxn.wait();
+        expect(receipt.error).toBeTruthy();
+      }, TIMEOUT);
+      test.todo("There must be at least two attestors to remove a attestor")
+    })
 
-  describe("Receive", () => {
-    const incomingSequence = BigInt(
-      Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-    );
-    const packet: InPacket = {
-      version: 0,
-      sequence: incomingSequence,
-      source: {
-        chain_id: ethChainId,
-        addr: evm2AleoArr(ethTsContractAddr),
-      },
-      destination: {
-        chain_id: aleoChainId,
-        addr: aleoTsProgramAddr,
-      },
-      message: {
-        token: wusdcTokenAddr,
-        sender: evm2AleoArr(ethUser),
-        receiver: aleoUser1,
-        amount : BigInt(10000)
-      },
-      height: 10,
-    };
+    describe("Update threshold", () => {
+      test("Owner can update threshold", async () => {
+        bridge.connect(aleoUser1);
+        const newThreshold = 3
 
-    const signature = signPacket(packet, bridge.config.privateKey);
-    console.log(signature.length)
-    
-    const signatures = [
-      signature,
-      signature,
-      signature,
-      signature,
-      signature
-    ]
+        const addAttestorTx = await bridge.update_threshold_tb(newThreshold);
+        // @ts-ignore
+        await addAttestorTx.wait()
 
-    const signers = [
-      aleoUser1,
-      ALEO_ZERO_ADDRESS,
-      ALEO_ZERO_ADDRESS,
-      ALEO_ZERO_ADDRESS,
-      ALEO_ZERO_ADDRESS,
-    ]
+        const updatedThreshold = await bridge.bridge_settings(THRESHOLD_INDEX);
+        expect(updatedThreshold).toBe(newThreshold);
+      }, TIMEOUT);
 
-    const packetHash = hashStruct(js2leo.getInPacketLeo(packet));
-    const packetWithScreening: InPacketWithScreening = {
-      packet_hash: packetHash,
-      screening_passed: true
-    };
-    const packetWithScreeningHash = hashStruct(js2leo.getInPacketWithScreeningLeo(packetWithScreening));
+      test("should not update threshold by non-admin", async() => {
+        bridge.connect(aleoUser3);
+        const updateThresholdTx = await bridge.update_threshold_tb(newThreshold);
+        // @ts-ignore
+        const receipt = await updateThresholdTx.wait();
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT);
 
-    const packetIdWithAttestor: PacketIdWithAttestor = {
-      chain_id: packet.source.chain_id,
-      sequence: packet.sequence,
-      attestor: aleoUser1
-    }
-    const packetKeyWithAttestorHash = hashStruct(js2leo.getPacketIdWithAttestorLeo(packetIdWithAttestor))
+      test.failing("should not update threshold if new threshold is less than 1", async() => {
+        bridge.connect(aleoUser1);
+        const updateThresholdTx = await bridge.update_threshold_tb(0);
+        // @ts-ignore
+        const receipt = await updateThresholdTx.wait();
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT);
 
-    test("Call receive", async() => {
-      let hasAttestorSigned = true
-      try {
-        hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
-      } catch (e) {
-        hasAttestorSigned = false
-      }
+      test("should not update threshold if new threshold is greater than total attestor", async() => {
+        const totalAttestors = await bridge.bridge_settings(TOTAL_ATTESTORS_INDEX);
+        const updateThresholdTx = await bridge.update_threshold_tb(totalAttestors+2);
+        // @ts-ignore
+        const receipt = await updateThresholdTx.wait();
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT);
+    });
 
-      let initialVotes = 99;
-      try {
-        initialVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
-      } catch (e) {
-        initialVotes = 0
-      }
+    describe("Enable Chain", () => {
+      test("Owner can enable chain", async () => {
 
-      const tx = await bridge.receive(packet, signers, signatures, true);
+        let isEthEnabled = false
+        try {
+          isEthEnabled = await bridge.supported_chains(ethChainId);
+        } catch (e) {
+          isEthEnabled = false
+        }
+        const enableChainTx = await bridge.add_chain_tb(ethChainId);
+        // @ts-ignore
+        await enableChainTx.wait()
+
+        isEthEnabled = await bridge.supported_chains(ethChainId);
+        expect(isEthEnabled).toBe(true)
+      }, TIMEOUT)
+
+      test("should not add chain by non-admin", async() => {
+        bridge.connect(aleoUser3);
+        const enableChainTx = await bridge.add_chain_tb(ethChainId);
+        // @ts-ignore
+        const receipt = await enableChainTx.wait();
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT);
+    })
+
+    describe("remove Chain", () => {
+    test("should not disable chain by non_admin", async() => {
+        bridge.connect(aleoUser3);
+        const disableChainTx = await bridge.remove_chain_tb(ethChainId);
+        // @ts-ignore
+        const receipt = await disableChainTx.wait();
+        expect(receipt.error).toBeTruthy();
+    }, TIMEOUT);
+
+      test("Owner can remove chain", async () => {
+        bridge.connect(aleoUser1);
+        let isEthEnabled = false
+        try {
+          isEthEnabled = await bridge.supported_chains(ethChainId);
+        } catch (e) {
+          isEthEnabled = false
+        }
+        expect(isEthEnabled).toBe(true);
+        const enableChainTx = await bridge.remove_chain_tb(ethChainId);
+        // @ts-ignore
+        await enableChainTx.wait()
+
+        try {
+          isEthEnabled = await bridge.supported_chains(ethChainId);
+        } catch (e) {
+          isEthEnabled = false
+        }
+        expect(isEthEnabled).toBe(false)
+      }, TIMEOUT)
+
+    test("should consist a chain to disable that", async() => {
+      const disableChainTx = await bridge.remove_chain_tb(ethChainId);
       // @ts-ignore
-      const receipt = await tx.wait()
+      const receipt = await disableChainTx.wait();
+      expect(receipt.error).toBeTruthy();      
+    }, TIMEOUT);
 
-      const finalVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
-      expect(finalVotes).toBe(initialVotes + 1); // TODO: test for cases with multiple validation
+    })
 
-      hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
-      expect(hasAttestorSigned).toBe(true);
+    describe("Add Service", () => {
+      test("Owner can add service", async () => {
 
+        let isTsEnabled = false
+        try {
+          isTsEnabled = await bridge.supported_services(tokenService.address());
+        } catch (e) {
+          isTsEnabled = false
+        }
+        const enableServiceTx = await bridge.add_service_tb(tokenService.address());
+        // @ts-ignore
+        await enableServiceTx.wait()
 
-    }, testTimeout)
+        isTsEnabled = await bridge.supported_services(tokenService.address());
+        expect(isTsEnabled).toBe(true)
 
-    test.todo("Attestation can only be done on packets coming from support chain")
-    test.todo("Attestation can only be done by valid attestors ")
-    test.todo("Attestation can only be done once per attestor")
-    test.todo("Attestation should increase the attestation count by 1")
-    test.todo("If attestation crosses the threshold, packet should be queryable by packetId")
+      }, TIMEOUT)
 
-    test.failing("Consume can only be called from program", async () => {
-      await bridge.consume(
-        ethChainId, // sourceChainId
-        evm2AleoArr(ethTsContractAddr), // sourceServiceContract
-        wusdcTokenAddr, // token
-        evm2AleoArr(ethUser), // sender
-        aleoUser1, // receiver
-        aleoUser1, // actual_receiver
-        BigInt(100), // amount
-        BigInt(1), // sequence
-        1, // height
-        signers,
-        signatures
-      )
-    }, testTimeout)
+    test("should not enable service by non-admin", async() => {
+        bridge.connect(aleoUser3);
+        const enableServiceTx = await bridge.add_service_tb(tokenService.address());
+        // @ts-ignore
+        const receipt = await enableServiceTx.wait();
+        expect(receipt.error).toBeTruthy();      
+    }, TIMEOUT);
+    });
+
+    describe("Disable Service", () => {
+      test("should not disable service by non_admin", async() => {
+          bridge.connect(aleoUser3);
+          const disableChainTx = await bridge.remove_service_tb(tokenService.address());
+          // @ts-ignore
+          const receipt = await disableChainTx.wait();
+          expect(receipt.error).toBeTruthy();
+      }, TIMEOUT);
+
+      test("Owner can disable service", async () => {
+        bridge.connect(aleoUser1);
+        const enableChainTx = await bridge.remove_service_tb(tokenService.address());
+        // @ts-ignore
+        await enableChainTx.wait()
+        const isTsEnabled = await bridge.supported_services(tokenService.address(), false);
+        expect(isTsEnabled).toBe(false)
+      }, TIMEOUT);
+
+      test("should not remove unavailabe service", async () => {
+        const removeChainTx = await bridge.remove_service_tb(tokenService.address());
+        // @ts-ignore
+        const receipt = await removeChainTx.wait()
+        expect(receipt.error).toBe(true);
+      }, TIMEOUT);
+    })
+
   })
+
+  // describe("Receive", () => {
+  //   const incomingSequence = BigInt(
+  //     Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+  //   );
+  //   const packet: InPacket = {
+  //     version: 0,
+  //     source: {
+  //       chain_id: ethChainId,
+  //       addr: evm2AleoArr(ethTsContractAddr),
+  //     },
+  //     destination: {
+  //       chain_id: aleoChainId,
+  //       addr: tokenService.address(),
+  //     },
+  //     message: {
+  //       token: wusdcToken.address(),
+  //       sender: evm2AleoArr(ethUser),
+  //       receiver: aleoUser1,
+  //       amount : BigInt(10000)
+  //     },
+  //     height: 10,
+  //   };
+
+  //   const unsupportedPacket: InPacket = {
+  //     version: 0,
+  //     source: {
+  //       chain_id: new_chainId,
+  //       addr: evm2AleoArr(ethTsContractAddr),
+  //     },
+  //     destination: {
+  //       chain_id: aleoChainId,
+  //       addr: tokenService.address(),
+  //     },
+  //     message: {
+  //       token: wusdcToken.address(),
+  //       sender: evm2AleoArr(ethUser),
+  //       receiver: aleoUser1,
+  //       amount : BigInt(10000)
+  //     },
+  //     height: 10,
+  //   };
+
+  //   const signature = signPacket(packet, true, bridge.config.privateKey);    
+  //   const signatures = [
+  //     signature,
+  //     signature,
+  //     signature,
+  //     signature,
+  //     signature
+  //   ]
+
+  //   const signers = [
+  //     aleoUser1,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //   ]
+
+  //   const packetHash = hashStruct(js2leo.getInPacketLeo(packet));
+  //   const packetWithScreening: InPacketWithScreening = {
+  //     packet_hash: packetHash,
+  //     screening_passed: true
+  //   };
+  //   const packetWithScreeningHash = hashStruct(js2leo.getInPacketWithScreeningLeo(packetWithScreening));
+
+  //   const packetIdWithAttestor: PacketIdWithAttestor = {
+  //     chain_id: packet.source.chain_id,
+  //     sequence: packet.sequence,
+  //     attestor: aleoUser1
+  //   }
+  //   const packetKeyWithAttestorHash = hashStruct(js2leo.getPacketIdWithAttestorLeo(packetIdWithAttestor))
+
+  //   const unsupportedSigner = [
+  //     aleoUser7,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //     ALEO_ZERO_ADDRESS,
+  //   ]
+
+  //   const packetId : PacketId = {
+  //     chain_id: ethChainId,
+  //     sequence: incomingSequence
+  //   }
+
+
+  //   test("Call receive", async() => {
+  //     //update threshold
+  //     const updateThresholdTx = await bridge.update_threshold_tb(1);
+  //     // @ts-ignore
+  //     await updateThresholdTx.wait();
+
+  //     //enable chain
+  //     const enableChainTx = await bridge.add_chain_tb(ethChainId);
+  //     // @ts-ignore
+  //     await enableChainTx.wait()
+
+  //     //enable service
+  //     const enableServiceTx = await bridge.add_service_tb(tokenService.address());
+  //     // @ts-ignore
+  //     await enableServiceTx.wait();
+
+  //     let hasAttestorSigned = true
+  //     try {
+  //       hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
+  //     } catch (e) {
+  //       hasAttestorSigned = false
+  //     }
+
+  //     let initialVotes = 99;
+  //     try {
+  //       initialVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
+  //     } catch (e) {
+  //       initialVotes = 0
+  //     }
+  //     const tx = await bridge.receive(packet, signers, signatures, true);
+  //     // @ts-ignore
+  //     const receipt = await tx.wait();
+  //     let finalVotes;
+  //     try{
+  //       finalVotes = await bridge.in_packet_attestations(packetWithScreeningHash); 
+  //     }catch(err){
+  //       finalVotes = 0;
+  //     }
+
+  //     expect(finalVotes).toBe(initialVotes + 1); // TODO: test for cases with multiple validation
+
+  //     hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
+  //     expect(hasAttestorSigned).toBe(true);
+  //     expect(await bridge.in_packet_attestations(packetWithScreeningHash)).toBe(1);
+  //     // expect(await bridge.in_packet_hash(packetId)).toBe(packetWithScreeningHash);
+  //     // expect(await bridge.in_packet_consumed(packetId)).toBe(false);
+  //   }, TIMEOUT)
+
+  //   test.failing("should not attest packet coming from unsupported chain", async() => {
+  //     const tx = await bridge.receive(unsupportedPacket, signers, signatures, true);
+  //     // @ts-ignore
+  //     const receipt = await tx.wait();
+  //     expect(receipt.error).toBeTruthy();
+  //   }, TIMEOUT)
+
+  //   test("should not attest packet coming from unvalid attestor", async() => {
+  //     const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser2, newThreshold);
+  //     // @ts-ignore
+  //     await removeAttestorTx.wait();
+
+  //     bridge.connect(aleoUser2);
+  //     const tx = await bridge.receive(packet, signers, signatures, true);
+  //     // @ts-ignore
+  //     const receipt = await tx.wait();
+  //     expect(receipt.error).toBeTruthy();
+  //   }, TIMEOUT)
+
+  //   test("should not attest the same packet by same attestor", async() => {
+  //     const tx = await bridge.receive(packet, signers, signatures, true);
+  //     // @ts-ignore
+  //     const receipt = await tx.wait();
+  //     expect(receipt.error).toBeTruthy();
+  //   }, TIMEOUT)
+
+
+  //   test.failing("Consume can only be called from program", async () => {
+  //     await bridge.consume(
+  //       ethChainId, // sourceChainId
+  //       evm2AleoArr(ethTsContractAddr), // sourceServiceContract
+  //       wusdcToken.address(), // token
+  //       evm2AleoArr(ethUser), // sender
+  //       aleoUser1, // receiver
+  //       aleoUser1, // actual_receiver
+  //       BigInt(100), // amount
+  //       BigInt(1), // sequence
+  //       1, // height
+  //       signers,
+  //       signatures
+  //     )
+  //   }, TIMEOUT)
+  // })
 
 
   describe("Publish", () => {
@@ -487,77 +657,53 @@ describe("Token Bridge ", () => {
         evm2AleoArr(ethUser), // receiver
         BigInt(100) // amount
       );
-    },testTimeout)
+    },TIMEOUT)
 
-  // })
+  })
 
   // describe("Attestor", () => {
-  //   test.failing("Update with duplicate attestor", async () => {
-  //     const highThresholdTxn = await bridge.update_attestor(aleoUser2)
+  //   test.skip("should not Update with duplicate attestor", async () => {
+  //     const highThresholdTxn = await bridge.update_attestor_key(aleoUser3)
   //     // @ts-ignore
   //     const receipt = await highThresholdTxn.wait()
-  //     console.log(receipt);
-  //     expect(receipt?.error).toBe(false);
-  //   }, testTimeout);
+  //     expect(receipt.error).toBe(true);
+  //   }, TIMEOUT);
 
-  //   test("Update attestor", async () => {
-  //     const updateAttestorTxn = await bridge.update_attestor(aleoUser6)
+  //   test.skip("Update attestor", async () => {
+  //     const updateAttestorTxn = await bridge.update_attestor_key(aleoUser6)
   //     // @ts-ignore
   //     const receipt = await updateAttestorTxn.wait()
   //     console.log(receipt);
-  //   }, testTimeout);
+  //   }, TIMEOUT);
 
-  //   test.failing("Add new attestor (Decrease threshold) - Should fail", async () => {
-  //     const addNewAttestorTxn = await bridge.add_attestor_tb(aleoUser7, 1)
-  //     // @ts-ignore
-  //     const receipt = await addNewAttestorTxn.wait()
-  //     console.log(receipt)
-  //     expect(!receipt?.error).toBe(false);
-  //   }, testTimeout)
 
-  //   test("Add new attestor (Increase threshold)", async () => {
-  //     const addNewAttestorTxn = await bridge.add_attestor_tb(aleoUser7, 6)
-  //     // @ts-ignore
-  //     const receipt = await addNewAttestorTxn.wait()
-  //     console.log(receipt)
-  //     expect(!receipt?.error).toBe(true);
-  //   }, testTimeout)
-
-  //   test("Remove attestor", async () => {
-  //     const removeAttestorTxn = await bridge.remove_attestor_tb(aleoUser6, 5)
-  //     // @ts-ignore
-  //     const receipt = await removeAttestorTxn.wait()
-  //     console.log(receipt)
-  //   }, testTimeout)
-
-  //   test("Remove non existing attestor", async () => {
-  //     const removeAttestorTxn = await bridge.remove_attestor_tb(aleoUser6, 5)
-  //     // @ts-ignore
-  //     const receipt = await removeAttestorTxn.wait();
-  //     console.log(receipt)
-  //     expect(receipt?.error).toBe(true);
-  //   }, testTimeout)
   // })
 
-  // describe("Transfer Ownership", () => {
-  //     test("Current owner can transfer ownership", async () => {
+  describe("Transfer Ownership", () => {
 
-  //       const currentOwner = await bridge.owner_TB(true);
-  //       expect(currentOwner).toBe(aleoUser1);
+      test("should not transfer ownership by non-admin", async() => {
+        bridge.connect(aleoUser3);
+        const transferOwnershipTx = await bridge.transfer_ownership_tb(council.address());
+        // @ts-ignore
+        const receipt = await transferOwnershipTx.wait();
+        expect(receipt.error).toBeTruthy();
+      }, TIMEOUT)
 
-  //       const transferOwnershipTx = await bridge.transfer_ownership_tb(councilProgramAddr);
-  //       // @ts-ignore
-  //       await transferOwnershipTx.wait()
+      test("Current owner can transfer ownership", async () => {
+        bridge.connect(aleoUser1);
+        const currentOwner = await bridge.owner_TB(true);
+        expect(currentOwner).toBe(aleoUser1);
 
-  //       const newOwner = await bridge.owner_TB(true);
-  //       expect(newOwner).toBe(councilProgramAddr);
+        const transferOwnershipTx = await bridge.transfer_ownership_tb(council.address());
+        // @ts-ignore
+        await transferOwnershipTx.wait()
 
-  //     }, testTimeout)
+        const newOwner = await bridge.owner_TB(true);
+        expect(newOwner).toBe(council.address());
 
-  //   test.todo("Other address cannot transfer ownership")
-  // })
+      }, TIMEOUT)
 
-
+  })
 
 
 
