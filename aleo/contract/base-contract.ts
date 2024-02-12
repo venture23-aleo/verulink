@@ -3,6 +3,7 @@ import { ContractConfig, snarkDeploy } from "@aleojs/core";
 import networkConfig from '../aleo-config'
 import { to_address } from "aleo-program-to-address";
 import { PrivateKey } from "@aleohq/sdk";
+import axios from "axios";
 
 export class BaseContract {
     public config: ContractConfig = {};
@@ -70,5 +71,19 @@ export class BaseContract {
             this.config.privateKey = this.config.network.accounts[accountIndex];
         }
     }
+
+    // TODO: Handle properly
+    async isDeployed(): bool {
+        let isDeployed = true
+        try {
+            const programUrl = `${this.config.network.endpoint}/program/${this.config.appName}.aleo`
+            console.log(programUrl);
+            await axios.get(programUrl);
+        } catch {
+            isDeployed = false
+        }
+        return isDeployed
+    }
+
 
 }

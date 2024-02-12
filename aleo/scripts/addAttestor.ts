@@ -1,13 +1,10 @@
-import {
-  TbAddAttestor,
-} from "../artifacts/js/types";
 import { hashStruct } from "../utils/hash";
-
-import * as js2leo from "../artifacts/js/js2leo";
 
 import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
 import { Council_v0002Contract } from "../artifacts/js/council_v0002";
 import { BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
+import { TbAddAttestor } from "../artifacts/js/types/council_v0002";
+import { getTbAddAttestorLeo } from "../artifacts/js/js2leo/council_v0002";
 
 const addAttestor = async (newAttestorAddress: string, newThreshold: number) => {
   const bridge = new Token_bridge_v0002Contract({
@@ -35,7 +32,7 @@ const addAttestor = async (newAttestorAddress: string, newThreshold: number) => 
     new_attestor: newAttestorAddress,
     new_threshold: newThreshold,
   };
-  const addAttestorHash = hashStruct(js2leo.getTbAddAttestorLeo(addAttestor));
+  const addAttestorHash = hashStruct(getTbAddAttestorLeo(addAttestor));
 
   // propose to add attestor
   const addAttestorProposalTx = await council.propose(proposalId, addAttestorHash);
@@ -65,6 +62,6 @@ const addAttestor = async (newAttestorAddress: string, newThreshold: number) => 
 };
 
 addAttestor(
-  "aleo1sfgaysqchded39ge2pk3prk92k267yd5qgc93wgeqh77njfx6v8syd6vfc", // Address of the new attestor
+  "aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7", // Address of the new attestor
   1 // Updated threshold
 );

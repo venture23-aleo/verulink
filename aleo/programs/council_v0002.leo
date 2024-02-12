@@ -531,7 +531,7 @@ program council_v0002.aleo {
         chain_id: u128
     }
 
-    transition disapprove_chain_bridge(public id: u32, public chain_id: u128) {
+    transition tb_remove_chain(public id: u32, public chain_id: u128) {
         let proposal: TbRemoveChain = TbRemoveChain {
             id,
             chain_id
@@ -544,7 +544,7 @@ program council_v0002.aleo {
         return then finalize(proposal_hash);
     }
 
-    finalize disapprove_chain_bridge(proposal_hash: field) {
+    finalize tb_remove_chain(proposal_hash: field) {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 

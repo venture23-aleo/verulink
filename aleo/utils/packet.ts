@@ -1,4 +1,4 @@
-import { InPacket } from "../artifacts/js/types/token_bridge_v0001";
+import { InPacket } from "../artifacts/js/types/token_bridge_v0002";
 import { BRIDGE_VERSION } from "./constants";
 import { evm2AleoArr } from "./ethAddress";
 

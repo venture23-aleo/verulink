@@ -12,3 +12,5 @@ export const BRIDGE_UNPAUSED_VALUE = 1;
 export const BRIDGE_VERSION = 2;
 
 export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";
+
+export const OWNER_INDEX = true;
