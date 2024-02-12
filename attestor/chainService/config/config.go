@@ -2,11 +2,11 @@ package config
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -24,12 +24,13 @@ type ConfigArgs struct {
 	LogEnc     string
 	Mode       string
 }
+
 type ChainConfig struct {
 	Name                      string            `yaml:"name"`
 	ChainID                   *big.Int          `yaml:"chain_id"`
 	BridgeContract            string            `yaml:"bridge_contract"`
 	NodeUrl                   string            `yaml:"node_url"`
-	WaitDuration              time.Duration     `yaml:"wait_duration"`
+	WaitDuration              time.Duration     `yaml:"wait_dur"`
 	WalletPath                string            `yaml:"wallet_path"`
 	DestChains                []string          `yaml:"dest_chains"`
 	WalletAddress             string            `yaml:"wallet_address"`
@@ -53,7 +54,7 @@ type Config struct {
 
 type LoggerConfig struct {
 	Encoding   string `yaml:"encoding"`
-	OutputPath string `yaml:"output_dir"`
+	OutputPath string `yaml:"output_path"`
 }
 
 type SigningServiceConfig struct {
@@ -61,9 +62,8 @@ type SigningServiceConfig struct {
 	Port     int    `yaml:"port"`
 	Endpoint string `yaml:"endpoint"`
 	Scheme   string `yaml:"scheme"`
-	Username string `yaml:"user_name"`
+	Username string `yaml:"username"`
 	Password string `yaml:"password"`
-	PingUrl  string `yaml:"ping_url"`
 }
 
 type CollecterServiceConfig struct {
@@ -78,13 +78,17 @@ func GetConfig() *Config {
 }
 
 func InitConfig(cfgArgs *ConfigArgs) error {
-	flag.Parse()
 	b, err := os.ReadFile(cfgArgs.ConfigFile)
 	if err != nil {
 		return err
 	}
 	config = new(Config)
 	err = yaml.Unmarshal(b, config)
+	if err != nil {
+		return err
+	}
+
+	err = validateChainConfig(config)
 	if err != nil {
 		return err
 	}
@@ -115,8 +119,24 @@ func InitConfig(cfgArgs *ConfigArgs) error {
 			return err
 		}
 		config.LogConfig.OutputPath = filepath.Join(cfgArgs.LogPath, "attestor.log")
-	} else if config.LogConfig.OutputPath == "" {
+	} else if config.LogConfig.OutputPath != "" {
+		fileName := filepath.Base(config.LogConfig.OutputPath)
+		if strings.HasSuffix(fileName, ".log") {
+			dir := filepath.Dir(config.LogConfig.OutputPath)
+			err := os.MkdirAll(dir, 0755)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := validateDirectory(config.LogConfig.OutputPath)
+			if err != nil {
+				return err
+			}
+			config.LogConfig.OutputPath = filepath.Join(config.LogConfig.OutputPath, "attestor.log")
+		}
+	} else {
 		config.LogConfig.OutputPath = "./attestor.log"
+
 	}
 
 	if cfgArgs.LogEnc != "" {
@@ -157,5 +177,38 @@ func validatePath(p string) error {
 	if finfo.IsDir() {
 		return fmt.Errorf("path %s should not be directory", p)
 	}
+	return nil
+}
+
+func validateChainConfig(cfg *Config) error {
+	chainNameToChainID := make(map[string]string)
+	for _, chainCfg := range cfg.ChainConfigs {
+		chainNameToChainID[chainCfg.Name] = chainCfg.ChainID.String()
+	}
+
+	for _, chainCfg := range cfg.ChainConfigs {
+		mDestChains := make([]string, len(chainCfg.DestChains))
+		mStartSeqMap := make(map[string]uint64)
+
+		for _, name := range chainCfg.DestChains {
+			chainID, ok := chainNameToChainID[name]
+			if !ok {
+				return fmt.Errorf("Chain-id not available for %s", name)
+			}
+			mDestChains = append(mDestChains, chainID)
+		}
+		chainCfg.DestChains = mDestChains
+
+		for name, startSeqNum := range chainCfg.StartSeqNum {
+			chainID, ok := chainNameToChainID[name]
+			if !ok {
+				return fmt.Errorf("Chain-id not available for %s", name)
+			}
+			mStartSeqMap[chainID] = startSeqNum
+		}
+
+		chainCfg.StartSeqNum = mStartSeqMap
+	}
+
 	return nil
 }

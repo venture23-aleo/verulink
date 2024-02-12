@@ -120,6 +120,7 @@ type Client struct {
 	address                   ethCommon.Address
 	eth                       ethClientI
 	bridge                    iBridgeClient
+	destChainsMap             map[string]bool
 	waitDur                   time.Duration
 	nextBlockHeight           uint64
 	chainID                   *big.Int
@@ -208,17 +209,28 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 		startHeight := cl.nextBlockHeight
 		endHeight := cl.blockHeightPriorWaitDur(ctx)
-		if endHeight > startHeight+defaultHeightDifferenceForFilterLogs {
+
+		if endHeight < startHeight {
+			time.Sleep(avgBlockGenDur)
+			continue
+		} else if endHeight > startHeight+defaultHeightDifferenceForFilterLogs {
 			endHeight = startHeight + defaultHeightDifferenceForFilterLogs
 		}
 
 		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 		if err != nil {
-			logger.GetLogger().Error(err.Error())
+			logger.GetLogger().Error("Filter packet log error",
+				zap.Error(err),
+				zap.Uint64("start_height", startHeight),
+				zap.Uint64("end_height", endHeight),
+			)
 			continue
 		}
+
 		for _, pkt := range pkts {
-			ch <- pkt
+			if _, ok := cl.destChainsMap[pkt.Destination.ChainID.String()]; ok {
+				ch <- pkt
+			}
 		}
 		cl.nextBlockHeight = endHeight + 1
 	}
@@ -377,16 +389,18 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
 	}
 
-	destChains := getDestChains()
+	destChainsMap := make(map[string]bool)
 	var namespaces []string
-	for _, destChain := range destChains {
+	for _, destChain := range cfg.DestChains {
 		rns := retryPacketNamespacePrefix + destChain
 		bns := baseSeqNumNameSpacePrefix + destChain
 		namespaces = append(namespaces, rns, bns)
 
 		retryPacketNamespaces = append(retryPacketNamespaces, rns)
 		baseSeqNamespaces = append(baseSeqNamespaces, bns)
+		destChainsMap[destChain] = true
 	}
+
 	err = store.CreateNamespaces(namespaces)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create namespaces. Error: %s", err.Error()))
@@ -416,6 +430,7 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
 		eth:                       ethclient,
 		bridge:                    bridgeClient,
+		destChainsMap:             destChainsMap,
 		waitDur:                   waitDur,
 		chainID:                   cfg.ChainID,
 		nextBlockHeight:           cfg.StartHeight,
@@ -427,5 +442,5 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 }
 
 func getDestChains() []string { // list of chain IDs
-	return []string{"2"}
+	return []string{"6694886634403"}
 }

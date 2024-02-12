@@ -3,7 +3,6 @@ package aleo
 import (
 	"context"
 	"math/big"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -276,15 +275,23 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		panic("failed to create aleoclient")
 	}
 
-	destChains := getDestChains(aleoClient, cfg.BridgeContract)
+	destChainsSeqMap := make(map[string]uint64, 0)
+	for k, v := range cfg.StartSeqNum {
+		destChainsSeqMap[k] = v
+	}
+
 	var namespaces []string
-	for _, destChain := range destChains {
-		rns := retryPacketNamespacePrefix + destChain
-		bns := baseSeqNumNameSpacePrefix + destChain
+	for _, destChainId := range cfg.DestChains {
+		rns := retryPacketNamespacePrefix + destChainId
+		bns := baseSeqNumNameSpacePrefix + destChainId
 		namespaces = append(namespaces, rns, bns)
 
 		retryPacketNamespaces = append(retryPacketNamespaces, rns)
 		baseSeqNamespaces = append(baseSeqNamespaces, bns)
+
+		if _, ok := destChainsSeqMap[destChainId]; !ok {
+			destChainsSeqMap[destChainId] = 1 // By default start from 1
+		}
 	}
 
 	err = store.CreateNamespaces(namespaces)
@@ -312,15 +319,6 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
 	}
 
-	destChainsSeqMap := make(map[string]uint64, 0)
-	for chainName, seqNum := range cfg.StartSeqNum {
-		chainID, ok := m[chainName]
-		if !ok {
-			panic("missing start sequence number information")
-		}
-		destChainsSeqMap[chainID.String()] = seqNum
-	}
-
 	return &Client{
 		queryUrl:            urlSlice[0],
 		network:             urlSlice[1],
@@ -329,34 +327,8 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		chainID:             cfg.ChainID,
 		programID:           cfg.BridgeContract,
 		name:                name,
-		destChains:          destChainsSeqMap,
+		destChains:          cfg.StartSeqNum,
 		retryPacketWaitDur:  retryPacketWaitDur,
 		pruneBaseSeqWaitDur: pruneBaseSeqWaitDur,
 	}
-}
-
-func getDestChains(client aleoRpc.IAleoRPC, bridgeContract string) []string { // list of chain IDs
-	if true {
-		return []string{"1"} // TODO: remove in prod
-	}
-
-	destChains := []string{}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	for i := 0; i < 255; i++ {
-		destChainMap, err := client.GetMappingValue(ctx, bridgeContract, "registered_chains", strconv.Itoa(i))
-		if err != nil {
-			panic(err)
-		}
-		destChain := destChainMap[strconv.Itoa(i)]
-		// ensure all the chains are supported by the bridge at the moment
-		isSupportedMap, err := client.GetMappingValue(ctx, bridgeContract, "supported_chains", destChain)
-		if err != nil {
-			panic(err)
-		}
-		if isSupportedMap[destChain] == "true" {
-			destChains = append(destChains, destChain)
-		}
-	}
-	return destChains
 }

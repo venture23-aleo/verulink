@@ -1,40 +1,46 @@
 ---
 chains:
 - name: aleo
-  chain_id: 2
-  wallet_address: "address" # wallet indentifier
-  bridge_contract: bridge.aleo
+  chain_id: 6694886634403
+  wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7 # wallet indentifier
+  bridge_contract: token_bridge_v0002.aleo
   node_url: http://52.91.48.169|testnet3
   sequence_num_start:
-    ethereum: 0
+    ethereum: 1
     # solana: 23 # solana is just for config example
-  wait_time: 24h
-  retry_packet_wait_dur: 12h
-  prune_base_seq_num_wait_dur: 6h
+  wait_dur: 2s
+  retry_packet_wait_dur: 1m
+  prune_base_seq_num_wait_dur: 1m
+  dest_chains:
+    - ethereum
+
 - name: ethereum
-  chain_id: 1
-  wallet_address: "address"
-  bridge_contract: '0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758'
+  chain_id: 28556963657430695
+  wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
+  bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
   node_url: https://rpc.sepolia.org
-  start_height: 1
-  wait_time: 24h
-  filter_topic: '0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9'
-  retry_packet_wait_dur: 12h
-  prune_base_seq_num_wait_dur: 6h
-db_path: db
+  start_height: 5270200
+  wait_dur: 2s
+  filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
+  retry_packet_wait_dur: 1m
+  prune_base_seq_num_wait_dur: 1m
+  dest_chains:
+    - aleo
+
+
+db_path: attestorBolt.db
 consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
-  output_path: relays.log
+  output_dir: ./
 mode: dev # dev/prod
 signing_service:
-  host: "host name"
+  host: 127.0.0.1
   port: 6579
   endpoint: "/sign"
-  scheme: "communication scheme" # https, http, rpc, etc.
-  username: "user name"
+  scheme: "http" # https, http, rpc, etc.
+  username: "username"
   password: "password"
-  ping_endpoint: "/ping"
 collector_service:
-  uri: https://collector.service.uri
-  collector_wait_dur: 12h
+  uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
+  collector_wait_dur: 1h
