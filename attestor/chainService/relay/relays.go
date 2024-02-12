@@ -13,12 +13,7 @@ import (
 	addressscreener "github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/address_screener"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/collector"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/signer"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 	"go.uber.org/zap"
-)
-
-const (
-	walletScreeningNameSpace = "walletScreeningNS"
 )
 
 var (
@@ -38,24 +33,24 @@ type relay struct {
 }
 
 func StartRelay(ctx context.Context, cfg *config.Config) {
-	err := store.CreateNamespaces([]string{walletScreeningNameSpace})
+	err := signer.SetupSigner(&cfg.SigningServiceConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	err = signer.SetupSigner(&cfg.SigningServiceConfig)
+	err = addressscreener.SetupScreenService()
 	if err != nil {
 		panic(err)
 	}
 
-	var walletAddresses []string
+	chainIdToAddress := make(map[string]string)
 	for _, v := range cfg.ChainConfigs {
-		walletAddresses = append(walletAddresses, v.WalletAddress)
+		chainIdToAddress[v.ChainID.String()] = v.WalletAddress
 	}
 
 	err = collector.SetupCollector(
 		cfg.CollectorServiceConfig.Uri,
-		walletAddresses,
+		chainIdToAddress,
 		cfg.CollectorServiceConfig.CollectorWaitDur,
 	)
 	if err != nil {
@@ -165,14 +160,17 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		Packet:  pkt,
 		IsWhite: isWhite,
 	}
-	signature, err := r.signer.SignScreenedPacket(ctx, sp)
+	hash, signature, err := r.signer.HashAndSignScreenedPacket(ctx, sp)
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
 		return
 	}
 
-	err = r.collector.SendToCollector(ctx, sp, signature)
+	logger.GetLogger().Info("packet hashed and signed",
+		zap.String("hash", hash), zap.String("signature", signature))
+
+	err = r.collector.SendToCollector(ctx, sp, hash, signature)
 	if err != nil {
 		if errors.Is(err, common.AlreadyRelayedPacket{}) {
 			err = nil // non-nil error will put packet in retry namespace
@@ -181,6 +179,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
 	}
+
+	logger.GetLogger().Info("Yay packet successfully sent")
 }
 
 func (r *relay) consumeMissedPackets(

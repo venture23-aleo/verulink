@@ -249,13 +249,13 @@ func TestProcessPackets(t *testing.T) {
 
 		r := relay{
 			collector: &collectorTest{
-				sendToCollector: func(sp *chain.ScreenedPacket, signature string) error {
+				sendToCollector: func(sp *chain.ScreenedPacket, pktHash, signature string) error {
 					return nil
 				},
 			},
 			signer: &signTest{
-				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, error) {
-					return "signature", nil
+				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, string, error) {
+					return "hash", "signature", nil
 				},
 			},
 			screener: &screenTest{
@@ -298,8 +298,8 @@ func TestProcessPackets(t *testing.T) {
 
 		r := relay{
 			signer: &signTest{
-				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, error) {
-					return "", errors.New("error")
+				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, string, error) {
+					return "", "", errors.New("error")
 				},
 			},
 			screener: &screenTest{
@@ -342,13 +342,13 @@ func TestProcessPackets(t *testing.T) {
 
 		r := relay{
 			collector: &collectorTest{
-				sendToCollector: func(sp *chain.ScreenedPacket, signature string) error {
+				sendToCollector: func(sp *chain.ScreenedPacket, pktHash, signature string) error {
 					return errors.New("error")
 				},
 			},
 			signer: &signTest{
-				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, error) {
-					return "signature", nil
+				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, string, error) {
+					return "hash", "signature", nil
 				},
 			},
 			screener: &screenTest{
@@ -438,13 +438,13 @@ func TestConsumeMissedPacket(t *testing.T) {
 }
 
 type collectorTest struct {
-	sendToCollector          func(sp *chain.ScreenedPacket, signature string) error
+	sendToCollector          func(sp *chain.ScreenedPacket, pktHash, signature string) error
 	receivePktsFromCollector func(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
-func (c *collectorTest) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, signature string) error {
+func (c *collectorTest) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, signature string) error {
 	if c.sendToCollector != nil {
-		return c.sendToCollector(sp, signature)
+		return c.sendToCollector(sp, pktHash, signature)
 	}
 	return nil
 }
@@ -477,13 +477,13 @@ func (s *screenTest) Screen(pkt *chain.Packet) bool {
 }
 
 type signTest struct {
-	signScreenedPacket func(sp *chain.ScreenedPacket) (string, error)
+	signScreenedPacket func(sp *chain.ScreenedPacket) (string, string, error)
 }
 
-func (s *signTest) SignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, error) {
+func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, string, error) {
 	if s.signScreenedPacket != nil {
 		return s.signScreenedPacket(sp)
 	}
 
-	return "mySignature", nil
+	return "hash", "mySignature", nil
 }
