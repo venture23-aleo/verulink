@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	// flag.StringVar(&configFile, "config", "", "config file")
+	flag.StringVar(&configFile, "config", "", "config file")
 	flag.StringVar(&dbPath, "db-path", "", "directory path to store key-value db")
 	flag.StringVar(&logPath, "log-path", "", "file path to store logs")
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
@@ -34,6 +34,8 @@ func init() {
 }
 
 func main() {
+	flag.Parse()
+
 	cfgArgs := &config.ConfigArgs{
 		ConfigFile: configFile,
 		DBPath:     dbPath,
@@ -48,6 +50,7 @@ func main() {
 	}
 
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().LogConfig)
+	logger.GetLogger().Info("Attestor started")
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
