@@ -32,10 +32,9 @@ export const proposeRemoveToken = async (
   };
   const tbRemoveTokenProposalHash = hashStruct(getTsRemoveTokenLeo(tsRemoveToken)); 
 
-  const proposeRemoveTokenTx = await council.propose(proposalId, tbRemoveTokenProposalHash);
-  
-  // @ts-ignore
-  await proposeRemoveTokenTx.wait()
+  const [proposeRemoveTokenTx] = await council.propose(proposalId, tbRemoveTokenProposalHash);
+
+  await council.wait(proposeRemoveTokenTx);
 
   getProposalStatus(tbRemoveTokenProposalHash);
   return proposalId
@@ -64,10 +63,9 @@ export const voteRemoveToken = async (
 
   validateVote(tbRemoveTokenProposalHash, voter);
 
-  const voteRemoveTokenTx = await council.vote(tbRemoveTokenProposalHash);
-  
-  // @ts-ignore
-  await voteRemoveTokenTx.wait()
+  const [voteRemoveTokenTx] = await council.vote(tbRemoveTokenProposalHash);
+
+  await council.wait(voteRemoveTokenTx);
 
   getProposalStatus(tbRemoveTokenProposalHash);
 
@@ -99,13 +97,12 @@ export const execAddToken = async (
 
   validateExecution(tbRemoveTokenProposalHash);
 
-  const removeTokenTx = await council.ts_remove_token(
+  const [removeTokenTx] = await council.ts_remove_token(
     tsRemoveToken.id,
     tsRemoveToken.token_address,
   ) // 301_747
 
-  // @ts-ignore
-  await removeTokenTx.wait();
+  await council.wait(removeTokenTx);
 
   const updatedConnector = await tokenService.token_connectors(tokenAddress, "false");
   if (updatedConnector != "false") {
