@@ -31,10 +31,9 @@ export const proposeRemoveAttestor = async (attestor: string, new_threshold: num
   };
   const tbRemoveAttestorProposalHash = hashStruct(getTbRemoveAttestorLeo(tbRemoveAttestor)); 
 
-  const proposeRemoveAttestorTx = await council.propose(proposalId, tbRemoveAttestorProposalHash); // 477_914
+  const [proposeRemoveAttestorTx] = await council.propose(proposalId, tbRemoveAttestorProposalHash); // 477_914
   
-  // @ts-ignore
-  await proposeRemoveAttestorTx.wait()
+  await council.wait(proposeRemoveAttestorTx);
 
   getProposalStatus(tbRemoveAttestorProposalHash);
   
@@ -59,10 +58,9 @@ export const voteRemoveAttestor = async (proposalId: number, attestor: string, n
   const voter = council.getAccounts()[0];
   validateVote(tbRemoveAttestorProposalHash, voter);
 
-  const voteRemoveChainTx = await council.vote(tbRemoveAttestorProposalHash); // 477_914
+  const [voteRemoveChainTx] = await council.vote(tbRemoveAttestorProposalHash); // 477_914
   
-  // @ts-ignore
-  await voteRemoveChainTx.wait()
+  await council.wait(voteRemoveChainTx);
 
   getProposalStatus(tbRemoveAttestorProposalHash);
 
@@ -90,14 +88,13 @@ export const execRemoveAttestor = async (proposalId: number,attestor: string, ne
 
   validateExecution(tbRemoveAttestorProposalHash);
 
-  const removeAttestorTx = await council.tb_remove_attestor(
+  const [removeAttestorTx] = await council.tb_remove_attestor(
     tbRemoveAttestor.id,
     tbRemoveAttestor.existing_attestor,
     tbRemoveAttestor.new_threshold
   ) // 301_747
 
-  // @ts-ignore
-  await removeAttestorTx.wait()
+  await council.wait(removeAttestorTx);
 
   isAttestorSupported = await bridge.attestors(attestor, false);
   if (isAttestorSupported) {

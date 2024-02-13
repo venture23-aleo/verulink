@@ -29,10 +29,9 @@ export const proposeUnpause = async (): Promise<number> => {
   };
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause)); 
 
-  const proposeUnpauseBridgeTx = await council.propose(proposalId, tbUnpauseProposalHash); // 477_914
+  const [proposeUnpauseBridgeTx] = await council.propose(proposalId, tbUnpauseProposalHash); // 477_914
   
-  // @ts-ignore
-  await proposeUnpauseBridgeTx.wait()
+  await council.wait(proposeUnpauseBridgeTx);
 
   getProposalStatus(tbUnpauseProposalHash);
 
@@ -58,10 +57,9 @@ export const voteUnpause = async (proposalId: number) => {
   const voter = council.getAccounts()[0];
   validateVote(tbUnpauseProposalHash, voter);
 
-  const voteAddChainTx = await council.vote(tbUnpauseProposalHash); // 477_914
+  const [voteAddChainTx] = await council.vote(tbUnpauseProposalHash); // 477_914
   
-  // @ts-ignore
-  await voteAddChainTx.wait()
+  await council.wait(voteAddChainTx);
 
   getProposalStatus(tbUnpauseProposalHash);
 
@@ -91,12 +89,11 @@ export const execUnpause = async (proposalId: number) => {
   const voter = council.getAccounts()[0];
   validateExecution(tbUnpauseProposalHash);
 
-  const unpauseBridgeTx = await council.tb_unpause(
+  const [unpauseBridgeTx] = await council.tb_unpause(
     tbUnpause.id,
   ); 
 
-  // @ts-ignore
-  await unpauseBridgeTx.wait()
+  await council.wait(unpauseBridgeTx);
 
   isBridgeUnpaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_UNPAUSED_VALUE;
   if (!isBridgeUnpaused) {

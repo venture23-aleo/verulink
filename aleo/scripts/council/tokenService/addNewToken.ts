@@ -44,10 +44,9 @@ export const proposeAddToken = async (
   };
   const tbAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken)); 
 
-  const proposeAddChainTx = await council.propose(proposalId, tbAddTokenProposalHash);
+  const [proposeAddChainTx] = await council.propose(proposalId, tbAddTokenProposalHash);
   
-  // @ts-ignore
-  await proposeAddChainTx.wait()
+  await council.wait(proposeAddChainTx);
 
   getProposalStatus(tbAddTokenProposalHash);
   return proposalId
@@ -87,10 +86,9 @@ export const voteAddToken = async (
 
   validateVote(tsAddTokenProposalHash, voter);
 
-  const voteAddTokenTx = await council.vote(tsAddTokenProposalHash);
+  const [voteAddTokenTx] = await council.vote(tsAddTokenProposalHash);
   
-  // @ts-ignore
-  await voteAddTokenTx.wait()
+  await council.wait(voteAddTokenTx);
 
   getProposalStatus(tsAddTokenProposalHash);
 
@@ -134,7 +132,7 @@ export const execAddToken = async (
 
   validateExecution(tsAddTokenProposalHash);
 
-  const addChainTx = await council.ts_add_token(
+  const [addChainTx] = await council.ts_add_token(
     tsAddToken.id,
     tsAddToken.token_address,
     tsAddToken.connector,
@@ -145,8 +143,7 @@ export const execAddToken = async (
     tsAddToken.max_no_cap
   ) // 301_747
 
-  // @ts-ignore
-  await addChainTx.wait()
+  await council.wait(addChainTx);
 
   const updatedConnector = await tokenService.token_connectors(tokenAddress);
   if (updatedConnector != tokenConnector) {

@@ -31,10 +31,9 @@ export const proposeAddService = async (tokenService: string): Promise<number> =
   };
   const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
 
-  const proposeAddTokenServiceTx = await council.propose(proposalId, tbAddTokenServiceProposalHash); // 477_914
+  const [proposeAddTokenServiceTx] = await council.propose(proposalId, tbAddTokenServiceProposalHash); // 477_914
   
-  // @ts-ignore
-  await proposeAddTokenServiceTx.wait()
+  await council.wait(proposeAddTokenServiceTx);
 
   getProposalStatus(tbAddTokenServiceProposalHash);
 
@@ -62,10 +61,9 @@ export const voteAddService = async (proposalId: number, tokenService: string) =
 
   validateVote(tbAddTokenServiceProposalHash, voter);
 
-  const voteAddChainTx = await council.vote(tbAddTokenServiceProposalHash); // 477_914
-  
-  // @ts-ignore
-  await voteAddChainTx.wait()
+  const [voteAddChainTx] = await council.vote(tbAddTokenServiceProposalHash); // 477_914
+
+    await council.wait(voteAddChainTx);
 
   getProposalStatus(tbAddTokenServiceProposalHash);
 
@@ -96,13 +94,12 @@ export const execAddService = async (proposalId: number, tokenService: string) =
 
   validateExecution(tbAddTokenServiceProposalHash);
 
-  const addServiceTx = await council.tb_add_service(
+  const [addServiceTx] = await council.tb_add_service(
     tbAddService.id,
     tbAddService.service,
   ) // 301_747
-
-  // @ts-ignore
-  await addServiceTx.wait()
+  
+  await council.wait(addServiceTx);
 
   isTokenServiceSupported = await bridge.supported_services(tokenService);
   if (!isTokenServiceSupported) {

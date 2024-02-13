@@ -28,10 +28,9 @@ export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
   };
   const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
 
-  const proposeAddChainTx = await council.propose(proposalId, tbAddChainProposalHash); // 477_914
-  
-  // @ts-ignore
-  await proposeAddChainTx.wait()
+  const [proposeAddChainTx] = await council.propose(proposalId, tbAddChainProposalHash); // 477_914
+
+  await council.wait(proposeAddChainTx);
 
   getProposalStatus(tbAddChainProposalHash);
   
@@ -55,10 +54,9 @@ export const voteAddChain = async (proposalId: number, newChainId: bigint) => {
   const voter = council.getAccounts()[0];
   validateVote(tbAddChainProposalHash, voter);
 
-  const voteAddChainTx = await council.vote(tbAddChainProposalHash); // 477_914
+  const [voteAddChainTx] = await council.vote(tbAddChainProposalHash); // 477_914
   
-  // @ts-ignore
-  await voteAddChainTx.wait()
+  await council.wait(voteAddChainTx);
 
   getProposalStatus(tbAddChainProposalHash);
 
@@ -85,13 +83,12 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
 
   validateExecution(tbAddChainProposalHash);
 
-  const addChainTx = await council.tb_add_chain(
+  const [addChainTx] = await council.tb_add_chain(
     tbAddChain.id,
     tbAddChain.chain_id,
   ) // 301_747
 
-  // @ts-ignore
-  await addChainTx.wait()
+  await council.wait(addChainTx);
 
   isChainIdSupported = await bridge.supported_chains(newChainId);
   if (!isChainIdSupported) {
