@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
@@ -108,6 +109,7 @@ func (mckEthCl *mockEthClient) FilterLogs(ctx context.Context, fromHeight uint64
 	return nil, errors.New("error")
 }
 
+
 type mockBridgeClient struct {
 	getDispatchedPacket func(logs types.Log) (*abi.BridgePacketDispatched, error)
 }
@@ -119,6 +121,9 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 	return nil, errors.New("error")
 }
 
+func (mckEthCl *mockBridgeClient) IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error) {
+	return false, nil 
+}
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
 
@@ -156,6 +161,7 @@ func TestFeedPacket(t *testing.T) {
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
 		feedPktWaitDur:            time.Nanosecond,
+		destChainsMap: map[string]bool{common.Big2.String(): true},
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

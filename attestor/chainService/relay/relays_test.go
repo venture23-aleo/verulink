@@ -37,6 +37,7 @@ type feeder struct {
 	name            string
 	feed            func()
 	getMissedPacket func() (*chain.Packet, error)
+	consumed        func() bool
 }
 
 func (f *feeder) FeedPacket(ctx context.Context, pktCh chan<- *chain.Packet) {
@@ -54,6 +55,13 @@ func (f *feeder) GetMissedPacket(ctx context.Context, m *chain.MissedPacket) (*c
 		return f.getMissedPacket()
 	}
 	return nil, errors.New("not implemented")
+}
+
+func (f *feeder) IsConsumed(ctx context.Context, srcChainID *big.Int, seqNum uint64) bool {
+	if f.consumed != nil {
+		return f.consumed()
+	}
+	return false
 }
 
 func (f *feeder) GetPacket(
@@ -379,62 +387,135 @@ func TestProcessPackets(t *testing.T) {
 }
 
 func TestConsumeMissedPacket(t *testing.T) {
-	t.Cleanup(func() {
-		chainIDToChain = map[string]chain.IClient{}
+	t.Run("case: packet not consumed at destination", func(t *testing.T) {
+		t.Cleanup(func() {
+			chainIDToChain = map[string]chain.IClient{}
+		})
+
+		//
+		ethChainID := big.NewInt(1)
+		aleoChainID := big.NewInt(2)
+		chainIDToChain = map[string]chain.IClient{
+			ethChainID.String():  &feeder{name: "ethereum"},
+			aleoChainID.String(): &feeder{name: "aleo"},
+		}
+
+		ethCh := make(chan *chain.Packet)
+		aleoCh := make(chan *chain.Packet)
+		RegisteredCompleteChannels["ethereum"] = ethCh
+		RegisteredCompleteChannels["aleo"] = aleoCh
+		//
+
+		pktCh := make(chan *chain.Packet)
+		missedPktCh := make(chan *chain.MissedPacket)
+		refetCh := make(chan struct{})
+		r := relay{
+			screener:  &screenTest{},
+			signer:    &signTest{},
+			collector: &collectorTest{},
+		}
+		srcChainID := big.NewInt(1)
+		chainIDToChain = map[string]chain.IClient{
+			srcChainID.String(): &feeder{
+				getMissedPacket: func() (*chain.Packet, error) {
+					return &chain.Packet{
+						Destination: chain.NetworkAddress{
+							ChainID: aleoChainID,
+						},
+						Source: chain.NetworkAddress{
+							ChainID: ethChainID,
+						},
+					}, nil
+				},
+			},
+			aleoChainID.String(): &feeder{
+				consumed: func() bool {
+					return false
+				},
+			},
+		}
+
+		go r.consumeMissedPackets(context.TODO(), missedPktCh, pktCh, refetCh)
+
+		missedPktCh <- &chain.MissedPacket{
+			SourceChainID: srcChainID,
+			TargetChainID: aleoChainID,
+			IsLast:        true,
+		}
+
+		ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
+		defer cncl()
+		select {
+		case <-ctx.Done():
+			t.FailNow()
+		case <-refetCh:
+		}
 	})
 
-	//
-	ethChainID := big.NewInt(1)
-	aleoChainID := big.NewInt(math.MaxInt64)
-	chainIDToChain = map[string]chain.IClient{
-		ethChainID.String():  &feeder{name: "ethereum"},
-		aleoChainID.String(): &feeder{name: "aleo"},
-	}
+	t.Run("case: packet consumed at destination", func(t *testing.T) {
+		t.Cleanup(func() {
+			chainIDToChain = map[string]chain.IClient{}
+		})
 
-	ethCh := make(chan *chain.Packet)
-	aleoCh := make(chan *chain.Packet)
-	RegisteredCompleteChannels["ethereum"] = ethCh
-	RegisteredCompleteChannels["aleo"] = aleoCh
-	//
+		//
+		ethChainID := big.NewInt(1)
+		aleoChainID := big.NewInt(2)
+		chainIDToChain = map[string]chain.IClient{
+			ethChainID.String():  &feeder{name: "ethereum"},
+			aleoChainID.String(): &feeder{name: "aleo"},
+		}
 
-	pktCh := make(chan *chain.Packet)
-	missedPktCh := make(chan *chain.MissedPacket)
-	refetCh := make(chan struct{})
-	r := relay{
-		screener:  &screenTest{},
-		signer:    &signTest{},
-		collector: &collectorTest{},
-	}
-	srcChainID := big.NewInt(1)
-	chainIDToChain = map[string]chain.IClient{
-		srcChainID.String(): &feeder{
-			getMissedPacket: func() (*chain.Packet, error) {
-				return &chain.Packet{
-					Destination: chain.NetworkAddress{
-						ChainID: aleoChainID,
-					},
-					Source: chain.NetworkAddress{
-						ChainID: ethChainID,
-					},
-				}, nil
+		ethCh := make(chan *chain.Packet)
+		aleoCh := make(chan *chain.Packet)
+		RegisteredCompleteChannels["ethereum"] = ethCh
+		RegisteredCompleteChannels["aleo"] = aleoCh
+		//
+
+		pktCh := make(chan *chain.Packet)
+		missedPktCh := make(chan *chain.MissedPacket)
+		refetCh := make(chan struct{})
+		r := relay{
+			screener:  &screenTest{},
+			signer:    &signTest{},
+			collector: &collectorTest{},
+		}
+		srcChainID := big.NewInt(1)
+		chainIDToChain = map[string]chain.IClient{
+			srcChainID.String(): &feeder{
+				getMissedPacket: func() (*chain.Packet, error) {
+					return &chain.Packet{
+						Destination: chain.NetworkAddress{
+							ChainID: aleoChainID,
+						},
+						Source: chain.NetworkAddress{
+							ChainID: ethChainID,
+						},
+					}, nil
+				},
 			},
-		},
-	}
+			aleoChainID.String(): &feeder{
+				consumed: func() bool {
+					return true
+				},
+			},
+		}
 
-	go r.consumeMissedPackets(context.TODO(), missedPktCh, pktCh, refetCh)
+		go r.consumeMissedPackets(context.TODO(), missedPktCh, pktCh, refetCh)
 
-	missedPktCh <- &chain.MissedPacket{
-		SourceChainID: srcChainID,
-		IsLast:        true,
-	}
+		missedPktCh <- &chain.MissedPacket{
+			SourceChainID: srcChainID,
+			TargetChainID: aleoChainID,
+			IsLast:        true,
+		}
 
-	ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
-	defer cncl()
-	select {
-	case <-ctx.Done():
-		t.FailNow()
-	case <-refetCh:
-	}
+		ctx, cncl := context.WithTimeout(context.TODO(), time.Second*2)
+		defer cncl()
+		select {
+		case <-ctx.Done():
+		case <-refetCh:
+			t.FailNow()
+		}
+	})
 }
 
 type collectorTest struct {
