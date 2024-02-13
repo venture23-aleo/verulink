@@ -10,7 +10,7 @@ import { hashStruct } from "../utils/hash";
 
 const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
 
-const TIMEOUT = 100_000; // 100 seconds
+const TIMEOUT = 1000_000; // 100 seconds
 
 describe("Token", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();

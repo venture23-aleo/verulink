@@ -281,7 +281,7 @@ program token_bridge_v0002.aleo {
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
-        assert(new_threshold > 0u8);
+        assert(new_threshold > 0u8); // TODO: can be included in transition
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
 
         assert(!Mapping::contains(attestors, new_attestor));
@@ -302,9 +302,9 @@ program token_bridge_v0002.aleo {
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX);
+        let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX); // TODO: What is use of this value?
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        assert(new_threshold > 0u8);
+        assert(new_threshold > 0u8); // TODO: can be included in transition
 
         // If attestor does not exist, this is expected to fail
         assert(Mapping::contains(attestors, attestor));
@@ -331,7 +331,7 @@ program token_bridge_v0002.aleo {
         assert_eq(from, owner);
 
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        assert(new_threshold >= 1u8 && new_threshold <= total_attestors);
+        assert(new_threshold >= 1u8 && new_threshold <= total_attestors); // TODO: >= logic can be skipped
 
         // If attestor does not exist, this is expected to fail
         Mapping::set(bridge_settings, THRESHOLD_INDEX, new_threshold);
@@ -515,6 +515,8 @@ program token_bridge_v0002.aleo {
         // This can be used to check the total outgoing messages from this bridge irrespective of destination chain
         let bridge_sequence_no: u64 = Mapping::get_or_use(sequences, ALEO_CHAIN_ID, 1u64); 
 
+
+        // TODO: packets and other struct can be defined in transition itself and passed as params(if efficient)
         let source: AleoProgram = AleoProgram {
             chain_id: source_chain_id,
             addr: source_service_program
@@ -655,7 +657,7 @@ program token_bridge_v0002.aleo {
 
         // Ensure enough attestation for the packet
         assert(votes >= threshold);
-
+        // TODO: can be defined in transtion and passed(if efficient)
         let packet_id: PacketId = PacketId {
             chain_id,
             sequence
