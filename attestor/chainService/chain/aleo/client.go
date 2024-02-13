@@ -263,6 +263,20 @@ func (cl *Client) GetMissedPacket(
 	return pkt, nil
 }
 
+func (cl *Client) IsConsumed(ctx context.Context, srcChainID *big.Int, seqNum uint64) bool {
+	key := constructOutMappingKey(srcChainID, seqNum) // the in_packet_consumed mapping is same as out packet mapping key
+	isConsumed, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, "in_packet_consumed", key)
+	if err != nil {
+		return false 
+	}
+	if isConsumed[key] == "null" {
+		return false
+	} else if isConsumed[key] == "true" {
+		return true
+	}
+	return false
+}
+
 func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 
 	urlSlice := strings.Split(cfg.NodeUrl, "|")

@@ -10,6 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
@@ -91,6 +92,7 @@ func (eth *ethClient) FilterLogs(
 
 type iBridgeClient interface {
 	ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error)
+	IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error)
 }
 
 type bridgeClient struct {
@@ -113,6 +115,14 @@ func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacke
 		return nil, err
 	}
 	return packetDispatched, nil
+}
+
+func (brcl *bridgeClient) IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error) {
+	consumed, err := brcl.bridge.IsPacketConsumed(opts, _sequence)
+	if err != nil {
+		return false, err
+	}
+	return consumed, nil
 }
 
 type Client struct {
@@ -379,6 +389,17 @@ func (cl *Client) GetMissedPacket(
 		}
 	}
 	return nil, errors.New("packet not found")
+}
+
+func (cl *Client) IsConsumed(ctx context.Context, _ *big.Int, seqNum uint64) bool {
+	callOpts := bind.CallOpts{
+		Context: ctx,
+	}
+	isConsumed, err := cl.bridge.IsPacketConsumed(&callOpts, big.NewInt(int64(seqNum)))
+	if err != nil {
+		return false
+	}
+	return isConsumed
 }
 
 func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {

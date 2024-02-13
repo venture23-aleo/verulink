@@ -196,6 +196,11 @@ func (r *relay) consumeMissedPackets(
 
 		missedPkt := <-missedPktCh
 		srcChain := chainIDToChain[missedPkt.SourceChainID.String()]
+		destChain := chainIDToChain[missedPkt.TargetChainID.String()] // check if the packet has already been consumed in the destination
+		consumed := destChain.IsConsumed(ctx, missedPkt.SourceChainID, missedPkt.SeqNum)
+		if consumed {
+			continue // if packet is already consumed in destination then ignore the packet
+		}
 		pkt, err := srcChain.GetMissedPacket(ctx, missedPkt)
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",

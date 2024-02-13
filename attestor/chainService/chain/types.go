@@ -19,6 +19,7 @@ type IClient interface {
 	GetMissedPacket(
 		ctx context.Context, missedPkt *MissedPacket) (
 		*Packet, error)
+	IsConsumed(ctx context.Context, srcChainID *big.Int, seqNum uint64) bool
 }
 
 type NetworkAddress struct {
