@@ -165,7 +165,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 
 	amount := new(big.Int)
 	var amountOk bool
-	pkt.Message.Amount, amountOk = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	pkt.Message.Amount, amountOk = amount.SetString(strings.Replace(packet.message.amount, "u128", "", 1), 0)
 	if !amountOk {
 		return nil, errors.New("failed in parsing amount")
 	}
