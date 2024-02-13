@@ -19,6 +19,7 @@ describe("Council", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = council.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
   const admin = council.address();
+
   describe("Deployment and Setup", () => {
     test(
       "Deploy Bridge",
@@ -48,6 +49,25 @@ describe("Council", () => {
     );
 
     test(
+      "Initialize Council",
+      async () => {
+        let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
+
+        if (!isCouncilInitialized) {
+          const [initializeTx] = await council.initialize(
+            [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5], 1
+          );
+          await council.wait(initializeTx);
+        }
+      },
+      TIMEOUT
+    );
+
+
+  })
+
+  describe("Bridge", () => {
+    test(
       "Initialize Bridge",
       async () => {
         const threshold = 1
@@ -64,6 +84,58 @@ describe("Council", () => {
       TIMEOUT
     );
 
+    test("Ensure proper setup", async () => {
+      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(council.address());
+    }, TIMEOUT);
+
+    describe("Add Chain", () => {
+      const newChainId = ethChainId;
+      const proposer = aleoUser1;
+      let proposalId = 0;
+      let tbAddChainProposalHash = BigInt(0);
+
+      beforeEach( async () => {
+        council.connect(proposer);
+        expect(await bridge.supported_chains(newChainId, false)).toBe(false);
+        expect(await council.members(aleoUser1)).toBe(true);
+      }, TIMEOUT)
+
+      test("Propose", async () => {
+        proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        const tbAddChain: TbAddChain = {
+          id: proposalId,
+          chain_id: newChainId
+        };
+        tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
+        const [tx] = await council.propose(proposalId, tbAddChainProposalHash);
+        await council.wait(tx);
+
+        const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        expect(upcomingProposalId).toBe(proposalId + 1);
+        expect(await council.proposals(proposalId)).toBe(tbAddChainProposalHash);
+
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signature = signProposal(tbAddChainProposalHash, council.config.privateKey);
+        const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signs = [signature, signature, signature, signature, signature];
+
+        expect(await council.proposal_executed(tbAddChainProposalHash, false)).toBe(false);
+        const [tx] = await council.tb_add_chain(proposalId, newChainId, signers, signs);
+        await council.wait(tx);
+
+        expect(await bridge.supported_chains(newChainId)).toBe(true);
+        expect(await council.proposal_executed(tbAddChainProposalHash)).toBe(true);
+      }, TIMEOUT)
+
+    })
+
+    describe("Remove Chain", () => {})
+
+  })
+
+  describe.skip("Token Service", () => {
     test(
       "Initialize Token Service",
       async () => {
@@ -78,78 +150,11 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test(
-      "Initialize Council",
-      async () => {
-        let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
-
-        if (!isCouncilInitialized) {
-          const [initializeTx] = await council.initialize(
-            [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5], 1
-          );
-          await council.wait(initializeTx);
-        }
-      },
-      TIMEOUT
-    );
-
     test("Ensure proper setup", async () => {
-      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(council.address());
       expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(council.address());
     }, TIMEOUT);
 
   });
-
-  describe("Add Chain", () => {
-    let proposalId = 0;
-    const newChainId = BigInt(6);
-    let tbAddChainProposalHash = BigInt(0);
-
-    beforeEach( async () => {
-      council.connect(aleoUser1);
-      expect(await bridge.supported_chains(newChainId, false)).toBe(false);
-      expect(await council.members(aleoUser1)).toBe(true);
-    }, TIMEOUT)
-
-    test("Propose", async () => {
-      proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-      const tbAddChain: TbAddChain = {
-        id: proposalId,
-        chain_id: newChainId
-      };
-      tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
-      const [tx] = await council.propose(proposalId, tbAddChainProposalHash);
-      await council.wait(tx);
-
-      const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-      expect(upcomingProposalId).toBe(proposalId + 1);
-      expect(await council.proposals(proposalId)).toBe(tbAddChainProposalHash);
-
-    }, TIMEOUT)
-
-    test("Execute", async () => {
-      const signature = signProposal(tbAddChainProposalHash, council.config.privateKey);
-      const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
-      const signs = [signature, signature, signature, signature, signature];
-
-      expect(await council.proposal_executed(tbAddChainProposalHash, false)).toBe(false);
-      const [tx] = await council.tb_add_chain(proposalId, newChainId, signers, signs);
-      await council.wait(tx);
-
-      expect(await bridge.supported_chains(newChainId)).toBe(true);
-      expect(await council.proposal_executed(tbAddChainProposalHash)).toBe(true);
-    }, TIMEOUT)
-
-    test.failing("Execute", async () => {
-      const signature = signProposal(tbAddChainProposalHash, council.config.privateKey);
-      const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
-      const signs = [signature, signature, signature, signature, signature];
-
-      expect(await council.proposal_executed(tbAddChainProposalHash, false)).toBe(false);
-      const [tx] = await council.tb_add_chain(proposalId, newChainId, signers, signs);
-      await council.wait(tx);
-    }, TIMEOUT)
-  })
 
 });
   
