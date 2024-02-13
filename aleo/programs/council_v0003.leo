@@ -23,9 +23,6 @@ program council_v0003.aleo {
     /// key = false : returns the total attestors
     mapping settings: bool => u8;
 
-    /// Tracks the number of votes received by the given proposal
-    mapping proposal_vote_counts: field => u8;
-
     /// Tracks if the proposal is executed or not
     mapping proposal_executed: field => bool;
 
@@ -33,11 +30,6 @@ program council_v0003.aleo {
     /// Key is the proposalId
     /// TOTAL_PROPOSALS_INDEX keeps track of the total proposals created
     mapping proposals: u32 => field;
-
-    /// Tracks if the given member has signed the proposal
-    /// Key is hash(ProposalVote)
-    /// Returns true if the member has voted
-    mapping proposal_votes: field => bool;
 
     const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
 
@@ -105,6 +97,7 @@ program council_v0003.aleo {
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             Mapping::set(members, initial_members[i], true);
         }
+        Mapping::set(members, ZERO_ADDRESS, true);
 
         // Set the initial initial values
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
@@ -133,9 +126,6 @@ program council_v0003.aleo {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
-        // Assert that the member has not signed the same proposal earlier
-        assert(!Mapping::contains(proposal_votes, proposal_sign));
-
         // Assert that the proposal id is expected
         let total_proposals: field = Mapping::get(proposals, TOTAL_PROPOSALS_INDEX);
         let expected_proposal_id: u32 = (total_proposals + 1field ) as u32;
@@ -144,13 +134,6 @@ program council_v0003.aleo {
 
         // Store the proposal hash
         Mapping::set(proposals, proposal_id, proposal_hash);
-
-        // Set that the member has signed the packet
-        Mapping::set(proposal_votes, proposal_sign, true);
-
-        // Set the vote for proposal to be 1
-        Mapping::set(proposal_vote_counts, proposal_hash, 1u8);
-
     }
 
     //////////////////////////////////////
