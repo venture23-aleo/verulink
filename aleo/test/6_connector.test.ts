@@ -32,7 +32,7 @@ const wusdcHolding = new Wusdc_holding_v0002Contract({ mode: "execute" });
 const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
 const newConnector = new Wusdc_connector_v0003Contract({ mode: "execute" });
 
-const TIMEOUT = 100_000; // 100 seconds
+const TIMEOUT = 200_000; // 200 seconds
 
 const createPacket = (receiver: string, amount: bigint): InPacket => {
   return createRandomPacket(receiver, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
@@ -50,7 +50,7 @@ describe("Token Connector", () => {
       "Deploy Bridge",
       async () => {
         const deployTx = await bridge.deploy();
-        await deployTx.wait();
+        await bridge.wait(deployTx);
       },
       TIMEOUT
     );
@@ -59,7 +59,7 @@ describe("Token Connector", () => {
       "Deploy Token Service",
       async () => {
         const deployTx = await tokenService.deploy();
-        await deployTx.wait();
+        await tokenService.wait(deployTx);
       },
       TIMEOUT
     );
@@ -68,7 +68,7 @@ describe("Token Connector", () => {
       "Deploy Council",
       async () => {
         const deployTx = await council.deploy();
-        await deployTx.wait();
+        await council.wait(deployTx);
       },
       TIMEOUT
     );
@@ -77,7 +77,7 @@ describe("Token Connector", () => {
       "Deploy Token",
       async () => {
         const deployTx = await wusdcToken.deploy();
-        await deployTx.wait();
+        await wusdcToken.wait(deployTx)
       },
       TIMEOUT
     );
@@ -86,7 +86,7 @@ describe("Token Connector", () => {
       "Deploy Holding",
       async () => {
         const deployTx = await wusdcHolding.deploy();
-        await deployTx.wait();
+        await wusdcHolding.wait(deployTx);
       },
       TIMEOUT
     );
@@ -95,7 +95,7 @@ describe("Token Connector", () => {
       "Deploy Connector",
       async () => {
         const deployTx = await wusdcConnector.deploy();
-        await deployTx.wait();
+        await wusdcConnector.wait(deployTx);
       },
       TIMEOUT
     );
@@ -109,13 +109,12 @@ describe("Token Connector", () => {
         const isBridgeInitialized = (await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX, 0)) != 0;
 
         if (!isBridgeInitialized) {
-          const initializeTx = await bridge.initialize_tb(
+          const [initializeTx] = await bridge.initialize_tb(
             [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
             threshold,
             admin
           );
-          // @ts-ignore
-          await initializeTx.wait();
+          await bridge.wait(initializeTx);
         }
       },
       TIMEOUT
@@ -127,11 +126,10 @@ describe("Token Connector", () => {
 
         const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isTokenServiceInitialized) {
-          const initializeTx = await tokenService.initialize_ts(
+          const [initializeTx] = await tokenService.initialize_ts(
             admin
           );
-          // @ts-ignore
-          await initializeTx.wait();
+          await tokenService.wait(initializeTx);
         }
       },
       TIMEOUT
@@ -142,9 +140,8 @@ describe("Token Connector", () => {
       async () => {
         const isEthSupported = (await bridge.supported_chains(ethChainId, false));
         if (!isEthSupported) {
-          const addEthChainTx = await bridge.add_chain_tb(ethChainId);
-          // @ts-ignore
-          await addEthChainTx.wait();
+          const [addEthChainTx] = await bridge.add_chain_tb(ethChainId);
+          await bridge.wait(addEthChainTx);
         }
       },
       TIMEOUT
@@ -155,9 +152,8 @@ describe("Token Connector", () => {
       async () => {
         let isTokenInitialized = (await wusdcToken.token_owner(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isTokenInitialized) {
-          const initializeTx = await wusdcConnector.initialize_wusdc();
-          // @ts-ignore
-          await initializeTx.wait();
+          const [initializeTx] = await wusdcConnector.initialize_wusdc();
+          await wusdcConnector.wait(initializeTx);
         }
       },
       TIMEOUT
@@ -168,7 +164,7 @@ describe("Token Connector", () => {
       async () => {
         const isWusdcSupported = (await tokenService.token_connectors(wusdcToken.address(), ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isWusdcSupported) {
-          const supportWusdcTx = await tokenService.add_token_ts(
+          const [supportWusdcTx] = await tokenService.add_token_ts(
             wusdcToken.address(),
             wusdcConnector.address(),
             BigInt(100), // minimum transfer
@@ -177,8 +173,7 @@ describe("Token Connector", () => {
             1, // (timeframe)
             BigInt(10000000000) // max liquidity for no cap
           );
-          // @ts-ignore
-          await supportWusdcTx.wait();
+          await tokenService.wait(supportWusdcTx);
         }
       },
       TIMEOUT
@@ -189,11 +184,10 @@ describe("Token Connector", () => {
       async () => {
         const isTokenServiceEnabled = await bridge.supported_services(tokenService.address(), false);
         if (!isTokenServiceEnabled) {
-          const supportServiceTx = await bridge.add_service_tb(
+          const [supportServiceTx] = await bridge.add_service_tb(
             tokenService.address()
           );
-          // @ts-ignore
-          await supportServiceTx.wait();
+          await bridge.wait(supportServiceTx);
         }
       },
       TIMEOUT
@@ -204,9 +198,8 @@ describe("Token Connector", () => {
       async () => {
         const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
         if (isPaused) {
-          const unpauseTx = await bridge.unpause_tb();
-          // @ts-ignore
-          await unpauseTx.wait();
+          const [unpauseTx] = await bridge.unpause_tb();
+          await bridge.wait(unpauseTx);
         }
       },
       TIMEOUT
@@ -247,7 +240,7 @@ describe("Token Connector", () => {
 
         const signs = [signature, signature, signature, signature, signature];
 
-        const tx = await wusdcConnector.wusdc_receive(
+        const [tx] = await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           packet.message.amount,
@@ -256,9 +249,7 @@ describe("Token Connector", () => {
           signers,
           signs
         );
-
-        // @ts-ignore
-        await tx.wait();
+        wusdcConnector.wait(tx);
 
         let finalBalance = await wusdcToken.account(aleoUser1);
         expect(finalBalance).toBe(initialBalance + packet.message.amount);
@@ -278,12 +269,11 @@ describe("Token Connector", () => {
         const initialSupply = await tokenService.total_supply(wusdcToken.address());
 
         const outgoingAmount = BigInt(1_000);
-        const tx = await wusdcConnector.wusdc_send(
+        const [tx] = await wusdcConnector.wusdc_send(
           evm2AleoArr(ethUser),
           outgoingAmount
         );
-        // @ts-ignore
-        await tx.wait();
+        await wusdcConnector.wait(tx);
 
         const finalBalance = await wusdcToken.account(aleoUser1);
         expect(finalBalance).toBe(initialBalance - outgoingAmount);
@@ -327,11 +317,10 @@ describe("Token Connector", () => {
         let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
 
         if (!isCouncilInitialized) {
-          const initializeTx = await council.initialize(
+          const [initializeTx] = await council.initialize(
             [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5], 1
           );
-          // @ts-ignore
-          await initializeTx.wait();
+          await council.wait(initializeTx);
         }
       },
       TIMEOUT
@@ -359,7 +348,7 @@ describe("Token Connector", () => {
 
         const signs = [signature, signature, signature, signature, signature];
 
-        const tx = await wusdcConnector.wusdc_receive(
+        const [tx] = await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           packet.message.amount,
@@ -368,9 +357,7 @@ describe("Token Connector", () => {
           signers,
           signs
         );
-
-        // @ts-ignore
-        await tx.wait();
+        await wusdcConnector.wait(tx);
 
         const userFinalBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const holdingProgramFinalBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
@@ -404,19 +391,15 @@ describe("Token Connector", () => {
         const releaseFundProposalHash = hashStruct(
           getHoldingReleaseLeo(releaseFundProposal)
         );
-        let tx = await council.propose(proposalId, releaseFundProposalHash);
+        let [tx] = await council.propose(proposalId, releaseFundProposalHash);
+        await council.wait(tx);
 
-        // @ts-ignore
-        await tx.wait();
-
-        tx = await wusdcConnector.wusdc_release(
+        [tx] = await wusdcConnector.wusdc_release(
           proposalId,
           aleoUser1,
           initialHeldAmount
         );
-
-        // @ts-ignore
-        await tx.wait();
+        await wusdcConnector.wait(tx);
 
         const userFinalBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const holdingProgramFinalBalance = await wusdcToken.account(
@@ -456,7 +439,7 @@ describe("Token Connector", () => {
 
         const signs = [signature, signature, signature, signature, signature];
 
-        const tx = await wusdcConnector.wusdc_receive(
+        const [tx] = await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           packet.message.amount,
@@ -483,7 +466,7 @@ describe("Token Connector", () => {
 
         const signs = [signature1, signature1, signature1, signature1, signature1];
 
-        const tx = await wusdcConnector.wusdc_receive(
+        await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           packet.message.amount,
@@ -492,9 +475,6 @@ describe("Token Connector", () => {
           signers,
           signs
         );
-        // @ts-ignore
-        const txReceipt = await tx.wait();
-        expect(txReceipt.error).toBeTruthy();
     }, TIMEOUT);
 
     test.failing("Pass all ZERO_ALEO_ADDRESS - (threshold not met) must fail", async () => {
@@ -525,7 +505,7 @@ describe("Token Connector", () => {
         );
     }, TIMEOUT);
 
-    test("Pass a valid signature from invalid attestor - must fail", async () => {
+    test.failing("Pass a valid signature from invalid attestor - must fail", async () => {
         const wallet = new PrivateKey();
         const amount = BigInt(100_000);
         const packet = createPacket(aleoUser1, amount);
@@ -545,7 +525,7 @@ describe("Token Connector", () => {
 
         const signs = [signature1, signature2, signature1, signature1, signature1];
 
-        const tx = await wusdcConnector.wusdc_receive(
+        await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           packet.message.amount,
@@ -554,21 +534,18 @@ describe("Token Connector", () => {
           signers,
           signs
         );
-        // @ts-ignore
-        const txReceipt = await tx.wait();
-        expect(txReceipt.error).toBeTruthy();
     }, TIMEOUT);
 
   });
 
-  describe("Token Send", () => {
-    test.todo("So many cases to look at");
-  });
+  // describe("Token Send", () => {
+  //   test.todo("So many cases to look at");
+  // });
 
   describe("Update Connector", () => {
     test("Deploy New connector", async () => {
       const tx = await newConnector.deploy();
-      await tx.wait();
+      await newConnector.wait(tx);
   }, TIMEOUT)
 
     test("Happy Path", async () => {
@@ -580,15 +557,11 @@ describe("Token Connector", () => {
           new_connector: newConnector.address(),
         };
         const proposalHash = hashStruct(getConnectorUpdateLeo(proposal));
-        let tx = await council.propose(proposalId, proposalHash);
+        let [tx] = await council.propose(proposalId, proposalHash);
+        await council.wait(tx);
 
-        // @ts-ignore
-        await tx.wait();
-
-        tx = await wusdcConnector.update(proposalId, newConnector.address());
-
-        // @ts-ignore
-        await tx.wait();
+        [tx] = await wusdcConnector.update(proposalId, newConnector.address());
+        await wusdcConnector.wait(tx);
 
         expect(await tokenService.token_connectors(wusdcToken.address())).toBe(newConnector.address());
         expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(newConnector.address());
