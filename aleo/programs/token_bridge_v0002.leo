@@ -272,6 +272,7 @@ program token_bridge_v0002.aleo {
     /// Only a valid attestor can `attest` to a packet
     /// Can only be called from owner
     transition add_attestor_tb(public new_attestor: address, public new_threshold: u8) {
+         assert(new_threshold > 0u8); 
         return then finalize(self.caller, new_attestor, new_threshold);
     }
 
@@ -281,7 +282,6 @@ program token_bridge_v0002.aleo {
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
-        assert(new_threshold > 0u8); // TODO: can be included in transition
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
 
         assert(!Mapping::contains(attestors, new_attestor));
@@ -293,6 +293,7 @@ program token_bridge_v0002.aleo {
     /// Remove an existing attestor from the bridge program
     /// Can only be called from owner
     transition remove_attestor_tb(public attestor: address, public new_threshold: u8) {
+        assert(new_threshold > 0u8); 
         return then finalize(self.caller, attestor, new_threshold);
     }
 
@@ -302,9 +303,9 @@ program token_bridge_v0002.aleo {
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let current_threshold: u8 = Mapping::get(bridge_settings, THRESHOLD_INDEX); // TODO: What is use of this value?
+       
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        assert(new_threshold > 0u8); // TODO: can be included in transition
+        
 
         // If attestor does not exist, this is expected to fail
         assert(Mapping::contains(attestors, attestor));
@@ -331,7 +332,7 @@ program token_bridge_v0002.aleo {
         assert_eq(from, owner);
 
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        assert(new_threshold >= 1u8 && new_threshold <= total_attestors); // TODO: >= logic can be skipped
+        assert(new_threshold <= total_attestors);
 
         // If attestor does not exist, this is expected to fail
         Mapping::set(bridge_settings, THRESHOLD_INDEX, new_threshold);
