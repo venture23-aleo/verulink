@@ -80,11 +80,11 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 			sl := messages[m+1 : m+1+70]
 			for i, v := range sl {
 				switch v {
-				case "token":
+				case "dest_token_address":
 					pkt.message.token = strings.Join(sl[i+1:i+1+32], " ")
-				case "sender":
+				case "sender_address":
 					pkt.message.sender = sl[i+1]
-				case "receiver":
+				case "receiver_address":
 					pkt.message.receiver = strings.Join(sl[i+1:i+1+32], " ")
 				case "amount":
 					pkt.message.amount = sl[i+1]
@@ -188,7 +188,7 @@ func constructAleoPacket(msg *chain.Packet) string {
 		"{ version: %du8, sequence: %du64, "+
 			"source: { chain_id: %du128, addr: %s }, "+
 			"destination: { chain_id: %du128, addr: %s }, "+
-			"message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, "+
+			"message: { dest_token_address: %s, sender_address: %s, receiver_address: %s, amount: %du128 }, "+
 			"height: %du64 }",
 		msg.Version, msg.Sequence, msg.Source.ChainID,
 		constructEthAddressForAleoParameter(msg.Source.Address),
