@@ -2,6 +2,7 @@ package aleo
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"strings"
 	"sync"
@@ -21,6 +22,7 @@ const (
 	aleo                       = "aleo"
 	defaultRetryPacketWaitDur  = time.Hour * 12
 	defaultPruneBaseSeqWaitDur = time.Hour * 6
+	nullString                 = "null"
 )
 
 // Namespaces
@@ -73,6 +75,10 @@ func (cl *Client) getPktWithSeq(ctx context.Context, dst *big.Int, seqNum uint64
 	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, outPacket, mappingKey)
 	if err != nil {
 		return nil, err
+	}
+
+	if message[mappingKey] == nullString {
+		return nil, fmt.Errorf("packet not found for dest-chain %s, sequence num: %d", dst.String(), seqNum)
 	}
 
 	pktStr, err := parseMessage(message[mappingKey])
