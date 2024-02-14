@@ -44,7 +44,6 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
         let screening_passed: bool = token_service<%=tokenServiceVersion%>.aleo/token_receive(
             origin_chain_id(), 
             origin_token_service_address(), 
-            origin_token_address(), 
             <%=symbol.toUpperCase()%>_TOKEN, 
             sender, 
             receiver, 

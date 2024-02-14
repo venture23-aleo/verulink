@@ -44,7 +44,6 @@ program wusdc_connector_v0003.aleo {
         let screening_passed: bool = token_service_v0002.aleo/token_receive(
             origin_chain_id(), 
             origin_token_service_address(), 
-            origin_token_address(), 
             WUSDC_TOKEN, 
             sender, 
             receiver, 
