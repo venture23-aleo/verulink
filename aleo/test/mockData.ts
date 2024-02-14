@@ -15,6 +15,9 @@ export const ethUser = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 // // Token Service Contract Address on Ethereum
 export const ethTsContractAddr = "0xf2c1447b518b03e1Ab4ae47021365508871f0225".toLocaleLowerCase();
 
+// Token Service Contract Address on Ethereum
+export const updatedEthTsContractAddr = "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c".toLocaleLowerCase();
+
 // // User address on Aleo
 export const aleoUser1 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
 export const aleoUser2 = "aleo1s3ws5tra87fjycnjrwsjcrnw2qxr8jfqqdugnf0xzqqw29q9m5pqem2u4t"

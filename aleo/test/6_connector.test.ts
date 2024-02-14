@@ -11,6 +11,7 @@ import {
   ethChainId,
   ethTsContractAddr,
   ethUser,
+  updatedEthTsContractAddr,
   usdcContractAddr,
 } from "./mockData";
 import { Address, PrivateKey } from "@aleohq/sdk";
@@ -23,6 +24,7 @@ import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
 import { ConnectorUpdate, HoldingRelease, leoProposalVoteSchema } from "../artifacts/js/types/council_v0002";
 import { createRandomPacket } from "../utils/packet";
 import { js2leo } from "@aleojs/core";
+import { getInPacketLeo } from "../artifacts/js/js2leo/token_bridge_v0002";
 
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
@@ -37,6 +39,11 @@ const TIMEOUT = 200_000; // 200 seconds
 const createPacket = (receiver: string, amount: bigint): InPacket => {
   return createRandomPacket(receiver, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
 }
+
+const createUpdatedPacket = (receiver: string, amount: bigint): InPacket => {
+  return createRandomPacket(receiver, amount, ethChainId, aleoChainId, updatedEthTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
+}
+
 
 describe("Token Connector", () => {
 
@@ -249,7 +256,7 @@ describe("Token Connector", () => {
           signers,
           signs
         );
-        wusdcConnector.wait(tx);
+        await wusdcConnector.wait(tx);
 
         let finalBalance = await wusdcToken.account(aleoUser1);
         expect(finalBalance).toBe(initialBalance + packet.message.amount);
@@ -510,14 +517,16 @@ describe("Token Connector", () => {
         const amount = BigInt(100_000);
         const packet = createPacket(aleoUser1, amount);
         const signature1 = signPacket(packet, true, bridge.config.privateKey);
-
         const signature2 = signPacket(packet, true, wallet.to_string());
 
+        const walletAddress = wallet.to_address().to_string();
+
+        expect(await bridge.attestors(walletAddress, false)).toBe(false);
         const signers = [
           Address.from_private_key(
             PrivateKey.from_string(bridge.config.privateKey)
           ).to_string(),
-          wallet.to_address().to_string(),
+          walletAddress,
           ALEO_ZERO_ADDRESS,
           ALEO_ZERO_ADDRESS,
           ALEO_ZERO_ADDRESS,
@@ -525,7 +534,7 @@ describe("Token Connector", () => {
 
         const signs = [signature1, signature2, signature1, signature1, signature1];
 
-        await wusdcConnector.wusdc_receive(
+        const [tx] = await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
           packet.message.amount,
@@ -534,6 +543,7 @@ describe("Token Connector", () => {
           signers,
           signs
         );
+        await wusdcConnector.wait(tx);
     }, TIMEOUT);
 
   });
@@ -542,13 +552,13 @@ describe("Token Connector", () => {
   //   test.todo("So many cases to look at");
   // });
 
-  describe("Update Connector", () => {
+  describe("New Connector", () => {
     test("Deploy New connector", async () => {
       const tx = await newConnector.deploy();
       await newConnector.wait(tx);
   }, TIMEOUT)
 
-    test("Happy Path", async () => {
+    test("Update to new connector", async () => {
         let proposalId = parseInt( (await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1
         const proposal: ConnectorUpdate = {
           id: proposalId,
@@ -567,6 +577,109 @@ describe("Token Connector", () => {
         expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(newConnector.address());
         expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(newConnector.address());
     }, TIMEOUT * 2)
+
+    describe("Screening Failed Path with new connector", () => {
+      beforeEach(async () => {
+        expect(await bridge.owner_TB(OWNER_INDEX)).toBe(aleoUser1);
+        expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(aleoUser1);
+        expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(newConnector.address());
+        expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(newConnector.address());
+      }, TIMEOUT);
+
+      test(
+        "Receive wUSDC must collect the amount in holding program",
+        async () => {
+          const packet = createUpdatedPacket(aleoUser1, BigInt(100_000));
+          const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+          const holdingProgramInitialBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0))
+          const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
+
+          const signature = signPacket(packet, false, bridge.config.privateKey);
+
+          const signers = [
+            Address.from_private_key(
+              PrivateKey.from_string(bridge.config.privateKey)
+            ).to_string(),
+            ALEO_ZERO_ADDRESS,
+            ALEO_ZERO_ADDRESS,
+            ALEO_ZERO_ADDRESS,
+            ALEO_ZERO_ADDRESS,
+          ];
+
+          const signs = [signature, signature, signature, signature, signature];
+
+          const [tx] = await newConnector.wusdc_receive(
+            evm2AleoArr(ethUser), // sender
+            aleoUser1, // receiver
+            packet.message.amount,
+            packet.sequence,
+            packet.height,
+            signers,
+            signs
+          );
+          await newConnector.wait(tx);
+
+          const userFinalBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+          const holdingProgramFinalBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
+          const finalHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
+
+          expect(userFinalBalance).toBe(userInitialBalance);
+          expect(holdingProgramFinalBalance).toBe(
+            holdingProgramInitialBalance + packet.message.amount
+          );
+          expect(finalHeldAmount).toBe(initialHeldAmount + packet.message.amount);
+        },
+        TIMEOUT
+      );
+
+      test(
+        "Release held amount",
+        async () => {
+
+          const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+          const holdingProgramInitialBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
+          const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
+
+          console.log(userInitialBalance)
+          console.log(holdingProgramInitialBalance)
+          console.log(initialHeldAmount)
+
+          let proposalId = parseInt( (await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1
+          const releaseFundProposal: HoldingRelease = {
+            id: proposalId,
+            token_address: wusdcToken.address(),
+            connector: newConnector.address(),
+            receiver: aleoUser1,
+            amount: initialHeldAmount,
+          };
+          const releaseFundProposalHash = hashStruct(
+            getHoldingReleaseLeo(releaseFundProposal)
+          );
+          let [tx] = await council.propose(proposalId, releaseFundProposalHash);
+          await council.wait(tx);
+
+          [tx] = await newConnector.wusdc_release(
+            proposalId,
+            aleoUser1,
+            initialHeldAmount
+          );
+          await newConnector.wait(tx);
+
+          const userFinalBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+          const holdingProgramFinalBalance = await wusdcToken.account(
+            wusdcHolding.address(), BigInt(0)
+          );
+          const finalHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
+
+          expect(userFinalBalance).toBe(userInitialBalance + initialHeldAmount);
+          expect(holdingProgramFinalBalance).toBe(
+            holdingProgramInitialBalance - initialHeldAmount
+          );
+          expect(finalHeldAmount).toBe(BigInt(0));
+        },
+        TIMEOUT * 2
+      );
+    });
 
   })
 
