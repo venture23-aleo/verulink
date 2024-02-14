@@ -29,6 +29,7 @@ import { hashStruct } from "../utils/hash";
 
 import { sign } from "aleo-signer";
 import { BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, OWNER_INDEX } from "../utils/constants";
+import { getInPacketLeo, getInPacketWithScreeningLeo, getPacketIdWithAttestorLeo } from "../artifacts/js/js2leo/token_bridge_v0002";
 
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
@@ -339,7 +340,7 @@ describe("Token Bridge ", () => {
         bridge.connect(aleoUser3);
         const [enableChainTx] = await bridge.add_chain_tb(ethChainId);
 
-        const receipt = await bridge.wait(enableChainTx);
+        await bridge.wait(enableChainTx);
       }, TIMEOUT);
     })
 
@@ -348,7 +349,7 @@ describe("Token Bridge ", () => {
         bridge.connect(aleoUser3);
         const [disableChainTx] = await bridge.remove_chain_tb(ethChainId);
 
-        const receipt = await bridge.wait(disableChainTx);
+        await bridge.wait(disableChainTx);
       }, TIMEOUT);
 
       test("Owner can remove chain", async () => {
@@ -366,7 +367,7 @@ describe("Token Bridge ", () => {
       test.failing("should consist a chain to disable that", async () => {
         const [disableChainTx] = await bridge.remove_chain_tb(ethChainId);
 
-        const receipt = await bridge.wait(disableChainTx);
+        await bridge.wait(disableChainTx);
       }, TIMEOUT);
 
     })
@@ -388,7 +389,7 @@ describe("Token Bridge ", () => {
         bridge.connect(aleoUser3);
         const [enableServiceTx] = await bridge.add_service_tb(tokenService.address());
 
-        const receipt = await bridge.wait(enableServiceTx);
+        await bridge.wait(enableServiceTx);
       }, TIMEOUT);
     });
 
@@ -397,7 +398,7 @@ describe("Token Bridge ", () => {
         bridge.connect(aleoUser3);
         const [disableChainTx] = await bridge.remove_service_tb(tokenService.address());
 
-        const receipt = await bridge.wait(disableChainTx);
+        await bridge.wait(disableChainTx);
       }, TIMEOUT);
 
       test("Owner can disable service", async () => {
@@ -417,185 +418,186 @@ describe("Token Bridge ", () => {
     })
 
   })
+
   // TODO: what is receive used for
-  // describe("Receive", () => {
-  //   const incomingSequence = BigInt(
-  //     Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-  //   );
-  //   const packet: InPacket = {
-  //     version: 0,
-  //     source: {
-  //       chain_id: ethChainId,
-  //       addr: evm2AleoArr(ethTsContractAddr),
-  //     },
-  //     destination: {
-  //       chain_id: aleoChainId,
-  //       addr: tokenService.address(),
-  //     },
-  //     message: {
-  //       token: wusdcToken.address(),
-  //       sender: evm2AleoArr(ethUser),
-  //       receiver: aleoUser1,
-  //       amount: BigInt(10000)
-  //     },
-  //     height: 10,
-  //   };
+  describe("Receive", () => {
+    const incomingSequence = BigInt(
+      Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+    );
+    const packet: InPacket = {
+      version: 0,
+      source: {
+        chain_id: ethChainId,
+        addr: evm2AleoArr(ethTsContractAddr),
+      },
+      destination: {
+        chain_id: aleoChainId,
+        addr: tokenService.address(),
+      },
+      message: {
+        token: wusdcToken.address(),
+        sender: evm2AleoArr(ethUser),
+        receiver: aleoUser1,
+        amount: BigInt(10000)
+      },
+      height: 10,
+    };
 
-  //   const unsupportedPacket: InPacket = {
-  //     version: 0,
-  //     source: {
-  //       chain_id: new_chainId,
-  //       addr: evm2AleoArr(ethTsContractAddr),
-  //     },
-  //     destination: {
-  //       chain_id: aleoChainId,
-  //       addr: tokenService.address(),
-  //     },
-  //     message: {
-  //       token: wusdcToken.address(),
-  //       sender: evm2AleoArr(ethUser),
-  //       receiver: aleoUser1,
-  //       amount: BigInt(10000)
-  //     },
-  //     height: 10,
-  //   };
+    const unsupportedPacket: InPacket = {
+      version: 0,
+      source: {
+        chain_id: new_chainId,
+        addr: evm2AleoArr(ethTsContractAddr),
+      },
+      destination: {
+        chain_id: aleoChainId,
+        addr: tokenService.address(),
+      },
+      message: {
+        token: wusdcToken.address(),
+        sender: evm2AleoArr(ethUser),
+        receiver: aleoUser1,
+        amount: BigInt(10000)
+      },
+      height: 10,
+    };
 
-  //   const signature = signPacket(packet, true, bridge.config.privateKey);
-  //   const signatures = [
-  //     signature,
-  //     signature,
-  //     signature,
-  //     signature,
-  //     signature
-  //   ]
+    const signature = signPacket(packet, true, bridge.config.privateKey);
+    const signatures = [
+      signature,
+      signature,
+      signature,
+      signature,
+      signature
+    ]
 
-  //   const signers = [
-  //     aleoUser1,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //   ]
+    const signers = [
+      aleoUser1,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+    ]
 
-  //   const packetHash = hashStruct(js2leo.getInPacketLeo(packet));
-  //   const packetWithScreening: InPacketWithScreening = {
-  //     packet_hash: packetHash,
-  //     screening_passed: true
-  //   };
-  //   const packetWithScreeningHash = hashStruct(js2leo.getInPacketWithScreeningLeo(packetWithScreening));
+    const packetHash = hashStruct(getInPacketLeo(packet));
+    const packetWithScreening: InPacketWithScreening = {
+      packet_hash: packetHash,
+      screening_passed: true
+    };
+    const packetWithScreeningHash = hashStruct(getInPacketWithScreeningLeo(packetWithScreening));
 
-  //   const packetIdWithAttestor: PacketIdWithAttestor = {
-  //     chain_id: packet.source.chain_id,
-  //     sequence: packet.sequence,
-  //     attestor: aleoUser1
-  //   }
-  //   const packetKeyWithAttestorHash = hashStruct(js2leo.getPacketIdWithAttestorLeo(packetIdWithAttestor))
+    const packetIdWithAttestor: PacketIdWithAttestor = {
+      chain_id: packet.source.chain_id,
+      sequence: packet.sequence,
+      attestor: aleoUser1
+    }
+    const packetKeyWithAttestorHash = hashStruct(getPacketIdWithAttestorLeo(packetIdWithAttestor))
 
-  //   const unsupportedSigner = [
-  //     aleoUser7,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //     ALEO_ZERO_ADDRESS,
-  //   ]
+    const unsupportedSigner = [
+      aleoUser7,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+      ALEO_ZERO_ADDRESS,
+    ]
 
-  //   const packetId: PacketId = {
-  //     chain_id: ethChainId,
-  //     sequence: incomingSequence
-  //   }
-
-
-  //   test("Call receive", async () => {
-  //     //update threshold
-  //     const updateThresholdTx = await bridge.update_threshold_tb(1);
-
-  //     await updateThresholdTx.wait();
-
-  //     //enable chain
-  //     const enableChainTx = await bridge.add_chain_tb(ethChainId);
-
-  //     await enableChainTx.wait()
-
-  //     //enable service
-  //     const enableServiceTx = await bridge.add_service_tb(tokenService.address());
-
-  //     await enableServiceTx.wait();
-
-  //     let hasAttestorSigned = true
-  //     try {
-  //       hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
-  //     } catch (e) {
-  //       hasAttestorSigned = false
-  //     }
-
-  //     let initialVotes = 99;
-  //     try {
-  //       initialVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
-  //     } catch (e) {
-  //       initialVotes = 0
-  //     }
-  //     const tx = await bridge.receive(packet, signers, signatures, true);
-
-  //     const receipt = await tx.wait();
-  //     let finalVotes;
-  //     try {
-  //       finalVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
-  //     } catch (err) {
-  //       finalVotes = 0;
-  //     }
-
-  //     expect(finalVotes).toBe(initialVotes + 1); // TODO: test for cases with multiple validation
-
-  //     hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
-  //     expect(hasAttestorSigned).toBe(true);
-  //     expect(await bridge.in_packet_attestations(packetWithScreeningHash)).toBe(1);
-  //     // expect(await bridge.in_packet_hash(packetId)).toBe(packetWithScreeningHash);
-  //     // expect(await bridge.in_packet_consumed(packetId)).toBe(false);
-  //   }, TIMEOUT)
-
-  //   test.failing("should not attest packet coming from unsupported chain", async () => {
-  //     const tx = await bridge.receive(unsupportedPacket, signers, signatures, true);
-
-  //     const receipt = await tx.wait();
-  //     expect(receipt.error).toBeTruthy();
-  //   }, TIMEOUT)
-
-  //   test("should not attest packet coming from unvalid attestor", async () => {
-  //     const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser2, newThreshold);
-
-  //     await removeAttestorTx.wait();
-
-  //     bridge.connect(aleoUser2);
-  //     const tx = await bridge.receive(packet, signers, signatures, true);
-
-  //     const receipt = await tx.wait();
-  //     expect(receipt.error).toBeTruthy();
-  //   }, TIMEOUT)
-
-  //   test("should not attest the same packet by same attestor", async () => {
-  //     const tx = await bridge.receive(packet, signers, signatures, true);
-
-  //     const receipt = await tx.wait();
-  //     expect(receipt.error).toBeTruthy();
-  //   }, TIMEOUT)
+    const packetId: PacketId = {
+      chain_id: ethChainId,
+      sequence: incomingSequence
+    }
 
 
-  //   test.failing("Consume can only be called from program", async () => {
-  //     await bridge.consume(
-  //       ethChainId, // sourceChainId
-  //       evm2AleoArr(ethTsContractAddr), // sourceServiceContract
-  //       wusdcToken.address(), // token
-  //       evm2AleoArr(ethUser), // sender
-  //       aleoUser1, // receiver
-  //       aleoUser1, // actual_receiver
-  //       BigInt(100), // amount
-  //       BigInt(1), // sequence
-  //       1, // height
-  //       signers,
-  //       signatures
-  //     )
-  //   }, TIMEOUT)
-  // })
+    test("Call receive", async () => {
+      //update threshold
+      const [updateThresholdTx] = await bridge.update_threshold_tb(1);
+
+      await bridge.wait(updateThresholdTx);
+
+      //enable chain
+      const [enableChainTx] = await bridge.add_chain_tb(ethChainId);
+
+      await bridge.wait(enableChainTx)
+
+      //enable service
+      const [enableServiceTx] = await bridge.add_service_tb(tokenService.address());
+
+      await bridge.wait(enableServiceTx);
+
+      let hasAttestorSigned = true
+      try {
+        hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
+      } catch (e) {
+        hasAttestorSigned = false
+      }
+
+      let initialVotes = 99;
+      try {
+        initialVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
+      } catch (e) {
+        initialVotes = 0
+      }
+      const tx = await bridge.receive(packet, signers, signatures, true);
+
+      const receipt = await tx.wait();
+      let finalVotes;
+      try {
+        finalVotes = await bridge.in_packet_attestations(packetWithScreeningHash);
+      } catch (err) {
+        finalVotes = 0;
+      }
+
+      expect(finalVotes).toBe(initialVotes + 1); // TODO: test for cases with multiple validation
+
+      hasAttestorSigned = await bridge.in_packet_attestors(packetKeyWithAttestorHash);
+      expect(hasAttestorSigned).toBe(true);
+      expect(await bridge.in_packet_attestations(packetWithScreeningHash)).toBe(1);
+      // expect(await bridge.in_packet_hash(packetId)).toBe(packetWithScreeningHash);
+      // expect(await bridge.in_packet_consumed(packetId)).toBe(false);
+    }, TIMEOUT)
+
+    test.failing("should not attest packet coming from unsupported chain", async () => {
+      const tx = await bridge.receive(unsupportedPacket, signers, signatures, true);
+
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT)
+
+    test("should not attest packet coming from unvalid attestor", async () => {
+      const removeAttestorTx = await bridge.remove_attestor_tb(aleoUser2, newThreshold);
+
+      await removeAttestorTx.wait();
+
+      bridge.connect(aleoUser2);
+      const tx = await bridge.receive(packet, signers, signatures, true);
+
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT)
+
+    test("should not attest the same packet by same attestor", async () => {
+      const tx = await bridge.receive(packet, signers, signatures, true);
+
+      const receipt = await tx.wait();
+      expect(receipt.error).toBeTruthy();
+    }, TIMEOUT)
+
+
+    test.failing("Consume can only be called from program", async () => {
+      await bridge.consume(
+        ethChainId, // sourceChainId
+        evm2AleoArr(ethTsContractAddr), // sourceServiceContract
+        wusdcToken.address(), // token
+        evm2AleoArr(ethUser), // sender
+        aleoUser1, // receiver
+        aleoUser1, // actual_receiver
+        BigInt(100), // amount
+        BigInt(1), // sequence
+        1, // height
+        signers,
+        signatures
+      )
+    }, TIMEOUT)
+  })
 
 
   describe("Publish", () => {
