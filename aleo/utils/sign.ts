@@ -18,6 +18,10 @@ export const signPacket = (packet: InPacket, screening_passed: boolean, privateK
     return signature
 }
 
+export const signProposal = (proposalHash: bigint, privateKey: string) => {
+    const signature = sign(privateKey, js2leoCommon.field(proposalHash))
+    return signature
+}
 // console.log(sign_verify(
 //   "sign1cpk5uknzfydxmfhs2tarq8f8wzwk9fqkkend8usxrjpl9dq2lqqhjx9pndu7lymdkfs58626qz09wjsrf3wen62s3p5nspnwd62xvqyr22qjwn4zc0pzv87twjygsz9m7ekljmuw4jpzf68rwuq99r0tp735vs6220q7tp60nr7llkwstcvu49wdhydx5x2s3sftjskzawhqvgh5w2e", 
 //   "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px", 

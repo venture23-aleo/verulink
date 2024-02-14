@@ -26,10 +26,9 @@ export const proposeupdateThreshold = async (new_threshold: number): Promise<num
   };
   const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold)); 
 
-  const proposeUpdateThresholdTx = await council.propose(proposalId, tbUpdateThresholdProposalHash); // 477_914
+  const [proposeUpdateThresholdTx] = await council.propose(proposalId, tbUpdateThresholdProposalHash); // 477_914
   
-  // @ts-ignore
-  await proposeUpdateThresholdTx.wait()
+  await council.wait(proposeUpdateThresholdTx);
 
   getProposalStatus(tbUpdateThresholdProposalHash);
   
@@ -49,10 +48,9 @@ export const voteUpdateThredhold = async (proposalId: number, new_threshold: num
   const voter = council.getAccounts()[0];
   validateVote(tbUpdateThresholdProposalHash, voter);
 
-  const voteUpdateThresholdTx = await council.vote(tbUpdateThresholdProposalHash); // 477_914
+  const [voteUpdateThresholdTx] = await council.vote(tbUpdateThresholdProposalHash); // 477_914
   
-  // @ts-ignore
-  await voteUpdateThresholdTx.wait()
+  await council.wait(voteUpdateThresholdTx);
 
   getProposalStatus(tbUpdateThresholdProposalHash);
 
@@ -60,7 +58,7 @@ export const voteUpdateThredhold = async (proposalId: number, new_threshold: num
 
 export const execUpdateThreshold = async (proposalId: number, new_threshold: number) => {
 
-    console.log(`👍 executing to update threshold: ${new_threshold}`)
+  console.log(`👍 executing to update threshold: ${new_threshold}`)
 
   const bridgeOwner = await bridge.owner_TB(true);
   if (bridgeOwner != council.address()) {
@@ -75,13 +73,12 @@ export const execUpdateThreshold = async (proposalId: number, new_threshold: num
 
   validateExecution(tbUpdateThresholdProposalHash);
 
-  const updateThresholdTx = await council.tb_update_threshold(
+  const [updateThresholdTx] = await council.tb_update_threshold(
     tbUpdateThreshold.id,
     tbUpdateThreshold.new_threshold
   ) // 301_747
 
-  // @ts-ignore
-  await updateThresholdTx.wait()
+  await council.wait(updateThresholdTx);
 
   const THRESHOLD_INDEX = 1;
   const updatedThreshold = await bridge.bridge_settings(THRESHOLD_INDEX);

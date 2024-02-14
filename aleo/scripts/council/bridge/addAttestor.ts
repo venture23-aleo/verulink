@@ -5,9 +5,7 @@ import { Council_v0002Contract } from "../../../artifacts/js/council_v0002";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getTbAddAttestorLeo, getTbAddChainLeo } from "../../../artifacts/js/js2leo/council_v0002";
-import { TbAddAttestor, TbAddChain } from "../../../artifacts/js/types/council_v0002";
-import { Address } from "@aleohq/sdk";
-import { getTbAddAttestor } from "../../../artifacts/js/leo2js/council_v0002";
+import { TbAddAttestor } from "../../../artifacts/js/types/council_v0002";
 
 const council = new Council_v0002Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0002Contract({mode: "execute", priorityFee: 10_000});
@@ -31,10 +29,9 @@ export const proposeAddAttestor = async (newAttestor: string, new_threshold: num
   };
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor)); 
 
-  const proposeAddAttestorTx = await council.propose(proposalId, tbAddAttestorProposalHash); // 477_914
+  const [proposeAddAttestorTx] = await council.propose(proposalId, tbAddAttestorProposalHash); // 477_914
   
-  // @ts-ignore
-  await proposeAddAttestorTx.wait()
+  await council.wait(proposeAddAttestorTx);
 
   getProposalStatus(tbAddAttestorProposalHash);
   
@@ -59,10 +56,9 @@ export const voteAddAttestor = async (proposalId: number, newAttestor: string, n
   const voter = council.getAccounts()[0];
   validateVote(tbAddAttestorProposalHash, voter);
 
-  const voteAddChainTx = await council.vote(tbAddAttestorProposalHash); // 477_914
+  const [voteAddChainTx] = await council.vote(tbAddAttestorProposalHash); // 477_914
   
-  // @ts-ignore
-  await voteAddChainTx.wait()
+  await council.wait(voteAddChainTx);
 
   getProposalStatus(tbAddAttestorProposalHash);
 
@@ -90,14 +86,13 @@ export const execAddAttestor = async (proposalId: number,newAttestor: string, ne
 
   validateExecution(tbAddAttestorProposalHash);
 
-  const addAttestorTx = await council.tb_add_attestor(
+  const [addAttestorTx] = await council.tb_add_attestor(
     tbAddAttestor.id,
     tbAddAttestor.new_attestor,
     tbAddAttestor.new_threshold
   ) // 301_747
 
-  // @ts-ignore
-  await addAttestorTx.wait()
+  await council.wait(addAttestorTx);
 
   isAttestorSupported = await bridge.attestors(newAttestor, false);
   if (!isAttestorSupported) {

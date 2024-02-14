@@ -32,10 +32,9 @@ export const proposeRemoveService = async (tokenService: string): Promise<number
   };
   const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService)); 
 
-  const proposeRemoveTokenServiceTx = await council.propose(proposalId, tbRemoveTokenServiceProposalHash); // 477_914
+  const [proposeRemoveTokenServiceTx] = await council.propose(proposalId, tbRemoveTokenServiceProposalHash); // 477_914
   
-  // @ts-ignore
-  await proposeRemoveTokenServiceTx.wait()
+  await council.wait(proposeRemoveTokenServiceTx);
 
   getProposalStatus(tbRemoveTokenServiceProposalHash);
 
@@ -64,10 +63,9 @@ export const voteRemoveService = async (proposalId: number, tokenService: string
 
   validateVote(tbRemoveTokenServiceProposalHash, voter);
 
-  const voteRemoveChainTx = await council.vote(tbRemoveTokenServiceProposalHash); // 477_914
+  const [voteRemoveChainTx] = await council.vote(tbRemoveTokenServiceProposalHash); // 477_914
   
-  // @ts-ignore
-  await voteRemoveChainTx.wait()
+  await council.wait(voteRemoveChainTx);
 
   getProposalStatus(tbRemoveTokenServiceProposalHash);
 
@@ -98,13 +96,12 @@ export const execRemoveService = async (proposalId: number, tokenService: string
 
   validateExecution(tbRemoveTokenServiceProposalHash);
 
-  const removeServiceTx = await council.tb_remove_service(
+  const [removeServiceTx] = await council.tb_remove_service(
     tbRemoveService.id,
     tbRemoveService.service,
   ) // 301_747
 
-  // @ts-ignore
-  await removeServiceTx.wait()
+  await council.wait(removeServiceTx);
 
   isTokenServiceSupported = await bridge.supported_services(tokenService, false);
   if (isTokenServiceSupported) {
