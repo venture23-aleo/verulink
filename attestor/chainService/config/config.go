@@ -187,7 +187,7 @@ func validateChainConfig(cfg *Config) error {
 	}
 
 	for _, chainCfg := range cfg.ChainConfigs {
-		mDestChains := make([]string, len(chainCfg.DestChains))
+		mDestChains := make([]string, 0, len(chainCfg.DestChains))
 		mStartSeqMap := make(map[string]uint64)
 
 		for _, name := range chainCfg.DestChains {
