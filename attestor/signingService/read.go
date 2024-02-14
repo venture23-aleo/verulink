@@ -12,6 +12,12 @@ func readInputs() error {
 		return err
 	}
 
+	fmt.Println("Input aleo nonce")
+	_, err = fmt.Scanln(&aleoDecryptNonce)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("Input ethereum decrypt key")
 	_, err = fmt.Scanln(&ethDecryptKey)
 	if err != nil {

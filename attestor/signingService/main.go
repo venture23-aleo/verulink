@@ -13,13 +13,14 @@ import (
 )
 
 var (
-	aleoKeyPath    string
-	ethKeyPath     string
-	aleoDecryptKey string
-	ethDecryptKey  string
-	configPath     string
-	address        string
-	port           int
+	aleoKeyPath      string
+	ethKeyPath       string
+	aleoDecryptKey   string
+	aleoDecryptNonce string
+	ethDecryptKey    string
+	configPath       string
+	address          string
+	port             int
 )
 
 func init() {
@@ -63,10 +64,10 @@ func main() {
 
 	err = readInputs()
 	if err != nil {
-		return
+		return 
 	}
-
-	err = aleo.SetUpPrivateKey(aleoKeyPath, aleoDecryptKey)
+	
+	err = aleo.SetUpPrivateKey(aleoKeyPath, aleoDecryptKey, aleoDecryptNonce)
 	if err != nil {
 		return
 	}
