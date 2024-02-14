@@ -27,12 +27,11 @@ chains:
   dest_chains:
     - aleo
 
-
-db_path: attestorBolt.db
+db_dir: /path/to/db/dir
 consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
-  output_dir: ./
+  output_dir: /path/to/log/dir
 mode: dev # dev/prod
 
 signing_service:
@@ -45,4 +44,5 @@ signing_service:
 
 collector_service:
   uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
+  # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h

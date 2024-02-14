@@ -19,16 +19,16 @@ import (
 // flags
 var (
 	configFile string
-	dbPath     string
-	logPath    string
+	dbDir      string
+	logDir     string
 	logEnc     string
 	mode       string
 )
 
 func init() {
 	flag.StringVar(&configFile, "config", "", "config file")
-	flag.StringVar(&dbPath, "db-path", "", "directory path to store key-value db")
-	flag.StringVar(&logPath, "log-path", "", "file path to store logs")
+	flag.StringVar(&dbDir, "db-dir", "", "directory path to store key-value db")
+	flag.StringVar(&logDir, "log-path", "", "file path to store logs")
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
 	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
 }
@@ -36,14 +36,14 @@ func init() {
 func main() {
 	flag.Parse()
 
-	cfgArgs := &config.ConfigArgs{
+	flagArgs := &config.FlagArgs{
 		ConfigFile: configFile,
-		DBPath:     dbPath,
-		LogPath:    logPath,
+		DBDir:      dbDir,
+		LogDir:     logDir,
 		LogEnc:     logEnc,
 		Mode:       mode,
 	}
-	err := config.InitConfig(cfgArgs)
+	err := config.InitConfig(flagArgs)
 	if err != nil {
 		fmt.Println("Error while loading config. ", err)
 		os.Exit(1)

@@ -17,10 +17,10 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
-func getConfigArgs(configFile, dbPath string) *config.ConfigArgs {
-	return &config.ConfigArgs{
+func getFlagArgs(configFile, dbDir string) *config.FlagArgs {
+	return &config.FlagArgs{
 		ConfigFile: configFile,
-		DBPath:     dbPath,
+		DBDir:      dbDir,
 	}
 }
 
@@ -155,11 +155,11 @@ func setupConfig(t *testing.T) func() {
 	err := os.MkdirAll(p, 0777)
 	require.NoError(t, err)
 	configStr := `
-db_path: db
+db_dir: tmp
 consume_packet_workers: 1
 log:
   encoding: console
-  output_path: relays.log
+  output_dir: tmp
 signing_service:
   scheme: https
 `
@@ -170,7 +170,7 @@ signing_service:
 	require.NoError(t, err)
 	flag.Set("config", configPath)
 
-	err = config.InitConfig(getConfigArgs(configPath, p))
+	err = config.InitConfig(getFlagArgs(configPath, p))
 	require.NoError(t, err)
 	return func() {
 		os.RemoveAll(p)

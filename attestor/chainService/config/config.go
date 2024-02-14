@@ -17,10 +17,15 @@ const (
 	Production  = "prod"
 )
 
-type ConfigArgs struct {
+const (
+	dbFileName  = "attestorBolt.db"
+	logFileName = "attestor.log"
+)
+
+type FlagArgs struct {
 	ConfigFile string
-	DBPath     string
-	LogPath    string
+	DBDir      string
+	LogDir     string
 	LogEnc     string
 	Mode       string
 }
@@ -45,7 +50,8 @@ type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
 	LogConfig              *LoggerConfig          `yaml:"log"`
-	DBPath                 string                 `yaml:"db_path"`
+	DBDir                  string                 `yaml:"db_dir"`
+	DBPath                 string                 `yaml:"-"` // Calculate based on DBDir
 	ConsumePacketWorker    int                    `yaml:"consume_packet_workers"`
 	Mode                   string                 `yaml:"mode"`
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
@@ -54,7 +60,8 @@ type Config struct {
 
 type LoggerConfig struct {
 	Encoding   string `yaml:"encoding"`
-	OutputPath string `yaml:"output_path"`
+	OutputDir  string `yaml:"output_dir"`
+	OutputPath string `yaml:"-"` // calculated based on OutputDir
 }
 
 type SigningServiceConfig struct {
@@ -77,8 +84,8 @@ func GetConfig() *Config {
 	return config
 }
 
-func InitConfig(cfgArgs *ConfigArgs) error {
-	b, err := os.ReadFile(cfgArgs.ConfigFile)
+func InitConfig(flagArgs *FlagArgs) error {
+	b, err := os.ReadFile(flagArgs.ConfigFile)
 	if err != nil {
 		return err
 	}
@@ -102,56 +109,55 @@ func InitConfig(cfgArgs *ConfigArgs) error {
 		config.ConsumePacketWorker = 10
 	}
 
-	if cfgArgs.DBPath != "" {
-		err := validateDirectory(cfgArgs.DBPath)
-		if err != nil {
-			return err
-		}
-		file := filepath.Join(cfgArgs.DBPath, "bolt.db")
-		config.DBPath = file
-	} else if config.DBPath == "" {
-		config.DBPath = "./bolt.db"
+	dbFilePath, err := getPath(flagArgs.DBDir, config.DBDir, dbFileName)
+	if err != nil {
+		return err
+	}
+	logFilePath, err := getPath(flagArgs.LogDir, config.LogConfig.OutputDir, logFileName)
+	if err != nil {
+		return err
 	}
 
-	if cfgArgs.LogPath != "" {
-		err := validatePath(cfgArgs.LogPath)
-		if err != nil {
-			return err
-		}
-		config.LogConfig.OutputPath = filepath.Join(cfgArgs.LogPath, "attestor.log")
-	} else if config.LogConfig.OutputPath != "" {
-		fileName := filepath.Base(config.LogConfig.OutputPath)
-		if strings.HasSuffix(fileName, ".log") {
-			dir := filepath.Dir(config.LogConfig.OutputPath)
-			err := os.MkdirAll(dir, 0755)
-			if err != nil {
-				return err
-			}
-		} else {
-			err := validateDirectory(config.LogConfig.OutputPath)
-			if err != nil {
-				return err
-			}
-			config.LogConfig.OutputPath = filepath.Join(config.LogConfig.OutputPath, "attestor.log")
-		}
-	} else {
-		config.LogConfig.OutputPath = "./attestor.log"
+	config.DBPath = dbFilePath
+	config.LogConfig.OutputPath = logFilePath
 
+	if flagArgs.LogEnc != "" {
+		config.LogConfig.Encoding = flagArgs.LogEnc
 	}
 
-	if cfgArgs.LogEnc != "" {
-		config.LogConfig.Encoding = cfgArgs.LogEnc
-	}
-
-	if cfgArgs.Mode == Production {
-		config.Mode = cfgArgs.Mode
+	if flagArgs.Mode == Production {
+		config.Mode = flagArgs.Mode
 	} else {
 		config.Mode = Development
 	}
 	return nil
 }
 
-func validateDirectory(p string) error {
+func getPath(pathFrmFlag, pathFrmYaml, fileName string) (string, error) {
+	if pathFrmFlag != "" {
+		err := validateDirectory(pathFrmFlag, fileName)
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(pathFrmFlag, fileName), nil
+	}
+
+	if pathFrmYaml != "" {
+		err := validateDirectory(pathFrmYaml, fileName)
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(pathFrmYaml, fileName), nil
+	}
+	return filepath.Join(".", fileName), nil
+}
+
+func validateDirectory(p, fileName string) error {
+	if strings.Contains(p, fileName) {
+		return fmt.Errorf("path %s has ambiguous name. Should not contain %s in directory path",
+			p, fileName)
+	}
+
 	finfo, err := os.Stat(p)
 	if errors.Is(err, os.ErrNotExist) {
 		if err := os.MkdirAll(p, 0666); err != nil {
@@ -159,6 +165,7 @@ func validateDirectory(p string) error {
 		}
 		return nil
 	}
+
 	if !finfo.IsDir() {
 		return fmt.Errorf("invalid path %s. Should be directory", p)
 	}
