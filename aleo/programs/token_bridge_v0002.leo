@@ -464,11 +464,6 @@ program token_bridge_v0002.aleo {
         public receiver: [u8; 32], 
         public amount: u128
     ) {
-        // Assert that only a program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
 
         // Cannot directly pass struct as parameter in cross-contract call.
         // So construct source struct on `finalize` instead
@@ -477,8 +472,6 @@ program token_bridge_v0002.aleo {
         //     chain_id: ALEO_CHAIN_ID,
         //     addr: self.caller
         // };
-
-        
 
         return then finalize (
             ALEO_CHAIN_ID, 
@@ -586,11 +579,6 @@ program token_bridge_v0002.aleo {
         public signers: [address; 5], 
         public signs: [signature; 5]
     ) -> bool {
-        // Assert that only a program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
 
         let source: ForeignContract = ForeignContract {
             chain_id: source_chain_id,

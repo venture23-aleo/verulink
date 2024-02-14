@@ -286,13 +286,6 @@ program token_service_v0002.aleo {
         public origin_token_address: [u8; 32], 
         public origin_token_service_address: [u8; 32]
     ) {
-        // Assert that only a connector program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-
-        // call publish on bridge contract
         token_bridge_v0002.aleo/publish(origin_chain_id, origin_token_service_address, origin_token_address, sender, receiver, amount);
 
         return then finalize (self.caller, token_address, amount);
@@ -356,13 +349,6 @@ program token_service_v0002.aleo {
         public signers: [address; 5], 
         public signs: [signature; 5]
     ) -> bool {
-
-        // Assert that only a connector program can call this method
-        // Referencing: https://github.com/AleoHQ/snarkVM/pull/2020
-        // self.signer = tx.origin
-        // self.caller = msg.sender
-        assert_neq(self.signer, self.caller);
-
 
         // call consume on bridge
         let screening_passed: bool = token_bridge_v0002.aleo/consume(
