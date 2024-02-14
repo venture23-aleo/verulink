@@ -6,7 +6,7 @@ import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002
 import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
 
 
-import {evm2AleoArr } from "../utils/ethAddress";
+import { evm2AleoArr } from "../utils/ethAddress";
 import {
   TIMEOUT,
   TOTAL_PROPOSALS_INDEX,
@@ -27,7 +27,7 @@ import {
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const council = new Council_v0002Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
+const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
 const wusdcHolding = new Wusdc_holding_v0002Contract({ mode: "execute" });
 const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
 
@@ -40,53 +40,36 @@ const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = tokenService.getAccounts();
 let tx, errorMsg, proposalId;
 
 describe("Token Service", () => {
-  test("Deploy Bridge", async () => {
-    const deployTx = await bridge.deploy();
-    await deployTx.wait();
-  }, TIMEOUT);
+  describe('Setup', () => {
+    test("Deploy Bridge", async () => {
+      const deployTx = await bridge.deploy();
+      await deployTx.wait();
+    }, TIMEOUT);
 
-  test("Deploy Token Service", async () => {
-    const deployTx = await tokenService.deploy();
-    await deployTx.wait();
-  }, TIMEOUT);
+    test("Deploy Token Service", async () => {
+      const deployTx = await tokenService.deploy();
+      await deployTx.wait();
+    }, TIMEOUT);
 
-  test("Initialize (First try) - Expected parameters (must pass)", async () => {
-    // TODO: figure out why unskipping this fails consume below
-    let isTokenServiceInitialized = true;
-    try {
-      const ownerAddr = await tokenService.owner_TS(true);
-    } catch (err) {
-      isTokenServiceInitialized = false;
-    }
-
-    if (!isTokenServiceInitialized) {
-      const initializeTx = await tokenService.initialize_ts(aleoUser1);
-      // @ts-ignore
-      await initializeTx.wait();
-      expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
-    }
-  }, TIMEOUT);
-
-  test(
-    "Initialize (Second try) - Expected parameters (must fail)",
-    async () => {
-      // TODO: this must fail - only throws error but the actual task passes
-      let isTokenServiceInitialized = true;
-      try {
-        const ownerAddr = await tokenService.owner_TS(true);
-      } catch (err) {
-        isTokenServiceInitialized = false;
+    test("Initialize (First try) - Expected parameters (must pass)", async () => {
+      const ownerAddr = await tokenService.owner_TS(true, '');
+      if (ownerAddr.length === 0) {
+        const [initializeTx] = await tokenService.initialize_ts(aleoUser1);
+        await tokenService.wait(initializeTx);
+        expect(await tokenService.owner_TS(true)).toBe(aleoUser1);
       }
+    }, TIMEOUT);
 
-      if (isTokenServiceInitialized) {
-        const initializeTx = await tokenService.initialize_ts(aleoUser1);
-        // @ts-ignore
-        const txReceipt = await initializeTx.wait();
-        expect(txReceipt.error).toBeTruthy();
+    test.failing("Initialize (Second try) - Expected parameters (must fail)", async () => {
+      const ownerAddr = await tokenService.owner_TS(true, '');
+      if (ownerAddr.length > 0) {
+        const [initializeTx] = await tokenService.initialize_ts(aleoUser1);
+        await tokenService.wait(initializeTx);
       }
     },
-    TIMEOUT
-  );
+      TIMEOUT
+    );
+  })
 
   test.failing("Transfer Token From Aleo To Ethereum", async () => {
     await tokenService.token_send(
@@ -116,7 +99,7 @@ describe("Token Service", () => {
   // });
 
   describe("Governance Tests", () => {
-    
+
     test("should not add token by non-admin", async () => {
       tokenService.connect(aleoUser3);
       tx = await tokenService.add_token_ts(
