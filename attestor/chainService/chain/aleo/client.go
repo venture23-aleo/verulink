@@ -124,7 +124,10 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 				defer wg.Done()
 				pkt, err := cl.getPktWithSeq(ctx, dstBig, cl.destChains[dst])
 				if err != nil {
-					// log error
+					logger.GetLogger().Error("Error while fetching aleo packets",
+						zap.Error(err),
+						zap.Uint64("Seq_num", cl.destChains[dst]),
+					)
 					return
 				}
 				// todo verify pkt creation time
@@ -267,7 +270,7 @@ func (cl *Client) IsConsumed(ctx context.Context, srcChainID *big.Int, seqNum ui
 	key := constructOutMappingKey(srcChainID, seqNum) // the in_packet_consumed mapping is same as out packet mapping key
 	isConsumed, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, "in_packet_consumed", key)
 	if err != nil {
-		return false 
+		return false
 	}
 	if isConsumed[key] == "null" {
 		return false
