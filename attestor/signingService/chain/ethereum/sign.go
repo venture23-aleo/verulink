@@ -17,7 +17,8 @@ func sign(hashString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return common.Bytes2Hex(b), nil
+
+	return "0x" + common.Bytes2Hex(b), nil
 }
 
 func SetUpPrivateKey(keyPath, decryptKey string) error {
