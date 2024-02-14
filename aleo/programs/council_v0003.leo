@@ -959,6 +959,101 @@ program council_v0003.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
     }
 
+    ////////////////////////////////////////////
+    ///////  Token Service: Pause Token ////////
+    ////////////////////////////////////////////
+
+    struct TsPauseToken {
+        id: u32,
+        token_address: address,
+    }
+
+    transition ts_update_max_transfer(
+        public id: u32, 
+        public token_address: address, 
+        public signers: [address; 5],
+        public signs: [signature; 5]
+    ) {
+        let proposal: TsPauseToken  = TsPauseToken {
+            id,
+            token_address,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service_v0002.aleo/pause_token_ts(token_address);
+
+        let votes: u8 = get_valid_signature_count(proposal_hash, signers, signs);
+
+        return then finalize(proposal_hash, signers, votes);
+    }
+
+    finalize ts_update_max_transfer(proposal_hash: field, signers: [address; 5], votes: u8) {
+        // Ensure that the signature are from valid members
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            assert(Mapping::contains(members, signers[i]));
+        }
+
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+    //////////////////////////////////////////////
+    ///////  Token Service: Unpause Token ////////
+    //////////////////////////////////////////////
+
+    struct TsUnpauseToken {
+        id: u32,
+        token_address: address,
+    }
+
+    transition ts_update_max_transfer(
+        public id: u32, 
+        public token_address: address, 
+        public signers: [address; 5],
+        public signs: [signature; 5]
+    ) {
+        let proposal: TsUnpauseToken  = TsUnpauseToken {
+            id,
+            token_address,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        // Execute the proposal
+        token_service_v0002.aleo/unpause_token_ts(token_address);
+
+        let votes: u8 = get_valid_signature_count(proposal_hash, signers, signs);
+
+        return then finalize(proposal_hash, signers, votes);
+    }
+
+    finalize ts_update_max_transfer(proposal_hash: field, signers: [address; 5], votes: u8) {
+        // Ensure that the signature are from valid members
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            assert(Mapping::contains(members, signers[i]));
+        }
+
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
+
 
     ////////////////////////////////////////////////////////
     ///////  Token Service: Update Withdrawal Limit ////////

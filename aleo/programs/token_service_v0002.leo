@@ -56,7 +56,13 @@ program token_service_v0002.aleo {
     /// Key is the address of the token program
     mapping token_amount_withdrawn: address => u128;
 
+    /// Tracks if the token is paused/unpaused
+    /// Key is the address of the token program
+    mapping token_status: address => bool;
+
     const OWNER_INDEX: bool = true;
+    const PAUSED_VALUE: bool = true;
+    const UNPAUSED_VALUE: bool = false;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -139,7 +145,7 @@ program token_service_v0002.aleo {
         Mapping::set(token_withdrawal_limits, token_address, withdrawal_limit);
         Mapping::set(min_transfers, token_address, min_transfer);
         Mapping::set(max_transfers, token_address, max_transfer);
-        
+        Mapping::set(token_status, token_address, PAUSED_VALUE);
     }
 
     transition remove_token_ts(public token_address: address) {
@@ -157,7 +163,9 @@ program token_service_v0002.aleo {
         Mapping::remove(token_withdrawal_limits, token_address);
         Mapping::remove(min_transfers, token_address);
         Mapping::remove(max_transfers, token_address);
+        Mapping::remove(token_status, token_address);
     }
+
 
     transition update_connector_ts(public token_address: address, public new_token_connector: address) { 
         return then finalize(self.caller, token_address, new_token_connector);
@@ -171,6 +179,37 @@ program token_service_v0002.aleo {
         Mapping::set(token_connectors, token_address, new_token_connector);
     }
 
+    /////////////////////////////////
+    ///// Pause/Unpause Token ///////
+    /////////////////////////////////
+
+    transition pause_token_ts(public token_address: address) {
+        return then finalize(self.caller, token_address);
+    }
+
+    finalize pause_token_ts(from: address, token_address: address) {
+        // Get the owner address
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
+
+        assert(Mapping::contains(token_status, token_address));
+        Mapping::set(token_status, token_address, PAUSED_VALUE);
+    }
+
+    transition unpause_token_ts(public token_address: address) {
+        return then finalize(self.caller, token_address);
+    }
+
+    finalize unpause_token_ts(from: address, token_address: address) {
+        // Get the owner address
+        // If program not initialized, this must fail
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
+
+        assert(Mapping::contains(token_status, token_address));
+        Mapping::set(token_status, token_address, UNPAUSED_VALUE);
+    }
 
     /////////////////////////////////////
     ///// Update Minimum Transfer ///////
@@ -186,6 +225,7 @@ program token_service_v0002.aleo {
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
+        assert(Mapping::contains(min_transfers, token_address));
         Mapping::set(min_transfers, token_address, min_transfer);
     }
 
@@ -203,6 +243,7 @@ program token_service_v0002.aleo {
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
+        assert(Mapping::contains(max_transfers, token_address));
         Mapping::set(max_transfers, token_address, max_transfer);
     }
 
@@ -222,12 +263,13 @@ program token_service_v0002.aleo {
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
+
+        assert(Mapping::contains(token_withdrawal_limits, token_address));
         let withdrawal_limit: WithdrawalLimit = WithdrawalLimit {
             percentage,
             duration,
             threshold_no_limit
         };
-
         Mapping::set(token_withdrawal_limits, token_address, withdrawal_limit);
     }
 
@@ -267,6 +309,8 @@ program token_service_v0002.aleo {
         let max_amount: u128 = Mapping::get(max_transfers, wrapped_addr);
         assert(amount <= max_amount);
 
+        assert_eq(Mapping::get(token_status, wrapped_addr), UNPAUSED_VALUE);
+
         let withdrawal_limit: WithdrawalLimit = Mapping::get(token_withdrawal_limits, wrapped_addr);
 
         let current_supply: u128 = Mapping::get(total_supply, wrapped_addr);
@@ -303,7 +347,6 @@ program token_service_v0002.aleo {
     transition token_receive(
         public source_chain_id: u128, 
         public source_token_service_address: [u8; 32], 
-        public source_token_address: [u8; 32], 
         public token_address: address, 
         public sender: [u8; 32], 
         public receiver: address, 
@@ -341,6 +384,8 @@ program token_service_v0002.aleo {
     finalize token_receive(connector: address, token_address: address, amount: u128) {
         let token_connector: address = Mapping::get(token_connectors, token_address);
         assert_eq(token_connector, connector);
+
+        assert_eq(Mapping::get(token_status, token_address), UNPAUSED_VALUE);
 
         // Increase the total supply
         let current_supply: u128 = Mapping::get_or_use(total_supply, token_address, 0u128);
