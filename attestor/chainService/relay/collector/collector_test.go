@@ -155,151 +155,11 @@ func TestGetPktsFromCollector(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		refetchCh := make(chan struct{})
 		missedCh := make(chan *chain.MissedPacket)
-		go collec.ReceivePktsFromCollector(ctx, missedCh, refetchCh)
+		go collec.ReceivePktsFromCollector(ctx, missedCh)
 
 		pkt := <-missedCh
 		assert.Equal(t, mPkt, pkt)
-	})
-
-	t.Run("case: last packet should have IsLast set to true", func(t *testing.T) {
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			missedPacket := []*chain.MissedPacket{}
-			for i := 0; i < limitSize; i++ {
-				missedPacket = append(missedPacket, &chain.MissedPacket{
-					TargetChainID: big.NewInt(1),
-					SourceChainID: big.NewInt(2),
-					SeqNum:        uint64(i),
-					Height:        uint64(55),
-					TxnID:         "txnid",
-				})
-			}
-			missedPktBt, _ := json.Marshal(&missedPacket)
-			w.Write(missedPktBt)
-		}))
-		defer ts.Close()
-
-		uri := ts.URL
-		chainIdToAddress := map[string]string{
-			"2": "aleoaddr",
-			"1": "ethAddr",
-		}
-		collec := &collector{
-			uri:              uri,
-			chainIDToAddress: chainIdToAddress,
-			collectorWaitDur: time.Second,
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-		refetchCh := make(chan struct{})
-		missedCh := make(chan *chain.MissedPacket)
-		go collec.ReceivePktsFromCollector(ctx, missedCh, refetchCh)
-
-		for i := uint64(1); i <= uint64(limitSize); i++ {
-			pkt := <-missedCh
-			if i == limitSize {
-				assert.True(t, pkt.IsLast)
-			} else {
-				assert.False(t, pkt.IsLast)
-			}
-		}
-	})
-
-	t.Run("case: test same url requested if refetching is required", func(t *testing.T) {
-		var firstUri string
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if firstUri == "" {
-				firstUri = r.RequestURI
-			} else {
-				assert.Equal(t, firstUri, r.RequestURI)
-			}
-			missedPacket := []*chain.MissedPacket{}
-			for i := 0; i < limitSize; i++ {
-				missedPacket = append(missedPacket, &chain.MissedPacket{
-					TargetChainID: big.NewInt(1),
-					SourceChainID: big.NewInt(2),
-					SeqNum:        uint64(i),
-					Height:        uint64(55),
-					TxnID:         "txnid",
-				})
-			}
-			missedPktBt, _ := json.Marshal(&missedPacket)
-			w.Write(missedPktBt)
-		}))
-		defer ts.Close()
-		uri := ts.URL
-		chainIdToAddress := map[string]string{
-			"2": "aleoaddr",
-			"1": "ethAddr",
-		}
-		collec := &collector{
-			uri:              uri,
-			chainIDToAddress: chainIdToAddress,
-			collectorWaitDur: time.Second,
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-		defer cancel()
-
-		refetchCh := make(chan struct{})
-		missedCh := make(chan *chain.MissedPacket)
-		go collec.ReceivePktsFromCollector(ctx, missedCh, refetchCh)
-		go func() {
-			time.Sleep(time.Second * 2)
-			refetchCh <- struct{}{}
-		}()
-
-		for i := uint64(0); i < limitSize*2; i++ {
-			<-missedCh
-		}
-	})
-
-	t.Run("case: for refetching not required, different url shoudl be requested", func(t *testing.T) {
-		var firstUri string
-		mpkt := &chain.MissedPacket{
-			TargetChainID: big.NewInt(1),
-			SourceChainID: big.NewInt(2),
-			SeqNum:        uint64(1),
-			Height:        uint64(55),
-			TxnID:         "txnid",
-		}
-		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if firstUri == "" {
-				firstUri = r.RequestURI
-			} else {
-				assert.NotEqual(t, firstUri, r.RequestURI)
-			}
-			missedPackets := []*chain.MissedPacket{mpkt}
-
-			missedPktBt, _ := json.Marshal(&missedPackets)
-			w.Write(missedPktBt)
-		}))
-		defer ts.Close()
-
-		uri := ts.URL
-		chainIdToAddress := map[string]string{
-			"2": "aleoaddr",
-			"1": "ethAddr",
-		}
-		collec := &collector{
-			uri:              uri,
-			chainIDToAddress: chainIdToAddress,
-			collectorWaitDur: time.Second,
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-		refetchCh := make(chan struct{})
-		missedCh := make(chan *chain.MissedPacket)
-		go collec.ReceivePktsFromCollector(ctx, missedCh, refetchCh)
-
-		for i := uint64(0); i < uint64(2); i++ {
-			pkt := <-missedCh
-			assert.False(t, pkt.IsLast)
-		}
 	})
 
 	t.Run("case: error bad status code", func(t *testing.T) {
@@ -340,11 +200,12 @@ func TestGetPktsFromCollector(t *testing.T) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		defer cancel()
-		refetchCh := make(chan struct{})
 		missedCh := make(chan *chain.MissedPacket)
-		go collec.ReceivePktsFromCollector(ctx, missedCh, refetchCh)
-
-		pkt := <-missedCh
-		assert.False(t, pkt.IsLast)
+		go collec.ReceivePktsFromCollector(ctx, missedCh)
+		select {
+		case <-ctx.Done():
+			t.Fail()
+		case <-missedCh:
+		}
 	})
 }

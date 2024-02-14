@@ -69,11 +69,10 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	}()
 
 	missedPktCh := make(chan *chain.MissedPacket)
-	refetchCh := make(chan struct{})
 
 	go r.initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
-	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh, refetchCh)
-	go r.consumeMissedPackets(ctx, missedPktCh, pktCh, refetchCh)
+	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
+	go r.consumeMissedPackets(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
 }
 
@@ -187,7 +186,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 
 func (r *relay) consumeMissedPackets(
 	ctx context.Context, missedPktCh <-chan *chain.MissedPacket,
-	pktCh chan<- *chain.Packet, refetchCh chan<- struct{}) { // refetchCh Channel to signal collector
+	pktCh chan<- *chain.Packet) { // refetchCh Channel to signal collector
 
 	for {
 		select {
@@ -198,22 +197,14 @@ func (r *relay) consumeMissedPackets(
 
 		missedPkt := <-missedPktCh
 		srcChain := chainIDToChain[missedPkt.SourceChainID.String()]
-		destChain := chainIDToChain[missedPkt.TargetChainID.String()] // check if the packet has already been consumed in the destination
-		consumed := destChain.IsConsumed(ctx, missedPkt.SourceChainID, missedPkt.SeqNum)
-		if consumed {
-			continue // if packet is already consumed in destination then ignore the packet
-		}
 		pkt, err := srcChain.GetMissedPacket(ctx, missedPkt)
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
 			continue
 		}
+
 		pkt.SetMissed(true)
 		r.processPacket(ctx, pkt)
-
-		if missedPkt.IsLast {
-			refetchCh <- struct{}{}
-		}
 	}
 }

@@ -42,7 +42,7 @@ const (
 
 type CollectorI interface {
 	SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error
-	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket, refetchCh <-chan struct{})
+	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
 var collc collector
@@ -103,43 +103,40 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
-func (c *collector) ReceivePktsFromCollector(
-	ctx context.Context, ch chan<- *chain.MissedPacket, refetchCh <-chan struct{}) {
-	ticker := time.NewTicker(c.collectorWaitDur)
+func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
 
 	if len(c.chainIDToAddress) == 0 {
 		return
 	}
+
+	dur := c.collectorWaitDur
+	if dur == 0 {
+		dur = time.Hour
+	}
+	ticker := time.NewTicker(dur)
+	defer ticker.Stop()
 
 	var walletAddresses []string
 	for _, add := range c.chainIDToAddress {
 		walletAddresses = append(walletAddresses, add)
 	}
 
-	shouldRefetch := false
 	nextAddressIndex := 0
 
-	defer ticker.Stop()
 	for {
-		if shouldRefetch {
-			select {
-			case <-ctx.Done():
-				return
-			case <-refetchCh:
-			}
-		} else {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-			}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
 		}
 
 		var (
-			missedPackets []*chain.MissedPacket
-			err           error
-			resp          *http.Response
-			data          []byte
+			missedPackets   []*chain.MissedPacket
+			err             error
+			resp            *http.Response
+			data            []byte
+			shouldCloseBody bool
 		)
 		u, _ := url.Parse(c.uri)
 		u = u.JoinPath(unconfirmed)
@@ -158,7 +155,7 @@ func (c *collector) ReceivePktsFromCollector(
 		if err != nil {
 			goto postFor
 		}
-
+		shouldCloseBody = true
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("unexpected status code %d", resp.StatusCode)
 			goto postFor
@@ -169,27 +166,21 @@ func (c *collector) ReceivePktsFromCollector(
 			goto postFor
 		}
 		err = json.Unmarshal(data, &missedPackets)
+
 	postFor:
 		cncl()
-		resp.Body.Close()
-
+		if shouldCloseBody {
+			resp.Body.Close()
+		}
 		if err != nil { // for non nil error it should wait on ticker
 			logger.GetLogger().Error(err.Error())
-			shouldRefetch = false
 			continue
-		}
-
-		shouldRefetch = len(missedPackets) == limitSize
-		if shouldRefetch {
-			lastInd := len(missedPackets) - 1
-			missedPackets[lastInd].IsLast = true
-		} else {
-			nextAddressIndex = (nextAddressIndex + 1) % len(walletAddresses)
 		}
 
 		for _, m := range missedPackets {
 			ch <- m
 		}
+		nextAddressIndex = (nextAddressIndex + 1) % len(walletAddresses)
 	}
 }
 

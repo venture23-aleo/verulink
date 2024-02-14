@@ -19,7 +19,6 @@ type IClient interface {
 	GetMissedPacket(
 		ctx context.Context, missedPkt *MissedPacket) (
 		*Packet, error)
-	IsConsumed(ctx context.Context, srcChainID *big.Int, seqNum uint64) bool
 }
 
 type NetworkAddress struct {
@@ -81,5 +80,4 @@ type MissedPacket struct {
 	SeqNum        uint64   `json:"seq_num"`
 	Height        uint64   `json:"height"`
 	TxnID         string   `json:"txn_id"`
-	IsLast        bool     `json:"-"`
 }

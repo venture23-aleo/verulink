@@ -391,17 +391,6 @@ func (cl *Client) GetMissedPacket(
 	return nil, errors.New("packet not found")
 }
 
-func (cl *Client) IsConsumed(ctx context.Context, _ *big.Int, seqNum uint64) bool {
-	callOpts := bind.CallOpts{
-		Context: ctx,
-	}
-	isConsumed, err := cl.bridge.IsPacketConsumed(&callOpts, big.NewInt(int64(seqNum)))
-	if err != nil {
-		return false
-	}
-	return isConsumed
-}
-
 func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
