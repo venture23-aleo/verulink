@@ -4,7 +4,7 @@ chains:
   chain_id: 6694886634403
   wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7 # wallet indentifier
   bridge_contract: token_bridge_v0002.aleo
-  node_url: http://52.91.48.169|testnet3
+  node_url: https://api.explorer.aleo.org/v1|testnet3
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
