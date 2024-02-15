@@ -531,13 +531,13 @@ describe('TokenService', () => {
         const max = 100;
         // console.log("inpacket1 = ", inPacket);
         // Add token
-        const ERC20TokenSupport = await ethers.getContractFactory("ERC20TokenSupportMock");
+        const ERC20TokenSupport = await ethers.getContractFactory("TokenService");
         const tokenSupportImpl = await ERC20TokenSupport.deploy();
         await tokenSupportImpl.deployed();
         let ERC20TokenSupportABI = ERC20TokenSupport.interface.format();
 
         const ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
-        const initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenSupport_init", [destChainId]);
+        const initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenService_init", [other.address, 2, destChainId, other.address]);
         const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, initializeData);
         await proxy.deployed();
         const proxiedContract = ERC20TokenSupport.attach(proxy.address);
@@ -600,7 +600,7 @@ describe('TokenService', () => {
     });
 
     it('should not withdraw if token transfer is failed', async () => {
-        let NTToken = await ethers.getContractFactory("NonTransferableERC20Mock");
+        let NTToken = await ethers.getContractFactory("USDCMock");
         let nTToken = await NTToken.deploy();
         await nTToken.deployed();
 
@@ -620,6 +620,7 @@ describe('TokenService', () => {
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
+        await (await nTToken.addBlackList(other.address)).wait();
         expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith('Token transfer failed');
     });
 

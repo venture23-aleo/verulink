@@ -21,9 +21,9 @@ contract USDCMock is ERC20 {
         blackLists[account] = true;
     }
 
-    function removeBlackList(address account) external {
-        delete blackLists[account];
-    }
+    // function removeBlackList(address account) external {
+    //     delete blackLists[account];
+    // }
 
     function transfer(address to, uint256 value) public override returns (bool) {
         if(isBlacklisted(msg.sender) || isBlacklisted(to)) {return false;}
@@ -31,9 +31,9 @@ contract USDCMock is ERC20 {
         return true;
     }
 
-    function transferFrom (address sender, address to, uint256 value) public override returns (bool) {
-        if(isBlacklisted(sender) || isBlacklisted(to)) {return false;}
-        super.transferFrom(sender, to, value);
-        return true;
-    }
+    // function transferFrom (address sender, address to, uint256 value) public override returns (bool) {
+    //     if(isBlacklisted(sender) || isBlacklisted(to)) {return false;}
+    //     super.transferFrom(sender, to, value);
+    //     return true;
+    // }
 }

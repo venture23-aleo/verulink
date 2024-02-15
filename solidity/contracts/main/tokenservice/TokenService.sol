@@ -5,6 +5,7 @@ import {IBridge} from "../../common/interface/bridge/IBridge.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
@@ -12,6 +13,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 contract TokenService is 
+    OwnableUpgradeable,
     Pausable,
     TokenSupport,
     ReentrancyGuardUpgradeable,
@@ -28,8 +30,9 @@ contract TokenService is
         uint256 _destChainId,
         address _blackListService
     ) public initializer {
-        __Pausable_init();
+        // __Ownable_init_unchained();
         __TokenSupport_init(_destChainId);
+        __Pausable_init_unchained();
         __ReentrancyGuard_init_unchained();
         erc20Bridge = IBridge(bridge);
         self = PacketLibrary.InNetworkAddress(
@@ -125,4 +128,11 @@ contract TokenService is
             revert("Insufficient Quorum");
         }
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

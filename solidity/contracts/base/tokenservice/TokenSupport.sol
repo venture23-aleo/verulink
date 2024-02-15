@@ -27,9 +27,14 @@ abstract contract TokenSupport is OwnableUpgradeable {
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
     function __TokenSupport_init(uint256 _destChainId) internal onlyInitializing {
-        __Ownable_init();
+        __Ownable_init_unchained();
         destChainId = _destChainId;
+        // __TokenSupport_init_unchained(_destChainId);
     }
+
+    // function __TokenSupport_init_unchained(uint256 _destChainId) internal onlyInitializing {
+    //     destChainId = _destChainId;
+    // }
 
     function isSupportedToken(
         address token

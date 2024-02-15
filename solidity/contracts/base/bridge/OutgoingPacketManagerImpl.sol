@@ -3,15 +3,14 @@ pragma solidity ^0.8.19;
 
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 
-abstract contract OutgoingPacketManagerImpl  {
+abstract contract OutgoingPacketManagerImpl {
     using PacketLibrary for PacketLibrary.OutPacket;
 
     event PacketDispatched(PacketLibrary.OutPacket packet);
     
+    uint256 public sequence;
     //sequence => Packet hash
     mapping(uint256 => bytes32) public outgoingPackets;
-
-    uint256 public sequence;
 
     function _sendMessage(PacketLibrary.OutPacket memory packet) public {
         packet.version = 1;

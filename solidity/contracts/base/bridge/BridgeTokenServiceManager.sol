@@ -3,13 +3,13 @@ pragma solidity ^0.8.19;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract BridgeTokenServiceManager is OwnableUpgradeable {
+contract BridgeTokenServiceManager is OwnableUpgradeable {
     event TokenServiceAdded(address tokenService);
     event TokenServiceRemoved(address tokenService);
 
     mapping(address => bool) public tokenServices;
 
-    function __BridgeTokenServiceManager_init() internal onlyInitializing {
+    function BridgeTokenServiceManager_init() public initializer {
         __Ownable_init();
     }
 

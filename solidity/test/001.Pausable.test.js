@@ -10,11 +10,11 @@ describe('Pausable', () => {
     // Deploy a new Pausable contract before each test
     beforeEach(async () => {
         [owner, newOwner, other] = await ethers.getSigners();
-        PausableImpl = await ethers.getContractFactory('PausableMock');
+        PausableImpl = await ethers.getContractFactory('Pausable');
         pausableInstance = await PausableImpl.deploy();
         await pausableInstance.deployed();
         Proxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(PausableImpl.interface.format()).encodeFunctionData("initialize", [owner.address]);
+        initializeData = new ethers.utils.Interface(PausableImpl.interface.format()).encodeFunctionData("Pausable_init", []);
         const proxy = await Proxy.deploy(pausableInstance.address, initializeData);
         await proxy.deployed();
         proxiedOwner = PausableImpl.attach(proxy.address);
@@ -28,7 +28,7 @@ describe('Pausable', () => {
 
     // Test for second time initialize and revert
     it('should not initialize contract twice', async () => {
-        expect(proxiedOwner["initialize(address)"](owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(proxiedOwner["Pausable_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should start with not paused state', async () => {

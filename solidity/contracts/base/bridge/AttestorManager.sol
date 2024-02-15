@@ -3,16 +3,16 @@ pragma solidity ^0.8.19;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract AttestorManager is OwnableUpgradeable {
+contract AttestorManager is OwnableUpgradeable {
     event AttestorAdded(address attestor, uint256 quorum);
     event AttestorRemoved(address attestor, uint256 quorum);
-    event QuourumUpdated(uint256 oldQuorum, uint256 newQuorum);
+    event QuorumUpdated(uint256 oldQuorum, uint256 newQuorum);
 
     mapping(address => bool) private attestors;
     uint256 public quorumRequired;
 
-    function __AttestorManager_init() internal onlyInitializing {
-        __Ownable_init();
+    function AttestorManager_init() public initializer {
+        __Ownable_init_unchained();
     }
 
     function isAttestor(address attestor) public virtual view returns (bool) {
@@ -41,7 +41,7 @@ abstract contract AttestorManager is OwnableUpgradeable {
     }
 
     function updateQuorum(uint256 newQuorumRequired) external onlyOwner {
-        emit QuourumUpdated(quorumRequired, newQuorumRequired);
+        emit QuorumUpdated(quorumRequired, newQuorumRequired);
         quorumRequired = newQuorumRequired;
     }
 }

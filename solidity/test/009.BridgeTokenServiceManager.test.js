@@ -11,7 +11,7 @@ describe('BridgeTokenServiceManager', () => {
     beforeEach(async () => {
         [owner, other] = await ethers.getSigners();
 
-        BridgeTokenServiceManager = await ethers.getContractFactory("BridgeTokenServiceManagerMock");
+        BridgeTokenServiceManager = await ethers.getContractFactory("BridgeTokenServiceManager");
         let BridgeTokenServiceManagerABI = BridgeTokenServiceManager.interface.format();
 
         bridgeTokenServiceManagerImpl = await BridgeTokenServiceManager.deploy();

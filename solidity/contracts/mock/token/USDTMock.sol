@@ -20,7 +20,7 @@ contract USDTMock is ERC20 {
         blackLists[account] = true;
     }
 
-    function removeBlackList(address account) external {
-        delete blackLists[account];
-    }
+    // function removeBlackList(address account) external {
+    //     delete blackLists[account];
+    // }
 }

@@ -2,11 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {IIERC20} from "../common/interface/tokenservice/IIERC20.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Pausable} from "../common/Pausable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Holding is Pausable, ReentrancyGuardUpgradeable, Upgradeable {
+contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Upgradeable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);
@@ -14,13 +15,12 @@ contract Holding is Pausable, ReentrancyGuardUpgradeable, Upgradeable {
 
     // user address => token address => amount
     mapping(address => mapping(address => uint256)) public locked;
-
     mapping(address => mapping(address => uint256)) public unlocked;
-
     mapping(address => bool) public supportedTokenServices;
 
     function Holding_init(address _tokenService) public initializer {
-        __Pausable_init();
+        __Ownable_init_unchained();
+        __Pausable_init_unchained();
         supportedTokenServices[_tokenService] = true;
     }
 
@@ -65,7 +65,9 @@ contract Holding is Pausable, ReentrancyGuardUpgradeable, Upgradeable {
         uint256 amount
     ) external onlyOwner {
         require(locked[user][token] >= amount, "Insufficient amount");
-        locked[user][token] -= amount;
+        unchecked {
+            locked[user][token] -= amount;
+        }
         unlocked[user][token] += amount;
         emit Unlocked(user, token, amount);
     }
@@ -73,7 +75,9 @@ contract Holding is Pausable, ReentrancyGuardUpgradeable, Upgradeable {
     function _release(address user, address token, uint256 amount) internal whenNotPaused nonReentrant {
         require(user != address(0), "Zero Address");
         require(unlocked[user][token] >= amount, "Insufficient amount");
-        unlocked[user][token] -= amount;
+        unchecked {
+            unlocked[user][token] -= amount;
+        }
         emit Released(user, token, amount);
     }
 

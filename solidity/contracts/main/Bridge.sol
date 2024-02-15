@@ -7,10 +7,11 @@ import {AttestorManager} from "../base/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "../base/bridge/OutgoingPacketManagerImpl.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-// import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 contract Bridge is 
+    OwnableUpgradeable,
     Pausable,
     AttestorManager,
     BridgeTokenServiceManager,
@@ -27,9 +28,10 @@ contract Bridge is
     function Bridge_init(
         uint256 _destChainId
     ) public initializer {
-        __Pausable_init();
-        __AttestorManager_init();
-        __BridgeTokenServiceManager_init();
+        __Ownable_init_unchained();
+        __Pausable_init_unchained();
+        // __AttestorManager_init();
+        // __BridgeTokenServiceManager_init();
         destinationChainId = _destChainId;       
     }
 

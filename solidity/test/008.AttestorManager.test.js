@@ -12,7 +12,7 @@ describe('AttestorManager', () => {
         [owner, attestor, other, signer] = await ethers.getSigners();
 
         // Deploy AttestorManager
-        AttestorManager = await ethers.getContractFactory("AttestorManagerMock");
+        AttestorManager = await ethers.getContractFactory("AttestorManager");
         let abi = AttestorManager.interface.format();
 
         attestorManagerImpl = await AttestorManager.deploy();
