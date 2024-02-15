@@ -20,6 +20,7 @@ const (
 const (
 	dbFileName  = "attestorBolt.db"
 	logFileName = "attestor.log"
+	perm        = 744 // Read, execute and write permission for owner, and read-only permission for others
 )
 
 type FlagArgs struct {
@@ -160,7 +161,7 @@ func validateDirectory(p, fileName string) error {
 
 	finfo, err := os.Stat(p)
 	if errors.Is(err, os.ErrNotExist) {
-		if err := os.MkdirAll(p, 0666); err != nil {
+		if err := os.MkdirAll(p, perm); err != nil {
 			return err
 		}
 		return nil
@@ -168,21 +169,6 @@ func validateDirectory(p, fileName string) error {
 
 	if !finfo.IsDir() {
 		return fmt.Errorf("invalid path %s. Should be directory", p)
-	}
-	return nil
-}
-
-func validatePath(p string) error {
-	finfo, err := os.Stat(p)
-	if errors.Is(err, os.ErrNotExist) {
-		if err := os.MkdirAll(p, 0666); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	if finfo.IsDir() {
-		return fmt.Errorf("path %s should not be directory", p)
 	}
 	return nil
 }
@@ -200,7 +186,7 @@ func validateChainConfig(cfg *Config) error {
 		for _, name := range chainCfg.DestChains {
 			chainID, ok := chainNameToChainID[name]
 			if !ok {
-				return fmt.Errorf("Chain-id not available for %s", name)
+				return fmt.Errorf("chain-id not available for %s", name)
 			}
 			mDestChains = append(mDestChains, chainID)
 		}
@@ -209,7 +195,7 @@ func validateChainConfig(cfg *Config) error {
 		for name, startSeqNum := range chainCfg.StartSeqNum {
 			chainID, ok := chainNameToChainID[name]
 			if !ok {
-				return fmt.Errorf("Chain-id not available for %s", name)
+				return fmt.Errorf("chain-id not available for %s", name)
 			}
 			mStartSeqMap[chainID] = startSeqNum
 		}
