@@ -16,13 +16,13 @@ func constructAleoPacket(pkt *chainService.Packet) string {
 		"{ version: %du8, sequence: %du64, "+
 			"source: { chain_id: %du128, addr: %s }, "+
 			"destination: { chain_id: %du128, addr: %s }, "+
-			"message: { dest_token_address: %s, sender_address: %s, receiver_address: %s, amount: %du128 }, "+
+			"message: { sender_address: %s, dest_token_address: %s , amount: %du128 , receiver_address: %s }, "+
 			"height: %du64 }",
 		pkt.Version, pkt.Sequence, pkt.Source.ChainID,
 		constructEthAddressForAleoParameter(pkt.Source.Address),
-		pkt.Destination.ChainID, pkt.Destination.Address, pkt.Message.DestTokenAddress,
-		constructEthAddressForAleoParameter(pkt.Message.SenderAddress),
-		pkt.Message.ReceiverAddress, pkt.Message.Amount, pkt.Height)
+		pkt.Destination.ChainID, pkt.Destination.Address,
+		constructEthAddressForAleoParameter(pkt.Message.SenderAddress), pkt.Message.DestTokenAddress, pkt.Message.Amount,
+		pkt.Message.ReceiverAddress, pkt.Height)
 }
 
 // constructs ethereum address in the format of 32 len byte array string, appending "u8" in every

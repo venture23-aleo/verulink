@@ -5,3 +5,4 @@ go.work*
 *.txt
 **/*UTC*
 **/*.db
+*.lock

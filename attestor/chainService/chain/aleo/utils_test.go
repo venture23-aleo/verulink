@@ -22,13 +22,13 @@ func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 	msgReceiver = "[" + strings.ReplaceAll(msgReceiver, " ", ", ") + "]"
 
 	if !malform {
-		return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
-			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
-			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
-			"message: {\\n    dest_token_address: %s,\\n    sender_address: %s,\\n    receiver_address: %s,\\n    amount: %s\\n  },\\n  "+
-			"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
-			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
-			msgReceiver, pkt.message.amount, pkt.height,
+		return fmt.Sprintf("{ version: %s, sequence: %s, "+
+			"source: { chain_id: %s, addr: %s }, "+
+			"destination: { chain_id: %s, addr: %s }, "+
+			"message: { sender_address: %s, dest_token_address: %s , amount: %s , receiver_address: %s }, "+
+			"height: %s }", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
+			pkt.destination.chainID, destAddr, pkt.message.sender, msgToken,
+			pkt.message.amount, msgReceiver, pkt.height,
 		)
 	}
 
@@ -267,10 +267,9 @@ func dumpPktToAleoPacketString(pkt chain.Packet) string {
 	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du64 ,\\n  "+
 		"source: {\\n    chain_id: %du128,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %du128,\\n    addr: %s},\\n  "+
-		"message: {\\n    dest_token_address: %s,\\n    sender_address: %s,\\n    receiver_address: %s,\\n    amount: %su128\\n  },\\n  "+
+		"message: {\\n        sender_address: %s,\\n  dest_token_address: %s,\\n  amount: %su128,\\n  receiver_address: %s\\n     },\\n  "+
 		"height: %du64\\n}", pkt.Version, pkt.Sequence, pkt.Source.ChainID, pkt.Source.Address,
 		pkt.Destination.ChainID, constructEthAddressForAleoParameter(pkt.Destination.Address),
-		constructEthAddressForAleoParameter(pkt.Message.DestTokenAddress), pkt.Message.SenderAddress,
-		constructEthAddressForAleoParameter(pkt.Message.ReceiverAddress), pkt.Message.Amount.String(),
-		pkt.Height)
+		pkt.Message.SenderAddress, constructEthAddressForAleoParameter(pkt.Message.DestTokenAddress),
+		pkt.Message.Amount.String(), constructEthAddressForAleoParameter(pkt.Message.ReceiverAddress), pkt.Height)
 }
