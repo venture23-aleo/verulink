@@ -2,10 +2,9 @@
 pragma solidity ^0.8.19;
 
 import {Pausable} from "../../common/Pausable.sol";
-import "@thirdweb-dev/contracts/extension/Initializable.sol";
 
-contract PausableMock is Pausable, Initializable {
+contract PausableMock is Pausable {
     function initialize(address _owner) public initializer {
-        _initialize(_owner);
+        __Pausable_init();
     }
 }

@@ -18,7 +18,7 @@ describe('AttestorManager', () => {
         attestorManagerImpl = await AttestorManager.deploy();
         await attestorManagerImpl.deployed();
         AttestorManagerProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("initializemock", [owner.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("AttestorManager_init", []);
         const proxy = await AttestorManagerProxy.deploy(attestorManagerImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = AttestorManager.attach(proxy.address);

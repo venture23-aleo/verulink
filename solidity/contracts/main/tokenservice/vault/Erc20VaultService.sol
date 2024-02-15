@@ -3,22 +3,20 @@ pragma solidity ^0.8.19;
 
 import {IIERC20} from "../../../common/interface/tokenservice/IIERC20.sol";
 import {VaultService} from "../../../base/tokenservice/VaultService.sol";
-import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Erc20VaultService is VaultService, Initializable, Upgradeable {
+contract Erc20VaultService is VaultService, Upgradeable {
     
-    function initialize(
+    function Erc20VaultService_init(
         address _token,
-        string memory _name,
-        address _owner
+        string memory _name
     ) public initializer {
         require(_token != address(0), "Only ERC20 Address");
-        super._initialize(_token, _name, _owner);
+        __VaultService_init(_token, _name);
     }
 
     function _authorizeUpgrade(address) internal view override {
-        require(msg.sender == _owner_);
+        require(msg.sender == owner());
     }
 
     function transfer(uint256 amount) external onlyOwner returns (bool) {

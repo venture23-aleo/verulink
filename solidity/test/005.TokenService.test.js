@@ -44,7 +44,7 @@ describe('TokenService', () => {
         });
         erc20TokenBridge = await ERC20TokenBridge.deploy();
         await erc20TokenBridge.deployed();
-        initializeData = new ethers.utils.Interface(ERC20TokenBridge.interface.format()).encodeFunctionData("initialize(address,uint256)", [owner.address, destchainID]);
+        initializeData = new ethers.utils.Interface(ERC20TokenBridge.interface.format()).encodeFunctionData("Bridge_init(uint256)", [destchainID]);
 
         Proxied = await ethers.getContractFactory('ProxyContract');
         proxy = await Proxied.deploy(erc20TokenBridge.address, initializeData);
@@ -65,29 +65,8 @@ describe('TokenService', () => {
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
             // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdTMock.address));
-            initializeData = new ethers.utils.Interface([{
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_owner",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_usdc",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_usdt",
-                        "type": "address"
-                    }
-                ],
-                "name": "initialize",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdTMock.address]);
+            
+            initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
             await blackListProxy.deployed();
             blackListProxy = BlackListService.attach(blackListProxy.address);
@@ -99,29 +78,7 @@ describe('TokenService', () => {
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
             // initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData(["initialize"](usdcMock.address, "vaultservice", owner.address));
-            initializeData = new ethers.utils.Interface([{
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_token",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "_name",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_owner",
-                        "type": "address"
-                    }
-                ],
-                "name": "initialize",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }]).encodeFunctionData("initialize", [usdcMock.address, "vaultservice", owner.address]);
+            initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
@@ -134,25 +91,7 @@ describe('TokenService', () => {
             await ethVaultServiceInstance.deployed();
             EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
     
-            initializeData = new ethers.utils.Interface([{
-                "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "_name",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_owner",
-                        "type": "address"
-                    },
-    
-                ],
-                "name": "initialize",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }]).encodeFunctionData("initialize", ["ETH", owner.address]);
+            initializeData = new ethers.utils.Interface(EthVaultServiceImpl.interface.format()).encodeFunctionData("EthVaultService_init", ["ETH Vault"]);
             const ethVaultServiceProxy = await EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, initializeData);
             await ethVaultServiceProxy.deployed();
             proxiedEthVaultService = EthVaultServiceImpl.attach(ethVaultServiceProxy.address);
@@ -166,39 +105,7 @@ describe('TokenService', () => {
 
         ERC20TokenServiceImpl = await TokenService.deploy();
         await ERC20TokenServiceImpl.deployed();
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "bridge",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "_chainId",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "_destChainId",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_blackListService",
-                    "type": "address"
-                }
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize", [proxiedBridge.address, chainId, destchainID, owner.address, blackListProxy.address]);
+        initializeData = new ethers.utils.Interface(ERC20TokenServiceImpl.interface.format()).encodeFunctionData("TokenService_init", [proxiedBridge.address, chainId, destchainID, blackListProxy.address]);
         proxy = await Proxied.deploy(ERC20TokenServiceImpl.address, initializeData);
         await proxy.deployed();
         ERC20TokenServiceImplAddr = ERC20TokenServiceImpl.address;
@@ -229,7 +136,7 @@ describe('TokenService', () => {
 
     it('reverts if the contract is already initialized', async function () {
         // console.log("initializeData = ", initializeData);
-        expect(proxiedV1["initialize(address,uint256,uint256,address,address)"](proxiedBridge.address, chainId, destchainID, owner.address, blackListProxy.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(proxiedV1["TokenService_init(address,uint256,uint256,address)"](proxiedBridge.address, chainId, destchainID, blackListProxy.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should return "ERC20" as the token type', async () => {
@@ -405,7 +312,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("initialize(address,address)", [owner.address, proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address)", [proxiedV1.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -442,7 +349,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("initialize(address,address)", [owner.address, proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address)", [proxiedV1.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -479,7 +386,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("initialize(address,address)", [owner.address, proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address)", [proxiedV1.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -511,7 +418,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("initialize(address,address)", [owner.address, proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init", [proxiedV1.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -630,7 +537,7 @@ describe('TokenService', () => {
         let ERC20TokenSupportABI = ERC20TokenSupport.interface.format();
 
         const ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
-        const initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("_initialize", [owner.address, destChainId]);
+        const initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenSupport_init", [destChainId]);
         const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, initializeData);
         await proxy.deployed();
         const proxiedContract = ERC20TokenSupport.attach(proxy.address);
@@ -885,29 +792,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
             // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-            initializeData = new ethers.utils.Interface([{
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_owner",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_usdc",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_usdt",
-                        "type": "address"
-                    }
-                ],
-                "name": "initialize",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdTMock.address]);
+            initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
             await blackListProxy.deployed();
             blackListProxy = BlackListService.attach(blackListProxy.address);
@@ -919,29 +804,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
             // initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData(["initialize"](usdcMock.address, "vaultservice", owner.address));
-            initializeData = new ethers.utils.Interface([{
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_token",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "_name",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_owner",
-                        "type": "address"
-                    }
-                ],
-                "name": "initialize",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }]).encodeFunctionData("initialize", [usdcMock.address, "vaultservice", owner.address]);
+            initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
@@ -952,39 +815,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
         await ERC20TokenServiceV1Impl.deployed();
 
         ERC20TokenServiceProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "bridge",
-                    "type": "address"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "_chainId",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "uint256",
-                    "name": "_destChainId",
-                    "type": "uint256"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_blackListService",
-                    "type": "address"
-                }
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize(address,uint256,uint256,address,address)", [erc20TokenBridge.address, chainId, destChainId, owner.address, blackListProxy.address]);
+        initializeData = new ethers.utils.Interface(ERC20TokenServiceV1.interface.format()).encodeFunctionData("TokenService_init(address,uint256,uint256,address)", [erc20TokenBridge.address, chainId, destChainId, blackListProxy.address]);
 
         const proxy = await ERC20TokenServiceProxy.deploy(ERC20TokenServiceV1Impl.address, initializeData);
         await proxy.deployed();

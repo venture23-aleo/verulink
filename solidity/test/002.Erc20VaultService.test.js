@@ -6,7 +6,7 @@ console.log("ethers = ", ethers.version);
 // Define the test suite
 describe('Erc20VaultService', () => {
     let owner, newOwner,usdcMock, other,Erc20VaultServiceImpl, erc20VaultServiceInstance, Proxy, initializeData, Erc20VaultServiceProxy;
-
+    let abi;
     // Deploy a new Pausable contract before each test
     beforeEach(async () => {
         [owner, newOwner, other] = await ethers.getSigners();
@@ -19,61 +19,16 @@ describe('Erc20VaultService', () => {
         erc20VaultServiceInstance = await Erc20VaultServiceImpl.deploy();
         await erc20VaultServiceInstance.deployed();
         Proxy = await ethers.getContractFactory('ProxyContract');
+        abi = Erc20VaultServiceImpl.interface.format();
 
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_token",
-                    "type": "address"
-                },
-                {
-                    "internalType": "string",
-                    "name": "_name",
-                    "type": "string"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize", [usdcMock.address, "USDC", owner.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
         const proxy = await Proxy.deploy(erc20VaultServiceInstance.address, initializeData);
         await proxy.deployed();
         Erc20VaultServiceProxy = Erc20VaultServiceImpl.attach(proxy.address);
     });
 
     it("should not initialize if token address is zero", async() => {
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_token",
-                    "type": "address"
-                },
-                {
-                    "internalType": "string",
-                    "name": "_name",
-                    "type": "string"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize", [ethers.constants.AddressZero, "USDC", owner.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [ethers.constants.AddressZero, "USDC"]);
         expect(Proxy.deploy(erc20VaultServiceInstance.address, initializeData)).to.be.revertedWith('Only ERC20 Address');
     });
 
@@ -84,13 +39,13 @@ describe('Erc20VaultService', () => {
     });
 
     it('should initialize contract with the correct name', async () => {
-        const contractOwner = await Erc20VaultServiceProxy.name();
-        expect(contractOwner).to.equal("USDC");
+        const name = await Erc20VaultServiceProxy.name();
+        expect(name).to.equal("USDC Vault");
     });
 
     // Test for second time initialize and revert
     it('reverts if the contract is already initialized', async function () {
-        expect(Erc20VaultServiceProxy["initialize(address,string,address)"](usdcMock.address, "USDC", owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(Erc20VaultServiceProxy["Erc20VaultService_init(address,string)"](usdcMock.address, "USDC")).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should not transfer if caller is not admin', async() => {
@@ -117,7 +72,7 @@ describe('Erc20VaultService', () => {
 
 describe("Erc20VaultService Upgradeability", () => {
     let owner,upgradeData, newOwner,usdcMock, other,Erc20VaultServiceV1, erc20VaultServiceInstance, Proxy, initializeData, Erc20VaultServiceProxy, Erc20VaultServiceV2, erc20VaultServiceV2Instance;
-
+    let abi;
         // Deploy a new Pausable contract before each test
     beforeEach(async () => {
         [owner, newOwner, other] = await ethers.getSigners();
@@ -130,31 +85,9 @@ describe("Erc20VaultService Upgradeability", () => {
         erc20VaultServiceInstance = await Erc20VaultServiceV1.deploy();
         await erc20VaultServiceInstance.deployed();
         Proxy = await ethers.getContractFactory('ProxyContract');
+        abi = Erc20VaultServiceV1.interface.format();
 
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_token",
-                    "type": "address"
-                },
-                {
-                    "internalType": "string",
-                    "name": "_name",
-                    "type": "string"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize", [usdcMock.address, "USDC", owner.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault 2"]);
         const proxy = await Proxy.deploy(erc20VaultServiceInstance.address, initializeData);
         await proxy.deployed();
         Erc20VaultServiceProxy = Erc20VaultServiceV1.attach(proxy.address);

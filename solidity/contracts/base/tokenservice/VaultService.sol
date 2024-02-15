@@ -2,19 +2,18 @@
 pragma solidity ^0.8.19;
 
 import {IVaultService} from "../../common/interface/tokenservice/IVaultService.sol";
-import {Ownable} from "../../common/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract VaultService is IVaultService, Ownable {
+abstract contract VaultService is IVaultService, OwnableUpgradeable {
 
     address private _token_;
     string private _name_;
 
-    function _initialize(
+    function __VaultService_init(
         address _token,
-        string memory _name,
-        address _owner
-    ) internal {
-        super._initialize(_owner);
+        string memory _name
+    ) internal onlyInitializing {
+        __Ownable_init();
         _token_ = _token;
         _name_ = _name;
     }

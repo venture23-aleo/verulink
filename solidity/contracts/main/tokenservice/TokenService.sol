@@ -2,19 +2,17 @@
 pragma solidity ^0.8.19;
 
 import {IBridge} from "../../common/interface/bridge/IBridge.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
+import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
+import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
-import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
-import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {Holding} from "../Holding.sol";
-import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
-import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 contract TokenService is 
     Pausable,
-    TokenSupport, 
-    Initializable,
+    TokenSupport,
     Upgradeable
 {
     IBridge erc20Bridge;
@@ -22,14 +20,14 @@ contract TokenService is
     Holding holding;
     PacketLibrary.InNetworkAddress public self;
 
-    function initialize(
+    function TokenService_init(
         address bridge, 
         uint256 _chainId,
         uint256 _destChainId,
-        address _owner,
         address _blackListService
-    ) public virtual initializer {
-        super._initialize(_owner, _destChainId);
+    ) public initializer {
+        __Pausable_init();
+        __TokenSupport_init(_destChainId);
         erc20Bridge = IBridge(bridge);
         self = PacketLibrary.InNetworkAddress(
             _chainId, 
@@ -39,7 +37,7 @@ contract TokenService is
     }
 
     function _authorizeUpgrade(address) internal view override {
-        require(msg.sender == _owner_);
+        require(msg.sender == owner());
     }
 
     function tokenType() public pure returns (string memory) {

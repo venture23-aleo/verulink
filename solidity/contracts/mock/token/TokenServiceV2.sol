@@ -2,7 +2,6 @@
 pragma solidity ^0.8.19;
 
 import {TokenService} from "../../main/tokenservice/TokenService.sol";
-import {Ownable} from "../../common/Ownable.sol";
 
 contract TokenServiceV2 is TokenService {
     uint256 public val;

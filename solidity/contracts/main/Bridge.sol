@@ -7,8 +7,8 @@ import {AttestorManager} from "../base/bridge/AttestorManager.sol";
 import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImpl} from "../base/bridge/OutgoingPacketManagerImpl.sol";
-import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
+// import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 contract Bridge is 
     Pausable,
@@ -16,7 +16,6 @@ contract Bridge is
     BridgeTokenServiceManager,
     ConsumedPacketManagerImpl,
     OutgoingPacketManagerImpl,
-    Initializable,
     Upgradeable
 {
     using PacketLibrary for PacketLibrary.InPacket;
@@ -25,16 +24,17 @@ contract Bridge is
 
     uint256 public destinationChainId;
 
-    function initialize(
-        address _owner,
+    function Bridge_init(
         uint256 _destChainId
     ) public initializer {
-        super._initialize(_owner);
+        __Pausable_init();
+        __AttestorManager_init();
+        __BridgeTokenServiceManager_init();
         destinationChainId = _destChainId;       
     }
 
     function _authorizeUpgrade(address) internal view override {
-        require(msg.sender == _owner_);
+        require(msg.sender == owner());
     }
 
     function isSupportedChain(uint256 destChainId) public view returns (bool) {

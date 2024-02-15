@@ -17,7 +17,7 @@ describe('BridgeTokenServiceManager', () => {
         bridgeTokenServiceManagerImpl = await BridgeTokenServiceManager.deploy();
         await bridgeTokenServiceManagerImpl.deployed();
         BridgeTokenServiceManagerProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(BridgeTokenServiceManagerABI).encodeFunctionData("initializemock", [owner.address]);
+        initializeData = new ethers.utils.Interface(BridgeTokenServiceManagerABI).encodeFunctionData("BridgeTokenServiceManager_init", []);
         const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = BridgeTokenServiceManager.attach(proxy.address);

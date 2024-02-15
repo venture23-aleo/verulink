@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../common/Ownable.sol";
-import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {IVaultService} from "../../common/interface/tokenservice/IVaultService.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract TokenSupport is Ownable {
+abstract contract TokenSupport is OwnableUpgradeable {
     uint256 public destChainId;
 
     struct Token {
@@ -27,8 +26,8 @@ abstract contract TokenSupport is Ownable {
     event TokenMinValueUpdated(address token, uint256 destChainId, uint256 oldMinValue, uint256 newMinValue);
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
-    function _initialize(address _owner, uint256 _destChainId) public {
-        super._initialize(_owner);
+    function __TokenSupport_init(uint256 _destChainId) internal onlyInitializing {
+        __Ownable_init();
         destChainId = _destChainId;
     }
 

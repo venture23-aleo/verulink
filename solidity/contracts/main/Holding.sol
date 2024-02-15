@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Pausable} from "../common/Pausable.sol";
 import {IIERC20} from "../common/interface/tokenservice/IIERC20.sol";
-import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {Pausable} from "../common/Pausable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Holding is Pausable, Initializable, Upgradeable {
+contract Holding is Pausable, Upgradeable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);
@@ -19,13 +18,13 @@ contract Holding is Pausable, Initializable, Upgradeable {
 
     mapping(address => bool) public supportedTokenServices;
 
-    function initialize(address _owner, address _tokenService) public initializer {
-        super._initialize(_owner);
+    function Holding_init(address _tokenService) public initializer {
+        __Pausable_init();
         supportedTokenServices[_tokenService] = true;
     }
 
     function _authorizeUpgrade(address) internal view override {
-        require(msg.sender == _owner_);
+        require(msg.sender == owner());
     }
 
     function addTokenService(address _tokenService) external onlyOwner {

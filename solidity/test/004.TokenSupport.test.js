@@ -23,30 +23,10 @@ describe('TokenSupport', () => {
             const erc20VaultServiceImpl = await Erc20VaultService.deploy();
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
+
+            let abi = Erc20VaultService.interface.format();
             // initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData(["initialize"](usdcMock.address, "vaultservice", owner.address));
-            initializeData = new ethers.utils.Interface([{
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_token",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "_name",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_owner",
-                        "type": "address"
-                    }
-                ],
-                "name": "initialize",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }]).encodeFunctionData("initialize", [usdcMock.address, "vaultservice", owner.address]);
+            initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
@@ -68,7 +48,7 @@ describe('TokenSupport', () => {
         let ERC20TokenSupportABI = ERC20TokenSupport.interface.format();
 
         ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("_initialize", [owner.address, destChainId]);
+        initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenSupport_init", [destChainId]);
         const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, initializeData);
         await proxy.deployed();
         proxiedContract = ERC20TokenSupport.attach(proxy.address);

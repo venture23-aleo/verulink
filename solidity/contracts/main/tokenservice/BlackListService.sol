@@ -3,11 +3,10 @@ pragma solidity ^0.8.19;
 
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
-import {Ownable} from "../../common/Ownable.sol";
-import {Initializable} from "@thirdweb-dev/contracts/extension/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract BlackListService is Ownable, IBlackListService, Initializable, Upgradeable {
+contract BlackListService is IBlackListService, OwnableUpgradeable, Upgradeable {
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
@@ -25,14 +24,14 @@ contract BlackListService is Ownable, IBlackListService, Initializable, Upgradea
     */
     address internal usdt;
 
-    function initialize(address _owner, address _usdc, address _usdt) public initializer{
-        super._initialize(_owner);
+    function BlackList_init(address _usdc, address _usdt) public initializer {
+        __Ownable_init();
         usdc = _usdc;
         usdt = _usdt;
     }
 
     function _authorizeUpgrade(address) internal view override {
-        require(msg.sender == _owner_);
+        require(msg.sender == owner());
     }
 
     function addToBlackList(address account) external onlyOwner {

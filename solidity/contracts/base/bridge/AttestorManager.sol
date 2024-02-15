@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../common/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract AttestorManager is Ownable {
+abstract contract AttestorManager is OwnableUpgradeable {
     event AttestorAdded(address attestor, uint256 quorum);
     event AttestorRemoved(address attestor, uint256 quorum);
+    event QuourumUpdated(uint256 oldQuorum, uint256 newQuorum);
 
     mapping(address => bool) private attestors;
     uint256 public quorumRequired;
+
+    function __AttestorManager_init() internal onlyInitializing {
+        __Ownable_init();
+    }
 
     function isAttestor(address attestor) public virtual view returns (bool) {
         return attestors[attestor];
@@ -29,9 +34,14 @@ abstract contract AttestorManager is Ownable {
         emit AttestorRemoved(attestor, newQuorumRequired);
     }
 
-    function addAttestors(address[] memory _attestors, uint256 newQuorumRequired) external onlyOwner {
+    function addAttestors(address[] calldata _attestors, uint256 newQuorumRequired) external onlyOwner {
         for(uint256 i=0;i<_attestors.length;i++) {
             addAttestor(_attestors[i], newQuorumRequired);
         }
+    }
+
+    function updateQuorum(uint256 newQuorumRequired) external onlyOwner {
+        emit QuourumUpdated(quorumRequired, newQuorumRequired);
+        quorumRequired = newQuorumRequired;
     }
 }

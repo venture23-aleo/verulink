@@ -21,7 +21,7 @@ describe('Holding', () => {
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
         // initializeData = new ethers.Interface(BlackListServiceABI).encodeFunctionData(["initialize(address)"](owner.address));
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
         const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = Holding.attach(proxy.address);
@@ -35,7 +35,7 @@ describe('Holding', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        expect(proxiedV1["initialize(address,address)"](owner.address, tokenService.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(proxiedV1["Holding_init(address)"](tokenService.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     // Test that only the owner can update the token service
@@ -381,7 +381,7 @@ describe('Holding', () => {
         let HoldingContractABI = Holding.interface.format();
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
         const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxy.deployed();
         let proxiedHolding = Holding.attach(proxy.address);
@@ -471,7 +471,7 @@ describe('Upgradeabilty: HoldingV2', () => {
         let HoldingContractABI = HoldingV1.interface.format();
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("initialize(address,address)", [owner.address, tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
         const proxy = await HoldingProxy.deploy(holdingV1Impl.address, initializeData);
         await proxy.deployed();
         proxied = HoldingV1.attach(proxy.address);

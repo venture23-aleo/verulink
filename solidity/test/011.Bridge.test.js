@@ -60,7 +60,7 @@ describe('Bridge', () => {
         await bridgeImpl.deployed();
 
         Proxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("initialize(address,uint256)", [owner.address, destChainId]);
+        initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("Bridge_init(uint256)", [destChainId]);
         const proxy = await Proxy.deploy(bridgeImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = ERC20TokenbridgeImpl.attach(proxy.address);
@@ -76,7 +76,7 @@ describe('Bridge', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        expect(proxiedV1["initialize(address,uint256)"](owner.address, destChainId)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(proxiedV1["Bridge_init(uint256)"](destChainId)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should check if a chain is supported', async () => {
@@ -150,6 +150,27 @@ describe('Bridge', () => {
         const signatures = [signature1, signature2];
         await proxiedV1.connect(tokenService).consume(inPacket, signatures);
     });
+
+    // it('pass consume even if v=0', async () => {
+    //     // Create an inPacket
+    //     const inPacket = [
+    //         1,
+    //         1,
+    //         [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+    //         [1, ethers.Wallet.createRandom().address],
+    //         ["aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", ethers.Wallet.createRandom().address, 10, ethers.Wallet.createRandom().address],
+    //         100
+    //     ];
+    //     const packetHash = inPacketHash(inPacket);
+    //     let message = ethers.utils.solidityKeccak256(
+    //         ['bytes32', 'uint8'],
+    //         [packetHash, 1]
+    //     );
+    //     const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
+    //     const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
+    //     const signatures = [signature1, signature2];
+    //     await proxiedV1.connect(tokenService).consume(inPacket, signatures);
+    // });
 
     it('should not consume if contract is paused', async () => {
         // Create an inPacket
@@ -353,7 +374,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         let ERC20TokenBridgeABI = ERC20TokenBridgeV1.interface.format();
 
         ERC20TokenBridgeProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenBridgeABI).encodeFunctionData("initialize(address,uint256)", [owner.address, destChainId]);
+        initializeData = new ethers.utils.Interface(ERC20TokenBridgeABI).encodeFunctionData("Bridge_init(uint256)", [destChainId]);
         const proxy = await ERC20TokenBridgeProxy.deploy(ERC20TokenBridgeV1Impl.address, initializeData);
         await proxy.deployed();
         proxied = ERC20TokenBridgeV1.attach(proxy.address);

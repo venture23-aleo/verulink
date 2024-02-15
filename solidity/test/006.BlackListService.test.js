@@ -20,38 +20,17 @@ describe("BlackListService", () => {
         BlackListService = await ethers.getContractFactory("BlackListService");
         blackListServiceImpl = await BlackListService.deploy();
         await blackListServiceImpl.deployed();
+        let abi = BlackListService.interface.format();
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
         // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_usdc",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_usdt",
-                    "type": "address"
-                }
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdtMock.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxiedContract = BlackListService.attach(proxy.address);
     });
 
     it('reverts if the contract is already initialized', async function () {
-        expect(proxiedContract["initialize(address,address,address)"](owner.address, usdcMock.address, usdtMock.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        expect(proxiedContract["BlackList_init"](usdcMock.address, usdtMock.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it("should add to and remove from the black list", async () => {
@@ -198,30 +177,9 @@ describe('Upgradeabilty: BlacklistServiceV2', () => {
         blackListServiceImpl = await BlackListService.deploy();
         await blackListServiceImpl.deployed();
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
+        let abi = BlackListService.interface.format();
         // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-        initializeData = new ethers.utils.Interface([{
-            "inputs": [
-                {
-                    "internalType": "address",
-                    "name": "_owner",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_usdc",
-                    "type": "address"
-                },
-                {
-                    "internalType": "address",
-                    "name": "_usdt",
-                    "type": "address"
-                }
-            ],
-            "name": "initialize",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        }]).encodeFunctionData("initialize", [owner.address, usdcMock.address, usdtMock.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxied = BlackListService.attach(proxy.address);

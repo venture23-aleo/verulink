@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "../../common/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract BridgeTokenServiceManager is Ownable {
+abstract contract BridgeTokenServiceManager is OwnableUpgradeable {
     event TokenServiceAdded(address tokenService);
     event TokenServiceRemoved(address tokenService);
 
     mapping(address => bool) public tokenServices;
+
+    function __BridgeTokenServiceManager_init() internal onlyInitializing {
+        __Ownable_init();
+    }
 
     function isRegisteredTokenService(address _service) public view returns(bool) {
         return tokenServices[_service];

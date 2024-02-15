@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {Ownable} from "./Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 
 /**
  * @title Pausable
  * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
-abstract contract Pausable is Ownable {
+abstract contract Pausable is OwnableUpgradeable {
   event Pause();
   event Unpause();
 
@@ -29,6 +29,10 @@ abstract contract Pausable is Ownable {
   modifier whenPaused() {
     require(paused);
     _;
+  }
+
+  function __Pausable_init() internal onlyInitializing {
+    __Ownable_init();
   }
 
   /**
