@@ -21,6 +21,10 @@ var (
 	configPath       string
 	address          string
 	port             int
+	encryptCommand   string
+	aleoPrivateKey   string
+	keyPassword      string
+	confirmPassword  string
 )
 
 func init() {
@@ -28,6 +32,7 @@ func init() {
 	flag.StringVar(&ethKeyPath, "eth-kp", "", "path to encrypted ethereum key-pairs")
 	flag.StringVar(&configPath, "config", "config.yaml", "configuration for running signing service")
 	flag.StringVar(&address, "address", "127.0.0.1", "network address")
+	flag.StringVar(&encryptCommand, "encryptKey", "", "encrypt raw aleo private key")
 	flag.IntVar(&port, "port", 6579, "port")
 }
 
@@ -41,6 +46,12 @@ func main() {
 	}()
 
 	flag.Parse()
+
+	if encryptCommand != "" {
+		readInputsForKeyEncryption()
+		aleo.EncryptPrivateKey(aleoPrivateKey, keyPassword)
+		return
+	}
 
 	if aleoKeyPath == "" {
 		err = errors.New("aleo key path is required")
