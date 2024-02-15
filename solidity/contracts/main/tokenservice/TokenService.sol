@@ -8,11 +8,13 @@ import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 contract TokenService is 
     Pausable,
     TokenSupport,
+    ReentrancyGuardUpgradeable,
     Upgradeable
 {
     IBridge erc20Bridge;
@@ -28,6 +30,7 @@ contract TokenService is
     ) public initializer {
         __Pausable_init();
         __TokenSupport_init(_destChainId);
+        __ReentrancyGuard_init_unchained();
         erc20Bridge = IBridge(bridge);
         self = PacketLibrary.InNetworkAddress(
             _chainId, 
@@ -48,7 +51,7 @@ contract TokenService is
         holding = _holding;
     }
 
-    function transferToVault(address token, uint256 amount) external onlyOwner {
+    function transferToVault(address token, uint256 amount) external onlyOwner nonReentrant {
         require(isEnabledToken(token), "Token not supported");
         address vault = address(supportedTokens[token].vault);
         if(token == address(0)) {
@@ -82,17 +85,17 @@ contract TokenService is
         return packet;
     }
 
-    function transfer(string memory receiver) external whenNotPaused onlyProxy payable {
+    function transfer(string memory receiver) external whenNotPaused onlyProxy nonReentrant payable {
         erc20Bridge.sendMessage(_packetify(address(0), msg.value, receiver));
     }
 
-    function transfer(address tokenAddress, uint256 amount, string memory receiver) external whenNotPaused onlyProxy {
+    function transfer(address tokenAddress, uint256 amount, string memory receiver) external whenNotPaused onlyProxy nonReentrant {
         require(tokenAddress != address(0), "Only ERC20 Tokens");
         require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
-    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external whenNotPaused onlyProxy {
+    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external whenNotPaused onlyProxy nonReentrant {
         require(packet.destTokenService.addr == address(this),"Invalid Token Service");
         
         address receiver = packet.message.receiverAddress;

@@ -3,9 +3,10 @@ pragma solidity ^0.8.19;
 
 import {IIERC20} from "../common/interface/tokenservice/IIERC20.sol";
 import {Pausable} from "../common/Pausable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-contract Holding is Pausable, Upgradeable {
+contract Holding is Pausable, ReentrancyGuardUpgradeable, Upgradeable {
 
     event Locked(address account, address token, uint256 amount);
     event Unlocked(address account, address token, uint256 amount);
@@ -69,7 +70,7 @@ contract Holding is Pausable, Upgradeable {
         emit Unlocked(user, token, amount);
     }
 
-    function _release(address user, address token, uint256 amount) internal whenNotPaused {
+    function _release(address user, address token, uint256 amount) internal whenNotPaused nonReentrant {
         require(user != address(0), "Zero Address");
         require(unlocked[user][token] >= amount, "Insufficient amount");
         unlocked[user][token] -= amount;
