@@ -125,10 +125,6 @@ program token_bridge_v0002.aleo {
     /// Returns null otherwise
     mapping attestors: address => bool;
 
-    /// Tracks the number of attestations for a given packet
-    /// key is derived as hash(InPacket);
-    mapping in_packet_attestations: field => u8;
-
     /// Tracks if the given packet is consumed
     mapping in_packet_consumed: PacketId => bool;
 
@@ -137,10 +133,6 @@ program token_bridge_v0002.aleo {
 
     /// Stores the outgoing packet
     mapping out_packets: PacketId => OutPacket;
-
-    /// Tracks if the given attestor has signed a given packet
-    /// key is hash(PacketIdWithAttestor)
-    mapping in_packet_attestors: field => bool;
 
     /// Tracks the supported chains
     /// Key is chain_id
@@ -164,8 +156,8 @@ program token_bridge_v0002.aleo {
 
     const THRESHOLD_INDEX: u8 = 1u8;
     const TOTAL_ATTESTORS_INDEX: u8 = 2u8;
-    const PAUSABILITY_INDEX: u8 = 3u8;
 
+    const PAUSABILITY_INDEX: u8 = 3u8;
     const PAUSED_VALUE: u8 = 0u8;
     const UNPAUSED_VALUE: u8 = 1u8;
 
@@ -479,8 +471,6 @@ program token_bridge_v0002.aleo {
         // This can be used to check the total outgoing messages from this bridge irrespective of destination chain
         let bridge_sequence_no: u64 = Mapping::get_or_use(sequences, ALEO_CHAIN_ID, 1u64); 
 
-
-        // TODO: packets and other struct can be defined in transition itself and passed as params(if efficient)
         let source: AleoProgram = AleoProgram {
             chain_id: source_chain_id,
             addr: source_service_program
@@ -583,7 +573,6 @@ program token_bridge_v0002.aleo {
             source_chain_id, 
             sequence, 
             signers, 
-            signs, 
             votes,
         );
     }
@@ -593,7 +582,6 @@ program token_bridge_v0002.aleo {
         chain_id: u128, 
         sequence: u64 , 
         signers: [address; 5], 
-        signs: [signature; 5], 
         votes: u8, 
     ) {
         // Assert that the bridge is unpaused
@@ -616,7 +604,7 @@ program token_bridge_v0002.aleo {
 
         // Ensure enough attestation for the packet
         assert(votes >= threshold);
-        // TODO: can be defined in transtion and passed(if efficient)
+        
         let packet_id: PacketId = PacketId {
             chain_id,
             sequence
@@ -632,21 +620,8 @@ program token_bridge_v0002.aleo {
 
 
 
-    /// Returns the number of valid signatures
-    /// If the address is *NOT* ZERO_ADDRESS and the signature does not match, it throws an error
-    function get_valid_signatures_count(msg: field, signers: [address; 5], signs: [signature; 5]) -> u8 {
-        let count: u8 = 0u8;
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
-            if (signers[i] != ZERO_ADDRESS) {
-                assert(signature::verify(signs[i], signers[i], msg));
-                count = count + 1u8;
-            }
-        }
-        return count;
-    }
-
     // Validates that the addresses are unique except for ZERO_ADDRESS
-    // Returs the count of the unique addresses
+    // Returns the count of the unique addresses
     inline get_valid_unique_address_count(addresses: [address; 5]) -> u8 {
         let unique_addresses: u8 = 0u8;
         if (addresses[0u8] != ZERO_ADDRESS) {
