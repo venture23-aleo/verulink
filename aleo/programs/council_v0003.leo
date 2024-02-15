@@ -131,7 +131,6 @@ program council_v0003.aleo {
         let expected_proposal_id: u32 = (total_proposals + 1field ) as u32;
         assert_eq(expected_proposal_id, proposal_id);
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, total_proposals + 1field);
-
         // Store the proposal hash
         Mapping::set(proposals, proposal_id, proposal_hash);
     }
@@ -968,7 +967,7 @@ program council_v0003.aleo {
         token_address: address,
     }
 
-    transition ts_update_max_transfer(
+    transition ts_pause_token(
         public id: u32, 
         public token_address: address, 
         public signers: [address; 5],
@@ -988,7 +987,7 @@ program council_v0003.aleo {
         return then finalize(proposal_hash, signers, votes);
     }
 
-    finalize ts_update_max_transfer(proposal_hash: field, signers: [address; 5], votes: u8) {
+    finalize ts_pause_token(proposal_hash: field, signers: [address; 5], votes: u8) {
         // Ensure that the signature are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, signers[i]));
@@ -1015,7 +1014,7 @@ program council_v0003.aleo {
         token_address: address,
     }
 
-    transition ts_update_max_transfer(
+    transition ts_unpause_token(
         public id: u32, 
         public token_address: address, 
         public signers: [address; 5],
@@ -1035,7 +1034,7 @@ program council_v0003.aleo {
         return then finalize(proposal_hash, signers, votes);
     }
 
-    finalize ts_update_max_transfer(proposal_hash: field, signers: [address; 5], votes: u8) {
+    finalize ts_unpause_token(proposal_hash: field, signers: [address; 5], votes: u8) {
         // Ensure that the signature are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, signers[i]));
