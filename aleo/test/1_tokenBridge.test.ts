@@ -1,5 +1,5 @@
 import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { InPacket } from "../artifacts/js/types/token_bridge_v0002";
+import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
 import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
 import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
 import { Council_v0002Contract } from "../artifacts/js/council_v0002";
@@ -433,6 +433,29 @@ describe("Token Bridge ", () => {
         evm2AleoArr(ethUser), // receiver
         BigInt(100) // amount
       );
+    }, TIMEOUT)
+
+    test("Publish calls successfully", async () => {
+      bridge.connect(aleoUser1)
+      const [addSupportedServiceTx] = await bridge.add_service_tb(aleoUser1);
+      await bridge.wait(addSupportedServiceTx);
+
+      const [tx] = await bridge.publish(
+        ethChainId, // destinationChainId
+        evm2AleoArr(ethTsContractAddr), // destinationServiceContract
+        evm2AleoArr(usdcContractAddr), // token
+        aleoUser1, // sender
+        evm2AleoArr(ethUser), // receiver
+        BigInt(100) // amount
+      );
+      await bridge.wait(tx);
+      const sequence = await bridge.sequences(ethChainId);
+      const packet_id: PacketId = {
+        chain_id: ethChainId,
+        sequence: sequence - BigInt(1)
+      }
+      const packet = await bridge.out_packets(packet_id);
+      expect(packet.message.sender_address).toBe(aleoUser1);
     }, TIMEOUT)
 
   })
