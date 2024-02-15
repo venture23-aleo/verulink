@@ -266,6 +266,24 @@ describe('Holding', () => {
         expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("ERC20 Release Failed");
     });
 
+    it('should not release if release to user is blacklisted', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.address;
+        const amount = 50;
+        await (await usdcMock.mint(tokenService.address, amount)).wait();
+        await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
+    
+        // Lock tokens with the owner
+        await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
+    
+        // Unlock tokens with the owner
+        await (await proxiedV1.unlock(user, token, amount)).wait();
+        // contract is blackListed here to make it fail on token transfer
+        const tx = await usdcMock.addBlackList(user);
+        // Release tokens with the owner, should revert back
+        expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("ERC20 Release Failed");
+    });
+
     // Test for holding contract is blacklisted before releasing
     it('should not release in case of zero address user', async () => {
         const user = ethers.constants.AddressZero;
@@ -396,6 +414,30 @@ describe('Holding', () => {
         await (await proxiedHolding.unlock(user, token, 100)).wait();
         await(await proxiedHolding.transferETH(other.address, 90)).wait();
         expect(proxiedHolding["release(address,uint256)"](user, amount)).to.be.revertedWith("ETH Release Failed");
+    });
+
+    it('should not release ETH if there is insufficient eth', async () => {
+        Holding = await ethers.getContractFactory("HoldingMock");
+        holdingImpl = await Holding.deploy();
+        await holdingImpl.deployed();
+        let HoldingContractABI = Holding.interface.format();
+
+        HoldingProxy = await ethers.getContractFactory('ProxyContract');
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
+        const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
+        await proxy.deployed();
+        let proxiedHolding = Holding.attach(proxy.address);
+
+        // const user = ethers.Wallet.createRandom().address;
+        // const token = ethers.constants.AddressZero;
+        // const amount = 100;
+
+        // await (await proxiedHolding.connect(tokenService)["lock(address)"](user, { value: amount })).wait();
+        // expect(await ethers.provider.getBalance(proxiedHolding.address)).to.be.equal(100);
+        // Unlock tokens with the owner
+        // await (await proxiedHolding.unlock(user, token, 100)).wait();
+        expect(proxiedHolding.transferETH(other.address, 90)).to.be.revertedWith("ETH Release Failed");
+        // expect(proxiedHolding["release(address,uint256)"](user, amount)).to.be.revertedWith("ETH Release Failed");
     });
 
     // Test the 'Locked' event

@@ -84,21 +84,19 @@ contract TokenService is
             receiver
         );
         packet.height = block.number;
-
-        return packet;
     }
 
-    function transfer(string memory receiver) external whenNotPaused onlyProxy nonReentrant payable {
+    function transfer(string memory receiver) external whenNotPaused payable {
         erc20Bridge.sendMessage(_packetify(address(0), msg.value, receiver));
     }
 
-    function transfer(address tokenAddress, uint256 amount, string memory receiver) external whenNotPaused onlyProxy nonReentrant {
+    function transfer(address tokenAddress, uint256 amount, string memory receiver) external whenNotPaused {
         require(tokenAddress != address(0), "Only ERC20 Tokens");
         require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
-    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external whenNotPaused onlyProxy nonReentrant {
+    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external whenNotPaused nonReentrant {
         require(packet.destTokenService.addr == address(this),"Invalid Token Service");
         
         address receiver = packet.message.receiverAddress;

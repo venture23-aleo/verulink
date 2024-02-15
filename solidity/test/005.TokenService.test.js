@@ -158,7 +158,7 @@ describe('TokenService', () => {
     });
 
     //Test for transfer of blackListed address
-    it('should not allow blackListed address for transfer', async () => {
+    it('should not allow blackListed address msg.sender for transfer', async () => {
         // Mock USDC and USDT contracts to simulate blacklisting
         await (await usdcMock.addBlackList(other.address)).wait();
 
