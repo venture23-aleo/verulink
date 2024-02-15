@@ -184,39 +184,7 @@ program token_bridge_v0002.aleo {
     /// Note: This function must be allowed to be called only once.
     transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) {
 
-        let unique_attestors: u8 = 0u8;
-
-        // Assert all attestors are different
-        if (initial_attestors[0u8] != ZERO_ADDRESS) {
-            assert(initial_attestors[0u8] != initial_attestors[1u8]);
-            assert_neq(initial_attestors[0u8], initial_attestors[1u8]);
-            assert_neq(initial_attestors[0u8], initial_attestors[2u8]);
-            assert_neq(initial_attestors[0u8], initial_attestors[3u8]);
-            assert_neq(initial_attestors[0u8], initial_attestors[4u8]);
-            unique_attestors += 1u8;
-        }
-
-        if (initial_attestors[1u8] != ZERO_ADDRESS) {
-            assert_neq(initial_attestors[1u8], initial_attestors[2u8]);
-            assert_neq(initial_attestors[1u8], initial_attestors[3u8]);
-            assert_neq(initial_attestors[1u8], initial_attestors[4u8]);
-            unique_attestors += 1u8;
-        }
-
-        if (initial_attestors[2u8] != ZERO_ADDRESS) {
-            assert_neq(initial_attestors[2u8], initial_attestors[3u8]);
-            assert_neq(initial_attestors[2u8], initial_attestors[4u8]);
-            unique_attestors += 1u8;
-        }
-
-        if (initial_attestors[3u8] != ZERO_ADDRESS) {
-            assert_neq(initial_attestors[3u8], initial_attestors[4u8]);
-            unique_attestors += 1u8;
-        }
-
-        if (initial_attestors[4u8] != ZERO_ADDRESS) {
-            unique_attestors += 1u8;
-        }
+        let unique_attestors: u8 = get_valid_unique_address_count(initial_attestors);
 
         // Sanity check for threshold
         assert(threshold >= 1u8 && threshold <= unique_attestors );
@@ -677,40 +645,44 @@ program token_bridge_v0002.aleo {
         return count;
     }
 
+    // Validates that the addresses are unique except for ZERO_ADDRESS
+    // Returs the count of the unique addresses
+    inline get_valid_unique_address_count(addresses: [address; 5]) -> u8 {
+        let unique_addresses: u8 = 0u8;
+        if (addresses[0u8] != ZERO_ADDRESS) {
+            assert_neq(addresses[0u8], addresses[1u8]);
+            assert_neq(addresses[0u8], addresses[2u8]);
+            assert_neq(addresses[0u8], addresses[3u8]);
+            assert_neq(addresses[0u8], addresses[4u8]);
+            unique_addresses += 1u8;
+        }
+
+        if (addresses[1u8] != ZERO_ADDRESS) {
+            assert_neq(addresses[1u8], addresses[2u8]);
+            assert_neq(addresses[1u8], addresses[3u8]);
+            assert_neq(addresses[1u8], addresses[4u8]);
+            unique_addresses += 1u8;
+        }
+
+        if (addresses[2u8] != ZERO_ADDRESS) {
+            assert_neq(addresses[2u8], addresses[3u8]);
+            assert_neq(addresses[2u8], addresses[4u8]);
+            unique_addresses += 1u8;
+        }
+
+        if (addresses[3u8] != ZERO_ADDRESS) {
+            assert_neq(addresses[3u8], addresses[4u8]);
+            unique_addresses += 1u8;
+        }
+
+        if (addresses[4u8] != ZERO_ADDRESS) {
+            unique_addresses += 1u8;
+        }
+        return unique_addresses;
+    }
+
     function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (bool, u8) {
-        // Assert all signers are different
-        let unique_signers: u8 = 0u8;
-        if (signers[0u8] != ZERO_ADDRESS) {
-            assert(signers[0u8] != signers[1u8]);
-            assert_neq(signers[0u8], signers[1u8]);
-            assert_neq(signers[0u8], signers[2u8]);
-            assert_neq(signers[0u8], signers[3u8]);
-            assert_neq(signers[0u8], signers[4u8]);
-            unique_signers += 1u8;
-        }
-
-        if (signers[1u8] != ZERO_ADDRESS) {
-            assert_neq(signers[1u8], signers[2u8]);
-            assert_neq(signers[1u8], signers[3u8]);
-            assert_neq(signers[1u8], signers[4u8]);
-            unique_signers += 1u8;
-        }
-
-        if (signers[2u8] != ZERO_ADDRESS) {
-            assert_neq(signers[2u8], signers[3u8]);
-            assert_neq(signers[2u8], signers[4u8]);
-            unique_signers += 1u8;
-        }
-
-        if (signers[3u8] != ZERO_ADDRESS) {
-            assert_neq(signers[3u8], signers[4u8]);
-            unique_signers += 1u8;
-        }
-
-        if (signers[4u8] != ZERO_ADDRESS) {
-            unique_signers += 1u8;
-        }
-
+        let unique_signers: u8 = get_valid_unique_address_count(signers);
         let yay_count: u8 = 0u8;
         let nay_count: u8 = 0u8;
 
