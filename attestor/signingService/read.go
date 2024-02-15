@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"golang.org/x/term"
 )
 
 func readInputs() error {
@@ -34,16 +36,29 @@ func readInputsForKeyEncryption() error {
 	}
 
 	for {
-		fmt.Println("Input password")
-		_, err = fmt.Scanln(&keyPassword)
+		// read password without echoing in the terminal
+		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 		if err != nil {
 			return err
 		}
-		fmt.Println("Confirm password")
-		_, err = fmt.Scanln(&confirmPassword)
+
+		fmt.Print("\nInput password:: ")
+		password, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			return err
 		}
+		term.Restore(int(os.Stdin.Fd()), oldState)
+
+		keyPassword = string(password)
+
+		fmt.Print("\nConfirm password:: ")
+		password, err = term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return err
+		}
+		term.Restore(int(os.Stdin.Fd()), oldState)
+
+		confirmPassword = string(password)
 
 		if keyPassword != confirmPassword {
 			fmt.Println("password mismatched. retry")
@@ -51,6 +66,6 @@ func readInputsForKeyEncryption() error {
 		}
 		break
 	}
-
-	return nil 
+	fmt.Println()
+	return nil
 }

@@ -53,7 +53,7 @@ func EncryptPrivateKey(privateKey, password string) {
 	fmt.Println("************************************************")
 	fmt.Println("WARNING!!!! keep the decrypt key and nonce safe")
 	fmt.Println("************************************************")
-	fmt.Printf("decryptKey:         %x\n", passwordByte)
+	fmt.Printf("decryptionKey:      %x\n", passwordByte)
 	fmt.Printf("nonce:              %x\n", nonce)
-	fmt.Printf("ciphertext:         %x\n", ciphertext)
+	fmt.Printf("encrypted key:      %x\n", ciphertext)
 }
