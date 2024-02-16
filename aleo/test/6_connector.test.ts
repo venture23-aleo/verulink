@@ -15,7 +15,7 @@ import {
   usdcContractAddr,
 } from "./mockData";
 import { Address, PrivateKey } from "@aleohq/sdk";
-import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, BRIDGE_VERSION, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX } from "../utils/constants";
+import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, BRIDGE_VERSION, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
 import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import { hashStruct } from "../utils/hash";
@@ -211,19 +211,36 @@ describe("Token Connector", () => {
       },
       TIMEOUT
     );
+
+    test(
+      "Token Service: Token Unpause",
+      async () => {
+        const isPaused = (await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
+        if (isPaused) {
+          const [unpauseTx] = await tokenService.unpause_token_ts(wusdcToken.address());
+          await bridge.wait(unpauseTx);
+          expect(await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)).toBe(TOKEN_UNPAUSED_VALUE);
+        }
+      },
+      TIMEOUT
+    );
   });
 
   describe("Happy Path", () => {
 
     test("Ensure proper setup", async () => {
-      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(admin);
-      expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(admin);
-      expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(wusdcConnector.address());
-      expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(wusdcConnector.address());
       expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
       expect(await bridge.supported_chains(ethChainId)).toBe(true);
       expect(await bridge.supported_services(tokenService.address())).toBe(true);
+      expect(await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)).toBe(1);
+      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(admin);
+
       expect(await tokenService.token_connectors(wusdcToken.address())).toBe(wusdcConnector.address());
+      expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(admin);
+      expect(await tokenService.token_status(wusdcToken.address())).toBe(TOKEN_UNPAUSED_VALUE);
+
+      expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(wusdcConnector.address());
+      expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(wusdcConnector.address());
     });
 
     test(
@@ -233,8 +250,15 @@ describe("Token Connector", () => {
         const packet = createPacket(aleoUser1, amount);
         const initialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const initialSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
-        const signature = signPacket(packet, true, bridge.config.privateKey);
 
+        const packetId: PacketId = {
+          chain_id: packet.source.chain_id,
+          sequence: packet.sequence
+        }
+        expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+        expect(await bridge.attestors(attestor)).toBe(true);
+
+        const signature = signPacket(packet, true, bridge.config.privateKey);
         const signers = [
           Address.from_private_key(
             PrivateKey.from_string(bridge.config.privateKey)
@@ -247,6 +271,7 @@ describe("Token Connector", () => {
 
         const signs = [signature, signature, signature, signature, signature];
 
+        wusdcConnector.connect(attestor);
         const [tx] = await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
           aleoUser1, // receiver
