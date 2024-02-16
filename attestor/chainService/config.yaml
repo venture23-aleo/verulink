@@ -19,7 +19,7 @@ chains:
   wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
   bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
   node_url: https://rpc.sepolia.org
-  start_height: 5270200
+  start_height: 5287968
   wait_dur: 2s
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   retry_packet_wait_dur: 1m
