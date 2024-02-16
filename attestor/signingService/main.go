@@ -47,6 +47,8 @@ func main() {
 		return
 	}
 
+	// key verification
+
 	m, err := config.LoadKeys(keyPath)
 	for chainName, cfg := range m {
 		switch chainName {
