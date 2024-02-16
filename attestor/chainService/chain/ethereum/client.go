@@ -221,12 +221,14 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 		endHeight := cl.blockHeightPriorWaitDur(ctx)
 
 		if endHeight < startHeight {
-			time.Sleep(avgBlockGenDur)
+			diff := startHeight - endHeight
+			time.Sleep((time.Duration(diff) * avgBlockGenDur))
 			continue
 		} else if endHeight > startHeight+defaultHeightDifferenceForFilterLogs {
 			endHeight = startHeight + defaultHeightDifferenceForFilterLogs
 		}
 
+		// todo: add context timeout and also change height range if it timeouts.
 		pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 		if err != nil {
 			logger.GetLogger().Error("Filter packet log error",
