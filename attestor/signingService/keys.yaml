@@ -1,0 +1,7 @@
+chain:
+  ethereum:
+    public_key: Publickey
+    private_key: privateKey
+  aleo:
+    public_key: PublicKey
+    private_key: PrivateKey

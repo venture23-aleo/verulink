@@ -2,12 +2,9 @@ package aleo
 
 import (
 	"context"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/sha256"
-	"encoding/hex"
-	"os"
 	"os/exec"
+
+	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
 )
 
 const (
@@ -28,49 +25,18 @@ func sign(s string) (string, error) {
 	return string(signature), nil
 }
 
-func SetUpPrivateKey(keyPath, decrpytKeyString string, nonceStr string) error {
-	b, err := os.ReadFile(keyPath)
-	if err != nil {
-		return err
-	}
-	ciphertext := string(b)
-
-	keyBt, err := hex.DecodeString(decrpytKeyString)
+func SetUpPrivateKey(keyPair *config.KeyPair) error {
+	err := validateAleoPrivateKey(keyPair.PrivateKey, keyPair.PublicKey)
 	if err != nil {
 		return err
 	}
 
-	h := sha256.New()
-	h.Write(keyBt)
+	sKey = keyPair.PrivateKey
+	return nil
+}
 
-	key := h.Sum(nil)
+func validateAleoPrivateKey(privateKey, publicKey string) error {
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return err
-	}
-
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return err
-	}
-
-	nonceBt, err := hex.DecodeString(nonceStr)
-	if err != nil {
-		return err
-	}
-
-	cipherTextBt, err := hex.DecodeString(ciphertext)
-	if err != nil {
-		return err
-	}
-
-	plaintext, err := aesgcm.Open(nil, nonceBt, cipherTextBt, nil)
-	if err != nil {
-		return err
-	}
-
-	sKey = string(plaintext)
 	return nil
 }
 

@@ -2,11 +2,10 @@ package ethereum
 
 import (
 	"crypto/ecdsa"
-	"os"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
 )
 
 var pKey *ecdsa.PrivateKey
@@ -21,17 +20,20 @@ func sign(hashString string) (string, error) {
 	return "0x" + common.Bytes2Hex(b), nil
 }
 
-func SetUpPrivateKey(keyPath, decryptKey string) error {
-	b, err := os.ReadFile(keyPath)
+func SetUpPrivateKey(keyPair *config.KeyPair) error {
+	err := validateKey(keyPair.PrivateKey, keyPair.PublicKey)
 	if err != nil {
 		return err
 	}
 
-	ks, err := keystore.DecryptKey(b, decryptKey)
+	privateKey, err := crypto.HexToECDSA(keyPair.PrivateKey)
 	if err != nil {
 		return err
 	}
-	pKey = ks.PrivateKey
+	pKey = privateKey
 	return nil
+}
 
+func validateKey(privateKey, publicKey string) error {
+	return nil
 }

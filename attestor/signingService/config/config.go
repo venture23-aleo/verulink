@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"math/big"
 	"os"
 
@@ -41,4 +42,29 @@ func GetChains() []ChainConfig {
 
 func GetUsernamePassword() (string, string) {
 	return cfg.Cred.Username, cfg.Cred.Password
+}
+
+/***********************************Keys***********************************************/
+
+type KeyConfig struct {
+	ChainKeys map[string]*KeyPair `yaml:"chain"`
+}
+
+type KeyPair struct {
+	PublicKey  string `yaml:"public_key"`
+	PrivateKey string `yaml:"private_key"`
+}
+
+func LoadKeys(keyPath string) (map[string]*KeyPair, error) {
+	b, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, err
+	}
+	keyCfg := new(KeyConfig)
+	err = json.Unmarshal(b, keyCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return keyCfg.ChainKeys, nil
 }
