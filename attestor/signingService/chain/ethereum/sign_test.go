@@ -1,7 +1,6 @@
 package ethereum
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -22,14 +21,10 @@ func TestValidateKeys(t *testing.T) {
 	privKey := crypto.FromECDSA(pvtKey.PrivateKey)
 
 	privateKeyString := hexutil.Encode(privKey)
-	
-	fmt.Println(privateKeyString)
-
-
 
 	err = SetUpPrivateKey(&config.KeyPair{
-		PrivateKey: "0xecd31a379af9c9c0049c82e918983fc35955d5b799cd473b9b55103847d06331",
-		PublicKey: "0x02de27c3f07f4f66a8cfb1ade766a4052f3c9b55",
+		PrivateKey: privateKeyString,
+		PublicKey:  "0x02de27c3f07f4f66a8cfb1ade766a4052f3c9b55",
 	})
 	assert.NoError(t, err)
 }
