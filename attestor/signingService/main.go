@@ -61,7 +61,7 @@ func main() {
 		}
 
 		if err != nil {
-			return
+			panic(err)
 		}
 	}
 

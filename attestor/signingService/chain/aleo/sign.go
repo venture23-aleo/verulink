@@ -2,13 +2,15 @@ package aleo
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
 )
 
 const (
-	signCmd = "sign"
+	signCmd    = "sign"
+	deriveAddr = "derive-addr"
 )
 
 var sKey string
@@ -36,7 +38,16 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 }
 
 func validateAleoPrivateKey(privateKey, publicKey string) error {
-
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cmd := exec.CommandContext(ctx, command, deriveAddr, privateKey)
+	addrBt, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	if publicKey != string(addrBt) {
+		return fmt.Errorf("supplied private key couldnot derive supplied public key")
+	}
 	return nil
 }
 
