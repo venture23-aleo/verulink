@@ -9,7 +9,7 @@ services:
     build: ./chainService
     configs:
       - source: chainService_config
-        target: config.yaml
+        target: /configs/config.yaml
     volumes:
       - type: volume
         source: db-path
@@ -27,7 +27,15 @@ services:
     build: ./signingService
     configs:
       - source: signingService_config
-        target: config.yaml
+        target: /configs/config.yaml
+    ports:
+      - 6579: 6579
+
+# todo: add collector service image
+  collectorService:
+    build: "image"
+    ports:
+      - 8080: 8080
 
 configs:
   chainService_config:
