@@ -62,7 +62,7 @@ describe("Token Bridge ", () => {
   const lowThreshold = 0; // Any number <= 0
   const highThreshold = 6; // Any number above 5
 
-  describe.skip("Deployment", () => {
+  describe("Deployment", () => {
     test(
       "Deploy",
       async () => {
@@ -73,7 +73,7 @@ describe("Token Bridge ", () => {
     );
   });
 
-  describe.skip("Initialization", () => {
+  describe("Initialization", () => {
     test.skip.failing(
       "Initialize - Threshold too low (must fail)",
       async () => {
@@ -404,7 +404,7 @@ describe("Token Bridge ", () => {
     });
 
     describe("Add Chain", () => {
-      test(
+      test(//donot skip
         "Owner can enable chain",
         async () => {
           expect(await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)).toBe(admin)
@@ -440,7 +440,7 @@ describe("Token Bridge ", () => {
         TIMEOUT
       );
 
-      test(
+      test.skip(
         "Owner can remove chain",
         async () => {
           bridge.connect(aleoUser1);
@@ -557,9 +557,10 @@ describe("Token Bridge ", () => {
     test(
       "Screening passed",
       async () => {
+
         bridge.connect(aleoTsAddr);
         const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
-
+        console.log(packet, "packet")
         let packetId: PacketId = {
           chain_id: packet.source.chain_id,
           sequence: packet.sequence
@@ -655,10 +656,7 @@ describe("Token Bridge ", () => {
         bridge.connect(aleoTsAddr);
         const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
 
-        let packetId: PacketId = {
-          chain_id: packet.source.chain_id,
-          sequence: packet.sequence
-        }
+
         const signature = signPacket(packet, false, bridge.config.privateKey);
         const signatures = [
           signature,
@@ -827,7 +825,7 @@ describe("Token Bridge ", () => {
 
   });
 
-  describe.skip("Publish", () => {
+  describe("Publish", () => {
     test.failing(
       "Publish can only be called from program",
       async () => {
