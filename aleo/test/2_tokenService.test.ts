@@ -167,7 +167,7 @@ describe("Token Service", () => {
       expect(await tokenService.token_status(wusdcToken.address())).toBe(false);
     }, TIMEOUT)
 
-    test.skip.failing("Initialize (Second try) - Expected parameters (must fail)", async () => {
+    test.failing("Initialize (Second try) - Expected parameters (must fail)", async () => {
       const ownerAddr = await tokenService.owner_TS(true, '');
       if (ownerAddr.length > 0) {
         const [initializeTx] = await tokenService.initialize_ts(aleoUser1);
@@ -181,39 +181,9 @@ describe("Token Service", () => {
 
   })
 
-  describe.skip('Transfer/Receive', () => {
-    test.skip.failing("Transfer Token From Aleo To Ethereum (must fail): Only called from connector program", async () => {
-      await tokenService.token_send(
-        wusdcToken.address(), // token
-        aleoUser1,
-        evm2AleoArr(ethUser), // receiver
-        BigInt(100), // amount
-        ethChainId, // originChainId
-        evm2AleoArr(usdcContractAddr), // originTokenAddress
-        evm2AleoArr(ethTsContractAddr) // origin token service address
-      );
-    });
-
-    // test.failing("Receive Token From Ethereum To Aleo", async () => {
-    //   await tokenService.token_receive(
-    //     ethChainId, //source chain id
-    //     evm2AleoArr(ethTsContractAddr), // source token service address
-    //     evm2AleoArr(usdcContractAddr), // originTokenAddress
-    //     wusdcTokenAddr,
-    //     evm2AleoArr(ethUser), // sender
-    //     aleoUser1, // receiver
-    //     BigInt(100), // amount
-    //     BigInt(1), // sequence
-    //     BigInt(1), // height
-    //     signers,
-    //     signs
-    //   );
-    // });
-  })
-
   describe("Governance Tests", () => {
 
-    test.skip.failing("should not add token by non-admin", async () => {
+    test.failing("should not add token by non-admin", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.add_token_ts(
         wusdcToken.address(),
@@ -228,7 +198,7 @@ describe("Token Service", () => {
     }, TIMEOUT);
 
 
-    test.skip.failing("should not Update minimum transfer by non-admin", async () => {
+    test.failing("should not Update minimum transfer by non-admin", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.update_min_transfer_ts(
         wusdcToken.address(),
@@ -238,7 +208,7 @@ describe("Token Service", () => {
 
     }, TIMEOUT);
 
-    test.skip("should Update minimum transfer", async () => {
+    test("should Update minimum transfer", async () => {
       tokenService.connect(aleoUser1);
       const [tx] = await tokenService.update_min_transfer_ts(
         wusdcToken.address(),
@@ -250,7 +220,7 @@ describe("Token Service", () => {
       );
     }, TIMEOUT);
 
-    test.skip.failing("should not Update maximum transfer by non-admin", async () => {
+    test.failing("should not Update maximum transfer by non-admin", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.update_max_transfer_ts(
         wusdcToken.address(),
@@ -259,7 +229,7 @@ describe("Token Service", () => {
       await tokenService.wait(tx);
     }, TIMEOUT);
 
-    test.skip("should Update maximum transfer", async () => {
+    test("should Update maximum transfer by admin", async () => {
       tokenService.connect(aleoUser1);
       const [tx] = await tokenService.update_max_transfer_ts(
         wusdcToken.address(),
@@ -271,7 +241,7 @@ describe("Token Service", () => {
       );
     }, TIMEOUT);
 
-    test.skip.failing("should not Update withdrawl by non-admin", async () => {
+    test.failing("should not Update withdrawl by non-admin", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.update_withdrawal_limit(
         wusdcToken.address(),
@@ -282,7 +252,7 @@ describe("Token Service", () => {
       await tokenService.wait(tx);
     }, TIMEOUT);
 
-    test.skip("should Update withdrawl", async () => {
+    test("should Update withdrawl by admin", async () => {
       tokenService.connect(aleoUser1);
       const [tx] = await tokenService.update_withdrawal_limit(
         wusdcToken.address(),
@@ -301,7 +271,7 @@ describe("Token Service", () => {
       ).toStrictEqual(new_outgoing_percentage);
     }, TIMEOUT);
 
-    test.skip.failing("should not remove token by non-admin", async () => {
+    test.failing("should not remove token by non-admin", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.remove_token_ts(wusdcToken.address());
       await tokenService.wait(tx);
@@ -319,7 +289,7 @@ describe("Token Service", () => {
 
     }, TIMEOUT);
 
-    test.skip.failing("should not Transfer Ownership by non-admin", async () => {
+    test.failing("should not Transfer Ownership by non-admin", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.transfer_ownership_ts(
         aleoUser2
@@ -327,7 +297,7 @@ describe("Token Service", () => {
       await tokenService.wait(tx);
     }, TIMEOUT);
 
-    test.skip("should Transfer Ownership", async () => {
+    test("should Transfer Ownership", async () => {
       tokenService.connect(aleoUser1);
       const [tx] = await tokenService.transfer_ownership_ts(
         aleoUser2
@@ -337,7 +307,7 @@ describe("Token Service", () => {
     }, TIMEOUT);
 
 
-    test.skip.failing("should not Update token connector address by non token connector address", async () => {
+    test.failing("should not Update token connector address by non token connector address", async () => {
       tokenService.connect(aleoUser3);
       const [tx] = await tokenService.update_connector_ts(
         wusdcToken.address(),
@@ -409,7 +379,7 @@ describe("Token Service", () => {
 
 
     // TEST: Remove the assert logic from the transition and finalize for test
-    test.skip("token send", async () => {
+    test("token send", async () => {
       tokenService.connect(aleoUser1);
       //add token required for token send, with token connector as aleoUser1
       //Setup for token send

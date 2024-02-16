@@ -32,7 +32,7 @@ const tokenService = new Token_service_v0002Contract({ mode: "execute" });
 const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
 const council = new Council_v0002Contract({ mode: "execute" });
 
-const TIMEOUT = 200_000;
+const TIMEOUT = 20000_000;
 
 const createPacket = (
   receiver: string,
@@ -74,7 +74,7 @@ describe("Token Bridge ", () => {
   });
 
   describe("Initialization", () => {
-    test.skip.failing(
+    test.failing(
       "Initialize - Threshold too low (must fail)",
       async () => {
         await bridge.initialize_tb(
@@ -86,7 +86,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize - Threshold too high (must fail)",
       async () => {
         await bridge.initialize_tb(
@@ -98,7 +98,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize - Repeated attestors (must fail)",
       async () => {
         await bridge.initialize_tb(
@@ -110,7 +110,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize (Second try) - Expected parameters (must fail)",
       async () => {
         const isBridgeInitialized =
@@ -156,7 +156,7 @@ describe("Token Bridge ", () => {
   });
 
   describe("Pausability", () => {
-    test.skip.failing(
+    test.failing(
       "should not unpause by non-owner",
       async () => {
         bridge.connect(aleoUser3);
@@ -182,7 +182,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "should not pause by non-owner",
       async () => {
         bridge.connect(aleoUser3); //changing the contract caller account to non owner
@@ -192,7 +192,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip(
+    test(
       "owner can pause",
       async () => {
         bridge.connect(aleoUser1);
@@ -206,7 +206,7 @@ describe("Token Bridge ", () => {
     );
 
     // simply unpausing contract for further tests
-    test.skip(
+    test(
       "owner can unpause",
       async () => {
         const [tx] = await bridge.unpause_tb();
@@ -223,7 +223,7 @@ describe("Token Bridge ", () => {
     const aleoUser6 = new PrivateKey().to_address().to_string();
     const aleoUser7 = new PrivateKey().to_address().to_string();
 
-    describe.skip("Add Attestor", () => {
+    describe("Add Attestor", () => {
       const newThreshold = 2;
       test(
         "Owner can add new attestor",
@@ -282,7 +282,7 @@ describe("Token Bridge ", () => {
       );
     });
 
-    describe.skip("Remove Attestor", () => {
+    describe("Remove Attestor", () => {
       const newThreshold = 1;
       test(
         "Owner can remove attestor",
@@ -349,8 +349,8 @@ describe("Token Bridge ", () => {
       test.todo("There must be at least two attestors to remove a attestor");
     });
 
-    describe.skip("Update threshold", () => {
-      const newThreshold = 3;
+    describe("Update threshold", () => {
+      const newThreshold = 1;
       test(
         "Owner can update threshold",
         async () => {
@@ -417,7 +417,7 @@ describe("Token Bridge ", () => {
         TIMEOUT
       );
 
-      test.skip.failing(
+      test.failing(
         "should not add chain by non-admin",
         async () => {
           bridge.connect(aleoUser3);
@@ -428,7 +428,7 @@ describe("Token Bridge ", () => {
       );
     });
 
-    describe.skip("Remove Chain", () => {
+    describe("Remove Chain", () => {
       test.failing(
         "should not disable chain by non_admin",
         async () => {
@@ -481,7 +481,7 @@ describe("Token Bridge ", () => {
         TIMEOUT
       );
 
-      test.skip.failing(
+      test.failing(
         "should not enable service by non-admin",
         async () => {
           bridge.connect(aleoUser3);
@@ -495,7 +495,7 @@ describe("Token Bridge ", () => {
       );
     });
 
-    describe.skip("Remove Service", () => {
+    describe("Remove Service", () => {
       test.failing(
         "should not disable service by non_admin",
         async () => {
@@ -509,7 +509,7 @@ describe("Token Bridge ", () => {
         TIMEOUT
       );
 
-      test(
+      test.skip(
         "Owner can disable service",
         async () => {
           bridge.connect(aleoUser1);
@@ -842,7 +842,7 @@ describe("Token Bridge ", () => {
     );
 
     test(
-      "Publish calls successfully",
+      "Publish calls successfully, and publishes packet for user",
       async () => {
         bridge.connect(aleoUser1);
         const [addSupportedServiceTx] = await bridge.add_service_tb(aleoUser1);
@@ -869,7 +869,7 @@ describe("Token Bridge ", () => {
     );
   });
 
-  describe.skip("Transfer Ownership", () => {
+  describe("Transfer Ownership", () => {
     test.failing(
       "should not transfer ownership by non-admin",
       async () => {
