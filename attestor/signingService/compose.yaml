@@ -1,0 +1,14 @@
+services:
+  signingservice:
+    build: .
+    configs:
+      - source: signingService_config
+        target: /configs/config.yaml
+    ports:
+      - 6579: 6579
+
+  signingService_config:
+    file: ./config.yaml
+volumes:
+  db-path:
+  log-path:

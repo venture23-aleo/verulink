@@ -1,0 +1,31 @@
+x-dbpath: &p # server as value holder for compose file
+  /db
+
+x-logpath: &l
+  /log
+
+services:
+  chainservice:
+    build: .
+    configs:
+      - source: chainService_config
+        target: /configs/config.yaml
+    volumes:
+      - type: volume
+        source: db-path
+        target: *p
+      - type: bind
+        source: ./log/
+        target: *l
+    environment:
+      DB_PATH: *p
+      LOG_PATH: *l
+      LOG_ENC: json
+      MODE: dev
+
+configs:
+  chainService_config:
+    file: ./config.yaml
+volumes:
+  db-path:
+  log-path:

@@ -16,10 +16,11 @@ RUN apt update && apt -y upgrade && apt install -y curl
 WORKDIR /app
 COPY --from=aleo /app/target/debug/ahs .
 COPY --from=signingservice /signingservice/signingservice .
-COPY ./config.yaml .
 #signing service looks up if `ahs` command is available
 ENV PATH="$PATH:/app"
 RUN export PATH
+# port in which signing service listens from and serves to the incoming requests
+EXPOSE 6579
 # signingservice expects user to provide input in its run time while
 # asking for decrypt key. It is recommended that attestor encrypt their
 # wallet credentials and provide decrypt key at runtime
