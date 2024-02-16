@@ -3,17 +3,24 @@ import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
 import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
 import { Council_v0003Contract } from "../artifacts/js/council_v0003";
 import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, BRIDGE_UNPAUSED_VALUE, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX } from "../utils/constants";
-import { PAUSABILITY_INDEX, THRESHOLD_INDEX, TOTAL_MEMBERS_INDEX, TOTAL_PROPOSALS_INDEX, ethChainId, newThreshold, new_chainId, normalThreshold } from "./mockData";
+import { PAUSABILITY_INDEX, THRESHOLD_INDEX, TOTAL_MEMBERS_INDEX, TOTAL_PROPOSALS_INDEX, ethChainId, maximum_trasnfer, minimum_transfer, newThreshold, new_chainId, normalThreshold, outgoing_percentage_in_time, threshold_no_limit } from "./mockData";
 import { hashStruct } from "../utils/hash";
-import { getAddMemberLeo, getRemoveMemberLeo, getTbAddAttestorLeo, getTbAddChainLeo, getTbAddServiceLeo, getTbPauseLeo, getTbRemoveAttestorLeo, getTbRemoveChainLeo, getTbRemoveServiceLeo, getTbUnpauseLeo, getUpdateThresholdLeo } from "../artifacts/js/js2leo/council_v0003";
+import { getAddMemberLeo, getRemoveMemberLeo, getTbAddAttestorLeo, getTbAddChainLeo, getTbAddServiceLeo, getTbPauseLeo, getTbRemoveAttestorLeo, getTbRemoveChainLeo, getTbRemoveServiceLeo, getTbUnpauseLeo, getTsAddTokenLeo, getTsRemoveTokenLeo, getTsUpdateMaxTransferLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo, getUpdateThresholdLeo } from "../artifacts/js/js2leo/council_v0003";
 import { signPacket, signProposal } from "../utils/sign";
-import { AddMember, RemoveMember, TbAddAttestor, TbAddAttestorLeo, TbAddChain, TbAddService, TbPause, TbRemoveAttestor, TbRemoveChain, TbRemoveService, TbUnpause, UpdateThreshold } from "../artifacts/js/types/council_v0003";
+import { AddMember, RemoveMember, TbAddAttestor, TbAddAttestorLeo, TbAddChain, TbAddService, TbPause, TbRemoveAttestor, TbRemoveChain, TbRemoveService, TbUnpause, TsAddToken, TsRemoveToken, TsUpdateMaxTransfer, TsUpdateMinTransfer, TsUpdateWithdrawalLimit, UpdateThreshold } from "../artifacts/js/types/council_v0003";
 import { getTbPause, getTbRemoveAttestor } from "../artifacts/js/leo2js/council_v0003";
+import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
+import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
+import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
 
 
 const council = new Council_v0003Contract({ mode: "execute" });
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
+const wudc_connector = new Wusdc_connector_v0002Contract({ mode: "execute" });
+const wudc_holding = new Wusdc_holding_v0002Contract({ mode: "execute" });
+const wudc_token = new Wusdc_token_v0002Contract({ mode: "execute" });
+
 
 const TIMEOUT = 300000_000;
 
@@ -611,7 +618,7 @@ describe("Council", () => {
 
     
 
-  describe.skip("Token Service", () => {
+  describe("Token Service", () => {
     test(
       "Initialize Token Service",
       async () => {
@@ -630,9 +637,271 @@ describe("Council", () => {
       expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(council.address());
     }, TIMEOUT);
 
+    describe("Add Token", () => {
+      const proposer = aleoUser1;
+      let proposalId = 0;
+      let enableTokenProposalHash = BigInt(0);
+
+      test("Propose", async () => {
+        proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        const tsSupportToken: TsAddToken = {
+          id: proposalId,
+          token_address: wudc_token.address(),
+          connector: wudc_connector.address(),
+          min_transfer: minimum_transfer,
+          max_transfer: maximum_trasnfer,
+          outgoing_percentage: 100_00,
+          time: 1,
+          max_no_cap: threshold_no_limit
+        };
+        enableTokenProposalHash = hashStruct(
+          getTsAddTokenLeo(tsSupportToken)
+        ); 
+        const [tx] = await council.propose(proposalId, enableTokenProposalHash);
+        await council.wait(tx);
+
+        const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        expect(upcomingProposalId).toBe(proposalId + 1);
+        expect(await council.proposals(proposalId)).toBe(enableTokenProposalHash);
+
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signature = signProposal(enableTokenProposalHash, council.config.privateKey);
+        const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signs = [signature, signature, signature, signature, signature];
+
+        expect(await council.proposal_executed(enableTokenProposalHash, false)).toBe(false);
+        const [tx] = await council.ts_add_token(
+          proposalId,
+          wudc_token.address(),
+          wudc_connector.address(),
+          minimum_transfer,
+          maximum_trasnfer,
+          100_00,
+          1,
+          threshold_no_limit,
+          signers, 
+          signs
+        );
+        await council.wait(tx);
+
+        expect(await council.proposal_executed(enableTokenProposalHash)).toBe(true);
+        expect(
+          await tokenService.token_withdrawal_limits(wudc_token.address())
+        ).toStrictEqual(outgoing_percentage_in_time);
+        expect(await tokenService.min_transfers(wudc_token.address())).toBe(
+          minimum_transfer
+        );
+        expect(await tokenService.max_transfers(wudc_token.address())).toBe(
+          maximum_trasnfer
+        );
+        expect(await tokenService.token_connectors(wudc_token.address())).toBe(
+          wudc_connector.address()
+        );
+      }, TIMEOUT);
+
+    });
 
 
-  });
+    describe("Update minimum transfer", () => {
+      let proposalId = 0;
+      let TsUpdateMinimumTransferHash = BigInt(0);
+
+      test("Propose", async () => {
+        proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        const TsUpdateMinimumTransfer: TsUpdateMinTransfer = {
+          id: proposalId,
+          token_address: wudc_token.address(),
+          min_transfer: BigInt(200),
+        };
+        TsUpdateMinimumTransferHash = hashStruct(
+          getTsUpdateMinTransferLeo(TsUpdateMinimumTransfer)
+        ); 
+        const [tx] = await council.propose(proposalId, TsUpdateMinimumTransferHash);
+        await council.wait(tx);
+
+        const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        expect(upcomingProposalId).toBe(proposalId + 1);
+        expect(await council.proposals(proposalId)).toBe(TsUpdateMinimumTransferHash);
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signature = signProposal(TsUpdateMinimumTransferHash, council.config.privateKey);
+        const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signs = [signature, signature, signature, signature, signature];
+
+        expect(await council.proposal_executed(TsUpdateMinimumTransferHash, false)).toBe(false);
+        const [tx] = await council.ts_update_min_transfer(
+          proposalId,
+          wudc_token.address(),
+          BigInt(200),
+          signers, 
+          signs
+        );
+        await council.wait(tx);
+        expect(await council.proposal_executed(TsUpdateMinimumTransferHash)).toBe(true);
+        expect(await tokenService.min_transfers(wudc_token.address())).toBe(
+          BigInt(200)
+        );
+      }, TIMEOUT);
+
+    });
+
+    describe("Update maximum transfer", () => {
+      let proposalId = 0;
+      let TsUpdateMaximumTransferHash = BigInt(0);
+
+      test("Propose", async () => {
+        proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        const TsUpdateMaximumTransfer: TsUpdateMaxTransfer = {
+          id: proposalId,
+          token_address: wudc_token.address(),
+          max_transfer: BigInt(20000000000),
+        };
+        TsUpdateMaximumTransferHash = hashStruct(
+          getTsUpdateMaxTransferLeo(TsUpdateMaximumTransfer)
+        ); 
+        const [tx] = await council.propose(proposalId, TsUpdateMaximumTransferHash);
+        await council.wait(tx);
+
+        const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        expect(upcomingProposalId).toBe(proposalId + 1);
+        expect(await council.proposals(proposalId)).toBe(TsUpdateMaximumTransferHash);
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signature = signProposal(TsUpdateMaximumTransferHash, council.config.privateKey);
+        const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signs = [signature, signature, signature, signature, signature];
+
+        expect(await council.proposal_executed(TsUpdateMaximumTransferHash, false)).toBe(false);
+        const [tx] = await council.ts_update_max_transfer(
+          proposalId,
+          wudc_token.address(),
+          BigInt(20000000000),
+          signers, 
+          signs
+        );
+        await council.wait(tx);
+        expect(await council.proposal_executed(TsUpdateMaximumTransferHash)).toBe(true);
+        expect(await tokenService.max_transfers(wudc_token.address())).toBe(
+          BigInt(20000000000)
+        );
+      }, TIMEOUT);
+
+    });
+
+    describe("Update Outgoing Percentage", () => {
+      let proposalId = 0;
+      let TsUpdateOutgoingHash = BigInt(0);
+
+      test("Propose", async () => {
+        proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        const TsUpdateOutgoing: TsUpdateWithdrawalLimit = {
+          id: proposalId,
+          token_address: wudc_token.address(),
+          percentage: 200,
+          duration: 1,
+          threshold_no_limit: BigInt(20000000000)
+        };
+        TsUpdateOutgoingHash = hashStruct(
+          getTsUpdateWithdrawalLimitLeo(TsUpdateOutgoing)
+        ); 
+        const [tx] = await council.propose(proposalId, TsUpdateOutgoingHash);
+        await council.wait(tx);
+
+        const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        expect(upcomingProposalId).toBe(proposalId + 1);
+        expect(await council.proposals(proposalId)).toBe(TsUpdateOutgoingHash);
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signature = signProposal(TsUpdateOutgoingHash, council.config.privateKey);
+        const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signs = [signature, signature, signature, signature, signature];
+
+        expect(await council.proposal_executed(TsUpdateOutgoingHash, false)).toBe(false);
+        const [tx] = await council.ts_update_outgoing_percentage(
+          proposalId,
+          wudc_token.address(),
+          200,
+          1,
+          BigInt(20000000000),
+          signers, 
+          signs
+        );
+        await council.wait(tx);
+        expect(await council.proposal_executed(TsUpdateOutgoingHash)).toBe(true);
+        const new_outgoing_percentage = {
+          percentage: 200,
+          duration: 1,
+          threshold_no_limit: BigInt(20000000000)
+        };
+        expect(
+          await tokenService.token_withdrawal_limits(wudc_token.address())
+        ).toStrictEqual(new_outgoing_percentage);
+      }, TIMEOUT);
+
+    });
+
+    describe("Remove Token", () => {
+      let proposalId = 0;
+      let RemoveTokenHash = BigInt(0);
+      let errMsg;
+
+      test("Propose", async () => {
+        proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        const RemoveToken: TsRemoveToken = {
+          id: proposalId,
+          token_address: wudc_token.address(),
+        };
+        RemoveTokenHash = hashStruct(
+          getTsRemoveTokenLeo(RemoveToken)
+        );
+        const [tx] = await council.propose(proposalId, RemoveTokenHash);
+        await council.wait(tx);
+
+        const upcomingProposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+        expect(upcomingProposalId).toBe(proposalId + 1);
+        expect(await council.proposals(proposalId)).toBe(RemoveTokenHash);
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signature = signProposal(RemoveTokenHash, council.config.privateKey);
+        const signers = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signs = [signature, signature, signature, signature, signature];
+
+        expect(await council.proposal_executed(RemoveTokenHash, false)).toBe(false);
+        const [tx] = await council.ts_remove_token(
+          proposalId,
+          wudc_token.address(),
+          signers, 
+          signs
+        );
+        await council.wait(tx);
+        expect(await council.proposal_executed(RemoveTokenHash)).toBe(true);
+        try {
+          await tokenService.token_connectors(wudc_token.address());
+        } catch (err) {
+          errMsg = false;
+        }
+        expect(errMsg).toBe(false);
+        try {
+          await tokenService.token_withdrawal_limits(wudc_token.address());
+        } catch (err) {
+          errMsg = false;
+        }
+        expect(errMsg).toBe(false);
+        try {
+          await tokenService.min_transfers(wudc_token.address());
+        } catch (err) {
+          errMsg = false;
+        }
+        expect(errMsg).toBe(false);
+      }, TIMEOUT);
+    });
 
 });
-  
+
+});

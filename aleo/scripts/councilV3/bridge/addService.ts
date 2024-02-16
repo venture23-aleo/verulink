@@ -44,7 +44,7 @@ export const proposeAddService = async (tokenService: string): Promise<number> =
 //////////////////////
 ///// Execute ////////
 //////////////////////
-export const execAddChain = async (proposalId: number, tokenService: string, signers: string[], signs: string[]) => {
+export const execAddService = async (proposalId: number, tokenService: string, signers: string[], signs: string[]) => {
 
     console.log(`👍 Proposing to add token service: ${tokenService}`)
     let isTokenServiceSupported = await bridge.supported_services(tokenService, false);

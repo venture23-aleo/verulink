@@ -44,7 +44,7 @@ export const proposeRemoveService = async (tokenService: string): Promise<number
 //////////////////////
 ///// Execute ////////
 //////////////////////
-export const execRemoveChain = async (proposalId: number, tokenService: string, signers: string[], signs: string[]) => {
+export const execRemoveService = async (proposalId: number, tokenService: string, signers: string[], signs: string[]) => {
 
     console.log(`👍 Proposing to remove token service: ${tokenService}`)
     let isTokenServiceSupported = await bridge.supported_services(tokenService, false);
