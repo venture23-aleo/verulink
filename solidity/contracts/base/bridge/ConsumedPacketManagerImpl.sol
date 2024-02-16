@@ -14,7 +14,7 @@ abstract contract ConsumedPacketManagerImpl {
 
     function isPacketConsumed(
         uint256 _sequence
-    ) public view returns (bool) {
+    ) public virtual view returns (bool) {
         return consumedPackets[_sequence] != bytes32(0);
     }
 
@@ -51,8 +51,8 @@ abstract contract ConsumedPacketManagerImpl {
 
     function _checkSignatures(bytes32 packetHash, bytes[] memory sigs, uint256 threshold) internal view returns (PacketLibrary.Vote) {
         address signer;
-        uint256 yeaVote;
-        uint256 nayVote;
+        uint256 yeas;
+        uint256 nays;
 
         uint8 v;
         bytes32 r;
@@ -63,11 +63,11 @@ abstract contract ConsumedPacketManagerImpl {
             (v,r,s) = _splitSignature(sigs[i]);
             signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.YEA);
             if(_validateAttestor(signer)) {
-                if(++yeaVote >= threshold) return PacketLibrary.Vote.YEA;
+                if(++yeas >= threshold) return PacketLibrary.Vote.YEA;
             }else {
                 signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
                 require(_validateAttestor(signer), "Unknown Signer");
-                if(++nayVote >= threshold) return PacketLibrary.Vote.NAY;
+                if(++nays >= threshold) return PacketLibrary.Vote.NAY;
             }
         }
         return PacketLibrary.Vote.NULL;
@@ -81,7 +81,7 @@ abstract contract ConsumedPacketManagerImpl {
         uint256 sequence,
         bytes[] memory sigs,
         uint256 threshold
-    ) internal returns (PacketLibrary.Vote _quorum) {
+    ) internal virtual returns (PacketLibrary.Vote _quorum) {
         require(
             !isPacketConsumed(
                 sequence
@@ -102,4 +102,11 @@ abstract contract ConsumedPacketManagerImpl {
 
         return _quorum;
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

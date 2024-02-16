@@ -3,6 +3,8 @@ import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 
+const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
+
 // Define the test suite
 describe('Holding', () => {
     let owner, other, Holding, holdingImpl, HoldingProxy, initializeData, proxiedV1, tokenService, USDCMock, usdcMock;
@@ -207,7 +209,7 @@ describe('Holding', () => {
         expect(await proxiedV1.unlocked(user, token)).to.be.equal(0);
 
         // Try to release token as zero address as parameter for token address and expect it to revert 
-        await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Token Address"); 
+        await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Address"); 
     });
 
     it('should not allow to release tokens if zero address is given', async () => {
@@ -225,7 +227,7 @@ describe('Holding', () => {
         await (await proxiedV1.unlock(user, token, amount)).wait();
 
         // Try to release token as zero address as parameter for token address and expect it to revert 
-        await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Token Address"); 
+        await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Address"); 
     });
 
     // Test for contract is paused and then tried to release
@@ -285,7 +287,7 @@ describe('Holding', () => {
     });
 
     // Test for holding contract is blacklisted before releasing
-    it('should not release in case of zero address user', async () => {
+    it('should not lock in case of zero address user', async () => {
         const user = ethers.constants.AddressZero;
         const token = usdcMock.address;
         const amount = 50;
@@ -293,19 +295,19 @@ describe('Holding', () => {
         await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
     
         // Lock tokens with the owner
-        await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
+        expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Zero Address");
     
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        // await (await proxiedV1.unlock(user, token, amount)).wait();
 
-        // Release tokens with the owner, should revert back
-        expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Zero Address");
+        // // Release tokens with the owner, should revert back
+        // expect(proxiedV1["release(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Zero Address");
     });
 
     // Test lockETH function
     it('should allow Token Service to lock ETH for a user', async () => {
         const amount = 100;
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         // Ensure the Token Service can lock ETH
         await (await proxiedV1.connect(tokenService)["lock(address)"](other.address, { value: 100 })).wait();
 
@@ -332,7 +334,7 @@ describe('Holding', () => {
 
     it('should revert if ETH transfer fails', async () => {
         const user = ethers.Wallet.createRandom().address;
-        const token = ethers.constants.AddressZero;
+        const token = ADDRESS_ONE;
         const amount = 100;
         // const randomAccount = ethers.Wallet.createRandom();
         // await proxiedV1.updateTokenService(randomAccount.address);
@@ -358,16 +360,16 @@ describe('Holding', () => {
 
     it('should emit Locked event after locking ETH for a user', async () => {
         const amount = 100;
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         // Ensure the Token Service can lock ETH
         expect(await proxiedV1.connect(tokenService)["lock(address)"](other.address, { value: 100 }))
             .to.emit(proxiedV1, 'Locked')
             .withArgs(other.address, tokenAddress, amount);
     });
 
-    it('should release ETH when token is address(0)', async () => {
+    it('should release ETH when token is address(1)', async () => {
         const user = ethers.Wallet.createRandom().address;
-        const token = ethers.constants.AddressZero;
+        const token = ADDRESS_ONE;
         const amount = 100;
 
         await (await proxiedV1.connect(tokenService)["lock(address)"](user, { value: amount })).wait();
@@ -379,9 +381,9 @@ describe('Holding', () => {
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(0);
     });
 
-    it('should not release ETH when token is address(0) and amount send is greater than balance', async () => {
+    it('should not release ETH when token is address(1) and amount send is greater than balance', async () => {
         const user = ethers.Wallet.createRandom().address;
-        const token = ethers.constants.AddressZero;
+        const token = ADDRESS_ONE;
         const amount = 100;
 
         await (await proxiedV1.connect(tokenService)["lock(address)"](user, { value: amount })).wait();
@@ -405,7 +407,7 @@ describe('Holding', () => {
         let proxiedHolding = Holding.attach(proxy.address);
 
         const user = ethers.Wallet.createRandom().address;
-        const token = ethers.constants.AddressZero;
+        const token = ADDRESS_ONE;
         const amount = 100;
 
         await (await proxiedHolding.connect(tokenService)["lock(address)"](user, { value: amount })).wait();

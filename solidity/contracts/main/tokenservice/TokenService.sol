@@ -19,6 +19,8 @@ contract TokenService is
     ReentrancyGuardUpgradeable,
     Upgradeable
 {
+    address immutable ETH_TOKEN = address(1);
+
     IBridge erc20Bridge;
     IBlackListService blackListService;
     Holding holding;
@@ -29,9 +31,9 @@ contract TokenService is
         uint256 _chainId,
         uint256 _destChainId,
         address _blackListService
-    ) public initializer {
-        // __Ownable_init_unchained();
-        __TokenSupport_init(_destChainId);
+    ) public virtual initializer {
+        __Ownable_init_unchained();
+        __TokenSupport_init_unchained(_destChainId);
         __Pausable_init_unchained();
         __ReentrancyGuard_init_unchained();
         erc20Bridge = IBridge(bridge);
@@ -42,22 +44,23 @@ contract TokenService is
         blackListService = IBlackListService(_blackListService);
     }
 
-    function _authorizeUpgrade(address) internal view override {
+    function _authorizeUpgrade(address) internal virtual view override {
         require(msg.sender == owner());
     }
 
-    function tokenType() public pure returns (string memory) {
+    function tokenType() public virtual pure returns (string memory) {
         return "ERC20";
     }
 
-    function setHolding(Holding _holding) external onlyOwner {
+    function setHolding(Holding _holding) external virtual onlyOwner {
         holding = _holding;
     }
 
-    function transferToVault(address token, uint256 amount) external onlyOwner nonReentrant {
+    function transferToVault(address token, uint256 amount) external virtual onlyOwner nonReentrant {
         require(isEnabledToken(token), "Token not supported");
-        address vault = address(supportedTokens[token].vault);
-        if(token == address(0)) {
+        address vault = supportedTokens[token].vault;
+        require(vault != address(0), "Vault Zero Address");
+        if(token == ETH_TOKEN) {
             (bool sent,) = vault.call{value: amount}("");
             require(sent, "ETH Transfer Failed");
         }else {
@@ -86,17 +89,17 @@ contract TokenService is
         packet.height = block.number;
     }
 
-    function transfer(string memory receiver) external whenNotPaused payable {
-        erc20Bridge.sendMessage(_packetify(address(0), msg.value, receiver));
+    function transfer(string memory receiver) external whenNotPaused virtual payable {
+        erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
-    function transfer(address tokenAddress, uint256 amount, string memory receiver) external whenNotPaused {
-        require(tokenAddress != address(0), "Only ERC20 Tokens");
+    function transfer(address tokenAddress, uint256 amount, string memory receiver) external virtual whenNotPaused {
+        require(tokenAddress != ETH_TOKEN, "Only ERC20 Tokens");
         require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
-    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external whenNotPaused nonReentrant {
+    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external virtual whenNotPaused nonReentrant {
         require(packet.destTokenService.addr == address(this),"Invalid Token Service");
         
         address receiver = packet.message.receiverAddress;
@@ -107,7 +110,7 @@ contract TokenService is
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, sigs);
 
         if(PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
-            if(tokenAddress == address(0)) {
+            if(tokenAddress == ETH_TOKEN) {
                 // eth lock
                 holding.lock{value:amount}(receiver);
             }else {
@@ -115,7 +118,7 @@ contract TokenService is
                 holding.lock(receiver, tokenAddress, amount);
             }
         }else if(quorum == PacketLibrary.Vote.YEA){
-            if(tokenAddress == address(0)) {
+            if(tokenAddress == ETH_TOKEN) {
                 // eth transfer
                 (bool sent,) = receiver.call{value: amount}("");
                 require(sent, "ETH Withdraw Failed");

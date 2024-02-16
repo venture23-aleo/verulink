@@ -13,6 +13,9 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     event Unlocked(address account, address token, uint256 amount);
     event Released(address account, address token, uint256 amount);
 
+    address private immutable ZERO_ADDRESS = address(0);
+    address private immutable ETH_TOKEN = address(1);
+
     // user address => token address => amount
     mapping(address => mapping(address => uint256)) public locked;
     mapping(address => mapping(address => uint256)) public unlocked;
@@ -29,18 +32,20 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     }
 
     function addTokenService(address _tokenService) external onlyOwner {
-        require(_tokenService != address(0), "Zero Address");
+        require(_tokenService != ZERO_ADDRESS, "Zero Address");
         require(!supportedTokenServices[_tokenService], "Known TokenService");
         supportedTokenServices[_tokenService] = true;
     }
 
     function removeTokenService(address _tokenService) external onlyOwner {
-        require(_tokenService != address(0), "Zero Address");
+        require(_tokenService != ZERO_ADDRESS, "Zero Address");
         require(supportedTokenServices[_tokenService], "UnKnown TokenService");
         delete supportedTokenServices[_tokenService];
     }
 
     function _lock(address user, address token, uint256 amount) internal {
+        require(user != ZERO_ADDRESS, "Zero Address");
+        require(user != ETH_TOKEN, "ETH Token Address");
         require(
             supportedTokenServices[msg.sender],
             "Unknown TokenService"
@@ -49,21 +54,21 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
         emit Locked(user, token, amount);
     }
 
-    function lock(address user, address token, uint256 amount) external {
-        require(token != address(0), "Zero Address");
+    function lock(address user, address token, uint256 amount) external virtual {
+        require(token != ZERO_ADDRESS, "Zero Address");
         _lock(user,token,amount);
     }
 
-    function lock(address user) external payable {
+    function lock(address user) external virtual payable {
         require(msg.value > 0, "Requires ETH Transfer");
-        _lock(user, address(0), msg.value);
+        _lock(user, ETH_TOKEN, msg.value);
     }
 
     function unlock(
         address user,
         address token,
         uint256 amount
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         require(locked[user][token] >= amount, "Insufficient amount");
         unchecked {
             locked[user][token] -= amount;
@@ -73,7 +78,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     }
 
     function _release(address user, address token, uint256 amount) internal whenNotPaused nonReentrant {
-        require(user != address(0), "Zero Address");
+        require(user != ZERO_ADDRESS, "Zero Address");
         require(unlocked[user][token] >= amount, "Insufficient amount");
         unchecked {
             unlocked[user][token] -= amount;
@@ -81,15 +86,22 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
         emit Released(user, token, amount);
     }
 
-    function release(address user, address token, uint256 amount) external {
-        require(token != address(0), "Zero Token Address");
+    function release(address user, address token, uint256 amount) external virtual {
+        require(token != address(0), "Zero Address");
         _release(user, token, amount);
         require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
     }
 
-    function release(address user, uint256 amount) external {
-        _release(user, address(0), amount);
+    function release(address user, uint256 amount) external virtual {
+        _release(user, ETH_TOKEN, amount);
         (bool sent,) = user.call{value: amount}("");
         require(sent, "ETH Release Failed");
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-console.log("ethers = ", ethers.version);
+// console.log("ethers = ", ethers.version);
 // Define the test suite
 describe('Erc20VaultService', () => {
     let owner, newOwner,usdcMock, other,Erc20VaultServiceImpl, erc20VaultServiceInstance, Proxy, initializeData, Erc20VaultServiceProxy;

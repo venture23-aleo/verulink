@@ -17,14 +17,21 @@ contract Pausable is PausableUpgradeable, OwnableUpgradeable {
   /**
    * @dev called by the owner to pause, triggers stopped state
    */
-  function pause() onlyOwner whenNotPaused public {
+  function pause() virtual onlyOwner whenNotPaused public {
     _pause();
   }
 
   /**
    * @dev called by the owner to unpause, returns to normal state
    */
-  function unpause() onlyOwner whenPaused public {
+  function unpause() virtual onlyOwner whenPaused public {
     _unpause();
   }
+
+  /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

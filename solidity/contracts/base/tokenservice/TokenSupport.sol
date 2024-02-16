@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {IVaultService} from "../../common/interface/tokenservice/IVaultService.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract TokenSupport is OwnableUpgradeable {
+contract TokenSupport is OwnableUpgradeable {
+
+    event VaultUpdated(address token, address oldVault, address newVault);
+
     uint256 public destChainId;
+    address private immutable ZERO_ADDRESS = address(0);
 
     struct Token {
         address tokenAddress;
-        IVaultService vault;
+        address vault;
         string destTokenAddress;
         string destTokenService;
         uint256 minValue;
@@ -26,31 +29,30 @@ abstract contract TokenSupport is OwnableUpgradeable {
     event TokenMinValueUpdated(address token, uint256 destChainId, uint256 oldMinValue, uint256 newMinValue);
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
-    function __TokenSupport_init(uint256 _destChainId) internal onlyInitializing {
+    function TokenSupport_init(uint256 _destChainId) public initializer {
         __Ownable_init_unchained();
-        destChainId = _destChainId;
-        // __TokenSupport_init_unchained(_destChainId);
+        __TokenSupport_init_unchained(_destChainId);
     }
 
-    // function __TokenSupport_init_unchained(uint256 _destChainId) internal onlyInitializing {
-    //     destChainId = _destChainId;
-    // }
+    function __TokenSupport_init_unchained(uint256 _destChainId) internal onlyInitializing {
+        destChainId = _destChainId;
+    }
 
     function isSupportedToken(
         address token
-    ) public view returns (bool) {
+    ) public virtual view returns (bool) {
         return
-            address(supportedTokens[token].vault) != address(0);
+            address(supportedTokens[token].tokenAddress) != ZERO_ADDRESS;
     }
 
     function isEnabledToken(
         address token
-    ) public view returns (bool) {
+    ) public virtual view returns (bool) {
         return
-            supportedTokens[token].enabled && isSupportedToken(token);
+            isSupportedToken(token) && supportedTokens[token].enabled;
     }
 
-    function isAmountInRange(address tokenAddress, uint256 amount) public view returns (bool) {
+    function isAmountInRange(address tokenAddress, uint256 amount) public virtual view returns (bool) {
         Token memory token = supportedTokens[tokenAddress];
         return amount >= token.minValue && amount <= token.maxValue;
     }
@@ -64,6 +66,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
         uint256 min,
         uint256 max
     ) internal {
+        require(tokenAddress != ZERO_ADDRESS, "Zero Address");
         require(
             !isSupportedToken(tokenAddress),
             "Token already supported"
@@ -71,7 +74,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
         require(_destChainId == destChainId, "Target Chain Mismatch");
         Token memory token = Token(
             tokenAddress,
-            IVaultService(vault),
+            vault,
             destTokenAddress,
             destTokenService,
             min,
@@ -94,10 +97,16 @@ abstract contract TokenSupport is OwnableUpgradeable {
         _addToken(tokenAddress, _destChainId, vault, destTokenAddress, destTokenService, min, max);
     }
 
+    function updateVault(address token, address _vault) external virtual onlyOwner {
+        address vault = address(supportedTokens[token].vault);
+        emit VaultUpdated(token, vault, _vault);
+        supportedTokens[token].vault = _vault;
+    }
+
     function removeToken(
         address tokenAddress,
         uint256 _destChainId
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         require(
             isSupportedToken(tokenAddress),
             "Token not supported"
@@ -110,7 +119,8 @@ abstract contract TokenSupport is OwnableUpgradeable {
     function enable(
         address tokenAddress,
         uint256 _destChainId
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
+        require(tokenAddress != ZERO_ADDRESS, "Zero Address");
         require(
             !isEnabledToken(tokenAddress),
             "Token not enabled"
@@ -123,22 +133,29 @@ abstract contract TokenSupport is OwnableUpgradeable {
     function disable(
         address tokenAddress,
         uint256 _destChainId
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         require(isEnabledToken(tokenAddress), "Token not enabled");
         require(_destChainId == destChainId, "Target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = false;
         emit TokenDisabled(tokenAddress, _destChainId);
     }
 
-    function updateMinValue(address tokenAddress, uint256 minValue) external onlyOwner {
+    function updateMinValue(address tokenAddress, uint256 minValue) external virtual onlyOwner {
         require(isSupportedToken(tokenAddress), "Token not supported");
         emit TokenMinValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].minValue, minValue);
         supportedTokens[tokenAddress].minValue = minValue;
     }
 
-    function updateMaxValue(address tokenAddress, uint256 maxValue) external onlyOwner {
+    function updateMaxValue(address tokenAddress, uint256 maxValue) external virtual onlyOwner {
         require(isSupportedToken(tokenAddress), "Token not supported");
         emit TokenMaxValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].maxValue, maxValue);
         supportedTokens[tokenAddress].maxValue = maxValue;
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

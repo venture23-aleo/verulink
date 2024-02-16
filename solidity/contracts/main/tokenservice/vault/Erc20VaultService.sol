@@ -6,21 +6,30 @@ import {VaultService} from "../../../base/tokenservice/VaultService.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 contract Erc20VaultService is VaultService, Upgradeable {
+    address private immutable ZERO_ADDRESS = address(0);
+    address private immutable ETH_TOKEN = address(1);
     
     function Erc20VaultService_init(
         address _token,
         string memory _name
     ) public initializer {
-        require(_token != address(0), "Only ERC20 Address");
+        require(_token != ZERO_ADDRESS && _token != ETH_TOKEN, "Only ERC20 Address");
         __VaultService_init(_token, _name);
     }
 
-    function _authorizeUpgrade(address) internal view override {
+    function _authorizeUpgrade(address) internal virtual view override {
         require(msg.sender == owner());
     }
 
-    function transfer(uint256 amount) external onlyOwner returns (bool) {
+    function transfer(uint256 amount) external virtual onlyOwner returns (bool) {
         require(IIERC20(token()).transfer(owner(), amount), "ERC20 Transfer Failed");
         return true;
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

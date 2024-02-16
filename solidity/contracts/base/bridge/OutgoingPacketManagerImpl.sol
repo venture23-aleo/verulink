@@ -12,10 +12,17 @@ abstract contract OutgoingPacketManagerImpl {
     //sequence => Packet hash
     mapping(uint256 => bytes32) public outgoingPackets;
 
-    function _sendMessage(PacketLibrary.OutPacket memory packet) public {
+    function _sendMessage(PacketLibrary.OutPacket memory packet) public virtual {
         packet.version = 1;
         packet.sequence = ++sequence;
         outgoingPackets[packet.sequence] = packet.hash();
         emit PacketDispatched(packet);
-    }    
+    }  
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;  
 }

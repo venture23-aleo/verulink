@@ -19,7 +19,7 @@ contract AttestorManager is OwnableUpgradeable {
         return attestors[attestor];
     }
 
-    function addAttestor(address attestor, uint256 newQuorumRequired) public onlyOwner {
+    function addAttestor(address attestor, uint256 newQuorumRequired) public virtual onlyOwner {
         require(attestor != address(0), "Zero Address");
         require(!isAttestor(attestor), "Attestor already exists");
         attestors[attestor] = true;
@@ -27,21 +27,28 @@ contract AttestorManager is OwnableUpgradeable {
         emit AttestorAdded(attestor, newQuorumRequired);
     }
 
-    function removeAttestor(address attestor, uint256 newQuorumRequired) external onlyOwner {
+    function removeAttestor(address attestor, uint256 newQuorumRequired) external virtual onlyOwner {
         require(attestors[attestor], "Unknown Attestor");
         delete attestors[attestor];
         quorumRequired = newQuorumRequired;
         emit AttestorRemoved(attestor, newQuorumRequired);
     }
 
-    function addAttestors(address[] calldata _attestors, uint256 newQuorumRequired) external onlyOwner {
+    function addAttestors(address[] calldata _attestors, uint256 newQuorumRequired) external virtual onlyOwner {
         for(uint256 i=0;i<_attestors.length;i++) {
             addAttestor(_attestors[i], newQuorumRequired);
         }
     }
 
-    function updateQuorum(uint256 newQuorumRequired) external onlyOwner {
+    function updateQuorum(uint256 newQuorumRequired) external virtual onlyOwner {
         emit QuorumUpdated(quorumRequired, newQuorumRequired);
         quorumRequired = newQuorumRequired;
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -42,13 +42,13 @@ describe('TokenSupport', () => {
         usdTMock = await USDTMock.deploy();
         await usdTMock.deployed();
 
-        ERC20TokenSupport = await ethers.getContractFactory("TokenService");
+        ERC20TokenSupport = await ethers.getContractFactory("TokenSupport");
         tokenSupportImpl = await ERC20TokenSupport.deploy();
         await tokenSupportImpl.deployed();
         let ERC20TokenSupportABI = ERC20TokenSupport.interface.format();
 
         ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenService_init", [otherAccount.address, 2, destChainId, otherAccount.address]);
+        initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenSupport_init", [destChainId]);
         const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, initializeData);
         await proxy.deployed();
         proxiedContract = ERC20TokenSupport.attach(proxy.address);

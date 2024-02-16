@@ -35,7 +35,7 @@ contract Bridge is
         destinationChainId = _destChainId;       
     }
 
-    function _authorizeUpgrade(address) internal view override {
+    function _authorizeUpgrade(address) internal virtual view override {
         require(msg.sender == owner());
     }
 
@@ -67,4 +67,11 @@ contract Bridge is
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
         _sendMessage(packet);
     } 
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }

@@ -2,6 +2,8 @@ import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 
+const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
+
 function inPacketHash(inPacket) {
     let packetHash = ethers.utils.solidityKeccak256([
         "uint256",
@@ -190,7 +192,7 @@ describe('TokenService', () => {
     });
 
     it('should transfer ETH using transfer(receiver)', async () => {
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         const destChainId = 2;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -378,7 +380,7 @@ describe('TokenService', () => {
         const max = 100;
 
         // Add token
-        await proxiedV1.connect(owner).addToken(ethers.constants.AddressZero, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
 
         // deploying Holding Contract
@@ -391,7 +393,7 @@ describe('TokenService', () => {
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
         await (await proxiedV1.setHolding(proxiedHolding.address)).wait();
-        inPacket[4][1] = ethers.constants.AddressZero;
+        inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
             ['bytes32', 'uint8'],
@@ -410,9 +412,9 @@ describe('TokenService', () => {
         const max = 100;
 
         // Add token
-        await proxiedV1.connect(owner).addToken(ethers.constants.AddressZero, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
-        await proxiedV1.disable(ethers.constants.AddressZero, destchainID);
+        await proxiedV1.disable(ADDRESS_ONE, destchainID);
         // deploying Holding Contract
         const Holding = await ethers.getContractFactory("Holding");
         const holdingImpl = await Holding.deploy();
@@ -423,7 +425,7 @@ describe('TokenService', () => {
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
         await (await proxiedV1.setHolding(proxiedHolding.address)).wait();
-        inPacket[4][1] = ethers.constants.AddressZero;
+        inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
             ['bytes32', 'uint8'],
@@ -442,10 +444,10 @@ describe('TokenService', () => {
         const max = 100;
 
         // Add token
-        await proxiedV1.connect(owner).addToken(ethers.constants.AddressZero, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
 
-        inPacket[4][1] = ethers.constants.AddressZero;
+        inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
             ['bytes32', 'uint8'],
@@ -464,8 +466,8 @@ describe('TokenService', () => {
         const max = 100;
 
         // Add token
-        await proxiedV1.connect(owner).addToken(ethers.constants.AddressZero, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
-        inPacket[4][1] = ethers.constants.AddressZero;
+        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
             ['bytes32', 'uint8'],
@@ -484,10 +486,10 @@ describe('TokenService', () => {
         const max = 100;
 
         // Add token
-        await proxiedV1.connect(owner).addToken(ethers.constants.AddressZero, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
 
-        inPacket[4][1] = ethers.constants.AddressZero;
+        inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
             ['bytes32', 'uint8'],
@@ -658,7 +660,7 @@ describe('TokenService', () => {
     });
 
     it('should not transfer ETH from tokenservice to vault if given amount is greater than balance', async () => {
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         const destChainId = 2;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -670,7 +672,7 @@ describe('TokenService', () => {
     });
 
     it('should not transfer ETH from tokenservice to vault if contract is paused', async () => {
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         const destChainId = 2;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -682,7 +684,7 @@ describe('TokenService', () => {
     });
 
     it('should not transfer ETH from tokenservice to vault by non-owner', async () => {
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         const destChainId = 2;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -694,7 +696,7 @@ describe('TokenService', () => {
     });
 
     it('should transfer ETH from tokenservice to vault', async () => {
-        const tokenAddress = ethers.constants.AddressZero;
+        const tokenAddress = ADDRESS_ONE;
         const destChainId = 2;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";

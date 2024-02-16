@@ -10,7 +10,7 @@ contract BlackListService is IBlackListService, OwnableUpgradeable, Upgradeable 
     event BlackListAdded(address account);
     event BlackListRemoved(address account);
 
-    mapping(address => bool) blackLists;
+    mapping(address => bool) private blackLists;
 
     /*
     USDC Contract addresses:
@@ -24,30 +24,37 @@ contract BlackListService is IBlackListService, OwnableUpgradeable, Upgradeable 
     */
     address internal usdt;
 
-    function BlackList_init(address _usdc, address _usdt) public initializer {
+    function BlackList_init(address _usdc, address _usdt) public virtual initializer {
         __Ownable_init();
         usdc = _usdc;
         usdt = _usdt;
     }
 
-    function _authorizeUpgrade(address) internal view override {
+    function _authorizeUpgrade(address) internal virtual view override {
         require(msg.sender == owner());
     }
 
-    function addToBlackList(address account) external onlyOwner {
+    function addToBlackList(address account) external virtual onlyOwner {
         emit BlackListAdded(account);
         blackLists[account] = true;
     }
 
-    function removeFromBlackList(address account) external onlyOwner {
+    function removeFromBlackList(address account) external virtual onlyOwner {
         emit BlackListRemoved(account);
         delete blackLists[account];
     }
 
-    function isBlackListed(address account) public view override returns (bool) {
+    function isBlackListed(address account) public virtual view override returns (bool) {
         return (blackLists[account] || 
             IIERC20(usdc).isBlacklisted(account) ||
             IIERC20(usdt).getBlackListStatus(account)
         );
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }
