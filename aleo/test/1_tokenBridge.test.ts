@@ -61,12 +61,12 @@ describe("Token Bridge ", () => {
   describe("Setup", () => {
     bridge.connect(admin)
 
-    test.skip( "Deploy", async () => {
+    test( "Deploy", async () => {
         const deployTx = await bridge.deploy();
         await bridge.wait(deployTx);
       }, TIMEOUT);
 
-    test( "Initialize", async () => {
+    test("Initialize", async () => {
         const threshold = 1;
         const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isBridgeInitialized) {
@@ -403,7 +403,7 @@ describe("Token Bridge ", () => {
           expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe( BRIDGE_PAUSED_VALUE);
         }, TIMEOUT);
 
-      test.skip("should not unpause by non-owner", async () => {
+      test.failing("should not unpause by non-owner", async () => {
           bridge.connect(aleoUser3);
           const [tx] = await bridge.unpause_tb();
           await bridge.wait(tx);
