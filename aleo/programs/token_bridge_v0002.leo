@@ -224,9 +224,9 @@ program token_bridge_v0002.aleo {
         Mapping::set(owner_TB, OWNER_INDEX, new_owner);
     }
 
-    /////////////////////////////////////
-    ///// Add/Remove/Update Attestor ////
-    /////////////////////////////////////
+    //////////////////////////////
+    ///// Add/Remove Attestor ////
+    //////////////////////////////
 
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
@@ -253,6 +253,7 @@ program token_bridge_v0002.aleo {
     /// Remove an existing attestor from the bridge program
     /// Can only be called from owner
     transition remove_attestor_tb(public attestor: address, public new_threshold: u8) {
+        assert_neq(attestor, ZERO_ADDRESS);
         assert(new_threshold > 0u8); 
         return then finalize(self.caller, attestor, new_threshold);
     }
@@ -263,9 +264,7 @@ program token_bridge_v0002.aleo {
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
         assert_eq(from, owner);
 
-       
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
-        
 
         // If attestor does not exist, this is expected to fail
         assert(Mapping::contains(attestors, attestor));

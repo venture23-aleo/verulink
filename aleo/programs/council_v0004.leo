@@ -246,6 +246,7 @@ program council_v0004.aleo {
     }
 
     transition remove_member(public id: u32, public existing_member: address, public new_threshold: u8, public voters: [address; 5]) {
+        assert_neq(existing_member, ZERO_ADDRESS);
         let proposal: RemoveMember = RemoveMember {
             id,
             existing_member,
