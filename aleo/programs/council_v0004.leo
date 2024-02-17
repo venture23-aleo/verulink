@@ -147,7 +147,7 @@ program council_v0004.aleo {
     /////// Vote ///////
     ///////////////////////
 
-    transition vote(public id: u32, public proposal_hash: field, acceptance: bool) {
+    transition vote(public proposal_hash: field, acceptance: bool) {
         let from: address = self.caller;
 
         let proposal_sign: field = BHP256::hash_to_field(
@@ -157,10 +157,10 @@ program council_v0004.aleo {
             }
         );
 
-        return then finalize(from, id, proposal_hash, proposal_sign, acceptance);
+        return then finalize(from, proposal_hash, proposal_sign, acceptance);
     }
 
-    finalize vote(from: address, proposal_id: u32, proposal_hash: field, proposal_sign: field, acceptance: bool) {
+    finalize vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
