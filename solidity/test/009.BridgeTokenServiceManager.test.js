@@ -29,6 +29,10 @@ describe('BridgeTokenServiceManager', () => {
         expect(contractOwner).to.equal(owner.address);
     });
 
+    it('reverts if the contract is already initialized', async function () {
+        expect(proxiedV1["BridgeTokenServiceManager_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
+    });
+
     // Test adding a token service
     it('should add a token service', async () => {
         const newTokenService = ethers.Wallet.createRandom().address;

@@ -30,6 +30,10 @@ describe('AttestorManager', () => {
         expect(contractOwner).to.equal(owner.address);
     });
 
+    it('reverts if the contract is already initialized', async function () {
+        expect(proxiedV1["AttestorManager_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
+    });
+
     // Test adding an attestor
     it('should add an attestor', async () => {
         const newAttestor = ethers.Wallet.createRandom().address;
@@ -45,6 +49,37 @@ describe('AttestorManager', () => {
         const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
     });
+
+    it('should update quorum by owner', async () => {
+        const quorumRequired = 2;
+
+        // Add attestor
+        await (await proxiedV1.updateQuorum(quorumRequired)).wait();
+
+        // Check if the attestor was added
+        // const isAttestor = await proxiedV1.isAttestor(newAttestor);
+        // expect(isAttestor).to.be.true;
+        // Check if the quorum was updated
+        const newQuorum = await proxiedV1.quorumRequired();
+        expect(newQuorum).to.equal(quorumRequired);
+    })
+
+    it('should revert when update quorum by non-owner', async () => {
+        const quorumRequired = 2;
+
+        // Add attestor
+        expect(proxiedV1.connect(other).updateQuorum(quorumRequired)).to.be.reverted;
+
+        // Check if the attestor was added
+        // const isAttestor = await proxiedV1.isAttestor(newAttestor);
+        // expect(isAttestor).to.be.true;
+        // Check if the quorum was updated
+        const newQuorum = await proxiedV1.quorumRequired();
+        expect(newQuorum).to.equal(0);
+    })
+
+
+
 
     // it('should call addAttestor only through proxy', async () => {
     //     const newAttestor = ethers.Wallet.createRandom().address;
@@ -81,7 +116,7 @@ describe('AttestorManager', () => {
     //     expect(attestorManagerImpl.addAttestors(attestors, quorumRequired)).to.be.reverted;
     // });
 
-    it('should add attestors in batch by a non-owner', async () => {
+    it('should revert when add attestors in batch by a non-owner', async () => {
         const attestors = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
         const quorumRequired = 2;
 

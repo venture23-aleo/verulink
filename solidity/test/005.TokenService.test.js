@@ -345,6 +345,38 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedHolding.address)).to.be.equal(100);
     });
 
+    it('should not withdraw when token is not enabled', async () => {
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+
+        // Add token
+        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
+        await proxiedV1.disable(ADDRESS_ONE, destchainID);
+        // deploying Holding Contract
+        const Holding = await ethers.getContractFactory("Holding");
+        const holdingImpl = await Holding.deploy();
+        await holdingImpl.deployed();
+        const HoldingProxy = await ethers.getContractFactory('ProxyContract');
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init", [proxiedV1.address]);
+        const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
+        await proxyHolding.deployed();
+        proxiedHolding = Holding.attach(proxyHolding.address);
+        await (await proxiedV1.setHolding(proxiedHolding.address)).wait();
+        inPacket[4][1] = ADDRESS_ONE;
+        const packetHash = inPacketHash(inPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+        );
+        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Token ===============================");
+    });
+
     it('should transfer to holding when quorum is NAY', async () => {
         // deploying Holding Contract
         const Holding = await ethers.getContractFactory("Holding");
@@ -405,38 +437,6 @@ describe('TokenService', () => {
         await proxiedV1.withdraw(inPacket, signatures);
     });
 
-    it('should not withdraw when token is not enabled', async () => {
-        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const min = 1;
-        const max = 100;
-
-        // Add token
-        await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
-        await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
-        await proxiedV1.disable(ADDRESS_ONE, destchainID);
-        // deploying Holding Contract
-        const Holding = await ethers.getContractFactory("Holding");
-        const holdingImpl = await Holding.deploy();
-        await holdingImpl.deployed();
-        const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init", [proxiedV1.address]);
-        const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
-        await proxyHolding.deployed();
-        proxiedHolding = Holding.attach(proxyHolding.address);
-        await (await proxiedV1.setHolding(proxiedHolding.address)).wait();
-        inPacket[4][1] = ADDRESS_ONE;
-        const packetHash = inPacketHash(inPacket);
-        let message = ethers.utils.solidityKeccak256(
-            ['bytes32', 'uint8'],
-            [packetHash, 1]
-        );
-        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
-        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
-        expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Token");
-    });
-
     it('should transfer ETH to user when quorum is YEA ', async () => {
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -457,6 +457,27 @@ describe('TokenService', () => {
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
         await proxiedV1.withdraw(inPacket, signatures);
+    });
+
+    //Test for withdraw
+    it('should withdraw', async () => {
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+        await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        const packetHash = inPacketHash(inPacket);
+        let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+        );
+        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+        const signatures = [signature1, signature2];
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
+        expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+        await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(0);
+        expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
     });
 
     it('should revert on transferring ETH to user when contract has no ETH ', async () => {
@@ -559,27 +580,6 @@ describe('TokenService', () => {
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
         expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Token");
-    });
-
-    //Test for withdraw
-    it('should withdraw', async () => {
-        await (await usdcMock.mint(other.address, 150)).wait();
-        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
-        const packetHash = inPacketHash(inPacket);
-        let message = ethers.utils.solidityKeccak256(
-            ['bytes32', 'uint8'],
-            [packetHash, 1]
-        );
-        const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
-        const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
-        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
-        expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
-        await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
-        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(0);
-        expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
     });
 
     it('should not withdraw if contract is paused', async () => {

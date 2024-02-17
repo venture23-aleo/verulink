@@ -61,19 +61,25 @@ abstract contract ConsumedPacketManagerImpl {
         for(uint256 i = 0; i < sigs.length; i++) {
             require(sigs[i].length == 65, "Invalid Signature Length");
             (v,r,s) = _splitSignature(sigs[i]);
-            signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.YEA);
+            signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
             if(_validateAttestor(signer)) {
-                if(++yeas >= threshold) return PacketLibrary.Vote.YEA;
+                unchecked {
+                    nays = nays + 1;
+                }
             }else {
-                signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
+                signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.YEA);
                 require(_validateAttestor(signer), "Unknown Signer");
-                if(++nays >= threshold) return PacketLibrary.Vote.NAY;
+                unchecked {
+                    yeas = yeas + 1;
+                }
             }
+        }
+        unchecked {
+            if(yeas > nays && yeas >= threshold) return PacketLibrary.Vote.YEA;
+            else if(nays >= threshold) return PacketLibrary.Vote.NAY;
         }
         return PacketLibrary.Vote.NULL;
     }
-
-
 
     function _consume(
         bytes32 packetHash, 

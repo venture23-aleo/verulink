@@ -78,12 +78,29 @@ describe('TokenSupport', () => {
         // Check if the added token matches the expected values
         const addedToken = await proxiedContract.supportedTokens(tokenAddress);
         expect(addedToken.tokenAddress).to.equal(tokenAddress);
+        expect(addedToken.vault).to.equal(erc20VaultServiceProxy.address);
         expect(addedToken.destTokenAddress).to.equal(destTokenAddress);
         expect(addedToken.destTokenService).to.equal(destTokenService);
         expect(addedToken.minValue).to.equal(min);
         expect(addedToken.maxValue).to.equal(max);
         expect(addedToken.enabled).to.be.true;
     });
+
+    it('should update vault by owner', async () => {
+        const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
+        const tokenAddress = usdcMock.address;
+        const destChainId = 1;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+
+        // Add token
+        await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
+        await (await proxiedContract.updateVault(tokenAddress, ADDRESS_ONE)).wait();
+        const addedToken = await proxiedContract.supportedTokens(tokenAddress);
+        expect(addedToken.vault).to.equal(ADDRESS_ONE);
+    })
 
     it('should revert on adding a token if target chain is mismatched', async () => {
         const tokenAddress = usdcMock.address;
