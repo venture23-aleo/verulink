@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -24,7 +25,7 @@ func sign(hashString string) (string, error) {
 
 func SetUpPrivateKey(keyPair *config.KeyPair) error {
 	privKey := strings.Replace(keyPair.PrivateKey, "0x", "", 1) // remove 0x
-	
+
 	privateKey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
 		return err
@@ -38,20 +39,11 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 	return nil
 }
 
-func validateKey(privateKey *ecdsa.PrivateKey, publicAddress string) error {
-	pubKey := privateKey.Public()
-
-	pubKeyECDSA, ok := pubKey.(*ecdsa.PublicKey)
-	if !ok {
-		panic("couldnot cast to ECDSA public key")
+func validateKey(privateKey *ecdsa.PrivateKey, publicKey string) error {
+	pubKey := hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey))
+	pubKey = strings.ToLower(pubKey)
+	if pubKey != strings.ToLower(publicKey) {
+		return fmt.Errorf("private key cannot derive the give public key address")
 	}
-
-	address := crypto.PubkeyToAddress(*pubKeyECDSA).Hex()
-	address = strings.ToLower(address)
-	if address != publicAddress {
-		return fmt.Errorf("supplied private key cannot derieve the supplied address")
-	}
-
-	return nil 
-
+	return nil
 }
