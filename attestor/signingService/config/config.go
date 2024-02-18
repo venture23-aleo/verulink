@@ -1,7 +1,6 @@
 package config
 
 import (
-	"encoding/json"
 	"math/big"
 	"os"
 
@@ -61,7 +60,7 @@ func LoadKeys(keyPath string) (map[string]*KeyPair, error) {
 		return nil, err
 	}
 	keyCfg := new(KeyConfig)
-	err = json.Unmarshal(b, keyCfg)
+	err = yaml.Unmarshal(b, keyCfg)
 	if err != nil {
 		return nil, err
 	}
