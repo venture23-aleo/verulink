@@ -10,19 +10,19 @@ import {
   aleoChainId,
   ethChainId,
   ethTsContractAddr,
-  ethUser,
   updatedEthTsContractAddr,
   usdcContractAddr,
 } from "./mockData";
 import { Address, PrivateKey } from "@aleohq/sdk";
 import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, BRIDGE_VERSION, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
-import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
+import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import { hashStruct } from "../utils/hash";
 import { getConnectorUpdateLeo, getHoldingReleaseLeo } from "../artifacts/js/js2leo/council_v0002";
 import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
 import { ConnectorUpdate, HoldingRelease, leoProposalVoteSchema } from "../artifacts/js/types/council_v0002";
 import { createRandomPacket } from "../utils/packet";
+import { getBytes } from "ethers";
 
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
@@ -34,6 +34,7 @@ const newConnector = new Wusdc_connector_v0003Contract({ mode: "execute" });
 
 const TIMEOUT = 200_000; // 200 seconds
 
+const ethUser = generateRandomEthAddr();
 const createPacket = (receiver: string, amount: bigint): InPacket => {
   return createRandomPacket(receiver, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
 }
@@ -41,7 +42,6 @@ const createPacket = (receiver: string, amount: bigint): InPacket => {
 const createUpdatedPacket = (receiver: string, amount: bigint): InPacket => {
   return createRandomPacket(receiver, amount, ethChainId, aleoChainId, updatedEthTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
 }
-
 
 describe("Token Connector", () => {
 
@@ -257,7 +257,7 @@ describe("Token Connector", () => {
         const signs = [signature, signature, signature, signature, signature];
 
         const [tx] = await wusdcConnector.wusdc_receive(
-          evm2AleoArr(ethUser), // sender
+          Array.from(getBytes(ethUser)), // sender
           aleoUser2, // receiver
           packet.message.amount,
           packet.sequence,
@@ -286,7 +286,7 @@ describe("Token Connector", () => {
 
         wusdcConnector.connect(aleoUser2);
         const [tx] = await wusdcConnector.wusdc_send(
-          evm2AleoArr(ethUser),
+          Array.from(getBytes(ethUser)), // sender
           outgoingAmount
         );
         await wusdcConnector.wait(tx);
@@ -361,7 +361,7 @@ describe("Token Connector", () => {
         const signs = [signature, signature, signature, signature, signature];
 
         const [tx] = await wusdcConnector.wusdc_receive(
-          evm2AleoArr(ethUser), // sender
+          Array.from(getBytes(ethUser)), // sender
           aleoUser1, // receiver
           packet.message.amount,
           packet.sequence,
@@ -488,7 +488,7 @@ describe("Token Connector", () => {
           const signs = [signature, signature, signature, signature, signature];
 
           const [tx] = await newConnector.wusdc_receive(
-            evm2AleoArr(ethUser), // sender
+            Array.from(getBytes(ethUser)), // sender
             aleoUser1, // receiver
             packet.message.amount,
             packet.sequence,

@@ -1,6 +1,6 @@
 import { InPacket } from "../artifacts/js/types/token_bridge_v0002";
 import { BRIDGE_VERSION } from "./constants";
-import { evm2AleoArr } from "./ethAddress";
+import { evm2AleoArr, generateRandomEthAddr } from "./ethAddress";
 
 export const createRandomPacket = (
   receiver: string,
@@ -10,7 +10,7 @@ export const createRandomPacket = (
   sourceTsContractAddr: string,
   destTsContractAddr: string,
   destTokenAddr: string,
-  sender: string,
+  sender?: string,
   sequence?: bigint,
   height?: bigint,
   version?: number
@@ -21,6 +21,8 @@ export const createRandomPacket = (
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 
   let bridgeVersion = version ?? BRIDGE_VERSION ;
+
+  let senderAddr = sender ?? generateRandomEthAddr() ;
 
   // Create a packet
   const packet: InPacket = {
@@ -35,7 +37,7 @@ export const createRandomPacket = (
     },
     message: {
       dest_token_address: destTokenAddr,
-      sender_address: evm2AleoArr(sender),
+      sender_address: evm2AleoArr(senderAddr),
       amount,
       receiver_address: receiver,
     },
