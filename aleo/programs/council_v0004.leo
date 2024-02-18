@@ -18,7 +18,7 @@ program council_v0004.aleo {
         index: u8
     }
 
-    /// Tracks if the addess is an attestor
+    /// Tracks if the address is an attestor
     /// Returns true if the address is a member
     /// Returns null/false otherwise
     mapping members: address => bool;
@@ -69,8 +69,8 @@ program council_v0004.aleo {
         
         let unique_members: u8 = get_valid_unique_address_count(initial_members);
 
-        // Sanity check for threhsold
-        assert(threshold >= 1u8 && threshold <= unique_members );
+        // Sanity check for threshold
+        assert(threshold > 0u8 && threshold <= unique_members );
 
         return then finalize(initial_members, threshold, unique_members);
     }
@@ -97,6 +97,7 @@ program council_v0004.aleo {
 
     transition propose(public id: u32, public proposal_hash: field) {
         let from: address = self.caller;
+        assert_neq(from, ZERO_ADDRESS);
 
         let proposal_sign: field = BHP256::hash_to_field(
             ProposalVote {
@@ -149,6 +150,7 @@ program council_v0004.aleo {
 
     transition vote(public proposal_hash: field, acceptance: bool) {
         let from: address = self.caller;
+        assert_neq(from, ZERO_ADDRESS);
 
         let proposal_sign: field = BHP256::hash_to_field(
             ProposalVote {
@@ -175,13 +177,38 @@ program council_v0004.aleo {
         };
         Mapping::set(proposal_voters, voter_key, from);
 
-        // Set that the member has signed the packet
+        // Set that the member has voted the proposal
         Mapping::set(proposal_votes, proposal_sign, acceptance);
 
         // Increase the votes by 1
         Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
     }
 
+    ///////////////////////////
+    /////// Update Vote ///////
+    ///////////////////////////
+
+    transition update_vote(public proposal_hash: field, acceptance: bool) {
+        let from: address = self.caller;
+        assert_neq(from, ZERO_ADDRESS);
+
+        let proposal_sign: field = BHP256::hash_to_field(
+            ProposalVote {
+                proposal: proposal_hash,
+                member: from
+            }
+        );
+
+        return then finalize(from, proposal_hash, proposal_sign, acceptance);
+    }
+
+    finalize update_vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
+        // Assert that the member has already voted the proposal earlier
+        assert(Mapping::contains(proposal_votes, proposal_sign));
+
+        // Set that the member has voted the proposal
+        Mapping::set(proposal_votes, proposal_sign, acceptance);
+    }
 
     //////////////////////////////////////
     /////// Council: Add New Member //////
@@ -263,7 +290,7 @@ program council_v0004.aleo {
     }
 
     finalize remove_member(proposal_hash: field, existing_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -315,7 +342,7 @@ program council_v0004.aleo {
     }
 
     finalize update_threshold(proposal_hash: field, new_threshold: u8, voters: [address;5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -365,7 +392,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_transfer_ownership(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
         }
@@ -410,7 +437,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_add_attestor(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -456,7 +483,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_remove_attestor(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -500,7 +527,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_update_threshold(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -544,7 +571,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_add_chain(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -588,7 +615,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_remove_chain(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -633,7 +660,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_add_service(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -677,7 +704,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_remove_service(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
         }
@@ -718,7 +745,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_pause(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -760,7 +787,7 @@ program council_v0004.aleo {
     }
 
     finalize tb_unpause(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -805,7 +832,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_transfer_ownership(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -872,7 +899,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_add_token(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -916,7 +943,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_remove_token(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -968,7 +995,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_update_min_transfer(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1020,7 +1047,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_update_max_transfer(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1069,7 +1096,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_pause_token(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1118,7 +1145,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_unpause_token(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1178,7 +1205,7 @@ program council_v0004.aleo {
     }
 
     finalize ts_update_outgoing_percentage(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1232,7 +1259,7 @@ program council_v0004.aleo {
     }
 
     finalize holding_release(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1283,7 +1310,7 @@ program council_v0004.aleo {
     }
 
     finalize connector_update(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -1327,7 +1354,7 @@ program council_v0004.aleo {
     }
 
     finalize external_execute(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the signature are from valid members
+        // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));

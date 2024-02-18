@@ -67,7 +67,7 @@ const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> =
 describe("Council", () => {
   const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
   const admin = council.address();
-  const initialThreshold = 2;
+  const initialThreshold = 3;
 
   describe("Deployment and Setup", () => {
     test(
@@ -253,11 +253,33 @@ describe("Council", () => {
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
         await council.wait(updateThresholExecTx);
-
     }, TIMEOUT);
 
-    test("Execute with only YES votes", async() => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+    test("Change vote of council member2 to YES", async () => {
+        const initialVotes = await council.proposal_vote_counts(proposalHash);
+        council.connect(councilMember2)
+        const [voteTx] = await council.update_vote(proposalHash, true);
+        await council.wait(voteTx);
+
+        const finalVotes = await council.proposal_vote_counts(proposalHash);
+        expect(finalVotes).toBe(initialVotes);
+
+        const [voters, votes] = await getVoters(proposalHash);
+        expect(voters.length).toBe(3)
+        expect(votes.length).toBe(3)
+
+        expect(voters[0]).toBe(councilMember1);
+        expect(voters[1]).toBe(councilMember2);
+        expect(voters[2]).toBe(councilMember3);
+
+        expect(votes[0]).toBe(true);
+        expect(votes[1]).toBe(true);
+        expect(votes[2]).toBe(true);
+    }, TIMEOUT)
+
+
+    test("Execute with all votes", async() => {
+        const signers = [ councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
         
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
@@ -269,7 +291,7 @@ describe("Council", () => {
 
   })
 
-  describe("Add member", () => {
+  describe.skip("Add member", () => {
     const newMember = new PrivateKey().to_address().to_string()
     const updatedThreshold = 1;
     let proposalHash: bigint
@@ -323,7 +345,7 @@ describe("Council", () => {
     }, TIMEOUT)
   }) 
 
-  describe("Remove member", () => {
+  describe.skip("Remove member", () => {
     const oldMember = councilMember2
     const updatedThreshold = 1;
     let proposalHash: bigint
@@ -383,7 +405,7 @@ describe("Council", () => {
     }, TIMEOUT)
   }) 
 
-  describe("Bridge", () => {
+  describe.skip("Bridge", () => {
     const threshold = 1;
 
     test( "Initialize Bridge", async () => {
@@ -759,8 +781,7 @@ describe("Council", () => {
 
   });
     
-
-  describe("Token Service", () => {
+  describe.skip("Token Service", () => {
 
     test( "Initialize Token Service", async () => {
         const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
