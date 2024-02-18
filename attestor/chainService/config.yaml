@@ -8,7 +8,8 @@ chains:
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
-  wait_dur: 2s
+  pkt_validity_wait_dur: 1m
+  finality_height: 1
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 1m
   dest_chains:
@@ -20,7 +21,8 @@ chains:
   bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
   node_url: https://rpc.sepolia.org
   start_height: 5287968
-  wait_dur: 2s
+  pkt_validity_wait_dur: 2s
+  finality_height: 64
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 1m

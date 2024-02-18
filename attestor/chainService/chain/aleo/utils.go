@@ -11,8 +11,8 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
-func constructOutMappingKey(dst *big.Int, seqNum uint64) (mappingKey string) {
-	return fmt.Sprintf("{chain_id:%du128,sequence:%du64}", dst, seqNum)
+func constructOutMappingKey(dst string, seqNum uint64) (mappingKey string) {
+	return fmt.Sprintf("{chain_id:%su128,sequence:%du64}", dst, seqNum)
 }
 
 // after splitting we get the message in the form [key1:value1,key2:value2, ...]

@@ -37,12 +37,12 @@ func setupDB(p string) (func(), error) {
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
-		Name:           "ethereum",
-		ChainID:        big.NewInt(1),
-		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:        "https://rpc.sepolia.org",
-		WaitDuration:   time.Hour * 24,
-		DestChains:     []string{"2"},
+		Name:                       "ethereum",
+		ChainID:                    big.NewInt(1),
+		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:                    "https://rpc.sepolia.org",
+		PacketValidityWaitDuration: time.Hour * 24,
+		DestChains:                 []string{"2"},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
@@ -73,12 +73,12 @@ func TestNewClientUninitializedDB(t *testing.T) {
 	t.Cleanup(dbRemover)
 	store.CloseDB()
 	cfg := &config.ChainConfig{
-		Name:           "ethereum",
-		ChainID:        big.NewInt(1),
-		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:        "https://rpc.sepolia.org",
-		WaitDuration:   time.Hour * 24,
-		DestChains:     []string{"2"},
+		Name:                       "ethereum",
+		ChainID:                    big.NewInt(1),
+		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:                    "https://rpc.sepolia.org",
+		PacketValidityWaitDuration: time.Hour * 24,
+		DestChains:                 []string{"2"},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
@@ -109,7 +109,6 @@ func (mckEthCl *mockEthClient) FilterLogs(ctx context.Context, fromHeight uint64
 	return nil, errors.New("error")
 }
 
-
 type mockBridgeClient struct {
 	getDispatchedPacket func(logs types.Log) (*abi.BridgePacketDispatched, error)
 }
@@ -122,7 +121,7 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 }
 
 func (mckEthCl *mockBridgeClient) IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error) {
-	return false, nil 
+	return false, nil
 }
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
@@ -161,7 +160,7 @@ func TestFeedPacket(t *testing.T) {
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
 		feedPktWaitDur:            time.Nanosecond,
-		destChainsMap: map[string]bool{common.Big2.String(): true},
+		destChainsMap:             map[string]bool{common.Big2.String(): true},
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -473,7 +472,6 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		nextBlockHeight:           10,
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
-		waitDur:                   time.Second,
 	}
 
 	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")

@@ -55,9 +55,9 @@ func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 }
 
 func TestConstructOutMappingKey(t *testing.T) {
-	d := big.NewInt(23)
+	d := "23"
 	seqNum := uint64(32)
-	expectedString := fmt.Sprintf("{chain_id:%du128,sequence:%du64}", d, seqNum)
+	expectedString := fmt.Sprintf("{chain_id:%su128,sequence:%du64}", d, seqNum)
 	actual := constructOutMappingKey(d, seqNum)
 	require.Equal(t, expectedString, actual)
 }
