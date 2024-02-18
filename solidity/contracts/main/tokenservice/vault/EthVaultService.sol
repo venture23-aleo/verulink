@@ -4,20 +4,30 @@ pragma solidity ^0.8.19;
 import {VaultService} from "../../../base/tokenservice/VaultService.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
+/// @title EthVaultService Contract
+/// @dev This contract implements VaultService and Upgradeable contracts specifically for Ether (ETH).
 contract EthVaultService is VaultService, Upgradeable {
 
+    /// @notice address of ETH
     address private immutable ETH_TOKEN = address(1);
 
+    /// @dev Initializes the EthVaultService contract
+    /// @param _name A descriptive name for the vault service
     function EthVaultService_init(
         string memory _name
     ) public initializer {
         __VaultService_init(ETH_TOKEN,_name);
     }
 
+    /// @dev Authorizes an upgrade only if the caller is the owner
     function _authorizeUpgrade(address) internal virtual view override {
         require(msg.sender == owner());
     }
 
+
+    /// @notice Transfers Ether from the vault to the owner
+    /// @param amount The amount of Ether to be transferred
+    /// @return true if the transfer is successful, false otherwise
     function transfer(uint256 amount) external virtual onlyOwner returns (bool) {
         (bool sent,) = owner().call{value: amount}("");
         require(sent, "ETH approval Failed");

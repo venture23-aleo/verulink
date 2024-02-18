@@ -10,6 +10,9 @@ import {OutgoingPacketManagerImpl} from "../base/bridge/OutgoingPacketManagerImp
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
+
+/// @title Bridge Contract
+/// @dev This contract implements OwnableUpgradeable, Pausable, AttestorManager, BridgeTokenServiceManager, ConsumedPacketManagerImpl, OutgoingPacketManagerImpl, and Upgradeable contracts.
 contract Bridge is 
     OwnableUpgradeable,
     Pausable,
@@ -21,10 +24,17 @@ contract Bridge is
 {
     using PacketLibrary for PacketLibrary.InPacket;
     
+    
+    /// @notice Event triggered when the destination chain is updated
+    /// @param oldDestinationChainId The old destination chain ID
+    /// @param newDestinationChainId The new destination chain ID
     event ChainUpdated(uint256 oldDestinationChainId, uint256 newDestinationChainId);
 
+    /// @notice The destination chain ID for packet routing
     uint256 public destinationChainId;
 
+    /// @dev Initializes the Bridge contract
+    /// @param _destChainId The initial destination chain ID
     function Bridge_init(
         uint256 _destChainId
     ) public initializer {
@@ -39,20 +49,32 @@ contract Bridge is
         require(msg.sender == owner());
     }
 
+    /// @notice Checks if a given destination chain is supported
+    /// @param destChainId The destination chain ID to check
+    /// @return true if supported, false otherwise
     function isSupportedChain(uint256 destChainId) public view returns (bool) {
         return destinationChainId == destChainId;
     }
 
+    /// @notice Updates the destination chain ID, callable only by the owner
+    /// @param newDestChainId The new destination chain ID
     function updateDestinationChainId(uint256 newDestChainId) external onlyOwner {
         require(!isSupportedChain(newDestChainId), "Destination Chain already supported");
         emit ChainUpdated(destinationChainId, newDestChainId);
         destinationChainId = newDestChainId;
     }
 
+    /// @dev Validates if the attestation signer is an authorized attestor
+    /// @param signer The address of the attestation signer
+    /// @return true if the signer is a valid attestor, false otherwise
     function _validateAttestor(address signer) internal view override returns (bool) {
         return isAttestor(signer);
     }
 
+    /// @notice Consumes a packet with provided signatures
+    /// @param packet The input packet to be consumed
+    /// @param sigs The array of signatures for attestation
+    /// @return Votes result of the packet consumption
     function consume(
         PacketLibrary.InPacket memory packet, 
         bytes[] memory sigs
@@ -62,6 +84,8 @@ contract Bridge is
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 
+    /// @notice Sends a message packet to the specified destination chain
+    /// @param packet The outgoing packet to be sent
     function sendMessage(PacketLibrary.OutPacket memory packet) public whenNotPaused {
         require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
         require(isRegisteredTokenService(msg.sender), "Unknown Token Service");

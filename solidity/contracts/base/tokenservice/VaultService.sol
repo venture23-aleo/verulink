@@ -4,11 +4,20 @@ pragma solidity ^0.8.19;
 import {IVaultService} from "../../common/interface/tokenservice/IVaultService.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+
+/// @title VaultService
+/// @dev Abstract contract providing basic functionality for a vault service
 abstract contract VaultService is IVaultService, OwnableUpgradeable {
 
+    /// @notice Address of the associated token
     address private _token_;
+
+    /// @notice Name of the vault service
     string private _name_;
 
+    /// @notice Initializes the VaultService contract with the specified token address and name
+    /// @param _token The address of the associated token
+    /// @param _name The name of the vault service
     function __VaultService_init(
         address _token,
         string memory _name
@@ -26,10 +35,14 @@ abstract contract VaultService is IVaultService, OwnableUpgradeable {
     //     _name_ = _name;
     // }
 
+    /// @notice Gets the address of the associated token
+    /// @return address of the token
     function token() public virtual view returns (address) {
         return _token_;
     }
 
+    /// @notice Gets the name of the vault service
+    /// @return name of the vault service
     function name() public virtual view returns (string memory) {
         return _name_;
     }

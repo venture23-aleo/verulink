@@ -3,15 +3,24 @@ pragma solidity ^0.8.19;
 
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 
+/// @title OutgoingPacketManagerImpl
+/// @dev Abstract contract for managing outgoing packets on a bridge
 abstract contract OutgoingPacketManagerImpl {
     using PacketLibrary for PacketLibrary.OutPacket;
 
+    /// @notice Emitted when a packet is dispatched
+    /// @param packet The OutPacket struct containing the outgoing packet information
     event PacketDispatched(PacketLibrary.OutPacket packet);
     
+    /// @notice Sequence number for outgoing packets
     uint256 public sequence;
+
     //sequence => Packet hash
+    /// @notice Mapping of sequence numbers to packet hashes for outgoing packets
     mapping(uint256 => bytes32) public outgoingPackets;
 
+    /// @dev Sends an outgoing packet by updating its version, assigning a sequence number, storing its hash, and emitting a PacketDispatched event
+    /// @param packet The OutPacket struct containing the outgoing packet information
     function _sendMessage(PacketLibrary.OutPacket memory packet) public virtual {
         packet.version = 1;
         packet.sequence = ++sequence;

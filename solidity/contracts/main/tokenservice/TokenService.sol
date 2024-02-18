@@ -12,6 +12,9 @@ import {Holding} from "../Holding.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
+
+/// @title TokenService Contract
+/// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
 contract TokenService is 
     OwnableUpgradeable,
     Pausable,
@@ -19,13 +22,27 @@ contract TokenService is
     ReentrancyGuardUpgradeable,
     Upgradeable
 {
+    /// @dev immutable Address of Eth 
     address immutable ETH_TOKEN = address(1);
 
+    /// @dev Address of the Bridge contract
     IBridge erc20Bridge;
+
+    /// @dev Address of the BlackListService contract
     IBlackListService blackListService;
+
+    /// @dev Address of the Holding contract
     Holding holding;
+
+    /// @dev Information about the token service's network address
     PacketLibrary.InNetworkAddress public self;
 
+
+    /// @dev Initializes the TokenService contract
+    /// @param bridge Address of the bridge contract
+    /// @param _chainId Chain ID of the token service
+    /// @param _destChainId Chain ID of the destination network
+    /// @param _blackListService Address of the BlackListService contract
     function TokenService_init(
         address bridge, 
         uint256 _chainId,
@@ -44,18 +61,26 @@ contract TokenService is
         blackListService = IBlackListService(_blackListService);
     }
 
+    /// @dev Authorizes an upgrade only if the caller is the owner
     function _authorizeUpgrade(address) internal virtual view override {
         require(msg.sender == owner());
     }
 
+    /// @notice Returns the type of token managed by the TokenService
+    /// @return string representation of the token type ("ERC20")
     function tokenType() public virtual pure returns (string memory) {
         return "ERC20";
     }
 
+    /// @notice Sets the Holding contract for token locking, callable by owner only
+    /// @param _holding Address of the Holding contract
     function setHolding(Holding _holding) external virtual onlyOwner {
         holding = _holding;
     }
 
+    /// @notice Transfers ETH to the vault and locks it in the Holding contract
+    /// @param token  Address of the ERC20 token
+    /// @param amount Amount of tokens to be transferred
     function transferToVault(address token, uint256 amount) external virtual onlyOwner nonReentrant {
         require(isEnabledToken(token), "Token not supported");
         address vault = supportedTokens[token].vault;
@@ -68,6 +93,11 @@ contract TokenService is
         }
     }
 
+    /// @dev Creates an OutPacket representation of the transaction details
+    /// @param tokenAddress Address of the ERC20 token (or address(0) for ETH)
+    /// @param amount Amount of tokens or ETH to be transferred
+    /// @param receiver The intended receiver of the transferred tokens or ETH
+    /// @return packet representation of the transaction
     function _packetify(address tokenAddress, uint256 amount, string memory receiver) 
         internal view returns (PacketLibrary.OutPacket memory packet)
     {
@@ -89,16 +119,25 @@ contract TokenService is
         packet.height = block.number;
     }
 
+    /// @notice Transfers ETH to the destination chain via the bridge
+    /// @param receiver The intended receiver of the transferred ETH
     function transfer(string memory receiver) external whenNotPaused virtual payable {
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
+    /// @notice Transfers ERC20 tokens to the destination chain via the bridge
+    /// @param tokenAddress Address of the ERC20 token
+    /// @param amount Amount of ERC20 tokens to be transferred
+    /// @param receiver The intended receiver of the transferred tokens
     function transfer(address tokenAddress, uint256 amount, string memory receiver) external virtual whenNotPaused {
         require(tokenAddress != ETH_TOKEN, "Only ERC20 Tokens");
         require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
+    /// @notice Transfers ERC20 tokens to the destination chain via the bridge
+    /// @param packet incoming packet containing information to withdraw
+    /// @param sigs arrays of signature of attestor
     function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external virtual whenNotPaused nonReentrant {
         require(packet.destTokenService.addr == address(this),"Invalid Token Service");
         
