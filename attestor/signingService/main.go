@@ -50,6 +50,10 @@ func main() {
 	// key verification
 
 	m, err := config.LoadKeys(keyPath)
+	if err != nil {
+		return
+	}
+
 	for chainName, cfg := range m {
 		switch chainName {
 		case chain.Aleo:
@@ -61,7 +65,7 @@ func main() {
 		}
 
 		if err != nil {
-			panic(err)
+			return
 		}
 	}
 
