@@ -24,7 +24,7 @@ program wusdc_connector_v0003.aleo {
     /// Receive Wrapped USDC
     ///
     /// # Arguments:
-    /// * sender: [u8; 32] - Address of the sender on source chain (Ethereum)
+    /// * sender: [u8; 20] - Address of the sender on source chain (Ethereum)
     /// * receiver: address - Receiver on the packet in Aleo
     /// * amount: u128 - Amount to be minted on Aleo
     /// * sequence: u32 - Sequence no for this chain on the source chain
@@ -32,7 +32,7 @@ program wusdc_connector_v0003.aleo {
     /// * signers: [address; 5] - Addresses of the attestors who have signed the packet
     /// * signs: [signature; 5] - Signatures of the attestors after signing the packet
     transition wusdc_receive(
-        public sender: [u8; 32], 
+        public sender: [u8; 20], 
         public receiver: address, 
         public amount: u128, 
         public sequence: u64, 
@@ -45,7 +45,7 @@ program wusdc_connector_v0003.aleo {
             origin_chain_id(), 
             origin_token_service_address(), 
             WUSDC_TOKEN, 
-            sender, 
+            pad_20_to_32(sender), 
             receiver, 
             amount, 
             sequence, 
@@ -68,14 +68,19 @@ program wusdc_connector_v0003.aleo {
 
     }
 
-    transition wusdc_send(public receiver: [u8; 32], public amount: u128) {
+    /// Send Wrapped USDC
+    ///
+    /// # Arguments:
+    /// * receiver: [u8; 20] - Receiver on wusdc in Ethereum
+    /// * amount: u128 - Amount to be burned on Aleo; unlocked on Ethereum
+    transition wusdc_send(public receiver: [u8; 20], public amount: u128) {
 
         wusdc_token_v0002.aleo/burn_public(self.caller, amount);
 
         token_service_v0002.aleo/token_send(
             WUSDC_TOKEN, 
             self.caller, 
-            receiver, 
+            pad_20_to_32(receiver) , 
             amount, 
             origin_chain_id(), 
             origin_token_address(), 
@@ -150,6 +155,44 @@ program wusdc_connector_v0003.aleo {
     inline decimals() -> u8 {
         return 6u8;
     }
+
+    inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {
+        return [
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            unpadded[0u32],
+            unpadded[1u32],
+            unpadded[2u32],
+            unpadded[3u32],
+            unpadded[4u32],
+            unpadded[5u32],
+            unpadded[6u32],
+            unpadded[7u32],
+            unpadded[8u32],
+            unpadded[9u32],
+            unpadded[10u32],
+            unpadded[11u32],
+            unpadded[12u32],
+            unpadded[13u32],
+            unpadded[14u32],
+            unpadded[15u32],
+            unpadded[16u32],
+            unpadded[17u32],
+            unpadded[18u32],
+            unpadded[19u32],
+        ];
+    }
+
 
 
 
