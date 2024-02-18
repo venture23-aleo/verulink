@@ -72,6 +72,7 @@ pub fn help() {
     println!("    options");
     println!("         - sign <privatekey> <message>");
     println!("         - hash <algorithm> <input> <hash output>");
+    println!("         - derive-addr <private-key>");
     print!("\n\n");
     println!("************************** aleoHelper **************************");
 }
