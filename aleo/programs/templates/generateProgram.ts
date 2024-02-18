@@ -31,7 +31,7 @@ const holdingData = {
 const connectorData = {
     connectorVersion: "_v0003",
     tokenServiceVersion: "_v0002",
-    councilVersion: "_v0002",
+    councilVersion: "_v0004",
     originChainId: ethChainId.toString() + 'u128',
     originTokenAddress: '[' + evm2AleoArr(ethTokenAddr).map((x) => x.toString() + 'u8').join(',') + ']',
     originTokenServiceAddress: '[' + evm2AleoArr(ethTsContractAddr).map((x) => x.toString() + 'u8').join(',') + ']',

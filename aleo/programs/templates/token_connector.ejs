@@ -90,8 +90,8 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
 
     /// Update the existing connector program
     /// Can only be called if proposal with enough votes exist on council program
-    transition update(public proposal_id: u32, public new_connector: address) {
-        council<%=councilVersion%>.aleo/connector_update(proposal_id, <%=symbol.toUpperCase()%>_TOKEN, new_connector);
+    transition update(public proposal_id: u32, public new_connector: address, public voters: [address; 5]) {
+        council<%=councilVersion%>.aleo/connector_update(proposal_id, <%=symbol.toUpperCase()%>_TOKEN, new_connector, voters);
         <%=symbol%>_token<%=tokenVersion%>.aleo/transfer_ownership_token(new_connector);
         <%=symbol%>_holding<%=holdingVersion%>.aleo/transfer_ownership_holding(new_connector);
         token_service<%=tokenServiceVersion%>.aleo/update_connector_ts(<%=symbol.toUpperCase()%>_TOKEN, new_connector);
@@ -100,8 +100,8 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
 
     /// Release fund from holding program
     /// Can only be called if proposal with enough votes exist on council program
-    transition <%=symbol%>_release(public proposal_id: u32, public receiver: address, public amount: u128) {
-        council<%=councilVersion%>.aleo/holding_release(proposal_id, <%=symbol.toUpperCase()%>_TOKEN, receiver, amount);
+    transition <%=symbol%>_release(public proposal_id: u32, public receiver: address, public amount: u128, public voters: [address; 5]) {
+        council<%=councilVersion%>.aleo/holding_release(proposal_id, <%=symbol.toUpperCase()%>_TOKEN, receiver, amount, voters);
         <%=symbol%>_holding<%=holdingVersion%>.aleo/release_fund(receiver, amount);
     }
 
