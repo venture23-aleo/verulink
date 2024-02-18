@@ -11,7 +11,7 @@ import { getTbPause, getTbRemoveAttestor } from "../artifacts/js/leo2js/council_
 import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
 import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
 import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
-import { amount, ethChainId } from "./mockData";
+import { ethChainId } from "./mockData";
 import { ProposalVote, ProposalVoterKey, TsPauseToken, TsUnpauseToken } from "../artifacts/js/types/council_v0004";
 import { getProposalVote } from "../artifacts/js/leo2js/council_v0002";
 import { getProposalVoteLeo } from "../artifacts/js/js2leo/council_v0002";
