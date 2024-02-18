@@ -194,6 +194,7 @@ program council_v0004.aleo {
     }
 
     transition add_member(public id: u32, public new_member: address, public new_threshold: u8, public voters: [address; 5]) {
+        assert(new_threshold > 0u8);
         let proposal: AddMember = AddMember {
             id,
             new_member,
@@ -216,7 +217,7 @@ program council_v0004.aleo {
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
-        assert(votes >= threshold );
+        assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
@@ -231,7 +232,7 @@ program council_v0004.aleo {
 
         // Update total members
         let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
-        assert(new_threshold >= 1u8 && new_threshold <= current_members_count + 1u8);
+        assert(new_threshold <= current_members_count + 1u8);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u8);
     }
 
@@ -247,6 +248,7 @@ program council_v0004.aleo {
 
     transition remove_member(public id: u32, public existing_member: address, public new_threshold: u8, public voters: [address; 5]) {
         assert_neq(existing_member, ZERO_ADDRESS);
+        assert(new_threshold > 0u8);
         let proposal: RemoveMember = RemoveMember {
             id,
             existing_member,
@@ -279,8 +281,8 @@ program council_v0004.aleo {
         Mapping::set(proposal_executed, proposal_hash, true);
 
         let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
-        assert(current_members_count >= 2u8);
-        assert(new_threshold >= 1u8 && new_threshold < current_members_count);
+        assert(current_members_count > 1u8);
+        assert(new_threshold < current_members_count);
 
         // Execute the proposal
         assert(Mapping::contains(members, existing_member));
@@ -299,7 +301,7 @@ program council_v0004.aleo {
     }
 
     transition update_threshold(public id: u32, public new_threshold: u8, public voters: [address; 5]) {
-        assert(new_threshold >= 1u8);
+        assert(new_threshold > 0u8);
 
         let proposal: UpdateThreshold = UpdateThreshold {
             id,
@@ -336,8 +338,6 @@ program council_v0004.aleo {
         // Execute the proposal
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
     }
-
-
 
     ///////////////////////////////////////////
     /////// Bridge: Transfer Ownership ////////
