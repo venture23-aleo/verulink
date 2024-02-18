@@ -29,15 +29,15 @@ describe('EthVaultService', () => {
 
     // Test for second time initialize and revert
     it('reverts if the contract is already initialized', async function () {
-        expect(proxiedEthVaultService["EthVaultService_init(string)"]("ETH Vault")).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedEthVaultService["EthVaultService_init(string)"]("ETH Vault")).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should not transfer if caller is not admin', async() => {
-        expect(proxiedEthVaultService.connect(other).transfer(1000)).to.be.revertedWith('Not owner');
+        await expect(proxiedEthVaultService.connect(other).transfer(1000)).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
     it('should not transfer if balance is less than send amount', async() => {
-        expect(proxiedEthVaultService.transfer(100000000000000)).to.be.reverted;
+        await expect(proxiedEthVaultService.transfer(100000000000000)).to.be.reverted;
     });
 
     it('should transfer', async() => {
@@ -100,11 +100,11 @@ describe("Erc20VaultService Upgradeability", () => {
     });
 
     it('only owner should be able to upgrade', async () => {
-        expect(Erc20VaultServiceProxy.connect(other).upgradeToAndCall(ethVaultServiceV2Instance.address, upgradeData)).to.be.revertedWith("Only owner can upgrade");
+        await expect(Erc20VaultServiceProxy.connect(other).upgradeToAndCall(ethVaultServiceV2Instance.address, upgradeData)).to.be.reverted;
     });
 
     it('reverts if the contract is initialized twice', async function () {
-        expect(Erc20VaultServiceProxy.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(Erc20VaultServiceProxy.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
 

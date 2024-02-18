@@ -29,7 +29,7 @@ describe('Erc20VaultService', () => {
 
     it("should not initialize if token address is zero", async() => {
         initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [ethers.constants.AddressZero, "USDC"]);
-        expect(Proxy.deploy(erc20VaultServiceInstance.address, initializeData)).to.be.revertedWith('Only ERC20 Address');
+        await expect(Proxy.deploy(erc20VaultServiceInstance.address, initializeData)).to.be.revertedWith('Only ERC20 Address');
     });
 
     // Test deployment and initialization
@@ -45,21 +45,21 @@ describe('Erc20VaultService', () => {
 
     // Test for second time initialize and revert
     it('reverts if the contract is already initialized', async function () {
-        expect(Erc20VaultServiceProxy["Erc20VaultService_init(address,string)"](usdcMock.address, "USDC")).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(Erc20VaultServiceProxy["Erc20VaultService_init(address,string)"](usdcMock.address, "USDC")).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should not transfer if caller is not admin', async() => {
-        expect(Erc20VaultServiceProxy.connect(other).transfer(1000)).to.be.revertedWith('Not owner');
+        await expect(Erc20VaultServiceProxy.connect(other).transfer(1000)).to.be.revertedWith('Ownable: caller is not the owner');
     });
 
     it('should not transfer if balance is less than send amount', async() => {
-        expect(Erc20VaultServiceProxy.transfer(1000)).to.be.revertedWith('ERC20: transfer amount exceeds balance');
+        await expect(Erc20VaultServiceProxy.transfer(1000)).to.be.revertedWith('ERC20: transfer amount exceeds balance');
     });
 
     it('should not transfer if sender is blacklisted', async() => {
         await (await usdcMock.mint(Erc20VaultServiceProxy.address, 150)).wait();
         await (await usdcMock.addBlackList(Erc20VaultServiceProxy.address)).wait();
-        expect(Erc20VaultServiceProxy.connect(owner).transfer(10)).to.be.revertedWith('ERC20 Transfer Failed');
+        await expect(Erc20VaultServiceProxy.connect(owner).transfer(10)).to.be.revertedWith('ERC20 Transfer Failed');
     });
 
     it('should transfer', async() => {
@@ -116,11 +116,11 @@ describe("Erc20VaultService Upgradeability", () => {
     });
 
     it('only owner should be able to upgrade', async () => {
-        expect(Erc20VaultServiceProxy.connect(other).upgradeToAndCall(erc20VaultServiceV2Instance.address, upgradeData)).to.be.revertedWith("Only owner can upgrade");
+        await expect(Erc20VaultServiceProxy.connect(other).upgradeToAndCall(erc20VaultServiceV2Instance.address, upgradeData)).to.be.reverted;
     });
 
     it('reverts if the contract is initialized twice', async function () {
-        expect(Erc20VaultServiceProxy.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(Erc20VaultServiceProxy.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
 

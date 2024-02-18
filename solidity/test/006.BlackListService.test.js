@@ -30,7 +30,7 @@ describe("BlackListService", () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        expect(proxiedContract["BlackList_init"](usdcMock.address, usdtMock.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedContract["BlackList_init"](usdcMock.address, usdtMock.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it("should add to and remove from the black list", async () => {
@@ -94,7 +94,7 @@ describe("BlackListService", () => {
         // Try to add to the black list with another account and expect it to revert
         await expect(
             proxiedContract.connect(other).addToBlackList(owner.address)
-        ).to.be.reverted;
+        ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     // it("should allow to add to the black list only through proxy", async () => {
@@ -123,7 +123,7 @@ describe("BlackListService", () => {
         // Try to remove from the black list with another account and expect it to revert
         await expect(
             proxiedContract.connect(other).removeFromBlackList(owner.address)
-        ).to.be.reverted;
+        ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     // it("should allow to remove from the black list only through proxy", async () => {
@@ -205,10 +205,10 @@ describe('Upgradeabilty: BlacklistServiceV2', () => {
     });
 
     it('only owner should be able to upgrade', async () => {
-        expect(proxied.connect(other).upgradeToAndCall(blackListServiceImplV2.address, upgradeData)).to.be.revertedWith("Only owner can upgrade");
+        await expect(proxied.connect(other).upgradeToAndCall(blackListServiceImplV2.address, upgradeData)).to.be.reverted;
     });
 
     it('reverts if the contract is initialized twice', async function () {
-        expect(proxied.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxied.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 });

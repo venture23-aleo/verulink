@@ -28,7 +28,7 @@ describe('Pausable', () => {
 
     // Test for second time initialize and revert
     it('should not initialize contract twice', async () => {
-        expect(proxiedOwner["Pausable_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedOwner["Pausable_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should start with not paused state', async () => {
@@ -61,17 +61,17 @@ describe('Pausable', () => {
 
     it('only owner can unpause the contract', async () => {
         await(await proxiedOwner.connect(owner).pause()).wait();
-        expect(proxiedOwner.connect(other).unpause()).to.be.revertedWith("Not owner");
+        await expect(proxiedOwner.connect(other).unpause()).to.be.revertedWith("Ownable: caller is not the owner");
         // expect(await proxiedOwner.paused()).to.equal(false);
     });
 
     it('should prevent actions when paused', async () => {
         await(await proxiedOwner.pause()).wait();
-        expect(proxiedOwner.pause()).to.be.reverted;
+        await expect(proxiedOwner.pause()).to.be.revertedWith("Pausable: paused");
     });
 
     it('should prevent actions when unpaused', async () => {
-        expect(proxiedOwner.unpause()).to.be.reverted;
+        await expect(proxiedOwner.unpause()).to.be.revertedWith("Pausable: not paused");
     });
 
 });

@@ -30,7 +30,7 @@ describe('BridgeTokenServiceManager', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        expect(proxiedV1["BridgeTokenServiceManager_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedV1["BridgeTokenServiceManager_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     // Test adding a token service
@@ -70,13 +70,13 @@ describe('BridgeTokenServiceManager', () => {
         // Add token service
         await (await proxiedV1.addTokenService(newTokenService)).wait();
         // Attempt to add an existing token service
-        expect(proxiedV1.addTokenService(newTokenService)).to.be.revertedWith('Token Service already exists');
+        await expect(proxiedV1.addTokenService(newTokenService)).to.be.revertedWith('Token Service already exists');
     });
 
     // Test attempting to add a token service with zero address
     it('should revert when trying to add a token service with zero address', async () => {
         // Attempt to add a token service with zero address
-        expect(proxiedV1.addTokenService(ethers.constants.AddressZero)).to.be.revertedWith('Zero Address');
+        await expect(proxiedV1.addTokenService(ethers.constants.AddressZero)).to.be.revertedWith('Zero Address');
     });
 
     // Test removing a token service
@@ -109,22 +109,22 @@ describe('BridgeTokenServiceManager', () => {
         const nonExistingTokenService = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing token service
-        expect(proxiedV1.removeTokenService(nonExistingTokenService)).to.be.revertedWith('Unknown Token Service');
+        await expect(proxiedV1.removeTokenService(nonExistingTokenService)).to.be.revertedWith('Unknown Token Service');
     });
 
     // Test attempting to remove a token service with zero address
     it('should revert when trying to remove a token service with zero address', async () => {
         // Attempt to remove a token service with zero address
-        expect(proxiedV1.removeTokenService(ethers.constants.AddressZero)).to.be.revertedWith('Unknown Token Service');
+        await expect(proxiedV1.removeTokenService(ethers.constants.AddressZero)).to.be.revertedWith('Unknown Token Service');
     });
 
     it('should emit TokenServiceAdded event when adding a new token service', async () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
-        const addTokenServiceTx = await (await proxiedV1.addTokenService(newTokenService)).wait();
+        const addTokenServiceTx = await proxiedV1.addTokenService(newTokenService);
 
         // Check event emission
-        expect(addTokenServiceTx)
+        await expect(addTokenServiceTx)
             .to.emit(proxiedV1, 'TokenServiceAdded')
             .withArgs(newTokenService);
     });
@@ -135,10 +135,10 @@ describe('BridgeTokenServiceManager', () => {
         // Add token service first
         await (await proxiedV1.addTokenService(existingTokenService)).wait();
 
-        const removeTokenServiceTx = await (await proxiedV1.removeTokenService(existingTokenService)).wait();
+        const removeTokenServiceTx = await proxiedV1.removeTokenService(existingTokenService);
 
         // Check event emission
-        expect(removeTokenServiceTx)
+        await expect(removeTokenServiceTx)
             .to.emit(proxiedV1, 'TokenServiceRemoved')
             .withArgs(existingTokenService);
     });
@@ -151,9 +151,9 @@ describe('BridgeTokenServiceManager', () => {
         await (await proxiedV1.addTokenService(newTokenService)).wait();
 
         // Try to add token service with another account and expect it to revert
-        expect(
+        await expect(
             proxiedV1.connect(other).addTokenService(newTokenService)
-        ).to.be.reverted;
+        ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
     // Test that only the owner can remove a token service
@@ -164,8 +164,8 @@ describe('BridgeTokenServiceManager', () => {
         await (await proxiedV1.addTokenService(newTokenService)).wait();
 
         // Try to remove token service with another account and expect it to revert
-        expect(
+        await expect(
             proxiedV1.connect(other).removeTokenService(newTokenService)
-        ).to.be.reverted;
+        ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 });

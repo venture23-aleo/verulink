@@ -48,8 +48,7 @@ contract TokenSupport is OwnableUpgradeable {
     function isEnabledToken(
         address token
     ) public virtual view returns (bool) {
-        return
-            isSupportedToken(token) && supportedTokens[token].enabled;
+        return supportedTokens[token].enabled;
     }
 
     function isAmountInRange(address tokenAddress, uint256 amount) public virtual view returns (bool) {
@@ -67,10 +66,7 @@ contract TokenSupport is OwnableUpgradeable {
         uint256 max
     ) internal {
         require(tokenAddress != ZERO_ADDRESS, "Zero Address");
-        require(
-            !isSupportedToken(tokenAddress),
-            "Token already supported"
-        );
+        require(!isSupportedToken(tokenAddress),"Token already supported");
         require(_destChainId == destChainId, "Target Chain Mismatch");
         Token memory token = Token(
             tokenAddress,
@@ -107,10 +103,7 @@ contract TokenSupport is OwnableUpgradeable {
         address tokenAddress,
         uint256 _destChainId
     ) external virtual onlyOwner {
-        require(
-            isSupportedToken(tokenAddress),
-            "Token not supported"
-        );
+        require(isSupportedToken(tokenAddress),"Token not supported");
         require(_destChainId == destChainId, "Target Chain Mismatch");
         emit TokenRemoved(tokenAddress, _destChainId);
         delete supportedTokens[tokenAddress];
@@ -120,11 +113,9 @@ contract TokenSupport is OwnableUpgradeable {
         address tokenAddress,
         uint256 _destChainId
     ) external virtual onlyOwner {
-        require(tokenAddress != ZERO_ADDRESS, "Zero Address");
-        require(
-            !isEnabledToken(tokenAddress),
-            "Token not enabled"
-        );
+        // require(tokenAddress != ZERO_ADDRESS, "Zero Address");
+        require(isSupportedToken(tokenAddress),"Token not supported");
+        require(!isEnabledToken(tokenAddress),"Token already enabled");
         require(_destChainId == destChainId, "Target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = true;
         emit TokenEnabled(tokenAddress, _destChainId);
@@ -134,7 +125,8 @@ contract TokenSupport is OwnableUpgradeable {
         address tokenAddress,
         uint256 _destChainId
     ) external virtual onlyOwner {
-        require(isEnabledToken(tokenAddress), "Token not enabled");
+        require(isSupportedToken(tokenAddress),"Token not supported");
+        require(isEnabledToken(tokenAddress), "Token already disabled");
         require(_destChainId == destChainId, "Target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = false;
         emit TokenDisabled(tokenAddress, _destChainId);
