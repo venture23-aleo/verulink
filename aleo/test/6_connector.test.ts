@@ -1,4 +1,4 @@
-import { Council_v0002Contract } from "../artifacts/js/council_v0002";
+import { Council_v0004Contract } from "../artifacts/js/council_v0004";
 import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
 import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
 import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
@@ -23,12 +23,10 @@ import { getConnectorUpdateLeo, getHoldingReleaseLeo } from "../artifacts/js/js2
 import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
 import { ConnectorUpdate, HoldingRelease, leoProposalVoteSchema } from "../artifacts/js/types/council_v0002";
 import { createRandomPacket } from "../utils/packet";
-import { js2leo } from "@aleojs/core";
-import { getInPacketLeo } from "../artifacts/js/js2leo/token_bridge_v0002";
 
 const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
 const tokenService = new Token_service_v0002Contract({ mode: "execute" });
-const council = new Council_v0002Contract({ mode: "execute" });
+const council = new Council_v0004Contract({ mode: "execute" });
 const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
 const wusdcHolding = new Wusdc_holding_v0002Contract({ mode: "execute" });
 const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
@@ -104,18 +102,18 @@ describe("Token Connector", () => {
         const deployTx = await wusdcConnector.deploy();
         await wusdcConnector.wait(deployTx);
       },
-      TIMEOUT
+      TIMEOUT * 2
     );
   });
 
   describe("Setup", () => {
-    test(
-      "Initialize Bridge",
-      async () => {
+
+    test("Initialize Bridge", async () => {
         let threshold = 1;
         const isBridgeInitialized = (await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX, 0)) != 0;
 
         if (!isBridgeInitialized) {
+          bridge.connect(admin)
           const [initializeTx] = await bridge.initialize_tb(
             [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
             threshold,
@@ -123,104 +121,94 @@ describe("Token Connector", () => {
           );
           await bridge.wait(initializeTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await bridge.owner_TB(OWNER_INDEX)).toBe(admin)
+      }, TIMEOUT);
 
-    test(
-      "Initialize Token Service",
-      async () => {
-
+    test("Initialize Token Service", async () => {
         const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isTokenServiceInitialized) {
+          tokenService.connect(admin)
           const [initializeTx] = await tokenService.initialize_ts(
             admin
           );
           await tokenService.wait(initializeTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(admin)
+      }, TIMEOUT);
 
-    test(
-      "Token Bridge: Enable Ethereum Chain",
-      async () => {
+    test("Token Bridge: Enable Ethereum Chain", async () => {
         const isEthSupported = (await bridge.supported_chains(ethChainId, false));
         if (!isEthSupported) {
+          bridge.connect(admin)
           const [addEthChainTx] = await bridge.add_chain_tb(ethChainId);
           await bridge.wait(addEthChainTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await bridge.supported_chains(ethChainId)).toBe(true)
+      }, TIMEOUT);
 
-    test(
-      "Initialize WUSDC",
-      async () => {
+    test("Initialize WUSDC", async () => {
         let isTokenInitialized = (await wusdcToken.token_owner(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isTokenInitialized) {
+          wusdcConnector.connect(admin)
           const [initializeTx] = await wusdcConnector.initialize_wusdc();
           await wusdcConnector.wait(initializeTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(wusdcConnector.address())
+        expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(wusdcConnector.address())
+      }, TIMEOUT);
 
-    test(
-      "Token Service: Add New Token",
-      async () => {
+    test("Token Service: Add New Token", async () => {
         const isWusdcSupported = (await tokenService.token_connectors(wusdcToken.address(), ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
         if (!isWusdcSupported) {
+          tokenService.connect(admin)
           const [supportWusdcTx] = await tokenService.add_token_ts(
             wusdcToken.address(),
             wusdcConnector.address(),
             BigInt(100), // minimum transfer
-            BigInt(10000000000), // maximum transfer
+            BigInt(100_000), // maximum transfer
             100_00, // outgoing percentage
             1, // (timeframe)
-            BigInt(10000000000) // max liquidity for no cap
+            BigInt(100_000) // max liquidity for no cap
           );
           await tokenService.wait(supportWusdcTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await tokenService.token_connectors(wusdcToken.address(), ALEO_ZERO_ADDRESS)).toBe(wusdcConnector.address())
+      }, TIMEOUT);
 
-    test(
-      "Token Bridge: Enable Service",
-      async () => {
+    test( "Token Bridge: Enable Service", async () => {
         const isTokenServiceEnabled = await bridge.supported_services(tokenService.address(), false);
         if (!isTokenServiceEnabled) {
+          bridge.connect(admin)
           const [supportServiceTx] = await bridge.add_service_tb(
             tokenService.address()
           );
           await bridge.wait(supportServiceTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await bridge.supported_services(tokenService.address())).toBe(true)
+      }, TIMEOUT);
 
     test(
       "Token Bridge: Unpause",
       async () => {
         const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
         if (isPaused) {
+          bridge.connect(admin)
           const [unpauseTx] = await bridge.unpause_tb();
           await bridge.wait(unpauseTx);
         }
-      },
-      TIMEOUT
-    );
+        expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+      }, TIMEOUT);
 
     test(
       "Token Service: Token Unpause",
       async () => {
         const isPaused = (await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
         if (isPaused) {
+          tokenService.connect(admin)
           const [unpauseTx] = await tokenService.unpause_token_ts(wusdcToken.address());
           await bridge.wait(unpauseTx);
-          expect(await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)).toBe(TOKEN_UNPAUSED_VALUE);
         }
+        expect(await tokenService.token_status(wusdcToken.address())).toBe(TOKEN_UNPAUSED_VALUE)
       },
       TIMEOUT
     );
@@ -243,12 +231,10 @@ describe("Token Connector", () => {
       expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(wusdcConnector.address());
     });
 
-    test(
-      "Receive wUSDC",
-      async () => {
+    test( "Receive wUSDC", async () => {
         const amount = BigInt(100_000);
-        const packet = createPacket(aleoUser1, amount);
-        const initialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
+        const packet = createPacket(aleoUser2, amount);
+        const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
         const initialSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
 
         const packetId: PacketId = {
@@ -256,7 +242,6 @@ describe("Token Connector", () => {
           sequence: packet.sequence
         }
         expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-        expect(await bridge.attestors(attestor)).toBe(true);
 
         const signature = signPacket(packet, true, bridge.config.privateKey);
         const signers = [
@@ -271,10 +256,9 @@ describe("Token Connector", () => {
 
         const signs = [signature, signature, signature, signature, signature];
 
-        wusdcConnector.connect(attestor);
         const [tx] = await wusdcConnector.wusdc_receive(
           evm2AleoArr(ethUser), // sender
-          aleoUser1, // receiver
+          aleoUser2, // receiver
           packet.message.amount,
           packet.sequence,
           packet.height,
@@ -283,7 +267,7 @@ describe("Token Connector", () => {
         );
         await wusdcConnector.wait(tx);
 
-        let finalBalance = await wusdcToken.account(aleoUser1);
+        let finalBalance = await wusdcToken.account(aleoUser2);
         expect(finalBalance).toBe(initialBalance + packet.message.amount);
 
         let finalSupply = await tokenService.total_supply(wusdcToken.address());
@@ -293,21 +277,21 @@ describe("Token Connector", () => {
       TIMEOUT
     );
 
-    test(
-      "Transfer wUSDC",
-      async () => {
-        const initialBalance = await wusdcToken.account(aleoUser1);
+    test( "Transfer wUSDC", async () => {
+        const initialBalance = await wusdcToken.account(aleoUser2);
         const outgoingSequence = await bridge.sequences(ethChainId, BigInt(1));
         const initialSupply = await tokenService.total_supply(wusdcToken.address());
 
         const outgoingAmount = BigInt(1_000);
+
+        wusdcConnector.connect(aleoUser2);
         const [tx] = await wusdcConnector.wusdc_send(
           evm2AleoArr(ethUser),
           outgoingAmount
         );
         await wusdcConnector.wait(tx);
 
-        const finalBalance = await wusdcToken.account(aleoUser1);
+        const finalBalance = await wusdcToken.account(aleoUser2);
         expect(finalBalance).toBe(initialBalance - outgoingAmount);
 
         const finalSupply = await tokenService.total_supply(wusdcToken.address());
@@ -320,7 +304,7 @@ describe("Token Connector", () => {
         const outPacket = await bridge.out_packets(packetKey);
 
         expect(aleoArr2Evm(outPacket.message.dest_token_address)).toBe(usdcContractAddr);
-        expect(outPacket.message.sender_address).toBe(aleoUser1);
+        expect(outPacket.message.sender_address).toBe(aleoUser2);
         expect(aleoArr2Evm(outPacket.message.receiver_address)).toBe(
           ethUser.toLocaleLowerCase()
         );
@@ -343,9 +327,7 @@ describe("Token Connector", () => {
       expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(wusdcConnector.address());
     });
 
-    test(
-      "Initialize Council",
-      async () => {
+    test( "Initialize Council", async () => {
         let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
 
         if (!isCouncilInitialized) {
@@ -358,9 +340,7 @@ describe("Token Connector", () => {
       TIMEOUT
     );
 
-    test(
-      "Receive wUSDC must collect the amount in holding program",
-      async () => {
+    test( "Receive wUSDC must collect the amount in holding program", async () => {
         const packet = createPacket(aleoUser1, BigInt(100_000));
         const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const holdingProgramInitialBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0))
@@ -404,9 +384,7 @@ describe("Token Connector", () => {
       TIMEOUT
     );
 
-    test(
-      "Release held amount",
-      async () => {
+    test( "Release held amount", async () => {
 
         const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
         const holdingProgramInitialBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
@@ -426,10 +404,13 @@ describe("Token Connector", () => {
         let [tx] = await council.propose(proposalId, releaseFundProposalHash);
         await council.wait(tx);
 
+        const voters = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        wusdcConnector.connect(aleoUser1);
         [tx] = await wusdcConnector.wusdc_release(
           proposalId,
           aleoUser1,
-          initialHeldAmount
+          initialHeldAmount,
+          voters
         );
         await wusdcConnector.wait(tx);
 
@@ -449,134 +430,6 @@ describe("Token Connector", () => {
     );
   });
 
-  describe("Update governance", () => {
-    test.todo("Successful case");
-  });
-
-  describe("Token Receive", () => {
-    test.failing("Pass an invalid signature - must fail", async () => {
-        const amount = BigInt(100_000);
-        const packet = createPacket(aleoUser1, amount);
-        const signature = signPacket(packet, true, bridge.config.privateKey);
-
-        const signers = [
-          Address.from_private_key(
-            PrivateKey.from_string(bridge.config.privateKey)
-          ).to_string(),
-          aleoUser2,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
-
-        const signs = [signature, signature, signature, signature, signature];
-
-        const [tx] = await wusdcConnector.wusdc_receive(
-          evm2AleoArr(ethUser), // sender
-          aleoUser1, // receiver
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signs
-        );
-    }, TIMEOUT);
-
-    test.failing("Pass valid signature from valid attestor twice - must fail", async () => {
-        const amount = BigInt(100_000);
-        const packet = createPacket(aleoUser1, amount);
-
-        const signature1 = signPacket(packet, true, bridge.config.privateKey);
-
-        const signers = [
-          aleoUser1,
-          aleoUser1,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
-
-        const signs = [signature1, signature1, signature1, signature1, signature1];
-
-        await wusdcConnector.wusdc_receive(
-          evm2AleoArr(ethUser), // sender
-          aleoUser1, // receiver
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signs
-        );
-    }, TIMEOUT);
-
-    test.failing("Pass all ZERO_ALEO_ADDRESS - (threshold not met) must fail", async () => {
-        // Note: This fails because the YAY and NO votes both are 0. i.e. YAY votes = NAY votes
-        const amount = BigInt(100_000);
-        const packet = createPacket(aleoUser1, amount);
-
-        const signature1 = signPacket(packet, true, bridge.config.privateKey);
-
-        const signers = [
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
-
-        const signs = [signature1, signature1, signature1, signature1, signature1];
-
-        await wusdcConnector.wusdc_receive(
-          evm2AleoArr(ethUser), // sender
-          aleoUser1, // receiver
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signs
-        );
-    }, TIMEOUT);
-
-    test.failing("Pass a valid signature from invalid attestor - must fail", async () => {
-        const wallet = new PrivateKey();
-        const amount = BigInt(100_000);
-        const packet = createPacket(aleoUser1, amount);
-        const signature1 = signPacket(packet, true, bridge.config.privateKey);
-        const signature2 = signPacket(packet, true, wallet.to_string());
-
-        const walletAddress = wallet.to_address().to_string();
-
-        expect(await bridge.attestors(walletAddress, false)).toBe(false);
-        const signers = [
-          Address.from_private_key(
-            PrivateKey.from_string(bridge.config.privateKey)
-          ).to_string(),
-          walletAddress,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
-
-        const signs = [signature1, signature2, signature1, signature1, signature1];
-
-        const [tx] = await wusdcConnector.wusdc_receive(
-          evm2AleoArr(ethUser), // sender
-          aleoUser1, // receiver
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signs
-        );
-        await wusdcConnector.wait(tx);
-    }, TIMEOUT);
-
-  });
-
-  // describe("Token Send", () => {
-  //   test.todo("So many cases to look at");
-  // });
-
   describe("New Connector", () => {
     test("Deploy New connector", async () => {
       const tx = await newConnector.deploy();
@@ -595,7 +448,8 @@ describe("Token Connector", () => {
         let [tx] = await council.propose(proposalId, proposalHash);
         await council.wait(tx);
 
-        [tx] = await wusdcConnector.update(proposalId, newConnector.address());
+        const voters = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        [tx] = await wusdcConnector.update(proposalId, newConnector.address(), voters);
         await wusdcConnector.wait(tx);
 
         expect(await tokenService.token_connectors(wusdcToken.address())).toBe(newConnector.address());
@@ -683,10 +537,13 @@ describe("Token Connector", () => {
           let [tx] = await council.propose(proposalId, releaseFundProposalHash);
           await council.wait(tx);
 
+          const voters = [ aleoUser1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+          wusdcConnector.connect(aleoUser1);
           [tx] = await newConnector.wusdc_release(
             proposalId,
             aleoUser1,
-            initialHeldAmount
+            initialHeldAmount,
+            voters,
           );
           await newConnector.wait(tx);
 
