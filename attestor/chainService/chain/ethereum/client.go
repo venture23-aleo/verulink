@@ -260,7 +260,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 						ch <- pkt
 					}
 				}
-				cl.nextBlockHeight += endHeight + 1
+				cl.nextBlockHeight = endHeight + 1
 			}
 		}
 	}
