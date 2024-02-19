@@ -6,7 +6,7 @@ x-logpath: &l
 
 services:
   chainservice:
-    build: ./chainService
+    build: .
     configs:
       - source: chainService_config
         target: /configs/config.yaml
@@ -23,25 +23,9 @@ services:
       LOG_ENC: json
       MODE: dev
 
-  signingservice:
-    build: ./signingService
-    configs:
-      - source: signingService_config
-        target: /configs/config.yaml
-    ports:
-      - 6579: 6579
-
-# todo: add collector service image
-  collectorService:
-    build: "image"
-    ports:
-      - 8080: 8080
-
 configs:
   chainService_config:
-    file: ./chainService/config.yaml
-  signingService_config:
-    file: ./signingService/config.yaml
+    file: ./config.yaml
 volumes:
   db-path:
   log-path:

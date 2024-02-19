@@ -13,18 +13,14 @@ import (
 )
 
 var (
-	aleoKeyPath    string
-	ethKeyPath     string
-	aleoDecryptKey string
-	ethDecryptKey  string
-	configPath     string
-	address        string
-	port           int
+	keyPath    string
+	configPath string
+	address    string
+	port       int
 )
 
 func init() {
-	flag.StringVar(&aleoKeyPath, "aleo-kp", "", "path to encrypted aleo key-pairs")
-	flag.StringVar(&ethKeyPath, "eth-kp", "", "path to encrypted ethereum key-pairs")
+	flag.StringVar(&keyPath, "kp", "", "yaml file that contains key pair for each chain's wallet")
 	flag.StringVar(&configPath, "config", "config.yaml", "configuration for running signing service")
 	flag.StringVar(&address, "address", "127.0.0.1", "network address")
 	flag.IntVar(&port, "port", 6579, "port")
@@ -41,21 +37,6 @@ func main() {
 
 	flag.Parse()
 
-	if aleoKeyPath == "" {
-		err = errors.New("aleo key path is required")
-		return
-	}
-
-	if ethKeyPath == "" {
-		err = errors.New("ethereum key path is required")
-		return
-	}
-
-	err = readInputs()
-	if err != nil {
-		return
-	}
-
 	err = config.LoadConfig(configPath)
 	if err != nil {
 		return
@@ -65,18 +46,32 @@ func main() {
 		err = errors.New("Ahs(Aleo hasher+signer) command is not available")
 		return
 	}
-	err = aleo.SetUpPrivateKey(aleoKeyPath, aleoDecryptKey)
+
+	// key verification
+
+	m, err := config.LoadKeys(keyPath)
 	if err != nil {
 		return
 	}
 
-	err = ethereum.SetUpPrivateKey(ethKeyPath, ethDecryptKey)
-	if err != nil {
-		return
+	for chainName, cfg := range m {
+		switch chainName {
+		case chain.Aleo:
+			err = aleo.SetUpPrivateKey(cfg)
+		case chain.Ethereum:
+			err = ethereum.SetUpPrivateKey(cfg)
+		default:
+			err = fmt.Errorf("unsupported chain %s", chainName)
+		}
+
+		if err != nil {
+			return
+		}
 	}
 
 	chain.SetUpChains()
 
 	registerHandlers()
+	fmt.Println("starting to serve")
 	serve()
 }

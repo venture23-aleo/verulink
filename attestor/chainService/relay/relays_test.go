@@ -17,6 +17,13 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
+func getFlagArgs(configFile, dbDir string) *config.FlagArgs {
+	return &config.FlagArgs{
+		ConfigFile: configFile,
+		DBDir:      dbDir,
+	}
+}
+
 func setupDB(t *testing.T, p string) func() {
 	err := store.InitKVStore(p)
 	require.NoError(t, err)
@@ -148,11 +155,11 @@ func setupConfig(t *testing.T) func() {
 	err := os.MkdirAll(p, 0777)
 	require.NoError(t, err)
 	configStr := `
-db_path: db
+db_dir: tmp
 consume_packet_workers: 1
 log:
   encoding: console
-  output_path: relays.log
+  output_dir: tmp
 signing_service:
   scheme: https
 `
@@ -162,7 +169,8 @@ signing_service:
 	_, err = f.WriteString(configStr)
 	require.NoError(t, err)
 	flag.Set("config", configPath)
-	err = config.InitConfig()
+
+	err = config.InitConfig(getFlagArgs(configPath, p))
 	require.NoError(t, err)
 	return func() {
 		os.RemoveAll(p)
@@ -172,16 +180,35 @@ signing_service:
 func TestConsumePackets(t *testing.T) {
 
 	t.Run("test packet consumption", func(t *testing.T) {
+		cleaner := setupConfig(t)
 		t.Cleanup(func() {
+			cleaner()
 			chainIDToChain = map[string]chain.IClient{}
+			RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 		})
 
 		chainID := big.NewInt(1)
+		name := "ethereum"
 		chainIDToChain = map[string]chain.IClient{
-			chainID.String(): &feeder{},
+			chainID.String(): &feeder{name: name},
 		}
-		cleaner := setupConfig(t)
-		t.Cleanup(cleaner)
+
+		ctx, cncl := context.WithCancel(context.Background())
+		defer cncl()
+		completedCh := make(chan *chain.Packet)
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				<-completedCh
+			}
+		}()
+
+		RegisteredCompleteChannels[name] = completedCh
 
 		r := relay{
 			collector: &collectorTest{},
@@ -190,9 +217,8 @@ func TestConsumePackets(t *testing.T) {
 		}
 
 		pktCh := make(chan *chain.Packet)
-		go r.consumePackets(context.TODO(), pktCh)
-		ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
-		defer cncl()
+
+		go r.consumePackets(ctx, pktCh)
 
 		pktCh <- &chain.Packet{
 			Source: chain.NetworkAddress{ChainID: chainID},
@@ -202,6 +228,8 @@ func TestConsumePackets(t *testing.T) {
 			require.Fail(t, "packet not consumed")
 		case pktCh <- &chain.Packet{Source: chain.NetworkAddress{ChainID: chainID}}:
 		}
+		cncl()
+		time.Sleep(time.Millisecond)
 	})
 }
 
@@ -221,13 +249,13 @@ func TestProcessPackets(t *testing.T) {
 
 		r := relay{
 			collector: &collectorTest{
-				sendToCollector: func(sp *chain.ScreenedPacket, signature string) error {
+				sendToCollector: func(sp *chain.ScreenedPacket, pktHash, signature string) error {
 					return nil
 				},
 			},
 			signer: &signTest{
-				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, error) {
-					return "signature", nil
+				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, string, error) {
+					return "hash", "signature", nil
 				},
 			},
 			screener: &screenTest{
@@ -270,8 +298,8 @@ func TestProcessPackets(t *testing.T) {
 
 		r := relay{
 			signer: &signTest{
-				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, error) {
-					return "", errors.New("error")
+				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, string, error) {
+					return "", "", errors.New("error")
 				},
 			},
 			screener: &screenTest{
@@ -314,13 +342,13 @@ func TestProcessPackets(t *testing.T) {
 
 		r := relay{
 			collector: &collectorTest{
-				sendToCollector: func(sp *chain.ScreenedPacket, signature string) error {
+				sendToCollector: func(sp *chain.ScreenedPacket, pktHash, signature string) error {
 					return errors.New("error")
 				},
 			},
 			signer: &signTest{
-				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, error) {
-					return "signature", nil
+				signScreenedPacket: func(sp *chain.ScreenedPacket) (string, string, error) {
+					return "hash", "signature", nil
 				},
 			},
 			screener: &screenTest{
@@ -350,79 +378,20 @@ func TestProcessPackets(t *testing.T) {
 
 }
 
-func TestConsumeMissedPacket(t *testing.T) {
-	t.Cleanup(func() {
-		chainIDToChain = map[string]chain.IClient{}
-	})
-
-	//
-	ethChainID := big.NewInt(1)
-	aleoChainID := big.NewInt(math.MaxInt64)
-	chainIDToChain = map[string]chain.IClient{
-		ethChainID.String():  &feeder{name: "ethereum"},
-		aleoChainID.String(): &feeder{name: "aleo"},
-	}
-
-	ethCh := make(chan *chain.Packet)
-	aleoCh := make(chan *chain.Packet)
-	RegisteredCompleteChannels["ethereum"] = ethCh
-	RegisteredCompleteChannels["aleo"] = aleoCh
-	//
-
-	pktCh := make(chan *chain.Packet)
-	missedPktCh := make(chan *chain.MissedPacket)
-	refetCh := make(chan struct{})
-	r := relay{
-		screener:  &screenTest{},
-		signer:    &signTest{},
-		collector: &collectorTest{},
-	}
-	srcChainID := big.NewInt(1)
-	chainIDToChain = map[string]chain.IClient{
-		srcChainID.String(): &feeder{
-			getMissedPacket: func() (*chain.Packet, error) {
-				return &chain.Packet{
-					Destination: chain.NetworkAddress{
-						ChainID: aleoChainID,
-					},
-					Source: chain.NetworkAddress{
-						ChainID: ethChainID,
-					},
-				}, nil
-			},
-		},
-	}
-
-	go r.consumeMissedPackets(context.TODO(), missedPktCh, pktCh, refetCh)
-
-	missedPktCh <- &chain.MissedPacket{
-		SourceChainID: srcChainID,
-		IsLast:        true,
-	}
-
-	ctx, cncl := context.WithTimeout(context.TODO(), time.Second*5)
-	defer cncl()
-	select {
-	case <-ctx.Done():
-		t.FailNow()
-	case <-refetCh:
-	}
-}
-
 type collectorTest struct {
-	sendToCollector          func(sp *chain.ScreenedPacket, signature string) error
+	sendToCollector          func(sp *chain.ScreenedPacket, pktHash, signature string) error
 	receivePktsFromCollector func(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
-func (c *collectorTest) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, signature string) error {
+func (c *collectorTest) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, signature string) error {
 	if c.sendToCollector != nil {
-		return c.sendToCollector(sp, signature)
+		return c.sendToCollector(sp, pktHash, signature)
 	}
 	return nil
 }
 
 func (c *collectorTest) ReceivePktsFromCollector(
-	ctx context.Context, ch chan<- *chain.MissedPacket, refetCh <-chan struct{}) {
+	ctx context.Context, ch chan<- *chain.MissedPacket) {
 
 	if c.receivePktsFromCollector != nil {
 		c.receivePktsFromCollector(ctx, ch)
@@ -449,13 +418,13 @@ func (s *screenTest) Screen(pkt *chain.Packet) bool {
 }
 
 type signTest struct {
-	signScreenedPacket func(sp *chain.ScreenedPacket) (string, error)
+	signScreenedPacket func(sp *chain.ScreenedPacket) (string, string, error)
 }
 
-func (s *signTest) SignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, error) {
+func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, string, error) {
 	if s.signScreenedPacket != nil {
 		return s.signScreenedPacket(sp)
 	}
 
-	return "mySignature", nil
+	return "hash", "mySignature", nil
 }

@@ -19,7 +19,7 @@ var (
 	chainIDToName = map[string]string{}
 )
 
-func Sign(data []byte) (signature string, err error) {
+func HashAndSign(data []byte) (hash, signature string, err error) {
 	sp := new(chainService.ScreenedPacket)
 	err = json.Unmarshal(data, sp)
 	if err != nil {
@@ -29,7 +29,7 @@ func Sign(data []byte) (signature string, err error) {
 	chainID := sp.Packet.Destination.ChainID.String()
 	chainName, ok := chainIDToName[chainID]
 	if !ok {
-		return "", fmt.Errorf("chain-id %s is not supported", chainID)
+		return "", "", fmt.Errorf("chain-id %s is not supported", chainID)
 	}
 
 	switch chainName {
@@ -38,7 +38,7 @@ func Sign(data []byte) (signature string, err error) {
 	case Ethereum:
 		return ethereum.HashAndSign(sp)
 	}
-	return "", fmt.Errorf("chain %s is not supported", chainName)
+	return "", "", fmt.Errorf("chain %s is not supported", chainName)
 }
 
 func SetUpChains() {

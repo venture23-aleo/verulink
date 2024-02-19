@@ -10,19 +10,19 @@ import (
 
 // formats packet for aleo bridge contract
 // return: string :: example ::
-// "{version: 0u8, sequence: 1u32, source: { chain_id: 1u32, addr: <source contract address in the form of len 32 long byte array in which eth address is represented by the last 20 bytes>}....}
+// "{version: 0u8, sequence: 1u64, source: { chain_id: 1u64, addr: <source contract address in the form of len 32 long byte array in which eth address is represented by the last 20 bytes>}....}
 func constructAleoPacket(pkt *chainService.Packet) string {
 	return fmt.Sprintf(
 		"{ version: %du8, sequence: %du64, "+
 			"source: { chain_id: %du128, addr: %s }, "+
 			"destination: { chain_id: %du128, addr: %s }, "+
-			"message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, "+
+			"message: { sender_address: %s, dest_token_address: %s , amount: %du128 , receiver_address: %s }, "+
 			"height: %du64 }",
 		pkt.Version, pkt.Sequence, pkt.Source.ChainID,
 		constructEthAddressForAleoParameter(pkt.Source.Address),
-		pkt.Destination.ChainID, pkt.Destination.Address, pkt.Message.DestTokenAddress,
-		constructEthAddressForAleoParameter(pkt.Message.SenderAddress),
-		pkt.Message.ReceiverAddress, pkt.Message.Amount, pkt.Height)
+		pkt.Destination.ChainID, pkt.Destination.Address,
+		constructEthAddressForAleoParameter(pkt.Message.SenderAddress), pkt.Message.DestTokenAddress, pkt.Message.Amount,
+		pkt.Message.ReceiverAddress, pkt.Height)
 }
 
 // constructs ethereum address in the format of 32 len byte array string, appending "u8" in every

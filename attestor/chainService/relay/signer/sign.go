@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,10 +13,19 @@ import (
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"go.uber.org/zap"
+)
+
+// response body fields
+const (
+	signatureField = "signature"
+	hashField      = "hash"
 )
 
 type SignI interface {
-	SignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, error)
+	HashAndSignScreenedPacket(
+		ctx context.Context, sp *chain.ScreenedPacket) (hash string, signature string, err error)
 }
 
 var s SignI
@@ -24,8 +34,8 @@ type signService struct {
 	url string
 }
 
-func (s *signService) SignScreenedPacket(
-	ctx context.Context, sp *chain.ScreenedPacket) (signature string, err error) {
+func (s *signService) HashAndSignScreenedPacket(
+	ctx context.Context, sp *chain.ScreenedPacket) (hash, signature string, err error) {
 
 	var data []byte
 	data, err = json.Marshal(sp)
@@ -53,10 +63,33 @@ func (s *signService) SignScreenedPacket(
 	if err != nil {
 		return
 	}
-	return string(data), nil
+	m := make(map[string]string)
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		return
+	}
+
+	var ok bool
+	hash, ok = m[hashField]
+	if !ok {
+		err = errors.New("missing hash field")
+	}
+	signature, ok = m[signatureField]
+	if !ok {
+		err = errors.New("missing signature field")
+	}
+
+	return
 }
 
 func SetupSigner(cfg *config.SigningServiceConfig) error {
+	logger.GetLogger().Info("Setting up signer",
+		zap.String("username", cfg.Username),
+		zap.String("password", cfg.Password),
+		zap.String("scheme", cfg.Scheme),
+		zap.String("endpoint", cfg.Endpoint),
+		zap.String("host", cfg.Host),
+	)
 	u := &url.URL{
 		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Path:   cfg.Endpoint,

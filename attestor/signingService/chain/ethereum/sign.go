@@ -2,11 +2,12 @@ package ethereum
 
 import (
 	"crypto/ecdsa"
-	"os"
+	"fmt"
+	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
 )
 
 var pKey *ecdsa.PrivateKey
@@ -17,20 +18,31 @@ func sign(hashString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return common.Bytes2Hex(b), nil
+
+	return "0x" + common.Bytes2Hex(b), nil
 }
 
-func SetUpPrivateKey(keyPath, decryptKey string) error {
-	b, err := os.ReadFile(keyPath)
+func SetUpPrivateKey(keyPair *config.KeyPair) error {
+	privKey := strings.Replace(keyPair.PrivateKey, "0x", "", 1) // remove 0x
+
+	privateKey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
 		return err
 	}
 
-	ks, err := keystore.DecryptKey(b, decryptKey)
+	err = validateKey(privateKey, keyPair.WalletAddress)
 	if err != nil {
 		return err
 	}
-	pKey = ks.PrivateKey
+
+	pKey = privateKey
 	return nil
+}
 
+func validateKey(privateKey *ecdsa.PrivateKey, addr string) error {
+	calculatedAddr := crypto.PubkeyToAddress(privateKey.PublicKey)
+	if !strings.EqualFold(calculatedAddr.Hex(), addr) {
+		return fmt.Errorf("private key cannot derive given wallet address")
+	}
+	return nil
 }

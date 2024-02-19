@@ -2,14 +2,14 @@ package aleo
 
 import (
 	"context"
+	"errors"
 	"math/big"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 	aleoRpc "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo/rpc"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
@@ -17,11 +17,13 @@ import (
 )
 
 const (
-	defaultWaitDur             = time.Hour * 24
+	defaultValidityWaitDur     = time.Hour * 24
+	avgBlockGenDur             = time.Second
 	outPacket                  = "out_packets"
 	aleo                       = "aleo"
-	defaultRetryPacketWaitDur  = time.Hour * 12
-	defaultPruneBaseSeqWaitDur = time.Hour * 6
+	defaultRetryPacketWaitDur  = time.Hour
+	defaultPruneBaseSeqWaitDur = time.Hour
+	nullString                 = "null"
 )
 
 // Namespaces
@@ -42,8 +44,10 @@ type Client struct {
 	queryUrl            string
 	network             string
 	chainID             *big.Int
-	waitDur             time.Duration
+	finalityHeight      uint64
+	waitHeight          int64
 	destChains          map[string]uint64 // keeps record of sequence number of all dest chains
+	validityWaitDur     time.Duration
 	retryPacketWaitDur  time.Duration
 	pruneBaseSeqWaitDur time.Duration
 }
@@ -69,11 +73,19 @@ type aleoMessage struct {
 	sender   string
 }
 
-func (cl *Client) getPktWithSeq(ctx context.Context, dst *big.Int, seqNum uint64) (*chain.Packet, error) {
+func (cl *Client) getPktWithSeq(ctx context.Context, dst string, seqNum uint64) (*chain.Packet, error) {
 	mappingKey := constructOutMappingKey(dst, seqNum)
 	message, err := cl.aleoClient.GetMappingValue(ctx, cl.programID, outPacket, mappingKey)
 	if err != nil {
 		return nil, err
+	}
+
+	if message[mappingKey] == nullString {
+		return nil, common.ErrPacketNotFound{
+			SeqNum:      seqNum,
+			SourceChain: cl.name,
+			DestChain:   dst,
+		}
 	}
 
 	pktStr, err := parseMessage(message[mappingKey])
@@ -81,14 +93,6 @@ func (cl *Client) getPktWithSeq(ctx context.Context, dst *big.Int, seqNum uint64
 		return nil, err
 	}
 	return parseAleoPacket(pktStr)
-}
-
-func (cl *Client) CurHeight(ctx context.Context) uint64 {
-	height, err := cl.aleoClient.GetLatestHeight(ctx)
-	if err != nil {
-		return 0
-	}
-	return uint64(height)
 }
 
 func (cl *Client) Name() string {
@@ -99,42 +103,85 @@ func (cl *Client) GetChainID() *big.Int {
 	return cl.chainID
 }
 
-func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
+	if nextSeqNum == 0 {
+		nextSeqNum = 1
+	}
 
+	availableInHeight := int64(1)
+	for {
+		select {
+		case <-ctx.Done():
+		default:
+		}
+
+		curHeight := cl.blockHeightPriorWaitDur(ctx)
+		if curHeight == 0 {
+			continue
+		}
+
+		switch {
+		case availableInHeight == 0:
+			time.Sleep(cl.validityWaitDur)
+		case availableInHeight > curHeight:
+			dur := time.Duration(availableInHeight-curHeight) * avgBlockGenDur
+			logger.GetLogger().Info("Sleeping ", zap.Duration("duration", dur))
+			time.Sleep(dur)
+		}
+
+		curHeight = cl.blockHeightPriorWaitDur(ctx)
+		if curHeight == 0 {
+			continue
+		}
+
+		for { // pull all packets as long as all are matured against waitDuration
+			logger.GetLogger().Info("Getting packet", zap.Uint64("seqnum", nextSeqNum))
+			pkt, err := cl.getPktWithSeq(ctx, chainID, nextSeqNum)
+			if err != nil {
+				if errors.Is(err, common.ErrPacketNotFound{}) {
+					availableInHeight = 0
+					break
+				}
+
+				logger.GetLogger().Error("Error while fetching aleo packets",
+					zap.Uint64("Seq_num", nextSeqNum),
+					zap.Error(err),
+				)
+				goto postFor
+			}
+
+			if int64(pkt.Height) > curHeight {
+				availableInHeight = int64(pkt.Height)
+				break
+			}
+
+			ch <- pkt
+			nextSeqNum++
+
+		postFor:
+			time.Sleep(time.Second) // todo: wait proper duration to avoid rate limit
+		}
+	}
+}
+
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		wg := sync.WaitGroup{}
-		wg.Add(len(cl.destChains))
-		for dst := range cl.destChains {
-			dst := dst
-			dstBig := new(big.Int)
-			dstBig, ok := dstBig.SetString(dst, 10)
-			if !ok {
-				panic("could not parse chainID")
-			}
-			go func() {
-				defer wg.Done()
-				pkt, err := cl.getPktWithSeq(ctx, dstBig, cl.destChains[dst])
-				if err != nil {
-					// log error
-					return
-				}
-				// todo verify pkt creation time
-				ch <- pkt
-				cl.destChains[dst]++
-			}()
-		}
-		wg.Wait()
+	for chainID, nextSeqNum := range cl.destChains {
+		go cl.feedPacket(ctx, chainID, nextSeqNum, ch)
 	}
+	<-ctx.Done()
+}
+
+func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
+	h, err := cl.aleoClient.GetLatestHeight(ctx)
+	if err != nil {
+		logger.GetLogger().Error("error while getting height", zap.Error(err))
+		return 0
+	}
+	return h - cl.waitHeight
 }
 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
@@ -160,13 +207,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			shouldFetch            bool
 		)
 		ns := baseSeqNamespaces[index]
-		chainIdStr := strings.Replace(ns, baseSeqNumNameSpacePrefix, "", 1)
-		chainID := new(big.Int)
-		chainID, ok := chainID.SetString(chainIdStr, 10)
-		if !ok {
-			logger.GetLogger().Error("Error while parsing uint")
-			goto indIncr
-		}
+		chainID := strings.Replace(ns, baseSeqNumNameSpacePrefix, "", 1)
+
 		seqHeightRanges, shouldFetch = store.PruneBaseSeqNum(ns)
 		if !shouldFetch {
 			goto indIncr
@@ -257,7 +299,7 @@ func (cl *Client) GetMissedPacket(
 	ctx context.Context, missedPkt *chain.MissedPacket) (
 	*chain.Packet, error) {
 
-	pkt, err := cl.getPktWithSeq(ctx, missedPkt.TargetChainID, missedPkt.SeqNum)
+	pkt, err := cl.getPktWithSeq(ctx, missedPkt.TargetChainID.String(), missedPkt.SeqNum)
 	if err != nil {
 		return nil, err
 	}
@@ -276,15 +318,23 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		panic("failed to create aleoclient")
 	}
 
-	destChains := getDestChains(aleoClient, cfg.BridgeContract)
+	destChainsSeqMap := make(map[string]uint64, 0)
+	for k, v := range cfg.StartSeqNum {
+		destChainsSeqMap[k] = v
+	}
+
 	var namespaces []string
-	for _, destChain := range destChains {
-		rns := retryPacketNamespacePrefix + destChain
-		bns := baseSeqNumNameSpacePrefix + destChain
+	for _, destChainId := range cfg.DestChains {
+		rns := retryPacketNamespacePrefix + destChainId
+		bns := baseSeqNumNameSpacePrefix + destChainId
 		namespaces = append(namespaces, rns, bns)
 
 		retryPacketNamespaces = append(retryPacketNamespaces, rns)
 		baseSeqNamespaces = append(baseSeqNamespaces, bns)
+
+		if _, ok := destChainsSeqMap[destChainId]; !ok {
+			destChainsSeqMap[destChainId] = 1 // By default start from 1
+		}
 	}
 
 	err = store.CreateNamespaces(namespaces)
@@ -297,9 +347,9 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		name = aleo
 	}
 
-	waitDur := cfg.WaitDuration
-	if waitDur == 0 {
-		waitDur = defaultWaitDur
+	validityWaitDur := cfg.PacketValidityWaitDuration
+	if validityWaitDur == 0 {
+		validityWaitDur = defaultValidityWaitDur
 	}
 
 	retryPacketWaitDur := cfg.RetryPacketWaitDur
@@ -312,51 +362,23 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
 	}
 
-	destChainsSeqMap := make(map[string]uint64, 0)
-	for chainName, seqNum := range cfg.StartSeqNum {
-		chainID, ok := m[chainName]
-		if !ok {
-			panic("missing start sequence number information")
-		}
-		destChainsSeqMap[chainID.String()] = seqNum
+	waitHeight := int64(validityWaitDur / avgBlockGenDur)
+	if waitHeight < int64(cfg.FinalityHeight) {
+		waitHeight = int64(cfg.FinalityHeight)
 	}
 
 	return &Client{
 		queryUrl:            urlSlice[0],
 		network:             urlSlice[1],
 		aleoClient:          aleoClient,
-		waitDur:             waitDur,
 		chainID:             cfg.ChainID,
 		programID:           cfg.BridgeContract,
 		name:                name,
-		destChains:          destChainsSeqMap,
+		destChains:          cfg.StartSeqNum,
+		finalityHeight:      cfg.FinalityHeight,
+		waitHeight:          waitHeight,
+		validityWaitDur:     validityWaitDur,
 		retryPacketWaitDur:  retryPacketWaitDur,
 		pruneBaseSeqWaitDur: pruneBaseSeqWaitDur,
 	}
-}
-
-func getDestChains(client aleoRpc.IAleoRPC, bridgeContract string) []string { // list of chain IDs
-	if true {
-		return []string{"1"} // TODO: remove in prod
-	}
-
-	destChains := []string{}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	for i := 0; i < 255; i++ {
-		destChainMap, err := client.GetMappingValue(ctx, bridgeContract, "registered_chains", strconv.Itoa(i))
-		if err != nil {
-			panic(err)
-		}
-		destChain := destChainMap[strconv.Itoa(i)]
-		// ensure all the chains are supported by the bridge at the moment
-		isSupportedMap, err := client.GetMappingValue(ctx, bridgeContract, "supported_chains", destChain)
-		if err != nil {
-			panic(err)
-		}
-		if isSupportedMap[destChain] == "true" {
-			destChains = append(destChains, destChain)
-		}
-	}
-	return destChains
 }

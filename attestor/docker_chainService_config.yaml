@@ -8,8 +8,7 @@ chains:
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
-  pkt_validity_wait_dur: 1m
-  finality_height: 1
+  wait_dur: 2s
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 1m
   dest_chains:
@@ -20,11 +19,9 @@ chains:
   wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
   bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
   node_url: https://rpc.sepolia.org
-  start_height: 5287968
-  finality_height: 64
+  start_height: 5270200
+  wait_dur: 2s
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
-  feed_pkt_wait_dur: 2s
-  pkt_validity_wait_dur: 2s
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 1m
   dest_chains:
@@ -38,7 +35,7 @@ log:
 mode: dev # dev/prod
 
 signing_service:
-  host: 127.0.0.1
+  host: signingService
   port: 6579
   endpoint: "/sign"
   scheme: "http" # https, http, rpc, etc.
@@ -46,6 +43,6 @@ signing_service:
   password: "password"
 
 collector_service:
-  uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
+  uri: collectorService
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h

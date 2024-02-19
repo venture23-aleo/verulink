@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -15,14 +16,41 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
+// flags
+var (
+	configFile string
+	dbDir      string
+	logDir     string
+	logEnc     string
+	mode       string
+)
+
+func init() {
+	flag.StringVar(&configFile, "config", "", "config file")
+	flag.StringVar(&dbDir, "db-dir", "", "directory path to store key-value db")
+	flag.StringVar(&logDir, "log-path", "", "file path to store logs")
+	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
+	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
+}
+
 func main() {
-	err := config.InitConfig()
+	flag.Parse()
+
+	flagArgs := &config.FlagArgs{
+		ConfigFile: configFile,
+		DBDir:      dbDir,
+		LogDir:     logDir,
+		LogEnc:     logEnc,
+		Mode:       mode,
+	}
+	err := config.InitConfig(flagArgs)
 	if err != nil {
 		fmt.Println("Error while loading config. ", err)
 		os.Exit(1)
 	}
 
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().LogConfig)
+	logger.GetLogger().Info("Attestor started")
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()

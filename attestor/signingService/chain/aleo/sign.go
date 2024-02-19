@@ -2,12 +2,15 @@ package aleo
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"os/exec"
+
+	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
 )
 
 const (
-	signCmd = "sign"
+	signCmd    = "sign"
+	deriveAddr = "derive-addr"
 )
 
 var sKey string
@@ -24,24 +27,31 @@ func sign(s string) (string, error) {
 	return string(signature), nil
 }
 
-func SetUpPrivateKey(keyPath, decryptKey string) error {
-	b, err := os.ReadFile(keyPath)
+func SetUpPrivateKey(keyPair *config.KeyPair) error {
+	err := validateAleoPrivateKey(keyPair.PrivateKey, keyPair.WalletAddress)
 	if err != nil {
 		return err
 	}
 
-	sKey = "private key"
-	_ = b
+	sKey = keyPair.PrivateKey
 	return nil
+}
 
+func validateAleoPrivateKey(privateKey, publicKey string) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cmd := exec.CommandContext(ctx, command, deriveAddr, privateKey)
+	addrBt, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	if publicKey != string(addrBt) {
+		return fmt.Errorf("supplied private key couldnot derive supplied public key")
+	}
+	return nil
 }
 
 func IsAhsCommandAvailable() bool {
 	_, err := exec.LookPath(command)
-
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }

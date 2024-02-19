@@ -80,5 +80,4 @@ type MissedPacket struct {
 	SeqNum        uint64   `json:"seq_num"`
 	Height        uint64   `json:"height"`
 	TxnID         string   `json:"txn_id"`
-	IsLast        bool     `json:"-"`
 }

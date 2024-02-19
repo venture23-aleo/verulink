@@ -11,8 +11,13 @@ import (
 	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
-func HashAndSign(sp *chainService.ScreenedPacket) (signature string, err error) {
-	return sign(hash(sp))
+func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
+	hsh = hash(sp)
+	signature, err = sign(hsh)
+	if err != nil {
+		return "", "", err
+	}
+	return
 }
 
 func hash(sp *chainService.ScreenedPacket) string {

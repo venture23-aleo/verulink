@@ -21,38 +21,47 @@ const (
 	aleoTrue            = "true"
 )
 
+// request body fields
+const (
+	srcChainID     = "sourceChainId"
+	destChainID    = "destChainId"
+	seqNum         = "sequence"
+	isWhite        = "offChainAnalysis"
+	signature      = "signature"
+	packetHash     = "packetHash"
+	attestorSigner = "attestorSigner"
+)
+
 // query params
 const (
 	address     = "address"
-	srcChainID  = "src_chain_id"
-	destChainID = "dest_chain_id"
-	seqNum      = "seq_num"
-	isWhite     = "is_white"
 	unconfirmed = "unconfirmed"
 	limit       = "limit"
 	limitSize   = 20
 )
 
 type CollectorI interface {
-	SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, signature string) error
-	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket, refetchCh <-chan struct{})
+	SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error
+	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
 var collc collector
 
 type collector struct {
 	uri              string
-	walletAddresses  []string
+	chainIDToAddress map[string]string // chainID: walletAddress
 	collectorWaitDur time.Duration
 }
 
-func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, signature string) error {
+func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
 	params := map[string]interface{}{
-		srcChainID:  sp.Packet.Source.ChainID,
-		destChainID: sp.Packet.Destination.ChainID,
-		seqNum:      sp.Packet.Sequence,
-		signature:   signature,
-		isWhite:     sp.IsWhite,
+		srcChainID:     sp.Packet.Source.ChainID.String(),
+		destChainID:    sp.Packet.Destination.ChainID.String(),
+		seqNum:         sp.Packet.Sequence,
+		signature:      sig,
+		isWhite:        sp.IsWhite,
+		attestorSigner: c.chainIDToAddress[sp.Packet.Destination.ChainID.String()],
+		packetHash:     pktHash,
 	}
 
 	data, err := json.Marshal(params)
@@ -80,54 +89,59 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 		return err
 	}
 
+	req.Header.Set("content-type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusCreated {
 		return nil
 	}
-	return fmt.Errorf("expected status code %d, got %d", http.StatusCreated, resp.StatusCode)
+	r, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
-func (c *collector) ReceivePktsFromCollector(
-	ctx context.Context, ch chan<- *chain.MissedPacket, refetchCh <-chan struct{}) {
-	ticker := time.NewTicker(c.collectorWaitDur)
+func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
 
-	if len(c.walletAddresses) == 0 {
+	if len(c.chainIDToAddress) == 0 {
 		return
 	}
 
-	shouldRefetch := false
+	dur := c.collectorWaitDur
+	if dur == 0 {
+		dur = time.Hour
+	}
+	ticker := time.NewTicker(dur)
+	defer ticker.Stop()
+
+	var walletAddresses []string
+	for _, add := range c.chainIDToAddress {
+		walletAddresses = append(walletAddresses, add)
+	}
+
 	nextAddressIndex := 0
 
-	defer ticker.Stop()
 	for {
-		if shouldRefetch {
-			select {
-			case <-ctx.Done():
-				return
-			case <-refetchCh:
-			}
-		} else {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-			}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
 		}
 
 		var (
-			missedPackets []*chain.MissedPacket
-			err           error
-			resp          *http.Response
-			data          []byte
+			missedPackets   []*chain.MissedPacket
+			err             error
+			resp            *http.Response
+			data            []byte
+			shouldCloseBody bool
 		)
 		u, _ := url.Parse(c.uri)
 		u = u.JoinPath(unconfirmed)
 		queryParams := url.Values{}
-		queryParams.Set(address, c.walletAddresses[nextAddressIndex])
+		queryParams.Set(address, walletAddresses[nextAddressIndex])
 		queryParams.Set(limit, strconv.Itoa(limitSize))
 		u.RawQuery = queryParams.Encode()
 
@@ -141,7 +155,7 @@ func (c *collector) ReceivePktsFromCollector(
 		if err != nil {
 			goto postFor
 		}
-
+		shouldCloseBody = true
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("unexpected status code %d", resp.StatusCode)
 			goto postFor
@@ -152,27 +166,21 @@ func (c *collector) ReceivePktsFromCollector(
 			goto postFor
 		}
 		err = json.Unmarshal(data, &missedPackets)
+
 	postFor:
 		cncl()
-		resp.Body.Close()
-
+		if shouldCloseBody {
+			resp.Body.Close()
+		}
 		if err != nil { // for non nil error it should wait on ticker
 			logger.GetLogger().Error(err.Error())
-			shouldRefetch = false
 			continue
-		}
-
-		shouldRefetch = len(missedPackets) == limitSize
-		if shouldRefetch {
-			lastInd := len(missedPackets) - 1
-			missedPackets[lastInd].IsLast = true
-		} else {
-			nextAddressIndex = (nextAddressIndex + 1) % len(c.walletAddresses)
 		}
 
 		for _, m := range missedPackets {
 			ch <- m
 		}
+		nextAddressIndex = (nextAddressIndex + 1) % len(walletAddresses)
 	}
 }
 
@@ -180,12 +188,16 @@ func GetCollector() CollectorI {
 	return &collc
 }
 
-func SetupCollector(url string, walletAddresses []string, waitTime time.Duration) error {
+func SetupCollector(url string, chainIDToAddress map[string]string, waitTime time.Duration) error {
 	collc = collector{
 		uri:              url,
 		collectorWaitDur: waitTime,
+		chainIDToAddress: make(map[string]string),
 	}
-	collc.walletAddresses = make([]string, len(walletAddresses))
-	copy(collc.walletAddresses, walletAddresses)
+
+	for k, v := range chainIDToAddress {
+		collc.chainIDToAddress[k] = v
+	}
+
 	return nil
 }

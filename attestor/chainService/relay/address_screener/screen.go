@@ -12,13 +12,16 @@ type ScreenI interface {
 
 var sc ScreenI
 
+const (
+	namespace = "walletScreeningNS"
+)
+
 type screenService struct {
-	dbNamespace string
 }
 
 func (s screenService) Screen(pkt *chain.Packet) bool {
 	key := pkt.GetSha256Hash()
-	v, err := store.GetAndDeleteWhiteStatus(s.dbNamespace, key)
+	v, err := store.GetAndDeleteWhiteStatus(namespace, key)
 	if err == nil {
 		return v
 	}
@@ -34,13 +37,21 @@ func (s screenService) Screen(pkt *chain.Packet) bool {
 
 func (s *screenService) StoreWhiteStatus(pkt *chain.Packet, isWhite bool) error {
 	key := pkt.GetSha256Hash()
-	return store.StoreWhiteStatus(s.dbNamespace, key, isWhite)
+	return store.StoreWhiteStatus(namespace, key, isWhite)
 }
 
 func SetupScreenService() error {
+	err := store.CreateNamespace(namespace)
+	if err != nil {
+		panic(err)
+	}
 	sc = &screenService{}
 	return nil
 }
+
 func GetScreener() ScreenI {
+	if sc == nil {
+		panic("screneer not set up")
+	}
 	return sc
 }
