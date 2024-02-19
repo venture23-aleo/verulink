@@ -1,0 +1,180 @@
+import <%=ticker%>_token<%=tokenVersion%>.aleo;
+import <%=ticker%>_holding<%=holdingVersion%>.aleo;
+import token_service<%=tokenServiceVersion%>.aleo;
+import council<%=councilVersion%>.aleo;
+
+program <%=ticker%>_connector<%=connectorVersion%>.aleo {
+
+    // <%=ticker%>_token<%=tokenVersion%>.aleo as address
+    const <%=ticker.toUpperCase()%>_TOKEN: address = <%=aleoTokenAddr%>;
+
+    // <%=ticker%>_holding<%=holdingVersion%>.aleo as address
+    const <%=ticker.toUpperCase()%>_HOLDING: address = <%=aleoTokenHoldingAddr%>;
+
+    // <%=ticker%>_connector<%=connectorVersion%>.aleo as address
+    const <%=ticker.toUpperCase()%>_CONNECTOR: address = <%=aleoTokenConnectorAddr%>;
+
+    //////////////////////////////
+    /////// Initialization ///////
+    //////////////////////////////
+
+    // Initialize can only be called once
+    transition initialize_<%=ticker%>() {
+        <%=ticker%>_token<%=tokenVersion%>.aleo/initialize_token( <%=ticker.toUpperCase()%>_CONNECTOR );
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/initialize_holding( <%=ticker.toUpperCase()%>_CONNECTOR );
+    }
+
+    /// Receive Wrapped USDC
+    ///
+    /// # Arguments:
+    /// * sender: [u8; 20] - Address of the sender on source chain (Ethereum)
+    /// * receiver: address - Receiver on the packet in Aleo
+    /// * amount: u128 - Amount to be minted on Aleo
+    /// * sequence: u32 - Sequence no for this chain on the source chain
+    /// * height: u32 - Height of the source chain where the packet originated
+    /// * signers: [address; 5] - Addresses of the attestors who have signed the packet
+    /// * signs: [signature; 5] - Signatures of the attestors after signing the packet
+    transition <%=ticker%>_receive(
+        public sender: [u8; 20], 
+        public receiver: address, 
+        public amount: u128, 
+        public sequence: u64, 
+        public height: u64, 
+        public signers: [address; 5], 
+        public signs: [signature; 5]
+    ) {
+
+        let screening_passed: bool = token_service<%=tokenServiceVersion%>.aleo/token_receive(
+            origin_chain_id(), 
+            origin_token_service_address(), 
+            <%=ticker.toUpperCase()%>_TOKEN, 
+            pad_20_to_32(sender), 
+            receiver, 
+            amount, 
+            sequence, 
+            height, 
+            signers, 
+            signs
+        );
+
+        let actual_receiver: address = receiver;
+        let held_amount: u128 = 0u128;
+
+        if (!screening_passed) {
+            actual_receiver = WUSDC_HOLDING;
+            held_amount = amount;
+        }
+
+        <%=ticker%>_token<%=tokenVersion%>.aleo/mint_public(actual_receiver, amount);
+
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/hold_fund(receiver, held_amount);
+
+    }
+
+    /// Send Wrapped USDC
+    ///
+    /// # Arguments:
+    /// * receiver: [u8; 20] - Receiver on <%=ticker%> in Ethereum
+    /// * amount: u128 - Amount to be burned on Aleo; unlocked on Ethereum
+    transition <%=ticker%>_send(public receiver: [u8; 20], public amount: u128) {
+
+        <%=ticker%>_token<%=tokenVersion%>.aleo/burn_public(self.caller, amount);
+
+        token_service<%=tokenServiceVersion%>.aleo/token_send(
+            <%=ticker.toUpperCase()%>_TOKEN, 
+            self.caller, 
+            pad_20_to_32(receiver) , 
+            amount, 
+            origin_chain_id(), 
+            origin_token_address(), 
+            origin_token_service_address()
+        );
+
+    }
+
+    ///////////////////////////////
+    ///// Update Connector ////////
+    ///////////////////////////////
+
+    /// Update the existing connector program
+    /// Can only be called if proposal with enough votes exist on council program
+    transition update(public proposal_id: u32, public new_connector: address, public voters: [address; 5]) {
+        council<%=councilVersion%>.aleo/connector_update(proposal_id, <%=ticker.toUpperCase()%>_TOKEN, new_connector, voters);
+        <%=ticker%>_token<%=tokenVersion%>.aleo/transfer_ownership_token(new_connector);
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/transfer_ownership_holding(new_connector);
+        token_service<%=tokenServiceVersion%>.aleo/update_connector_ts(<%=ticker.toUpperCase()%>_TOKEN, new_connector);
+    }
+
+
+    /// Release fund from holding program
+    /// Can only be called if proposal with enough votes exist on council program
+    transition <%=ticker%>_release(public proposal_id: u32, public receiver: address, public amount: u128, public voters: [address; 5]) {
+        council<%=councilVersion%>.aleo/holding_release(proposal_id, <%=ticker.toUpperCase()%>_TOKEN, receiver, amount, voters);
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/release_fund(receiver, amount);
+    }
+
+
+    // Chain Id of the network
+    // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator
+    // For Ethereum Sepolia testnet, chain_id: `eth:11155111` -> 28556963657430695
+    inline origin_chain_id() -> u128 {
+        return <%=originChainId%>;
+    }
+
+    // Contract Address of the original token on the origin chain
+    // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+    // Example: Contract Address of USDC on Ethereum
+    // For EVM Chains, 20 bytes is formatted as following:
+    inline origin_token_address() -> [u8; 32] {
+        return <%=originTokenAddress%>;
+    }
+
+    // Token Service Contract Address of the original token on the origin chain
+    // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
+    // Example: Contract Address of USDC on Ethereum
+    // For EVM Chains, 20 bytes is formatted as following:
+    inline origin_token_service_address() -> [u8; 32] {
+        return <%=originTokenServiceAddress%>;
+    }
+
+    inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {
+        return [
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            unpadded[0u32],
+            unpadded[1u32],
+            unpadded[2u32],
+            unpadded[3u32],
+            unpadded[4u32],
+            unpadded[5u32],
+            unpadded[6u32],
+            unpadded[7u32],
+            unpadded[8u32],
+            unpadded[9u32],
+            unpadded[10u32],
+            unpadded[11u32],
+            unpadded[12u32],
+            unpadded[13u32],
+            unpadded[14u32],
+            unpadded[15u32],
+            unpadded[16u32],
+            unpadded[17u32],
+            unpadded[18u32],
+            unpadded[19u32],
+        ];
+    }
+
+
+
+
+}

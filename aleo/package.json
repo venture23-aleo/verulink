@@ -1,0 +1,36 @@
+{
+  "name": "aleojs-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --no-warnings --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.json --detectOpenHandles"
+  },
+  "devDependencies": {
+    "@aleojs/cli": "^0.2.1",
+    "@babel/preset-env": "^7.23.8",
+    "@types/jest": "^29.5.11",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1"
+  },
+  "dependencies": {
+    "@aleohq/sdk": "^0.6.9",
+    "@aleojs/core": "^0.2.1",
+    "@types/ejs": "^3.1.5",
+    "aleo-hasher": "^0.1.2",
+    "aleo-program-to-address": "^0.1.0",
+    "aleo-signer": "^0.1.1",
+    "axios": "^1.6.5",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "ethers": "^6.11.1",
+    "zod": "^3.22.4"
+  },
+  "author": "",
+  "license": "ISC"
+}
