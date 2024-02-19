@@ -10,9 +10,8 @@ import {
   aleoChainId,
   ethChainId,
   ethTsContractAddr,
-  updatedEthTsContractAddr,
   usdcContractAddr,
-} from "./mockData";
+} from "../utils/testnet.data";
 import { Address, PrivateKey } from "@aleohq/sdk";
 import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, BRIDGE_VERSION, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
 import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
@@ -39,10 +38,6 @@ const createPacket = (receiver: string, amount: bigint): InPacket => {
   return createRandomPacket(receiver, amount, ethChainId, aleoChainId, ethTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
 }
 
-const createUpdatedPacket = (receiver: string, amount: bigint): InPacket => {
-  return createRandomPacket(receiver, amount, ethChainId, aleoChainId, updatedEthTsContractAddr, tokenService.address(), wusdcToken.address(), ethUser);
-}
-
 describe("Token Connector", () => {
 
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcConnector.getAccounts();
@@ -51,54 +46,42 @@ describe("Token Connector", () => {
   const admin = aleoUser1;
 
   describe("Deployment", () => {
-    test(
-      "Deploy Bridge",
-      async () => {
+    test("Deploy Bridge", async () => {
         const deployTx = await bridge.deploy();
         await bridge.wait(deployTx);
       },
       TIMEOUT
     );
 
-    test(
-      "Deploy Token Service",
-      async () => {
+    test("Deploy Token Service", async () => {
         const deployTx = await tokenService.deploy();
         await tokenService.wait(deployTx);
       },
       TIMEOUT
     );
 
-    test(
-      "Deploy Council",
-      async () => {
+    test("Deploy Council", async () => {
         const deployTx = await council.deploy();
         await council.wait(deployTx);
       },
       TIMEOUT
     );
 
-    test(
-      "Deploy Token",
-      async () => {
+    test("Deploy Token", async () => {
         const deployTx = await wusdcToken.deploy();
         await wusdcToken.wait(deployTx)
       },
       TIMEOUT
     );
 
-    test(
-      "Deploy Holding",
-      async () => {
+    test("Deploy Holding", async () => {
         const deployTx = await wusdcHolding.deploy();
         await wusdcHolding.wait(deployTx);
       },
       TIMEOUT
     );
 
-    test(
-      "Deploy Connector",
-      async () => {
+    test("Deploy Connector", async () => {
         const deployTx = await wusdcConnector.deploy();
         await wusdcConnector.wait(deployTx);
       },
@@ -187,9 +170,7 @@ describe("Token Connector", () => {
         expect(await bridge.supported_services(tokenService.address())).toBe(true)
       }, TIMEOUT);
 
-    test(
-      "Token Bridge: Unpause",
-      async () => {
+    test( "Token Bridge: Unpause", async () => {
         const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
         if (isPaused) {
           bridge.connect(admin)
@@ -199,9 +180,7 @@ describe("Token Connector", () => {
         expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
       }, TIMEOUT);
 
-    test(
-      "Token Service: Token Unpause",
-      async () => {
+    test( "Token Service: Token Unpause", async () => {
         const isPaused = (await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
         if (isPaused) {
           tokenService.connect(admin)
@@ -286,7 +265,7 @@ describe("Token Connector", () => {
 
         wusdcConnector.connect(aleoUser2);
         const [tx] = await wusdcConnector.wusdc_send(
-          Array.from(getBytes(ethUser)), // sender
+          Array.from(getBytes(ethUser)), // receiver
           outgoingAmount
         );
         await wusdcConnector.wait(tx);
@@ -303,16 +282,14 @@ describe("Token Connector", () => {
         };
         const outPacket = await bridge.out_packets(packetKey);
 
-        expect(aleoArr2Evm(outPacket.message.dest_token_address)).toBe(usdcContractAddr);
+        expect(aleoArr2Evm(outPacket.message.dest_token_address)).toBe(usdcContractAddr.toLocaleLowerCase());
         expect(outPacket.message.sender_address).toBe(aleoUser2);
-        expect(aleoArr2Evm(outPacket.message.receiver_address)).toBe(
-          ethUser.toLocaleLowerCase()
-        );
+        expect(aleoArr2Evm(outPacket.message.receiver_address)).toBe( ethUser.toLowerCase());
         expect(outPacket.message.amount).toBe(outgoingAmount);
         expect(outPacket.source.chain_id).toBe(aleoChainId);
         expect(outPacket.source.addr).toBe(tokenService.address());
         expect(outPacket.destination.chain_id).toBe(ethChainId);
-        expect(aleoArr2Evm(outPacket.destination.addr)).toBe(ethTsContractAddr);
+        expect(aleoArr2Evm(outPacket.destination.addr)).toBe(ethTsContractAddr.toLowerCase());
       },
       TIMEOUT
     );
@@ -468,7 +445,7 @@ describe("Token Connector", () => {
       test(
         "Receive wUSDC must collect the amount in holding program",
         async () => {
-          const packet = createUpdatedPacket(aleoUser1, BigInt(100_000));
+          const packet = createPacket(aleoUser1, BigInt(100_000));
           const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
           const holdingProgramInitialBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0))
           const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
@@ -518,10 +495,6 @@ describe("Token Connector", () => {
           const userInitialBalance = await wusdcToken.account(aleoUser1, BigInt(0));
           const holdingProgramInitialBalance = await wusdcToken.account( wusdcHolding.address(), BigInt(0));
           const initialHeldAmount = await wusdcHolding.holdings(aleoUser1, BigInt(0));
-
-          console.log(userInitialBalance)
-          console.log(holdingProgramInitialBalance)
-          console.log(initialHeldAmount)
 
           let proposalId = parseInt( (await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1
           const releaseFundProposal: HoldingRelease = {

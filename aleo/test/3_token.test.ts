@@ -14,6 +14,7 @@ const TIMEOUT = 1000_000; // 100 seconds
 
 describe("Token", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
+    const admin = aleoUser1
 
     describe("Setup", () => {
 
@@ -23,11 +24,7 @@ describe("Token", () => {
         }, TIMEOUT)
 
         test("Initialize", async () => {
-            const [tx] = await wusdcToken.initialize_token(
-                string2AleoArr("USD Coin", 32),
-                string2AleoArr("USDC", 16),
-                6 // decimals
-            )
+            const [tx] = await wusdcToken.initialize_token(admin)
             await wusdcToken.wait(tx);
         }, TIMEOUT)
 
@@ -37,7 +34,6 @@ describe("Token", () => {
         test("Mints the right amount", async() => {
             const amount = BigInt(20_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
-            console.log(initialBalance)
 
             const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
             await wusdcToken.wait(tx);

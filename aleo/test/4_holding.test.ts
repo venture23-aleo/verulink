@@ -32,7 +32,7 @@ describe("Holding", () => {
 
         test("Initialize token holding", async () => {
             wusdcHolding.connect(admin);
-            const [tx] = await wusdcHolding.initialize_holding();
+            const [tx] = await wusdcHolding.initialize_holding(admin);
             await wusdcHolding.wait(tx);
             expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(admin);
         }, TIMEOUT);
@@ -66,11 +66,7 @@ describe("Holding", () => {
             const isTokenInitialized = (await wusdcToken.token_owner(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
             if (!isTokenInitialized) {
                 wusdcHolding.connect(admin);
-                const [tx] = await wusdcToken.initialize_token(
-                    string2AleoArr("USD Coin", 32),
-                    string2AleoArr("USDC", 16),
-                    6 // decimals
-                );
+                const [tx] = await wusdcToken.initialize_token(admin);
                 await wusdcToken.wait(tx);
                 expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(admin);
             }
