@@ -11,20 +11,23 @@ program wusdc_connector_v0002.aleo {
     // wusdc_holding_v0002.aleo as address
     const WUSDC_HOLDING: address = aleo1kcz2af0a3ezjh5hcqehhmjx0sv5cq8c40kwm835z9kc333a69sqq0fhfg3;
 
+    // wusdc_connector_v0002.aleo as address
+    const WUSDC_CONNECTOR: address = aleo1g4fkhyqln6x3qyy7sxgayqnany6rnmlm90v7jrhaamdhj52n6gqqrkqtpw;
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
     // Initialize can only be called once
     transition initialize_wusdc() {
-        wusdc_token_v0002.aleo/initialize_token(name(), symbol(), decimals());
-        wusdc_holding_v0002.aleo/initialize_holding();
+        wusdc_token_v0002.aleo/initialize_token( WUSDC_CONNECTOR );
+        wusdc_holding_v0002.aleo/initialize_holding( WUSDC_CONNECTOR );
     }
 
     /// Receive Wrapped USDC
     ///
     /// # Arguments:
-    /// * sender: [u8; 32] - Address of the sender on source chain (Ethereum)
+    /// * sender: [u8; 20] - Address of the sender on source chain (Ethereum)
     /// * receiver: address - Receiver on the packet in Aleo
     /// * amount: u128 - Amount to be minted on Aleo
     /// * sequence: u32 - Sequence no for this chain on the source chain
@@ -32,7 +35,7 @@ program wusdc_connector_v0002.aleo {
     /// * signers: [address; 5] - Addresses of the attestors who have signed the packet
     /// * signs: [signature; 5] - Signatures of the attestors after signing the packet
     transition wusdc_receive(
-        public sender: [u8; 32], 
+        public sender: [u8; 20], 
         public receiver: address, 
         public amount: u128, 
         public sequence: u64, 
@@ -45,7 +48,7 @@ program wusdc_connector_v0002.aleo {
             origin_chain_id(), 
             origin_token_service_address(), 
             WUSDC_TOKEN, 
-            sender, 
+            pad_20_to_32(sender), 
             receiver, 
             amount, 
             sequence, 
@@ -68,14 +71,19 @@ program wusdc_connector_v0002.aleo {
 
     }
 
-    transition wusdc_send(public receiver: [u8; 32], public amount: u128) {
+    /// Send Wrapped USDC
+    ///
+    /// # Arguments:
+    /// * receiver: [u8; 20] - Receiver on wusdc in Ethereum
+    /// * amount: u128 - Amount to be burned on Aleo; unlocked on Ethereum
+    transition wusdc_send(public receiver: [u8; 20], public amount: u128) {
 
         wusdc_token_v0002.aleo/burn_public(self.caller, amount);
 
         token_service_v0002.aleo/token_send(
             WUSDC_TOKEN, 
             self.caller, 
-            receiver, 
+            pad_20_to_32(receiver) , 
             amount, 
             origin_chain_id(), 
             origin_token_address(), 
@@ -126,30 +134,46 @@ program wusdc_connector_v0002.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_service_address() -> [u8; 32] {
-        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,242u8,193u8,68u8,123u8,81u8,139u8,3u8,225u8,171u8,74u8,228u8,112u8,33u8,54u8,85u8,8u8,135u8,31u8,2u8,37u8];
+        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,254u8,172u8,15u8,211u8,35u8,103u8,218u8,148u8,68u8,152u8,179u8,159u8,61u8,30u8,189u8,100u8,204u8,136u8,225u8,60u8];
     }
 
-    // Name of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USD Coin` is represented as following (hex):
-    // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
-    // Storing in const? Error [ETYC0372080]: The value of a const declaration must be a literal
-    inline name() -> [u8; 32] {
-        return [85u8,83u8,68u8,32u8,67u8,111u8,105u8,110u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
+    inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {
+        return [
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            0u8,
+            unpadded[0u32],
+            unpadded[1u32],
+            unpadded[2u32],
+            unpadded[3u32],
+            unpadded[4u32],
+            unpadded[5u32],
+            unpadded[6u32],
+            unpadded[7u32],
+            unpadded[8u32],
+            unpadded[9u32],
+            unpadded[10u32],
+            unpadded[11u32],
+            unpadded[12u32],
+            unpadded[13u32],
+            unpadded[14u32],
+            unpadded[15u32],
+            unpadded[16u32],
+            unpadded[17u32],
+            unpadded[18u32],
+            unpadded[19u32],
+        ];
     }
 
-    // Symbol of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USDC` is represented as following (hex):
-    // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
-    inline symbol() -> [u8; 16] {
-        return [85u8,83u8,68u8,67u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
-    }
-
-    // Decimals of the token
-    inline decimals() -> u8 {
-        return 6u8;
-    }
 
 
 

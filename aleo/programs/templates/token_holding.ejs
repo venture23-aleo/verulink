@@ -1,6 +1,6 @@
-import <%=symbol%>_token<%=tokenVersion%>.aleo;
+import <%=ticker%>_token<%=tokenVersion%>.aleo;
 
-program <%=symbol%>_holding<%=holdingVersion%>.aleo {
+program <%=ticker%>_holding<%=holdingVersion%>.aleo {
 
     mapping holdings: address => u128;
 
@@ -16,16 +16,16 @@ program <%=symbol%>_holding<%=holdingVersion%>.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_holding() {
-        return then finalize(self.caller);
+    transition initialize_holding(public owner: address) {
+        return then finalize(owner);
     }
 
-    finalize initialize_holding(connector: address) {
+    finalize initialize_holding(owner: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(owner_holding, OWNER_INDEX));
 
         // Set the owner program
-        Mapping::set(owner_holding, OWNER_INDEX, connector);
+        Mapping::set(owner_holding, OWNER_INDEX, owner);
     }
 
     ///////////////////////////////
@@ -65,7 +65,7 @@ program <%=symbol%>_holding<%=holdingVersion%>.aleo {
     }
 
     transition release_fund(public user: address, public amount: u128) {
-        <%=symbol%>_token<%=tokenVersion%>.aleo/transfer_public(user, amount);
+        <%=ticker%>_token<%=tokenVersion%>.aleo/transfer_public(user, amount);
         return then finalize(self.caller, user, amount);
     }
 

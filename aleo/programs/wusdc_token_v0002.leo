@@ -20,15 +20,15 @@ program wusdc_token_v0002.aleo {
 
     struct TokenInfo {
         // Name of the token
-        // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-        // Example: `USD Coin` is represented as following (hex):
-        // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
-        name: [u8; 32],
+        // Represented as ASCII bytes
+        // `USD Coin` is represented as following (hex):
+        // [85u8,83u8,68u8,32u8,67u8,111u8,105u8,110u8]
+        name: [u8; 8],
         // Symbol of the token
         // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-        // Example: `USDC` is represented as following (hex):
-        // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
-        symbol: [u8; 16],
+        // `USDC` is represented as following (hex):
+        // [85u8,83u8,68u8,67u8]
+        symbol: [u8; 4],
         // Decimals of the token
         decimals: u8
     }
@@ -52,11 +52,11 @@ program wusdc_token_v0002.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8) {
-        return then finalize(self.caller, name, symbol, decimals);
+    transition initialize_token(public owner: address) {
+        return then finalize(owner);
     }
 
-    finalize initialize_token(owner: address, name: [u8; 32], symbol: [u8; 16], decimals: u8) {
+    finalize initialize_token(owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(token_owner, OWNER_INDEX));
 
@@ -64,11 +64,11 @@ program wusdc_token_v0002.aleo {
         Mapping::set(token_owner, OWNER_INDEX, owner);
 
         let token_info: TokenInfo = TokenInfo {
-            name,
-            symbol,
-            decimals
+            name: [85u8,83u8,68u8,32u8,67u8,111u8,105u8,110u8],
+            symbol: [85u8,83u8,68u8,67u8],
+            decimals: 6u8
         };
-        Mapping::set(info, OWNER_INDEX, token_info);
+        Mapping::set(info, INFO_INDEX, token_info);
     }
 
     /// Update the existing owner program

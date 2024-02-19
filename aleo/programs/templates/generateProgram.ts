@@ -5,6 +5,7 @@ import { encodeNetworkChainId} from '../../utils/chainId';
 import { to_address } from 'aleo-program-to-address';
 import { evm2AleoArr} from '../../utils/ethAddress';
 import { string2AleoArr } from '../../utils/string';
+import { ethTsContractAddr, usdcContractAddr } from '../../utils/testnet.data';
 
 const tokenTemplate = fs.readFileSync('programs/templates/token_program.ejs').toString();
 const holdingTemplate = fs.readFileSync('programs/templates/token_holding.ejs').toString();
@@ -15,12 +16,17 @@ const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 
 const name = "USD Coin"
 const symbol = "USDC"
-const ethTokenAddr = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79".toLowerCase()
-const ethTsContractAddr = "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c".toLowerCase()
+const decimals = 6
+const ethTokenAddr = usdcContractAddr
 
 const tokenData = {
-    symbol: "wusdc",
+    ticker: "wusdc",
     tokenVersion: "_v0002",
+    name,
+    symbol,
+    decimals,
+    nameInArray: '[' + string2AleoArr(name, name.length).map((x) => x.toString() + 'u8').join(',') + ']',
+    symbolInArray: '[' + string2AleoArr(symbol, symbol.length).map((x) => x.toString() + 'u8').join(',') + ']',
 }
 
 const holdingData = {
@@ -28,18 +34,17 @@ const holdingData = {
     ...tokenData
 }
 
+const connectorVersion = "_v0002"
 const connectorData = {
-    connectorVersion: "_v0003",
+    connectorVersion,
     tokenServiceVersion: "_v0002",
     councilVersion: "_v0004",
     originChainId: ethChainId.toString() + 'u128',
     originTokenAddress: '[' + evm2AleoArr(ethTokenAddr).map((x) => x.toString() + 'u8').join(',') + ']',
     originTokenServiceAddress: '[' + evm2AleoArr(ethTsContractAddr).map((x) => x.toString() + 'u8').join(',') + ']',
-    nameInArray: '[' + string2AleoArr(name, 32).map((x) => x.toString() + 'u8').join(',') + ']',
-    symbolInArray: '[' + string2AleoArr(symbol, 16).map((x) => x.toString() + 'u8').join(',') + ']',
-    decimals: '6u8',
-    aleoTokenAddr: to_address(`${tokenData.symbol}_token${tokenData.tokenVersion}.aleo`),
-    aleoTokenHoldingAddr: to_address(`${tokenData.symbol}_holding${holdingData.holdingVersion}.aleo`),
+    aleoTokenAddr: to_address(`${tokenData.ticker}_token${tokenData.tokenVersion}.aleo`),
+    aleoTokenHoldingAddr: to_address(`${tokenData.ticker}_holding${holdingData.holdingVersion}.aleo`),
+    aleoTokenConnectorAddr: to_address(`${tokenData.ticker}_connector${connectorVersion}.aleo`),
     ...holdingData
 }
 
@@ -47,6 +52,6 @@ const tokenProgram = ejs.render(tokenTemplate, tokenData);
 const holdingProgram = ejs.render(holdingTemplate, holdingData);
 const connectorProgram = ejs.render(connectorTemplate, connectorData);
 
-fs.writeFileSync(`programs/${tokenData.symbol}_token${tokenData.tokenVersion}.leo`, tokenProgram);
-fs.writeFileSync(`programs/${tokenData.symbol}_holding${holdingData.holdingVersion}.leo`, holdingProgram);
-fs.writeFileSync(`programs/${tokenData.symbol}_connector${connectorData.connectorVersion}.leo`, connectorProgram);
+fs.writeFileSync(`programs/${tokenData.ticker}_token${tokenData.tokenVersion}.leo`, tokenProgram);
+fs.writeFileSync(`programs/${tokenData.ticker}_holding${holdingData.holdingVersion}.leo`, holdingProgram);
+fs.writeFileSync(`programs/${tokenData.ticker}_connector${connectorData.connectorVersion}.leo`, connectorProgram);

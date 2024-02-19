@@ -16,16 +16,16 @@ program wusdc_holding_v0002.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_holding() {
-        return then finalize(self.caller);
+    transition initialize_holding(public owner: address) {
+        return then finalize(owner);
     }
 
-    finalize initialize_holding(connector: address) {
+    finalize initialize_holding(owner: address) {
         // Assert holding program has not been initialized before
         assert(!Mapping::contains(owner_holding, OWNER_INDEX));
 
         // Set the owner program
-        Mapping::set(owner_holding, OWNER_INDEX, connector);
+        Mapping::set(owner_holding, OWNER_INDEX, owner);
     }
 
     ///////////////////////////////

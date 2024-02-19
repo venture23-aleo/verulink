@@ -11,14 +11,17 @@ program wusdc_connector_v0003.aleo {
     // wusdc_holding_v0002.aleo as address
     const WUSDC_HOLDING: address = aleo1kcz2af0a3ezjh5hcqehhmjx0sv5cq8c40kwm835z9kc333a69sqq0fhfg3;
 
+    // wusdc_connector_v0003.aleo as address
+    const WUSDC_CONNECTOR: address = aleo1frr0nmhnlrw0efczq72gwutarnsrtp9p3zxqdahxsn246l03y5rsatjha0;
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
     // Initialize can only be called once
     transition initialize_wusdc() {
-        wusdc_token_v0002.aleo/initialize_token(name(), symbol(), decimals());
-        wusdc_holding_v0002.aleo/initialize_holding();
+        wusdc_token_v0002.aleo/initialize_token( WUSDC_CONNECTOR );
+        wusdc_holding_v0002.aleo/initialize_holding( WUSDC_CONNECTOR );
     }
 
     /// Receive Wrapped USDC
@@ -132,28 +135,6 @@ program wusdc_connector_v0003.aleo {
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_service_address() -> [u8; 32] {
         return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,254u8,172u8,15u8,211u8,35u8,103u8,218u8,148u8,68u8,152u8,179u8,159u8,61u8,30u8,189u8,100u8,204u8,136u8,225u8,60u8];
-    }
-
-    // Name of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USD Coin` is represented as following (hex):
-    // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
-    // Storing in const? Error [ETYC0372080]: The value of a const declaration must be a literal
-    inline name() -> [u8; 32] {
-        return [85u8,83u8,68u8,32u8,67u8,111u8,105u8,110u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
-    }
-
-    // Symbol of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USDC` is represented as following (hex):
-    // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
-    inline symbol() -> [u8; 16] {
-        return [85u8,83u8,68u8,67u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
-    }
-
-    // Decimals of the token
-    inline decimals() -> u8 {
-        return 6u8;
     }
 
     inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {

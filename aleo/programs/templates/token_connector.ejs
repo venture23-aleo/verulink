@@ -1,24 +1,27 @@
-import <%=symbol%>_token<%=tokenVersion%>.aleo;
-import <%=symbol%>_holding<%=holdingVersion%>.aleo;
+import <%=ticker%>_token<%=tokenVersion%>.aleo;
+import <%=ticker%>_holding<%=holdingVersion%>.aleo;
 import token_service<%=tokenServiceVersion%>.aleo;
 import council<%=councilVersion%>.aleo;
 
-program <%=symbol%>_connector<%=connectorVersion%>.aleo {
+program <%=ticker%>_connector<%=connectorVersion%>.aleo {
 
-    // <%=symbol%>_token<%=tokenVersion%>.aleo as address
-    const <%=symbol.toUpperCase()%>_TOKEN: address = <%=aleoTokenAddr%>;
+    // <%=ticker%>_token<%=tokenVersion%>.aleo as address
+    const <%=ticker.toUpperCase()%>_TOKEN: address = <%=aleoTokenAddr%>;
 
-    // <%=symbol%>_holding<%=holdingVersion%>.aleo as address
-    const <%=symbol.toUpperCase()%>_HOLDING: address = <%=aleoTokenHoldingAddr%>;
+    // <%=ticker%>_holding<%=holdingVersion%>.aleo as address
+    const <%=ticker.toUpperCase()%>_HOLDING: address = <%=aleoTokenHoldingAddr%>;
+
+    // <%=ticker%>_connector<%=connectorVersion%>.aleo as address
+    const <%=ticker.toUpperCase()%>_CONNECTOR: address = <%=aleoTokenConnectorAddr%>;
 
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_<%=symbol%>() {
-        <%=symbol%>_token<%=tokenVersion%>.aleo/initialize_token(name(), symbol(), decimals());
-        <%=symbol%>_holding<%=holdingVersion%>.aleo/initialize_holding();
+    transition initialize_<%=ticker%>() {
+        <%=ticker%>_token<%=tokenVersion%>.aleo/initialize_token( <%=ticker.toUpperCase()%>_CONNECTOR );
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/initialize_holding( <%=ticker.toUpperCase()%>_CONNECTOR );
     }
 
     /// Receive Wrapped USDC
@@ -31,7 +34,7 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
     /// * height: u32 - Height of the source chain where the packet originated
     /// * signers: [address; 5] - Addresses of the attestors who have signed the packet
     /// * signs: [signature; 5] - Signatures of the attestors after signing the packet
-    transition <%=symbol%>_receive(
+    transition <%=ticker%>_receive(
         public sender: [u8; 20], 
         public receiver: address, 
         public amount: u128, 
@@ -44,7 +47,7 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
         let screening_passed: bool = token_service<%=tokenServiceVersion%>.aleo/token_receive(
             origin_chain_id(), 
             origin_token_service_address(), 
-            <%=symbol.toUpperCase()%>_TOKEN, 
+            <%=ticker.toUpperCase()%>_TOKEN, 
             pad_20_to_32(sender), 
             receiver, 
             amount, 
@@ -62,23 +65,23 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
             held_amount = amount;
         }
 
-        <%=symbol%>_token<%=tokenVersion%>.aleo/mint_public(actual_receiver, amount);
+        <%=ticker%>_token<%=tokenVersion%>.aleo/mint_public(actual_receiver, amount);
 
-        <%=symbol%>_holding<%=holdingVersion%>.aleo/hold_fund(receiver, held_amount);
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/hold_fund(receiver, held_amount);
 
     }
 
     /// Send Wrapped USDC
     ///
     /// # Arguments:
-    /// * receiver: [u8; 20] - Receiver on <%=symbol%> in Ethereum
+    /// * receiver: [u8; 20] - Receiver on <%=ticker%> in Ethereum
     /// * amount: u128 - Amount to be burned on Aleo; unlocked on Ethereum
-    transition <%=symbol%>_send(public receiver: [u8; 20], public amount: u128) {
+    transition <%=ticker%>_send(public receiver: [u8; 20], public amount: u128) {
 
-        <%=symbol%>_token<%=tokenVersion%>.aleo/burn_public(self.caller, amount);
+        <%=ticker%>_token<%=tokenVersion%>.aleo/burn_public(self.caller, amount);
 
         token_service<%=tokenServiceVersion%>.aleo/token_send(
-            <%=symbol.toUpperCase()%>_TOKEN, 
+            <%=ticker.toUpperCase()%>_TOKEN, 
             self.caller, 
             pad_20_to_32(receiver) , 
             amount, 
@@ -96,18 +99,18 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
     /// Update the existing connector program
     /// Can only be called if proposal with enough votes exist on council program
     transition update(public proposal_id: u32, public new_connector: address, public voters: [address; 5]) {
-        council<%=councilVersion%>.aleo/connector_update(proposal_id, <%=symbol.toUpperCase()%>_TOKEN, new_connector, voters);
-        <%=symbol%>_token<%=tokenVersion%>.aleo/transfer_ownership_token(new_connector);
-        <%=symbol%>_holding<%=holdingVersion%>.aleo/transfer_ownership_holding(new_connector);
-        token_service<%=tokenServiceVersion%>.aleo/update_connector_ts(<%=symbol.toUpperCase()%>_TOKEN, new_connector);
+        council<%=councilVersion%>.aleo/connector_update(proposal_id, <%=ticker.toUpperCase()%>_TOKEN, new_connector, voters);
+        <%=ticker%>_token<%=tokenVersion%>.aleo/transfer_ownership_token(new_connector);
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/transfer_ownership_holding(new_connector);
+        token_service<%=tokenServiceVersion%>.aleo/update_connector_ts(<%=ticker.toUpperCase()%>_TOKEN, new_connector);
     }
 
 
     /// Release fund from holding program
     /// Can only be called if proposal with enough votes exist on council program
-    transition <%=symbol%>_release(public proposal_id: u32, public receiver: address, public amount: u128, public voters: [address; 5]) {
-        council<%=councilVersion%>.aleo/holding_release(proposal_id, <%=symbol.toUpperCase()%>_TOKEN, receiver, amount, voters);
-        <%=symbol%>_holding<%=holdingVersion%>.aleo/release_fund(receiver, amount);
+    transition <%=ticker%>_release(public proposal_id: u32, public receiver: address, public amount: u128, public voters: [address; 5]) {
+        council<%=councilVersion%>.aleo/holding_release(proposal_id, <%=ticker.toUpperCase()%>_TOKEN, receiver, amount, voters);
+        <%=ticker%>_holding<%=holdingVersion%>.aleo/release_fund(receiver, amount);
     }
 
 
@@ -132,28 +135,6 @@ program <%=symbol%>_connector<%=connectorVersion%>.aleo {
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_service_address() -> [u8; 32] {
         return <%=originTokenServiceAddress%>;
-    }
-
-    // Name of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USD Coin` is represented as following (hex):
-    // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
-    // Storing in const? Error [ETYC0372080]: The value of a const declaration must be a literal
-    inline name() -> [u8; 32] {
-        return <%=nameInArray%>;
-    }
-
-    // Symbol of the token
-    // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-    // Example: `USDC` is represented as following (hex):
-    // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
-    inline symbol() -> [u8; 16] {
-        return <%=symbolInArray%>;
-    }
-
-    // Decimals of the token
-    inline decimals() -> u8 {
-        return <%=decimals%>;
     }
 
     inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {

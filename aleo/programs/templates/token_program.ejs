@@ -1,5 +1,5 @@
 // The `program` scope defines the data types, functions, and state associated with the `token` program.
-program <%= symbol %>_token<%=tokenVersion%>.aleo {
+program <%= ticker %>_token<%=tokenVersion%>.aleo {
     // On-chain storage of an `account` map, with `address` as the key,
     // and `u128` as the value.
     mapping account: address => u128;
@@ -20,15 +20,15 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
 
     struct TokenInfo {
         // Name of the token
-        // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-        // Example: `USD Coin` is represented as following (hex):
-        // [55 53 44 20 43 6f 69 6e 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00]
-        name: [u8; 32],
+        // Represented as ASCII bytes
+        // `<%= name%>` is represented as following (hex):
+        // <%= nameInArray %>
+        name: [u8; <%= name.length%>],
         // Symbol of the token
         // Represented as hexadecimal bytes for ASCII text zero-right-padded (Similar to privacy_pride)
-        // Example: `USDC` is represented as following (hex):
-        // [55 53 44 43 00 00 00 00 00 00 00 00 00 00 00 00] 
-        symbol: [u8; 16],
+        // `<%= symbol%>` is represented as following (hex):
+        // <%= symbolInArray%>
+        symbol: [u8; <%= symbol.length%>],
         // Decimals of the token
         decimals: u8
     }
@@ -52,11 +52,11 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
     //////////////////////////////
 
     // Initialize can only be called once
-    transition initialize_token(public name: [u8; 32], public symbol: [u8; 16], public decimals: u8) {
-        return then finalize(self.caller, name, symbol, decimals);
+    transition initialize_token(public owner: address) {
+        return then finalize(owner);
     }
 
-    finalize initialize_token(owner: address, name: [u8; 32], symbol: [u8; 16], decimals: u8) {
+    finalize initialize_token(owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(token_owner, OWNER_INDEX));
 
@@ -64,11 +64,11 @@ program <%= symbol %>_token<%=tokenVersion%>.aleo {
         Mapping::set(token_owner, OWNER_INDEX, owner);
 
         let token_info: TokenInfo = TokenInfo {
-            name,
-            symbol,
-            decimals
+            name: <%=nameInArray%>,
+            symbol: <%=symbolInArray%>,
+            decimals: <%=decimals.toString() + 'u8'%>
         };
-        Mapping::set(info, OWNER_INDEX, token_info);
+        Mapping::set(info, INFO_INDEX, token_info);
     }
 
     /// Update the existing owner program
