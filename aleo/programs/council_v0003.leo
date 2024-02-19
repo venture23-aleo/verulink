@@ -1,8 +1,8 @@
 // The 'council' program.
-import token_bridge_v0002.aleo;
-import token_service_v0002.aleo;
+import token_bridge_v0003.aleo;
+import token_service_v0003.aleo;
 
-program council_v0004.aleo {
+program council_v0003.aleo {
 
     struct ProposalVote {
         // Hash of the proposal
@@ -383,7 +383,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/transfer_ownership_tb(new_owner);
+        token_bridge_v0003.aleo/transfer_ownership_tb(new_owner);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);        
@@ -428,7 +428,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/add_attestor_tb(new_attestor, new_threshold);
+        token_bridge_v0003.aleo/add_attestor_tb(new_attestor, new_threshold);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -474,7 +474,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/remove_attestor_tb(existing_attestor, new_threshold);
+        token_bridge_v0003.aleo/remove_attestor_tb(existing_attestor, new_threshold);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -518,7 +518,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/update_threshold_tb(new_threshold);
+        token_bridge_v0003.aleo/update_threshold_tb(new_threshold);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -562,7 +562,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/add_chain_tb(chain_id);
+        token_bridge_v0003.aleo/add_chain_tb(chain_id);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -606,7 +606,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/remove_chain_tb(chain_id);
+        token_bridge_v0003.aleo/remove_chain_tb(chain_id);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -651,7 +651,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/add_service_tb(service);
+        token_bridge_v0003.aleo/add_service_tb(service);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -695,7 +695,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/remove_service_tb(service);
+        token_bridge_v0003.aleo/remove_service_tb(service);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -736,7 +736,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/pause_tb();
+        token_bridge_v0003.aleo/pause_tb();
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -778,7 +778,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/unpause_tb();
+        token_bridge_v0003.aleo/unpause_tb();
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -826,7 +826,7 @@ program council_v0004.aleo {
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
 
         // Execute the proposal
-        token_service_v0002.aleo/transfer_ownership_ts(new_owner);
+        token_service_v0003.aleo/transfer_ownership_ts(new_owner);
 
         return then finalize(proposal_hash, voters, vote_keys, votes);
     }
@@ -890,7 +890,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/add_token_ts(token_address, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
+        token_service_v0003.aleo/add_token_ts(token_address, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -934,7 +934,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/remove_token_ts(token_address);
+        token_service_v0003.aleo/remove_token_ts(token_address);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -986,7 +986,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/update_min_transfer_ts(token_address, min_transfer);
+        token_service_v0003.aleo/update_min_transfer_ts(token_address, min_transfer);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -1038,7 +1038,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/update_max_transfer_ts(token_address, max_transfer);
+        token_service_v0003.aleo/update_max_transfer_ts(token_address, max_transfer);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -1087,7 +1087,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/pause_token_ts(token_address);
+        token_service_v0003.aleo/pause_token_ts(token_address);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -1136,7 +1136,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/unpause_token_ts(token_address);
+        token_service_v0003.aleo/unpause_token_ts(token_address);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
@@ -1196,7 +1196,7 @@ program council_v0004.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/update_withdrawal_limit(token_address, percentage, duration, threshold_no_limit);
+        token_service_v0003.aleo/update_withdrawal_limit(token_address, percentage, duration, threshold_no_limit);
 
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);

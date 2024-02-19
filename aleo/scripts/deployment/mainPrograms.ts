@@ -1,12 +1,12 @@
-import { Token_bridge_v0002Contract } from "../../artifacts/js/token_bridge_v0002";
-import { Token_service_v0002Contract } from "../../artifacts/js/token_service_v0002";
-import { Council_v0002Contract } from "../../artifacts/js/council_v0002";
+import { Token_bridge_v0003Contract } from "../../artifacts/js/token_bridge_v0003";
+import { Token_service_v0003Contract } from "../../artifacts/js/token_service_v0003";
+import { Council_v0003Contract } from "../../artifacts/js/council_v0003";
 
 export const deployMainPrograms = async (initialAttestors: string[], initialCouncilMembers: string[], initialAttestorThreshold: number, initialCouncilThreshold: number) => {
 
-  const bridge = new Token_bridge_v0002Contract({mode: "execute", priorityFee: 10_000});
-  const tokenService = new Token_service_v0002Contract({mode: "execute", priorityFee: 10_000});
-  const council = new Council_v0002Contract({mode: "execute", priorityFee: 10_000});
+  const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
+  const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
+  const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 
   // Deploy token bridge
   const bridgeDeployTx = await bridge.deploy(); // 19_840_000

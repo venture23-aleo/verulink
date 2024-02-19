@@ -5,7 +5,7 @@ import { encodeNetworkChainId} from '../../utils/chainId';
 import { to_address } from 'aleo-program-to-address';
 import { evm2AleoArr} from '../../utils/ethAddress';
 import { string2AleoArr } from '../../utils/string';
-import { ethTsContractAddr, usdcContractAddr } from '../../utils/testnet.data';
+import { ethTsContractAddr, usdcContractAddr } from '../../utils/constants';
 
 const tokenTemplate = fs.readFileSync('programs/templates/token_program.ejs').toString();
 const holdingTemplate = fs.readFileSync('programs/templates/token_holding.ejs').toString();
@@ -21,7 +21,7 @@ const ethTokenAddr = usdcContractAddr
 
 const tokenData = {
     ticker: "wusdc",
-    tokenVersion: "_v0002",
+    tokenVersion: "_v0003",
     name,
     symbol,
     decimals,
@@ -30,15 +30,15 @@ const tokenData = {
 }
 
 const holdingData = {
-    holdingVersion: "_v0002",
+    holdingVersion: "_v0003",
     ...tokenData
 }
 
-const connectorVersion = "_v0002"
+const connectorVersion = "_v0003_1"
 const connectorData = {
     connectorVersion,
-    tokenServiceVersion: "_v0002",
-    councilVersion: "_v0004",
+    tokenServiceVersion: "_v0003",
+    councilVersion: "_v0003",
     originChainId: ethChainId.toString() + 'u128',
     originTokenAddress: '[' + evm2AleoArr(ethTokenAddr).map((x) => x.toString() + 'u8').join(',') + ']',
     originTokenServiceAddress: '[' + evm2AleoArr(ethTsContractAddr).map((x) => x.toString() + 'u8').join(',') + ']',

@@ -1,19 +1,11 @@
-import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
-import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
-import { Council_v0002Contract } from "../artifacts/js/council_v0002";
-import { Wusdc_connector_v0003Contract } from "../artifacts/js/wusdc_connector_v0003";
+import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
+import { InPacket } from "../artifacts/js/types/token_bridge_v0003";
+import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
+import { Council_v0003Contract } from "../artifacts/js/council_v0003";
+import { Wusdc_connector_v0003_0Contract } from "../artifacts/js/wusdc_connector_v0003_0";
 
-import {
-  aleoChainId,
-  ethChainId,
-  ethTsContractAddr,
-  ethUser,
-  usdcContractAddr,
-} from "../utils/testnet.data";
-
-import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
+import { evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 
 import {
@@ -24,19 +16,24 @@ import {
   OWNER_INDEX,
   TOKEN_PAUSED_VALUE,
   TOKEN_UNPAUSED_VALUE,
+  aleoChainId,
+  ethChainId,
+  ethTsContractAddr,
+  usdcContractAddr,
 } from "../utils/constants";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
-import { WithdrawalLimit } from "../artifacts/js/types/token_service_v0002";
+import { WithdrawalLimit } from "../artifacts/js/types/token_service_v0003";
 
-const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
-const tokenService = new Token_service_v0002Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0002Contract();
-const council = new Council_v0002Contract();
-const wusdcConnector = new Wusdc_connector_v0003Contract();
+const bridge = new Token_bridge_v0003Contract({ mode: "execute" });
+const tokenService = new Token_service_v0003Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0003Contract();
+const council = new Council_v0003Contract();
+const wusdcConnector = new Wusdc_connector_v0003_0Contract();
 
 const TIMEOUT = 20000_000;
 
+const ethUser = generateRandomEthAddr();
 const createPacket = (
   receiver: string,
   amount: bigint,

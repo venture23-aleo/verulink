@@ -1,14 +1,14 @@
-import wusdc_token_v0002.aleo;
-import wusdc_holding_v0002.aleo;
-import token_service_v0002.aleo;
-import council_v0002.aleo;
+import wusdc_token_v0003.aleo;
+import wusdc_holding_v0003.aleo;
+import token_service_v0003.aleo;
+import council_v0003.aleo;
 
-program wusdc_connector_v0002.aleo {
+program wusdc_connector_v0003.aleo {
 
-    // wusdc_token_v0002.aleo as address
+    // wusdc_token_v0003.aleo as address
     const WUSDC_TOKEN: address = aleo1s7ewgjkuhxr7a9u6vjmst4khchkggxemqazrs8vy54x3prt74upqy6aveq;
 
-    // wusdc_holding_v0002.aleo as address
+    // wusdc_holding_v0003.aleo as address
     const WUSDC_HOLDING: address = aleo1kcz2af0a3ezjh5hcqehhmjx0sv5cq8c40kwm835z9kc333a69sqq0fhfg3;
 
     //////////////////////////////
@@ -17,8 +17,8 @@ program wusdc_connector_v0002.aleo {
 
     // Initialize can only be called once
     transition initialize_wusdc() {
-        wusdc_token_v0002.aleo/initialize_token(name(), symbol(), decimals());
-        wusdc_holding_v0002.aleo/initialize_holding();
+        wusdc_token_v0003.aleo/initialize_token(name(), symbol(), decimals());
+        wusdc_holding_v0003.aleo/initialize_holding();
     }
 
     /// Receive Wrapped USDC
@@ -41,7 +41,7 @@ program wusdc_connector_v0002.aleo {
         public signs: [signature; 5]
     ) {
 
-        let screening_passed: bool = token_service_v0002.aleo/token_receive(
+        let screening_passed: bool = token_service_v0003.aleo/token_receive(
             origin_chain_id(), 
             origin_token_service_address(), 
             origin_token_address(), 
@@ -63,17 +63,17 @@ program wusdc_connector_v0002.aleo {
             held_amount = amount;
         }
 
-        wusdc_token_v0002.aleo/mint_public(actual_receiver, amount);
+        wusdc_token_v0003.aleo/mint_public(actual_receiver, amount);
 
-        wusdc_holding_v0002.aleo/hold_fund(receiver, held_amount);
+        wusdc_holding_v0003.aleo/hold_fund(receiver, held_amount);
 
     }
 
     transition wusdc_send(public receiver: [u8; 32], public amount: u128) {
 
-        wusdc_token_v0002.aleo/burn_public(self.caller, amount);
+        wusdc_token_v0003.aleo/burn_public(self.caller, amount);
 
-        token_service_v0002.aleo/token_send(
+        token_service_v0003.aleo/token_send(
             WUSDC_TOKEN, 
             self.caller, 
             receiver, 
@@ -92,18 +92,18 @@ program wusdc_connector_v0002.aleo {
     /// Update the existing connector program
     /// Can only be called if proposal with enough votes exist on council program
     transition update(public proposal_id: u32, public new_connector: address) {
-        council_v0002.aleo/connector_update(proposal_id, WUSDC_TOKEN, new_connector);
-        wusdc_token_v0002.aleo/transfer_ownership_token(new_connector);
-        wusdc_holding_v0002.aleo/transfer_ownership_holding(new_connector);
-        token_service_v0002.aleo/update_connector_ts(WUSDC_TOKEN, new_connector);
+        council_v0003.aleo/connector_update(proposal_id, WUSDC_TOKEN, new_connector);
+        wusdc_token_v0003.aleo/transfer_ownership_token(new_connector);
+        wusdc_holding_v0003.aleo/transfer_ownership_holding(new_connector);
+        token_service_v0003.aleo/update_connector_ts(WUSDC_TOKEN, new_connector);
     }
 
 
     /// Release fund from holding program
     /// Can only be called if proposal with enough votes exist on council program
     transition wusdc_release(public proposal_id: u32, public receiver: address, public amount: u128) {
-        council_v0002.aleo/holding_release(proposal_id, WUSDC_TOKEN, receiver, amount);
-        wusdc_holding_v0002.aleo/release_fund(receiver, amount);
+        council_v0003.aleo/holding_release(proposal_id, WUSDC_TOKEN, receiver, amount);
+        wusdc_holding_v0003.aleo/release_fund(receiver, amount);
     }
 
 

@@ -1,7 +1,7 @@
 import { hashStruct } from "../../../utils/hash";
 
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { Token_bridge_v0002Contract } from "../../../artifacts/js/token_bridge_v0002";
+import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { validateExecution, validateProposer } from "../councilUtils";
 import { TbAddService, TbRemoveService } from "../../../artifacts/js/types/council_v0003";
@@ -9,7 +9,7 @@ import { getTbAddServiceLeo, getTbRemoveServiceLeo } from "../../../artifacts/js
 
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const bridge = new Token_bridge_v0002Contract({mode: "execute", priorityFee: 10_000});
+const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
 
 
 //////////////////////

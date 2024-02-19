@@ -1,11 +1,10 @@
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
 
-import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
-import { string2AleoArr } from "../utils/string";
+import { Wusdc_holding_v0003Contract } from "../artifacts/js/wusdc_holding_v0003";
 import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
 
-const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
-const wusdcHolding = new Wusdc_holding_v0002Contract({mode: "execute"});
+const wusdcToken = new Wusdc_token_v0003Contract({mode: "execute"});
+const wusdcHolding = new Wusdc_holding_v0003Contract({mode: "execute"});
 
 const TIMEOUT = 100_000;
 

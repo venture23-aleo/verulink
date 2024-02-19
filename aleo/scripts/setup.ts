@@ -1,8 +1,8 @@
-import { Council_v0002Contract } from "../artifacts/js/council_v0002";
-import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
+import { Council_v0003Contract } from "../artifacts/js/council_v0003";
+import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
+import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
 import { Wusdc_connector_v0003Contract } from "../artifacts/js/wusdc_connector_v0003";
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -12,11 +12,11 @@ import { execAddToken, proposeAddToken } from "./council/tokenService/addNewToke
 import { deployMainPrograms } from "./deployment/mainPrograms";
 import { deployWusdc } from "./deployment/wusdc";
 
-const bridge = new Token_bridge_v0002Contract();
-const wusdcToken = new Wusdc_token_v0002Contract();
+const bridge = new Token_bridge_v0003Contract();
+const wusdcToken = new Wusdc_token_v0003Contract();
 const wusdcConnector = new Wusdc_connector_v0003Contract();
-const tokenService = new Token_service_v0002Contract();
-const council = new Council_v0002Contract();
+const tokenService = new Token_service_v0003Contract();
+const council = new Council_v0003Contract();
 
 import {
   aleoUser1,
@@ -31,7 +31,7 @@ import {
   wusdcMinTransfer,
   wusdcOutgoingPercentage,
   wusdcTimeframe,
-} from "./testnet.data";
+} from "../utils/testnet.data";
 
 const initialAttestors = [
   aleoUser1,
