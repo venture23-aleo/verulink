@@ -1,10 +1,11 @@
 import { hashStruct } from "../../../utils/hash";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TsAddToken, TsUpdateMaxTransfer, TsUpdateMinTransfer } from "../../../artifacts/js/types/council_v0003";
 import { getTsAddTokenLeo, getTsUpdateMaxTransferLeo, getTsUpdateMinTransferLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -32,13 +33,13 @@ export const proposeUpdateMaxTransfer = async (
     token_address: tokenAddress,
     max_transfer: maxTransfer
   };
-  const TsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
 
-  const [proposeUpdateMaxTransferTx] = await council.propose(proposalId, TsUpdateMaxTransferHash);
+  const [proposeUpdateMaxTransferTx] = await council.propose(proposalId, tsUpdateMaxTransferHash);
   
   await council.wait(proposeUpdateMaxTransferTx);
 
-  getProposalStatus(TsUpdateMaxTransferHash);
+  getProposalStatus(tsUpdateMaxTransferHash);
   return proposalId
 };
 
@@ -63,15 +64,15 @@ export const voteUpdateMaxTransfer = async (
     token_address: tokenAddress,
     max_transfer: maxTransfer
   };
-  const TsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
 
-  validateVote(TsUpdateMaxTransferHash, voter);
+  validateVote(tsUpdateMaxTransferHash, voter);
 
-  const [voteUpdateMaxTransferTx] = await council.vote(TsUpdateMaxTransferHash);
+  const [voteUpdateMaxTransferTx] = await council.vote(tsUpdateMaxTransferHash, true);
   
   await council.wait(voteUpdateMaxTransferTx);
 
-  getProposalStatus(TsUpdateMaxTransferHash);
+  getProposalStatus(tsUpdateMaxTransferHash);
 
 }
 
@@ -99,15 +100,18 @@ export const execUpdateMinTransfer = async (
     token_address: tokenAddress,
     max_transfer: maxTransfer
   };
-  const TsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
 
-  validateExecution(TsUpdateMaxTransferHash);
+  validateExecution(tsUpdateMaxTransferHash);
+
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateMaxTransferHash), SUPPORTED_THRESHOLD);
 
   const [updateMaxTransferTx] = await council.ts_update_max_transfer(
     tsUpdateMaxTransfer.id,
     tsUpdateMaxTransfer.token_address,
     tsUpdateMaxTransfer.max_transfer,
-  ) // 301_747
+    voters
+  ) 
 
   await council.wait(updateMaxTransferTx);
 
@@ -116,6 +120,6 @@ export const execUpdateMinTransfer = async (
     throw Error(`❌ Unknown error.`);
   }
 
-  console.log(` ✅ Token: ${tokenAddress} maximum tranfer value updated successfully.`)
+  console.log(` ✅ Token: ${tokenAddress} maximum transfer value updated successfully.`)
 
 }

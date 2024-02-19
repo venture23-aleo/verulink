@@ -2,10 +2,11 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddAttestorLeo, getTbAddChainLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getTbAddAttestorLeo } from "../../../artifacts/js/js2leo/council_v0003";
 import { TbAddAttestor } from "../../../artifacts/js/types/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -29,7 +30,7 @@ export const proposeAddAttestor = async (newAttestor: string, new_threshold: num
   };
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor)); 
 
-  const [proposeAddAttestorTx] = await council.propose(proposalId, tbAddAttestorProposalHash); // 477_914
+  const [proposeAddAttestorTx] = await council.propose(proposalId, tbAddAttestorProposalHash); 
   
   await council.wait(proposeAddAttestorTx);
 
@@ -53,10 +54,10 @@ export const voteAddAttestor = async (proposalId: number, newAttestor: string, n
   };
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor)); 
 
-  const voter = council.getAccounts()[0];
+  const voter = council.getDefaultAccount();
   validateVote(tbAddAttestorProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbAddAttestorProposalHash); // 477_914
+  const [voteAddChainTx] = await council.vote(tbAddAttestorProposalHash, true);
   
   await council.wait(voteAddChainTx);
 
@@ -86,11 +87,13 @@ export const execAddAttestor = async (proposalId: number,newAttestor: string, ne
 
   validateExecution(tbAddAttestorProposalHash);
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddAttestorProposalHash), SUPPORTED_THRESHOLD);
   const [addAttestorTx] = await council.tb_add_attestor(
     tbAddAttestor.id,
     tbAddAttestor.new_attestor,
-    tbAddAttestor.new_threshold
-  ) // 301_747
+    tbAddAttestor.new_threshold,
+    voters
+  ) 
 
   await council.wait(addAttestorTx);
 

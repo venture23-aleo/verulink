@@ -2,12 +2,11 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddAttestorLeo, getTbRemoveAttestorLeo} from "../../../artifacts/js/js2leo/council_v0003";
-import { TbAddAttestor, TbRemoveAttestor} from "../../../artifacts/js/types/council_v0003";
-import { Address } from "@aleohq/sdk";
-import { getTbAddAttestor, getTbRemoveAttestor } from "../../../artifacts/js/leo2js/council_v0003";
+import { getTbRemoveAttestorLeo} from "../../../artifacts/js/js2leo/council_v0003";
+import { TbRemoveAttestor} from "../../../artifacts/js/types/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -31,7 +30,7 @@ export const proposeRemoveAttestor = async (attestor: string, new_threshold: num
   };
   const tbRemoveAttestorProposalHash = hashStruct(getTbRemoveAttestorLeo(tbRemoveAttestor)); 
 
-  const [proposeRemoveAttestorTx] = await council.propose(proposalId, tbRemoveAttestorProposalHash); // 477_914
+  const [proposeRemoveAttestorTx] = await council.propose(proposalId, tbRemoveAttestorProposalHash); 
   
   await council.wait(proposeRemoveAttestorTx);
 
@@ -58,7 +57,7 @@ export const voteRemoveAttestor = async (proposalId: number, attestor: string, n
   const voter = council.getAccounts()[0];
   validateVote(tbRemoveAttestorProposalHash, voter);
 
-  const [voteRemoveChainTx] = await council.vote(tbRemoveAttestorProposalHash); // 477_914
+  const [voteRemoveChainTx] = await council.vote(tbRemoveAttestorProposalHash, true);
   
   await council.wait(voteRemoveChainTx);
 
@@ -88,11 +87,13 @@ export const execRemoveAttestor = async (proposalId: number,attestor: string, ne
 
   validateExecution(tbRemoveAttestorProposalHash);
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbRemoveAttestorProposalHash), SUPPORTED_THRESHOLD);
   const [removeAttestorTx] = await council.tb_remove_attestor(
     tbRemoveAttestor.id,
     tbRemoveAttestor.existing_attestor,
-    tbRemoveAttestor.new_threshold
-  ) // 301_747
+    tbRemoveAttestor.new_threshold,
+    voters
+  );
 
   await council.wait(removeAttestorTx);
 

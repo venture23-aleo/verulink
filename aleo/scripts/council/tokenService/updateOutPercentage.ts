@@ -1,10 +1,11 @@
 import { hashStruct } from "../../../utils/hash";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TsAddToken, TsUpdateMinTransfer, TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/council_v0003";
 import { getTsAddTokenLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -75,7 +76,7 @@ export const voteUpdateOutPercentage = async (
 
   validateVote(tsUpdateWithdrawalLimitHash, voter);
 
-  const [voteUpdateWithdrawalLimitTx] = await council.vote(tsUpdateWithdrawalLimitHash);
+  const [voteUpdateWithdrawalLimitTx] = await council.vote(tsUpdateWithdrawalLimitHash, true);
   
   await council.wait(voteUpdateWithdrawalLimitTx);
 
@@ -115,13 +116,16 @@ export const execUpdateWithdrawalLimit = async (
 
   validateExecution(tsUpdateWithdrawalLimitHash);
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateWithdrawalLimitHash), SUPPORTED_THRESHOLD);
+
   const [updateWithdrawalLimitTx] = await council.ts_update_outgoing_percentage(
     tsUpdateWithdrawalLimit.id,
     tsUpdateWithdrawalLimit.token_address,
     tsUpdateWithdrawalLimit.percentage,
     tsUpdateWithdrawalLimit.duration,
-    tsUpdateWithdrawalLimit.threshold_no_limit
-  ) // 301_747
+    tsUpdateWithdrawalLimit.threshold_no_limit,
+    voters
+  ) 
 
   await council.wait(updateWithdrawalLimitTx);
 

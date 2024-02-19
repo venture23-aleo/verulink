@@ -32,7 +32,7 @@ export const proposeUnpauseToken = async (tokenAddr: string): Promise<number> =>
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken)); 
 
-  const [proposeUnpauseTokenTx] = await council.propose(proposalId, tsUnpauseTokenHash); // 477_914
+  const [proposeUnpauseTokenTx] = await council.propose(proposalId, tsUnpauseTokenHash); 
   await council.wait(proposeUnpauseTokenTx);
 
   getProposalStatus(tsUnpauseTokenHash);
@@ -59,7 +59,7 @@ export const voteUnpauseToken = async (proposalId: number, tokenAddr: string) =>
   const voter = council.getAccounts()[0];
   validateVote(tsUnpauseTokenHash, voter);
 
-  const [voteUnpauseTx] = await council.vote(tsUnpauseTokenHash, true); // 477_914
+  const [voteUnpauseTx] = await council.vote(tsUnpauseTokenHash, true); 
   
   await council.wait(voteUnpauseTx);
 

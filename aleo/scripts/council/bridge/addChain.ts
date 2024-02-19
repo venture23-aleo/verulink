@@ -29,7 +29,7 @@ export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
   };
   const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
 
-  const [proposeAddChainTx] = await council.propose(proposalId, tbAddChainProposalHash); // 477_914
+  const [proposeAddChainTx] = await council.propose(proposalId, tbAddChainProposalHash); 
 
   await council.wait(proposeAddChainTx);
 
@@ -52,10 +52,10 @@ export const voteAddChain = async (proposalId: number, newChainId: bigint) => {
   };
   const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
 
-  const voter = council.getAccounts()[0];
+  const voter = council.getDefaultAccount();
   validateVote(tbAddChainProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbAddChainProposalHash, true); // 477_914
+  const [voteAddChainTx] = await council.vote(tbAddChainProposalHash, true);
   
   await council.wait(voteAddChainTx);
 

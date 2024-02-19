@@ -2,12 +2,11 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddAttestorLeo, getTbAddChainLeo, getTbUpdateThresholdLeo } from "../../../artifacts/js/js2leo/council_v0003";
-import { TbAddAttestor, TbAddChain, TbUpdateThreshold } from "../../../artifacts/js/types/council_v0003";
-import { Address } from "@aleohq/sdk";
-import { getTbAddAttestor } from "../../../artifacts/js/leo2js/council_v0003";
+import { getTbUpdateThresholdLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TbUpdateThreshold } from "../../../artifacts/js/types/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -26,7 +25,7 @@ export const proposeupdateThreshold = async (new_threshold: number): Promise<num
   };
   const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold)); 
 
-  const [proposeUpdateThresholdTx] = await council.propose(proposalId, tbUpdateThresholdProposalHash); // 477_914
+  const [proposeUpdateThresholdTx] = await council.propose(proposalId, tbUpdateThresholdProposalHash);
   
   await council.wait(proposeUpdateThresholdTx);
 
@@ -48,7 +47,7 @@ export const voteUpdateThredhold = async (proposalId: number, new_threshold: num
   const voter = council.getAccounts()[0];
   validateVote(tbUpdateThresholdProposalHash, voter);
 
-  const [voteUpdateThresholdTx] = await council.vote(tbUpdateThresholdProposalHash); // 477_914
+  const [voteUpdateThresholdTx] = await council.vote(tbUpdateThresholdProposalHash, true);
   
   await council.wait(voteUpdateThresholdTx);
 
@@ -72,11 +71,13 @@ export const execUpdateThreshold = async (proposalId: number, new_threshold: num
   const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold)); 
 
   validateExecution(tbUpdateThresholdProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbUpdateThresholdProposalHash), SUPPORTED_THRESHOLD);
 
   const [updateThresholdTx] = await council.tb_update_threshold(
     tbUpdateThreshold.id,
-    tbUpdateThreshold.new_threshold
-  ) // 301_747
+    tbUpdateThreshold.new_threshold,
+    voters
+  )
 
   await council.wait(updateThresholdTx);
 

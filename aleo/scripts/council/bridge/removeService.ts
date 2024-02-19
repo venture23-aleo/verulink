@@ -2,11 +2,11 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TbRemoveService } from "../../../artifacts/js/types/council_v0003";
 import { getTbRemoveServiceLeo } from "../../../artifacts/js/js2leo/council_v0003";
-import { getTbRemoveService } from "../../../artifacts/js/leo2js/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -32,7 +32,7 @@ export const proposeRemoveService = async (tokenService: string): Promise<number
   };
   const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService)); 
 
-  const [proposeRemoveTokenServiceTx] = await council.propose(proposalId, tbRemoveTokenServiceProposalHash); // 477_914
+  const [proposeRemoveTokenServiceTx] = await council.propose(proposalId, tbRemoveTokenServiceProposalHash);
   
   await council.wait(proposeRemoveTokenServiceTx);
 
@@ -63,7 +63,7 @@ export const voteRemoveService = async (proposalId: number, tokenService: string
 
   validateVote(tbRemoveTokenServiceProposalHash, voter);
 
-  const [voteRemoveChainTx] = await council.vote(tbRemoveTokenServiceProposalHash); // 477_914
+  const [voteRemoveChainTx] = await council.vote(tbRemoveTokenServiceProposalHash, true); 
   
   await council.wait(voteRemoveChainTx);
 
@@ -96,10 +96,12 @@ export const execRemoveService = async (proposalId: number, tokenService: string
 
   validateExecution(tbRemoveTokenServiceProposalHash);
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbRemoveTokenServiceProposalHash), SUPPORTED_THRESHOLD);
   const [removeServiceTx] = await council.tb_remove_service(
     tbRemoveService.id,
     tbRemoveService.service,
-  ) // 301_747
+    voters
+  );
 
   await council.wait(removeServiceTx);
 

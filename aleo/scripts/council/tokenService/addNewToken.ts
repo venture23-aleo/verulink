@@ -144,7 +144,7 @@ export const execAddToken = async (
     tsAddToken.time,
     tsAddToken.max_no_cap,
     voters
-  ) // 301_747
+  ) 
 
   await council.wait(addChainTx);
 

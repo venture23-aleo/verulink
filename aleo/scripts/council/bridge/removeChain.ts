@@ -2,10 +2,11 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TbRemoveChain } from "../../../artifacts/js/types/council_v0003";
 import { getTbRemoveChainLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -28,7 +29,7 @@ export const proposeRemoveChain = async (chainId: bigint): Promise<number> => {
   };
   const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain)); 
 
-  const [proposeRemoveChainTx] = await council.propose(proposalId, tbRemoveChainProposalHash); // 477_914
+  const [proposeRemoveChainTx] = await council.propose(proposalId, tbRemoveChainProposalHash); 
   
   await council.wait(proposeRemoveChainTx);
 
@@ -54,7 +55,7 @@ export const voteRemoveChain = async (proposalId: number, chainId: bigint) => {
   const voter = council.getAccounts()[0];
   validateVote(tbRemoveChainProposalHash, voter);
 
-  const [voteRemoveChainTx] = await council.vote(tbRemoveChainProposalHash); // 477_914
+  const [voteRemoveChainTx] = await council.vote(tbRemoveChainProposalHash, true); 
   
   await council.wait(voteRemoveChainTx);
 
@@ -83,10 +84,12 @@ export const execRemoveChain = async (proposalId: number, chainId: bigint) => {
 
   validateExecution(tbRemoveChainProposalHash);
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbRemoveChainProposalHash), SUPPORTED_THRESHOLD);
   const [removeChainTx] = await council.tb_remove_chain(
     tbRemoveChain.id,
     tbRemoveChain.chain_id,
-  ) // 301_747
+    voters
+  )
 
   await council.wait(removeChainTx);
 

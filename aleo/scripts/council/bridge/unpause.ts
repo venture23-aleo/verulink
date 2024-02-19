@@ -30,7 +30,7 @@ export const proposeUnpauseBridge = async (): Promise<number> => {
   };
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause)); 
 
-  const [proposeUnpauseBridgeTx] = await council.propose(proposalId, tbUnpauseProposalHash); // 477_914
+  const [proposeUnpauseBridgeTx] = await council.propose(proposalId, tbUnpauseProposalHash); 
   
   await council.wait(proposeUnpauseBridgeTx);
 
@@ -58,7 +58,7 @@ export const voteUnpauseBridge = async (proposalId: number) => {
   const voter = council.getAccounts()[0];
   validateVote(tbUnpauseProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbUnpauseProposalHash, true); // 477_914
+  const [voteAddChainTx] = await council.vote(tbUnpauseProposalHash, true); 
   
   await council.wait(voteAddChainTx);
 

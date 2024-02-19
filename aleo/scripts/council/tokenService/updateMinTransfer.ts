@@ -1,10 +1,11 @@
 import { hashStruct } from "../../../utils/hash";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TsAddToken, TsUpdateMinTransfer } from "../../../artifacts/js/types/council_v0003";
 import { getTsAddTokenLeo, getTsUpdateMinTransferLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -67,7 +68,7 @@ export const voteUpdateMinTransfer = async (
 
   validateVote(TsUpdateMinTransferHash, voter);
 
-  const [voteUpdateMinTransferTx] = await council.vote(TsUpdateMinTransferHash);
+  const [voteUpdateMinTransferTx] = await council.vote(TsUpdateMinTransferHash, true);
   
   await council.wait(voteUpdateMinTransferTx);
 
@@ -103,11 +104,14 @@ export const execUpdateMinTransfer = async (
 
   validateExecution(tsUpdateMinTransferHash);
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateMinTransferHash), SUPPORTED_THRESHOLD);
+
   const [updateMinTransferTx] = await council.ts_update_min_transfer(
     tsUpdateMinTransfer.id,
     tsUpdateMinTransfer.token_address,
     tsUpdateMinTransfer.min_transfer,
-  ) // 301_747
+    voters
+  ) 
 
   await council.wait(updateMinTransferTx);
 
