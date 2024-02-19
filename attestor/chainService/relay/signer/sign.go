@@ -34,6 +34,7 @@ type signService struct {
 	url string
 }
 
+// HashAndSignScreendedPacket calls the signing service to hash and sign the screened packets 
 func (s *signService) HashAndSignScreenedPacket(
 	ctx context.Context, sp *chain.ScreenedPacket) (hash, signature string, err error) {
 

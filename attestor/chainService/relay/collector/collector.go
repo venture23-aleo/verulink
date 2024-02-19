@@ -53,6 +53,7 @@ type collector struct {
 	collectorWaitDur time.Duration
 }
 
+// SendToCollector sends the signed packets to the collector service aka db-service
 func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
 	params := map[string]interface{}{
 		srcChainID:     sp.Packet.Source.ChainID.String(),
@@ -103,6 +104,7 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
+// ReceivePktsFromCollector queries the db-service for information of packets that has to be processed again
 func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
 
 	if len(c.chainIDToAddress) == 0 {

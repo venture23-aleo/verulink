@@ -19,6 +19,8 @@ const (
 type screenService struct {
 }
 
+// Screen evaluates the validity of the packet by checking if the wallet addresses of either of receiver or sender 
+// in the packet is flagged by the screening services. If they are flagged, returns false and returns true otherwise
 func (s screenService) Screen(pkt *chain.Packet) bool {
 	key := pkt.GetSha256Hash()
 	v, err := store.GetAndDeleteWhiteStatus(namespace, key)
@@ -35,6 +37,7 @@ func (s screenService) Screen(pkt *chain.Packet) bool {
 	return true
 }
 
+// StoreWhiteStatus stores the result of screening of the packets in the walletScreeningNS
 func (s *screenService) StoreWhiteStatus(pkt *chain.Packet, isWhite bool) error {
 	key := pkt.GetSha256Hash()
 	return store.StoreWhiteStatus(namespace, key, isWhite)

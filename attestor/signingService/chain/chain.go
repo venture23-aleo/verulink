@@ -19,6 +19,7 @@ var (
 	chainIDToName = map[string]string{}
 )
 
+// HashAndSign returns the hash and signature according to the destination of the packets
 func HashAndSign(data []byte) (hash, signature string, err error) {
 	sp := new(chainService.ScreenedPacket)
 	err = json.Unmarshal(data, sp)

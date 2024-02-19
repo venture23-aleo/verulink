@@ -32,6 +32,7 @@ type relay struct {
 	screener  addressscreener.ScreenI
 }
 
+// StartRelay setups all the necessary environment for running the relay. 
 func StartRelay(ctx context.Context, cfg *config.Config) {
 	err := signer.SetupSigner(&cfg.SigningServiceConfig)
 	if err != nil {
@@ -76,6 +77,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	r.consumePackets(ctx, pktCh)
 }
 
+// initPacketFeeder starts the routine to fetch and manage the packets of all the registered chains
 func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
 
@@ -110,6 +112,8 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 	}
 }
 
+// consumePackets spawns the goroutine to process the packets from source chain and send the packets to 
+// the db-service after signing 
 func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
 	guideCh := make(chan struct{}, config.GetConfig().ConsumePacketWorker)
 	for {
@@ -132,6 +136,9 @@ func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) 
 	}
 }
 
+// processPacket verifies if the addresses(receiver and sender) in the packet are flagged by querying their 
+// validity in the screening services and according to the result, send the screened packets to signing 
+// service to retrieve the signature and finally send it to the db-service aka collector 
 func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	srcChainName := chainIDToChain[pkt.Source.ChainID.String()].Name()
 	var (
@@ -184,6 +191,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	logger.GetLogger().Info("Yay packet successfully sent")
 }
 
+// consumeMissedPackets receives the packet from the db-service administrator in missedPktCh channel and reprocesses the
+// packet by screening the packet, signing the packet and sending the signature back to the db-service
 func (r *relay) consumeMissedPackets(
 	ctx context.Context, missedPktCh <-chan *chain.MissedPacket,
 	pktCh chan<- *chain.Packet) { // refetchCh Channel to signal collector

@@ -169,6 +169,9 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	return curHeight - cl.waitHeight, nil // total number of blocks that has to be passed in the waiting duration
 }
 
+// filterPacketLogs filters the event logs of the bridge contract and returns all the PacketDispatched events that are
+// emitted from fromHeight to toHeight. The result of the query is close ended i.e. both fromHeight and toHeight are
+// included in the range for filtering
 func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uint64) ([]*chain.Packet, error) {
 	logs, err := cl.eth.FilterLogs(ctx, fromHeight, toHeight, cl.address, cl.filterTopic)
 	if err != nil {
@@ -205,6 +208,14 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 	return packets, nil
 }
 
+// FeedPacket spawns goroutine for processes that handles error while sending the packet to the 
+// db service, process that periodically updates the base sequence number, process that handles
+// retrying the failed to send packets to the db service and that fetches packets from the source 
+// chain. After fetching the packets from the source chain, the packet is fed into "ch" channel
+//
+// FilterPacket logs syncs quickly from start height to the end height upto which the blocks can be 
+// processed given by blockHeightPriorWaitDur() by filtering the blocks between start height and end 
+// height in chunks of defaultHeightDifferenceForFilterLogs
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
@@ -266,6 +277,9 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	}
 }
 
+// retryFeed periodically fetches the packets in the "retryPacketNamespace" to be sent to the 
+// db-service. It deletes the packets in the namespace after fetching and sends the packets in "ch"
+// channel
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(cl.retryPacketWaitDur) // todo: define in config
 	index := 0
@@ -296,6 +310,9 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 	}
 }
 
+// pruneBaseSeqNum updates the sequence number upto which the attestor has processed all the 
+// outgoing packets of the source chain. The first entry of the baseSeqNum bucket represents
+// the base sequence number
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(cl.pruneBaseSeqNumberWaitDur)
 	index := 0
@@ -357,6 +374,10 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 	}
 }
 
+// managePacket either keeps the packet received from retryCh channel in the retryPacketNameSpace 
+// in the event of failure while sending packets to db-service or 
+// in the baseSequenceNumberNameSpace to the packets received from completedCh channel in the event
+// of successful packet delivery to the db-service
 func (cl *Client) managePacket(ctx context.Context) {
 	for {
 		select {
@@ -411,6 +432,7 @@ func (cl *Client) GetMissedPacket(
 	return nil, errors.New("packet not found")
 }
 
+// NewClient initializes Client and returns the interface to chain.IClient
 func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
