@@ -218,6 +218,13 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 	defer ticker.Stop()
 
+	if cl.nextBlockHeight == 0 {
+		ns := baseSeqNumNameSpacePrefix + cl.chainID.String()
+		baseSeqNumber := store.GetFirstKey[uint64](ns, uint64(1))
+		baseHeight := store.GetFromDB[uint64](ns, baseSeqNumber)
+		cl.nextBlockHeight = baseHeight
+	}
+
 	for {
 		select {
 		case <-ctx.Done():

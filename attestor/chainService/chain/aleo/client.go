@@ -170,7 +170,15 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.retryFeed(ctx, ch)
 
 	for chainID, nextSeqNum := range cl.destChains {
-		go cl.feedPacket(ctx, chainID, nextSeqNum, ch)
+		go func(chainId string, nxtSeqNum uint64) {
+			if nxtSeqNum == 0 {
+				ns := baseSeqNumNameSpacePrefix + chainId
+				nxtSeqNum = store.GetFirstKey[uint64](ns, uint64(1))
+			}
+			go cl.feedPacket(ctx, chainId, nxtSeqNum, ch)
+
+
+		}(chainID, nextSeqNum)
 	}
 	<-ctx.Done()
 }

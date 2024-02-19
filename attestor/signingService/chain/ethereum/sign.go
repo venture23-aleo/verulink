@@ -2,7 +2,6 @@ package ethereum
 
 import (
 	"crypto/ecdsa"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -39,11 +38,18 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 	return nil
 }
 
-func validateKey(privateKey *ecdsa.PrivateKey, publicKey string) error {
-	pubKey := hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey))
-	pubKey = strings.ToLower(pubKey)
-	if pubKey != strings.ToLower(publicKey) {
-		return fmt.Errorf("private key cannot derive the give public key address")
+func validateKey(privateKey *ecdsa.PrivateKey, publicAddress string) error {
+	pubKey := privateKey.Public()
+
+	pubKeyECDSA, ok := pubKey.(*ecdsa.PublicKey)
+	if !ok {
+		panic("couldnot cast to ECDSA public key")
 	}
-	return nil
+
+	address := crypto.PubkeyToAddress(*pubKeyECDSA).Hex()
+	address = strings.ToLower(address)
+	if address !=  publicAddress{
+		return fmt.Errorf("supplied private key cannot derieve the supplied address")
+	}
+	return nil 
 }
