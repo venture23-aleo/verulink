@@ -143,8 +143,8 @@ import { hashStruct } from "../utils/hash";
 
 const signPacketHash = (packet_hash: bigint, screening_passed: boolean, privateKey: string) => {
     const packetHashWithScreening: InPacketWithScreening = {
-      packet_hash,
-      screening_passed
+        packet_hash,
+        screening_passed
     };
     const packetHashWithScreeningHash = hashStruct(getInPacketWithScreeningLeo(packetHashWithScreening));
     const signature = sign(privateKey, js2leo.field(packetHashWithScreeningHash))
@@ -330,7 +330,7 @@ describe("Signature Verification", () => {
                 ]
             );
         })
-    }) 
+    })
 
     describe("Screening Passed - All False", () => {
 
@@ -490,7 +490,7 @@ describe("Signature Verification", () => {
                 ]
             );
         })
-    }) 
+    })
 
     describe("Screening Passed - Mixed", () => {
 
@@ -585,6 +585,26 @@ describe("Signature Verification", () => {
             );
             expect(passed).toBe(true);
             expect(count).toBe(2);
+        })
+
+        test.failing("Two passed, two failed (equal failed and passed majority)- Must fail", async () => {
+            await utils.get_majority_count(
+                packet_hash,
+                [
+                    addr1,
+                    addr2,
+                    addr3,
+                    ALEO_ZERO_ADDRESS,
+                    addr5,
+                ],
+                [
+                    sign1,
+                    sign2,
+                    sign3,
+                    sign4,
+                    sign5,
+                ]
+            )
         })
 
         test("Two passed, three failed - failed majority", async () => {
