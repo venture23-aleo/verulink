@@ -20,7 +20,7 @@ interface IBridge {
 
      /// @notice Consumes an incoming packet and validates the provided signatures
     /// @param packet The incoming packet to be consumed
-    /// @param sigs The array of signatures to be validated
+    /// @param signatures The array of signatures to be validated
     /// @return The overall vote (YEA, NAY, or NULL) based on the provided signatures
-    function consume(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external returns (PacketLibrary.Vote);
+    function consume(PacketLibrary.InPacket memory packet, bytes memory signatures) external returns (PacketLibrary.Vote);
 }

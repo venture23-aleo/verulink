@@ -73,15 +73,15 @@ contract Bridge is
 
     /// @notice Consumes a packet with provided signatures
     /// @param packet The input packet to be consumed
-    /// @param sigs The array of signatures for attestation
+    /// @param signatures The array of signatures for attestation
     /// @return Votes result of the packet consumption
     function consume(
         PacketLibrary.InPacket memory packet, 
-        bytes[] memory sigs
+        bytes memory signatures
     ) external whenNotPaused returns (PacketLibrary.Vote)
     {
         require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
-        return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
+        return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, signatures, quorumRequired);
     }
 
     /// @notice Sends a message packet to the specified destination chain

@@ -147,7 +147,7 @@ describe('Bridge', () => {
         );
         const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
+        const signatures = signature2 + signature1.slice(2);
         await proxiedV1.connect(tokenService).consume(inPacket, signatures);
         //TODO: expect something
     });
@@ -190,7 +190,7 @@ describe('Bridge', () => {
         );
         const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
+        const signatures = signature1 + signature2.slice(2);
         await(await proxiedV1.pause());
         await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWith("Pausable: paused");
     });
@@ -213,8 +213,9 @@ describe('Bridge', () => {
         // const signature = await owner.signMessage(ethers.utils.arrayify(message));
         const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
-        await expect(proxiedV1.connect(unknowntokenService).consume(inPacket, signatures)).to.be.revertedWith("Bridge: unknown token service");
+        const signatures = signature1 + signature2.slice(2);
+        await expect(proxiedV1.connect(unknowntokenService).consume(inPacket, signatures))
+            .to.be.revertedWith("Bridge: unknown token service");
     });
 
 
@@ -279,7 +280,7 @@ describe('Bridge', () => {
         );
         const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
-        const signatures = [signature1, signature2];
+        const signatures = signature2 + signature1.slice(2);
         await proxiedV1.connect(tokenService).consume(inPacket, signatures);
         await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });

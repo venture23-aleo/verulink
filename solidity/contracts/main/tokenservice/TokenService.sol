@@ -140,8 +140,8 @@ contract TokenService is
 
     /// @notice Transfers ERC20 tokens to the destination chain via the bridge
     /// @param packet incoming packet containing information to withdraw
-    /// @param sigs arrays of signature of attestor
-    function withdraw(PacketLibrary.InPacket memory packet, bytes[] memory sigs) external virtual whenNotPaused nonReentrant {
+    /// @param signatures arrays of signature of attestor
+    function withdraw(PacketLibrary.InPacket memory packet, bytes memory signatures) external virtual nonReentrant whenNotPaused {
         require(packet.destTokenService.addr == address(this),"TokenService: invalid token service");
         
         address receiver = packet.message.receiverAddress;
@@ -149,7 +149,7 @@ contract TokenService is
         uint256 amount = packet.message.amount;
 
         require(isEnabledToken(tokenAddress), "TokenService: invalid token");
-        PacketLibrary.Vote quorum = erc20Bridge.consume(packet, sigs);
+        PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
         if(PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
             if(tokenAddress == ETH_TOKEN) {
@@ -162,7 +162,7 @@ contract TokenService is
         }else if(quorum == PacketLibrary.Vote.YEA){
             if(tokenAddress == ETH_TOKEN) {
                 // eth transfer
-                (bool sent,) = receiver.call{value: amount}("");
+                (bool sent,) = payable(receiver).call{value: amount}("");
                 require(sent, "TokenService: eth withdraw failed");
             }else {
                 require(IIERC20(tokenAddress).transfer(receiver, amount), "TokenService: withdraw failed");
