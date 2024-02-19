@@ -449,10 +449,10 @@ program token_bridge_v0003.aleo {
         assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
 
         // Assert that the packet is being sent to supported chain.
-        assert(Mapping::get(supported_chains, destination_chain_id));
+        assert(Mapping::contains(supported_chains, destination_chain_id));
 
         // Assert that the packet is being sent from one of the supported services
-        assert(Mapping::get(supported_services, source_service_program));
+        assert(Mapping::contains(supported_services, source_service_program));
 
         // Get Sequence number for the destination chain
         let target_sequence_no: u64 = Mapping::get_or_use(sequences, destination_chain_id, 1u64);

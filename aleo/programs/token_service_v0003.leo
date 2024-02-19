@@ -116,6 +116,7 @@ program token_service_v0003.aleo {
         public threshold_no_limit: u128
     ) {
         assert(max_transfer >= min_transfer);
+        assert(percentage <= HUNDRED_PERCENTAGE);
         return then finalize(self.caller, token_address, token_connector, min_transfer, max_transfer, percentage, duration, threshold_no_limit);
     }
 
