@@ -10,7 +10,7 @@ import {
   ethTsContractAddr,
   ethUser,
   usdcContractAddr,
-} from "./mockData";
+} from "../utils/testnet.data";
 
 import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
@@ -690,7 +690,7 @@ describe("Token Bridge ", () => {
     });
   });
 
-  describe.skip("Initialization", () => {
+  describe("Initialization", () => {
     test.skip.failing(
       "Initialize - Threshold too low (must fail)",
       async () => {

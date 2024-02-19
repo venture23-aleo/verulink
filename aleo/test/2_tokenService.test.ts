@@ -11,7 +11,7 @@ import {
   ethTsContractAddr,
   ethUser,
   usdcContractAddr,
-} from "./mockData";
+} from "../utils/testnet.data";
 
 import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
