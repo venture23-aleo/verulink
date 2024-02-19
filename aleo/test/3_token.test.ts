@@ -1,14 +1,12 @@
-import { PrivateKey, ViewKey } from "@aleohq/sdk";
-import { gettoken } from "../artifacts/js/leo2js/wusdc_token_v0002";
-import { Approval, token, tokenLeo } from "../artifacts/js/types/wusdc_token_v0002";
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002"
-import { string2AleoArr } from "../utils/string";
-import { getApprovalLeo, gettokenLeo } from "../artifacts/js/js2leo/wusdc_token_v0002";
-import { config } from "dotenv";
-import { js2leo, leo2js, parseRecordString } from "@aleojs/core";
+import { PrivateKey } from "@aleohq/sdk";
+import { gettoken } from "../artifacts/js/leo2js/wusdc_token_v0003";
+import { Approval, token, tokenLeo } from "../artifacts/js/types/wusdc_token_v0003";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003"
+import { getApprovalLeo } from "../artifacts/js/js2leo/wusdc_token_v0003";
+import { parseRecordString } from "@aleojs/core";
 import { hashStruct } from "../utils/hash";
 
-const wusdcToken = new Wusdc_token_v0002Contract({mode: "execute"});
+const wusdcToken = new Wusdc_token_v0003Contract({mode: "execute"});
 
 const TIMEOUT = 1000_000; // 100 seconds
 

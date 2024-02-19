@@ -1,13 +1,13 @@
 import { hashStruct } from "../../../utils/hash";
-import { Token_bridge_v0002Contract } from "../../../artifacts/js/token_bridge_v0002";
-import { Council_v0002Contract } from "../../../artifacts/js/council_v0002";
+import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
+import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_UNPAUSED_VALUE, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbPause, TbUnpause } from "../../../artifacts/js/types/council_v0002";
-import { getTbPauseLeo, getTbUnpauseLeo } from "../../../artifacts/js/js2leo/council_v0002";
+import { TbPause, TbUnpause } from "../../../artifacts/js/types/council_v0003";
+import { getTbPauseLeo, getTbUnpauseLeo } from "../../../artifacts/js/js2leo/council_v0003";
 
-const council = new Council_v0002Contract({mode: "execute", priorityFee: 10_000});
-const bridge = new Token_bridge_v0002Contract({mode: "execute", priorityFee: 10_000});
+const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
+const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////

@@ -1,5 +1,5 @@
 // The `program` scope defines the data types, functions, and state associated with the `token` program.
-program wusdc_token_v0002.aleo {
+program wusdc_token_v0003.aleo {
     // On-chain storage of an `account` map, with `address` as the key,
     // and `u128` as the value.
     mapping account: address => u128;

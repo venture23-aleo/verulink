@@ -1,13 +1,13 @@
 import { hashStruct } from "../../../utils/hash";
-import { Council_v0002Contract } from "../../../artifacts/js/council_v0002";
+import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
-import { Token_service_v0002Contract } from "../../../artifacts/js/token_service_v0002";
+import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken, TsUpdateMinTransfer } from "../../../artifacts/js/types/council_v0002";
-import { getTsAddTokenLeo, getTsUpdateMinTransferLeo } from "../../../artifacts/js/js2leo/council_v0002";
+import { TsAddToken, TsUpdateMinTransfer } from "../../../artifacts/js/types/council_v0003";
+import { getTsAddTokenLeo, getTsUpdateMinTransferLeo } from "../../../artifacts/js/js2leo/council_v0003";
 
-const council = new Council_v0002Contract({mode: "execute", priorityFee: 10_000});
-const tokenService = new Token_service_v0002Contract({mode: "execute", priorityFee: 10_000});
+const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
+const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////

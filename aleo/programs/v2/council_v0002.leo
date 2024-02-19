@@ -1,10 +1,10 @@
 // The 'council' program.
-import token_bridge_v0002.aleo;
-import token_service_v0002.aleo;
+import token_bridge_v0003.aleo;
+import token_service_v0003.aleo;
 
 // proposal_hash -> Proposal: String
 
-program council_v0002.aleo {
+program council_v0003.aleo {
 
     struct ProposalVote {
         // Hash of the proposal
@@ -345,7 +345,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/transfer_ownership_tb(new_owner);
+        token_bridge_v0003.aleo/transfer_ownership_tb(new_owner);
 
         return then finalize(proposal_hash);
     }
@@ -385,7 +385,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/add_attestor_tb(new_attestor, new_threshold);
+        token_bridge_v0003.aleo/add_attestor_tb(new_attestor, new_threshold);
 
         return then finalize(proposal_hash);
     }
@@ -425,7 +425,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/remove_attestor_tb(existing_attestor, new_threshold);
+        token_bridge_v0003.aleo/remove_attestor_tb(existing_attestor, new_threshold);
 
         return then finalize(proposal_hash);
     }
@@ -463,7 +463,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/update_threshold_tb(new_threshold);
+        token_bridge_v0003.aleo/update_threshold_tb(new_threshold);
 
         return then finalize(proposal_hash);
     }
@@ -501,7 +501,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/add_chain_tb(chain_id);
+        token_bridge_v0003.aleo/add_chain_tb(chain_id);
 
         return then finalize(proposal_hash);
     }
@@ -539,7 +539,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/remove_chain_tb(chain_id);
+        token_bridge_v0003.aleo/remove_chain_tb(chain_id);
 
         return then finalize(proposal_hash);
     }
@@ -578,7 +578,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/add_service_tb(service);
+        token_bridge_v0003.aleo/add_service_tb(service);
 
         return then finalize(proposal_hash);
     }
@@ -617,7 +617,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/remove_service_tb(service);
+        token_bridge_v0003.aleo/remove_service_tb(service);
 
         return then finalize(proposal_hash);
     }
@@ -654,7 +654,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/pause_tb();
+        token_bridge_v0003.aleo/pause_tb();
 
         return then finalize(proposal_hash);
     }
@@ -691,7 +691,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0002.aleo/unpause_tb();
+        token_bridge_v0003.aleo/unpause_tb();
 
         return then finalize(proposal_hash);
     }
@@ -731,7 +731,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/transfer_ownership_ts(new_owner);
+        token_service_v0003.aleo/transfer_ownership_ts(new_owner);
 
         return then finalize(proposal_hash);
     }
@@ -791,7 +791,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/add_token_ts(token_address, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
+        token_service_v0003.aleo/add_token_ts(token_address, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
 
         return then finalize(proposal_hash);
     }
@@ -829,7 +829,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/remove_token_ts(token_address);
+        token_service_v0003.aleo/remove_token_ts(token_address);
 
         return then finalize(proposal_hash);
     }
@@ -873,7 +873,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/update_min_transfer_ts(token_address, min_transfer);
+        token_service_v0003.aleo/update_min_transfer_ts(token_address, min_transfer);
 
         return then finalize(proposal_hash);
     }
@@ -917,7 +917,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/update_max_transfer_ts(token_address, max_transfer);
+        token_service_v0003.aleo/update_max_transfer_ts(token_address, max_transfer);
 
         return then finalize(proposal_hash);
     }
@@ -968,7 +968,7 @@ program council_v0002.aleo {
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0002.aleo/update_withdrawal_limit(token_address, percentage, duration, threshold_no_limit);
+        token_service_v0003.aleo/update_withdrawal_limit(token_address, percentage, duration, threshold_no_limit);
 
         return then finalize(proposal_hash);
     }

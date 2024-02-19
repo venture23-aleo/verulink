@@ -1,30 +1,79 @@
-import { Address, PrivateKey } from "@aleohq/sdk";
-import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
-import { Council_v0004Contract } from "../artifacts/js/council_v0004";
-import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, BRIDGE_UNPAUSED_VALUE, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
+import { PrivateKey } from "@aleohq/sdk";
+
+import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
+import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
+import { Council_v0003Contract } from "../artifacts/js/council_v0003";
+import { Wusdc_connector_v0003_0Contract } from "../artifacts/js/wusdc_connector_v0003_0";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
+
+import { 
+  ALEO_ZERO_ADDRESS, 
+  BRIDGE_PAUSABILITY_INDEX, 
+  BRIDGE_PAUSED_VALUE, 
+  BRIDGE_THRESHOLD_INDEX, 
+  BRIDGE_TOTAL_ATTESTORS_INDEX, 
+  BRIDGE_UNPAUSED_VALUE, 
+  COUNCIL_THRESHOLD_INDEX, 
+  COUNCIL_TOTAL_MEMBERS_INDEX, 
+  COUNCIL_TOTAL_PROPOSALS_INDEX, 
+  OWNER_INDEX, 
+  TOKEN_PAUSED_VALUE, 
+  TOKEN_UNPAUSED_VALUE, 
+  ethChainId 
+} from "../utils/constants";
+import { 
+  getAddMemberLeo, 
+  getRemoveMemberLeo, 
+  getTbAddAttestorLeo, 
+  getTbAddChainLeo, 
+  getTbAddServiceLeo, 
+  getTbPauseLeo, 
+  getTbRemoveAttestorLeo, 
+  getTbRemoveChainLeo, 
+  getTbRemoveServiceLeo, 
+  getTbUnpauseLeo, 
+  getTsAddTokenLeo, 
+  getTsRemoveTokenLeo, 
+  getTsUpdateMaxTransferLeo, 
+  getTsUpdateMinTransferLeo, 
+  getTsUpdateWithdrawalLimitLeo, 
+  getUpdateThresholdLeo,
+  getTsPauseTokenLeo, 
+  getTsUnpauseTokenLeo,
+  getProposalVoteLeo 
+} from "../artifacts/js/js2leo/council_v0003";
+import { 
+  AddMember, 
+  RemoveMember, 
+  TbAddAttestor, 
+  TbAddChain, 
+  TbAddService, 
+  TbPause, 
+  TbRemoveAttestor, 
+  TbRemoveChain, 
+  TbRemoveService, 
+  TbUnpause, 
+  TsAddToken, 
+  TsRemoveToken, 
+  TsUpdateMaxTransfer, 
+  TsUpdateMinTransfer, 
+  TsUpdateWithdrawalLimit, 
+  UpdateThreshold,
+  ProposalVote, 
+  ProposalVoterKey, 
+  TsPauseToken, 
+  TsUnpauseToken,
+} from "../artifacts/js/types/council_v0003";
+
+import { WithdrawalLimit } from "../artifacts/js/types/token_service_v0003";
+
 import { hashStruct } from "../utils/hash";
-import { getAddMemberLeo, getRemoveMemberLeo, getTbAddAttestorLeo, getTbAddChainLeo, getTbAddServiceLeo, getTbPauseLeo, getTbRemoveAttestorLeo, getTbRemoveChainLeo, getTbRemoveServiceLeo, getTbUnpauseLeo, getTsAddTokenLeo, getTsRemoveTokenLeo, getTsUpdateMaxTransferLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo, getUpdateThresholdLeo } from "../artifacts/js/js2leo/council_v0003";
-import { signPacket, signProposal } from "../utils/sign";
-import { AddMember, RemoveMember, TbAddAttestor, TbAddAttestorLeo, TbAddChain, TbAddService, TbPause, TbRemoveAttestor, TbRemoveChain, TbRemoveService, TbUnpause, TsAddToken, TsRemoveToken, TsUpdateMaxTransfer, TsUpdateMinTransfer, TsUpdateWithdrawalLimit, UpdateThreshold } from "../artifacts/js/types/council_v0003";
-import { getTbPause, getTbRemoveAttestor } from "../artifacts/js/leo2js/council_v0003";
-import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
-import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
-import { ethChainId } from "../utils/testnet.data";
-import { ProposalVote, ProposalVoterKey, TsPauseToken, TsUnpauseToken } from "../artifacts/js/types/council_v0004";
-import { getProposalVote } from "../artifacts/js/leo2js/council_v0002";
-import { getProposalVoteLeo } from "../artifacts/js/js2leo/council_v0002";
-import { WithdrawalLimit } from "../artifacts/js/types/token_service_v0002";
-import { getTsPauseToken, getTsUnpauseToken } from "../artifacts/js/leo2js/council_v0004";
-import { getTsPauseTokenLeo, getTsUnpauseTokenLeo } from "../artifacts/js/js2leo/council_v0004";
 
-
-const council = new Council_v0004Contract({ mode: "execute" });
-const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
-const tokenService = new Token_service_v0002Contract({ mode: "execute" });
-const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
+const council = new Council_v0003Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0003Contract({ mode: "execute" });
+const tokenService = new Token_service_v0003Contract({ mode: "execute" });
+const wusdcConnector = new Wusdc_connector_v0003_0Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
 
 
 const TIMEOUT = 300000_000;
@@ -928,9 +977,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signature = signProposal(TsUpdateMaximumTransferHash, council.config.privateKey);
         const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
-        const signs = [signature, signature, signature, signature, signature];
 
         expect(await council.proposal_executed(TsUpdateMaximumTransferHash, false)).toBe(false);
         const [tx] = await council.ts_update_max_transfer(

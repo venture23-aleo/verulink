@@ -1,17 +1,17 @@
 import { hashStruct } from "../utils/hash";
 
-import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { Council_v0002Contract } from "../artifacts/js/council_v0002";
+import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
+import { Council_v0003Contract } from "../artifacts/js/council_v0003";
 import { BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../utils/constants";
-import { TbAddAttestor } from "../artifacts/js/types/council_v0002";
-import { getTbAddAttestorLeo } from "../artifacts/js/js2leo/council_v0002";
+import { TbAddAttestor } from "../artifacts/js/types/council_v0003";
+import { getTbAddAttestorLeo } from "../artifacts/js/js2leo/council_v0003";
 
 const addAttestor = async (newAttestorAddress: string, newThreshold: number) => {
-  const bridge = new Token_bridge_v0002Contract({
+  const bridge = new Token_bridge_v0003Contract({
     mode: "execute",
     priorityFee: 10_000,
   });
-  const council = new Council_v0002Contract({
+  const council = new Council_v0003Contract({
     mode: "execute",
     priorityFee: 10_000,
   });

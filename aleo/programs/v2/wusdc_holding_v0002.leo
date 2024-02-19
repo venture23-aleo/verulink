@@ -1,6 +1,6 @@
-import wusdc_token_v0002.aleo;
+import wusdc_token_v0003.aleo;
 
-program wusdc_holding_v0002.aleo {
+program wusdc_holding_v0003.aleo {
 
     mapping holdings: address => u128;
 
@@ -65,7 +65,7 @@ program wusdc_holding_v0002.aleo {
     }
 
     transition release_fund(public user: address, public amount: u128) {
-        wusdc_token_v0002.aleo/transfer_public(user, amount);
+        wusdc_token_v0003.aleo/transfer_public(user, amount);
         return then finalize(self.caller, user, amount);
     }
 

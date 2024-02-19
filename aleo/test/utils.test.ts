@@ -137,8 +137,8 @@ describe("Unique Addresses", () => {
     })
 })
 
-import { InPacketWithScreening } from '../artifacts/js/types/token_bridge_v0002';
-import { getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/token_bridge_v0002';
+import { InPacketWithScreening } from '../artifacts/js/types/token_bridge_v0003';
+import { getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/token_bridge_v0003';
 import { hashStruct } from "../utils/hash";
 
 const signPacketHash = (packet_hash: bigint, screening_passed: boolean, privateKey: string) => {

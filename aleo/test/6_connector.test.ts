@@ -1,35 +1,45 @@
-import { Council_v0004Contract } from "../artifacts/js/council_v0004";
-import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
-import { Wusdc_holding_v0002Contract } from "../artifacts/js/wusdc_holding_v0002";
-import { Wusdc_connector_v0002Contract } from "../artifacts/js/wusdc_connector_v0002";
-import { Wusdc_connector_v0003Contract } from "../artifacts/js/wusdc_connector_v0003";
+import { Address, PrivateKey } from "@aleohq/sdk";
 
-import {
+import { Council_v0003Contract } from "../artifacts/js/council_v0003";
+import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
+import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
+import { Wusdc_holding_v0003Contract } from "../artifacts/js/wusdc_holding_v0003";
+import { Wusdc_connector_v0003_0Contract } from "../artifacts/js/wusdc_connector_v0003_0";
+import { Wusdc_connector_v0003_1Contract } from "../artifacts/js/wusdc_connector_v0003_1";
+
+import { 
+  ALEO_ZERO_ADDRESS, 
+  BRIDGE_PAUSABILITY_INDEX, 
+  BRIDGE_PAUSED_VALUE, 
+  BRIDGE_THRESHOLD_INDEX, 
+  BRIDGE_UNPAUSED_VALUE, 
+  COUNCIL_THRESHOLD_INDEX, 
+  COUNCIL_TOTAL_PROPOSALS_INDEX, 
+  OWNER_INDEX, 
+  TOKEN_PAUSED_VALUE, 
+  TOKEN_UNPAUSED_VALUE,
   aleoChainId,
   ethChainId,
   ethTsContractAddr,
   usdcContractAddr,
-} from "../utils/testnet.data";
-import { Address, PrivateKey } from "@aleohq/sdk";
-import { ALEO_ZERO_ADDRESS, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_UNPAUSED_VALUE, BRIDGE_VERSION, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, OWNER_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
+ } from "../utils/constants";
 import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import { hashStruct } from "../utils/hash";
-import { getConnectorUpdateLeo, getHoldingReleaseLeo } from "../artifacts/js/js2leo/council_v0002";
-import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
-import { ConnectorUpdate, HoldingRelease, leoProposalVoteSchema } from "../artifacts/js/types/council_v0002";
+import { getConnectorUpdateLeo, getHoldingReleaseLeo } from "../artifacts/js/js2leo/council_v0003";
+import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0003";
+import { ConnectorUpdate, HoldingRelease, leoProposalVoteSchema } from "../artifacts/js/types/council_v0003";
 import { createRandomPacket } from "../utils/packet";
 import { getBytes } from "ethers";
 
-const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
-const tokenService = new Token_service_v0002Contract({ mode: "execute" });
-const council = new Council_v0004Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
-const wusdcHolding = new Wusdc_holding_v0002Contract({ mode: "execute" });
-const wusdcConnector = new Wusdc_connector_v0002Contract({ mode: "execute" });
-const newConnector = new Wusdc_connector_v0003Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0003Contract({ mode: "execute" });
+const tokenService = new Token_service_v0003Contract({ mode: "execute" });
+const council = new Council_v0003Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
+const wusdcHolding = new Wusdc_holding_v0003Contract({ mode: "execute" });
+const wusdcConnector = new Wusdc_connector_v0003_0Contract({ mode: "execute" });
+const newConnector = new Wusdc_connector_v0003_1Contract({ mode: "execute" });
 
 const TIMEOUT = 200_000; // 200 seconds
 

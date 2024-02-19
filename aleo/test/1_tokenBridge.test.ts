@@ -1,18 +1,10 @@
-import { Token_bridge_v0002Contract } from "../artifacts/js/token_bridge_v0002";
-import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0002";
-import { Token_service_v0002Contract } from "../artifacts/js/token_service_v0002";
-import { Wusdc_token_v0002Contract } from "../artifacts/js/wusdc_token_v0002";
-import { Council_v0002Contract } from "../artifacts/js/council_v0002";
+import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
+import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
+import { Council_v0003Contract } from "../artifacts/js/council_v0003";
 
-import {
-  aleoChainId,
-  ethChainId,
-  ethTsContractAddr,
-  ethUser,
-  usdcContractAddr,
-} from "../utils/testnet.data";
-
-import { aleoArr2Evm, evm2AleoArr } from "../utils/ethAddress";
+import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
+import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0003";
+import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 
 import {
@@ -23,17 +15,23 @@ import {
   BRIDGE_TOTAL_ATTESTORS_INDEX,
   BRIDGE_UNPAUSED_VALUE,
   OWNER_INDEX,
+  aleoChainId,
+  ethChainId,
+  ethTsContractAddr,
+  usdcContractAddr,
 } from "../utils/constants";
+
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
 
-const bridge = new Token_bridge_v0002Contract({ mode: "execute" });
-const tokenService = new Token_service_v0002Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0002Contract({ mode: "execute" });
-const council = new Council_v0002Contract({ mode: "execute" });
+const bridge = new Token_bridge_v0003Contract({ mode: "execute" });
+const tokenService = new Token_service_v0003Contract({ mode: "execute" });
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
+const council = new Council_v0003Contract({ mode: "execute" });
 
 const TIMEOUT = 20000_000;
 
+const ethUser = generateRandomEthAddr();
 const createPacket = (
   receiver: string,
   amount: bigint,

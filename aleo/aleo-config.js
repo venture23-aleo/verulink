@@ -11,7 +11,8 @@ export default {
       priorityFee: 0.01,
     },
     // testnet3: {
-    //   endpoint: `https://aleo-testnet3.obscura.build/v1/${process.env.OBSCURA_TESTNET3_API}`,
+    //   endpoint: `https://explorer.hamp.app`,
+    //   // endpoint: `https://aleo-testnet3.obscura.build/v1/${process.env.OBSCURA_TESTNET3_API}`,
     //   accounts: [process.env.ALEO_TESTNET3_PRIVATE_KEY],
     //   priorityFee: 0.001,
     // },

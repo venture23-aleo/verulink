@@ -1,16 +1,16 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Token_bridge_v0002Contract } from "../../../artifacts/js/token_bridge_v0002";
-import { Council_v0002Contract } from "../../../artifacts/js/council_v0002";
+import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
+import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddAttestorLeo, getTbAddChainLeo, getTbUpdateThresholdLeo } from "../../../artifacts/js/js2leo/council_v0002";
-import { TbAddAttestor, TbAddChain, TbUpdateThreshold } from "../../../artifacts/js/types/council_v0002";
+import { getTbAddAttestorLeo, getTbAddChainLeo, getTbUpdateThresholdLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TbAddAttestor, TbAddChain, TbUpdateThreshold } from "../../../artifacts/js/types/council_v0003";
 import { Address } from "@aleohq/sdk";
-import { getTbAddAttestor } from "../../../artifacts/js/leo2js/council_v0002";
+import { getTbAddAttestor } from "../../../artifacts/js/leo2js/council_v0003";
 
-const council = new Council_v0002Contract({mode: "execute", priorityFee: 10_000});
-const bridge = new Token_bridge_v0002Contract({mode: "execute", priorityFee: 10_000});
+const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
+const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
 
 export const proposeupdateThreshold = async (new_threshold: number): Promise<number> => {
 

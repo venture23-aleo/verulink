@@ -1,5 +1,5 @@
 // The 'bridge' program.
-program token_bridge_v0002.aleo {
+program token_bridge_v0003.aleo {
 
     // Default Aleo Program
     struct AleoProgram {

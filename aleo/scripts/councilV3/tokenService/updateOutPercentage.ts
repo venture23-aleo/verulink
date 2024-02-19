@@ -3,15 +3,15 @@ import { hashStruct } from "../../../utils/hash";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
 import { validateExecution, validateProposer } from "../councilUtils";
-import { Token_service_v0002Contract } from "../../../artifacts/js/token_service_v0002";
+import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { TsUpdateMaxTransfer } from "../../../artifacts/js/types/council_v0003";
 import { getTsUpdateMaxTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/council_v0003";
-import { TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/council_v0002";
+import { TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/council_v0003";
 
 
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const tokenService = new Token_service_v0002Contract({mode: "execute", priorityFee: 10_000});
+const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
 
 
 //////////////////////

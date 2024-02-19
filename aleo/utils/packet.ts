@@ -1,4 +1,4 @@
-import { InPacket } from "../artifacts/js/types/token_bridge_v0002";
+import { InPacket } from "../artifacts/js/types/token_bridge_v0003";
 import { PACKET_VERSION } from "./constants";
 import { evm2AleoArr, generateRandomEthAddr } from "./ethAddress";
 
