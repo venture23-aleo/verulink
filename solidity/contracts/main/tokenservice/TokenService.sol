@@ -5,10 +5,10 @@ import {IBridge} from "../../common/interface/bridge/IBridge.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
@@ -59,6 +59,9 @@ contract TokenService is
             address(this)
         );
         blackListService = IBlackListService(_blackListService);
+    }
+
+    receive() external payable onlyOwner {
     }
 
     /// @dev Authorizes an upgrade only if the caller is the owner
@@ -121,7 +124,7 @@ contract TokenService is
 
     /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
-    function transfer(string memory receiver) external whenNotPaused virtual payable {
+    function transfer(string memory receiver) external whenNotPaused virtual payable nonReentrant {
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
@@ -129,9 +132,9 @@ contract TokenService is
     /// @param tokenAddress Address of the ERC20 token
     /// @param amount Amount of ERC20 tokens to be transferred
     /// @param receiver The intended receiver of the transferred tokens
-    function transfer(address tokenAddress, uint256 amount, string memory receiver) external virtual whenNotPaused {
+    function transfer(address tokenAddress, uint256 amount, string memory receiver) external virtual whenNotPaused nonReentrant {
         require(tokenAddress != ETH_TOKEN, "Only ERC20 Tokens");
-        require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Tokens Transfer Failed");
+        require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "Token Transfer Failed");
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
@@ -153,7 +156,7 @@ contract TokenService is
                 // eth lock
                 holding.lock{value:amount}(receiver);
             }else {
-                require(IIERC20(tokenAddress).transfer(address(holding), amount),"Token transfer failed");
+                require(IIERC20(tokenAddress).transfer(address(holding), amount),"Token holding failed");
                 holding.lock(receiver, tokenAddress, amount);
             }
         }else if(quorum == PacketLibrary.Vote.YEA){

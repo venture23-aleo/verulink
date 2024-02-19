@@ -10,7 +10,7 @@ describe('EthVaultService', () => {
     beforeEach(async () => {
         [owner, other] = await ethers.getSigners();
 
-        EthVaultServiceImpl = await ethers.getContractFactory('EthVaultServiceMock');
+        EthVaultServiceImpl = await ethers.getContractFactory('EthVaultService');
         ethVaultServiceInstance = await EthVaultServiceImpl.deploy();
         await ethVaultServiceInstance.deployed();
         EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
@@ -27,17 +27,25 @@ describe('EthVaultService', () => {
         expect(contractOwner).to.equal(owner.address);
     });
 
+    // it('should not initialize faulty', async () => {
+    //     const faulty_initializeData = new ethers.utils.Interface(abi).encodeFunctionData("EthVaultService_init_faulty", ["ETH Faulty Vault"]);
+    //     await expect(EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, faulty_initializeData))
+    //         .to.be.revertedWith("Initializable: contract is not initializing");
+    // });
+
     // Test for second time initialize and revert
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedEthVaultService["EthVaultService_init(string)"]("ETH Vault")).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedEthVaultService["EthVaultService_init(string)"]("ETH Vault 1.5"))
+            .to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should not transfer if caller is not admin', async() => {
-        await expect(proxiedEthVaultService.connect(other).transfer(1000)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(proxiedEthVaultService.connect(other).transfer(1000))
+            .to.be.revertedWith('Ownable: caller is not the owner');
     });
 
     it('should not transfer if balance is less than send amount', async() => {
-        await expect(proxiedEthVaultService.transfer(100000000000000)).to.be.reverted;
+        await expect(proxiedEthVaultService.transfer(100000000000000)).to.be.revertedWith("ETH approval Failed");
     });
 
     it('should transfer', async() => {
@@ -66,7 +74,7 @@ describe("Erc20VaultService Upgradeability", () => {
     beforeEach(async () => {
         [owner,  newOwner, other] = await ethers.getSigners();
 
-        EthVaultServiceImpl = await ethers.getContractFactory('EthVaultServiceMock');
+        EthVaultServiceImpl = await ethers.getContractFactory('EthVaultService');
         ethVaultServiceInstance = await EthVaultServiceImpl.deploy();
         await ethVaultServiceInstance.deployed();
         EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');

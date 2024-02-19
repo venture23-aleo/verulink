@@ -5,7 +5,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 /// @title AttestorManager Contract
 /// @dev This contract manages a list of attestors and their quorum requirements.
-contract AttestorManager is OwnableUpgradeable {
+abstract contract AttestorManager is OwnableUpgradeable {
 
     /// @dev Event triggered when a new attestor is added with a specified quorum
     /// @param attestor The address of the new attestor
@@ -28,10 +28,9 @@ contract AttestorManager is OwnableUpgradeable {
     /// @dev The quorum required for attestations
     uint256 public quorumRequired;
 
-    /// @dev Initializes the AttestorManager contract
-    function AttestorManager_init() public initializer {
-        __Ownable_init_unchained();
-    }
+    // function AttestorManager_init() public initializer {
+    //     __Ownable_init_unchained();
+    // }
 
     /// @notice Checks if an address is a registered attestor, callable only by the owner
     /// @param attestor The address to check

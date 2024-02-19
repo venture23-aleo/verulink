@@ -8,12 +8,12 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/
  * @title Pausable
  * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
-contract Pausable is PausableUpgradeable, OwnableUpgradeable {
+abstract contract Pausable is PausableUpgradeable, OwnableUpgradeable {
 
-  function Pausable_init() public initializer {
-    __Ownable_init_unchained();
-    __Pausable_init_unchained();
-  }
+  // function Pausable_init() public initializer {
+  //   __Ownable_init_unchained();
+  //   __Pausable_init_unchained();
+  // }
   /**
    * @dev called by the owner to pause, triggers stopped state
    */

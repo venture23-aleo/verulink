@@ -80,7 +80,6 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param amount Number of tokens to be locked
     function _lock(address user, address token, uint256 amount) internal {
         require(user != ZERO_ADDRESS, "Zero Address");
-        require(user != ETH_TOKEN, "ETH Token Address");
         require(
             supportedTokenServices[msg.sender],
             "Unknown TokenService"
@@ -95,6 +94,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param amount Number of tokens to be locked
     function lock(address user, address token, uint256 amount) external virtual {
         require(token != ZERO_ADDRESS, "Zero Address");
+        require(token != ETH_TOKEN, "ETH Token Address");
         _lock(user,token,amount);
     }
 
@@ -125,12 +125,12 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @dev Internal function to release tokens
     /// @param user Address of the user
     /// @param token Address of the token to be released
-    /// @param amount Number of tokens to be released
-    function _release(address user, address token, uint256 amount) internal whenNotPaused nonReentrant {
+    function _release(address user, address token) internal whenNotPaused nonReentrant returns (uint256 amount) {
         require(user != ZERO_ADDRESS, "Zero Address");
-        require(unlocked[user][token] >= amount, "Insufficient amount");
+        // require(unlocked[user][token] >= amount, "Insufficient amount");
+        amount = unlocked[user][token];
         unchecked {
-            unlocked[user][token] -= amount;
+            unlocked[user][token] = 0;
         }
         emit Released(user, token, amount);
     }
@@ -138,18 +138,17 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @notice Releases tokens to a user
     /// @param user Address of the user
     /// @param token Address of the token to be released
-    /// @param amount Number of tokens to be released
-    function release(address user, address token, uint256 amount) external virtual {
-        require(token != address(0), "Zero Address");
-        _release(user, token, amount);
+    function release(address user, address token) external virtual {
+        require(token != ZERO_ADDRESS, "Zero Address");
+        require(token != ETH_TOKEN, "ETH Token Address");
+        uint256 amount = _release(user, token);
         require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
     }
 
     /// @notice Releases ETH to a user
     /// @param user Address of the user
-    /// @param amount Number of ETH to be released
-    function release(address user, uint256 amount) external virtual {
-        _release(user, ETH_TOKEN, amount);
+    function release(address user) external virtual {
+        uint256 amount = _release(user, ETH_TOKEN);
         (bool sent,) = user.call{value: amount}("");
         require(sent, "ETH Release Failed");
     }

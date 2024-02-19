@@ -10,7 +10,7 @@ describe('Pausable', () => {
     // Deploy a new Pausable contract before each test
     beforeEach(async () => {
         [owner, newOwner, other] = await ethers.getSigners();
-        PausableImpl = await ethers.getContractFactory('Pausable');
+        PausableImpl = await ethers.getContractFactory('PausableMock');
         pausableInstance = await PausableImpl.deploy();
         await pausableInstance.deployed();
         Proxy = await ethers.getContractFactory('ProxyContract');
@@ -28,7 +28,8 @@ describe('Pausable', () => {
 
     // Test for second time initialize and revert
     it('should not initialize contract twice', async () => {
-        await expect(proxiedOwner["Pausable_init()"]()).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedOwner["Pausable_init"]())
+            .to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should start with not paused state', async () => {
@@ -45,7 +46,7 @@ describe('Pausable', () => {
     });
 
     it('only owner should pause contract', async() => {
-        expect(proxiedOwner.connect(other).pause()).to.be.revertedWith("Not owner");
+        await expect(proxiedOwner.connect(other).pause()).to.be.revertedWith("Ownable: caller is not the owner");
         expect(await proxiedOwner.paused()).to.equal(false);
     });
 

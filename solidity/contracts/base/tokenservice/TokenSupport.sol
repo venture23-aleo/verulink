@@ -5,7 +5,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 /// @title TokenSupport
 /// @dev Abstract contract providing support for managing tokens on a bridge
-contract TokenSupport is OwnableUpgradeable {
+abstract contract TokenSupport is OwnableUpgradeable {
 
     /// @notice Emitted when the vault of a token is updated
     /// @param token address of token
@@ -51,16 +51,12 @@ contract TokenSupport is OwnableUpgradeable {
     /// @notice Emitted when the maximum value for a token is updated
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
-    /// @notice Initializes the contract with the destination chain ID
-    /// @param _destChainId The destination chain ID for the token
-    function TokenSupport_init(uint256 _destChainId) public initializer {
-        __Ownable_init_unchained();
-        __TokenSupport_init_unchained(_destChainId);
-    }
+    // function __TokenSupport_init(uint256 _destChainId) internal onlyInitializing {
+    //     __Ownable_init_unchained();
+    //     __TokenSupport_init_unchained(_destChainId);
+    // }
 
-    /// @notice Internal initialization function to set the destination chain ID
-    /// @param _destChainId The destination chain ID for the token
-    function __TokenSupport_init_unchained(uint256 _destChainId) internal onlyInitializing {
+    function __TokenSupport_init_unchained(uint256 _destChainId) internal {
         destChainId = _destChainId;
     }
 

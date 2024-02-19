@@ -21,7 +21,7 @@ abstract contract VaultService is IVaultService, OwnableUpgradeable {
     function __VaultService_init(
         address _token,
         string memory _name
-    ) internal onlyInitializing {
+    ) internal {
         __Ownable_init_unchained();
         _token_ = _token;
         _name_ = _name;

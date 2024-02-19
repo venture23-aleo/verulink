@@ -5,7 +5,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 /// @title BridgeTokenServiceManager Contract
 /// @dev This contract manages the registration and removal of Token Services for the bridge.
-contract BridgeTokenServiceManager is OwnableUpgradeable {
+abstract contract BridgeTokenServiceManager is OwnableUpgradeable {
 
     /// @dev Event triggered when a new Token Service is added
     /// @param tokenService The address of the added Token Service
@@ -18,10 +18,9 @@ contract BridgeTokenServiceManager is OwnableUpgradeable {
     /// @dev Mapping to track registered Token Services
     mapping(address => bool) public tokenServices;
 
-    /// @dev Initializes the BridgeTokenServiceManager contract
-    function BridgeTokenServiceManager_init() public initializer {
-        __Ownable_init();
-    }
+    // function BridgeTokenServiceManager_init() public initializer {
+    //     __Ownable_init();
+    // }
 
     /// @notice Checks if a Token Service is registered
     /// @param _service The address of the Token Service to check

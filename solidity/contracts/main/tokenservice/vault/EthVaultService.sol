@@ -11,6 +11,9 @@ contract EthVaultService is VaultService, Upgradeable {
     /// @notice address of ETH
     address private immutable ETH_TOKEN = address(1);
 
+    receive() external payable {
+    }
+
     /// @dev Initializes the EthVaultService contract
     /// @param _name A descriptive name for the vault service
     function EthVaultService_init(
