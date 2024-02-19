@@ -1,5 +1,5 @@
 import { InPacket } from "../artifacts/js/types/token_bridge_v0002";
-import { BRIDGE_VERSION } from "./constants";
+import { PACKET_VERSION } from "./constants";
 import { evm2AleoArr, generateRandomEthAddr } from "./ethAddress";
 
 export const createRandomPacket = (
@@ -20,7 +20,7 @@ export const createRandomPacket = (
   );
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 
-  let bridgeVersion = version ?? BRIDGE_VERSION ;
+  let bridgeVersion = version ?? PACKET_VERSION ;
 
   let senderAddr = sender ?? generateRandomEthAddr() ;
 
