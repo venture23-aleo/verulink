@@ -1,2 +1,8 @@
+# Ignore files for attestor
 go.work*
-attestor/rust/aleo_hash/target
+**/rust/target
+**/*.log
+*.txt
+**/*UTC*
+**/*.db
+*.lock
