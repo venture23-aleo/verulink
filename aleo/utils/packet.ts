@@ -27,6 +27,7 @@ export const createRandomPacket = (
   // Create a packet
   const packet: InPacket = {
     version: bridgeVersion,
+    sequence: incomingSequence,
     source: {
       chain_id: sourceChainId,
       addr: evm2AleoArr(sourceTsContractAddr),
@@ -41,7 +42,6 @@ export const createRandomPacket = (
       amount,
       receiver_address: receiver,
     },
-    sequence: incomingSequence,
     height: incomingHeight,
   };
 

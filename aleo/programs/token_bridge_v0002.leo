@@ -15,7 +15,7 @@ program token_bridge_v0002.aleo {
         chain_id: u128,
         // Contract address of the service contract on other chain
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
-        // For EVM Chains, 20 bytes is formated as following:
+        // For EVM Chains, 20 bytes is formatted as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         addr: [u8; 32]
     }
@@ -25,14 +25,14 @@ program token_bridge_v0002.aleo {
         sender_address: address,
         // Contract Address of the Asset on origin chain; Ex: USDC on Ethereum
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
-        // For EVM Chains, 20 bytes is formated as following:
+        // For EVM Chains, 20 bytes is formatted as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         dest_token_address: [u8; 32],
         // Amount to unlock on origin chain
         amount: u128
         // Address of the receiver on origin chain
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
-        // For EVM Chains, 20 bytes is formated as following:
+        // For EVM Chains, 20 bytes is formatted as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         receiver_address: [u8; 32],
     }
@@ -41,7 +41,7 @@ program token_bridge_v0002.aleo {
     struct InTokenMessage {
         // Address of the sender on the origin chain
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
-        // For EVM Chains, 20 bytes is formated as following:
+        // For EVM Chains, 20 bytes is formatted as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         sender_address: [u8; 32],
         // Program Address of the wrapped asset on Aleo; Ex: wUSDC
@@ -56,12 +56,12 @@ program token_bridge_v0002.aleo {
     struct OutPacket {
         // Packet versioning for future enhancements or changes
         version: u8,
+        // Sequence no of the packet for destination chain
+        sequence: u64,
         // Service Program where the packet originated
         source: AleoProgram,
         // Service Contract where the packet should be consumed
         destination: ForeignContract,
-        // Sequence no of the packet for destination chain
-        sequence: u64,
         // Hash of the message. Message can be found in service program
         message: OutTokenMessage,
         // Height where the packet is published
@@ -72,12 +72,12 @@ program token_bridge_v0002.aleo {
         // Packet versioning for future enhancements or changes
         version: u8,
         // Sequence no of the packet for this chain on source chain
+        sequence: u64,
+        // Service Contract where the packet originated
         source: ForeignContract,
         // Destination Program where the packet should be consumed
         destination: AleoProgram,
         // Full message token
-        sequence: u64,
-        // Service Contract where the packet originated
         message: InTokenMessage,
         // Height on the source chain where the packet originated
         height: u64
@@ -89,15 +89,6 @@ program token_bridge_v0002.aleo {
         chain_id: u128,
         // Sequence no of when the packet emitted
         sequence: u64
-    }
-
-    struct PacketIdWithAttestor {
-        // Chain Id where the packet originated
-        chain_id: u128,
-        // Sequence no of when the packet emitted
-        sequence: u64,
-        // Address of the attestor
-        attestor: address
     }
 
     struct InPacketWithScreening {
@@ -149,8 +140,8 @@ program token_bridge_v0002.aleo {
     // The chain id of the Aleo network where this program is deployed
     const ALEO_CHAIN_ID: u128 = 6694886634403u128;
 
-    // Version of the bridge program
-    const VERSION: u8 = 2u8;
+    // Version of the packet
+    const VERSION: u8 = 1u8;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
