@@ -6,3 +6,7 @@ go.work*
 **/*UTC*
 **/*.db
 *.lock
+.DS_Store
+# solidity-coverage files
+coverage
+coverage.json
