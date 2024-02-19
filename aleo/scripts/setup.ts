@@ -1,12 +1,12 @@
 import { Council_v0003Contract } from "../artifacts/js/council_v0003";
 import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
 import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
-import { Wusdc_connector_v0003Contract } from "../artifacts/js/wusdc_connector_v0003";
+import { Wusdc_connector_v0003_0Contract } from "../artifacts/js/wusdc_connector_v0003_0";
 import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
-import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE } from "../utils/constants";
+import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
-import { execUnpause, proposeUnpause } from "./council/bridge/unpause";
+import { execUnpause, proposeUnpauseBridge } from "./council/bridge/unpause";
 import { execAddToken, proposeAddToken } from "./council/tokenService/addNewToken";
 
 import { deployMainPrograms } from "./deployment/mainPrograms";
@@ -14,7 +14,7 @@ import { deployWusdc } from "./deployment/wusdc";
 
 const bridge = new Token_bridge_v0003Contract();
 const wusdcToken = new Wusdc_token_v0003Contract();
-const wusdcConnector = new Wusdc_connector_v0003Contract();
+const wusdcConnector = new Wusdc_connector_v0003_0Contract();
 const tokenService = new Token_service_v0003Contract();
 const council = new Council_v0003Contract();
 
@@ -25,13 +25,13 @@ import {
   aleoUser4,
   aleoUser5,
   councilThreshold,
-  ethChainId,
   wusdcMaxNoCap,
   wusdcMaxTransfer,
   wusdcMinTransfer,
   wusdcOutgoingPercentage,
   wusdcTimeframe,
 } from "../utils/testnet.data";
+import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
 
 const initialAttestors = [
   aleoUser1,
@@ -83,14 +83,16 @@ const setup = async () => {
   );
 
   // Token Bridge: Enable Service
-  const enableTokenServiceProposalId = await proposeAddService(
-    tokenService.address()
-  );
+  const enableTokenServiceProposalId = await proposeAddService( tokenService.address());
   await execAddService(enableTokenServiceProposalId, tokenService.address());
 
   // Token Bridge: Unpause
-  const unpauseBridgeProposalId = await proposeUnpause();
+  const unpauseBridgeProposalId = await proposeUnpauseBridge();
   await execUnpause(unpauseBridgeProposalId);
+
+  // Wusdc Token: Unpause
+  const unpauseTokenProposalId = await proposeUnpauseToken(wusdcToken.address());
+  await execUnpauseToken(unpauseTokenProposalId, wusdcToken.address());
 
 };
 

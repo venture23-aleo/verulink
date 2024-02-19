@@ -10,29 +10,25 @@ export const deployMainPrograms = async (initialAttestors: string[], initialCoun
 
   // Deploy token bridge
   const bridgeDeployTx = await bridge.deploy(); // 19_840_000
-  await bridgeDeployTx.wait()
+  await bridge.wait(bridgeDeployTx);
 
   // Deploy token service
   const tokenServiceDeployTx = await tokenService.deploy(); // 14_051_000
-  await tokenServiceDeployTx.wait();
+  await tokenService.wait(tokenServiceDeployTx);
 
   // Deploy council
   const councilDeployTx = await council.deploy(); // 29_917_000
-  await councilDeployTx.wait();
+  await council.wait(councilDeployTx)
 
   // Initialize council
-  const initializeCouncilTx = await council.initialize(initialCouncilMembers, initialCouncilThreshold);
-  // @ts-ignore
-  await initializeCouncilTx.wait()
-  
+  const [initializeCouncilTx] = await council.initialize(initialCouncilMembers, initialCouncilThreshold);
+  await council.wait(initializeCouncilTx);
 
-  const initializeBridgeTx = await bridge.initialize_tb(initialAttestors, initialAttestorThreshold, council.address());
-  // @ts-ignore
-  await initializeBridgeTx.wait()
+  const [initializeBridgeTx] = await bridge.initialize_tb(initialAttestors, initialAttestorThreshold, council.address());
+  await bridge.wait(initializeBridgeTx)
 
   // Initialize token service
-  const initializeTokenServiceTx = await tokenService.initialize_ts(council.address());
-  // @ts-ignore
-  await initializeTokenServiceTx.wait();
+  const [initializeTokenServiceTx] = await tokenService.initialize_ts(council.address());
+  await tokenService.wait(initializeTokenServiceTx);
   
 };

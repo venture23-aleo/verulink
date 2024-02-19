@@ -2,10 +2,11 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TbAddService } from "../../../artifacts/js/types/council_v0003";
 import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -61,9 +62,9 @@ export const voteAddService = async (proposalId: number, tokenService: string) =
 
   validateVote(tbAddTokenServiceProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbAddTokenServiceProposalHash); // 477_914
+  const [voteAddChainTx] = await council.vote(tbAddTokenServiceProposalHash, true); // 477_914
 
-    await council.wait(voteAddChainTx);
+  await council.wait(voteAddChainTx);
 
   getProposalStatus(tbAddTokenServiceProposalHash);
 
@@ -93,10 +94,12 @@ export const execAddService = async (proposalId: number, tokenService: string) =
   const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
 
   validateExecution(tbAddTokenServiceProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddTokenServiceProposalHash), SUPPORTED_THRESHOLD);
 
   const [addServiceTx] = await council.tb_add_service(
     tbAddService.id,
     tbAddService.service,
+    voters
   ) // 301_747
   
   await council.wait(addServiceTx);

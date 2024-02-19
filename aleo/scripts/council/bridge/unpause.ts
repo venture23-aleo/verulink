@@ -1,10 +1,11 @@
 import { hashStruct } from "../../../utils/hash";
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
 import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
-import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_UNPAUSED_VALUE, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/constants";
+import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_UNPAUSED_VALUE, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TbUnpause } from "../../../artifacts/js/types/council_v0003";
 import { getTbUnpauseLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 
 const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
 const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
@@ -12,7 +13,7 @@ const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_
 //////////////////////
 ///// Propose ////////
 //////////////////////
-export const proposeUnpause = async (): Promise<number> => {
+export const proposeUnpauseBridge = async (): Promise<number> => {
 
   console.log(`👍 Proposing to unpause bridge:`)
   const isBridgeUnpaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_UNPAUSED_VALUE;
@@ -41,7 +42,7 @@ export const proposeUnpause = async (): Promise<number> => {
 ///////////////////
 ///// Vote ////////
 ///////////////////
-export const voteUnpause = async (proposalId: number) => {
+export const voteUnpauseBridge = async (proposalId: number) => {
 
   console.log(`👍 Voting to unpause bridge:`)
   const isBridgeUnpaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_UNPAUSED_VALUE;
@@ -57,7 +58,7 @@ export const voteUnpause = async (proposalId: number) => {
   const voter = council.getAccounts()[0];
   validateVote(tbUnpauseProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbUnpauseProposalHash); // 477_914
+  const [voteAddChainTx] = await council.vote(tbUnpauseProposalHash, true); // 477_914
   
   await council.wait(voteAddChainTx);
 
@@ -86,11 +87,12 @@ export const execUnpause = async (proposalId: number) => {
   };
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause)); 
 
-  const voter = council.getAccounts()[0];
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbUnpauseProposalHash), SUPPORTED_THRESHOLD);
   validateExecution(tbUnpauseProposalHash);
 
   const [unpauseBridgeTx] = await council.tb_unpause(
     tbUnpause.id,
+    voters
   ); 
 
   await council.wait(unpauseBridgeTx);
