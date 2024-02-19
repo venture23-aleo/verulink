@@ -1,13 +1,17 @@
-FROM golang:1.21.6-bookworm as signingservice
+FROM golang:1.21.6 as signingservice
+WORKDIR /chainService
+COPY ./chainService .
 WORKDIR /signingservice
-COPY go.mod go.sum ./
+COPY ./signingService/go.mod ./signingService/go.sum ./
 RUN go mod download
-COPY . .
+COPY ./signingService .
+
+ENV GOPRIVATE=github.com/venture23-aleo/aleo-bridge
 RUN go build -o signingservice .
 
 FROM rust:1.75.0-buster as aleo
 WORKDIR /app
-COPY ./rust .
+COPY ./signingService/rust .
 RUN cargo install --path .
 RUN cargo build
 
@@ -24,4 +28,7 @@ EXPOSE 6579
 # signingservice expects user to provide input in its run time while
 # asking for decrypt key. It is recommended that attestor encrypt their
 # wallet credentials and provide decrypt key at runtime
-ENTRYPOINT [ "./signingservice", "--config config.yaml"]
+# ENTRYPOINT ["/bin/sh","-c", "./signingservice", "--config=/configs/config.yaml", "--kp=/configs/keys.yaml"]
+CMD ["./signingservice --config=/configs/config.yaml --kp=/configs/keys.yaml"]
+ENTRYPOINT ["/bin/sh", "-c"]
+# ENTRYPOINT [ "/bin/sh", "-c", "sleep 1800"]
