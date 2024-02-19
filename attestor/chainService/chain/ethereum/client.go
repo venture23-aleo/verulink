@@ -312,7 +312,10 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 
 // pruneBaseSeqNum updates the sequence number upto which the attestor has processed all the 
 // outgoing packets of the source chain. The first entry of the baseSeqNum bucket represents
-// the base sequence number
+// the base sequence number. refetches the packets if there is gap while updating the base 
+// seq number. eg. in the case we have the following packets 1, 2, 3, 7, 8. It updates the 
+// base seq number to 3 and fetches the packets 4, 5 and 6 and sends it to ch channel 
+// (retryPacketCh) 
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(cl.pruneBaseSeqNumberWaitDur)
 	index := 0
