@@ -155,13 +155,13 @@ describe('AttestorManager', () => {
         const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
         // Attempt to add an existing attestor
-        await expect(proxiedV1.addAttestor(newAttestor, quorumRequired)).to.be.revertedWith('Attestor already exists');
+        await expect(proxiedV1.addAttestor(newAttestor, quorumRequired)).to.be.revertedWith('AttestorManager: attestor already exists');
     });
 
     // Test attempting to add an attestor with zero address
     it('should revert when trying to add an attestor with zero address', async () => {
         // Attempt to add an attestor with zero address
-        await expect(proxiedV1.addAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('Zero Address');
+        await expect(proxiedV1.addAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('AttestorManager: zero address');
     });
 
     // Test removing an attestor
@@ -200,13 +200,13 @@ describe('AttestorManager', () => {
         const nonExistingAttestor = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing attestor
-        await expect(proxiedV1.removeAttestor(nonExistingAttestor, 2)).to.be.revertedWith('Unknown Attestor');
+        await expect(proxiedV1.removeAttestor(nonExistingAttestor, 2)).to.be.revertedWith('AttestorManager: unknown attestor');
     });
 
     // Test attempting to remove an attestor with zero address
     it('should revert when trying to remove an attestor with zero address', async () => {
         // Attempt to remove an attestor with zero address
-        await expect(proxiedV1.removeAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('Unknown Attestor');
+        await expect(proxiedV1.removeAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('AttestorManager: unknown attestor');
     });
 
     // Test onlyOwner modifier for addAttestor function

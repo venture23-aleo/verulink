@@ -29,7 +29,7 @@ describe('Erc20VaultService', () => {
 
     it("should not initialize if token address is zero", async() => {
         initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [ethers.constants.AddressZero, "USDC"]);
-        await expect(Proxy.deploy(erc20VaultServiceInstance.address, initializeData)).to.be.revertedWith('Only ERC20 Address');
+        await expect(Proxy.deploy(erc20VaultServiceInstance.address, initializeData)).to.be.revertedWith('Erc20VaultService: only erc20 address');
     });
 
     // Test deployment and initialization
@@ -59,7 +59,7 @@ describe('Erc20VaultService', () => {
     it('should not transfer if sender is blacklisted', async() => {
         await (await usdcMock.mint(Erc20VaultServiceProxy.address, 150)).wait();
         await (await usdcMock.addBlackList(Erc20VaultServiceProxy.address)).wait();
-        await expect(Erc20VaultServiceProxy.connect(owner).transfer(10)).to.be.revertedWith('ERC20 Transfer Failed');
+        await expect(Erc20VaultServiceProxy.connect(owner).transfer(10)).to.be.revertedWith('Erc20VaultService: erc20 transfer failed');
     });
 
     it('should transfer', async() => {

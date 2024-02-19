@@ -56,12 +56,12 @@ describe('Holding', () => {
         // Try to update existed token service and expect it to revert
         await expect(
             proxiedV1.addTokenService(newTokenService)
-        ).to.be.revertedWith("Known TokenService");  
+        ).to.be.revertedWith("Holding: known tokenService");  
 
         // Try to update token service with zero address and expect it to revert 
         await expect(
             proxiedV1.addTokenService("0x0000000000000000000000000000000000000000")
-        ).to.be.revertedWith("Zero Address");  
+        ).to.be.revertedWith("Holding: zero address");  
     });
 
     it('should not allow a non-owner to update the token service', async () => {
@@ -107,12 +107,12 @@ describe('Holding', () => {
         // try to remove non-exist token service and expect it to revert
         await expect(
             proxiedV1.removeTokenService(newTokenService)
-        ).to.be.revertedWith("UnKnown TokenService");
+        ).to.be.revertedWith("Holding: unKnown tokenService");
         
         // Try to update remove token service as zero address as parameter and expect it to revert 
         await expect(
             proxiedV1.removeTokenService("0x0000000000000000000000000000000000000000")
-        ).to.be.revertedWith("Zero Address");  
+        ).to.be.revertedWith("Holding: zero address");  
     });
 
     it('should not allow a non-owner to remove the token service', async () => {
@@ -165,7 +165,7 @@ describe('Holding', () => {
         // await (await usdcMock.mint(tokenService.address, amount)).wait();
         // await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
         // Lock tokens with the owner
-        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith('Zero Address');
+        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith('Holding: zero address');
     });
 
     it('should not allow to lock erc20 tokens if token address is eth address', async () => {
@@ -177,7 +177,7 @@ describe('Holding', () => {
         // await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
         // Lock tokens with the owner
         await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount))
-            .to.be.revertedWith('ETH Token Address');
+            .to.be.revertedWith('Holding: eth token address');
     });
 
     // Test for fail case of Token Transfer Failed
@@ -230,7 +230,7 @@ describe('Holding', () => {
         // Try to unlock an amount greater than what is locked and expect it to revert
         await expect(
             proxiedV1.unlock(user, token, unlockAmount)
-        ).to.be.revertedWith("Insufficient amount");
+        ).to.be.revertedWith("Holding: insufficient amount");
     });
 
     // Test the release function and the require statement for "Insufficient amount"
@@ -280,7 +280,7 @@ describe('Holding', () => {
 
         // Try to release token as zero address as parameter for token address and expect it to revert 
         await expect(proxiedV1.connect(tokenService)["release(address,address)"](user, token))
-            .to.be.revertedWith("Zero Address"); 
+            .to.be.revertedWith("Holding: zero address"); 
     });
 
     it('should not allow to release tokens if user address is zero address', async () => {
@@ -288,7 +288,7 @@ describe('Holding', () => {
         const token = usdcMock.address;
         
         await expect(proxiedV1.connect(tokenService)["release(address,address)"](user, token))
-            .to.be.revertedWith("Zero Address"); 
+            .to.be.revertedWith("Holding: zero address"); 
     });
 
     it('should not allow to release erc20 tokens if token address is eth address', async () => {
@@ -296,7 +296,7 @@ describe('Holding', () => {
         const token = ADDRESS_ONE;
         
         await expect(proxiedV1.connect(tokenService)["release(address,address)"](user, token))
-            .to.be.revertedWith('ETH Token Address');
+            .to.be.revertedWith('Holding: eth token Address');
     });
 
     // Test for contract is paused and then tried to release
@@ -334,7 +334,7 @@ describe('Holding', () => {
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(proxiedV1.address);
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("ERC20 Release Failed");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("Holding: erc20 release failed");
     });
 
     it('should not release if release to user is blacklisted', async () => {
@@ -352,7 +352,7 @@ describe('Holding', () => {
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(user);
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("ERC20 Release Failed");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("Holding: erc20 release failed");
     });
 
     // Test for holding contract is blacklisted before releasing
@@ -364,7 +364,7 @@ describe('Holding', () => {
         // await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
     
         // Lock tokens with the owner
-        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Zero Address");
+        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith("Holding: zero address");
     
         // Unlock tokens with the owner
         // await (await proxiedV1.unlock(user, token, amount)).wait();
@@ -398,7 +398,7 @@ describe('Holding', () => {
         const tokenAddress = ethers.constants.AddressZero;
         // Ensure the Token Service can lock ETH
         await expect(proxiedV1.connect(other)["lock(address)"](other.address, { value: 100 }))
-            .to.be.revertedWith("Unknown TokenService");
+            .to.be.revertedWith("Holding: unknown tokenService");
     });
 
     // it('should revert if ETH transfer fails', async () => {
@@ -424,7 +424,7 @@ describe('Holding', () => {
 
     it('should revert locking ETH for a user if ETH value is less than or equal to zero', async () => {
         // Ensure the Token Service can lock ETH
-        await expect(proxiedV1.connect(tokenService)["lock(address)"](other.address, { value: 0 })).to.be.revertedWith("Requires ETH Transfer");
+        await expect(proxiedV1.connect(tokenService)["lock(address)"](other.address, { value: 0 })).to.be.revertedWith("Holding: requires eth transfer");
     });
 
     it('should emit Locked event after locking ETH for a user', async () => {
@@ -484,7 +484,7 @@ describe('Holding', () => {
         // Unlock tokens with the owner
         await (await proxiedHolding.unlock(user, token, 100)).wait();
         await(await proxiedHolding.transferETH(other.address, 90)).wait();
-        await expect(proxiedHolding["release(address)"](user)).to.be.revertedWith("ETH Release Failed");
+        await expect(proxiedHolding["release(address)"](user)).to.be.revertedWith("Holding: eth release failed");
     });
 
     it('should not release ETH if there is insufficient eth', async () => {

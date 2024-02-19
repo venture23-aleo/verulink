@@ -111,7 +111,7 @@ describe('TokenSupport', () => {
 
         // Add token
         await expect(proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max))
-            .to.be.revertedWith("Zero Address");
+            .to.be.revertedWith("TokenSupport: zero address");
         
     });
 
@@ -154,7 +154,7 @@ describe('TokenSupport', () => {
         const max = 100;
 
         // Add token
-        await expect(proxiedContract.addToken(tokenAddress, wrong_dest_ChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("Target Chain Mismatch");
+        await expect(proxiedContract.addToken(tokenAddress, wrong_dest_ChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("TokenSupport: target chain mismatch");
     });
 
     // it('should call addToken only through proxy', async () => {
@@ -196,7 +196,7 @@ describe('TokenSupport', () => {
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
 
         // Attempt to add the same token again
-        await expect(proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("Token already supported");
+        await expect(proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("TokenSupport: token already supported");
     });
 
     // Test removing a token
@@ -229,7 +229,7 @@ describe('TokenSupport', () => {
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
 
         // Remove token
-        await expect(proxiedContract.removeToken(tokenAddress, 3)).to.be.revertedWith("Target Chain Mismatch");
+        await expect(proxiedContract.removeToken(tokenAddress, 3)).to.be.revertedWith("TokenSupport: target chain mismatch");
     });
 
     // expect(proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("Target Chain Mismatch");
@@ -252,7 +252,7 @@ describe('TokenSupport', () => {
         const nonExistingToken = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing token
-        await expect(proxiedContract.removeToken(nonExistingToken, 1)).to.be.revertedWith('Token not supported');
+        await expect(proxiedContract.removeToken(nonExistingToken, 1)).to.be.revertedWith('TokenSupport: token not supported');
     });
 
     // ...
@@ -377,7 +377,7 @@ describe('TokenSupport', () => {
         // Enable token
         // await proxiedContract.connect(owner).enable(tokenAddress, destChainId);
         await expect(proxiedContract.connect(owner).enable(tokenAddress, wrong_dest_ChainId))
-            .to.be.revertedWith("Target Chain Mismatch");
+            .to.be.revertedWith("TokenSupport: target Chain Mismatch");
         // Check if the token is enabled
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
         expect(isEnabled).to.be.false;
@@ -395,7 +395,7 @@ describe('TokenSupport', () => {
         // Try to enable the token again and expect it to revert
         await expect(
             proxiedContract.enable(tokenAddress, ALEO_CHAINID)
-        ).to.be.revertedWith("Token already enabled");
+        ).to.be.revertedWith("TokenSupport: token already enabled");
     });
     
 
@@ -403,7 +403,7 @@ describe('TokenSupport', () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
 
         await expect(proxiedContract.enable(tokenAddress, ALEO_CHAINID))
-            .to.be.revertedWith("Token not supported");
+            .to.be.revertedWith("TokenSupport: token not supported");
     });
 
     it('should revert when non-owner tries to enable a supported token', async () => {
@@ -452,7 +452,7 @@ describe('TokenSupport', () => {
         // await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         // Disable the token
         await expect(proxiedContract.disable(usdcMock.address, ALEO_CHAINID))
-            .to.be.revertedWith("Token not supported");
+            .to.be.revertedWith("TokenSupport: token not supported");
         // const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
 
         // Check if the token is not disabled
@@ -470,7 +470,7 @@ describe('TokenSupport', () => {
         // Add token
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         await expect(proxiedContract.connect(owner).disable(tokenAddress, wrong_dest_ChainId))
-            .to.be.revertedWith("Target Chain Mismatch");
+            .to.be.revertedWith("TokenSupport: target Chain Mismatch");
     });
 
     // it('should disable an enabled token only through proxy', async () => {
@@ -502,7 +502,7 @@ describe('TokenSupport', () => {
 
         // Disable the token
         await (await proxiedContract.disable(tokenAddress, ALEO_CHAINID)).wait();
-        await expect(proxiedContract.disable(tokenAddress, ALEO_CHAINID)).to.be.revertedWith("Token already disabled");
+        await expect(proxiedContract.disable(tokenAddress, ALEO_CHAINID)).to.be.revertedWith("TokenSupport: token already disabled");
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
         // // Check if the token is disabled
         expect(isEnabled).to.be.false;
@@ -652,7 +652,7 @@ describe('TokenSupport', () => {
         // Attempt to update min value for an unsupported token
         await expect(
             proxiedContract.updateMinValue(tokenAddress, 20)
-        ).to.be.revertedWith("Token not supported");
+        ).to.be.revertedWith("TokenSupport: token not supported");
     });
 
     it('should revert when updating max value for unsupported token', async () => {
@@ -661,7 +661,7 @@ describe('TokenSupport', () => {
         // Attempt to update max value for an unsupported token
         await expect(
             proxiedContract.updateMaxValue(tokenAddress, 90)
-        ).to.be.revertedWith("Token not supported");
+        ).to.be.revertedWith("TokenSupport: token not supported");
     });
 
     it('should emit events when updating min value', async () => {

@@ -172,7 +172,7 @@ describe('TokenService', () => {
 
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"))
-            .to.be.revertedWith("Token Transfer Failed");
+            .to.be.revertedWith("TokenService: token transfer failed");
     });
 
     it('should not allow blackListed address msg.sender for transfer', async () => {
@@ -183,7 +183,7 @@ describe('TokenService', () => {
 
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"))
-            .to.be.revertedWith("Sender Blacklisted");
+            .to.be.revertedWith("TokenService: sender blacklisted");
     });
 
     // Test for unsupported tokens while transfer
@@ -193,7 +193,7 @@ describe('TokenService', () => {
         await (await unsupportedToken.mint(other.address, 150)).wait();
         await (await unsupportedToken.connect(other).approve(proxiedV1.address, 100)).wait();
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (unsupportedToken.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("Token not supported");
+            (unsupportedToken.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: token not supported");
     });
 
 
@@ -241,7 +241,7 @@ describe('TokenService', () => {
         await (await blackListProxy.connect(owner).addToBlackList(other.address)).wait();
         // return;
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("Sender Blacklisted");
+            (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: sender blacklisted");
     });
 
     it('should transfer USDT and checking if "Token not supported" in _packetify', async () => {
@@ -249,7 +249,7 @@ describe('TokenService', () => {
         await (await usdTMock.connect(other).approve(proxiedV1.address, 100)).wait();
         await proxiedV1.disable(usdTMock.address, destchainID);
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("Token not supported");
+            (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: token not supported");
     });
 
     it('should transfer USDT and checking "Transfer amount not in range" in _packetify', async () => {
@@ -257,14 +257,14 @@ describe('TokenService', () => {
         await (await usdTMock.mint(other.address, amountOutOfRange)).wait();
         await (await usdTMock.connect(other).approve(proxiedV1.address, amountOutOfRange)).wait();
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (usdTMock.address, amountOutOfRange, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("Amount out of range");
+            (usdTMock.address, amountOutOfRange, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: amount out of range");
     });
 
     it('should transfer Only ERC20 Tokens', async () => {
         await (await usdTMock.mint(other.address, 150)).wait();
         await (await usdTMock.connect(other).approve(proxiedV1.address, 100)).wait();
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (ADDRESS_ONE, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("Only ERC20 Tokens");
+            (ADDRESS_ONE, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: only erc20 tokens");
     });
 
     it("should revert if transfer amount is not in range", async () => {
@@ -277,7 +277,7 @@ describe('TokenService', () => {
         // Attempt to transfer tokens with an amount out of range
         await expect(
             proxiedV1["transfer(address,uint256,string)"](usdcMock.address, amountOutOfRange, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")
-        ).to.be.revertedWith("Amount out of range");
+        ).to.be.revertedWith("TokenService: amount out of range");
     });
 
     // Test for wrong destTokenService
@@ -302,7 +302,7 @@ describe('TokenService', () => {
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
-        await expect(proxiedV1.connect(other).withdraw(wrongPacket, signatures)).to.be.revertedWith('Invalid Token Service');
+        await expect(proxiedV1.connect(other).withdraw(wrongPacket, signatures)).to.be.revertedWith('TokenService: invalid token service');
     });
 
     // Test for wrong destTokenAddress
@@ -327,7 +327,7 @@ describe('TokenService', () => {
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
-        await expect(proxiedV1.connect(other).withdraw(wrongPacket, signatures)).to.be.revertedWith('Invalid Token');
+        await expect(proxiedV1.connect(other).withdraw(wrongPacket, signatures)).to.be.revertedWith('TokenService: invalid token');
     });
 
     //Test for receiving funds for blackListed address
@@ -397,7 +397,7 @@ describe('TokenService', () => {
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
-        await expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Token");
+        await expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("TokenService: invalid token");
     });
 
     it('should transfer to holding when quorum is NAY', async () => {
@@ -525,7 +525,7 @@ describe('TokenService', () => {
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
         await expect(proxiedV1.withdraw(inPacket, signatures))
-            .to.be.revertedWith("ETH Withdraw Failed");
+            .to.be.revertedWith("TokenService: eth withdraw failed");
     });
 
     it('should revert on transferring ERC20 if Withdraw Failed', async () => {
@@ -547,7 +547,7 @@ describe('TokenService', () => {
         const signatures = [signature1, signature2];
         await (await usdcMock.addBlackList(proxiedV1.address)).wait();
         await expect(proxiedV1.withdraw(inPacket, signatures))
-            .to.be.revertedWith("Withdraw Failed");
+            .to.be.revertedWith("TokenService: withdraw failed");
     });
 
     it('should not transfer ETH to user when quorum is Insufficient', async () => {
@@ -568,7 +568,7 @@ describe('TokenService', () => {
         );
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1];
-        await expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("Insufficient Quorum");
+        await expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("TokenService: insufficient quorum");
     });
 
     it('should not withdraw for Invalid Token Service', async () => {
@@ -584,7 +584,7 @@ describe('TokenService', () => {
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
-        await expect(ERC20TokenServiceImpl.withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Token Service");
+        await expect(ERC20TokenServiceImpl.withdraw(inPacket, signatures)).to.be.revertedWith("TokenService: invalid token service");
     });
 
     it('should not withdraw if a token is disabled', async () => {
@@ -628,7 +628,7 @@ describe('TokenService', () => {
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
-        await expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Token");
+        await expect(proxiedV1.withdraw(inPacket, signatures)).to.be.revertedWith("TokenService: invalid token");
     });
 
     it('should not withdraw if contract is paused', async () => {
@@ -679,7 +679,7 @@ describe('TokenService', () => {
 
         await (await nTToken.addBlackList(proxiedV1.address)).wait();
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures))
-            .to.be.revertedWith('Token holding failed');
+            .to.be.revertedWith('TokenService: token holding failed');
     });
 
     it('should not withdraw if unknown attestor for yea vote', async () => {
@@ -699,7 +699,7 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
         // await (await proxiedV1.pause());
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("Unknown Signer");
+        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: unknown signer");
     });
 
     it('should not withdraw if invalid signature length', async () => {
@@ -719,7 +719,7 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
         // await (await proxiedV1.pause());
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("Invalid Signature Length");
+        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: invalid signature length");
     });
 
     it('should fail in double withdraw', async () => {
@@ -740,7 +740,7 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
         // await (await proxiedV1.pause());
         await(await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("Packet already consumed");
+        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });
 
     it('should convert sig v=0 to v=27', async () => {
@@ -799,7 +799,7 @@ describe('TokenService', () => {
 
     it('should not transferToVault if token is not supported', async () => {
         const tokenAddress = ethers.constants.AddressZero;
-        await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).to.be.revertedWith("Token not supported");
+        await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).to.be.revertedWith("TokenService: token not supported");
     });
 
     it('should not transfer ETH from tokenservice to vault if given amount is greater than balance', async () => {
@@ -810,7 +810,7 @@ describe('TokenService', () => {
         const max = 100;
         await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
-        await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500)).to.be.revertedWith('ETH Transfer Failed');
+        await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500)).to.be.revertedWith('TokenService: eth transfer failed');
     });
 
     it('should not transfer to vault if vault is zero address', async () => {
@@ -822,7 +822,7 @@ describe('TokenService', () => {
         await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, ethers.constants.AddressZero, destTokenAddress, destTokenService, min, max);
         // await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
         await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500))
-            .to.be.revertedWith('Vault Zero Address');
+            .to.be.revertedWith('TokenService: vault zero address');
     });
 
     it('should not transfer ETH from tokenservice to vault if contract is paused', async () => {

@@ -32,8 +32,8 @@ abstract contract BridgeTokenServiceManager is OwnableUpgradeable {
     /// @notice Adds a new Token Service to the list of registered services
     /// @param _service The address of the new Token Service
     function addTokenService(address _service) external virtual onlyOwner {
-        require(_service != address(0), "Zero Address");
-        require(!isRegisteredTokenService(_service), "Token Service already exists");
+        require(_service != address(0), "BridgeTokenServiceManager: zero address");
+        require(!isRegisteredTokenService(_service), "BridgeTokenServiceManager: token service already exists");
         tokenServices[_service] = true;
         emit TokenServiceAdded(_service);
     }
@@ -41,7 +41,7 @@ abstract contract BridgeTokenServiceManager is OwnableUpgradeable {
     /// @notice Removes a Token Service from the list of registered services
     /// @param _service The address of the Token Service to be removed
     function removeTokenService(address _service) external virtual onlyOwner {
-        require(isRegisteredTokenService(_service), "Unknown Token Service");
+        require(isRegisteredTokenService(_service), "BridgeTokenServiceManager: unknown token service");
         delete tokenServices[_service];
         emit TokenServiceRemoved(_service);
     }

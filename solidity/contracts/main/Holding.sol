@@ -58,19 +58,25 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
         require(msg.sender == owner());
     }
 
+    /// @dev Modifier to ensure that the provided address is not the zero address.
+    /// @param addr The address to check.
+    /// @dev Reverts with "Holding: zero address" if the provided address is the zero address.
+    modifier checkZeroAddress(address addr) {
+    require(addr != ZERO_ADDRESS, "Holding: zero address");
+    _;
+    }
+
     /// @dev Adds a new token service, callable only by the owner
     /// @param _tokenService Address of the new token service to be added
-    function addTokenService(address _tokenService) external onlyOwner {
-        require(_tokenService != ZERO_ADDRESS, "Zero Address");
-        require(!supportedTokenServices[_tokenService], "Known TokenService");
+    function addTokenService(address _tokenService) external onlyOwner checkZeroAddress(_tokenService){
+        require(!supportedTokenServices[_tokenService], "Holding: known tokenService");
         supportedTokenServices[_tokenService] = true;
     }
 
     /// @dev Removes an existing token service, callable only by the owner
     /// @param _tokenService Address of the token service to be removed
-    function removeTokenService(address _tokenService) external onlyOwner {
-        require(_tokenService != ZERO_ADDRESS, "Zero Address");
-        require(supportedTokenServices[_tokenService], "UnKnown TokenService");
+    function removeTokenService(address _tokenService) external onlyOwner checkZeroAddress(_tokenService){
+        require(supportedTokenServices[_tokenService], "Holding: unKnown tokenService");
         delete supportedTokenServices[_tokenService];
     }
 
@@ -78,11 +84,10 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param user Address of the user
     /// @param token Address of the token to be locked
     /// @param amount Number of tokens to be locked
-    function _lock(address user, address token, uint256 amount) internal {
-        require(user != ZERO_ADDRESS, "Zero Address");
+    function _lock(address user, address token, uint256 amount) internal checkZeroAddress(token){
         require(
             supportedTokenServices[msg.sender],
-            "Unknown TokenService"
+            "Holding: unknown tokenService"
         );
         locked[user][token] += amount;
         emit Locked(user, token, amount);
@@ -92,16 +97,15 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param user Address of the user
     /// @param token Address of the token to be locked
     /// @param amount Number of tokens to be locked
-    function lock(address user, address token, uint256 amount) external virtual {
-        require(token != ZERO_ADDRESS, "Zero Address");
-        require(token != ETH_TOKEN, "ETH Token Address");
+    function lock(address user, address token, uint256 amount) external virtual checkZeroAddress(user){
+        require(token != ETH_TOKEN, "Holding: eth token address");
         _lock(user,token,amount);
     }
 
     /// @notice Locks ETH for a user
     /// @param user Address of the user
     function lock(address user) external virtual payable {
-        require(msg.value > 0, "Requires ETH Transfer");
+        require(msg.value > 0, "Holding: requires eth transfer");
         _lock(user, ETH_TOKEN, msg.value);
     }
 
@@ -114,7 +118,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
         address token,
         uint256 amount
     ) external virtual onlyOwner {
-        require(locked[user][token] >= amount, "Insufficient amount");
+        require(locked[user][token] >= amount, "Holding: insufficient amount");
         unchecked {
             locked[user][token] -= amount;
         }
@@ -125,8 +129,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @dev Internal function to release tokens
     /// @param user Address of the user
     /// @param token Address of the token to be released
-    function _release(address user, address token) internal whenNotPaused nonReentrant returns (uint256 amount) {
-        require(user != ZERO_ADDRESS, "Zero Address");
+    function _release(address user, address token) internal whenNotPaused nonReentrant checkZeroAddress(user) returns (uint256 amount) {
         // require(unlocked[user][token] >= amount, "Insufficient amount");
         amount = unlocked[user][token];
         unchecked {
@@ -138,11 +141,10 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @notice Releases tokens to a user
     /// @param user Address of the user
     /// @param token Address of the token to be released
-    function release(address user, address token) external virtual {
-        require(token != ZERO_ADDRESS, "Zero Address");
-        require(token != ETH_TOKEN, "ETH Token Address");
+    function release(address user, address token) external virtual checkZeroAddress(token){
+        require(token != ETH_TOKEN, "Holding: eth token Address");
         uint256 amount = _release(user, token);
-        require(IIERC20(token).transfer(user, amount), "ERC20 Release Failed");
+        require(IIERC20(token).transfer(user, amount), "Holding: erc20 release failed");
     }
 
     /// @notice Releases ETH to a user
@@ -150,7 +152,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     function release(address user) external virtual {
         uint256 amount = _release(user, ETH_TOKEN);
         (bool sent,) = user.call{value: amount}("");
-        require(sent, "ETH Release Failed");
+        require(sent, "Holding: eth release failed");
     }
 
     /**

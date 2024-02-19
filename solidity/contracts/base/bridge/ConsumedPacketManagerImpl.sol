@@ -90,7 +90,7 @@ abstract contract ConsumedPacketManagerImpl {
         bytes32 s;
 
         for(uint256 i = 0; i < sigs.length; i++) {
-            require(sigs[i].length == 65, "Invalid Signature Length");
+            require(sigs[i].length == 65, "ConsumedPacketManagerImpl: invalid signature length");
             (v,r,s) = _splitSignature(sigs[i]);
             signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
             if(_validateAttestor(signer)) {
@@ -99,7 +99,7 @@ abstract contract ConsumedPacketManagerImpl {
                 }
             }else {
                 signer = _recover(packetHash, v, r, s, PacketLibrary.Vote.YEA);
-                require(_validateAttestor(signer), "Unknown Signer");
+                require(_validateAttestor(signer), "ConsumedPacketManagerImpl: unknown signer");
                 unchecked {
                     yeas = yeas + 1;
                 }
@@ -132,7 +132,7 @@ abstract contract ConsumedPacketManagerImpl {
             !isPacketConsumed(
                 sequence
             ),
-            "Packet already consumed"
+            "ConsumedPacketManagerImpl: packet already consumed"
         );
         
         consumedPackets[sequence] = packetHash;

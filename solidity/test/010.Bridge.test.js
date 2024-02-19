@@ -126,7 +126,7 @@ describe('Bridge', () => {
     it('should revert when updating to an already supported chain', async () => {
         const supportedChain = 2; // Already supported destination chainId is 2
         await expect(proxiedV1.updateDestinationChainId(supportedChain)).to.be.revertedWith(
-            'Destination Chain already supported'
+            'Bridge: destination chain already supported'
         );
     });
 
@@ -214,7 +214,7 @@ describe('Bridge', () => {
         const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
-        await expect(proxiedV1.connect(unknowntokenService).consume(inPacket, signatures)).to.be.revertedWith("Unknown Token Service");
+        await expect(proxiedV1.connect(unknowntokenService).consume(inPacket, signatures)).to.be.revertedWith("Bridge: unknown token service");
     });
 
 
@@ -281,7 +281,7 @@ describe('Bridge', () => {
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
         const signatures = [signature1, signature2];
         await proxiedV1.connect(tokenService).consume(inPacket, signatures);
-        await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWith("Packet already consumed");
+        await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });
 
     it('should dispatch an outgoing packet when sendMessage is called', async () => {
@@ -328,7 +328,7 @@ describe('Bridge', () => {
             [unknowndestChainId, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             100
         ];
-        await expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Unknown destination chain");
+        await expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Bridge: unknown destination chain");
     });
 
     it('should revert when calling sendMessage with unknown token service', async () => {
@@ -339,7 +339,7 @@ describe('Bridge', () => {
             [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             100
         ];
-        await expect(proxiedV1.connect(unknowntokenService).sendMessage(outPacket)).to.be.revertedWith("Unknown Token Service");
+        await expect(proxiedV1.connect(unknowntokenService).sendMessage(outPacket)).to.be.revertedWith("Bridge: unknown token service");
     });
 });
 

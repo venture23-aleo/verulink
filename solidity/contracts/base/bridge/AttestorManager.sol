@@ -43,8 +43,8 @@ abstract contract AttestorManager is OwnableUpgradeable {
     /// @param attestor The address of the new attestor
     /// @param newQuorumRequired The quorum required for the new attestor
     function addAttestor(address attestor, uint256 newQuorumRequired) public virtual onlyOwner {
-        require(attestor != address(0), "Zero Address");
-        require(!isAttestor(attestor), "Attestor already exists");
+        require(attestor != address(0), "AttestorManager: zero address");
+        require(!isAttestor(attestor), "AttestorManager: attestor already exists");
         attestors[attestor] = true;
         quorumRequired = newQuorumRequired;
         emit AttestorAdded(attestor, newQuorumRequired);
@@ -54,7 +54,7 @@ abstract contract AttestorManager is OwnableUpgradeable {
     /// @param attestor The address of the attestor to be removed
     /// @param newQuorumRequired The new quorum requirement after removal
     function removeAttestor(address attestor, uint256 newQuorumRequired) external virtual onlyOwner {
-        require(attestors[attestor], "Unknown Attestor");
+        require(attestors[attestor], "AttestorManager: unknown attestor");
         delete attestors[attestor];
         quorumRequired = newQuorumRequired;
         emit AttestorRemoved(attestor, newQuorumRequired);

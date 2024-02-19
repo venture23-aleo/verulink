@@ -19,7 +19,7 @@ contract Erc20VaultService is VaultService, Upgradeable {
         address _token,
         string memory _name
     ) public initializer {
-        require(_token != ZERO_ADDRESS && _token != ETH_TOKEN, "Only ERC20 Address");
+        require(_token != ZERO_ADDRESS && _token != ETH_TOKEN, "Erc20VaultService: only erc20 address");
         __VaultService_init(_token, _name);
     }
 
@@ -32,7 +32,7 @@ contract Erc20VaultService is VaultService, Upgradeable {
     /// @param amount The amount of ERC20 tokens to be transferred
     /// @return true if the transfer is successful, false otherwise
     function transfer(uint256 amount) external virtual onlyOwner returns (bool) {
-        require(IIERC20(token()).transfer(owner(), amount), "ERC20 Transfer Failed");
+        require(IIERC20(token()).transfer(owner(), amount), "Erc20VaultService: erc20 transfer failed");
         return true;
     }
 

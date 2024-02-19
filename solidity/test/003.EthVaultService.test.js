@@ -45,7 +45,7 @@ describe('EthVaultService', () => {
     });
 
     it('should not transfer if balance is less than send amount', async() => {
-        await expect(proxiedEthVaultService.transfer(100000000000000)).to.be.revertedWith("ETH approval Failed");
+        await expect(proxiedEthVaultService.transfer(100000000000000)).to.be.revertedWith("EthVaultService: eth approval failed");
     });
 
     it('should transfer', async() => {

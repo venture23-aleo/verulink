@@ -82,13 +82,13 @@ describe('BridgeTokenServiceManager', () => {
         // Add token service
         await (await proxiedV1.addTokenService(newTokenService)).wait();
         // Attempt to add an existing token service
-        await expect(proxiedV1.addTokenService(newTokenService)).to.be.revertedWith('Token Service already exists');
+        await expect(proxiedV1.addTokenService(newTokenService)).to.be.revertedWith('BridgeTokenServiceManager: token service already exists');
     });
 
     // Test attempting to add a token service with zero address
     it('should revert when trying to add a token service with zero address', async () => {
         // Attempt to add a token service with zero address
-        await expect(proxiedV1.addTokenService(ethers.constants.AddressZero)).to.be.revertedWith('Zero Address');
+        await expect(proxiedV1.addTokenService(ethers.constants.AddressZero)).to.be.revertedWith('BridgeTokenServiceManager: zero address');
     });
 
     // Test removing a token service
@@ -121,13 +121,13 @@ describe('BridgeTokenServiceManager', () => {
         const nonExistingTokenService = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing token service
-        await expect(proxiedV1.removeTokenService(nonExistingTokenService)).to.be.revertedWith('Unknown Token Service');
+        await expect(proxiedV1.removeTokenService(nonExistingTokenService)).to.be.revertedWith('BridgeTokenServiceManager: unknown token service');
     });
 
     // Test attempting to remove a token service with zero address
     it('should revert when trying to remove a token service with zero address', async () => {
         // Attempt to remove a token service with zero address
-        await expect(proxiedV1.removeTokenService(ethers.constants.AddressZero)).to.be.revertedWith('Unknown Token Service');
+        await expect(proxiedV1.removeTokenService(ethers.constants.AddressZero)).to.be.revertedWith('BridgeTokenServiceManager: unknown token service');
     });
 
     it('should emit TokenServiceAdded event when adding a new token service', async () => {

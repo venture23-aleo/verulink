@@ -105,9 +105,9 @@ abstract contract TokenSupport is OwnableUpgradeable {
         uint256 min,
         uint256 max
     ) internal {
-        require(tokenAddress != ZERO_ADDRESS, "Zero Address");
-        require(!isSupportedToken(tokenAddress),"Token already supported");
-        require(_destChainId == destChainId, "Target Chain Mismatch");
+        require(tokenAddress != ZERO_ADDRESS, "TokenSupport: zero address");
+        require(!isSupportedToken(tokenAddress),"TokenSupport: token already supported");
+        require(_destChainId == destChainId, "TokenSupport: target chain mismatch");
         Token memory token = Token(
             tokenAddress,
             vault,
@@ -157,8 +157,8 @@ abstract contract TokenSupport is OwnableUpgradeable {
         address tokenAddress,
         uint256 _destChainId
     ) external virtual onlyOwner {
-        require(isSupportedToken(tokenAddress),"Token not supported");
-        require(_destChainId == destChainId, "Target Chain Mismatch");
+        require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
+        require(_destChainId == destChainId, "TokenSupport: target chain mismatch");
         emit TokenRemoved(tokenAddress, _destChainId);
         delete supportedTokens[tokenAddress];
     }
@@ -171,9 +171,9 @@ abstract contract TokenSupport is OwnableUpgradeable {
         uint256 _destChainId
     ) external virtual onlyOwner {
         // require(tokenAddress != ZERO_ADDRESS, "Zero Address");
-        require(isSupportedToken(tokenAddress),"Token not supported");
-        require(!isEnabledToken(tokenAddress),"Token already enabled");
-        require(_destChainId == destChainId, "Target Chain Mismatch");
+        require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
+        require(!isEnabledToken(tokenAddress),"TokenSupport: token already enabled");
+        require(_destChainId == destChainId, "TokenSupport: target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = true;
         emit TokenEnabled(tokenAddress, _destChainId);
     }
@@ -185,9 +185,9 @@ abstract contract TokenSupport is OwnableUpgradeable {
         address tokenAddress,
         uint256 _destChainId
     ) external virtual onlyOwner {
-        require(isSupportedToken(tokenAddress),"Token not supported");
-        require(isEnabledToken(tokenAddress), "Token already disabled");
-        require(_destChainId == destChainId, "Target Chain Mismatch");
+        require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
+        require(isEnabledToken(tokenAddress), "TokenSupport: token already disabled");
+        require(_destChainId == destChainId, "TokenSupport: target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = false;
         emit TokenDisabled(tokenAddress, _destChainId);
     }
@@ -196,7 +196,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
     /// @param tokenAddress The address of the token
     /// @param minValue The new minimum value
     function updateMinValue(address tokenAddress, uint256 minValue) external virtual onlyOwner {
-        require(isSupportedToken(tokenAddress), "Token not supported");
+        require(isSupportedToken(tokenAddress), "TokenSupport: token not supported");
         emit TokenMinValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].minValue, minValue);
         supportedTokens[tokenAddress].minValue = minValue;
     }
@@ -205,7 +205,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
     /// @param tokenAddress The address of the token
     /// @param maxValue The new maximum value
     function updateMaxValue(address tokenAddress, uint256 maxValue) external virtual onlyOwner {
-        require(isSupportedToken(tokenAddress), "Token not supported");
+        require(isSupportedToken(tokenAddress), "TokenSupport: token not supported");
         emit TokenMaxValueUpdated(tokenAddress, destChainId, supportedTokens[tokenAddress].maxValue, maxValue);
         supportedTokens[tokenAddress].maxValue = maxValue;
     }

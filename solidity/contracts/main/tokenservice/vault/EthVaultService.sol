@@ -33,7 +33,7 @@ contract EthVaultService is VaultService, Upgradeable {
     /// @return true if the transfer is successful, false otherwise
     function transfer(uint256 amount) external virtual onlyOwner returns (bool) {
         (bool sent,) = owner().call{value: amount}("");
-        require(sent, "ETH approval Failed");
+        require(sent, "EthVaultService: eth approval failed");
         return true;
     }
 

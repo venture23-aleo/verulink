@@ -59,7 +59,7 @@ contract Bridge is
     /// @notice Updates the destination chain ID, callable only by the owner
     /// @param newDestChainId The new destination chain ID
     function updateDestinationChainId(uint256 newDestChainId) external onlyOwner {
-        require(!isSupportedChain(newDestChainId), "Destination Chain already supported");
+        require(!isSupportedChain(newDestChainId), "Bridge: destination chain already supported");
         emit ChainUpdated(destinationChainId, newDestChainId);
         destinationChainId = newDestChainId;
     }
@@ -80,15 +80,15 @@ contract Bridge is
         bytes[] memory sigs
     ) external whenNotPaused returns (PacketLibrary.Vote)
     {
-        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, sigs, quorumRequired);
     }
 
     /// @notice Sends a message packet to the specified destination chain
     /// @param packet The outgoing packet to be sent
     function sendMessage(PacketLibrary.OutPacket memory packet) public whenNotPaused {
-        require(isSupportedChain(packet.destTokenService.chainId), "Unknown destination chain");
-        require(isRegisteredTokenService(msg.sender), "Unknown Token Service");
+        require(isSupportedChain(packet.destTokenService.chainId), "Bridge: unknown destination chain");
+        require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
         _sendMessage(packet);
     } 
 
