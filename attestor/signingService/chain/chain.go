@@ -27,6 +27,12 @@ func HashAndSign(data []byte) (hash, signature string, err error) {
 		return
 	}
 
+	fmt.Printf("processing packet with srcChainID: %s, destChainID %s and seqNum: %d",
+		sp.Packet.Source.ChainID.String(),
+		sp.Packet.Destination.ChainID.String(),
+		sp.Packet.Sequence,
+	)
+
 	chainID := sp.Packet.Destination.ChainID.String()
 	chainName, ok := chainIDToName[chainID]
 	if !ok {
