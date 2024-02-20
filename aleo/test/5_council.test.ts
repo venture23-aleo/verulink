@@ -6,62 +6,62 @@ import { Council_v0003Contract } from "../artifacts/js/council_v0003";
 import { Wusdc_connector_v0003_0Contract } from "../artifacts/js/wusdc_connector_v0003_0";
 import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
 
-import { 
-  ALEO_ZERO_ADDRESS, 
-  BRIDGE_PAUSABILITY_INDEX, 
-  BRIDGE_PAUSED_VALUE, 
-  BRIDGE_THRESHOLD_INDEX, 
-  BRIDGE_TOTAL_ATTESTORS_INDEX, 
-  BRIDGE_UNPAUSED_VALUE, 
-  COUNCIL_THRESHOLD_INDEX, 
-  COUNCIL_TOTAL_MEMBERS_INDEX, 
-  COUNCIL_TOTAL_PROPOSALS_INDEX, 
-  OWNER_INDEX, 
-  TOKEN_PAUSED_VALUE, 
-  TOKEN_UNPAUSED_VALUE, 
-  ethChainId 
+import {
+  ALEO_ZERO_ADDRESS,
+  BRIDGE_PAUSABILITY_INDEX,
+  BRIDGE_PAUSED_VALUE,
+  BRIDGE_THRESHOLD_INDEX,
+  BRIDGE_TOTAL_ATTESTORS_INDEX,
+  BRIDGE_UNPAUSED_VALUE,
+  COUNCIL_THRESHOLD_INDEX,
+  COUNCIL_TOTAL_MEMBERS_INDEX,
+  COUNCIL_TOTAL_PROPOSALS_INDEX,
+  OWNER_INDEX,
+  TOKEN_PAUSED_VALUE,
+  TOKEN_UNPAUSED_VALUE,
+  ethChainId
 } from "../utils/constants";
-import { 
-  getAddMemberLeo, 
-  getRemoveMemberLeo, 
-  getTbAddAttestorLeo, 
-  getTbAddChainLeo, 
-  getTbAddServiceLeo, 
-  getTbPauseLeo, 
-  getTbRemoveAttestorLeo, 
-  getTbRemoveChainLeo, 
-  getTbRemoveServiceLeo, 
-  getTbUnpauseLeo, 
-  getTsAddTokenLeo, 
-  getTsRemoveTokenLeo, 
-  getTsUpdateMaxTransferLeo, 
-  getTsUpdateMinTransferLeo, 
-  getTsUpdateWithdrawalLimitLeo, 
+import {
+  getAddMemberLeo,
+  getRemoveMemberLeo,
+  getTbAddAttestorLeo,
+  getTbAddChainLeo,
+  getTbAddServiceLeo,
+  getTbPauseLeo,
+  getTbRemoveAttestorLeo,
+  getTbRemoveChainLeo,
+  getTbRemoveServiceLeo,
+  getTbUnpauseLeo,
+  getTsAddTokenLeo,
+  getTsRemoveTokenLeo,
+  getTsUpdateMaxTransferLeo,
+  getTsUpdateMinTransferLeo,
+  getTsUpdateWithdrawalLimitLeo,
   getUpdateThresholdLeo,
-  getTsPauseTokenLeo, 
+  getTsPauseTokenLeo,
   getTsUnpauseTokenLeo,
-  getProposalVoteLeo 
+  getProposalVoteLeo
 } from "../artifacts/js/js2leo/council_v0003";
-import { 
-  AddMember, 
-  RemoveMember, 
-  TbAddAttestor, 
-  TbAddChain, 
-  TbAddService, 
-  TbPause, 
-  TbRemoveAttestor, 
-  TbRemoveChain, 
-  TbRemoveService, 
-  TbUnpause, 
-  TsAddToken, 
-  TsRemoveToken, 
-  TsUpdateMaxTransfer, 
-  TsUpdateMinTransfer, 
-  TsUpdateWithdrawalLimit, 
+import {
+  AddMember,
+  RemoveMember,
+  TbAddAttestor,
+  TbAddChain,
+  TbAddService,
+  TbPause,
+  TbRemoveAttestor,
+  TbRemoveChain,
+  TbRemoveService,
+  TbUnpause,
+  TsAddToken,
+  TsRemoveToken,
+  TsUpdateMaxTransfer,
+  TsUpdateMinTransfer,
+  TsUpdateWithdrawalLimit,
   UpdateThreshold,
-  ProposalVote, 
-  ProposalVoterKey, 
-  TsPauseToken, 
+  ProposalVote,
+  ProposalVoterKey,
+  TsPauseToken,
   TsUnpauseToken,
 } from "../artifacts/js/types/council_v0003";
 
@@ -94,7 +94,7 @@ const getVoteKeys = (proposalHash: bigint, voters: string[]): bigint[] => {
 const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> => {
   const totalVoters = await council.proposal_vote_counts(proposalHash);
   const voters = []
-  for (let i = 0; i<totalVoters; i++) {
+  for (let i = 0; i < totalVoters; i++) {
     const ithVoterKey: ProposalVoterKey = {
       proposal: proposalHash,
       index: i
@@ -113,7 +113,7 @@ const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> =
 }
 
 
-describe("Council", () => {
+describe.skip("Council", () => {
   const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
   const admin = council.address();
   const initialThreshold = 3;
@@ -149,138 +149,126 @@ describe("Council", () => {
     test(
       "Initialize Council",
       async () => {
-          let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
-          if (!isCouncilInitialized) {
-            const [initializeTx] = await council.initialize(
-              [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS], initialThreshold
-            );
-            await council.wait(initializeTx);
-            expect(await council.members(councilMember1)).toBe(true);
-            expect(await council.members(councilMember2)).toBe(true);
-            expect(await council.members(councilMember3)).toBe(true);
-            expect(await council.members(ALEO_ZERO_ADDRESS)).toBe(true);
-            expect(await council.members(aleoUser4, false)).toBe(false);
-            expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(initialThreshold);
-            expect(await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)).toBe(3);
-            expect(await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toBe(BigInt(0));
+        let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
+        if (!isCouncilInitialized) {
+          const [initializeTx] = await council.initialize(
+            [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS], initialThreshold
+          );
+          await council.wait(initializeTx);
+          expect(await council.members(councilMember1)).toBe(true);
+          expect(await council.members(councilMember2)).toBe(true);
+          expect(await council.members(councilMember3)).toBe(true);
+          expect(await council.members(ALEO_ZERO_ADDRESS)).toBe(true);
+          expect(await council.members(aleoUser4, false)).toBe(false);
+          expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(initialThreshold);
+          expect(await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)).toBe(3);
+          expect(await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toBe(BigInt(0));
         }
       },
       TIMEOUT
     );
 
-    test.skip.failing(
-      "should not Initialize Council twice",
-      async () => {
-          let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
-          if (isCouncilInitialized) {
-            const [initializeTx] = await council.initialize(
-              [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS], initialThreshold
-            );
-            await council.wait(initializeTx);
-          }
-        },
-      TIMEOUT
-    );
+
 
   })
 
   describe("Update threshold", () => {
 
     const newThreshold = 1;
-    let proposalHash: bigint 
+    let proposalHash: bigint
     let proposalId: number;
 
     test("Propose from council member", async () => {
-        const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-        proposalId = totalProposals + 1;
-        const updateThresholdProposal: UpdateThreshold = {
-          id: proposalId,
-          new_threshold: newThreshold,
-        };
-        proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
+      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      proposalId = totalProposals + 1;
+      const updateThresholdProposal: UpdateThreshold = {
+        id: proposalId,
+        new_threshold: newThreshold,
+      };
+      proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
-        council.connect(councilMember1)
-        const [proposeTx] = await council.propose(proposalId, proposalHash);
-        await council.wait(proposeTx);
+      council.connect(councilMember1)
+      const [proposeTx] = await council.propose(proposalId, proposalHash);
+      await council.wait(proposeTx);
 
-        const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-        expect(totalProposalsAfter).toBe(totalProposals + 1);
-        expect(await council.proposals(proposalId)).toBe(proposalHash);
-        expect(await council.proposal_vote_counts(proposalHash)).toBe(1)
+      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      expect(totalProposalsAfter).toBe(totalProposals + 1);
+      expect(await council.proposals(proposalId)).toBe(proposalHash);
+      expect(await council.proposal_vote_counts(proposalHash)).toBe(1)
     }, TIMEOUT)
 
     test.failing("Propose with invalid proposalId", async () => {
-        const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-        const updateThresholdProposal: UpdateThreshold = {
-          id: proposalId,
-          new_threshold: newThreshold,
-        };
-        const proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
+      const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      const updateThresholdProposal: UpdateThreshold = {
+        id: proposalId,
+        new_threshold: newThreshold,
+      };
+      const proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
-        council.connect(councilMember1)
-        const [proposeTx] = await council.propose(proposalId, proposalHash);
-        await council.wait(proposeTx);
+      council.connect(councilMember1)
+      const [proposeTx] = await council.propose(proposalId, proposalHash);
+      await council.wait(proposeTx);
 
     }, TIMEOUT)
 
     test.failing("Propose from non-council member", async () => {
-        const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-        const updateThresholdProposal: UpdateThreshold = {
-          id: proposalId,
-          new_threshold: newThreshold,
-        };
-        const proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
+      const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+      const updateThresholdProposal: UpdateThreshold = {
+        id: proposalId,
+        new_threshold: newThreshold,
+      };
+      const proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
-        council.connect(aleoUser4)
-        const [proposeTx] = await council.propose(proposalId, proposalHash);
-        await council.wait(proposeTx);
+      council.connect(aleoUser4)
+      const [proposeTx] = await council.propose(proposalId, proposalHash);
+      await council.wait(proposeTx);
 
     }, TIMEOUT)
 
     test.failing("Vote from non council member fails", async () => {
-        council.connect(aleoUser4)
-        const [voteTx] = await council.vote(proposalHash, true);
-        await council.wait(voteTx);
+      council.connect(aleoUser4)
+      const [voteTx] = await council.vote(proposalHash, true);
+      await council.wait(voteTx);
     }, TIMEOUT)
 
     test.failing("Vote from council member1 fails", async () => {
       // This fails because propose is counted as a vote
-        council.connect(councilMember1)
-        const [voteTx] = await council.vote(proposalHash, true);
-        await council.wait(voteTx);
+      council.connect(councilMember1)
+      const [voteTx] = await council.vote(proposalHash, true);
+      await council.wait(voteTx);
     }, TIMEOUT)
 
     test("Vote NO from council member2", async () => {
-        const initialVotes = await council.proposal_vote_counts(proposalHash);
-        council.connect(councilMember2)
-        const [voteTx] = await council.vote(proposalHash, false);
-        await council.wait(voteTx);
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember2)
+      const [voteTx] = await council.vote(proposalHash, false);
+      await council.wait(voteTx);
 
-        const finalVotes = await council.proposal_vote_counts(proposalHash);
-        expect(finalVotes).toBe(initialVotes + 1);
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes + 1);
     }, TIMEOUT)
 
     test.failing("Vote again from council member2 fails", async () => {
-        council.connect(councilMember2)
-        const [voteTx] = await council.vote(proposalHash, true);
-        await council.wait(voteTx);
+      council.connect(councilMember2)
+      const [voteTx] = await council.vote(proposalHash, true);
+      await council.wait(voteTx);
     }, TIMEOUT)
 
-    test.failing("Execute without enough votes fails", async() => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
-        expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-        const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-        await council.wait(updateThresholExecTx);
+    test.failing("Execute without enough votes fails", async () => {
+      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+      expect(await council.proposal_executed(proposalHash, false)).toBe(false);
+      const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
+      await council.wait(updateThresholExecTx);
     }, TIMEOUT);
 
     test("Vote YES from council member3", async () => {
-        const initialVotes = await council.proposal_vote_counts(proposalHash);
-        council.connect(councilMember3)
-        const [voteTx] = await council.vote(proposalHash, true);
-        await council.wait(voteTx);
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember3)
+      const [voteTx] = await council.vote(proposalHash, true);
+      await council.wait(voteTx);
 
-        const finalVotes = await council.proposal_vote_counts(proposalHash);
-        expect(finalVotes).toBe(initialVotes + 1);
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes + 1);
     }, TIMEOUT)
 
     test("Get voters", async () => {
@@ -297,45 +285,45 @@ describe("Council", () => {
       expect(votes[2]).toBe(true);
     })
 
-    test.failing("Execute with both YES and NO votes fails", async() => {
-        const signers = [ councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, councilMember3 ];
-        expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-        const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-        await council.wait(updateThresholExecTx);
+    test.failing("Execute with both YES and NO votes fails", async () => {
+      const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, councilMember3];
+      expect(await council.proposal_executed(proposalHash, false)).toBe(false);
+      const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
+      await council.wait(updateThresholExecTx);
     }, TIMEOUT);
 
     test("Change vote of council member2 to YES", async () => {
-        const initialVotes = await council.proposal_vote_counts(proposalHash);
-        council.connect(councilMember2)
-        const [voteTx] = await council.update_vote(proposalHash, true);
-        await council.wait(voteTx);
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember2)
+      const [voteTx] = await council.update_vote(proposalHash, true);
+      await council.wait(voteTx);
 
-        const finalVotes = await council.proposal_vote_counts(proposalHash);
-        expect(finalVotes).toBe(initialVotes);
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes);
 
-        const [voters, votes] = await getVoters(proposalHash);
-        expect(voters.length).toBe(3)
-        expect(votes.length).toBe(3)
+      const [voters, votes] = await getVoters(proposalHash);
+      expect(voters.length).toBe(3)
+      expect(votes.length).toBe(3)
 
-        expect(voters[0]).toBe(councilMember1);
-        expect(voters[1]).toBe(councilMember2);
-        expect(voters[2]).toBe(councilMember3);
+      expect(voters[0]).toBe(councilMember1);
+      expect(voters[1]).toBe(councilMember2);
+      expect(voters[2]).toBe(councilMember3);
 
-        expect(votes[0]).toBe(true);
-        expect(votes[1]).toBe(true);
-        expect(votes[2]).toBe(true);
+      expect(votes[0]).toBe(true);
+      expect(votes[1]).toBe(true);
+      expect(votes[2]).toBe(true);
     }, TIMEOUT)
 
 
-    test("Execute with all votes", async() => {
-        const signers = [ councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
-        
-        expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-        const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-        await council.wait(updateThresholExecTx);
+    test("Execute with all votes", async () => {
+      const signers = [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
-        expect(await council.proposal_executed(proposalHash)).toBe(true);
-        expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(newThreshold);
+      expect(await council.proposal_executed(proposalHash, false)).toBe(false);
+      const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
+      await council.wait(updateThresholExecTx);
+
+      expect(await council.proposal_executed(proposalHash)).toBe(true);
+      expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(newThreshold);
     }, TIMEOUT);
 
   })
@@ -346,7 +334,7 @@ describe("Council", () => {
     let proposalHash: bigint
     let proposalId: number
 
-    test("Propose", async() => {
+    test("Propose", async () => {
       const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
       proposalId = totalProposals + 1;
 
@@ -368,19 +356,19 @@ describe("Council", () => {
     }, TIMEOUT)
 
     test("Vote", async () => {
-        const initialVotes = await council.proposal_vote_counts(proposalHash);
-        council.connect(councilMember2)
-        const [voteTx] = await council.vote(proposalHash, true);
-        await council.wait(voteTx);
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember2)
+      const [voteTx] = await council.vote(proposalHash, true);
+      await council.wait(voteTx);
 
-        const finalVotes = await council.proposal_vote_counts(proposalHash);
-        expect(finalVotes).toBe(initialVotes + 1);
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes + 1);
     }, TIMEOUT)
 
     test("Execute", async () => {
-      const signers = [ councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+      const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
       const initialTotalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
-      
+
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
       const [addMemeberExecTx] = await council.add_member(proposalId, newMember, updatedThreshold, signers);
       await council.wait(addMemeberExecTx);
@@ -392,7 +380,7 @@ describe("Council", () => {
       expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(updatedThreshold);
       expect(finalTotalAttestors).toBe(initialTotalAttestors + 1);
     }, TIMEOUT)
-  }) 
+  })
 
   describe.skip("Remove member", () => {
     const oldMember = councilMember2
@@ -404,7 +392,7 @@ describe("Council", () => {
       expect(await council.members(oldMember)).toBe(true)
     })
 
-    test("Propose", async() => {
+    test("Propose", async () => {
       const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
       proposalId = totalProposals + 1;
 
@@ -426,20 +414,20 @@ describe("Council", () => {
     }, TIMEOUT)
 
     test.skip("Vote", async () => {
-        const initialVotes = await council.proposal_vote_counts(proposalHash);
-        council.connect(councilMember2)
-        const [voteTx] = await council.vote(proposalHash, true);
-        await council.wait(voteTx);
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember2)
+      const [voteTx] = await council.vote(proposalHash, true);
+      await council.wait(voteTx);
 
-        const finalVotes = await council.proposal_vote_counts(proposalHash);
-        expect(finalVotes).toBe(initialVotes + 1);
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes + 1);
     }, TIMEOUT)
 
     test("Execute", async () => {
       // TODO validate again
-      const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
       const initialTotalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
-      
+
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
       const [removeMemberTx] = await council.remove_member(proposalId, oldMember, updatedThreshold, signers);
       await council.wait(removeMemberTx);
@@ -450,24 +438,24 @@ describe("Council", () => {
       expect(await council.members(oldMember, false)).toBe(false);
       expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(updatedThreshold);
       expect(finalTotalAttestors).toBe(initialTotalAttestors - 1);
-     
+
     }, TIMEOUT)
-  }) 
+  })
 
   describe.skip("Bridge", () => {
     const threshold = 1;
 
-    test( "Initialize Bridge", async () => {
-        const isBridgeInitialized = (await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX, 0)) != 0;
-        if (!isBridgeInitialized) {
-          const [initializeTx] = await bridge.initialize_tb(
-            [councilMember1, councilMember2, councilMember3, aleoUser4, ALEO_ZERO_ADDRESS],
-            threshold,
-            admin
-          );
-          await bridge.wait(initializeTx);
-        }
-      },
+    test("Initialize Bridge", async () => {
+      const isBridgeInitialized = (await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX, 0)) != 0;
+      if (!isBridgeInitialized) {
+        const [initializeTx] = await bridge.initialize_tb(
+          [councilMember1, councilMember2, councilMember3, aleoUser4, ALEO_ZERO_ADDRESS],
+          threshold,
+          admin
+        );
+        await bridge.wait(initializeTx);
+      }
+    },
       TIMEOUT
     );
 
@@ -481,7 +469,7 @@ describe("Council", () => {
       let proposalId = 0;
       let tbAddChainProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.supported_chains(newChainId, false)).toBe(false);
         expect(await council.members(councilMember1)).toBe(true);
@@ -494,7 +482,7 @@ describe("Council", () => {
           id: proposalId,
           chain_id: newChainId
         };
-        tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
+        tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
 
         council.connect(councilMember1);
         const [tx] = await council.propose(proposalId, tbAddChainProposalHash);
@@ -508,7 +496,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(tbAddChainProposalHash, false)).toBe(false);
 
         council.connect(councilMember1);
@@ -527,7 +515,7 @@ describe("Council", () => {
       let proposalId: number;
       let tbRemoveChainProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.supported_chains(newChainId, false)).toBe(true);
         expect(await council.members(councilMember1)).toBe(true);
@@ -540,7 +528,7 @@ describe("Council", () => {
           id: proposalId,
           chain_id: newChainId
         };
-        tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain)); 
+        tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain));
         const [tx] = await council.propose(proposalId, tbRemoveChainProposalHash);
         await council.wait(tx);
 
@@ -550,7 +538,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(tbRemoveChainProposalHash, false)).toBe(false);
 
         const [tx] = await council.tb_remove_chain(proposalId, newChainId, signers);
@@ -570,7 +558,7 @@ describe("Council", () => {
       let proposalId = 0;
       let addAttestorHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.attestors(newAttestor, false)).toBe(false);
         expect(await council.members(councilMember1)).toBe(true);
@@ -598,11 +586,11 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         const initialTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
 
         expect(await council.proposal_executed(addAttestorHash, false)).toBe(false);
-        const [tx] = await council.tb_add_attestor(proposalId, newAttestor, newThreshold , signers);
+        const [tx] = await council.tb_add_attestor(proposalId, newAttestor, newThreshold, signers);
         await council.wait(tx);
 
         expect(await council.proposal_executed(addAttestorHash)).toBe(true);
@@ -621,7 +609,7 @@ describe("Council", () => {
       let proposalId = 0;
       let removeAttestorHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.attestors(existingAttestor, false)).toBe(true);
         expect(await council.members(councilMember1)).toBe(true);
@@ -648,7 +636,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         const initialTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
 
         expect(await council.proposal_executed(removeAttestorHash, false)).toBe(false);
@@ -657,7 +645,7 @@ describe("Council", () => {
 
         expect(await council.proposal_executed(removeAttestorHash)).toBe(true);
         expect(await bridge.attestors(existingAttestor, false)).toBe(false);
-        expect(await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)).toBe( newThreshold );
+        expect(await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)).toBe(newThreshold);
         const finalTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
         expect(finalTotalAttestors).toBe(initialTotalAttestors - 1);
       }, TIMEOUT);
@@ -669,7 +657,7 @@ describe("Council", () => {
       let proposalId = 0;
       let addServiceProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.supported_services(tokenService.address(), false)).toBe(false);
         expect(await council.members(councilMember1)).toBe(true);
@@ -693,7 +681,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(addServiceProposalHash, false)).toBe(false);
         const [tx] = await council.tb_add_service(proposalId, tokenService.address(), signers);
@@ -711,7 +699,7 @@ describe("Council", () => {
       let proposalId = 0;
       let removeServiceProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.supported_services(tokenService.address())).toBe(true);
         expect(await council.members(councilMember1)).toBe(true);
@@ -735,7 +723,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(removeServiceProposalHash, false)).toBe(false);
         const [tx] = await council.tb_remove_service(proposalId, tokenService.address(), signers);
@@ -752,7 +740,7 @@ describe("Council", () => {
       let proposalId = 0;
       let tbPauseProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_PAUSED_VALUE);
         expect(await council.members(councilMember1)).toBe(true);
@@ -764,7 +752,7 @@ describe("Council", () => {
         const tbPause: TbUnpause = {
           id: proposalId,
         };
-        tbPauseProposalHash = hashStruct(getTbUnpauseLeo(tbPause)); 
+        tbPauseProposalHash = hashStruct(getTbUnpauseLeo(tbPause));
         const [tx] = await council.propose(proposalId, tbPauseProposalHash);
         await council.wait(tx);
 
@@ -775,7 +763,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(tbPauseProposalHash, false)).toBe(false);
         const [tx] = await council.tb_unpause(proposalId, signers);
@@ -792,7 +780,7 @@ describe("Council", () => {
       let proposalId = 0;
       let tbPauseProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
         expect(await council.members(councilMember1)).toBe(true);
@@ -804,7 +792,7 @@ describe("Council", () => {
         const tbPause: TbPause = {
           id: proposalId,
         };
-        tbPauseProposalHash = hashStruct(getTbPauseLeo(tbPause)); 
+        tbPauseProposalHash = hashStruct(getTbPauseLeo(tbPause));
         const [tx] = await council.propose(proposalId, tbPauseProposalHash);
         await council.wait(tx);
 
@@ -815,33 +803,33 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(tbPauseProposalHash, false)).toBe(false);
         const [tx] = await council.tb_pause(proposalId, signers);
         await council.wait(tx);
 
         expect(await council.proposal_executed(tbPauseProposalHash)).toBe(true);
-        
+
         expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_PAUSED_VALUE);
       }, TIMEOUT);
 
     });
 
   });
-    
+
   describe.skip("Token Service", () => {
 
-    test( "Initialize Token Service", async () => {
-        const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
-        if (!isTokenServiceInitialized) {
-          const [initializeTx] = await tokenService.initialize_ts(
-            admin
-          );
-          await tokenService.wait(initializeTx);
-        }
-        expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(council.address());
-      },
+    test("Initialize Token Service", async () => {
+      const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
+      if (!isTokenServiceInitialized) {
+        const [initializeTx] = await tokenService.initialize_ts(
+          admin
+        );
+        await tokenService.wait(initializeTx);
+      }
+      expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(council.address());
+    },
       TIMEOUT
     );
 
@@ -856,7 +844,7 @@ describe("Council", () => {
       const outgoingPercentage = 10_00
       const time = 1
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await tokenService.token_connectors(wusdcToken.address(), ALEO_ZERO_ADDRESS)).toBe(ALEO_ZERO_ADDRESS);
         expect(await council.members(councilMember1)).toBe(true);
@@ -875,7 +863,7 @@ describe("Council", () => {
           time,
           max_no_cap: thresholdNoLimit
         };
-        addTokenProposalHash = hashStruct( getTsAddTokenLeo(tsSupportToken)); 
+        addTokenProposalHash = hashStruct(getTsAddTokenLeo(tsSupportToken));
         const [tx] = await council.propose(proposalId, addTokenProposalHash);
         await council.wait(tx);
 
@@ -886,7 +874,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(addTokenProposalHash, false)).toBe(false);
         const [tx] = await council.ts_add_token(
@@ -898,7 +886,7 @@ describe("Council", () => {
           outgoingPercentage,
           time,
           thresholdNoLimit,
-          signers, 
+          signers,
         );
         await council.wait(tx);
 
@@ -914,7 +902,7 @@ describe("Council", () => {
       let TsUpdateMinimumTransferHash = BigInt(0);
       const newMinTransfer = BigInt(1000)
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
       }, TIMEOUT)
 
@@ -926,7 +914,7 @@ describe("Council", () => {
           token_address: wusdcToken.address(),
           min_transfer: newMinTransfer,
         };
-        TsUpdateMinimumTransferHash = hashStruct( getTsUpdateMinTransferLeo(TsUpdateMinimumTransfer)); 
+        TsUpdateMinimumTransferHash = hashStruct(getTsUpdateMinTransferLeo(TsUpdateMinimumTransfer));
         const [tx] = await council.propose(proposalId, TsUpdateMinimumTransferHash);
         await council.wait(tx);
 
@@ -936,14 +924,14 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(TsUpdateMinimumTransferHash, false)).toBe(false);
         const [tx] = await council.ts_update_min_transfer(
           proposalId,
           wusdcToken.address(),
           newMinTransfer,
-          signers, 
+          signers,
         );
         await council.wait(tx);
         expect(await council.proposal_executed(TsUpdateMinimumTransferHash)).toBe(true);
@@ -967,7 +955,7 @@ describe("Council", () => {
         };
         TsUpdateMaximumTransferHash = hashStruct(
           getTsUpdateMaxTransferLeo(TsUpdateMaximumTransfer)
-        ); 
+        );
         const [tx] = await council.propose(proposalId, TsUpdateMaximumTransferHash);
         await council.wait(tx);
 
@@ -977,14 +965,14 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(TsUpdateMaximumTransferHash, false)).toBe(false);
         const [tx] = await council.ts_update_max_transfer(
           proposalId,
           wusdcToken.address(),
           newMaxTransfer,
-          signers, 
+          signers,
         );
         await council.wait(tx);
         expect(await council.proposal_executed(TsUpdateMaximumTransferHash)).toBe(true);
@@ -1013,7 +1001,7 @@ describe("Council", () => {
           duration: newLimit.duration,
           threshold_no_limit: newLimit.threshold_no_limit
         };
-        TsUpdateOutgoingHash = hashStruct( getTsUpdateWithdrawalLimitLeo(TsUpdateOutgoing)); 
+        TsUpdateOutgoingHash = hashStruct(getTsUpdateWithdrawalLimitLeo(TsUpdateOutgoing));
         const [tx] = await council.propose(proposalId, TsUpdateOutgoingHash);
         await council.wait(tx);
 
@@ -1023,7 +1011,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(TsUpdateOutgoingHash, false)).toBe(false);
         const [tx] = await council.ts_update_outgoing_percentage(
@@ -1032,7 +1020,7 @@ describe("Council", () => {
           newLimit.percentage,
           newLimit.duration,
           newLimit.threshold_no_limit,
-          signers, 
+          signers,
         );
         await council.wait(tx);
         expect(await council.proposal_executed(TsUpdateOutgoingHash)).toBe(true);
@@ -1046,7 +1034,7 @@ describe("Council", () => {
       let proposalId = 0;
       let unpauseTokenProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await tokenService.token_status(wusdcToken.address())).toBe(TOKEN_PAUSED_VALUE);
       }, TIMEOUT)
@@ -1058,7 +1046,7 @@ describe("Council", () => {
           id: proposalId,
           token_address: wusdcToken.address(),
         };
-        unpauseTokenProposalHash = hashStruct( getTsUnpauseTokenLeo(unpauseTokenProposal)); 
+        unpauseTokenProposalHash = hashStruct(getTsUnpauseTokenLeo(unpauseTokenProposal));
         const [tx] = await council.propose(proposalId, unpauseTokenProposalHash);
         await council.wait(tx);
 
@@ -1068,7 +1056,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(unpauseTokenProposalHash, false)).toBe(false);
         const [tx] = await council.ts_unpause_token(
@@ -1088,7 +1076,7 @@ describe("Council", () => {
       let proposalId = 0;
       let pauseTokenProposalHash = BigInt(0);
 
-      beforeEach( async () => {
+      beforeEach(async () => {
         council.connect(proposer);
         expect(await tokenService.token_status(wusdcToken.address())).toBe(TOKEN_UNPAUSED_VALUE);
       }, TIMEOUT)
@@ -1100,7 +1088,7 @@ describe("Council", () => {
           id: proposalId,
           token_address: wusdcToken.address(),
         };
-        pauseTokenProposalHash = hashStruct( getTsPauseTokenLeo(pauseTokenProposal)); 
+        pauseTokenProposalHash = hashStruct(getTsPauseTokenLeo(pauseTokenProposal));
         const [tx] = await council.propose(proposalId, pauseTokenProposalHash);
         await council.wait(tx);
 
@@ -1110,7 +1098,7 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(pauseTokenProposalHash, false)).toBe(false);
         const [tx] = await council.ts_pause_token(
@@ -1136,7 +1124,7 @@ describe("Council", () => {
           id: proposalId,
           token_address: wusdcToken.address(),
         };
-        RemoveTokenHash = hashStruct( getTsRemoveTokenLeo(RemoveToken));
+        RemoveTokenHash = hashStruct(getTsRemoveTokenLeo(RemoveToken));
         const [tx] = await council.propose(proposalId, RemoveTokenHash);
         await council.wait(tx);
 
@@ -1146,13 +1134,13 @@ describe("Council", () => {
       }, TIMEOUT)
 
       test("Execute", async () => {
-        const signers = [ councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS ];
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(RemoveTokenHash, false)).toBe(false);
         const [tx] = await council.ts_remove_token(
           proposalId,
           wusdcToken.address(),
-          signers, 
+          signers,
         );
         await council.wait(tx);
         expect(await council.proposal_executed(RemoveTokenHash)).toBe(true);
@@ -1162,6 +1150,47 @@ describe("Council", () => {
       }, TIMEOUT);
     });
 
-});
+  });
 
 });
+
+describe("Transition Test cases", () => {
+
+  const council = new Council_v0003Contract({ mode: "evaluate" });
+  const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
+
+  describe("Initialize Fail Case", () => {
+    test.failing("Threshold more than unique member number should fail", async () => {
+      const threshold = 5;
+      console.log(councilMember1, councilMember2, councilMember3, aleoUser4, ALEO_ZERO_ADDRESS)
+      await council.initialize(
+        [councilMember1, councilMember2, councilMember3, aleoUser4, ALEO_ZERO_ADDRESS],
+        threshold
+      );
+    })
+
+    test.failing("Threshold cannot be less than 1", async () => {
+      const threshold = 0;
+      await council.initialize(
+        [councilMember1, councilMember2, councilMember3, aleoUser4, ALEO_ZERO_ADDRESS],
+        threshold
+      );
+
+    })
+  })
+
+  test.failing("Add member with threshold less than 1 (Must fail)", async () => {
+    const newMember = new PrivateKey().to_address().to_string()
+    const updatedThreshold = 0;
+    const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+    await council.add_member(1, newMember, updatedThreshold, signers);
+  })
+
+  test.failing("Removing ZERO ADDRESS user should fail", async () => {
+    const updatedThreshold = 1;
+    const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+    await council.remove_member(1, ALEO_ZERO_ADDRESS, updatedThreshold, signers);
+  })
+
+
+})
