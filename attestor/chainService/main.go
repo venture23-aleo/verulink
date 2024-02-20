@@ -28,7 +28,7 @@ var (
 func init() {
 	flag.StringVar(&configFile, "config", "", "config file")
 	flag.StringVar(&dbDir, "db-dir", "", "directory path to store key-value db")
-	flag.StringVar(&logDir, "log-path", "", "file path to store logs")
+	flag.StringVar(&logDir, "log-dir", "", "file path to store logs")
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
 	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
 }
