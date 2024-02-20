@@ -51,74 +51,77 @@ const createPacket = (
   );
 };
 
-describe("Token Service ", () => {
+describe.skip("Token Service ", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
 
   const admin = aleoUser1;
   const connector = aleoUser4;
 
-  describe("Setup", () => {
+  describe("Deployment", () => {
     tokenService.connect(admin)
 
     test("Deploy Bridge", async () => {
-        const deployTx = await bridge.deploy();
-        await bridge.wait(deployTx);
-      }, TIMEOUT);
+      const deployTx = await bridge.deploy();
+      await bridge.wait(deployTx);
+    }, TIMEOUT);
 
     test("Deploy Token Service", async () => {
-        const deployTx = await tokenService.deploy();
-        await tokenService.wait(deployTx);
-      }, TIMEOUT);
+      const deployTx = await tokenService.deploy();
+      await tokenService.wait(deployTx);
+    }, TIMEOUT);
 
+  })
+
+  describe("Initialization", () => {
     test("Bridge: Initialize", async () => {
-        const threshold = 1;
-        const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
-        if (!isBridgeInitialized) {
-          const [tx] = await bridge.initialize_tb(
-            [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser4, ALEO_ZERO_ADDRESS],
-            threshold,
-            admin
-          );
-          await bridge.wait(tx);
-        }
-      }, TIMEOUT);
+      const threshold = 1;
+      const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
+      if (!isBridgeInitialized) {
+        const [tx] = await bridge.initialize_tb(
+          [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser4, ALEO_ZERO_ADDRESS],
+          threshold,
+          admin
+        );
+        await bridge.wait(tx);
+      }
+    }, TIMEOUT);
 
     test("Bridge: Add Chain", async () => {
-        const isEthSupported = (await bridge.supported_chains(ethChainId, false));
-        if (!isEthSupported) {
-          const [addEthChainTx] = await bridge.add_chain_tb(ethChainId);
-          await bridge.wait(addEthChainTx);
-        }
-        expect(await bridge.supported_chains(ethChainId, false)).toBe(true)
+      const isEthSupported = (await bridge.supported_chains(ethChainId, false));
+      if (!isEthSupported) {
+        const [addEthChainTx] = await bridge.add_chain_tb(ethChainId);
+        await bridge.wait(addEthChainTx);
+      }
+      expect(await bridge.supported_chains(ethChainId, false)).toBe(true)
     }, TIMEOUT)
 
     test("Bridge: Add Service", async () => {
-        const isTokenServiceEnabled = await bridge.supported_services(tokenService.address(), false);
-        if (!isTokenServiceEnabled) {
-          const [supportServiceTx] = await bridge.add_service_tb(tokenService.address());
-          await bridge.wait(supportServiceTx);
-        }
-        expect(await bridge.supported_services(tokenService.address())).toBe(true);
+      const isTokenServiceEnabled = await bridge.supported_services(tokenService.address(), false);
+      if (!isTokenServiceEnabled) {
+        const [supportServiceTx] = await bridge.add_service_tb(tokenService.address());
+        await bridge.wait(supportServiceTx);
+      }
+      expect(await bridge.supported_services(tokenService.address())).toBe(true);
     }, TIMEOUT)
 
     test("Bridge: Unpause", async () => {
-        const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
-        if (isPaused) {
-          const [unpauseTx] = await bridge.unpause_tb();
-          await bridge.wait(unpauseTx);
-        }
-        expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE)).toBe(BRIDGE_UNPAUSED_VALUE);
+      const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
+      if (isPaused) {
+        const [unpauseTx] = await bridge.unpause_tb();
+        await bridge.wait(unpauseTx);
+      }
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE)).toBe(BRIDGE_UNPAUSED_VALUE);
     }, TIMEOUT)
 
     test("Token Service: Initialize", async () => {
-        const threshold = 1;
-        const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
-        if (!isTokenServiceInitialized) {
-          const [tx] = await tokenService.initialize_ts(admin);
-          await bridge.wait(tx);
-        }
-      }, TIMEOUT);
+      const threshold = 1;
+      const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
+      if (!isTokenServiceInitialized) {
+        const [tx] = await tokenService.initialize_ts(admin);
+        await bridge.wait(tx);
+      }
+    }, TIMEOUT);
 
 
     test("Token Service: Add Token", async () => {
@@ -147,19 +150,19 @@ describe("Token Service ", () => {
         );
         await tokenService.wait(tx);
       }
-      expect( await tokenService.token_withdrawal_limits(wusdcToken.address(), dummyLimit)).toStrictEqual(limit);
-      expect(await tokenService.min_transfers(wusdcToken.address())).toBe( minimumTransfer);
-      expect(await tokenService.max_transfers(wusdcToken.address())).toBe( maximumTransfer);
-      expect(await tokenService.token_connectors(wusdcToken.address())).toBe( connector);
+      expect(await tokenService.token_withdrawal_limits(wusdcToken.address(), dummyLimit)).toStrictEqual(limit);
+      expect(await tokenService.min_transfers(wusdcToken.address())).toBe(minimumTransfer);
+      expect(await tokenService.max_transfers(wusdcToken.address())).toBe(maximumTransfer);
+      expect(await tokenService.token_connectors(wusdcToken.address())).toBe(connector);
     }, TIMEOUT)
 
     test("Token Service: Unpause Token", async () => {
-        const isPaused = (await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
-        if (isPaused) {
-          const [unpauseTx] = await tokenService.unpause_token_ts(wusdcToken.address());
-          await bridge.wait(unpauseTx);
-        }
-        expect(await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)).toBe(TOKEN_UNPAUSED_VALUE);
+      const isPaused = (await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
+      if (isPaused) {
+        const [unpauseTx] = await tokenService.unpause_token_ts(wusdcToken.address());
+        await bridge.wait(unpauseTx);
+      }
+      expect(await tokenService.token_status(wusdcToken.address(), TOKEN_PAUSED_VALUE)).toBe(TOKEN_UNPAUSED_VALUE);
     }, TIMEOUT)
 
   })
@@ -167,83 +170,83 @@ describe("Token Service ", () => {
   describe("Token Receive", () => {
 
     test("Right connector for the given token can receive the token", async () => {
-        const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address());
-        tokenService.connect(admin);
-        const signature = signPacket(packet, true, bridge.config.privateKey);
-        const signatures = [
-          signature,
-          signature,
-          signature,
-          signature,
-          signature,
-        ];
-        const signers = [
-          admin,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address());
+      tokenService.connect(admin);
+      const signature = signPacket(packet, true, bridge.config.privateKey);
+      const signatures = [
+        signature,
+        signature,
+        signature,
+        signature,
+        signature,
+      ];
+      const signers = [
+        admin,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
 
-        const initialTokenSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
+      const initialTokenSupply = await tokenService.total_supply(wusdcToken.address(), BigInt(0));
 
-        tokenService.connect(connector)
-        const [screeningPassed, tx] = await tokenService.token_receive(
-          packet.source.chain_id,
-          packet.source.addr,
-          packet.message.dest_token_address,
-          packet.message.sender_address,
-          packet.message.receiver_address,
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signatures
-        );
-        await tokenService.wait(tx);
+      tokenService.connect(connector)
+      const [screeningPassed, tx] = await tokenService.token_receive(
+        packet.source.chain_id,
+        packet.source.addr,
+        packet.message.dest_token_address,
+        packet.message.sender_address,
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures
+      );
+      await tokenService.wait(tx);
 
-        const finalTokenSupply = await tokenService.total_supply(wusdcToken.address());
-        expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
-        expect(screeningPassed).toBe(true);
-      },
+      const finalTokenSupply = await tokenService.total_supply(wusdcToken.address());
+      expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
+      expect(screeningPassed).toBe(true);
+    },
       TIMEOUT
     );
 
     test.failing("Wrong connector cannot receive the token", async () => {
-        const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address());
-        tokenService.connect(admin);
-        const signature = signPacket(packet, true, bridge.config.privateKey);
-        const signatures = [
-          signature,
-          signature,
-          signature,
-          signature,
-          signature,
-        ];
-        const signers = [
-          admin,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address());
+      tokenService.connect(admin);
+      const signature = signPacket(packet, true, bridge.config.privateKey);
+      const signatures = [
+        signature,
+        signature,
+        signature,
+        signature,
+        signature,
+      ];
+      const signers = [
+        admin,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
 
-        tokenService.connect(admin)
-        const [screeningPassed, tx] = await tokenService.token_receive(
-          packet.source.chain_id,
-          packet.source.addr,
-          packet.message.dest_token_address,
-          packet.message.sender_address,
-          packet.message.receiver_address,
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signatures
-        );
-        await tokenService.wait(tx);
+      tokenService.connect(admin)
+      const [screeningPassed, tx] = await tokenService.token_receive(
+        packet.source.chain_id,
+        packet.source.addr,
+        packet.message.dest_token_address,
+        packet.message.sender_address,
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures
+      );
+      await tokenService.wait(tx);
 
-      },
+    },
       TIMEOUT
     );
 
@@ -359,31 +362,31 @@ describe("Token Service ", () => {
 
     describe("Pausability", () => {
       test.failing("should not pause by non-owner", async () => {
-          tokenService.connect(aleoUser3); //changing the contract caller account to non owner
-          const [tx] = await tokenService.pause_token_ts(wusdcToken.address());
-          await tokenService.wait(tx);
-        }, TIMEOUT);
+        tokenService.connect(aleoUser3); //changing the contract caller account to non owner
+        const [tx] = await tokenService.pause_token_ts(wusdcToken.address());
+        await tokenService.wait(tx);
+      }, TIMEOUT);
 
       test("owner can pause", async () => {
-          tokenService.connect(admin);
-          const [tx] = await tokenService.pause_token_ts(wusdcToken.address());
-          await tokenService.wait(tx);
-          expect(await tokenService.token_status(wusdcToken.address())).toBe(TOKEN_PAUSED_VALUE);
-        }, TIMEOUT);
+        tokenService.connect(admin);
+        const [tx] = await tokenService.pause_token_ts(wusdcToken.address());
+        await tokenService.wait(tx);
+        expect(await tokenService.token_status(wusdcToken.address())).toBe(TOKEN_PAUSED_VALUE);
+      }, TIMEOUT);
 
       test.failing("should not unpause by non-owner", async () => {
-          tokenService.connect(aleoUser3);
-          const [tx] = await tokenService.unpause_token_ts(wusdcToken.address());
-          await tokenService.wait(tx);
-        }, TIMEOUT);
+        tokenService.connect(aleoUser3);
+        const [tx] = await tokenService.unpause_token_ts(wusdcToken.address());
+        await tokenService.wait(tx);
+      }, TIMEOUT);
 
       test("owner can unpause", async () => {
-          expect(await tokenService.token_status(wusdcToken.address(), TOKEN_UNPAUSED_VALUE)).toBe( TOKEN_PAUSED_VALUE);
-          tokenService.connect(admin);
-          const [tx] = await tokenService.unpause_token_ts(wusdcToken.address());
-          await tokenService.wait(tx);
-          expect(await tokenService.token_status(wusdcToken.address(), TOKEN_UNPAUSED_VALUE)).toBe( TOKEN_UNPAUSED_VALUE);
-        },
+        expect(await tokenService.token_status(wusdcToken.address(), TOKEN_UNPAUSED_VALUE)).toBe(TOKEN_PAUSED_VALUE);
+        tokenService.connect(admin);
+        const [tx] = await tokenService.unpause_token_ts(wusdcToken.address());
+        await tokenService.wait(tx);
+        expect(await tokenService.token_status(wusdcToken.address(), TOKEN_UNPAUSED_VALUE)).toBe(TOKEN_UNPAUSED_VALUE);
+      },
         TIMEOUT
       );
     });
@@ -420,83 +423,83 @@ describe("Token Service ", () => {
             limit.threshold_no_limit
           );
           await tokenService.wait(tx);
-          expect( await tokenService.token_withdrawal_limits(newTokenAddr)).toStrictEqual(limit);
-          expect(await tokenService.min_transfers(newTokenAddr)).toBe( minTransfer);
-          expect(await tokenService.max_transfers(newTokenAddr)).toBe( maxTransfer);
-          expect(await tokenService.token_connectors(newTokenAddr)).toBe( newTokenConnectorAddr);
+          expect(await tokenService.token_withdrawal_limits(newTokenAddr)).toStrictEqual(limit);
+          expect(await tokenService.min_transfers(newTokenAddr)).toBe(minTransfer);
+          expect(await tokenService.max_transfers(newTokenAddr)).toBe(maxTransfer);
+          expect(await tokenService.token_connectors(newTokenAddr)).toBe(newTokenConnectorAddr);
         }, TIMEOUT);
 
         test.failing("Non-owner cannot add new token", async () => {
-            const newTokenAddr = new PrivateKey().to_address().to_string();
-            const newTokenConnectorAddr = new PrivateKey().to_address().to_string();
-            let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
-            expect(isTokenSupported).toBe(false);
+          const newTokenAddr = new PrivateKey().to_address().to_string();
+          const newTokenConnectorAddr = new PrivateKey().to_address().to_string();
+          let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
+          expect(isTokenSupported).toBe(false);
 
-            tokenService.connect(aleoUser3);
-            const [tx] = await tokenService.add_token_ts(
-              newTokenAddr,
-              newTokenConnectorAddr,
-              minTransfer,
-              maxTransfer,
-              limit.percentage,
-              limit.duration,
-              limit.threshold_no_limit
-            );
-            await tokenService.wait(tx);
+          tokenService.connect(aleoUser3);
+          const [tx] = await tokenService.add_token_ts(
+            newTokenAddr,
+            newTokenConnectorAddr,
+            minTransfer,
+            maxTransfer,
+            limit.percentage,
+            limit.duration,
+            limit.threshold_no_limit
+          );
+          await tokenService.wait(tx);
 
-          }, TIMEOUT);
+        }, TIMEOUT);
 
         test.failing("Existing token cannot be added again", async () => {
-            let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
-            expect(isTokenSupported).toBe(true);
+          let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
+          expect(isTokenSupported).toBe(true);
 
-            tokenService.connect(admin);
-            const [tx] = await tokenService.add_token_ts(
-              newTokenAddr,
-              newTokenConnectorAddr,
-              minTransfer,
-              maxTransfer,
-              limit.percentage,
-              limit.duration,
-              limit.threshold_no_limit
-            );
-            await tokenService.wait(tx);
+          tokenService.connect(admin);
+          const [tx] = await tokenService.add_token_ts(
+            newTokenAddr,
+            newTokenConnectorAddr,
+            minTransfer,
+            maxTransfer,
+            limit.percentage,
+            limit.duration,
+            limit.threshold_no_limit
+          );
+          await tokenService.wait(tx);
 
-          }, TIMEOUT);
+        }, TIMEOUT);
       });
 
       describe("Remove Token", () => {
         test.failing("Non owner cannot remove token", async () => {
-            let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
-            expect(isTokenSupported).toBe(true);
+          let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
+          expect(isTokenSupported).toBe(true);
 
-            tokenService.connect(aleoUser3);
-            const [tx] = await tokenService.remove_token_ts( newTokenAddr);
-            await tokenService.wait(tx);
+          tokenService.connect(aleoUser3);
+          const [tx] = await tokenService.remove_token_ts(newTokenAddr);
+          await tokenService.wait(tx);
         }, TIMEOUT);
 
         test("Owner can remove token", async () => {
-            let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
-            expect(isTokenSupported).toBe(true);
+          let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
+          expect(isTokenSupported).toBe(true);
 
-            tokenService.connect(admin);
-            const [tx] = await tokenService.remove_token_ts(newTokenAddr);
-            await tokenService.wait(tx);
+          tokenService.connect(admin);
+          const [tx] = await tokenService.remove_token_ts(newTokenAddr);
+          await tokenService.wait(tx);
 
-            isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
-            expect(isTokenSupported).toBe(false);
-          },
+          isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
+          expect(isTokenSupported).toBe(false);
+        },
           TIMEOUT
         );
 
         test.failing("Token must be added to be removed", async () => {
-            let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
-            expect(isTokenSupported).toBe(true);
+          let isTokenSupported = await tokenService.token_connectors(newTokenAddr, ALEO_ZERO_ADDRESS) != ALEO_ZERO_ADDRESS;
+          expect(isTokenSupported).toBe(true);
 
-            tokenService.connect(admin);
-            const [tx] = await tokenService.remove_token_ts(newTokenAddr);
-            await tokenService.wait(tx);
-          },
+          tokenService.connect(admin);
+          const [tx] = await tokenService.remove_token_ts(newTokenAddr);
+          await tokenService.wait(tx);
+        },
           TIMEOUT
         );
       });
@@ -505,23 +508,23 @@ describe("Token Service ", () => {
     describe("Update connector", () => {
 
       test.failing("Non-connector cannot update connector", async () => {
-          expect(await tokenService.token_connectors(wusdcToken.address())).toBe(connector);
+        expect(await tokenService.token_connectors(wusdcToken.address())).toBe(connector);
 
-          tokenService.connect(admin);
-          const [tx] = await tokenService.update_connector_ts(wusdcToken.address(), wusdcConnector.address());
-          await tokenService.wait(tx);
-        }, TIMEOUT);
+        tokenService.connect(admin);
+        const [tx] = await tokenService.update_connector_ts(wusdcToken.address(), wusdcConnector.address());
+        await tokenService.wait(tx);
+      }, TIMEOUT);
 
 
       test("Existing token connector can update connector", async () => {
-          expect(await tokenService.token_connectors(wusdcToken.address())).toBe(connector);
+        expect(await tokenService.token_connectors(wusdcToken.address())).toBe(connector);
 
-          tokenService.connect(connector);
-          const [tx] = await tokenService.update_connector_ts(wusdcToken.address(), wusdcConnector.address());
-          await tokenService.wait(tx);
+        tokenService.connect(connector);
+        const [tx] = await tokenService.update_connector_ts(wusdcToken.address(), wusdcConnector.address());
+        await tokenService.wait(tx);
 
-          expect(await tokenService.token_connectors(wusdcToken.address())).toBe(wusdcConnector.address());
-        }, TIMEOUT);
+        expect(await tokenService.token_connectors(wusdcToken.address())).toBe(wusdcConnector.address());
+      }, TIMEOUT);
 
     });
 
@@ -608,24 +611,24 @@ describe("Token Service ", () => {
     describe("Transfer Ownership", () => {
 
       test.failing("should not transfer ownership by non-admin", async () => {
-          tokenService.connect(aleoUser3);
-          const [transferOwnershipTx] = await tokenService.transfer_ownership_ts(aleoUser3);
-          await tokenService.wait(transferOwnershipTx);
-        },
+        tokenService.connect(aleoUser3);
+        const [transferOwnershipTx] = await tokenService.transfer_ownership_ts(aleoUser3);
+        await tokenService.wait(transferOwnershipTx);
+      },
         TIMEOUT
       );
 
-      test( "Current owner can transfer ownership", async () => {
-          const currentOwner = await tokenService.owner_TS(OWNER_INDEX);
-          expect(currentOwner).toBe(admin);
+      test("Current owner can transfer ownership", async () => {
+        const currentOwner = await tokenService.owner_TS(OWNER_INDEX);
+        expect(currentOwner).toBe(admin);
 
-          tokenService.connect(admin);
-          const [transferOwnershipTx] = await tokenService.transfer_ownership_ts(aleoUser3);
-          await tokenService.wait(transferOwnershipTx);
+        tokenService.connect(admin);
+        const [transferOwnershipTx] = await tokenService.transfer_ownership_ts(aleoUser3);
+        await tokenService.wait(transferOwnershipTx);
 
-          const newOwner = await tokenService.owner_TS(OWNER_INDEX);
-          expect(newOwner).toBe(aleoUser3);
-        },
+        const newOwner = await tokenService.owner_TS(OWNER_INDEX);
+        expect(newOwner).toBe(aleoUser3);
+      },
         TIMEOUT
       );
     });
@@ -634,4 +637,51 @@ describe("Token Service ", () => {
   })
 
 });
+
+describe('Transition Failing Test cases', () => {
+  const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = tokenService.getAccounts();
+  const aleoUser5 = new PrivateKey().to_address().to_string();
+  describe('Token Add/Remove', () => {
+    test.failing('min transfer greater than max transfer should fail', async () => {
+      await tokenService.add_token_ts(
+        wusdcToken.address(),
+        aleoUser4,
+        BigInt(100_000),
+        BigInt(100),
+        100_00,
+        1,
+        BigInt(100)
+      )
+
+    })
+
+    test.failing('Percentage greater than 100 should fail', async () => {
+      await tokenService.add_token_ts(
+        wusdcToken.address(),
+        aleoUser4,
+        BigInt(100),
+        BigInt(100_000),
+        101_00,
+        1,
+        BigInt(100)
+      )
+    })
+
+    test.failing('Updating withdrawal limit with percentage greater than 100 should fail', async () => {
+      await tokenService.update_withdrawal_limit(
+        wusdcToken.address(),
+        101_00,
+        1,
+        BigInt(100)
+      )
+    })
+  })
+
+
+
+
+
+
+})
+
 

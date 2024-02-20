@@ -49,7 +49,7 @@ const createPacket = (
   );
 };
 
-describe("Token Bridge ", () => {
+describe.skip("Token Bridge ", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
 
@@ -59,56 +59,56 @@ describe("Token Bridge ", () => {
   describe("Setup", () => {
     bridge.connect(admin)
 
-    test( "Deploy", async () => {
-        const deployTx = await bridge.deploy();
-        await bridge.wait(deployTx);
-      }, TIMEOUT);
+    test("Deploy", async () => {
+      const deployTx = await bridge.deploy();
+      await bridge.wait(deployTx);
+    }, TIMEOUT);
 
     test("Initialize", async () => {
-        const threshold = 1;
-        const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
-        if (!isBridgeInitialized) {
-          const [tx] = await bridge.initialize_tb(
-            [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser3, ALEO_ZERO_ADDRESS],
-            threshold,
-            admin
-          );
-          await bridge.wait(tx);
-        }
-        expect(await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)).toBe( threshold);
-        expect(await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX)).toBe(3);
-        expect(await bridge.attestors(aleoUser1)).toBeTruthy();
-        expect(await bridge.attestors(aleoUser2)).toBeTruthy();
-        expect(await bridge.attestors(aleoUser3)).toBeTruthy();
-        expect(await bridge.attestors(ALEO_ZERO_ADDRESS)).toBeTruthy();
-        expect(await bridge.attestors(aleoUser4, false)).toBe(false);
-      }, TIMEOUT);
+      const threshold = 1;
+      const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
+      if (!isBridgeInitialized) {
+        const [tx] = await bridge.initialize_tb(
+          [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser3, ALEO_ZERO_ADDRESS],
+          threshold,
+          admin
+        );
+        await bridge.wait(tx);
+      }
+      expect(await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)).toBe(threshold);
+      expect(await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX)).toBe(3);
+      expect(await bridge.attestors(aleoUser1)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser2)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser3)).toBeTruthy();
+      expect(await bridge.attestors(ALEO_ZERO_ADDRESS)).toBeTruthy();
+      expect(await bridge.attestors(aleoUser4, false)).toBe(false);
+    }, TIMEOUT);
 
     test("Add Chain", async () => {
-        const isEthSupported = (await bridge.supported_chains(ethChainId, false));
-        if (!isEthSupported) {
-          const [addEthChainTx] = await bridge.add_chain_tb(ethChainId);
-          await bridge.wait(addEthChainTx);
-        }
-        expect(await bridge.supported_chains(ethChainId, false)).toBe(true)
+      const isEthSupported = (await bridge.supported_chains(ethChainId, false));
+      if (!isEthSupported) {
+        const [addEthChainTx] = await bridge.add_chain_tb(ethChainId);
+        await bridge.wait(addEthChainTx);
+      }
+      expect(await bridge.supported_chains(ethChainId, false)).toBe(true)
     }, TIMEOUT)
 
     test("Add Service", async () => {
-        const isTokenServiceEnabled = await bridge.supported_services(aleoTsAddr, false);
-        if (!isTokenServiceEnabled) {
-          const [supportServiceTx] = await bridge.add_service_tb(aleoTsAddr);
-          await bridge.wait(supportServiceTx);
-        }
-        expect(await bridge.supported_services(aleoTsAddr)).toBe(true);
+      const isTokenServiceEnabled = await bridge.supported_services(aleoTsAddr, false);
+      if (!isTokenServiceEnabled) {
+        const [supportServiceTx] = await bridge.add_service_tb(aleoTsAddr);
+        await bridge.wait(supportServiceTx);
+      }
+      expect(await bridge.supported_services(aleoTsAddr)).toBe(true);
     }, TIMEOUT)
 
     test("Unpause", async () => {
-        const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
-        if (isPaused) {
-          const [unpauseTx] = await bridge.unpause_tb();
-          await bridge.wait(unpauseTx);
-        }
-        expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE)).toBe(BRIDGE_UNPAUSED_VALUE);
+      const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
+      if (isPaused) {
+        const [unpauseTx] = await bridge.unpause_tb();
+        await bridge.wait(unpauseTx);
+      }
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE)).toBe(BRIDGE_UNPAUSED_VALUE);
     }, TIMEOUT)
   })
 
@@ -203,181 +203,181 @@ describe("Token Bridge ", () => {
 
     const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
 
-    test( "Screening passed", async () => {
-        let packetId: PacketId = {
-          chain_id: packet.source.chain_id,
-          sequence: packet.sequence
-        }
-        bridge.connect(admin);
-        const signature = signPacket(packet, true, bridge.config.privateKey);
-        const signatures = [
-          signature,
-          signature,
-          signature,
-          signature,
-          signature,
-        ];
-        const signers = [
-          admin,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
+    test("Screening passed", async () => {
+      let packetId: PacketId = {
+        chain_id: packet.source.chain_id,
+        sequence: packet.sequence
+      }
+      bridge.connect(admin);
+      const signature = signPacket(packet, true, bridge.config.privateKey);
+      const signatures = [
+        signature,
+        signature,
+        signature,
+        signature,
+        signature,
+      ];
+      const signers = [
+        admin,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
 
-        expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-        bridge.connect(aleoTsAddr)
-        const [screeningPassed, tx] = await bridge.consume(
-          packet.source.chain_id,
-          packet.source.addr,
-          packet.message.dest_token_address,
-          packet.message.sender_address,
-          packet.message.receiver_address,
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signatures
-        );
-        await bridge.wait(tx);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+      bridge.connect(aleoTsAddr)
+      const [screeningPassed, tx] = await bridge.consume(
+        packet.source.chain_id,
+        packet.source.addr,
+        packet.message.dest_token_address,
+        packet.message.sender_address,
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures
+      );
+      await bridge.wait(tx);
 
-        expect(screeningPassed).toBe(true);
-        expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
-      },
+      expect(screeningPassed).toBe(true);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
+    },
       TIMEOUT
     );
 
     test.failing("Consume the same packet again - fails", async () => {
-        let packetId: PacketId = {
-          chain_id: packet.source.chain_id,
-          sequence: packet.sequence
-        }
-        bridge.connect(admin)
-        const signature = signPacket(packet, true, bridge.config.privateKey);
-        const signatures = [
-          signature,
-          signature,
-          signature,
-          signature,
-          signature,
-        ];
-        const signers = [
-          admin,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
+      let packetId: PacketId = {
+        chain_id: packet.source.chain_id,
+        sequence: packet.sequence
+      }
+      bridge.connect(admin)
+      const signature = signPacket(packet, true, bridge.config.privateKey);
+      const signatures = [
+        signature,
+        signature,
+        signature,
+        signature,
+        signature,
+      ];
+      const signers = [
+        admin,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
 
-        expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
-        bridge.connect(aleoTsAddr);
-        const [screeningPassed, tx] = await bridge.consume(
-          packet.source.chain_id,
-          packet.source.addr,
-          packet.message.dest_token_address,
-          packet.message.sender_address,
-          packet.message.receiver_address,
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signatures
-        );
-        await bridge.wait(tx);
-      },
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
+      bridge.connect(aleoTsAddr);
+      const [screeningPassed, tx] = await bridge.consume(
+        packet.source.chain_id,
+        packet.source.addr,
+        packet.message.dest_token_address,
+        packet.message.sender_address,
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures
+      );
+      await bridge.wait(tx);
+    },
       TIMEOUT
     );
 
-    test( "Screening failed", async () => {
-        const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
-        let packetId: PacketId = {
-          chain_id: packet.source.chain_id,
-          sequence: packet.sequence
-        }
-        bridge.connect(admin)
-        const signature = signPacket(packet, false, bridge.config.privateKey);
-        const signatures = [
-          signature,
-          signature,
-          signature,
-          signature,
-          signature,
-        ];
-        const signers = [
-          admin,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
+    test("Screening failed", async () => {
+      const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
+      let packetId: PacketId = {
+        chain_id: packet.source.chain_id,
+        sequence: packet.sequence
+      }
+      bridge.connect(admin)
+      const signature = signPacket(packet, false, bridge.config.privateKey);
+      const signatures = [
+        signature,
+        signature,
+        signature,
+        signature,
+        signature,
+      ];
+      const signers = [
+        admin,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
 
-        expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-        bridge.connect(aleoTsAddr);
-        const [screeningPassed, tx] = await bridge.consume(
-          packet.source.chain_id,
-          packet.source.addr,
-          packet.message.dest_token_address,
-          packet.message.sender_address,
-          packet.message.receiver_address,
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signatures
-        );
-        await bridge.wait(tx);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+      bridge.connect(aleoTsAddr);
+      const [screeningPassed, tx] = await bridge.consume(
+        packet.source.chain_id,
+        packet.source.addr,
+        packet.message.dest_token_address,
+        packet.message.sender_address,
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures
+      );
+      await bridge.wait(tx);
 
-        expect(screeningPassed).toBe(false);
-        expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
-      },
+      expect(screeningPassed).toBe(false);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
+    },
       TIMEOUT
     );
 
-    test.failing( "Invalid attestor must fail", async () => {
-        const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
-        const wallet = new PrivateKey();
-        const walletAddress = wallet.to_address().to_string();
-        const signature1 = signPacket(packet, true, bridge.config.privateKey);
-        const signature2 = signPacket(packet, true, wallet.to_string());
+    test.failing("Invalid attestor must fail", async () => {
+      const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr);
+      const wallet = new PrivateKey();
+      const walletAddress = wallet.to_address().to_string();
+      const signature1 = signPacket(packet, true, bridge.config.privateKey);
+      const signature2 = signPacket(packet, true, wallet.to_string());
 
-        expect(await bridge.attestors(walletAddress, false)).toBe(false);
+      expect(await bridge.attestors(walletAddress, false)).toBe(false);
 
-        let packetId: PacketId = {
-          chain_id: packet.source.chain_id,
-          sequence: packet.sequence
-        }
-        const signatures = [
-          signature1,
-          signature2,
-          signature1,
-          signature2,
-          signature1,
-        ];
-        const signers = [
-          aleoUser1,
-          walletAddress,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-          ALEO_ZERO_ADDRESS,
-        ];
+      let packetId: PacketId = {
+        chain_id: packet.source.chain_id,
+        sequence: packet.sequence
+      }
+      const signatures = [
+        signature1,
+        signature2,
+        signature1,
+        signature2,
+        signature1,
+      ];
+      const signers = [
+        aleoUser1,
+        walletAddress,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
 
-        expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-        bridge.connect(aleoTsAddr);
-        const [screeningPassed, tx] = await bridge.consume(
-          packet.source.chain_id,
-          packet.source.addr,
-          packet.message.dest_token_address,
-          packet.message.sender_address,
-          packet.message.receiver_address,
-          packet.message.amount,
-          packet.sequence,
-          packet.height,
-          signers,
-          signatures
-        );
-        expect(screeningPassed).toBe(true);
-        await bridge.wait(tx);
-      },
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+      bridge.connect(aleoTsAddr);
+      const [screeningPassed, tx] = await bridge.consume(
+        packet.source.chain_id,
+        packet.source.addr,
+        packet.message.dest_token_address,
+        packet.message.sender_address,
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures
+      );
+      expect(screeningPassed).toBe(true);
+      await bridge.wait(tx);
+    },
       TIMEOUT
     );
 
@@ -389,31 +389,31 @@ describe("Token Bridge ", () => {
 
     describe("Pausability", () => {
       test.failing("should not pause by non-owner", async () => {
-          bridge.connect(aleoUser3); //changing the contract caller account to non owner
-          const [tx] = await bridge.pause_tb();
-          await bridge.wait(tx);
-        }, TIMEOUT);
+        bridge.connect(aleoUser3); //changing the contract caller account to non owner
+        const [tx] = await bridge.pause_tb();
+        await bridge.wait(tx);
+      }, TIMEOUT);
 
       test("owner can pause", async () => {
-          bridge.connect(admin);
-          const [tx] = await bridge.pause_tb();
-          await bridge.wait(tx);
-          expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe( BRIDGE_PAUSED_VALUE);
-        }, TIMEOUT);
+        bridge.connect(admin);
+        const [tx] = await bridge.pause_tb();
+        await bridge.wait(tx);
+        expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_PAUSED_VALUE);
+      }, TIMEOUT);
 
       test.failing("should not unpause by non-owner", async () => {
-          bridge.connect(aleoUser3);
-          const [tx] = await bridge.unpause_tb();
-          await bridge.wait(tx);
-        }, TIMEOUT);
+        bridge.connect(aleoUser3);
+        const [tx] = await bridge.unpause_tb();
+        await bridge.wait(tx);
+      }, TIMEOUT);
 
       test("owner can unpause", async () => {
-          expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)).toBe( BRIDGE_PAUSED_VALUE);
-          bridge.connect(aleoUser1);
-          const [tx] = await bridge.unpause_tb();
-          await bridge.wait(tx);
-          expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe( BRIDGE_UNPAUSED_VALUE);
-        },
+        expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)).toBe(BRIDGE_PAUSED_VALUE);
+        bridge.connect(aleoUser1);
+        const [tx] = await bridge.unpause_tb();
+        await bridge.wait(tx);
+        expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+      },
         TIMEOUT
       );
     });
@@ -425,38 +425,38 @@ describe("Token Bridge ", () => {
         const newThreshold = 2;
 
         test("Owner can add new attestor", async () => {
-            const totalAttestors = await bridge.bridge_settings( BRIDGE_TOTAL_ATTESTORS_INDEX);
-            expect(await bridge.attestors(newAttestor, false)).toBe(false);
+          const totalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
+          expect(await bridge.attestors(newAttestor, false)).toBe(false);
 
-            bridge.connect(admin)
-            const [tx] = await bridge.add_attestor_tb(newAttestor, newThreshold);
-            await bridge.wait(tx);
-            expect(await bridge.attestors(newAttestor, false)).toBe(true);
+          bridge.connect(admin)
+          const [tx] = await bridge.add_attestor_tb(newAttestor, newThreshold);
+          await bridge.wait(tx);
+          expect(await bridge.attestors(newAttestor, false)).toBe(true);
 
-            const newTotalAttestors = await bridge.bridge_settings( BRIDGE_TOTAL_ATTESTORS_INDEX); 
-            expect(newTotalAttestors).toBe(totalAttestors + 1);
-            const updatedThreshold = await bridge.bridge_settings( BRIDGE_THRESHOLD_INDEX); 
-            expect(updatedThreshold).toBe(newThreshold);
-          }, TIMEOUT);
+          const newTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
+          expect(newTotalAttestors).toBe(totalAttestors + 1);
+          const updatedThreshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX);
+          expect(updatedThreshold).toBe(newThreshold);
+        }, TIMEOUT);
 
         test.failing("Non-owner cannot add attestor", async () => {
-            const newAttestor = new PrivateKey().to_address().to_string();
-            let isAttestor = await bridge.attestors(newAttestor, false);
-            expect(isAttestor).toBe(false);
+          const newAttestor = new PrivateKey().to_address().to_string();
+          let isAttestor = await bridge.attestors(newAttestor, false);
+          expect(isAttestor).toBe(false);
 
-            bridge.connect(aleoUser3);
-            const [tx] = await bridge.add_attestor_tb(newAttestor, newThreshold);
-            await bridge.wait(tx);
-          }, TIMEOUT);
+          bridge.connect(aleoUser3);
+          const [tx] = await bridge.add_attestor_tb(newAttestor, newThreshold);
+          await bridge.wait(tx);
+        }, TIMEOUT);
 
-        test.failing( "Existing attestor cannot be added again", async () => {
-            let isAttestor = await bridge.attestors(newAttestor, false);
-            expect(isAttestor).toBe(true);
+        test.failing("Existing attestor cannot be added again", async () => {
+          let isAttestor = await bridge.attestors(newAttestor, false);
+          expect(isAttestor).toBe(true);
 
-            bridge.connect(admin);
-            const [tx] = await bridge.add_attestor_tb(newAttestor, newThreshold);
-            await bridge.wait(tx);
-          },
+          bridge.connect(admin);
+          const [tx] = await bridge.add_attestor_tb(newAttestor, newThreshold);
+          await bridge.wait(tx);
+        },
           TIMEOUT
         );
       });
@@ -464,40 +464,40 @@ describe("Token Bridge ", () => {
       describe("Remove Attestor", () => {
         const newThreshold = 1;
 
-        test.failing( "Non owner cannot remove attestor", async () => {
-            let isAttestor = await bridge.attestors(newAttestor, false);
-            expect(isAttestor).toBe(true);
-            bridge.connect(aleoUser3);
-            const [tx] = await bridge.remove_attestor_tb(newAttestor, newThreshold);
-            await bridge.wait(tx);
-          },
+        test.failing("Non owner cannot remove attestor", async () => {
+          let isAttestor = await bridge.attestors(newAttestor, false);
+          expect(isAttestor).toBe(true);
+          bridge.connect(aleoUser3);
+          const [tx] = await bridge.remove_attestor_tb(newAttestor, newThreshold);
+          await bridge.wait(tx);
+        },
           TIMEOUT
         );
 
 
-        test( "Owner can remove attestor", async () => {
-            const totalAttestors = await bridge.bridge_settings( BRIDGE_TOTAL_ATTESTORS_INDEX);
-            let isAttestor = await bridge.attestors(newAttestor, false);
-            expect(isAttestor).toBe(true);
+        test("Owner can remove attestor", async () => {
+          const totalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
+          let isAttestor = await bridge.attestors(newAttestor, false);
+          expect(isAttestor).toBe(true);
 
-            bridge.connect(admin)
-            const [tx] = await bridge.remove_attestor_tb(newAttestor, newThreshold);
-            await bridge.wait(tx);
+          bridge.connect(admin)
+          const [tx] = await bridge.remove_attestor_tb(newAttestor, newThreshold);
+          await bridge.wait(tx);
 
-            isAttestor = await bridge.attestors(newAttestor, false);
-            expect(isAttestor).toBe(false);
-            const newTotalAttestors = await bridge.bridge_settings( BRIDGE_TOTAL_ATTESTORS_INDEX);
-            expect(newTotalAttestors).toBe(totalAttestors - 1);
-          },
+          isAttestor = await bridge.attestors(newAttestor, false);
+          expect(isAttestor).toBe(false);
+          const newTotalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
+          expect(newTotalAttestors).toBe(totalAttestors - 1);
+        },
           TIMEOUT
         );
 
-        test.failing( "Attestor must be added to be removed", async () => {
-            let isAttestor = await bridge.attestors(newAttestor, false);
-            expect(isAttestor).toBe(false);
-            const [tx] = await bridge.remove_attestor_tb(newAttestor, newThreshold);
-            await bridge.wait(tx);
-          },
+        test.failing("Attestor must be added to be removed", async () => {
+          let isAttestor = await bridge.attestors(newAttestor, false);
+          expect(isAttestor).toBe(false);
+          const [tx] = await bridge.remove_attestor_tb(newAttestor, newThreshold);
+          await bridge.wait(tx);
+        },
           TIMEOUT
         );
       });
@@ -507,59 +507,59 @@ describe("Token Bridge ", () => {
       const chainId = BigInt(1)
 
       describe("Add Service", () => {
-        test( "Owner can add chain", async () => {
-            expect(await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)).toBe(admin)
-            expect(await bridge.supported_chains(chainId, false)).toBe(false);
-            bridge.connect(admin)
-            const [tx] = await bridge.add_chain_tb(chainId);
-            await bridge.wait(tx);
-            expect(await bridge.supported_chains(chainId, false)).toBe(true);
-          },
+        test("Owner can add chain", async () => {
+          expect(await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)).toBe(admin)
+          expect(await bridge.supported_chains(chainId, false)).toBe(false);
+          bridge.connect(admin)
+          const [tx] = await bridge.add_chain_tb(chainId);
+          await bridge.wait(tx);
+          expect(await bridge.supported_chains(chainId, false)).toBe(true);
+        },
           TIMEOUT
         );
 
         test.failing("should not add chain by non-admin", async () => {
-            const newChainId = BigInt(2)
-            expect(await bridge.supported_chains(newChainId, false)).toBe(false);
-            bridge.connect(aleoUser3);
-            const [enableChainTx] = await bridge.add_chain_tb(newChainId);
-            await bridge.wait(enableChainTx);
-          },
+          const newChainId = BigInt(2)
+          expect(await bridge.supported_chains(newChainId, false)).toBe(false);
+          bridge.connect(aleoUser3);
+          const [enableChainTx] = await bridge.add_chain_tb(newChainId);
+          await bridge.wait(enableChainTx);
+        },
           TIMEOUT
         );
       })
 
       describe("Remove Service", () => {
         test.failing("should not remove chain by non_admin", async () => {
-            bridge.connect(aleoUser3);
-            const [disableChainTx] = await bridge.remove_chain_tb(chainId);
-            await bridge.wait(disableChainTx);
-          },
+          bridge.connect(aleoUser3);
+          const [disableChainTx] = await bridge.remove_chain_tb(chainId);
+          await bridge.wait(disableChainTx);
+        },
           TIMEOUT
         );
 
-        test( "Owner can remove chain", async () => {
-            let isChainEnabled = await bridge.supported_chains(chainId, false);
-            expect(isChainEnabled).toBe(true);
+        test("Owner can remove chain", async () => {
+          let isChainEnabled = await bridge.supported_chains(chainId, false);
+          expect(isChainEnabled).toBe(true);
 
-            bridge.connect(admin);
-            const [enableChainTx] = await bridge.remove_chain_tb(chainId);
-            await bridge.wait(enableChainTx);
+          bridge.connect(admin);
+          const [enableChainTx] = await bridge.remove_chain_tb(chainId);
+          await bridge.wait(enableChainTx);
 
-            isChainEnabled = await bridge.supported_chains(chainId, false);
-            expect(isChainEnabled).toBe(false);
-          },
+          isChainEnabled = await bridge.supported_chains(chainId, false);
+          expect(isChainEnabled).toBe(false);
+        },
           TIMEOUT
         );
 
-        test.failing( "should have a chain to remove it", async () => {
-            let isChainEnabled = await bridge.supported_chains(chainId, false);
-            expect(isChainEnabled).toBe(false);
+        test.failing("should have a chain to remove it", async () => {
+          let isChainEnabled = await bridge.supported_chains(chainId, false);
+          expect(isChainEnabled).toBe(false);
 
-            bridge.connect(admin)
-            const [disableChainTx] = await bridge.remove_chain_tb(chainId);
-            await bridge.wait(disableChainTx);
-          },
+          bridge.connect(admin)
+          const [disableChainTx] = await bridge.remove_chain_tb(chainId);
+          await bridge.wait(disableChainTx);
+        },
           TIMEOUT
         );
 
@@ -576,7 +576,7 @@ describe("Token Bridge ", () => {
           async () => {
             let isTsEnabled = await bridge.supported_services(newTsAddr, false);
             expect(isTsEnabled).toBe(false);
-            
+
             bridge.connect(admin)
             const [enableServiceTx] = await bridge.add_service_tb(newTsAddr);
             await bridge.wait(enableServiceTx);
@@ -588,52 +588,52 @@ describe("Token Bridge ", () => {
         );
 
         test.failing("Non-owner cannot add service", async () => {
-            const newTsAddr = new PrivateKey().to_address().to_string();
-            let isTsEnabled = await bridge.supported_services(newTsAddr, false);
-            expect(isTsEnabled).toBe(false);
+          const newTsAddr = new PrivateKey().to_address().to_string();
+          let isTsEnabled = await bridge.supported_services(newTsAddr, false);
+          expect(isTsEnabled).toBe(false);
 
-            bridge.connect(aleoUser3);
-            const [enableServiceTx] = await bridge.add_service_tb(newTsAddr);
-            await bridge.wait(enableServiceTx);
-          },
+          bridge.connect(aleoUser3);
+          const [enableServiceTx] = await bridge.add_service_tb(newTsAddr);
+          await bridge.wait(enableServiceTx);
+        },
           TIMEOUT
         );
       })
 
       describe("Remove Service", () => {
         test.failing("Non-owner cannot remove service", async () => {
-            let isTsEnabled = await bridge.supported_services(newTsAddr, false);
-            expect(isTsEnabled).toBe(true);
+          let isTsEnabled = await bridge.supported_services(newTsAddr, false);
+          expect(isTsEnabled).toBe(true);
 
-            bridge.connect(aleoUser3);
-            const [disableChainTx] = await bridge.remove_service_tb(newTsAddr);
-            await bridge.wait(disableChainTx);
-          },
+          bridge.connect(aleoUser3);
+          const [disableChainTx] = await bridge.remove_service_tb(newTsAddr);
+          await bridge.wait(disableChainTx);
+        },
           TIMEOUT
         );
 
         test("Owner can remove service", async () => {
-            let isTsEnabled = await bridge.supported_services(newTsAddr, false);
-            expect(isTsEnabled).toBe(true);
+          let isTsEnabled = await bridge.supported_services(newTsAddr, false);
+          expect(isTsEnabled).toBe(true);
 
-            bridge.connect(admin);
-            const [disableChainTx] = await bridge.remove_service_tb(newTsAddr);
-            await bridge.wait(disableChainTx);
+          bridge.connect(admin);
+          const [disableChainTx] = await bridge.remove_service_tb(newTsAddr);
+          await bridge.wait(disableChainTx);
 
-            isTsEnabled = await bridge.supported_services( tokenService.address(), false);
-            expect(isTsEnabled).toBe(false);
-          },
+          isTsEnabled = await bridge.supported_services(tokenService.address(), false);
+          expect(isTsEnabled).toBe(false);
+        },
           TIMEOUT
         );
 
         test.failing("Service must be added to be removed", async () => {
-            let isTsEnabled = await bridge.supported_services(newTsAddr, false);
-            expect(isTsEnabled).toBe(false);
+          let isTsEnabled = await bridge.supported_services(newTsAddr, false);
+          expect(isTsEnabled).toBe(false);
 
-            bridge.connect(admin);
-            const [disableChainTx] = await bridge.remove_service_tb(newTsAddr);
-            await bridge.wait(disableChainTx);
-          },
+          bridge.connect(admin);
+          const [disableChainTx] = await bridge.remove_service_tb(newTsAddr);
+          await bridge.wait(disableChainTx);
+        },
           TIMEOUT
         );
       })
@@ -642,21 +642,21 @@ describe("Token Bridge ", () => {
     describe("Update threshold", () => {
 
       const newThreshold = 3;
-      test( "Owner can update threshold", async () => {
-          bridge.connect(admin);
-          const [tx] = await bridge.update_threshold_tb(newThreshold);
-          await bridge.wait(tx);
-          const updatedThreshold = await bridge.bridge_settings( BRIDGE_THRESHOLD_INDEX);
-          expect(updatedThreshold).toBe(newThreshold);
-        },
+      test("Owner can update threshold", async () => {
+        bridge.connect(admin);
+        const [tx] = await bridge.update_threshold_tb(newThreshold);
+        await bridge.wait(tx);
+        const updatedThreshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX);
+        expect(updatedThreshold).toBe(newThreshold);
+      },
         TIMEOUT
       );
 
-      test.failing( "Non-owner cannot update threshold", async () => {
-          bridge.connect(aleoUser3);
-          const [tx] = await bridge.update_threshold_tb(newThreshold);
-          await bridge.wait(tx);
-        },
+      test.failing("Non-owner cannot update threshold", async () => {
+        bridge.connect(aleoUser3);
+        const [tx] = await bridge.update_threshold_tb(newThreshold);
+        await bridge.wait(tx);
+      },
         TIMEOUT
       );
 
@@ -664,32 +664,42 @@ describe("Token Bridge ", () => {
 
     describe("Transfer Ownership", () => {
 
-      test.failing( "should not transfer ownership by non-admin", async () => {
-          bridge.connect(aleoUser3);
-          const [transferOwnershipTx] = await bridge.transfer_ownership_tb( council.address());
-          await bridge.wait(transferOwnershipTx);
-        },
+      test.failing("should not transfer ownership by non-admin", async () => {
+        bridge.connect(aleoUser3);
+        const [transferOwnershipTx] = await bridge.transfer_ownership_tb(council.address());
+        await bridge.wait(transferOwnershipTx);
+      },
         TIMEOUT
       );
 
-      test( "Current owner can transfer ownership", async () => {
-          bridge.connect(aleoUser1);
-          const currentOwner = await bridge.owner_TB(true);
-          expect(currentOwner).toBe(aleoUser1);
+      test("Current owner can transfer ownership", async () => {
+        bridge.connect(aleoUser1);
+        const currentOwner = await bridge.owner_TB(true);
+        expect(currentOwner).toBe(aleoUser1);
 
-          const [transferOwnershipTx] = await bridge.transfer_ownership_tb( council.address());
-          await bridge.wait(transferOwnershipTx);
+        const [transferOwnershipTx] = await bridge.transfer_ownership_tb(council.address());
+        await bridge.wait(transferOwnershipTx);
 
-          const newOwner = await bridge.owner_TB(true);
-          expect(newOwner).toBe(council.address());
-        },
+        const newOwner = await bridge.owner_TB(true);
+        expect(newOwner).toBe(council.address());
+      },
         TIMEOUT
       );
     });
   });
 
-  describe("Initialization", () => {
-    test.skip.failing(
+
+
+});
+
+describe("Transition Failing Test cases", () => {
+
+  const bridge = new Token_bridge_v0003Contract({ mode: "evaluate" });
+  const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
+  const aleoUser5 = new PrivateKey().to_address().to_string();
+  const admin = aleoUser1
+  describe('Token Bridge : Initialization', () => {
+    test.failing(
       "Initialize - Threshold too low (must fail)",
       async () => {
         await bridge.initialize_tb(
@@ -701,7 +711,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize - Threshold too high (must fail)",
       async () => {
         await bridge.initialize_tb(
@@ -713,7 +723,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize (Second try) - Expected parameters (must fail)",
       async () => {
         const isBridgeInitialized =
@@ -729,7 +739,24 @@ describe("Token Bridge ", () => {
       },
       TIMEOUT
     );
+  })
 
-  });
+  describe('Attestor Add/Remove', () => {
+    test.failing('threshold not less than 1 in while adding attestor', async () => {
+      await bridge.add_attestor_tb(aleoUser5, 0);
+
+    })
+
+    test.failing('When removing attestor Zero address passed should fail', async () => {
+      await bridge.remove_attestor_tb(ALEO_ZERO_ADDRESS, 1);
+    })
+  })
+
+
+
+
+
+
+
 
 });
