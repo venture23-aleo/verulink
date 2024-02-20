@@ -1,8 +1,12 @@
+version: '3'
 services:
   signingservice:
-    image: signingservice
+    build:
+      context: ..
+      dockerfile: signingService/Dockerfile
     volumes:
       - ./config.yaml:/configs/config.yaml
       - ./keys.yaml:/configs/keys.yaml
+    network_mode: host
     ports:
-      - 6579:6579
+      - "6579:6579"

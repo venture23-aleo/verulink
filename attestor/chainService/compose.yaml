@@ -4,28 +4,27 @@ x-dbpath: &p # server as value holder for compose file
 x-logpath: &l
   /log
 
+version: '3'
 services:
   chainservice:
     build: .
-    configs:
-      - source: chainService_config
-        target: /configs/config.yaml
     volumes:
       - type: volume
-        source: db-path
+        source: db-dir
         target: *p
-      - type: bind
-        source: ./log/
+      - type: volume
+        source: log-dir
         target: *l
+      - type: bind
+        source: ./config.yaml
+        target: /configs/config.yaml
     environment:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
       MODE: dev
+    network_mode: host
 
-configs:
-  chainService_config:
-    file: ./config.yaml
 volumes:
-  db-path:
-  log-path:
+  db-dir:
+  log-dir:
