@@ -7,6 +7,11 @@ services:
     volumes:
       - ./config.yaml:/configs/config.yaml
       - ./keys.yaml:/configs/keys.yaml
-    network_mode: host
+    networks:
+      my-attestor-network:
     ports:
-      - "6579:6579"
+      - "8080:8080"
+
+networks:
+  my-attestor-network:
+    external: true

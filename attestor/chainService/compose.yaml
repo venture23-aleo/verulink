@@ -23,8 +23,13 @@ services:
       LOG_PATH: *l
       LOG_ENC: json
       MODE: dev
-    network_mode: host
+    networks:
+      my-attestor-network:
 
 volumes:
   db-dir:
   log-dir:
+
+networks:
+  my-attestor-network:
+    external: true
