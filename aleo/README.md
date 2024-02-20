@@ -95,37 +95,25 @@ Since our architecture features a single token bridge and token service program,
 
 # Testing
 
-The programs are tested using aleojs. The tests are written in typescript and are located in the `aleo/tests` directory.
+We conduct testing using [AleoJS](](https://github.com/venture23-zkp/aleojs/)). Tests are scripted in TypeScript and can be found in the [`test`](./test) directory. To execute the tests successfully, you'll need to have AleoJS installed, along with the snarkos node running on the default port (3030).
 
 ## Setup
 
-To run the tests, you need to have aleojs installed and the aleo node should be running on the default port (3030).
+Before running the tests, ensure you have the following prerequisites in place:
 
-### AleoJS
+**1. Rust:** Refer to the [Installation Guide](https://www.rust-lang.org/tools/install) for assistance with Rust installation.
 
-AleoJS is a powerful and lightweight library designed for seamless interaction with the Aleo blockchain and its diverse ecosystem. Drawing inspiration from the [zk-gaming-toolkit](https://github.com/kryha/zk-gaming-toolkit), Aleo.js fully harnesses existing tools while offering a user-friendly interface for developers keen on building atop the Aleo blockchain.
+**2. SnarkOS:** Follow the instructions provided in the [Installation Guide](https://github.com/AleoHQ/snarkos?tab=readme-ov-file#22-installation). If you encounter build issues, consider trying the fix provided [here](https://github.com/eqlabs/snarkOS/tree/fix/compile).
 
-#### AleoJS Installation
+**3. Leo language:** Get Leo up and running with the help of the [Installation Guide](https://github.com/aleoHQ/leo).
 
-Before beginning, make sure you have the following set up:
-
-**1. Rust**: [Installation Guide](https://www.rust-lang.org/tools/install)
-
-**2. SnarkOS**: [Installation Guide](https://github.com/aleoHQ/snarkos)
-
-> In case there are some issues with build try from [here](https://github.com/eqlabs/snarkOS/tree/fix/compile)
-
-**3. Leo language**:
-[Installation Guide](https://github.com/aleoHQ/leo)
-
+#### Installing AleoJS
 ##### From NPM
 
 Install Aleo.js globally using npm:
 `npm install -g @aleojs/cli@latest`
 
 ##### From Source
-
-1. Clone the Aleo.js repository:
 
 ```bash
 # Download the source file
@@ -142,37 +130,25 @@ npm run install:cli
 
 ## Running Tests
 
-Go to the root directory of the project and run the following commands:
-
-```bash
-cd aleo
-```
-
-Install the dependencies using the following command:
+1. Install the dependencies. 
 
 ```bash
 npm install
 ```
 
-Then compile the programs using the following command:
+2. Compile the programs using the following command:
 
 ```bash
 aleojs-cli-dev compile
 ```
 
-Then run the testnet locally using the following command inside the directory where you have installed the snarkOS:
+3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet)
 
 ```bash
 ./devnet.sh
 ```
 
-Finally, run the tests using the following command:
-
-```bash
-npm run test --runInBand
-```
-
-For running a specific test file (example: 1_tokenBridge.test.ts), use the following command:
+4. Run the tests for a specific program (example: tokenBridge) using the following command:
 
 ```bash
 npm run test --runInBand --  1_tokenBridge
