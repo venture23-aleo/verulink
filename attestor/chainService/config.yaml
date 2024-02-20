@@ -38,8 +38,8 @@ log:
 mode: dev # dev/prod
 
 signing_service:
-  host: 127.0.0.1
-  port: 6579
+  host: signingservice
+  port: 8080
   endpoint: "/sign"
   scheme: "http" # https, http, rpc, etc.
   username: "username"

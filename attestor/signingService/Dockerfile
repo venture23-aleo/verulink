@@ -24,11 +24,11 @@ COPY --from=signingservice /signingservice/signingservice .
 ENV PATH="$PATH:/app"
 RUN export PATH
 # port in which signing service listens from and serves to the incoming requests
-EXPOSE 6579
+EXPOSE 8080
 # signingservice expects user to provide input in its run time while
 # asking for decrypt key. It is recommended that attestor encrypt their
 # wallet credentials and provide decrypt key at runtime
 # ENTRYPOINT ["/bin/sh","-c", "./signingservice", "--config=/configs/config.yaml", "--kp=/configs/keys.yaml"]
-CMD ["./signingservice --config=/configs/config.yaml --kp=/configs/keys.yaml"]
+CMD ["./signingservice --config=/configs/config.yaml --kp=/configs/keys.yaml --port 8080"]
 ENTRYPOINT ["/bin/sh", "-c"]
 # ENTRYPOINT [ "/bin/sh", "-c", "sleep 1800"]

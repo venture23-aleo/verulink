@@ -6,42 +6,34 @@ x-logpath: &l
 
 services:
   chainservice:
+    depends_on:
+      - signingservice
     build: ./chainService
-    configs:
-      - source: chainService_config
-        target: /configs/config.yaml
     volumes:
       - type: volume
         source: db-path
         target: *p
-      - type: bind
-        source: ./log/
+      - type: volume
+        source: log-path
         target: *l
+      - type: bind
+        source: ./chainService/config.yaml
+        target: /configs/config.yaml
     environment:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
       MODE: dev
-
   signingservice:
-    build: ./signingService
-    configs:
-      - source: signingService_config
-        target: /configs/config.yaml
+    build:
+      context: .
+      dockerfile: ./signingService/Dockerfile
+    volumes:
+      - ./signingService/config.yaml:/configs/config.yaml
+      - ./signingService/keys.yaml:/configs/keys.yaml
     ports:
-      - 6579: 6579
+      - 8080:8080
 
-# todo: add collector service image
-  collectorService:
-    build: "image"
-    ports:
-      - 8080: 8080
-
-configs:
-  chainService_config:
-    file: ./chainService/config.yaml
-  signingService_config:
-    file: ./signingService/config.yaml
 volumes:
   db-path:
   log-path:
