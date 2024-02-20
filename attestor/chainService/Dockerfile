@@ -1,21 +1,21 @@
-FROM golang:1.21.6-bookworm as chainservice
+FROM golang:1.21.6 as chainservice
 WORKDIR /chainservice
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o chainservice .
+RUN CGO_ENABLED=0 go build -o chainservice .
 
 FROM alpine:3.19.1
-WORKDIR /
+WORKDIR /app
 COPY --from=chainservice /chainservice/chainservice .
-ENV DB_PATH=/db
-ENV LOG_PATH=/log/chainservice.log
+ENV DB_DIR=/db
+ENV LOG_DIR=/log
 ENV LOG_ENC=json
 # Entrypoint expects config.yaml to be present in /configs directory. User should bind mount their
 # config file into container's /configs/config.yaml
 ENTRYPOINT [ "./chainservice",\
-                            "--config /configs/config.yaml",\
-                            "--db ${DB_PATH}",\
-                            "--log_path ${LOG_PATH}",\
-                            "--log_enc ${LOG_ENC}", \
-                            "--mode ${MODE}"]
+                            "--config=/configs/config.yaml",\
+                            "--db-dir=${DB_DIR}",\
+                            "--log-dir=${LOG_DIR}",\
+                            "--log-enc=${LOG_ENC}", \
+                            "--mode=${MODE}"]
