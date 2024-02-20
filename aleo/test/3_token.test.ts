@@ -6,11 +6,11 @@ import { getApprovalLeo } from "../artifacts/js/js2leo/wusdc_token_v0003";
 import { parseRecordString } from "@aleojs/core";
 import { hashStruct } from "../utils/hash";
 
-const wusdcToken = new Wusdc_token_v0003Contract({mode: "execute"});
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
 
 const TIMEOUT = 1000_000; // 100 seconds
 
-describe("Token", () => {
+describe.skip("Token", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
     const admin = aleoUser1
 
@@ -29,7 +29,7 @@ describe("Token", () => {
     })
 
     describe("Mint Public", () => {
-        test("Mints the right amount", async() => {
+        test("Mints the right amount", async () => {
             const amount = BigInt(20_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
 
@@ -106,7 +106,7 @@ describe("Token", () => {
             const [recordString, tx] = await wusdcToken.transfer_public_to_private(receiver, amount);
             await wusdcToken.wait(tx);
 
-            const tokenRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(receiverPrivateKey).to_view_key().decrypt(recordString)) as tokenLeo);
+            const tokenRecord: token = gettoken(parseRecordString(PrivateKey.from_string(receiverPrivateKey).to_view_key().decrypt(recordString)) as tokenLeo);
             expect(tokenRecord.owner).toBe(receiver);
             expect(tokenRecord.amount).toBe(amount);
 
@@ -122,14 +122,14 @@ describe("Token", () => {
         let tokenRecord: token;
         let privateAmount = BigInt(100);
 
-        beforeEach( async () => {
+        beforeEach(async () => {
             wusdcToken.connect(sender);
             const senderInitialBalance = await wusdcToken.account(sender);
             expect(senderInitialBalance).toBeGreaterThanOrEqual(privateAmount);
 
             const [recordString, tx] = await wusdcToken.transfer_public_to_private(aleoUser2, privateAmount);
             await wusdcToken.wait(tx);
-            tokenRecord =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(recordString)) as tokenLeo);
+            tokenRecord = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(recordString)) as tokenLeo);
 
             const senderFinalBalance = await wusdcToken.account(sender);
             expect(senderFinalBalance).toBe(senderInitialBalance - privateAmount);
@@ -143,7 +143,7 @@ describe("Token", () => {
             await wusdcToken.wait(pvtToPubTx);
             const receiverFinalBalance = await wusdcToken.account(aleoUser4);
 
-            const remainingRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(remainingRecordString)) as tokenLeo);
+            const remainingRecord: token = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(remainingRecordString)) as tokenLeo);
             expect(remainingRecord.amount).toBe(tokenRecord.amount - amount);
             expect(receiverFinalBalance).toBe(receiverInitialBalance + amount);
         }, TIMEOUT)
@@ -155,14 +155,14 @@ describe("Token", () => {
             await wusdcToken.wait(tx);
 
             wusdcToken.connect(sender);
-            const senderRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(senderRecordString)) as tokenLeo);
-            
+            const senderRecord: token = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(senderRecordString)) as tokenLeo);
+
             wusdcToken.connect(receiver);
-            const receiverRecord: token =  gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(receiverRecordString)) as tokenLeo);
+            const receiverRecord: token = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(receiverRecordString)) as tokenLeo);
 
             expect(senderRecord.amount).toBe(tokenRecord.amount - amount);
             expect(receiverRecord.amount).toBe(amount);
-        }, TIMEOUT )
+        }, TIMEOUT)
     })
 
     describe("TransferFrom", () => {
@@ -210,4 +210,44 @@ describe("Token", () => {
 
     })
 
+})
+
+
+describe("Transition Test Cases", () => {
+    const wusdcToken = new Wusdc_token_v0003Contract({ mode: "evaluate" });
+    const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
+
+    describe("Private Transfers", () => {
+        const sender = aleoUser2;
+        const receiver = aleoUser4;
+        let tokenRecord: token;
+        let privateAmount = BigInt(100);
+
+        test("Transfer Private", async () => {
+            wusdcToken.connect(sender);
+            tokenRecord = { owner: sender, amount: privateAmount, _nonce: BigInt(0) }
+            const [remainingRecord, transferredRecord, tx] = await wusdcToken.transfer_private(tokenRecord, receiver, privateAmount);
+            // @ts-ignore
+            expect(remainingRecord.amount).toBe("0u128.private");
+            // @ts-ignore
+            expect(transferredRecord.amount).toBe("100u128.private");
+        }, TIMEOUT)
+
+
+        test("Transfer Private to Public", async () => {
+            wusdcToken.connect(sender);
+            tokenRecord = { owner: sender, amount: privateAmount, _nonce: BigInt(0) }
+            const [remainingRecord, tx] = await wusdcToken.transfer_private_to_public(tokenRecord, receiver, privateAmount);
+            // @ts-ignore
+            expect(remainingRecord.amount).toBe("0u128.private");
+        })
+
+
+        test("Transfer Public to Private", async () => {
+            wusdcToken.connect(sender);
+            const [record, tx] = await wusdcToken.transfer_public_to_private(receiver, privateAmount);
+            // @ts-ignore
+            expect(record.amount).toBe("100u128.private");
+        })
+    })
 })

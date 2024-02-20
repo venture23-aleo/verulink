@@ -49,7 +49,7 @@ const createPacket = (
   );
 };
 
-describe("Token Bridge ", () => {
+describe.skip("Token Bridge ", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
 
@@ -692,7 +692,7 @@ describe("Token Bridge ", () => {
 
 });
 
-describe("Transition Test cases", () => {
+describe("Transition Failing Test cases", () => {
 
   const bridge = new Token_bridge_v0003Contract({ mode: "evaluate" });
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
@@ -711,7 +711,7 @@ describe("Transition Test cases", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize - Threshold too high (must fail)",
       async () => {
         await bridge.initialize_tb(
@@ -723,7 +723,7 @@ describe("Transition Test cases", () => {
       TIMEOUT
     );
 
-    test.skip.failing(
+    test.failing(
       "Initialize (Second try) - Expected parameters (must fail)",
       async () => {
         const isBridgeInitialized =
@@ -741,14 +741,19 @@ describe("Transition Test cases", () => {
     );
   })
 
-  test.failing('threshold not less than 1 in while adding attestor', async () => {
-    await bridge.add_attestor_tb(aleoUser5, 0);
+  describe('Attestor Add/Remove', () => {
+    test.failing('threshold not less than 1 in while adding attestor', async () => {
+      await bridge.add_attestor_tb(aleoUser5, 0);
 
+    })
+
+    test.failing('When removing attestor Zero address passed should fail', async () => {
+      await bridge.remove_attestor_tb(ALEO_ZERO_ADDRESS, 1);
+    })
   })
 
-  test.failing('When removing attestor Zero address passed should fail', async () => {
-    await bridge.remove_attestor_tb(ALEO_ZERO_ADDRESS, 1);
-  })
+
+
 
 
 

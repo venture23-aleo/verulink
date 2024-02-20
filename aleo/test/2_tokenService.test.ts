@@ -638,7 +638,7 @@ describe.skip("Token Service ", () => {
 
 });
 
-describe('Transition Test cases', () => {
+describe('Transition Failing Test cases', () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = tokenService.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
   describe('Token Add/Remove', () => {
@@ -665,8 +665,6 @@ describe('Transition Test cases', () => {
         1,
         BigInt(100)
       )
-
-
     })
 
     test.failing('Updating withdrawal limit with percentage greater than 100 should fail', async () => {
