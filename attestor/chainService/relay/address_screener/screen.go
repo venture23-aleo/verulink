@@ -6,6 +6,12 @@ import (
 )
 
 type ScreenI interface {
+	// todo: might need to receive error as well
+	// currently we have not received any update from Aleo regarding integrating chain analysis.
+	// If we receive any update then we shall update this function accordingly
+
+	// Screen sends addresses in packets to address-screening service to analyse and
+	// flag them.
 	Screen(pkt *chain.Packet) (isWhite bool)
 	StoreWhiteStatus(pkt *chain.Packet, isWhite bool) error
 }
@@ -19,7 +25,7 @@ const (
 type screenService struct {
 }
 
-// Screen evaluates the validity of the packet by checking if the wallet addresses of either of receiver or sender 
+// Screen evaluates the validity of the packet by checking if the wallet addresses of either of receiver or sender
 // in the packet is flagged by the screening services. If they are flagged, returns false and returns true otherwise
 func (s screenService) Screen(pkt *chain.Packet) bool {
 	key := pkt.GetSha256Hash()

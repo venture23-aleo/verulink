@@ -10,7 +10,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
@@ -26,15 +25,21 @@ import (
 
 const (
 	ethereum                             = "ethereum"
-	defaultHeightDifferenceForFilterLogs = 100
-	defaultValidityWaitDur               = 24 * time.Hour
+	defaultHeightDifferenceForFilterLogs = 100            // number of blocks to filter logs from
+	defaultValidityWaitDur               = 24 * time.Hour // currently selected wait duration
 	// defaultFeedPktWaitDur sets ticker in FeedPacket. It is chosen to be two-third of time taken
 	// for blockchain to produce defaultHeightDifferenceForFilterLogs number of blocks so that
 	// it shall never lag with blockchain.
-	defaultFeedPktWaitDur      = defaultHeightDifferenceForFilterLogs * avgBlockGenDur * 2 / 3
-	avgBlockGenDur             = time.Second * 12
-	defaultRetryPacketWaitDur  = time.Hour * 12
+	defaultFeedPktWaitDur = defaultHeightDifferenceForFilterLogs * avgBlockGenDur * 2 / 3
+	avgBlockGenDur        = time.Second * 12 // average duration for block generation
+	// defaultRetryPacketWaitDur regularly fetches packets from local store(currently boltdb)
+	// These are those packets that were failed to process i.e. some error occurred while packets
+	// were being processed.
+	defaultRetryPacketWaitDur = time.Hour * 12
+	// defaultPruneBaseSeqWaitDur regularly prunes keys that are in ascending order till there
+	// is no gap between subsequent keys.
 	defaultPruneBaseSeqWaitDur = time.Hour * 6
+	retrievePacketNum          = 10 // total number of retry-packets to expect in single query
 )
 
 // Namespaces
@@ -94,16 +99,15 @@ func (eth *ethClient) FilterLogs(
 	return logs, err
 }
 
-type iBridgeClient interface {
+type bridgeClientI interface {
 	ParsePacketDispatched(log types.Log) (*abi.BridgePacketDispatched, error)
-	IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error)
 }
 
 type bridgeClient struct {
 	bridge *abi.Bridge
 }
 
-func NewBridgeClient(contractAddress ethCommon.Address, ethClient *ethclient.Client) (iBridgeClient, error) {
+func NewBridgeClient(contractAddress ethCommon.Address, ethClient *ethclient.Client) (bridgeClientI, error) {
 	bridge, err := abi.NewBridge(contractAddress, ethClient)
 	if err != nil {
 		return nil, err
@@ -121,23 +125,21 @@ func (brcl *bridgeClient) ParsePacketDispatched(log types.Log) (*abi.BridgePacke
 	return packetDispatched, nil
 }
 
-func (brcl *bridgeClient) IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error) {
-	consumed, err := brcl.bridge.IsPacketConsumed(opts, _sequence)
-	if err != nil {
-		return false, err
-	}
-	return consumed, nil
-}
-
 type Client struct {
-	name                      string
-	address                   ethCommon.Address
-	eth                       ethClientI
-	bridge                    iBridgeClient
-	destChainsMap             map[string]bool
-	nextBlockHeight           uint64
-	chainID                   *big.Int
-	filterTopic               ethCommon.Hash
+	name    string
+	address ethCommon.Address
+	eth     ethClientI
+	bridge  bridgeClientI
+	// destChainsMap stores list of destination chains that this attestor shall support
+	destChainsMap map[string]bool
+	// nextBlockHeight is next start height for filter logs
+	nextBlockHeight uint64
+	chainID         *big.Int
+	filterTopic     ethCommon.Hash
+	// waitHeight is number of blocks to pass before considering a block as matured.
+	// i.e if waitHeight is 10 and packet is available in block height 100 then
+	// packet is matured if current block number is >= 110 and it is immatured
+	// if current block number is < 110
 	waitHeight                uint64
 	feedPktWaitDur            time.Duration
 	retryPacketWaitDur        time.Duration
@@ -148,15 +150,7 @@ func (cl *Client) Name() string {
 	return cl.name
 }
 
-func (cl *Client) GetSourceChain() (string, string) {
-	return cl.name, cl.address.Hex()
-}
-
-func (cl *Client) GetChainID() *big.Int {
-	return cl.chainID
-}
-
-// blockHeightPriorWaitDur returns block height from which events logs can be safely parsed.
+// blockHeightPriorWaitDur returns matured block height from which events logs can be parsed.
 // This height equals (currentHeight - finalityHeight) at max
 // If wait duration is 24 hours then it will be equal to (currentHeight - 7200)
 func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
@@ -181,7 +175,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 	for _, l := range logs {
 		packetDispatched, err := cl.bridge.ParsePacketDispatched(l)
 		if err != nil {
-			return nil, err // TODO: test to find out if error has to be thrown or just continue
+			return nil, err
 		}
 		commonPacket := &chain.Packet{
 			Version:  uint8(packetDispatched.Packet.Version.Uint64()),
@@ -208,14 +202,11 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 	return packets, nil
 }
 
-// FeedPacket spawns goroutine for processes that handles error while sending the packet to the 
-// db service, process that periodically updates the base sequence number, process that handles
-// retrying the failed to send packets to the db service and that fetches packets from the source 
-// chain. After fetching the packets from the source chain, the packet is fed into "ch" channel
-//
-// FilterPacket logs syncs quickly from start height to the end height upto which the blocks can be 
-// processed given by blockHeightPriorWaitDur() by filtering the blocks between start height and end 
-// height in chunks of defaultHeightDifferenceForFilterLogs
+// FeedPacket spawsn few goroutines and starts to poll ethereum on regular interval.
+// It uses filter logs method that specifically filters particular packet related logs.
+// The range of block numbers to filter logs is set in defaultHeightDifferenceForFilterLogs.
+// It parses the logs and if packet has destination chainID that this attestor supports then
+// it will be send to the channel ch.
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
@@ -251,6 +242,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 				break L1
 			}
 
+			// startHeight adds 1, because filterLogs returns packets inclusively for startHeight and endHeight.
+			// We don't want to re-process already processed packets
 			for startHeight := cl.nextBlockHeight; startHeight <= maturedHeight; startHeight += defaultHeightDifferenceForFilterLogs + 1 {
 				endHeight := startHeight + defaultHeightDifferenceForFilterLogs
 				if endHeight > maturedHeight {
@@ -277,9 +270,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	}
 }
 
-// retryFeed periodically fetches the packets in the "retryPacketNamespace" to be sent to the 
-// db-service. It deletes the packets in the namespace after fetching and sends the packets in "ch"
-// channel
+// retryFeed periodically retrieves the packets from the "retryPacketNamespace"  and sends to the
+// channel ch. It also deletes the retrieved packets in the namespace.
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(cl.retryPacketWaitDur) // todo: define in config
 	index := 0
@@ -294,10 +286,10 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
-		// this is the most efficient approach.
-		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], 10)
+		// this seems to be the efficient approach.
+		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], retrievePacketNum)
 		if err != nil {
-			//log error
+			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
 			goto indIncr
 		}
 
@@ -306,16 +298,16 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 
 	indIncr:
-		index = (index + 1) % len(retryPacketNamespaces)
+		index = (index + 1) % len(retryPacketNamespaces) // switch index to next destination id
 	}
 }
 
-// pruneBaseSeqNum updates the sequence number upto which the attestor has processed all the 
+// pruneBaseSeqNum updates the sequence number upto which the attestor has processed all the
 // outgoing packets of the source chain. The first entry of the baseSeqNum bucket represents
-// the base sequence number. refetches the packets if there is gap while updating the base 
-// seq number. eg. in the case we have the following packets 1, 2, 3, 7, 8. It updates the 
-// base seq number to 3 and fetches the packets 4, 5 and 6 and sends it to ch channel 
-// (retryPacketCh) 
+// the base sequence number. refetches the packets if there is gap while updating the base
+// seq number. eg. in the case we have the following packets 1, 2, 3, 7, 8. It deletes the entry
+// 1 and 2 and fetches the packets 4, 5 and 6 and sends it to ch channel.
+// There can be multiple gaps but it will consider first gap.
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(cl.pruneBaseSeqNumberWaitDur)
 	index := 0
@@ -377,10 +369,10 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 	}
 }
 
-// managePacket either keeps the packet received from retryCh channel in the retryPacketNameSpace 
-// in the event of failure while sending packets to db-service or 
-// in the baseSequenceNumberNameSpace to the packets received from completedCh channel in the event
-// of successful packet delivery to the db-service
+// managePacket manages packets that should either be reprocessed or consider as completed.
+// It puts packets from retryCh into retry-packet namespace to retry them later.
+// If the packets comes inot completedCh, then its sequence number and height will be
+// put into sequence number namespace to later on prune base sequence number
 func (cl *Client) managePacket(ctx context.Context) {
 	for {
 		select {
@@ -415,6 +407,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 	}
 }
 
+// GetMissedPacket retrieves packet from source chain and returns it.
 func (cl *Client) GetMissedPacket(
 	ctx context.Context, missedPkt *chain.MissedPacket) (
 	*chain.Packet, error) {
