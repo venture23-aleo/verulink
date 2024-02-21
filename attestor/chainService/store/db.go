@@ -102,8 +102,11 @@ func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 	return exitsInGivenBucket(namespace, k)
 }
 
-// RetrieveNPackets retrieves n packets from first index
-// Caller should process sequence number range as open end and height range as close end.
+// PruneBaseSeqNum basically works as follow.
+// When signature is successfully delivered to collector service then this packet's sequence number and height
+// is stored in the given namespace.
+// For example, if attestor successfully delivered signatures for packets with sequence number, 1,2,3,4,5,6,10,11,12,
+// the this function will delete 1,2,3,4,5 and return's the sequence and height range and sets shouldFetch to true.
 func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [[startSeqNum, EndSeqNum], [startHeight, endHeight]]
 	seqNumCh := retrieveNKeyValuesFromFirst(namespace, 1000)
 	kv, open := <-seqNumCh

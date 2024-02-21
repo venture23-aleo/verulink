@@ -10,8 +10,8 @@ var retryCh chan *chain.Packet
 
 func init() {
 	relay.RegisteredClients["aleo"] = NewClient
-	completedCh = make(chan *chain.Packet) // todo: make proper bufferred channel
+	completedCh = make(chan *chain.Packet)
 	relay.RegisteredCompleteChannels["aleo"] = completedCh
-	retryCh = make(chan *chain.Packet) // todo: make proper bufferred channel
+	retryCh = make(chan *chain.Packet)
 	relay.RegisteredRetryChannels["aleo"] = retryCh
 }

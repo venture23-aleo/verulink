@@ -27,7 +27,6 @@ func registerHandlers() {
 
 		username, password, _ := r.BasicAuth()
 		cfgUser, cfgPass := config.GetUsernamePassword()
-		fmt.Printf("Server: %s--> %s\tClient: %s--> %s\n", cfgUser, cfgPass, username, password)
 
 		if username != cfgUser || password != cfgPass {
 			w.WriteHeader(http.StatusForbidden)

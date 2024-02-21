@@ -34,6 +34,7 @@ type signService struct {
 	url string
 }
 
+// HashAndSignScreendedPacket calls the signing service to hash and sign the screened packets
 func (s *signService) HashAndSignScreenedPacket(
 	ctx context.Context, sp *chain.ScreenedPacket) (hash, signature string, err error) {
 
@@ -82,6 +83,8 @@ func (s *signService) HashAndSignScreenedPacket(
 	return
 }
 
+// SetupSigner checks if url can be dialed and sets up given parameters for chainservice to
+// communicate with signing service securely.
 func SetupSigner(cfg *config.SigningServiceConfig) error {
 	logger.GetLogger().Info("Setting up signer",
 		zap.String("username", cfg.Username),
@@ -108,6 +111,8 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 	return nil
 }
 
+// dial simply sends post request on sign endpoint.
+// without proper request body it should respond with status in 4xx range.
 func dial(u string) error {
 
 	ctx, cncl := context.WithTimeout(context.TODO(), time.Second*30)
