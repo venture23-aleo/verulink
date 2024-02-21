@@ -69,6 +69,8 @@ func get(bucket string, key []byte) (value []byte) {
 	return
 }
 
+// getAndDelete returns value of key if it exists in the bucket otherwise
+// returns error.
 func getAndDelete(bucket string, key []byte) (value []byte, err error) {
 	err = db.Update(func(tx *bbolt.Tx) error {
 		bkt := tx.Bucket([]byte(bucket))
@@ -123,7 +125,7 @@ func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
 	return
 }
 
-// This function will return channel and populate minimum of n and total keys number of packets
+// retrieveNKeyValuesFromFirst will return channel and populate minimum of n and total keys number of packets
 func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 	ch := make(chan [2][]byte, n)
 	go func() {
@@ -146,6 +148,8 @@ func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 	return ch
 }
 
+// retrieveAndDeleteFirstKey retrieves and deletes first key.
+// It will return error if the bucket is empty
 func retrieveAndDeleteFirstKey(bucket string) (a [2][]byte, err error) {
 	err = db.Update(func(tx *bbolt.Tx) error {
 		bkt := tx.Bucket([]byte(bucket))
@@ -167,6 +171,8 @@ func retrieveAndDeleteFirstKey(bucket string) (a [2][]byte, err error) {
 	return
 }
 
+// retrieveAndDeleteNKeysFromFirst returns n number of keys from first index and deletes
+// them. It returns error if the bucket is empty
 func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err error) {
 	s = make([][]byte, 0, n)
 	err = db.Update(func(tx *bbolt.Tx) error {

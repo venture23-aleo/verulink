@@ -114,7 +114,7 @@ func trim(msg string) string {
 	return strReplacer.Replace(msg)
 }
 
-// TODO fix this
+// parseAleoPacket converts aleoPacket to chain.Packet and returns it.
 func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt := new(chain.Packet)
 	version := new(big.Int)
@@ -195,10 +195,6 @@ func constructAleoPacket(msg *chain.Packet) string {
 		msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress,
 		constructEthAddressForAleoParameter(msg.Message.SenderAddress),
 		msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
-}
-
-func constructAleoScreeningPacket(packetHash, screening string) string {
-	return fmt.Sprintf("{packet_hash:%s,screening_passed:%s}", packetHash, screening)
 }
 
 // constructs ethereum address in the format of 32 len byte array string, appending "u8" in every
