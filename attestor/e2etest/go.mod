@@ -3,7 +3,7 @@ module github.com/venture23-aleo/attestor/e2etest
 go 1.21.3
 
 require (
-	github.com/docker/docker v25.0.1+incompatible
+	github.com/docker/docker v25.0.3+incompatible
 	gopkg.in/yaml.v3 v3.0.1
 )
 

@@ -9,10 +9,10 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"gopkg.in/yaml.v3"
 )
@@ -165,28 +165,15 @@ func BuildRelayImage() {
 }
 
 func RunRelayImage() {
-	client, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
-	if err != nil {
-		panic(err)
-	}
+	composePath := "../../compose.yaml"
+	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "up")
+	fmt.Println(cmd.Output())
+}
 
-	res, err := client.ContainerCreate(context.Background(), &container.Config{
-		Image:   "attestor",
-		Volumes: map[string]struct{}{"${PWD}/config.yaml:/config.yaml": {}},
-		Cmd:     []string{"/chainService", "-config", "/config.yaml"},
-	}, nil, nil, nil, "")
-	if err != nil {
-		panic(err)
-	}
-	err = client.ContainerStart(context.Background(), res.ID, container.StartOptions{})
-	if err != nil {
-		panic(err)
-	}
-	c, err := client.ContainerInspect(context.Background(), res.ID)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%+v", c)
+func StopRelayImage() {
+	composePath := "../../compose.yaml" 
+	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "down")
+	fmt.Println(cmd.Output())
 }
 
 // db service
