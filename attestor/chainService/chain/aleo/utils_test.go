@@ -10,7 +10,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
 func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
@@ -22,13 +22,13 @@ func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 	msgReceiver = "[" + strings.ReplaceAll(msgReceiver, " ", ", ") + "]"
 
 	if !malform {
-		return fmt.Sprintf("{\\n  version: %s,\\n  sequence: %s ,\\n  "+
-			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
-			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
-			"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
-			"height: %s\\n}", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
-			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
-			msgReceiver, pkt.message.amount, pkt.height,
+		return fmt.Sprintf("{ version: %s, sequence: %s, "+
+			"source: { chain_id: %s, addr: %s }, "+
+			"destination: { chain_id: %s, addr: %s }, "+
+			"message: { sender_address: %s, dest_token_address: %s , amount: %s , receiver_address: %s }, "+
+			"height: %s }", pkt.version, pkt.sequence, pkt.source.chainID, pkt.source.address,
+			pkt.destination.chainID, destAddr, pkt.message.sender, msgToken,
+			pkt.message.amount, msgReceiver, pkt.height,
 		)
 	}
 
@@ -37,7 +37,7 @@ func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 		return fmt.Sprintf("{\\n  sequence: %s ,\\n  "+
 			"source: {\\n    chain_id: %s,\\n    addr: %s\\n  },\\n  "+
 			"destination: {\\n    chain_id: %s,\\n    addr: %s},\\n  "+
-			"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %s\\n  },\\n  "+
+			"message: {\\n    dest_token_address: %s,\\n    sender_address: %s,\\n    receiver_address: %s,\\n    amount: %s\\n  },\\n  "+
 			"height: %s\\n}", pkt.sequence, pkt.source.chainID, pkt.source.address,
 			pkt.destination.chainID, destAddr, msgToken, pkt.message.sender,
 			msgReceiver, pkt.message.amount, pkt.height,
@@ -55,9 +55,9 @@ func dumpAleoPacket(pkt *aleoPacket, malform bool) string {
 }
 
 func TestConstructOutMappingKey(t *testing.T) {
-	d := big.NewInt(23)
+	d := "23"
 	seqNum := uint64(32)
-	expectedString := fmt.Sprintf("{chain_id:%du128,sequence:%du64}", d, seqNum)
+	expectedString := fmt.Sprintf("{chain_id:%su128,sequence:%du64}", d, seqNum)
 	actual := constructOutMappingKey(d, seqNum)
 	require.Equal(t, expectedString, actual)
 }
@@ -113,19 +113,19 @@ func TestParseEthAleoAddress(t *testing.T) {
 func TestParseMessage(t *testing.T) {
 	expectedPacket := &aleoPacket{
 		version:  "0u8",
-		sequence: "1u32",
+		sequence: "1u64",
 		source: aleoPacketNetworkAddress{
-			chainID: "2u32",
+			chainID: "2u128",
 			address: "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px",
 		},
 		destination: aleoPacketNetworkAddress{
-			chainID: "1u32",
+			chainID: "1u128",
 			address: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 		},
 		message: aleoMessage{
 			token:    "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 			sender:   "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			amount:   "102u64",
+			amount:   "102u128",
 			receiver: "0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 0u8 20u8 119u8 159u8 153u8 43u8 47u8 44u8 66u8 184u8 102u8 15u8 250u8 66u8 219u8 203u8 60u8 124u8 153u8 48u8 176u8",
 		},
 		height: "55u32",
@@ -238,7 +238,7 @@ func TestParseAleoPacket(t *testing.T) {
 }
 
 func TestConstructAleoPacket(t *testing.T) {
-	modelAleoPacket := "{ version: 0u8, sequence: 1u64, source: { chain_id: 1u128, addr: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ] }, destination: { chain_id: 2u128, addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px }, message: { token: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, sender: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ], receiver: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, amount: 102u64 }, height: 55u64 }"
+	modelAleoPacket := "{ version: 0u8, sequence: 1u64, source: { chain_id: 1u128, addr: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ] }, destination: { chain_id: 2u128, addr: aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px }, message: { dest_token_address: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, sender_address: [ 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 20u8, 119u8, 159u8, 153u8, 43u8, 47u8, 44u8, 66u8, 184u8, 102u8, 15u8, 250u8, 66u8, 219u8, 203u8, 60u8, 124u8, 153u8, 48u8, 176u8 ], receiver_address: aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn, amount: 102u128 }, height: 55u64 }"
 	commonPacket := &chain.Packet{
 		Version:  uint8(big.NewInt(0).Uint64()),
 		Sequence: big.NewInt(1).Uint64(),
@@ -267,10 +267,9 @@ func dumpPktToAleoPacketString(pkt chain.Packet) string {
 	return fmt.Sprintf("{\\n  version: %du8,\\n  sequence: %du64 ,\\n  "+
 		"source: {\\n    chain_id: %du128,\\n    addr: %s\\n  },\\n  "+
 		"destination: {\\n    chain_id: %du128,\\n    addr: %s},\\n  "+
-		"message: {\\n    token: %s,\\n    sender: %s,\\n    receiver: %s,\\n    amount: %su64\\n  },\\n  "+
+		"message: {\\n        sender_address: %s,\\n  dest_token_address: %s,\\n  amount: %su128,\\n  receiver_address: %s\\n     },\\n  "+
 		"height: %du64\\n}", pkt.Version, pkt.Sequence, pkt.Source.ChainID, pkt.Source.Address,
 		pkt.Destination.ChainID, constructEthAddressForAleoParameter(pkt.Destination.Address),
-		constructEthAddressForAleoParameter(pkt.Message.DestTokenAddress), pkt.Message.SenderAddress,
-		constructEthAddressForAleoParameter(pkt.Message.ReceiverAddress), pkt.Message.Amount.String(),
-		pkt.Height)
+		pkt.Message.SenderAddress, constructEthAddressForAleoParameter(pkt.Message.DestTokenAddress),
+		pkt.Message.Amount.String(), constructEthAddressForAleoParameter(pkt.Message.ReceiverAddress), pkt.Height)
 }

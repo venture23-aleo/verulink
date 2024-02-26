@@ -26,3 +26,20 @@ type AlreadyRelayedPacket struct {
 func (e AlreadyRelayedPacket) Error() string {
 	return "packet aleady sent"
 }
+
+type ErrPacketNotFound struct {
+	SeqNum      uint64
+	SourceChain string
+	DestChain   string
+	Height      uint64
+}
+
+func (e ErrPacketNotFound) Error() string {
+	return fmt.Sprintf("packet not found for sequence num %d. source: %s, destination: %s, height: %d",
+		e.SeqNum, e.SourceChain, e.DestChain, e.Height)
+}
+
+func (e ErrPacketNotFound) Is(err error) bool {
+	_, ok := err.(ErrPacketNotFound)
+	return ok
+}

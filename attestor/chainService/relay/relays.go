@@ -6,25 +6,27 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/venture23-aleo/attestor/chainService/chain"
-	common "github.com/venture23-aleo/attestor/chainService/common"
-	"github.com/venture23-aleo/attestor/chainService/config"
-	"github.com/venture23-aleo/attestor/chainService/logger"
-	addressscreener "github.com/venture23-aleo/attestor/chainService/relay/address_screener"
-	"github.com/venture23-aleo/attestor/chainService/relay/collector"
-	"github.com/venture23-aleo/attestor/chainService/relay/signer"
-	"github.com/venture23-aleo/attestor/chainService/store"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	common "github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	addressscreener "github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/address_screener"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/collector"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/signer"
 	"go.uber.org/zap"
 )
 
-const (
-	walletScreeningNameSpace = "walletScreeningNS"
-)
-
+// Each chain registers required instance into these maps in its init() function.
+// Gateway to chain specific logic.
 var (
-	RegisteredClients          = map[string]chain.ClientFunc{}
-	RegisteredHashers          = map[string]chain.HashFunc{}
-	RegisteredRetryChannels    = map[string]chan *chain.Packet{}
+	// RegisteredClients stores function that returns instace which satisfies chain.IClient interface
+	// This function panics if any error occurs while initialization
+	RegisteredClients = map[string]chain.ClientFunc{}
+	// RegisteredRetryChannels stores channels for each chain to receive and handle packets that needs to be
+	// retried.
+	RegisteredRetryChannels = map[string]chan *chain.Packet{}
+	// RegisteredCompleteChannels stores channel for each chain to receive and handle packets that has successfully
+	// been stored in db-service.
 	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 )
 
@@ -32,23 +34,40 @@ var (
 	chainIDToChain = map[string]chain.IClient{}
 )
 
+// relay collects db-service, signer and wallet-screener interface to interact with these services
+// after it pulls the packet.
+// Collecting fields makes it possible to write unit-tests by injecting custom dependency.
 type relay struct {
 	collector collector.CollectorI
 	signer    signer.SignI
 	screener  addressscreener.ScreenI
 }
 
+// StartRelay setups all the necessary environment for running the relay and starts it.
 func StartRelay(ctx context.Context, cfg *config.Config) {
-	err := store.CreateNamespaces([]string{walletScreeningNameSpace})
+	err := signer.SetupSigner(&cfg.SigningServiceConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	pktCh := make(chan *chain.Packet)
-	go func() {
-		<-ctx.Done()
-		close(pktCh)
-	}()
+	err = addressscreener.SetupScreenService()
+	if err != nil {
+		panic(err)
+	}
+
+	chainIdToAddress := make(map[string]string)
+	for _, v := range cfg.ChainConfigs {
+		chainIdToAddress[v.ChainID.String()] = v.WalletAddress
+	}
+
+	err = collector.SetupCollector(
+		cfg.CollectorServiceConfig.Uri,
+		chainIdToAddress,
+		cfg.CollectorServiceConfig.CollectorWaitDur,
+	)
+	if err != nil {
+		panic(err)
+	}
 
 	r := relay{
 		collector: collector.GetCollector(),
@@ -56,13 +75,24 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 		screener:  addressscreener.GetScreener(),
 	}
 
+	// pktCh will receive all the packets from multiple sources and processes each packet.
+	pktCh := make(chan *chain.Packet)
+	go func() {
+		<-ctx.Done()
+		close(pktCh) // todo: verify graceful killing
+	}()
+
+	// missedPktCh will receive all the missed-packet from db-source. It will then be queried in source
+	// chain for the truth and if valid then this packet will be send to pktCh
 	missedPktCh := make(chan *chain.MissedPacket)
+
 	go r.initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
 	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
-	go r.processMissedPacket(ctx, missedPktCh, pktCh)
+	go r.consumeMissedPackets(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
 }
 
+// initPacketFeeder starts the routine to fetch and manage the packets of all the registered chains
 func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
 
@@ -76,9 +106,6 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
 		}
 
-		if _, ok := RegisteredHashers[chainCfg.Name]; !ok {
-			panic(fmt.Sprintf("hash undefined for chain %s", chainCfg.Name))
-		}
 		chain := RegisteredClients[chainCfg.Name](chainCfg, m)
 		chainIDToChain[chainCfg.ChainID.String()] = chain
 		ch <- chain
@@ -100,7 +127,10 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 	}
 }
 
+// consumePackets spawns the goroutine to process the packets i.e. wallet-screen, sign and send the hash and signature
+// to the db-service.
 func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
+	// guideCh will make sure that only given number of routines can be spawned simultaneously.
 	guideCh := make(chan struct{}, config.GetConfig().ConsumePacketWorker)
 	for {
 		select {
@@ -117,12 +147,15 @@ func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) 
 			defer func() {
 				<-guideCh
 			}()
-			r.processPacket(pkt)
+			r.processPacket(ctx, pkt)
 		}()
 	}
 }
 
-func (r *relay) processPacket(pkt *chain.Packet) {
+// processPacket verifies if the addresses(receiver and sender) in the packet are flagged by querying their
+// validity in the screening services and according to the result, send the screened packets to signing
+// service to retrieve the hash and signature and finally send it to the db-service aka collector
+func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	srcChainName := chainIDToChain[pkt.Source.ChainID.String()].Name()
 	var (
 		err     error
@@ -135,6 +168,8 @@ func (r *relay) processPacket(pkt *chain.Packet) {
 		}
 		if err != nil {
 			RegisteredRetryChannels[srcChainName] <- pkt
+			// todo: check if it is valid to store clean-status of a packet,
+			// storing these statuses will save chain-analysis cost
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
@@ -144,20 +179,24 @@ func (r *relay) processPacket(pkt *chain.Packet) {
 		RegisteredCompleteChannels[srcChainName] <- pkt
 	}()
 
-	isWhite = r.screener.Screen(pkt) // todo: might need to receive error as well
+	isWhite = r.screener.Screen(pkt)
 	sp := &chain.ScreenedPacket{
 		Packet:  pkt,
 		IsWhite: isWhite,
 	}
-	destChainName := chainIDToChain[pkt.Destination.ChainID.String()].Name()
-	signature, err := r.signer.SignScreenedPacket(sp, RegisteredHashers[destChainName])
+	hash, signature, err := r.signer.HashAndSignScreenedPacket(ctx, sp)
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
 		return
 	}
 
-	err = r.collector.SendToCollector(sp, signature)
+	logger.GetLogger().Debug("packet hashed and signed",
+		zap.String("source_chain", pkt.Source.ChainID.String()),
+		zap.Uint64("seq_num", pkt.Sequence),
+		zap.String("hash", hash), zap.String("signature", signature))
+
+	err = r.collector.SendToCollector(ctx, sp, hash, signature)
 	if err != nil {
 		if errors.Is(err, common.AlreadyRelayedPacket{}) {
 			err = nil // non-nil error will put packet in retry namespace
@@ -166,10 +205,15 @@ func (r *relay) processPacket(pkt *chain.Packet) {
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		return
 	}
+
+	logger.GetLogger().Info("Yay packet successfully sent")
 }
 
-func (relay) processMissedPacket(ctx context.Context,
-	missedPktCh <-chan *chain.MissedPacket, pktCh chan<- *chain.Packet) {
+// consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
+// fetches corresponding packet from source chain and feeds it to pktCh
+func (r *relay) consumeMissedPackets(
+	ctx context.Context, missedPktCh <-chan *chain.MissedPacket,
+	pktCh chan<- *chain.Packet) { // refetchCh Channel to signal collector
 
 	for {
 		select {
@@ -186,6 +230,7 @@ func (relay) processMissedPacket(ctx context.Context,
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
 			continue
 		}
+
 		pkt.SetMissed(true)
 		pktCh <- pkt
 	}

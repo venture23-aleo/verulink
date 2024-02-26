@@ -9,6 +9,10 @@ use std::{str::FromStr, env};
 
 pub fn main() {
     let args: Vec<String> = env::args().collect();
+    if args.len()<2{
+        help();
+        return;
+    }
     match args[1].as_str() {
         "sign"=> {
             if args.len() != 4 {
@@ -22,12 +26,20 @@ pub fn main() {
         "hash"=> {
             if args.len() != 5 {
                 help();
-                panic!()
+                panic!("invalid syntax")
             }
             let hash = hash(args[2].as_str(), args[3].as_str(), args[4].as_str());
             print!("{}", hash);
         },
-        _=>panic!("invalid command"),
+        "derive-addr" => {
+            if args.len() != 3 {
+                help();
+                panic!("invalid syntax")
+            }
+            let addr = derive_address(args[2].as_str());
+            print!("{}", addr)
+        }
+        _=>help(),
     }
 }
 
@@ -37,6 +49,12 @@ pub fn sign(private_key: &str, message: &str) -> String {
     let mut rng: rand_chacha::ChaCha20Rng = ChaChaRng::from_entropy();
     let signature = account.sign(&input.to_fields().unwrap(), &mut rng).unwrap();
     signature.to_string()
+}
+
+pub fn derive_address(private_key: &str) -> String {
+    let account = PrivateKey::<Testnet3>::from_str(private_key).unwrap();
+    let address = Address::try_from(account).unwrap().to_string();
+    address
 }
 
 pub fn sign_verify(sign: &str, address: &str, message: &str) -> bool {
@@ -54,6 +72,7 @@ pub fn help() {
     println!("    options");
     println!("         - sign <privatekey> <message>");
     println!("         - hash <algorithm> <input> <hash output>");
+    println!("         - derive-addr <private-key>");
     print!("\n\n");
     println!("************************** aleoHelper **************************");
 }

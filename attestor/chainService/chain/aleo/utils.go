@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
-func constructOutMappingKey(dst *big.Int, seqNum uint64) (mappingKey string) {
-	return fmt.Sprintf("{chain_id:%du128,sequence:%du64}", dst, seqNum)
+func constructOutMappingKey(dst string, seqNum uint64) (mappingKey string) {
+	return fmt.Sprintf("{chain_id:%su128,sequence:%du64}", dst, seqNum)
 }
 
 // after splitting we get the message in the form [key1:value1,key2:value2, ...]
@@ -80,11 +80,11 @@ func parseMessage(s string) (pkt *aleoPacket, err error) {
 			sl := messages[m+1 : m+1+70]
 			for i, v := range sl {
 				switch v {
-				case "token":
+				case "dest_token_address":
 					pkt.message.token = strings.Join(sl[i+1:i+1+32], " ")
-				case "sender":
+				case "sender_address":
 					pkt.message.sender = sl[i+1]
-				case "receiver":
+				case "receiver_address":
 					pkt.message.receiver = strings.Join(sl[i+1:i+1+32], " ")
 				case "amount":
 					pkt.message.amount = sl[i+1]
@@ -114,7 +114,7 @@ func trim(msg string) string {
 	return strReplacer.Replace(msg)
 }
 
-// TODO fix this
+// parseAleoPacket converts aleoPacket to chain.Packet and returns it.
 func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 	pkt := new(chain.Packet)
 	version := new(big.Int)
@@ -165,7 +165,7 @@ func parseAleoPacket(packet *aleoPacket) (*chain.Packet, error) {
 
 	amount := new(big.Int)
 	var amountOk bool
-	pkt.Message.Amount, amountOk = amount.SetString(strings.Replace(packet.message.amount, "u64", "", 1), 0)
+	pkt.Message.Amount, amountOk = amount.SetString(strings.Replace(packet.message.amount, "u128", "", 1), 0)
 	if !amountOk {
 		return nil, errors.New("failed in parsing amount")
 	}
@@ -188,17 +188,13 @@ func constructAleoPacket(msg *chain.Packet) string {
 		"{ version: %du8, sequence: %du64, "+
 			"source: { chain_id: %du128, addr: %s }, "+
 			"destination: { chain_id: %du128, addr: %s }, "+
-			"message: { token: %s, sender: %s, receiver: %s, amount: %du64 }, "+
+			"message: { dest_token_address: %s, sender_address: %s, receiver_address: %s, amount: %du128 }, "+
 			"height: %du64 }",
 		msg.Version, msg.Sequence, msg.Source.ChainID,
 		constructEthAddressForAleoParameter(msg.Source.Address),
 		msg.Destination.ChainID, msg.Destination.Address, msg.Message.DestTokenAddress,
 		constructEthAddressForAleoParameter(msg.Message.SenderAddress),
 		msg.Message.ReceiverAddress, msg.Message.Amount, msg.Height)
-}
-
-func constructAleoScreeningPacket(packetHash, screening string) string {
-	return fmt.Sprintf("{packet_hash:%s,screening_passed:%s}", packetHash, screening)
 }
 
 // constructs ethereum address in the format of 32 len byte array string, appending "u8" in every

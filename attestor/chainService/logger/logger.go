@@ -1,9 +1,11 @@
 package logger
 
 import (
+	"io"
+	"os"
 	"sync"
 
-	"github.com/venture23-aleo/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -43,18 +45,24 @@ func initLog(mode string, cfg *config.LoggerConfig) {
 	if err != nil {
 		panic(err)
 	}
+	var mW io.Writer // multi-writer
+	if mode == config.Development {
+		mW = io.MultiWriter(lumber, os.Stdout)
+	} else {
+		mW = io.MultiWriter(lumber)
+	}
 
-	w := zapcore.AddSync(lumber)
+	w := zapcore.AddSync(mW)
 
 	var (
 		level  = zap.NewAtomicLevel()
 		zapCfg zapcore.EncoderConfig
 	)
 	if mode == config.Production {
-		level.SetLevel(zap.ErrorLevel)
+		level.SetLevel(zap.DebugLevel)
 		zapCfg = zap.NewProductionEncoderConfig()
 	} else {
-		level.SetLevel(zap.DPanicLevel)
+		level.SetLevel(zap.DebugLevel)
 		zapCfg = zap.NewDevelopmentEncoderConfig()
 	}
 

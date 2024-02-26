@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
 func setTestDB() (func(), error) {
@@ -205,38 +205,6 @@ func TestGetFirstKey(t *testing.T) {
 
 	k := GetFirstKey(namespace, "")
 	require.Empty(t, k)
-}
-
-func TestRetrieveNPackets(t *testing.T) {
-	dbRemover, err := setTestDB()
-	require.NoError(t, err)
-	t.Cleanup(dbRemover)
-
-	data := map[interface{}]interface{}{}
-	for i := 0; i < 100; i++ {
-		data[i] = i
-	}
-	namespace := "testRetrieveNPackets"
-	err = setupDB(namespace, data)
-	require.NoError(t, err)
-
-	t.Run("test_for_n_lesser_than_100", func(t *testing.T) {
-		ch := RetrieveNPackets(namespace, 10)
-		count := 0
-		for range ch {
-			count++
-		}
-		require.Equal(t, 10, count)
-	})
-
-	t.Run("test_for_n_greater_than_100", func(t *testing.T) {
-		ch := RetrieveNPackets(namespace, 1000)
-		count := 0
-		for range ch {
-			count++
-		}
-		require.Equal(t, 100, count)
-	})
 }
 
 func TestExistInGivenNamespace(t *testing.T) {

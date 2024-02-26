@@ -5,12 +5,25 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
+	ethCommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/venture23-aleo/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
-func hash(sp *chain.ScreenedPacket) string {
+// HashAndSign returns the hash of screenedPacket and the signature of the attestor on the hash of 
+// screenedPacket
+func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
+	hsh = hash(sp)
+	signature, err = sign(hsh)
+	if err != nil {
+		return "", "", err
+	}
+	return
+}
+
+// hash returns Keccak256Hash of the screenedPacket
+func hash(sp *chainService.ScreenedPacket) string {
 	versionBytes := make([]byte, 32)
 	binary.BigEndian.PutUint64(versionBytes[len(versionBytes)-8:], uint64(sp.Packet.Version))
 
@@ -35,11 +48,11 @@ func hash(sp *chain.ScreenedPacket) string {
 		srcChainIDBytes,
 		[]byte(sp.Packet.Source.Address),
 		dstChainIDBytes,
-		common.HexToAddress(sp.Packet.Destination.Address).Bytes(),
+		ethCommon.HexToAddress(sp.Packet.Destination.Address).Bytes(),
 		[]byte(sp.Packet.Message.SenderAddress),
-		common.HexToAddress(sp.Packet.Message.DestTokenAddress).Bytes(),
+		ethCommon.HexToAddress(sp.Packet.Message.DestTokenAddress).Bytes(),
 		amountBytes,
-		common.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
+		ethCommon.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
 		heightBytes,
 	)
 
