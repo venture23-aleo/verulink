@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
@@ -120,9 +119,6 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 	return nil, errors.New("error")
 }
 
-func (mckEthCl *mockBridgeClient) IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error) {
-	return false, nil
-}
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
 
