@@ -38,15 +38,15 @@ var (
 )
 
 type Client struct {
-	aleoClient          aleoRpc.IAleoRPC
-	name                string
-	programID           string
-	queryUrl            string
-	network             string
-	chainID             *big.Int
-	finalityHeight      uint64
-	waitHeight          int64
-	destChains          map[string]uint64 // keeps record of sequence number of all dest chains
+	aleoClient aleoRpc.IAleoRPC
+	name       string
+	programID  string
+	queryUrl   string
+	network    string
+	chainID    *big.Int
+	waitHeight int64
+	// map of destChain to sequence number to start from
+	destChains          map[string]uint64
 	validityWaitDur     time.Duration
 	retryPacketWaitDur  time.Duration
 	pruneBaseSeqWaitDur time.Duration
@@ -88,26 +88,27 @@ func (cl *Client) getPktWithSeq(ctx context.Context, dst string, seqNum uint64) 
 		}
 	}
 
-	pktStr, err := parseMessage(message[mappingKey])
+	aleoPkt, err := parseMessage(message[mappingKey]) // todo: format with regex and unmarshall with json parser
 	if err != nil {
 		return nil, err
 	}
-	return parseAleoPacket(pktStr)
+	return parseAleoPacket(aleoPkt)
 }
 
 func (cl *Client) Name() string {
 	return cl.name
 }
 
-func (cl *Client) GetChainID() *big.Int {
-	return cl.chainID
-}
-
+// feedPacket continuously retrieves packets as long as they are matured and sends to channel ch.
+// If it finds some immature packet then it will wait accordingly for that packet.
+// If there are no more packets then it will wait for given wait duration.
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
 	if nextSeqNum == 0 {
-		nextSeqNum = 1
+		nextSeqNum = 1 // sequence number starts from 1
 	}
 
+	// setting availableInHeight to 1 will avoid waiting from given wait duration.
+	// If there are no any packets then it will anyway be set to 0
 	availableInHeight := int64(1)
 	for {
 		select {
@@ -115,22 +116,22 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 		default:
 		}
 
-		curHeight := cl.blockHeightPriorWaitDur(ctx)
-		if curHeight == 0 {
+		curMaturedHeight := cl.blockHeightPriorWaitDur(ctx)
+		if curMaturedHeight == 0 { // 0 means that there was some error while getting current height
 			continue
 		}
 
 		switch {
 		case availableInHeight == 0:
 			time.Sleep(cl.validityWaitDur)
-		case availableInHeight > curHeight:
-			dur := time.Duration(availableInHeight-curHeight) * avgBlockGenDur
+		case availableInHeight > curMaturedHeight:
+			dur := time.Duration(availableInHeight-curMaturedHeight) * avgBlockGenDur
 			logger.GetLogger().Info("Sleeping ", zap.Duration("duration", dur))
 			time.Sleep(dur)
 		}
 
-		curHeight = cl.blockHeightPriorWaitDur(ctx)
-		if curHeight == 0 {
+		curMaturedHeight = cl.blockHeightPriorWaitDur(ctx)
+		if curMaturedHeight == 0 {
 			continue
 		}
 
@@ -150,7 +151,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 				goto postFor
 			}
 
-			if int64(pkt.Height) > curHeight {
+			if int64(pkt.Height) > curMaturedHeight {
 				availableInHeight = int64(pkt.Height)
 				break
 			}
@@ -170,19 +171,15 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.retryFeed(ctx, ch)
 
 	for chainID, nextSeqNum := range cl.destChains {
-		go func(chainId string, nxtSeqNum uint64) {
-			if nxtSeqNum == 0 {
-				ns := baseSeqNumNameSpacePrefix + chainId
-				nxtSeqNum = store.GetFirstKey[uint64](ns, uint64(1))
-			}
-			go cl.feedPacket(ctx, chainId, nxtSeqNum, ch)
-
-
-		}(chainID, nextSeqNum)
+		go cl.feedPacket(ctx, chainID, nextSeqNum, ch)
 	}
 	<-ctx.Done()
 }
 
+// blockHeightPriorWaitDur returns matured height that signifies the packets formed
+// below this height is ready to be processed.
+// If any error occurs it logs error and returns 0. Caller should assume error occurrence
+// if it receives 0.
 func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
 	h, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
@@ -192,6 +189,9 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
 	return h - cl.waitHeight
 }
 
+// pruneBaseSeqNum updates the sequence number upto which the attestor has processed all the
+// outgoing packets of the source chain. The first entry of the baseSeqNum bucket represents
+// the base sequence number
 func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) {
 	// also fill gap and put in retry feed
 	ticker := time.NewTicker(cl.pruneBaseSeqWaitDur)
@@ -226,7 +226,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		for i := startSeqNum; i < endSeqNum; i++ {
 			pkt, err := cl.getPktWithSeq(ctx, chainID, i)
 			if err != nil {
-				// log/handle error
+				logger.GetLogger().Error("error while getting packet.",
+					zap.Uint64("seq_num", i), zap.Error(err))
 				continue
 			}
 			ch <- pkt
@@ -236,6 +237,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 	}
 }
 
+// retryFeed periodically fetches the packets in the "retryPacketNamespace" and sends them
+// to channel ch. It also deletes those packets entry from the namespace.
 func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 	ticker := time.NewTicker(cl.retryPacketWaitDur) // todo: define in config
 	index := 0
@@ -269,6 +272,10 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 	}
 }
 
+// managePacket either keeps the packet received from retryCh channel in the retryPacketNameSpace
+// in the event of failure while sending packets to db-service or
+// in the baseSequenceNumberNameSpace to the packets received from completedCh channel in the event
+// of successful packet delivery to the db-service
 func (cl *Client) managePacket(ctx context.Context) {
 	for {
 		select {
@@ -314,6 +321,7 @@ func (cl *Client) GetMissedPacket(
 	return pkt, nil
 }
 
+// NewClient initializes Client and returns the interface to chain.IClient
 func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 
 	urlSlice := strings.Split(cfg.NodeUrl, "|")
@@ -383,7 +391,6 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		programID:           cfg.BridgeContract,
 		name:                name,
 		destChains:          cfg.StartSeqNum,
-		finalityHeight:      cfg.FinalityHeight,
 		waitHeight:          waitHeight,
 		validityWaitDur:     validityWaitDur,
 		retryPacketWaitDur:  retryPacketWaitDur,

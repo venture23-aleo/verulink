@@ -22,8 +22,8 @@ var (
 func init() {
 	flag.StringVar(&keyPath, "kp", "", "yaml file that contains key pair for each chain's wallet")
 	flag.StringVar(&configPath, "config", "config.yaml", "configuration for running signing service")
-	flag.StringVar(&address, "address", "127.0.0.1", "network address")
-	flag.IntVar(&port, "port", 6579, "port")
+	flag.StringVar(&address, "address", "0.0.0.0", "network address")
+	flag.IntVar(&port, "port", 8080, "port")
 }
 
 func main() {
@@ -72,5 +72,6 @@ func main() {
 	chain.SetUpChains()
 
 	registerHandlers()
+	fmt.Println("starting to serve")
 	serve()
 }

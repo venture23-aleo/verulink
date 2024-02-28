@@ -21,6 +21,11 @@ const (
 	aleoTrue            = "true"
 )
 
+// headers
+const (
+	contentType = "application/json"
+)
+
 // request body fields
 const (
 	srcChainID     = "sourceChainId"
@@ -40,8 +45,16 @@ const (
 	limitSize   = 20
 )
 
+// CollectorI represents the interface for a signature collector i.e. db-service and hence the name collectorI.
 type CollectorI interface {
+	// SendToCollector sends screened-packet hash, signature and few other meta data required by the
+	// db-service.
 	SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error
+	// ReceivePktsFromCollector regularly polls db-service if there are any packets that attestors need to
+	// resend signature. This feature in db-service will become handy especially when db-service is corrupted
+	// and new db-service is started.
+	// Note that, db-service will delete missed-packet entry from its collection only when attestor sends valid
+	// signature.
 	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
 }
 
@@ -54,6 +67,7 @@ type collector struct {
 }
 
 func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
+	// Construct parameters for the request
 	params := map[string]interface{}{
 		srcChainID:     sp.Packet.Source.ChainID.String(),
 		destChainID:    sp.Packet.Destination.ChainID.String(),
@@ -89,7 +103,7 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 		return err
 	}
 
-	req.Header.Set("content-type", "application/json")
+	req.Header.Set("content-type", contentType)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
@@ -103,6 +117,12 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
+// ReceivePktsFromCollector regularly queries db-service if there are any packets that attestor has to
+// resign. For each chain, attestor will have different wallet address. Db-service assigns missed-packets
+// to the respective wallet address, so that attestor should also request missed-packets assigned for each
+// wallet-address.
+// The wallet-address in the request parameter belongs to the source chain i.e. db-service will return packets
+// of which attestor's wallet-address is registered in source chain.
 func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
 
 	if len(c.chainIDToAddress) == 0 {
@@ -180,6 +200,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		for _, m := range missedPackets {
 			ch <- m
 		}
+		// Update index for next wallet address
 		nextAddressIndex = (nextAddressIndex + 1) % len(walletAddresses)
 	}
 }

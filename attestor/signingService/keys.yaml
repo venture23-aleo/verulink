@@ -1,7 +1,7 @@
 chain:
   ethereum:
-    public_key: 046683d3e34431d64d48ee98cf660f7f92d9f03534143bdb626d4b7af16cdf4fc150670134db2cd53e5747e275a6d03597f9310f8a496e65abf76c4af8d92b0826
     private_key: a0e60c11e94f0aec4a9a363b86fa30945eac1750914ec6f878a8c9be438efb48
+    wallet_address: 0x5dc561633f195d44a530cdf0f288a409286797ff
   aleo:
-    public_key: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7
     private_key: APrivateKey1zkp6k1FpPXoWSXN8nj7JNPeoAkbHmAJNzLZEkL6Leham6MN
+    wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7

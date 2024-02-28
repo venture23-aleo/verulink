@@ -7,6 +7,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Cred denotes the credential needed to request the signing service for hash and signatures on
+// packets
 type Cred struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
@@ -50,8 +52,8 @@ type KeyConfig struct {
 }
 
 type KeyPair struct {
-	PublicKey  string `yaml:"public_key"`
-	PrivateKey string `yaml:"private_key"`
+	PrivateKey    string `yaml:"private_key"`
+	WalletAddress string `yaml:"wallet_address"`
 }
 
 func LoadKeys(keyPath string) (map[string]*KeyPair, error) {

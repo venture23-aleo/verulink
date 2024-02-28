@@ -16,9 +16,17 @@ import (
 	"go.uber.org/zap"
 )
 
+// Each chain registers required instance into these maps in its init() function.
+// Gateway to chain specific logic.
 var (
-	RegisteredClients          = map[string]chain.ClientFunc{}
-	RegisteredRetryChannels    = map[string]chan *chain.Packet{}
+	// RegisteredClients stores function that returns instace which satisfies chain.IClient interface
+	// This function panics if any error occurs while initialization
+	RegisteredClients = map[string]chain.ClientFunc{}
+	// RegisteredRetryChannels stores channels for each chain to receive and handle packets that needs to be
+	// retried.
+	RegisteredRetryChannels = map[string]chan *chain.Packet{}
+	// RegisteredCompleteChannels stores channel for each chain to receive and handle packets that has successfully
+	// been stored in db-service.
 	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
 )
 
@@ -26,12 +34,16 @@ var (
 	chainIDToChain = map[string]chain.IClient{}
 )
 
+// relay collects db-service, signer and wallet-screener interface to interact with these services
+// after it pulls the packet.
+// Collecting fields makes it possible to write unit-tests by injecting custom dependency.
 type relay struct {
 	collector collector.CollectorI
 	signer    signer.SignI
 	screener  addressscreener.ScreenI
 }
 
+// StartRelay setups all the necessary environment for running the relay and starts it.
 func StartRelay(ctx context.Context, cfg *config.Config) {
 	err := signer.SetupSigner(&cfg.SigningServiceConfig)
 	if err != nil {
@@ -62,12 +74,16 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 		signer:    signer.GetSigner(),
 		screener:  addressscreener.GetScreener(),
 	}
+
+	// pktCh will receive all the packets from multiple sources and processes each packet.
 	pktCh := make(chan *chain.Packet)
 	go func() {
 		<-ctx.Done()
 		close(pktCh) // todo: verify graceful killing
 	}()
 
+	// missedPktCh will receive all the missed-packet from db-source. It will then be queried in source
+	// chain for the truth and if valid then this packet will be send to pktCh
 	missedPktCh := make(chan *chain.MissedPacket)
 
 	go r.initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
@@ -76,6 +92,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	r.consumePackets(ctx, pktCh)
 }
 
+// initPacketFeeder starts the routine to fetch and manage the packets of all the registered chains
 func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
 
@@ -110,7 +127,10 @@ func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, p
 	}
 }
 
+// consumePackets spawns the goroutine to process the packets i.e. wallet-screen, sign and send the hash and signature
+// to the db-service.
 func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) {
+	// guideCh will make sure that only given number of routines can be spawned simultaneously.
 	guideCh := make(chan struct{}, config.GetConfig().ConsumePacketWorker)
 	for {
 		select {
@@ -132,6 +152,9 @@ func (r *relay) consumePackets(ctx context.Context, pktCh <-chan *chain.Packet) 
 	}
 }
 
+// processPacket verifies if the addresses(receiver and sender) in the packet are flagged by querying their
+// validity in the screening services and according to the result, send the screened packets to signing
+// service to retrieve the hash and signature and finally send it to the db-service aka collector
 func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	srcChainName := chainIDToChain[pkt.Source.ChainID.String()].Name()
 	var (
@@ -145,6 +168,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		}
 		if err != nil {
 			RegisteredRetryChannels[srcChainName] <- pkt
+			// todo: check if it is valid to store clean-status of a packet,
+			// storing these statuses will save chain-analysis cost
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
@@ -154,7 +179,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		RegisteredCompleteChannels[srcChainName] <- pkt
 	}()
 
-	isWhite = r.screener.Screen(pkt) // todo: might need to receive error as well
+	isWhite = r.screener.Screen(pkt)
 	sp := &chain.ScreenedPacket{
 		Packet:  pkt,
 		IsWhite: isWhite,
@@ -184,6 +209,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	logger.GetLogger().Info("Yay packet successfully sent")
 }
 
+// consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
+// fetches corresponding packet from source chain and feeds it to pktCh
 func (r *relay) consumeMissedPackets(
 	ctx context.Context, missedPktCh <-chan *chain.MissedPacket,
 	pktCh chan<- *chain.Packet) { // refetchCh Channel to signal collector
@@ -205,6 +232,6 @@ func (r *relay) consumeMissedPackets(
 		}
 
 		pkt.SetMissed(true)
-		r.processPacket(ctx, pkt)
+		pktCh <- pkt
 	}
 }

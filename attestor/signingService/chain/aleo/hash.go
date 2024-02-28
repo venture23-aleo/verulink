@@ -20,6 +20,8 @@ const (
 	aleoFalse = "false"
 )
 
+// HashAndSign returns the bhp246-hash of the screenedPacket and schnorr signature of the attestor
+// on the hash of the screened packet
 func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
 	hsh, err = hash(sp)
 	if err != nil {
@@ -33,6 +35,7 @@ func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err er
 	return
 }
 
+// hash returns the bhp256-hash of screenedPacket by calling a rust binary
 func hash(sp *chainService.ScreenedPacket) (hash string, err error) {
 	aleoPacket := constructAleoPacket(sp.Packet)
 

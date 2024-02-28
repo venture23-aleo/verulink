@@ -12,6 +12,7 @@ import (
 
 var pKey *ecdsa.PrivateKey
 
+// sign returns the ecdsa signature of the attestors on the input hash string
 func sign(hashString string) (string, error) {
 	hash := common.HexToHash(hashString)
 	b, err := crypto.Sign(hash.Bytes(), pKey)
@@ -22,6 +23,7 @@ func sign(hashString string) (string, error) {
 	return "0x" + common.Bytes2Hex(b), nil
 }
 
+// SetUpPrivateKey accepts the private-key address pair and validates the private key to set the pKey
 func SetUpPrivateKey(keyPair *config.KeyPair) error {
 	privKey := strings.Replace(keyPair.PrivateKey, "0x", "", 1) // remove 0x
 
@@ -29,7 +31,8 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 	if err != nil {
 		return err
 	}
-	err = validateKey(privateKey, keyPair.PublicKey)
+
+	err = validateKey(privateKey, keyPair.WalletAddress)
 	if err != nil {
 		return err
 	}
@@ -38,18 +41,12 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 	return nil
 }
 
-func validateKey(privateKey *ecdsa.PrivateKey, publicAddress string) error {
-	pubKey := privateKey.Public()
-
-	pubKeyECDSA, ok := pubKey.(*ecdsa.PublicKey)
-	if !ok {
-		panic("couldnot cast to ECDSA public key")
+// validateKey validates the private key by deriving the address from it and comparing it to the provided
+// address
+func validateKey(privateKey *ecdsa.PrivateKey, addr string) error {
+	calculatedAddr := crypto.PubkeyToAddress(privateKey.PublicKey)
+	if !strings.EqualFold(calculatedAddr.Hex(), addr) {
+		return fmt.Errorf("private key cannot derive given wallet address")
 	}
-
-	address := crypto.PubkeyToAddress(*pubKeyECDSA).Hex()
-	address = strings.ToLower(address)
-	if address !=  publicAddress{
-		return fmt.Errorf("supplied private key cannot derieve the supplied address")
-	}
-	return nil 
+	return nil
 }
