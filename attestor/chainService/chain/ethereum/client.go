@@ -233,9 +233,9 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	var baseHeight uint64
 	for dest := range cl.destChainsIDMap {
 		ns := baseSeqNumNameSpacePrefix + dest
-		_, bHeight := store.GetBaseSeqNumAndHeight(ns)
-		if bHeight < baseHeight {
-			baseHeight = bHeight
+		_, startHeight := store.GetStartingSeqNumAndHeight(ns)
+		if startHeight < baseHeight {
+			baseHeight = startHeight
 		}
 	}
 

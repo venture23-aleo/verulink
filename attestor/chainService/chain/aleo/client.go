@@ -104,9 +104,10 @@ func (cl *Client) Name() string {
 // If there are no more packets then it will wait for given wait duration.
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
 	ns := baseSeqNumNameSpacePrefix + chainID
-	baseSeqNum, _ := store.GetBaseSeqNumAndHeight(ns)
-	if nextSeqNum < baseSeqNum {
-		nextSeqNum = baseSeqNum
+	startSeqNum, _ := store.GetStartingSeqNumAndHeight(ns)
+
+	if nextSeqNum < startSeqNum {
+		nextSeqNum = startSeqNum
 	}
 
 	if nextSeqNum == 0 {

@@ -109,14 +109,14 @@ func getFirstKey(bucket string) []byte {
 	return key
 }
 
-func getFirstKeyValue(bucket string) (key, value []byte) {
+func getLastKeyValue(bucket string) (key, value []byte) {
 	db.View(func(tx *bbolt.Tx) error { // nolint
 		bkt := tx.Bucket([]byte(bucket))
 		if bkt == nil {
 			return nil
 		}
 		c := bkt.Cursor()
-		k, v := c.First()
+		k, v := c.Last()
 		if k == nil {
 			return nil
 		}
