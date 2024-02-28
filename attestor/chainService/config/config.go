@@ -124,7 +124,7 @@ func InitConfig(flagArgs *FlagArgs) error {
 
 	if flagArgs.CleanStart {
 		err := os.Remove(dbFilePath)
-		if !os.IsNotExist(err) {
+		if err != nil && !os.IsNotExist(err) {
 			return err
 		}
 	}
