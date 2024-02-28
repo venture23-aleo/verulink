@@ -23,6 +23,7 @@ var (
 	logDir     string
 	logEnc     string
 	mode       string
+	cleanStart bool
 )
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 	flag.StringVar(&logDir, "log-dir", "", "file path to store logs")
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
 	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
+	flag.BoolVar(&cleanStart, "clean", false, "Remove local db and start")
 }
 
 func main() {
@@ -42,7 +44,9 @@ func main() {
 		LogDir:     logDir,
 		LogEnc:     logEnc,
 		Mode:       mode,
+		CleanStart: cleanStart,
 	}
+
 	err := config.InitConfig(flagArgs)
 	if err != nil {
 		fmt.Println("Error while loading config. ", err)

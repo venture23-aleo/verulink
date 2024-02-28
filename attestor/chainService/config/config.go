@@ -29,6 +29,7 @@ type FlagArgs struct {
 	LogDir     string
 	LogEnc     string
 	Mode       string
+	CleanStart bool
 }
 
 type ChainConfig struct {
@@ -119,6 +120,13 @@ func InitConfig(flagArgs *FlagArgs) error {
 	logFilePath, err := getPath(flagArgs.LogDir, config.LogConfig.OutputDir, logFileName)
 	if err != nil {
 		return err
+	}
+
+	if flagArgs.CleanStart {
+		err := os.Remove(dbFilePath)
+		if !os.IsNotExist(err) {
+			return err
+		}
 	}
 
 	config.DBPath = dbFilePath
