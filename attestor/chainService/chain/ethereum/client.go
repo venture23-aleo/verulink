@@ -140,8 +140,8 @@ type Client struct {
 	address ethCommon.Address
 	eth     ethClientI
 	bridge  bridgeClientI
-	// destChainsMap stores list of destination chains that this attestor shall support
-	destChainsMap map[string]bool
+	// destChainsIDMap stores list of destination chain-ids that this attestor shall support
+	destChainsIDMap map[string]bool
 	// nextBlockHeight is next start height for filter logs
 	nextBlockHeight uint64
 	chainID         *big.Int
@@ -230,10 +230,16 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 	defer ticker.Stop()
 
-	if cl.nextBlockHeight == 0 {
-		ns := baseSeqNumNameSpacePrefix + cl.chainID.String()
-		baseSeqNumber := store.GetFirstKey[uint64](ns, uint64(1))
-		baseHeight := store.GetFromDB[uint64](ns, baseSeqNumber)
+	var baseHeight uint64
+	for dest := range cl.destChainsIDMap {
+		ns := baseSeqNumNameSpacePrefix + dest
+		_, bHeight := store.GetBaseSeqNumAndHeight(ns)
+		if bHeight < baseHeight {
+			baseHeight = bHeight
+		}
+	}
+
+	if cl.nextBlockHeight < baseHeight {
 		cl.nextBlockHeight = baseHeight
 	}
 
@@ -277,7 +283,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 				}
 
 				for _, pkt := range pkts {
-					if _, ok := cl.destChainsMap[pkt.Destination.ChainID.String()]; ok {
+					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
 						ch <- pkt
 					}
 				}
@@ -446,7 +452,7 @@ func (cl *Client) GetMissedPacket(
 }
 
 // NewClient initializes Client and returns the interface to chain.IClient
-func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
+func NewClient(cfg *config.ChainConfig) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
 	bridgeClient, err := abi.NewBridge(contractAddress, ethclient.(*ethClient).eth)
@@ -506,7 +512,7 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
 		eth:                       ethclient,
 		bridge:                    bridgeClient,
-		destChainsMap:             destChainsMap,
+		destChainsIDMap:           destChainsMap,
 		waitHeight:                waitHeight,
 		chainID:                   cfg.ChainID,
 		nextBlockHeight:           cfg.StartHeight,

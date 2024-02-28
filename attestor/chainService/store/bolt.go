@@ -109,6 +109,27 @@ func getFirstKey(bucket string) []byte {
 	return key
 }
 
+func getFirstKeyValue(bucket string) (key, value []byte) {
+	db.View(func(tx *bbolt.Tx) error { // nolint
+		bkt := tx.Bucket([]byte(bucket))
+		if bkt == nil {
+			return nil
+		}
+		c := bkt.Cursor()
+		k, v := c.First()
+		if k == nil {
+			return nil
+		}
+
+		key = make([]byte, len(k))
+		copy(key, k)
+		value = make([]byte, len(v))
+		copy(value, v)
+		return nil
+	})
+	return
+}
+
 func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
 	db.View(func(tx *bbolt.Tx) error { // nolint
 		bkt := tx.Bucket([]byte(bktName))

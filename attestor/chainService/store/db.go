@@ -89,9 +89,16 @@ func RemoveKey[T keyConstraint](namespace string, key T, batch bool) error {
 	return delete(namespace, k)
 }
 
-func GetFromDB[T keyConstraint](namespace string, key T) T {
-	value := get(namespace, getKeyByteForKeyConstraint(key))
-	return convertKey(key, value)
+func GetBaseSeqNumAndHeight(namespace string) (seqNum, height uint64) {
+	seqNumB, heightB := getFirstKeyValue(namespace)
+	if seqNumB != nil {
+		seqNum = convertKey(uint64(0), seqNumB)
+	}
+	if heightB != nil {
+		height = convertKey(uint64(0), heightB)
+	}
+	return
+
 }
 
 func GetFirstKey[T keyConstraint](namespace string, keyType T) T {

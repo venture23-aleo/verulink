@@ -55,7 +55,7 @@ func TestNewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(dbRemover)
 
-		client := NewClient(cfg, map[string]*big.Int{"2": big.NewInt(2)})
+		client := NewClient(cfg)
 		assert.Equal(t, client.Name(), "aleo")
 	})
 
@@ -66,7 +66,7 @@ func TestNewClient(t *testing.T) {
 
 		wrongCfg := *cfg
 		wrongCfg.NodeUrl = "wrong node url"
-		assert.Panics(t, func() { NewClient(&wrongCfg, map[string]*big.Int{}) })
+		assert.Panics(t, func() { NewClient(&wrongCfg) })
 	})
 }
 
@@ -90,7 +90,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("case: uninitialized database", func(t *testing.T) {
-		assert.Panics(t, func() { NewClient(cfg, map[string]*big.Int{}) })
+		assert.Panics(t, func() { NewClient(cfg) })
 	})
 }
 
@@ -186,7 +186,7 @@ func TestFeedPacket(t *testing.T) {
 					return 100, nil
 				},
 			},
-			destChains:          map[string]uint64{dstChainId: uint64(1)},
+			destChainsIDMap:     map[string]uint64{dstChainId: uint64(1)},
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
 			waitHeight:          1,
@@ -198,7 +198,7 @@ func TestFeedPacket(t *testing.T) {
 
 		go client.FeedPacket(ctx, pktCh)
 
-		assert.Equal(t, client.destChains[dstChainId], uint64(1))
+		assert.Equal(t, client.destChainsIDMap[dstChainId], uint64(1))
 
 		pkt := <-pktCh
 		assert.Equal(t, pkt, expectedPacket)
@@ -244,7 +244,7 @@ func TestFeedPacket(t *testing.T) {
 					return 100, nil
 				},
 			},
-			destChains:          map[string]uint64{dstChainId: uint64(1)},
+			destChainsIDMap:     map[string]uint64{dstChainId: uint64(1)},
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
 			waitHeight:          90,
@@ -460,7 +460,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 			},
 		},
 		retryPacketWaitDur:  time.Hour,
-		destChains:          map[string]uint64{big.NewInt(1).String(): 1},
+		destChainsIDMap:     map[string]uint64{big.NewInt(1).String(): 1},
 		pruneBaseSeqWaitDur: time.Second,
 	}
 
