@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Cred denotes the credential needed to request the signing service for hash and signatures on 
+// Cred denotes the credential needed to request the signing service for hash and signatures on
 // packets
 type Cred struct {
 	Username string `yaml:"username"`

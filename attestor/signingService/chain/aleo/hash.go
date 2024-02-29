@@ -20,7 +20,7 @@ const (
 	aleoFalse = "false"
 )
 
-// HashAndSign returns the bhp246-hash of the screenedPacket and schnorr signature of the attestor 
+// HashAndSign returns the bhp246-hash of the screenedPacket and schnorr signature of the attestor
 // on the hash of the screened packet
 func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
 	hsh, err = hash(sp)

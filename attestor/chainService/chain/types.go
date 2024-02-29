@@ -10,16 +10,16 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 )
 
-type ClientFunc func(cfg *config.ChainConfig, m map[string]*big.Int) IClient
+type ClientFunc func(cfg *config.ChainConfig) IClient
 type HashFunc func(sp *ScreenedPacket) string
 
 type IClient interface {
-	// Name gives the name of the client 
+	// Name gives the name of the client
 	Name() string
 	// FeedPacket fetches the packet from the source chain and sends it to the channel `ch`
 	FeedPacket(ctx context.Context, ch chan<- *Packet)
-	// GetMissedPacket queries the db-service for information about the packet the attestor 
-	// node has to reverify and resign 
+	// GetMissedPacket queries the db-service for information about the packet the attestor
+	// node has to reverify and resign
 	GetMissedPacket(
 		ctx context.Context, missedPkt *MissedPacket) (
 		*Packet, error)
@@ -45,7 +45,7 @@ func (m Message) String() string {
 	return fmt.Sprint(m.DestTokenAddress, m.SenderAddress, m.Amount, m.ReceiverAddress)
 }
 
-// Packet denotes the common structure for all the Outgoing and Incoming packets in the bridge 
+// Packet denotes the common structure for all the Outgoing and Incoming packets in the bridge
 type Packet struct {
 	Version     uint8          `json:"version"`
 	Source      NetworkAddress `json:"source"`
@@ -74,7 +74,7 @@ func (p *Packet) GetSha256Hash() string {
 	return hex.EncodeToString(b)
 }
 
-// ScreenedPacket is a struct to denote if a packet has been flagged by the wallet screening 
+// ScreenedPacket is a struct to denote if a packet has been flagged by the wallet screening
 // service; IsWhite: true denotes the packet has been white flagged
 type ScreenedPacket struct {
 	Packet  *Packet `json:"packet"`
