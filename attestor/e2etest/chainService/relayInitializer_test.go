@@ -17,3 +17,7 @@ func TestRunRelayImage(t *testing.T) {
 func TestStopRelayImage(t *testing.T) {
 	StopRelayImage()
 }
+
+func TestBuildRelayImage(t *testing.T) {
+	BuildRelayImage()
+}

@@ -1,19 +1,13 @@
 package chainservice
 
 import (
-	"archive/tar"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"log"
 	"math/big"
 	"os"
 	"os/exec"
 	"time"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"gopkg.in/yaml.v3"
 )
 
@@ -99,71 +93,6 @@ func WriteE2EConifg() {
 	}
 }
 
-func BuildRelayImage() {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Fatal(err, " :unable to init client")
-	}
-
-	buf := new(bytes.Buffer)
-	tw := tar.NewWriter(buf)
-	defer tw.Close()
-
-	dockerFile := "Dockerfile"
-	err = os.Setenv("DOCKER_API_VERSION", "1.43")
-	if err != nil {
-		panic(err)
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	err = os.Chdir(home + "/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/")
-	if err != nil {
-		panic(err)
-	}
-	dockerFileReader, err := os.Open(dockerFile) // path to docker file
-	if err != nil {
-		log.Fatal(err, " :unable to open Dockerfile")
-	}
-	readDockerFile, err := io.ReadAll(dockerFileReader)
-	if err != nil {
-		log.Fatal(err, " :unable to read dockerfile")
-	}
-
-	tarHeader := &tar.Header{
-		Name: dockerFile,
-		Size: int64(len(readDockerFile)),
-	}
-	err = tw.WriteHeader(tarHeader)
-	if err != nil {
-		log.Fatal(err, " :unable to write tar header")
-	}
-	_, err = tw.Write(readDockerFile)
-	if err != nil {
-		log.Fatal(err, " :unable to write tar body")
-	}
-	dockerFileTarReader := bytes.NewReader(buf.Bytes())
-
-	imageBuildResponse, err := cli.ImageBuild(
-		ctx,
-		dockerFileTarReader,
-		types.ImageBuildOptions{
-			Context:    dockerFileTarReader,
-			Dockerfile: dockerFile,
-			Version:    types.BuilderVersion("1"),
-			Remove:     true})
-	if err != nil {
-		log.Fatal(err, " :unable to build docker image")
-	}
-	defer imageBuildResponse.Body.Close()
-	_, err = io.Copy(os.Stdout, imageBuildResponse.Body)
-	if err != nil {
-		log.Fatal(err, " :unable to read image build response")
-	}
-}
-
 func RunRelayImage() {
 	composePath := "../../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "up")
@@ -171,10 +100,18 @@ func RunRelayImage() {
 }
 
 func StopRelayImage() {
-	composePath := "../../compose.yaml" 
+	composePath := "../../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "down")
 	fmt.Println(cmd.Output())
 }
+
+func BuildRelayImage() {
+	composePath := "../../compose.yaml"
+	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "build")
+	fmt.Println(cmd.Output())
+}
+
+
 
 // db service
 // run image with config
