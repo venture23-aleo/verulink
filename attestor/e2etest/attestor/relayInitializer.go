@@ -93,6 +93,12 @@ func WriteE2EConifg() {
 	}
 }
 
+func BuildRelayImage() {
+	composePath := "../../compose.yaml"
+	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "build")
+	fmt.Println(cmd.Output())
+}
+
 func RunRelayImage() {
 	composePath := "../../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "up")
@@ -102,12 +108,6 @@ func RunRelayImage() {
 func StopRelayImage() {
 	composePath := "../../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "down")
-	fmt.Println(cmd.Output())
-}
-
-func BuildRelayImage() {
-	composePath := "../../compose.yaml"
-	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "build")
 	fmt.Println(cmd.Output())
 }
 

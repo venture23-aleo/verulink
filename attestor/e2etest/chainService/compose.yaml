@@ -1,7 +1,0 @@
-services:
-  attestor:
-    image: "attestor:latest"
-    volumes:
-      - ${PWD}/config.yaml:/config.yaml
-
-    entrypoint: ["/chainService", "-config", "/config.yaml"]
