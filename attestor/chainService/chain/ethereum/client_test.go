@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +52,7 @@ func TestNewClient(t *testing.T) {
 		dbRemover, err := setupDB("db")
 		assert.NoError(t, err)
 		t.Cleanup(dbRemover)
-		client := NewClient(cfg, map[string]*big.Int{})
+		client := NewClient(cfg)
 		assert.Equal(t, client.Name(), "ethereum")
 	})
 
@@ -63,7 +62,7 @@ func TestNewClient(t *testing.T) {
 		t.Cleanup(dbRemover)
 		wrongCfg := *cfg
 		wrongCfg.NodeUrl = "wrong node url"
-		assert.Panics(t, func() { NewClient(&wrongCfg, map[string]*big.Int{}) })
+		assert.Panics(t, func() { NewClient(&wrongCfg) })
 	})
 }
 
@@ -86,7 +85,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("case: uninitialized database", func(t *testing.T) {
-		assert.Panics(t, func() { NewClient(cfg, map[string]*big.Int{}) })
+		assert.Panics(t, func() { NewClient(cfg) })
 	})
 }
 
@@ -120,9 +119,6 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 	return nil, errors.New("error")
 }
 
-func (mckEthCl *mockBridgeClient) IsPacketConsumed(opts *bind.CallOpts, _sequence *big.Int) (bool, error) {
-	return false, nil
-}
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
 
@@ -160,7 +156,7 @@ func TestFeedPacket(t *testing.T) {
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
 		feedPktWaitDur:            time.Nanosecond,
-		destChainsMap:             map[string]bool{common.Big2.String(): true},
+		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -63,8 +63,8 @@ func (f *feeder) GetPacket(
 	return nil, nil
 }
 
-func getClient(f *feeder) func(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
-	return func(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
+func getClient(f *feeder) func(cfg *config.ChainConfig) chain.IClient {
+	return func(cfg *config.ChainConfig) chain.IClient {
 		return f
 	}
 }
