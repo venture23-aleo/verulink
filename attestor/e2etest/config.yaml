@@ -1,7 +1,7 @@
 ---
 chains: 
   - name: ethereum
-    token_service_contract_address: token_service_address
+    token_service_contract_address: 0xFEac0FD32367da944498b39f3D1EbD64cC88E13c
     bridge_contract_address: bridge_address
     node_url: https://eth-sepolia.g.alchemy.com/v2/demo
     wallet_path: keys/UTC--2024-01-08T06-28-38.749088231Z--3bbe4b23aafa2a8cd3b89c6aa5298d02681a99d4

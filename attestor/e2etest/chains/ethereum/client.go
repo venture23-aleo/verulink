@@ -106,19 +106,23 @@ func (c *Client) TransferEther(ctx context.Context) error {
 
 	txOpts.GasPrice = big.NewInt(defaultGasPrice)
 	// txOpts.Nonce = big.NewInt(1)
-
+	
 	value := new(big.Int)
-	value, ok := value.SetString("1000000000", 10)
+	value, ok := value.SetString("500000000000000000", 10)
 	if !ok {
 		panic(fmt.Errorf("error in initializing value"))
 	}
-
-	tx, err := c.tokenService.Transfer(txOpts, c.tokenServiceAddress, value, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
+	
+	txOpts.Value = value
+	tx, err := c.tokenService.Transfer0(txOpts, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
 	if err != nil {
 		return err
 	}
 	fmt.Println("tx hash is ", tx.Hash())
 	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	if err != nil {
+		return err
+	}
 	fmt.Println("status", receipt.Status)
 
 	return nil
