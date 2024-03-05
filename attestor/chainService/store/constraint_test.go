@@ -18,20 +18,20 @@ func TestConvertKey(t *testing.T) {
 	for _, k := range keys {
 		switch v := k.(type) {
 		case string:
-			key := convertKey("", []byte(v))
+			key := convertType("", []byte(v))
 			require.Equal(t, k, key)
 		case uint64:
 			b := make([]byte, 8)
 			binary.BigEndian.PutUint64(b, v)
-			key := convertKey(uint64(0), b)
+			key := convertType(uint64(0), b)
 			require.Equal(t, k, key)
 		case int64:
 			b := make([]byte, 8)
 			binary.BigEndian.PutUint64(b, uint64(v))
-			key := convertKey(int64(0), b)
+			key := convertType(int64(0), b)
 			require.Equal(t, k, key)
 		case []byte:
-			key := convertKey([]byte{}, v)
+			key := convertType([]byte{}, v)
 			require.Equal(t, k, key)
 		}
 	}
@@ -61,7 +61,7 @@ func TestGetKeyByteForKeyConstraint(t *testing.T) {
 			binary.BigEndian.PutUint64(expectedValue, uint64(v))
 			require.Equal(t, expectedValue, key)
 		case []byte:
-			key := convertKey([]byte{}, v)
+			key := convertType([]byte{}, v)
 			require.Equal(t, v, key)
 		}
 	}
