@@ -46,7 +46,7 @@ type Client struct {
 	chainID    *big.Int
 	waitHeight int64
 	// map of destChain to sequence number to start from
-	destChains          map[string]uint64
+	destChainsIDMap     map[string]uint64
 	validityWaitDur     time.Duration
 	retryPacketWaitDur  time.Duration
 	pruneBaseSeqWaitDur time.Duration
@@ -103,6 +103,13 @@ func (cl *Client) Name() string {
 // If it finds some immature packet then it will wait accordingly for that packet.
 // If there are no more packets then it will wait for given wait duration.
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
+	ns := baseSeqNumNameSpacePrefix + chainID
+	startSeqNum, _ := store.GetStartingSeqNumAndHeight(ns)
+
+	if nextSeqNum < startSeqNum {
+		nextSeqNum = startSeqNum
+	}
+
 	if nextSeqNum == 0 {
 		nextSeqNum = 1 // sequence number starts from 1
 	}
@@ -170,7 +177,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
-	for chainID, nextSeqNum := range cl.destChains {
+	for chainID, nextSeqNum := range cl.destChainsIDMap {
 		go cl.feedPacket(ctx, chainID, nextSeqNum, ch)
 	}
 	<-ctx.Done()
@@ -322,8 +329,7 @@ func (cl *Client) GetMissedPacket(
 }
 
 // NewClient initializes Client and returns the interface to chain.IClient
-func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
-
+func NewClient(cfg *config.ChainConfig) chain.IClient {
 	urlSlice := strings.Split(cfg.NodeUrl, "|")
 	if len(urlSlice) != 2 {
 		panic("invalid format. Expected format:  <rpc_endpoint>|<network>:: example: http://localhost:3030|testnet3")
@@ -390,7 +396,7 @@ func NewClient(cfg *config.ChainConfig, m map[string]*big.Int) chain.IClient {
 		chainID:             cfg.ChainID,
 		programID:           cfg.BridgeContract,
 		name:                name,
-		destChains:          cfg.StartSeqNum,
+		destChainsIDMap:     destChainsSeqMap,
 		waitHeight:          waitHeight,
 		validityWaitDur:     validityWaitDur,
 		retryPacketWaitDur:  retryPacketWaitDur,

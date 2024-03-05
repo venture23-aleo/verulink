@@ -11,7 +11,7 @@ import (
 	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 )
 
-// HashAndSign returns the hash of screenedPacket and the signature of the attestor on the hash of 
+// HashAndSign returns the hash of screenedPacket and the signature of the attestor on the hash of
 // screenedPacket
 func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
 	hsh = hash(sp)

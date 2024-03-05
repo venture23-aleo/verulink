@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 	common "github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
@@ -96,17 +95,12 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
 
-	m := make(map[string]*big.Int)
-	for _, chainCfg := range cfgs {
-		m[chainCfg.Name] = chainCfg.ChainID
-	}
-
 	for _, chainCfg := range cfgs {
 		if _, ok := RegisteredClients[chainCfg.Name]; !ok {
 			panic(fmt.Sprintf("module undefined for chain %s", chainCfg.Name))
 		}
 
-		chain := RegisteredClients[chainCfg.Name](chainCfg, m)
+		chain := RegisteredClients[chainCfg.Name](chainCfg)
 		chainIDToChain[chainCfg.ChainID.String()] = chain
 		ch <- chain
 	}

@@ -130,8 +130,8 @@ type Client struct {
 	address ethCommon.Address
 	eth     ethClientI
 	bridge  bridgeClientI
-	// destChainsMap stores list of destination chains that this attestor shall support
-	destChainsMap map[string]bool
+	// destChainsIDMap stores list of destination chain-ids that this attestor shall support
+	destChainsIDMap map[string]bool
 	// nextBlockHeight is next start height for filter logs
 	nextBlockHeight uint64
 	chainID         *big.Int
@@ -220,6 +220,22 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 	defer ticker.Stop()
 
+	var baseHeight uint64
+	for dest := range cl.destChainsIDMap {
+		ns := baseSeqNumNameSpacePrefix + dest
+		_, startHeight := store.GetStartingSeqNumAndHeight(ns)
+		if startHeight < baseHeight {
+			baseHeight = startHeight
+		}
+	}
+	// if start height provided from config is less than already processed packet as stated
+	// by database, then next height is taken from database.
+	// If start height should be greater than already stored in database then start height from
+	// config should be considered.
+	if cl.nextBlockHeight < baseHeight {
+		cl.nextBlockHeight = baseHeight
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -260,7 +276,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 				}
 
 				for _, pkt := range pkts {
-					if _, ok := cl.destChainsMap[pkt.Destination.ChainID.String()]; ok {
+					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
 						ch <- pkt
 					}
 				}
@@ -429,7 +445,7 @@ func (cl *Client) GetMissedPacket(
 }
 
 // NewClient initializes Client and returns the interface to chain.IClient
-func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
+func NewClient(cfg *config.ChainConfig) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
 	contractAddress := ethCommon.HexToAddress(cfg.BridgeContract)
 	bridgeClient, err := abi.NewBridge(contractAddress, ethclient.(*ethClient).eth)
@@ -489,7 +505,7 @@ func NewClient(cfg *config.ChainConfig, _ map[string]*big.Int) chain.IClient {
 		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
 		eth:                       ethclient,
 		bridge:                    bridgeClient,
-		destChainsMap:             destChainsMap,
+		destChainsIDMap:           destChainsMap,
 		waitHeight:                waitHeight,
 		chainID:                   cfg.ChainID,
 		nextBlockHeight:           cfg.StartHeight,
