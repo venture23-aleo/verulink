@@ -1,7 +1,9 @@
 package aleo
 
 import (
+	"context"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/venture23-aleo/attestor/e2etest/chains/aleo/rpc"
@@ -41,4 +43,14 @@ func NewClient(cfg *common.ChainConfig) common.IClient {
 		rpc:                 rpcClient,
 		privateKey:          string(bt),
 	}
+}
+
+func TransferEther(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, "snarkos", "-h")
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	_ = output
+	return nil
 }

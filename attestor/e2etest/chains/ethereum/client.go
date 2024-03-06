@@ -37,7 +37,9 @@ type Client struct {
 	tokenServiceAddress ethCommon.Address
 	bridge              *abi.Bridge
 	tokenService        *abi.TokenService
+	usdc                *abi.USDC
 	privateKey          *ecdsa.PrivateKey
+	walletAddress       ethCommon.Address
 }
 
 func (c *Client) CreatePacket() {
@@ -54,6 +56,7 @@ func NewClient(cfg *common.ChainConfig) common.IClient {
 
 	bridgeContractAddress := ethCommon.HexToAddress(cfg.BridgeContractAddress)
 	tokenServiceContractAddress := ethCommon.HexToAddress(cfg.TokenServiceContractAddress)
+	usdcContractAddress := ethCommon.HexToAddress(cfg.USDCContractAddress)
 
 	bridgeClient, err := abi.NewBridge(bridgeContractAddress, ethClient)
 	if err != nil {
@@ -63,6 +66,11 @@ func NewClient(cfg *common.ChainConfig) common.IClient {
 	tokenServiceClient, err := abi.NewTokenService(tokenServiceContractAddress, ethClient)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create ethereum bridge client. Error: %s", err.Error()))
+	}
+
+	usdcClient, err := abi.NewUSDC(usdcContractAddress, ethClient)
+	if err != nil {
+		panic(err)
 	}
 
 	privateKey := loadWallet(cfg.WalletPath)
@@ -76,6 +84,7 @@ func NewClient(cfg *common.ChainConfig) common.IClient {
 		url:                 cfg.NodeUrl,
 		privateKey:          privateKey,
 		ethClient:           ethClient,
+		usdc:                usdcClient,
 	}
 }
 
@@ -83,7 +92,7 @@ func (c *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return c.ethClient.SuggestGasPrice(ctx)
 }
 
-func (c *Client) TransferEther(ctx context.Context) error {
+func (c *Client) buildTransactionOpts(ctx context.Context) (*bind.TransactOpts, error) {
 	newTransactOpts := func() (*bind.TransactOpts, error) {
 		txo, err := bind.NewKeyedTransactorWithChainID(c.privateKey, big.NewInt(11155111))
 		if err != nil {
@@ -98,21 +107,28 @@ func (c *Client) TransferEther(ctx context.Context) error {
 
 	txOpts, err := newTransactOpts()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	txOpts.Context = ctx
 	txOpts.GasLimit = defaultGasLimit
 
 	txOpts.GasPrice = big.NewInt(defaultGasPrice)
-	// txOpts.Nonce = big.NewInt(1)
-	
+	return txOpts, nil
+}
+
+func (c *Client) TransferEther(ctx context.Context) error {
+	txOpts, err := c.buildTransactionOpts(ctx)
+	if err != nil {
+		return err
+	}
+
 	value := new(big.Int)
 	value, ok := value.SetString("500000000000000000", 10)
 	if !ok {
 		panic(fmt.Errorf("error in initializing value"))
 	}
-	
+
 	txOpts.Value = value
 	tx, err := c.tokenService.Transfer0(txOpts, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
 	if err != nil {
@@ -126,6 +142,76 @@ func (c *Client) TransferEther(ctx context.Context) error {
 	fmt.Println("status", receipt.Status)
 
 	return nil
+}
+
+func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value *big.Int) error {
+	txOpts, err := c.buildTransactionOpts(ctx)
+	if err != nil {
+		return err
+	}
+
+	tx, err := c.usdc.Mint(txOpts, address, value)
+	if err != nil {
+		return err
+	}
+	fmt.Println("tx hash is ", tx.Hash())
+	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	if err != nil {
+		return err
+	}
+	_ = receipt
+	return nil
+}
+
+func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
+	txOpts, err := c.buildTransactionOpts(ctx)
+	if err != nil {
+		return err
+	}
+	tx, err := c.usdc.Approve(txOpts, c.tokenServiceAddress, value)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("tx hash is ", tx.Hash())
+	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	if err != nil {
+		return err
+	}
+	_ = receipt
+	return nil
+
+}
+
+func (c *Client) TransferUSDC(ctx context.Context) error {
+	// mint
+	// approve
+	// transfer
+	txOpts, err := c.buildTransactionOpts(ctx)
+	if err != nil {
+		return err
+	}
+
+	value := new(big.Int)
+	value, ok := value.SetString("500000000000000000", 10)
+	if !ok {
+		panic(fmt.Errorf("error in initializing value"))
+	}
+
+	txOpts.Value = value
+	tx, err := c.tokenService.Transfer0(txOpts, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
+	if err != nil {
+		return err
+	}
+	fmt.Println("tx hash is ", tx.Hash())
+	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	if err != nil {
+		return err
+	}
+	fmt.Println("status", receipt.Status)
+
+	return nil
+
 }
 
 func loadWallet(path string) *ecdsa.PrivateKey {

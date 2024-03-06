@@ -16,6 +16,7 @@ type ChainConfig struct {
 	NodeUrl                     string `yaml:"node_url"`
 	BridgeContractAddress       string `yaml:"bridge_contract_address"`
 	TokenServiceContractAddress string `yaml:"token_service_contract_address"`
+	USDCContractAddress         string `yaml:"usdc_contract_address"`
 	WalletPath                  string `yaml:"wallet_path"`
 }
 
