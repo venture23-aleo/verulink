@@ -51,11 +51,6 @@ abstract contract TokenSupport is OwnableUpgradeable {
     /// @notice Emitted when the maximum value for a token is updated
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
-    // function __TokenSupport_init(uint256 _destChainId) internal onlyInitializing {
-    //     __Ownable_init_unchained();
-    //     __TokenSupport_init_unchained(_destChainId);
-    // }
-
     function __TokenSupport_init_unchained(uint256 _destChainId) internal {
         destChainId = _destChainId;
     }
@@ -96,7 +91,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
     /// @param destTokenService The destination token service on the remote chain
     /// @param min The minimum value for the token
     /// @param max The maximum value for the token
-    function _addToken(
+    function addToken(
         address tokenAddress,
         uint256 _destChainId,
         address vault,
@@ -104,7 +99,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
         string memory destTokenService,
         uint256 min,
         uint256 max
-    ) internal {
+    ) external virtual onlyOwner {
         require(tokenAddress != ZERO_ADDRESS, "TokenSupport: zero address");
         require(!isSupportedToken(tokenAddress),"TokenSupport: token already supported");
         require(_destChainId == destChainId, "TokenSupport: target chain mismatch");
@@ -119,77 +114,48 @@ abstract contract TokenSupport is OwnableUpgradeable {
         );
         supportedTokens[tokenAddress] = token;
         emit TokenAdded(token, destChainId);
-    }    
-
-    /// @notice Adds a new token to the support list, callable only by the owner
-    /// @param tokenAddress The address of the token
-    /// @param _destChainId The destination chain ID for the token
-    /// @param vault The address of the associated vault
-    /// @param destTokenAddress The destination address on the remote chain
-    /// @param destTokenService The destination token service on the remote chain
-    /// @param min The minimum value for the token
-    /// @param max The maximum value for the token
-    function addToken(
-        address tokenAddress,
-        uint256 _destChainId,
-        address vault,
-        string memory destTokenAddress,
-        string memory destTokenService,
-        uint256 min,
-        uint256 max
-    ) external virtual onlyOwner {
-        _addToken(tokenAddress, _destChainId, vault, destTokenAddress, destTokenService, min, max);
     }
 
     /// @notice Updates the vault address associated with a token, callable only by the owner
     /// @param token The address of the token
     /// @param _vault The new address of the vault
     function updateVault(address token, address _vault) external virtual onlyOwner {
-        address vault = address(supportedTokens[token].vault);
+        require(isSupportedToken(token), "TokenSupport: token not supported");
+        address vault = supportedTokens[token].vault;
         emit VaultUpdated(token, vault, _vault);
         supportedTokens[token].vault = _vault;
     }
 
     /// @notice Removes a token from the support list, callable only by the owner
     /// @param tokenAddress The address of the token
-    /// @param _destChainId The destination chain ID for the token
     function removeToken(
-        address tokenAddress,
-        uint256 _destChainId
+        address tokenAddress
     ) external virtual onlyOwner {
         require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
-        require(_destChainId == destChainId, "TokenSupport: target chain mismatch");
-        emit TokenRemoved(tokenAddress, _destChainId);
+        emit TokenRemoved(tokenAddress, destChainId);
         delete supportedTokens[tokenAddress];
     }
 
     /// @notice Enables a token for use, callable only by the owner
     /// @param tokenAddress The address of the token to enable
-    /// @param _destChainId The destination chain ID for the token
     function enable(
-        address tokenAddress,
-        uint256 _destChainId
+        address tokenAddress
     ) external virtual onlyOwner {
-        // require(tokenAddress != ZERO_ADDRESS, "Zero Address");
         require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
         require(!isEnabledToken(tokenAddress),"TokenSupport: token already enabled");
-        require(_destChainId == destChainId, "TokenSupport: target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = true;
-        emit TokenEnabled(tokenAddress, _destChainId);
+        emit TokenEnabled(tokenAddress, destChainId);
     }
 
     /// @notice Disables a token for use, callable only by the owner
     /// @param tokenAddress The address of the token to disable
-    /// @param _destChainId The destination chain ID for the token
     function disable(
-        address tokenAddress,
-        uint256 _destChainId
+        address tokenAddress
     ) external virtual onlyOwner {
         require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
         require(isEnabledToken(tokenAddress), "TokenSupport: token already disabled");
-        require(_destChainId == destChainId, "TokenSupport: target Chain Mismatch");
         supportedTokens[tokenAddress].enabled = false;
-        emit TokenDisabled(tokenAddress, _destChainId);
+        emit TokenDisabled(tokenAddress, destChainId);
     }
 
     /// @notice Updates the minimum value for a token, callable only by the owner

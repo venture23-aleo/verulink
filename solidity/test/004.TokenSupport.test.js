@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 
-const ETH_CHAINID = 1;
 const ALEO_CHAINID = 2;
 
 // Define the test suite
@@ -28,22 +27,11 @@ describe('TokenSupport', () => {
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
 
             let abi = Erc20VaultService.interface.format();
-            // initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData(["initialize"](usdcMock.address, "vaultservice", owner.address));
             initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
         }
-
-        // destChainId = ALEO_CHAINID;
-
-        // USDCMock = await ethers.getContractFactory("USDCMock");
-        // usdcMock = await USDCMock.deploy();
-        // await usdcMock.deployed();
-
-        // USDTMock = await ethers.getContractFactory("USDTMock");
-        // usdTMock = await USDTMock.deploy();
-        // await usdTMock.deployed();
 
         ERC20TokenSupport = await ethers.getContractFactory("TokenService");
         tokenSupportImpl = await ERC20TokenSupport.deploy();
@@ -62,20 +50,6 @@ describe('TokenSupport', () => {
         const contractOwner = await proxiedContract.owner();
         expect(contractOwner).to.equal(owner.address);
     });
-
-    // it('reverts if the contract is already initialized', async function () {
-    //     await expect(proxiedContract["TokenSupportMock_init(uint256)"](5)).to.be.revertedWith('Initializable: contract is already initialized');
-    // });
-
-    // it('should not initialize faulty without initializer', async () => {
-    //     const faulty1_initializeData = new ethers.utils.Interface(ERC20TokenSupport.interface.format()).encodeFunctionData("TokenSupportMock_init_faulty1", [5]);
-    //     await expect(ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, faulty1_initializeData)).to.be.revertedWith("Initializable: contract is not initializing");
-    // });
-
-    // it('should not initialize faulty without initializer', async () => {
-    //     const faulty2_initializeData = new ethers.utils.Interface(ERC20TokenSupport.interface.format()).encodeFunctionData("TokenSupportMock_init_faulty2", [5]);
-    //     await expect(ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, faulty2_initializeData)).to.be.revertedWith("Initializable: contract is not initializing");
-    // });
 
     // Test adding a token
     it('should add a token', async () => {
@@ -157,33 +131,6 @@ describe('TokenSupport', () => {
         await expect(proxiedContract.addToken(tokenAddress, wrong_dest_ChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("TokenSupport: target chain mismatch");
     });
 
-    // it('should call addToken only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     expect(tokenSupportImpl.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.reverted;
-    // });
-
-    // it('check isSupportedToken only through proxy ', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
-
-    //     // Check if the token was added
-    //     expect(tokenSupportImpl.isSupportedToken(tokenAddress)).to.be.reverted;
-    // });
-
     // Test attempting to add an existing token
     it('should revert when trying to add an existing token', async () => {
         const tokenAddress = usdcMock.address;
@@ -211,48 +158,19 @@ describe('TokenSupport', () => {
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
 
         // Remove token
-        await (await proxiedContract.removeToken(tokenAddress, ALEO_CHAINID)).wait();
+        await (await proxiedContract.removeToken(tokenAddress)).wait();
 
         // Check if the token was removed
         const isSupported = await proxiedContract.isSupportedToken(tokenAddress);
         expect(isSupported).to.be.false;
     });
 
-    it('should revert on removing a token if target chain is mismatched', async () => {
-        const tokenAddress = usdcMock.address;
-        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const min = 1;
-        const max = 100;
-
-        // Add token
-        await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-
-        // Remove token
-        await expect(proxiedContract.removeToken(tokenAddress, 3)).to.be.revertedWith("TokenSupport: target chain mismatch");
-    });
-
-    // expect(proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("Target Chain Mismatch");
-
-    // it('should call removeToken only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-    //     expect(tokenSupportImpl.removeToken(tokenAddress, destChainId)).to.be.reverted;
-    // });
-
     // Test attempting to remove a non-existing token
     it('should revert when trying to remove a non-existing token', async () => {
         const nonExistingToken = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing token
-        await expect(proxiedContract.removeToken(nonExistingToken, 1)).to.be.revertedWith('TokenSupport: token not supported');
+        await expect(proxiedContract.removeToken(nonExistingToken)).to.be.revertedWith('TokenSupport: token not supported');
     });
 
     // ...
@@ -272,23 +190,6 @@ describe('TokenSupport', () => {
         const isSupported = await proxiedContract["isSupportedToken(address)"](tokenAddress);
         expect(isSupported).to.be.true;
     });
-
-    // it('should return false for a supported token and non-matching destChainId', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-
-    //     // Check if the token is not supported for a different destChainId
-    //     const nonMatchingDestChainId = 2;
-    //     const isSupported = await proxiedContract["isSupportedToken(address)"](tokenAddress, nonMatchingDestChainId);
-    //     expect(isSupported).to.be.false;
-    // });
 
     it('should return false for a non-existing token', async () => {
         const nonExistingToken = ethers.Wallet.createRandom().address;
@@ -332,7 +233,7 @@ describe('TokenSupport', () => {
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
 
         // Owner tries to remove the token 
-        await (await proxiedContract.removeToken(tokenAddress, ALEO_CHAINID)).wait();
+        await (await proxiedContract.removeToken(tokenAddress)).wait();
     });
 
     it('should revert when non-owner tries to remove a token', async () => {
@@ -347,7 +248,7 @@ describe('TokenSupport', () => {
 
         // Try to remove token with another account and expect it to revert
         await expect(
-            proxiedContract.connect(otherAccount).removeToken(tokenAddress, ALEO_CHAINID)
+            proxiedContract.connect(otherAccount).removeToken(tokenAddress)
         ).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
@@ -356,28 +257,7 @@ describe('TokenSupport', () => {
         const tokenAddress = usdcMock.address;
 
         // Add token
-        expect(proxiedContract.connect(otherAccount).enable(tokenAddress, ALEO_CHAINID)).to.be.revertedWith("Not owner");
-        // Check if the token is enabled
-        const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
-        expect(isEnabled).to.be.false;
-    });
-
-    it('should revert on re-enabling a token if Target Chain Mismatch', async () => {
-        const tokenAddress = usdcMock.address;
-        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const min = 1;
-        const max = 100;
-
-        // Add a token
-        await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-        await (await proxiedContract.disable(tokenAddress, ALEO_CHAINID)).wait();
-
-        const wrong_dest_ChainId = 3;
-        // Enable token
-        // await proxiedContract.connect(owner).enable(tokenAddress, destChainId);
-        await expect(proxiedContract.connect(owner).enable(tokenAddress, wrong_dest_ChainId))
-            .to.be.revertedWith("TokenSupport: target Chain Mismatch");
+        expect(proxiedContract.connect(otherAccount).enable(tokenAddress)).to.be.revertedWith("Not owner");
         // Check if the token is enabled
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
         expect(isEnabled).to.be.false;
@@ -389,12 +269,9 @@ describe('TokenSupport', () => {
         // Add token
         await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, "abc.aleo", "xyz.aleo", 1, 100);
     
-        // Enable token for the specified destination chain
-        // await proxiedContract.enable(tokenAddress, destChainId);
-    
         // Try to enable the token again and expect it to revert
         await expect(
-            proxiedContract.enable(tokenAddress, ALEO_CHAINID)
+            proxiedContract.enable(tokenAddress)
         ).to.be.revertedWith("TokenSupport: token already enabled");
     });
     
@@ -402,7 +279,7 @@ describe('TokenSupport', () => {
     it('should revert when enabling an unsupported token', async () => {
         const tokenAddress = ethers.Wallet.createRandom().address;
 
-        await expect(proxiedContract.enable(tokenAddress, ALEO_CHAINID))
+        await expect(proxiedContract.enable(tokenAddress))
             .to.be.revertedWith("TokenSupport: token not supported");
     });
 
@@ -432,7 +309,7 @@ describe('TokenSupport', () => {
         // Add token
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         // Disable the token
-        await expect(proxiedContract.connect(otherAccount).disable(tokenAddress, ALEO_CHAINID))
+        await expect(proxiedContract.connect(otherAccount).disable(tokenAddress))
             .to.be.revertedWith("Ownable: caller is not the owner");
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
 
@@ -441,54 +318,10 @@ describe('TokenSupport', () => {
     });
 
     it('should revert when disabling a not supported token', async () => {
-        // const tokenAddress = usdcMock.address;
-        // const destChainId = 1;
-        // const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        // const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        // const min = 1;
-        // const max = 100;
-
-        // // Add token
-        // await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         // Disable the token
-        await expect(proxiedContract.disable(usdcMock.address, ALEO_CHAINID))
+        await expect(proxiedContract.disable(usdcMock.address))
             .to.be.revertedWith("TokenSupport: token not supported");
-        // const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
-
-        // Check if the token is not disabled
-        // expect(isEnabled).to.be.true;
     });
-
-    it('should revert on disabling a token if Target Chain Mismatch', async () => {
-        const tokenAddress = usdcMock.address;
-        const wrong_dest_ChainId = 3;
-        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const min = 1;
-        const max = 100;
-
-        // Add token
-        await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-        await expect(proxiedContract.connect(owner).disable(tokenAddress, wrong_dest_ChainId))
-            .to.be.revertedWith("TokenSupport: target Chain Mismatch");
-    });
-
-    // it('should disable an enabled token only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-
-    //     // Enable the token
-    //     await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
-    //     // Disable the token
-    //     expect(tokenSupportImpl.connect(owner).disable(tokenAddress, destChainId)).to.be.reverted;
-    // });
 
     it('should revert when owner tries to disable an unenabled token', async () => {
         const tokenAddress = usdcMock.address;
@@ -501,8 +334,8 @@ describe('TokenSupport', () => {
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
 
         // Disable the token
-        await (await proxiedContract.disable(tokenAddress, ALEO_CHAINID)).wait();
-        await expect(proxiedContract.disable(tokenAddress, ALEO_CHAINID)).to.be.revertedWith("TokenSupport: token already disabled");
+        await (await proxiedContract.disable(tokenAddress)).wait();
+        await expect(proxiedContract.disable(tokenAddress)).to.be.revertedWith("TokenSupport: token already disabled");
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
         // // Check if the token is disabled
         expect(isEnabled).to.be.false;
@@ -518,25 +351,8 @@ describe('TokenSupport', () => {
         // Add token
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         // Disable the token
-        await expect(proxiedContract.connect(otherAccount).disable(tokenAddress, ALEO_CHAINID)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedContract.connect(otherAccount).disable(tokenAddress)).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
-    // it('should revert when non-proxy contract tries to disable an enabled token', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-
-    //     // Enable the token
-    //     await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
-    //     // Disable the token
-    //     expect(tokenSupportImpl.connect(owner).disable(tokenAddress, destChainId)).to.be.reverted;
-    // });
 
     // Test TokenRemoved event
     it('should emit TokenRemoved event when removing a token', async () => {
@@ -546,7 +362,7 @@ describe('TokenSupport', () => {
         await (await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 1, 100)).wait();
 
         await expect(
-            proxiedContract.removeToken(tokenAddress, ALEO_CHAINID)
+            proxiedContract.removeToken(tokenAddress)
         ).to.emit(proxiedContract, 'TokenRemoved')
             .withArgs(tokenAddress, ALEO_CHAINID);
     });
@@ -557,8 +373,8 @@ describe('TokenSupport', () => {
 
         // Add token
         await(await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 1, 100)).wait();
-        await (await(proxiedContract.disable(tokenAddress,ALEO_CHAINID))).wait();
-        let tx = await proxiedContract.enable(tokenAddress, ALEO_CHAINID);
+        await (await(proxiedContract.disable(tokenAddress))).wait();
+        let tx = await proxiedContract.enable(tokenAddress);
         await expect(tx).to.emit(proxiedContract, 'TokenEnabled')
             .withArgs(tokenAddress, ALEO_CHAINID);
     });
@@ -571,7 +387,7 @@ describe('TokenSupport', () => {
         await(await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 1, 100)).wait();
 
         await expect(
-            proxiedContract.disable(tokenAddress, ALEO_CHAINID)
+            proxiedContract.disable(tokenAddress)
         ).to.emit(proxiedContract, 'TokenDisabled')
             .withArgs(tokenAddress, ALEO_CHAINID);
     });
@@ -623,28 +439,6 @@ describe('TokenSupport', () => {
         // Call the updateMinValue function
         await expect(proxiedContract.connect(otherAccount).updateMaxValue(tokenAddress, 200)).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
-    // it('should update max value only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const maxValue = 100;
-
-    //     await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27', 'destTokenService', 1, maxValue);
-
-    //     // Call the updateMaxValue function
-    //     expect(tokenSupportImpl.updateMaxValue(tokenAddress, destChainId, 90)).to.be.reverted;
-    // });
-
-    // it('should update min value only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const minValue = 10;
-
-    //     await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27', 'destTokenService', minValue, 100);
-    //     // console.log("val1 = ", await proxiedContract.supportedTokens(tokenAddress));
-    //     // Call the updateMinValue function
-    //     expect(tokenSupportImpl.updateMinValue(tokenAddress, destChainId, 20)).to.be.reverted;
-    // });
 
     it('should revert when updating min value for unsupported token', async () => {
         const tokenAddress = usdcMock.address;
