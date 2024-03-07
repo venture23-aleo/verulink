@@ -246,7 +246,7 @@ describe('AttestorManager', () => {
         // Check event emission
         await expect(addAttestorTx)
             .to.emit(proxiedV1, 'AttestorAdded')
-            .withArgs(newAttestor, quorumRequired);
+            .withArgs(newAttestor);
     });
 
     it('should emit AttestorRemoved event when removing an existing attestor', async () => {
@@ -261,6 +261,6 @@ describe('AttestorManager', () => {
         // Check event emission
         await expect(removeAttestorTx)
             .to.emit(proxiedV1, 'AttestorRemoved')
-            .withArgs(existingAttestor, quorumRequired);
+            .withArgs(existingAttestor);
     });
 });
