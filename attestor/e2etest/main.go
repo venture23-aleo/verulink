@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/venture23-aleo/attestor/e2etest/attestor"
 	_ "github.com/venture23-aleo/attestor/e2etest/chains/aleo"
 	_ "github.com/venture23-aleo/attestor/e2etest/chains/ethereum"
 	"github.com/venture23-aleo/attestor/e2etest/common"
@@ -26,6 +27,14 @@ func main() {
 	testSuite := testsuite.NewE2ETest()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	// start the attestor
+	attestor.BuildRelayImage()
+	attestor.RunRelayImage()
+
+	if true {
+		return
+	}
 
 	// start the relays here
 

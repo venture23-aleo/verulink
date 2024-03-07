@@ -1,4 +1,4 @@
-package chainservice
+package attestor
 
 import "testing"
 

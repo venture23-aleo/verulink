@@ -1,4 +1,4 @@
-package chainservice
+package attestor
 
 import (
 	"context"
@@ -94,19 +94,19 @@ func WriteE2EConifg() {
 }
 
 func BuildRelayImage() {
-	composePath := "../../compose.yaml"
+	composePath := "../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "build")
 	fmt.Println(cmd.Output())
 }
 
 func RunRelayImage() {
-	composePath := "../../compose.yaml"
+	composePath := "../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "up")
 	fmt.Println(cmd.Output())
 }
 
 func StopRelayImage() {
-	composePath := "../../compose.yaml"
+	composePath := "../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "down")
 	fmt.Println(cmd.Output())
 }
