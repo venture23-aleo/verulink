@@ -395,6 +395,7 @@ program council_v0003.aleo {
         // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
+            assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
 
         // Get the threshold
