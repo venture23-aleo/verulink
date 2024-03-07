@@ -18,7 +18,7 @@ func TestSendEther(t *testing.T) {
 		TokenServiceContractAddress: "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c",
 		WalletPath:                  "/home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4",
 	})
-	err := client.(*Client).TransferEther(context.Background())
+	err := client.TransferEther(context.Background())
 	assert.Nil(t, err)
 }
 
@@ -35,7 +35,7 @@ func TestMintUSDC(t *testing.T) {
 	value := new(big.Int)
 	value, ok := value.SetString("100000000000000000000", 10)
 	assert.True(t, ok)
-	err := client.(*Client).MintUSDC(context.Background(), ethCommon.HexToAddress("0x06f1153169c8909a8f3761da4e79274f712328c4"), value)
+	err := client.MintUSDC(context.Background(), ethCommon.HexToAddress("0x06f1153169c8909a8f3761da4e79274f712328c4"), value)
 	assert.NoError(t, err)
 }
 
@@ -51,7 +51,7 @@ func TestApproveUSDC(t *testing.T) {
 	value := new(big.Int)
 	value, ok := value.SetString("10000000000000000000", 10)
 	assert.True(t, ok)
-	err := client.(*Client).ApproveUSDC(context.Background(), value)
+	err := client.ApproveUSDC(context.Background(), value)
 	assert.NoError(t, err)
 }
 
@@ -69,6 +69,6 @@ func TestTransferUSDC(t *testing.T) {
 	value, ok := value.SetString("100000000000000000", 10)
 	assert.True(t, ok)
 
-	err := client.(*Client).TransferUSDC(context.Background(), value, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
+	err := client.TransferUSDC(context.Background(), value, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
 	assert.NoError(t, err)
 }

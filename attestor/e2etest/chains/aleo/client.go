@@ -23,7 +23,7 @@ func (c *Client) CreatePacket() {
 
 }
 
-func NewClient(cfg *common.ChainConfig) common.IClient {
+func NewClient(cfg *common.ChainConfig) *Client {
 	endPoint := strings.Split(cfg.NodeUrl, "|")
 	rpcClient, err := rpc.NewRPC(endPoint[0], endPoint[1])
 	if err != nil {

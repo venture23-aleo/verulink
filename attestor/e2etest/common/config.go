@@ -18,6 +18,7 @@ type ChainConfig struct {
 	TokenServiceContractAddress string `yaml:"token_service_contract_address"`
 	USDCContractAddress         string `yaml:"usdc_contract_address"`
 	WalletPath                  string `yaml:"wallet_path"`
+	WalletAddress               string `yaml:"wallet_address"`
 }
 
 type Config []*ChainConfig

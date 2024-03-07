@@ -36,6 +36,7 @@ type Client struct {
 	ethClient           *ethclient.Client
 	bridgeAddress       ethCommon.Address
 	tokenServiceAddress ethCommon.Address
+	usdcAddress         ethCommon.Address
 	bridge              *abi.Bridge
 	tokenService        *abi.TokenService
 	usdc                *abi.USDC
@@ -86,6 +87,7 @@ func NewClient(cfg *common.ChainConfig) *Client {
 		privateKey:          privateKey,
 		ethClient:           ethClient,
 		usdc:                usdcClient,
+		usdcAddress:         usdcContractAddress,
 	}
 }
 
@@ -185,16 +187,12 @@ func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
 }
 
 func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver string) error {
-	// mint
-	// approve
-	// transfer
 	txOpts, err := c.buildTransactionOpts(ctx)
 	if err != nil {
 		return err
 	}
 
-	txOpts.Value = value
-	tx, err := c.tokenService.Transfer0(txOpts, receiver)
+	tx, err := c.tokenService.Transfer(txOpts, c.usdcAddress, value, receiver)
 	if err != nil {
 		return err
 	}

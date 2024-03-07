@@ -2,12 +2,16 @@
 chains: 
   - name: ethereum
     token_service_contract_address: 0xFEac0FD32367da944498b39f3D1EbD64cC88E13c
+    usdc_contract_address: 0xD342C031453c66A6D6c2a23D6dA86c30adA08C79
     bridge_contract_address: bridge_address
-    node_url: https://eth-sepolia.g.alchemy.com/v2/demo
-    wallet_path: keys/UTC--2024-01-08T06-28-38.749088231Z--3bbe4b23aafa2a8cd3b89c6aa5298d02681a99d4
+    node_url: https://endpoints.omniatech.io/v1/eth/sepolia/public
+    wallet_path: /home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4
+    wallet_address: 0x06f1153169c8909a8f3761da4e79274f712328c4
   - name: aleo
     token_service_contract_address: al_token_service_address
+    usdc_contract_address: al_usdc_address
     bridge_contract_address: al_bridge_address
     node_url: al_node.url.com|testnet3
     wallet_path: keys/aleo.key
+    wallet_address: wallet_address
 collector_service_uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
