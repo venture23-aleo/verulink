@@ -10,6 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -46,7 +47,7 @@ func (c *Client) CreatePacket() {
 
 }
 
-func NewClient(cfg *common.ChainConfig) common.IClient {
+func NewClient(cfg *common.ChainConfig) *Client {
 	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		panic(err)
@@ -135,11 +136,11 @@ func (c *Client) TransferEther(ctx context.Context) error {
 		return err
 	}
 	fmt.Println("tx hash is ", tx.Hash())
-	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	fmt.Println("status", receipt.Status)
+	fmt.Println(receipt.Status)
 
 	return nil
 }
@@ -155,11 +156,11 @@ func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value 
 		return err
 	}
 	fmt.Println("tx hash is ", tx.Hash())
-	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	_ = receipt
+	fmt.Println(receipt.Status)
 	return nil
 }
 
@@ -174,16 +175,16 @@ func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
 	}
 
 	fmt.Println("tx hash is ", tx.Hash())
-	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	_ = receipt
+	fmt.Println(receipt.Status)
 	return nil
 
 }
 
-func (c *Client) TransferUSDC(ctx context.Context) error {
+func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver string) error {
 	// mint
 	// approve
 	// transfer
@@ -192,26 +193,30 @@ func (c *Client) TransferUSDC(ctx context.Context) error {
 		return err
 	}
 
-	value := new(big.Int)
-	value, ok := value.SetString("500000000000000000", 10)
-	if !ok {
-		panic(fmt.Errorf("error in initializing value"))
-	}
-
 	txOpts.Value = value
-	tx, err := c.tokenService.Transfer0(txOpts, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
+	tx, err := c.tokenService.Transfer0(txOpts, receiver)
 	if err != nil {
 		return err
 	}
 	fmt.Println("tx hash is ", tx.Hash())
-	receipt, err := c.ethClient.TransactionReceipt(ctx, tx.Hash())
+	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	fmt.Println("status", receipt.Status)
-
+	fmt.Println(receipt.Status)
 	return nil
+}
 
+func (c *Client) getTxReceipt(ctx context.Context, txHash ethCommon.Hash) (*types.Receipt, error) {
+	for i := 0; i < 10; i++ {
+		receipt, err := c.ethClient.TransactionReceipt(ctx, txHash)
+		if err != nil {
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		return receipt, err
+	}
+	return nil, fmt.Errorf("could not fetch the tx receipt of %s", txHash.String())
 }
 
 func loadWallet(path string) *ecdsa.PrivateKey {

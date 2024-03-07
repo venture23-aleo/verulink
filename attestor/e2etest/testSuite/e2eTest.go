@@ -1,18 +1,22 @@
 package testsuite
 
 import (
-	"fmt"
-
-	"github.com/venture23-aleo/attestor/e2etest/common"
+	"testing"
 )
 
-var (
-	RegisteredClients = map[string]common.IClient{}
-	RegisteredChains  = map[string]func(*common.ChainConfig) common.IClient{}
-)
+type E2ETest struct {
+	T *testing.T
+}
 
-func GetRegisteredChains() {
-	for k, v := range RegisteredClients {
-		fmt.Println(k, v)
+func NewE2ETest() *E2ETest {
+	return &E2ETest{
+		T: new(testing.T),
 	}
+}
+
+func (e *E2ETest) ExecuteETHFlow() {
+	// transfer some usdc
+	// wait for an appropriate amount of time to wait for the relayer to pick the message and put it in dbservice
+	// query db service if the packet has arrived
+
 }
