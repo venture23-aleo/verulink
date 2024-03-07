@@ -85,6 +85,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param token Address of the token to be locked
     /// @param amount Number of tokens to be locked
     function _lock(address user, address token, uint256 amount) internal checkZeroAddress(token){
+        require(user != address(0), "Holding: zero address user");
         require(
             supportedTokenServices[msg.sender],
             "Holding: unknown tokenService"
@@ -99,7 +100,8 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param amount Number of tokens to be locked
     function lock(address user, address token, uint256 amount) external virtual checkZeroAddress(user){
         require(token != ETH_TOKEN, "Holding: eth token address");
-        _lock(user,token,amount);
+        require(amount > 0, "Holding: zero amount");
+        _lock(user, token, amount);
     }
 
     /// @notice Locks ETH for a user
