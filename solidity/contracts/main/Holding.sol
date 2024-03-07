@@ -7,7 +7,6 @@ import {Pausable} from "../common/Pausable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-
 /// @title A contract that implements OwnableUpgradeable, ReentrancyGuardUpgradeable, Pausable, Initializable and Upgradeable Contracts for Holding token 
 contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Upgradeable {
 
@@ -132,9 +131,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     function _release(address user, address token) internal whenNotPaused nonReentrant checkZeroAddress(user) returns (uint256 amount) {
         // require(unlocked[user][token] >= amount, "Insufficient amount");
         amount = unlocked[user][token];
-        unchecked {
-            unlocked[user][token] = 0;
-        }
+        unlocked[user][token] = 0;
         emit Released(user, token, amount);
     }
 
