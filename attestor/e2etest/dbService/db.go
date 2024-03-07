@@ -10,10 +10,19 @@ import (
 	"time"
 )
 
-var collectorUri string
+type Collector struct {
+	collectorUri string
+}
 
-func NewDataBase(uri string) {
-	collectorUri = uri
+func NewDataBase(uri string) *Collector {
+	return &Collector{
+		collectorUri: uri,
+	}
+}
+
+type Packet struct {
+	Data    []PacketInfo `json:"data"`
+	Message string       `json:"message"`
 }
 
 type PacketInfo struct {
@@ -24,17 +33,21 @@ type PacketInfo struct {
 	PacketHash    string `json:"packetHash"`
 	Attestor      string `json:"attestorSigner"`
 	Signature     string `json:"signature"`
-	Screening     string `json:"offChainAnalysis"`
+	Screening     bool `json:"offChainAnalysis"`
 }
 
-func GetPacketInfo(ctx context.Context, sequence, source, dest string) (*PacketInfo, error) {
-	u, _ := url.Parse(collectorUri)
-	u.JoinPath("signature")
+func (coll *Collector) GetPacketInfo(ctx context.Context, sequence, source, dest string) (*PacketInfo, error) {
+	u, err := url.Parse(coll.collectorUri)
+	if err != nil {
+		return nil, err
+	}
+	u = u.JoinPath("/signature")
 	queryParams := url.Values{}
 	queryParams.Set("sequence", sequence)
 	queryParams.Set("sourceChainId", source)
-	queryParams.Set("destChainId", dest)
+	queryParams.Set("destinationChainId", dest)
 
+	
 	u.RawQuery = queryParams.Encode()
 
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
@@ -58,11 +71,11 @@ func GetPacketInfo(ctx context.Context, sequence, source, dest string) (*PacketI
 		return nil, err
 	}
 	defer resp.Body.Close()
-	pktInfo := new(PacketInfo)
+	pktInfo := new(Packet)
 	err = json.Unmarshal(data, pktInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	return pktInfo, err
+	return &pktInfo.Data[0], err
 }

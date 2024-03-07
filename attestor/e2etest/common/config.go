@@ -12,13 +12,15 @@ type E2EConfig struct {
 }
 
 type ChainConfig struct {
-	Name                        string `yaml:"name"`
-	NodeUrl                     string `yaml:"node_url"`
-	BridgeContractAddress       string `yaml:"bridge_contract_address"`
-	TokenServiceContractAddress string `yaml:"token_service_contract_address"`
-	USDCContractAddress         string `yaml:"usdc_contract_address"`
-	WalletPath                  string `yaml:"wallet_path"`
-	WalletAddress               string `yaml:"wallet_address"`
+	Name                        string   `yaml:"name"`
+	NodeUrl                     string   `yaml:"node_url"`
+	BridgeContractAddress       string   `yaml:"bridge_contract_address"`
+	TokenServiceContractAddress string   `yaml:"token_service_contract_address"`
+	USDCContractAddress         string   `yaml:"usdc_contract_address"`
+	WalletPath                  string   `yaml:"wallet_path"`
+	WalletAddress               string   `yaml:"wallet_address"`
+	ChainID                     string   `yaml:"chain_id"`
+	DestChains                  []string `yaml:"dest_chain_ids"`
 }
 
 type Config []*ChainConfig

@@ -11,7 +11,7 @@ chains:
         - ethereum
       wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7
       sequence_num_start:
-        ethereum: 1
+        ethereum: 12356
       start_height: 0
       filter_topic: ""
       retry_packet_wait_dur: 1m0s
@@ -19,16 +19,16 @@ chains:
     - name: ethereum
       chain_id: "28556963657430695"
       bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
-      node_url: https://endpoints.omniatech.io/v1/eth/sepolia/public
+      node_url: https://rpc.sepolia.org
       pkt_validity_wait_dur: 2s
       feed_pkt_wait_dur: 2s
-      finality_height: 1
+      finality_height: 64
       wallet_path: ""
       dest_chains:
         - aleo
       wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
       sequence_num_start: {}
-      start_height: 5434359
+      start_height: 50
       filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
       retry_packet_wait_dur: 1m0s
       prune_base_seq_num_wait_dur: 1m0s

@@ -3,7 +3,7 @@ chains:
   - name: ethereum
     token_service_contract_address: 0xFEac0FD32367da944498b39f3D1EbD64cC88E13c
     usdc_contract_address: 0xD342C031453c66A6D6c2a23D6dA86c30adA08C79
-    bridge_contract_address: bridge_address
+    bridge_contract_address: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
     node_url: https://endpoints.omniatech.io/v1/eth/sepolia/public
     wallet_path: /home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4
     wallet_address: 0x06f1153169c8909a8f3761da4e79274f712328c4

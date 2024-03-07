@@ -230,6 +230,16 @@ func loadWallet(path string) *ecdsa.PrivateKey {
 	return wallet.PrivateKey
 }
 
+func (c *Client) GetLatestSequenceNumber(ctx context.Context) (uint64, error) {
+	sequence, err := c.bridge.Sequence(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return sequence.Uint64(), nil
+}
+
 /*
 	transfer 10 eth into the token service
 	that will generate a message in the bridge contract

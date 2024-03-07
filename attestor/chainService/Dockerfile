@@ -11,7 +11,7 @@ COPY --from=chainservice /chainservice/chainservice .
 ENV DB_DIR=/db
 ENV LOG_DIR=/log
 ENV LOG_ENC=json
-ENV CLEAN_START=false
+ENV CLEAN_START=true
 # Entrypoint expects config.yaml to be present in /configs directory. User should bind mount their
 # config file into container's /configs/config.yaml
 ENTRYPOINT ./chainservice --config=/configs/config.yaml \
