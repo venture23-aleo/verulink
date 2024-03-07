@@ -14,10 +14,9 @@ ENV LOG_ENC=json
 ENV CLEAN_START=false
 # Entrypoint expects config.yaml to be present in /configs directory. User should bind mount their
 # config file into container's /configs/config.yaml
-ENTRYPOINT [ "./chainservice",\
-                            "--config=/configs/config.yaml",\
-                            "--db-dir=${DB_DIR}",\
-                            "--log-dir=${LOG_DIR}",\
-                            "--log-enc=${LOG_ENC}", \
-                            "--mode=${MODE}",\
-                            "--clean=${CLEAN_START}"]
+ENTRYPOINT ./chainservice --config=/configs/config.yaml \
+                            --db-dir=$DB_DIR \
+                            --log-dir=$LOG_DIR \
+                            --log-enc=$LOG_ENC \
+                            --mode=$MODE \
+                            --clean=$CLEAN_START

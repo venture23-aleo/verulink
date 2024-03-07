@@ -228,7 +228,10 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 			baseHeight = startHeight
 		}
 	}
-
+	// if start height provided from config is less than already processed packet as stated
+	// by database, then next height is taken from database.
+	// If start height should be greater than already stored in database then start height from
+	// config should be considered.
 	if cl.nextBlockHeight < baseHeight {
 		cl.nextBlockHeight = baseHeight
 	}
