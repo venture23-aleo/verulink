@@ -95,7 +95,7 @@ Since our architecture features a single token bridge and token service program,
 
 # Testing
 
-We conduct testing using [AleoJS](](https://github.com/venture23-zkp/aleojs/)). Tests are scripted in TypeScript and can be found in the [`test`](./test) directory. To execute the tests successfully, you'll need to have AleoJS installed, along with the snarkos node running on the default port (3030).
+We conduct testing using [DokoJS](<](https://github.com/venture23-aleo/doko-js/)>). Tests are scripted in TypeScript and can be found in the [`test`](./test) directory. To execute the tests successfully, you'll need to have DokoJS installed, along with the snarkos node running on the default port (3030).
 
 ## Setup
 
@@ -107,30 +107,34 @@ Before running the tests, ensure you have the following prerequisites in place:
 
 **3. Leo language:** Get Leo up and running with the help of the [Installation Guide](https://github.com/aleoHQ/leo).
 
-#### Installing AleoJS
+#### Installing DokoJS
+
 ##### From NPM
 
 Install Aleo.js globally using npm:
-`npm install -g @aleojs/cli@latest`
+`npm install -g @doko-js/cli@latest`
 
 ##### From Source
 
 ```bash
 # Download the source file
-git clone https://github.com/venture23-zkp/aleojs
+git clone https://github.com/venture23-aleo/doko-js
 
-cd aleojs
+cd doko-js
+
+# Install the dependencies
+pnpm install
 
 # Build the project
 npm run build
 
-# Install aleojs
+# Install dokojs
 npm run install:cli
 ```
 
 ## Running Tests
 
-1. Install the dependencies. 
+1. Install the dependencies.
 
 ```bash
 npm install
@@ -139,7 +143,7 @@ npm install
 2. Compile the programs using the following command:
 
 ```bash
-aleojs-cli-dev compile
+dokojs compile
 ```
 
 3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet)
