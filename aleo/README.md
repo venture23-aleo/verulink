@@ -142,7 +142,7 @@ cd aleo
 # Install the dependencies
 npm install
 
-# Create .env file
+# Create .env file. 4 private keys on the .env.example are the default private keys on the local devnet with aleo credits.
 cp .env.example .env
 ```
 
