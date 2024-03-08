@@ -51,11 +51,6 @@ abstract contract TokenSupport is OwnableUpgradeable {
     /// @notice Emitted when the maximum value for a token is updated
     event TokenMaxValueUpdated(address token, uint256 destChainId, uint256 oldMaxValue, uint256 newMaxValue);
 
-    // function __TokenSupport_init(uint256 _destChainId) internal onlyInitializing {
-    //     __Ownable_init_unchained();
-    //     __TokenSupport_init_unchained(_destChainId);
-    // }
-
     function __TokenSupport_init_unchained(uint256 _destChainId) internal {
         destChainId = _destChainId;
     }
@@ -170,7 +165,6 @@ abstract contract TokenSupport is OwnableUpgradeable {
         address tokenAddress,
         uint256 _destChainId
     ) external virtual onlyOwner {
-        // require(tokenAddress != ZERO_ADDRESS, "Zero Address");
         require(isSupportedToken(tokenAddress),"TokenSupport: token not supported");
         require(!isEnabledToken(tokenAddress),"TokenSupport: token already enabled");
         require(_destChainId == destChainId, "TokenSupport: target Chain Mismatch");

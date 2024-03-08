@@ -473,23 +473,6 @@ describe('TokenSupport', () => {
             .to.be.revertedWith("TokenSupport: target Chain Mismatch");
     });
 
-    // it('should disable an enabled token only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-
-    //     // Enable the token
-    //     await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
-    //     // Disable the token
-    //     expect(tokenSupportImpl.connect(owner).disable(tokenAddress, destChainId)).to.be.reverted;
-    // });
-
     it('should revert when owner tries to disable an unenabled token', async () => {
         const tokenAddress = usdcMock.address;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -520,23 +503,6 @@ describe('TokenSupport', () => {
         // Disable the token
         await expect(proxiedContract.connect(otherAccount).disable(tokenAddress, ALEO_CHAINID)).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
-    // it('should revert when non-proxy contract tries to disable an enabled token', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-    //     const min = 1;
-    //     const max = 100;
-
-    //     // Add token
-    //     await (await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
-
-    //     // Enable the token
-    //     await (await proxiedContract.enable(tokenAddress, destChainId)).wait();
-    //     // Disable the token
-    //     expect(tokenSupportImpl.connect(owner).disable(tokenAddress, destChainId)).to.be.reverted;
-    // });
 
     // Test TokenRemoved event
     it('should emit TokenRemoved event when removing a token', async () => {
@@ -623,28 +589,6 @@ describe('TokenSupport', () => {
         // Call the updateMinValue function
         await expect(proxiedContract.connect(otherAccount).updateMaxValue(tokenAddress, 200)).to.be.revertedWith("Ownable: caller is not the owner");
     });
-
-    // it('should update max value only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const maxValue = 100;
-
-    //     await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27', 'destTokenService', 1, maxValue);
-
-    //     // Call the updateMaxValue function
-    //     expect(tokenSupportImpl.updateMaxValue(tokenAddress, destChainId, 90)).to.be.reverted;
-    // });
-
-    // it('should update min value only through proxy', async () => {
-    //     const tokenAddress = usdcMock.address;
-    //     const destChainId = 1;
-    //     const minValue = 10;
-
-    //     await proxiedContract.addToken(tokenAddress, destChainId, erc20VaultServiceProxy.address, 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27', 'destTokenService', minValue, 100);
-    //     // console.log("val1 = ", await proxiedContract.supportedTokens(tokenAddress));
-    //     // Call the updateMinValue function
-    //     expect(tokenSupportImpl.updateMinValue(tokenAddress, destChainId, 20)).to.be.reverted;
-    // });
 
     it('should revert when updating min value for unsupported token', async () => {
         const tokenAddress = usdcMock.address;

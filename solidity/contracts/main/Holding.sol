@@ -130,7 +130,6 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param user Address of the user
     /// @param token Address of the token to be released
     function _release(address user, address token) internal whenNotPaused nonReentrant checkZeroAddress(user) returns (uint256 amount) {
-        // require(unlocked[user][token] >= amount, "Insufficient amount");
         amount = unlocked[user][token];
         unchecked {
             unlocked[user][token] = 0;
