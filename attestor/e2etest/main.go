@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/venture23-aleo/attestor/e2etest/attestor"
 	_ "github.com/venture23-aleo/attestor/e2etest/chains/aleo"
@@ -28,7 +27,7 @@ func main() {
 	defer cancel()
 
 	// start the attestor
-	attestor.WriteE2EConifg("/home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet3", 5434359, 1)
+	attestor.WriteE2EConifg("/home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet3", 5434359, 17)
 	attestor.RunRelayImage()
 
 	// start the relays here
@@ -38,7 +37,7 @@ func main() {
 		case ethereum:
 			testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
 		case aleo:
-			fmt.Println("aleo flow here")
+			testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
 		}
 	}
 }

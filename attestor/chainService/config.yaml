@@ -11,7 +11,7 @@ chains:
         - ethereum
       wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7
       sequence_num_start:
-        ethereum: 1
+        ethereum: 17
       start_height: 0
       filter_topic: ""
       retry_packet_wait_dur: 1m0s

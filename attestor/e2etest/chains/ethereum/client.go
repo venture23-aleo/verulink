@@ -137,12 +137,14 @@ func (c *Client) TransferEther(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("tx hash is ", tx.Hash())
+
 	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	fmt.Println(receipt.Status)
+	if receipt.Status != 1 {
+		return fmt.Errorf("error in transaction")
+	}
 
 	return nil
 }
@@ -157,12 +159,14 @@ func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value 
 	if err != nil {
 		return err
 	}
-	fmt.Println("tx hash is ", tx.Hash())
+
 	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	fmt.Println(receipt.Status)
+	if receipt.Status != 1 {
+		return fmt.Errorf("error in transaction")
+	}
 	return nil
 }
 
@@ -176,12 +180,13 @@ func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
 		return err
 	}
 
-	fmt.Println("tx hash is ", tx.Hash())
 	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	fmt.Println(receipt.Status)
+	if receipt.Status != 1 {
+		return fmt.Errorf("error in transaction")
+	}
 	return nil
 
 }
@@ -196,12 +201,14 @@ func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver stri
 	if err != nil {
 		return err
 	}
-	fmt.Println("tx hash is ", tx.Hash())
+
 	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
 	}
-	fmt.Println(receipt.Status)
+	if receipt.Status != 1 {
+		return fmt.Errorf("error in transaction")
+	}
 	return nil
 }
 

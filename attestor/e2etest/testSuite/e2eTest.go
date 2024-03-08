@@ -56,6 +56,7 @@ func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, d
 	err = ethClient.TransferUSDC(ctx, transferValue, TokenReceiverAddress)
 	assert.NoError(e.t, err)
 
+	fmt.Println("⌛ wait for relay to pick the txn in ethereum and post to db service")
 	// wait for an appropriate amount of time for the packet to be picked up by the relayer and be sent to the db service
 	averageBlockProducingTime := time.Second * 14
 	waitTime := averageBlockProducingTime * (FinalityHeight + 2) // 2 as a buffer to ensure the packet arrives in the db service
@@ -71,4 +72,23 @@ func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, d
 	assert.Equal(e.t, seqNumber+uint64(1), pktInfo.Sequence)
 
 	fmt.Println("✅ Eth flow test passed")
+}
+
+func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, dbServiceURI string) {
+	// right now only checking if the existing packets are sent to the db service
+	// sequence number to be sent is 17 for this tesign purpose
+	fmt.Println("⌛ wait for relay to pick the txn in ethereum and post to db service")
+	averageBlockProducingTime := time.Second * 14
+	waitTime := averageBlockProducingTime * (FinalityHeight + 2) // 2 as a buffer to ensure the packet arrives in the db service
+
+	time.Sleep(waitTime)
+
+	// query the db
+
+	dbService := dbservice.NewDataBase(dbServiceURI)
+
+	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(17), AleoChainID, EthChainID)
+	assert.NoError(e.t, err)
+	assert.Equal(e.t, uint64(17), pktInfo.Sequence)
+	fmt.Println("✅ ALEO flow test passed")
 }
