@@ -134,10 +134,16 @@ npm run install:cli
 
 ## Running Tests
 
-1. Install the dependencies.
+1. Install the dependencies and create env file.
 
 ```bash
+cd aleo
+
+# Install the dependencies
 npm install
+
+# Create .env file
+cp .env.example .env
 ```
 
 2. Compile the programs using the following command:
