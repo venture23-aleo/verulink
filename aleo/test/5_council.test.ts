@@ -838,9 +838,7 @@ describe.skip("Council", () => {
           new_owner: aleoUser5,
         }
         tbTransferOwnershipProposalHash = hashStruct(getTbTransferOwnershipLeo(tbTransferOwnership));
-        const tbPause: TbUnpause = {
-          id: proposalId,
-        };
+
         const [tx] = await council.propose(proposalId, tbTransferOwnershipProposalHash);
         await council.wait(tx);
 
@@ -854,7 +852,7 @@ describe.skip("Council", () => {
         const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
         expect(await council.proposal_executed(tbTransferOwnershipProposalHash, false)).toBe(false);
-        const [tx] = await council.tb_unpause(proposalId, signers);
+        const [tx] = await council.tb_transfer_ownership(proposalId, aleoUser5, signers);
         await council.wait(tx);
 
         expect(await council.proposal_executed(tbTransferOwnershipProposalHash)).toBe(true);
