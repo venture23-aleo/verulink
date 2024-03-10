@@ -36,7 +36,7 @@ program token_service_v0003.aleo {
     /// Key is address of the token program
     mapping min_transfers: address => u128;
 
-    /// Stores the minimum amount that can be transferred via Token Service
+    /// Stores the maximum amount that can be transferred via Token Service
     /// Key is address of the token program
     mapping max_transfers: address => u128;
 
