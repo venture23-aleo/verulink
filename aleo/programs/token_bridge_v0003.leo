@@ -424,7 +424,6 @@ program token_bridge_v0003.aleo {
         // };
 
         return then finalize (
-            ALEO_CHAIN_ID, 
             self.caller, 
             destination_chain_id, 
             destination_service_contract, 
@@ -436,7 +435,6 @@ program token_bridge_v0003.aleo {
     }
 
     finalize publish(
-        source_chain_id: u128, 
         source_service_program: address, 
         destination_chain_id: u128, 
         destination_service_contract: [u8; 32], 
@@ -462,7 +460,7 @@ program token_bridge_v0003.aleo {
         let bridge_sequence_no: u64 = Mapping::get_or_use(sequences, ALEO_CHAIN_ID, 1u64); 
 
         let source: AleoProgram = AleoProgram {
-            chain_id: source_chain_id,
+            chain_id: ALEO_CHAIN_ID,
             addr: source_service_program
         };
 
@@ -490,7 +488,7 @@ program token_bridge_v0003.aleo {
 
         // Update sequence
         Mapping::set(sequences, destination_chain_id, target_sequence_no + 1u64);
-        Mapping::set(sequences, source_chain_id, bridge_sequence_no + 1u64);
+        Mapping::set(sequences, ALEO_CHAIN_ID, bridge_sequence_no + 1u64);
 
         let packet_id: PacketId = PacketId {
             chain_id: destination_chain_id,
