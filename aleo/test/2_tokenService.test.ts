@@ -51,7 +51,7 @@ const createPacket = (
   );
 };
 
-describe.skip("Token Service ", () => {
+describe("Token Service ", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
 
@@ -639,8 +639,7 @@ describe.skip("Token Service ", () => {
 });
 
 describe('Transition Failing Test cases', () => {
-  const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = tokenService.getAccounts();
-  const aleoUser5 = new PrivateKey().to_address().to_string();
+  const [aleoUser4] = tokenService.getAccounts();
   describe('Token Add/Remove', () => {
     test.failing('min transfer greater than max transfer should fail', async () => {
       await tokenService.add_token_ts(

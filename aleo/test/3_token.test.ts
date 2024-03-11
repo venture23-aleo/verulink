@@ -10,7 +10,7 @@ const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
 
 const TIMEOUT = 1000_000; // 100 seconds
 
-describe.skip("Token", () => {
+describe("Token", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
     const admin = aleoUser1
 

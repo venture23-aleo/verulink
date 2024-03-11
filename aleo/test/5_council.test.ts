@@ -113,7 +113,7 @@ const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> =
 }
 
 
-describe.skip("Council", () => {
+describe("Council", () => {
   const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
   const admin = council.address();
   const initialThreshold = 3;

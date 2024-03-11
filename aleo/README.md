@@ -111,7 +111,7 @@ Before running the tests, ensure you have the following prerequisites in place:
 
 ##### From NPM
 
-Install Aleo.js globally using npm:
+Install DokoJS globally using npm:
 `npm install -g @doko-js/cli@latest`
 
 ##### From Source
@@ -152,14 +152,18 @@ cp .env.example .env
 dokojs compile
 ```
 
-3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet)
+3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet). After installing just run following on the snarkOS installed directory.
 
 ```bash
 ./devnet.sh
 ```
 
-4. Run the tests for a specific program (example: tokenBridge) using the following command:
+4. Run the tests for a specific program `(filename example: 1_tokenBridge.test.ts)` using the following command:
 
 ```bash
 npm run test --runInBand --  1_tokenBridge
 ```
+
+Test are formatted such that first describe block consists of tests that are to be run in execute mode with devnet locally running which requires transition and finalize block both to be run, and second describe block consists of tests that are to be run in evaluate mode and will only check the transition running and it doesn't require devnet to be running.
+
+So, if you want to run only execute mode test or evaluate mode test then modify the required test files with `describe.skip` for the block which you want to skip.
