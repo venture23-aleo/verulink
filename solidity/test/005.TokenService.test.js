@@ -70,7 +70,7 @@ describe('TokenService', () => {
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
             // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdTMock.address));
-            
+
             initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
             await blackListProxy.deployed();
@@ -95,7 +95,7 @@ describe('TokenService', () => {
             ethVaultServiceInstance = await EthVaultServiceImpl.deploy();
             await ethVaultServiceInstance.deployed();
             EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
-    
+
             initializeData = new ethers.utils.Interface(EthVaultServiceImpl.interface.format()).encodeFunctionData("EthVaultService_init", ["ETH Vault"]);
             const ethVaultServiceProxy = await EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, initializeData);
             await ethVaultServiceProxy.deployed();
@@ -544,7 +544,7 @@ describe('TokenService', () => {
         );
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
-        
+
         const signatures = signature1 + signature2.slice(2)
         await (await usdcMock.addBlackList(proxiedV1.address)).wait();
         await expect(proxiedV1.withdraw(inPacket, signatures))
@@ -625,7 +625,7 @@ describe('TokenService', () => {
             ['bytes32', 'uint8'],
             [packetHash, 1]
         );
-        await (await proxiedV1.disable(usdcMock.address,ALEO_CHAINID)).wait();
+        await (await proxiedV1.disable(usdcMock.address, ALEO_CHAINID)).wait();
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2)
@@ -648,7 +648,7 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
         await (await proxiedV1.pause());
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("Pausable: paused");
+        await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("Pausable: paused");
     });
 
     it('should not withdraw to holding if token transfer failed', async () => {
@@ -676,7 +676,7 @@ describe('TokenService', () => {
         await (await proxiedV1.setHolding(ethers.Wallet.createRandom().address)).wait();
 
         // replicate transfer to load some erc20 funds in the tokenservice
-        await (await nTToken.mint(proxiedV1.address,100000000)).wait();
+        await (await nTToken.mint(proxiedV1.address, 100000000)).wait();
 
         await (await nTToken.addBlackList(proxiedV1.address)).wait();
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures))
@@ -700,7 +700,7 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
         // await (await proxiedV1.pause());
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: unknown signer");
+        await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: unknown signer");
     });
 
     // it('should not withdraw if invalid signature length', async () => {
@@ -740,8 +740,8 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
         // await (await proxiedV1.pause());
-        await(await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
+        await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
+        await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });
 
     it('should convert sig v=0 to v=27', async () => {
@@ -759,15 +759,15 @@ describe('TokenService', () => {
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         let newSignature1;
         const v = signature1.slice(-2);
-        if(v == "1b") newSignature1 = signature1.slice(0,-2)+"00";
-        if(v == "1c") newSignature1 = signature1.slice(0,-2)+"01";
+        if (v == "1b") newSignature1 = signature1.slice(0, -2) + "00";
+        if (v == "1c") newSignature1 = signature1.slice(0, -2) + "01";
         const signatures = newSignature1 + signature2.slice(2)
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
 
-        await expect (proxiedV1.connect(other).withdraw(inPacket, signatures))
+        await expect(proxiedV1.connect(other).withdraw(inPacket, signatures))
             .to.emit(proxiedBridge, "Consumed")
-            .withArgs(ALEO_CHAINID, inPacket[1],packetHash, 1);
+            .withArgs(ALEO_CHAINID, inPacket[1], packetHash, 1);
     });
 
     // it('should not withdraw if allowance is failed', async () => {
@@ -833,8 +833,8 @@ describe('TokenService', () => {
         const min = 1;
         const max = 100;
         await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
-        await(await proxiedV1.pause());
-        expect (proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).to.be.reverted;
+        await (await proxiedV1.pause());
+        expect(proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).to.be.reverted;
     });
 
     it('should not transfer ETH from tokenservice to vault by non-owner', async () => {
@@ -856,7 +856,7 @@ describe('TokenService', () => {
         const max = 100;
         await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
-        await( await proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).wait();
+        await (await proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).wait();
         expect(await ethers.provider.getBalance(proxiedEthVaultService.address)).to.be.equal(50);
     });
 
@@ -866,7 +866,7 @@ describe('TokenService', () => {
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
         await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
-        await( await proxiedV1.connect(owner).transferToVault(usdcMock.address, 50)).wait();
+        await (await proxiedV1.connect(owner).transferToVault(usdcMock.address, 50)).wait();
         expect(await usdcMock.balanceOf(erc20VaultServiceProxy.address)).to.equal(50);
     });
 
@@ -895,8 +895,8 @@ describe('TokenService', () => {
     it('should not transfer USDC if contract is paused', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await(await proxiedV1.pause());
-        await expect (proxiedV1.connect(other)["transfer(address,uint256,string)"]
+        await (await proxiedV1.pause());
+        await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.reverted;
     });
 });
