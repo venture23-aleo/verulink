@@ -8,18 +8,18 @@ import { hashStruct } from "../utils/hash";
 
 const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
 
-const TIMEOUT = 1000_000; // 100 seconds
+const TIMEOUT = 1000_000; // 1000 seconds
 
 describe("Token", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
     const admin = aleoUser1
 
     describe("Setup", () => {
-
-        test("Deploy", async () => {
-            const tx = await wusdcToken.deploy();
-            await wusdcToken.wait(tx);
-        }, TIMEOUT)
+        -
+            test("Deploy", async () => {
+                const tx = await wusdcToken.deploy();
+                await wusdcToken.wait(tx);
+            }, TIMEOUT)
 
         test("Initialize", async () => {
             const [tx] = await wusdcToken.initialize_token(admin)
@@ -225,8 +225,10 @@ describe("Transition Test Cases", () => {
 
         test("Transfer Private", async () => {
             wusdcToken.connect(sender);
-            tokenRecord = { owner: sender, amount: privateAmount, _nonce: BigInt(0) }
-            const [remainingRecord, transferredRecord, tx] = await wusdcToken.transfer_private(tokenRecord, receiver, privateAmount);
+
+            const [record, txPrivate] = await wusdcToken.transfer_public_to_private(aleoUser1, privateAmount);
+            wusdcToken.connect(aleoUser1);
+            const [remainingRecord, transferredRecord, tx] = await wusdcToken.transfer_private(gettoken(record as tokenLeo), receiver, privateAmount);
             // @ts-ignore
             expect(remainingRecord.amount).toBe("0u128.private");
             // @ts-ignore
@@ -235,8 +237,8 @@ describe("Transition Test Cases", () => {
 
 
         test("Transfer Private to Public", async () => {
-            wusdcToken.connect(sender);
-            tokenRecord = { owner: sender, amount: privateAmount, _nonce: BigInt(0) }
+            wusdcToken.connect(aleoUser1);
+            tokenRecord = { owner: aleoUser1, amount: privateAmount, _nonce: BigInt(0) }
             const [remainingRecord, tx] = await wusdcToken.transfer_private_to_public(tokenRecord, receiver, privateAmount);
             // @ts-ignore
             expect(remainingRecord.amount).toBe("0u128.private");
@@ -244,7 +246,8 @@ describe("Transition Test Cases", () => {
 
 
         test("Transfer Public to Private", async () => {
-            wusdcToken.connect(sender);
+            wusdcToken.connect(aleoUser1);
+            tokenRecord = { owner: aleoUser1, amount: privateAmount, _nonce: BigInt(0) }
             const [record, tx] = await wusdcToken.transfer_public_to_private(receiver, privateAmount);
             // @ts-ignore
             expect(record.amount).toBe("100u128.private");
