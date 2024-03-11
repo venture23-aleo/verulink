@@ -62,8 +62,8 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param addr The address to check.
     /// @dev Reverts with "Holding: zero address" if the provided address is the zero address.
     modifier checkZeroAddress(address addr) {
-    require(addr != ZERO_ADDRESS, "Holding: zero address");
-    _;
+        require(addr != ZERO_ADDRESS, "Holding: zero address");
+        _;
     }
 
     /// @dev Adds a new token service, callable only by the owner
@@ -84,8 +84,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @param user Address of the user
     /// @param token Address of the token to be locked
     /// @param amount Number of tokens to be locked
-    function _lock(address user, address token, uint256 amount) internal checkZeroAddress(token){
-        require(user != address(0), "Holding: zero address user");
+    function _lock(address user, address token, uint256 amount) internal checkZeroAddress(token) checkZeroAddress(user){
         require(
             supportedTokenServices[msg.sender],
             "Holding: unknown tokenService"
