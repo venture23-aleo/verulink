@@ -103,7 +103,7 @@ Before running the tests, ensure you have the following prerequisites in place:
 
 **1. Rust:** Refer to the [Installation Guide](https://www.rust-lang.org/tools/install) for assistance with Rust installation.
 
-**2. SnarkOS:** Follow the instructions provided in the [Installation Guide](https://github.com/AleoHQ/snarkos?tab=readme-ov-file#22-installation). If you encounter build issues, consider trying the fix provided [here](https://github.com/eqlabs/snarkOS/tree/fix/compile).
+**2. SnarkOS:** Clone the testnet3 branch of snarkOS and follow the instructions provided in the [Installation Guide](https://github.com/AleoHQ/snarkos?tab=readme-ov-file#22-installation). If you encounter build issues, consider trying the fix provided [here](https://github.com/eqlabs/snarkOS/tree/fix/compile).
 
 **3. Leo language:** Get Leo up and running with the help of the [Installation Guide](https://github.com/aleoHQ/leo).
 
@@ -152,7 +152,7 @@ cp .env.example .env
 dokojs compile
 ```
 
-3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet). After installing just run following on the snarkOS installed directory.
+3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet). After installing just run following on the snarkOS installed directory. With 4 validators, 0 clients.
 
 ```bash
 ./devnet.sh
@@ -164,6 +164,6 @@ dokojs compile
 npm run test --runInBand --  1_tokenBridge
 ```
 
-Test are formatted such that first describe block consists of tests that are to be run in execute mode with devnet locally running which requires transition and finalize block both to be run, and second describe block consists of tests that are to be run in evaluate mode and will only check the transition running and it doesn't require devnet to be running.
+Test are formatted such that first describe block consists of tests that are to be run in execute mode with devnet locally running which requires transition and finalize block both to be run, and second describe block consists of tests that are to be run in evaluate mode and will only check the transition function logic running and it doesn't require devnet to be running.
 
 So, if you want to run only execute mode test or evaluate mode test then modify the required test files with `describe.skip` for the block which you want to skip.
