@@ -101,13 +101,19 @@ We conduct testing using [DokoJS](<](https://github.com/venture23-aleo/doko-js/)
 
 Before running the tests, ensure you have the following prerequisites in place:
 
-**1. Rust:** Refer to the [Installation Guide](https://www.rust-lang.org/tools/install) for assistance with Rust installation.
+**1. Rust:** Refer to the [Installation Guide](https://www.rust-lang.org/tools/install) for assistance with Rust installation. `Used v1.76.0`
 
-**2. SnarkOS:** Clone the testnet3 branch of snarkOS and follow the instructions provided in the [Installation Guide](https://github.com/AleoHQ/snarkos?tab=readme-ov-file#22-installation). If you encounter build issues, consider trying the fix provided [here](https://github.com/eqlabs/snarkOS/tree/fix/compile).
+**2. SnarkOS:** Clone the testnet3 branch of snarkOS. Use following clone script instead of default clone script provided in snarkos readme.
+
+```bash
+git clone --branch testnet3 https://github.com/AleoHQ/snarkOS.git --depth 1
+```
+
+Follow the instructions afterwards cloning provided in the [Installation Guide](https://github.com/AleoHQ/snarkos?tab=readme-ov-file#22-installation). If you encounter build issues, consider trying the fix provided [here](https://github.com/eqlabs/snarkOS/tree/fix/compile). `Used v2.2.7`
 
 **3. Leo language:** Get Leo up and running with the help of the [Installation Guide](https://github.com/aleoHQ/leo).
 
-#### Installing DokoJS
+**4. DokoJS:** Installing DokoJS. You can install DokoJS using npm or from source. `Used v0.0.2`
 
 ##### From NPM
 
@@ -118,7 +124,7 @@ Install DokoJS globally using npm:
 
 ```bash
 # Download the source file
-git clone https://github.com/venture23-aleo/doko-js
+git clone https://github.com/venture23-aleo/doko-js.git
 
 cd doko-js
 
@@ -134,7 +140,18 @@ npm run install:cli
 
 ## Running Tests
 
-1. Install the dependencies and create env file.
+1. Clone the repository.
+
+```bash
+git clone https://github.com/venture23-aleo/aleo-bridge.git
+
+cd aleo-bridge
+
+# Change branch to update/readme-update-dokojs, after PR is merged git checkout develop
+git checkout update/readme-update-dokojs
+```
+
+2. Install the dependencies and create env file.
 
 ```bash
 cd aleo
@@ -146,19 +163,20 @@ npm install
 cp .env.example .env
 ```
 
-2. Compile the programs using the following command:
+3. Compile the programs using the following command:
 
 ```bash
 dokojs compile
 ```
 
-3. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet). After installing just run following on the snarkOS installed directory. With 4 validators, 0 clients.
+3. Just run following on the snarkOS directory where you cloned and build snarkOS. Start the snarkos devnet. More instructions about running devnet can be found [here](https://github.com/aleoHQ/snarkos?tab=readme-ov-file#63-local-devnet).
 
 ```bash
+# Settings: 4 validators, clients 0
 ./devnet.sh
 ```
 
-4. Run the tests for a specific program `(filename example: 1_tokenBridge.test.ts)` using the following command:
+5. Run the tests for a specific program `(filename example: 1_tokenBridge.test.ts)` using the following command:
 
 ```bash
 npm run test --runInBand --  1_tokenBridge
