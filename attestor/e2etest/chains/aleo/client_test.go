@@ -8,6 +8,6 @@ import (
 )
 
 func TestTransferEther(t *testing.T) {
-	err := TransferEther(context.Background())
+	err := TransferUSDC(context.Background())
 	assert.NoError(t, err)
 }

@@ -27,8 +27,8 @@ func main() {
 	defer cancel()
 
 	// start the attestor
-	attestor.WriteE2EConifg("/home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet3", 5434359, 17)
-	attestor.RunRelayImage()
+	attestor.WriteE2EConifg("/home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet3", 5475443, 17)
+	attestor.RunRelayImage("../compose.yaml")
 
 	// start the relays here
 

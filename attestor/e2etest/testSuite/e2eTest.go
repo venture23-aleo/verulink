@@ -10,6 +10,7 @@ import (
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/venture23-aleo/attestor/e2etest/attestor"
 	"github.com/venture23-aleo/attestor/e2etest/chains/ethereum"
 	"github.com/venture23-aleo/attestor/e2etest/common"
 	dbservice "github.com/venture23-aleo/attestor/e2etest/dbService"
@@ -80,6 +81,8 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 	fmt.Println("⌛ wait for relay to pick the txn in ethereum and post to db service")
 	averageBlockProducingTime := time.Second * 14
 	waitTime := averageBlockProducingTime * (FinalityHeight + 2) // 2 as a buffer to ensure the packet arrives in the db service
+	// err := aleo.TransferUSDC(ctx)
+	// assert.NoError(e.t, err)
 
 	time.Sleep(waitTime)
 
@@ -87,8 +90,12 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 
 	dbService := dbservice.NewDataBase(dbServiceURI)
 
-	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(17), AleoChainID, EthChainID)
+	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(17), AleoChainID, EthChainID) // check according to the next seq number
 	assert.NoError(e.t, err)
 	assert.Equal(e.t, uint64(17), pktInfo.Sequence)
 	fmt.Println("✅ ALEO flow test passed")
+}
+
+func (e *E2ETest) TestBringRelayDown(ctx context.Context) {
+	attestor.StopRelayImage("../../compose.yaml")
 }

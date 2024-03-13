@@ -35,7 +35,7 @@ func TestMintUSDC(t *testing.T) {
 	value := new(big.Int)
 	value, ok := value.SetString("100000000000000000000", 10)
 	assert.True(t, ok)
-	err := client.MintUSDC(context.Background(), ethCommon.HexToAddress("0x06f1153169c8909a8f3761da4e79274f712328c4"), value)
+	err := client.MintUSDC(context.Background(), ethCommon.HexToAddress("0x218600eC01a8Fd9Bf9DEc0C91ac2ec480331Bc9B"), value)
 	assert.NoError(t, err)
 }
 

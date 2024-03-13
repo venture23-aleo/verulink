@@ -24,7 +24,7 @@ services:
       LOG_PATH: *l
       LOG_ENC: json
       MODE: dev
-      CLEAN_START: true
+      CLEAN_START: false
   signingservice:
     build:
       context: .

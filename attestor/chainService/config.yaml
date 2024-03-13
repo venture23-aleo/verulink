@@ -28,7 +28,7 @@ chains:
         - aleo
       wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
       sequence_num_start: {}
-      start_height: 5434359
+      start_height: 5475443
       filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
       retry_packet_wait_dur: 1m0s
       prune_base_seq_num_wait_dur: 1m0s

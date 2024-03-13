@@ -45,8 +45,12 @@ func NewClient(cfg *common.ChainConfig) *Client {
 	}
 }
 
-func TransferEther(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, "snarkos", "-h")
+func TransferUSDC(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, "snarkos", "developer", "execute", "wusdc_connector_v0003.aleo", "wusdc_send",
+		"[0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,22u8,196u8,62u8,31u8,147u8,239u8,217u8,175u8,205u8,17u8,252u8,181u8,163u8,153u8,0u8,0u8,221u8,17u8,86u8,96u8]",
+		"1u128", "--private-key", "APrivateKey1zkpAypsxK9kpYJ8QetRAC3sXRZTSoJXYZCEBzywnHNTmmy5", "--query", "https://node.puzzle.online", "--broadcast",
+		"https://node.puzzle.online/testnet3/transaction/broadcast", "--priority-fee", "100",
+	)
 	output, err := cmd.Output()
 	if err != nil {
 		return err

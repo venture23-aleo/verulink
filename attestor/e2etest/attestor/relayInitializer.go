@@ -39,7 +39,7 @@ type SigningServiceConfig struct {
 }
 
 type CollecterServiceConfig struct {
-	Uri              string        `yaml:"uri"`
+	Uri string `yaml:"uri"`
 }
 
 type Config struct {
@@ -58,7 +58,7 @@ type LoggerConfig struct {
 	OutputPath string `yaml:"output_dir"`
 }
 
-func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64,) {
+func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64) {
 	relayConfig := &Config{
 		ChainConfigs: []*ChainConfig{
 			{
@@ -100,10 +100,10 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 		ConsumePacketWorker: 50,
 		Mode:                "dev",
 		SigningServiceConfig: SigningServiceConfig{
-			Host: "signingservice",
-			Port: 8080,
+			Host:     "signingservice",
+			Port:     8080,
 			Endpoint: "/sign",
-			Scheme: "http",
+			Scheme:   "http",
 			Username: "username",
 			Password: "password",
 		},
@@ -137,20 +137,18 @@ func BuildRelayImage() {
 	fmt.Println("🏠 image built. now starting chain service and signing service")
 }
 
-func RunRelayImage() {
-	composePath := "../compose.yaml"
-	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "up", "-d")
+func RunRelayImage(relativePath string) {
+	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", relativePath, "up", "-d")
 	_, err := cmd.Output()
 	if err != nil {
 		fmt.Println("🔴 could not start chain and signing service")
-		panic(err) 
+		panic(err)
 	}
 	fmt.Println("🟢 relay started")
 }
 
-func StopRelayImage() {
-	composePath := "../compose.yaml"
-	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "down")
+func StopRelayImage(relativePath string) {
+	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", relativePath, "down")
 	fmt.Println(cmd.Output())
 }
 
