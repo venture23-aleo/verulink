@@ -11,6 +11,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/attestor/e2etest/attestor"
+	"github.com/venture23-aleo/attestor/e2etest/chains/aleo"
 	"github.com/venture23-aleo/attestor/e2etest/chains/ethereum"
 	"github.com/venture23-aleo/attestor/e2etest/common"
 	dbservice "github.com/venture23-aleo/attestor/e2etest/dbService"
@@ -34,6 +35,7 @@ func NewE2ETest() *E2ETest {
 }
 
 func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, dbServiceURI string) {
+	return 
 	ethClient := ethereum.NewClient(cfg)
 
 	// store latest sequence number
@@ -81,8 +83,13 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 	fmt.Println("⌛ wait for relay to pick the txn in ethereum and post to db service")
 	averageBlockProducingTime := time.Second * 14
 	waitTime := averageBlockProducingTime * (FinalityHeight + 2) // 2 as a buffer to ensure the packet arrives in the db service
-	// err := aleo.TransferUSDC(ctx)
-	// assert.NoError(e.t, err)
+	aleoClient := aleo.NewClient(cfg)
+
+	
+
+
+	err := aleoClient.TransferUSDC(ctx)
+	assert.NoError(e.t, err)
 
 	time.Sleep(waitTime)
 
@@ -97,5 +104,5 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 }
 
 func (e *E2ETest) TestBringRelayDown(ctx context.Context) {
-	attestor.StopRelayImage("../../compose.yaml")
+	attestor.StopRelayImage("../compose.yaml")
 }

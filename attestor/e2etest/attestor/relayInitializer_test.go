@@ -11,11 +11,11 @@ func TestBuildDockerImage(t *testing.T) {
 }
 
 func TestRunRelayImage(t *testing.T) {
-	RunRelayImage()
+	RunRelayImage("")
 }
 
 func TestStopRelayImage(t *testing.T) {
-	StopRelayImage()
+	StopRelayImage("")
 }
 
 func TestBuildRelayImage(t *testing.T) {

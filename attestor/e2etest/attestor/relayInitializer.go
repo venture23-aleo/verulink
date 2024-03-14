@@ -149,7 +149,12 @@ func RunRelayImage(relativePath string) {
 
 func StopRelayImage(relativePath string) {
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", relativePath, "down")
-	fmt.Println(cmd.Output())
+	_, err := cmd.Output()
+	if err != nil {
+		fmt.Println("🔴 could not bring relay down")
+		panic(err)
+	}
+	fmt.Println("🛬 relay stopped")
 }
 
 // db service

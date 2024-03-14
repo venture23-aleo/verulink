@@ -8,10 +8,10 @@ chains:
     wallet_path: /home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4
     wallet_address: 0x06f1153169c8909a8f3761da4e79274f712328c4
   - name: aleo
-    token_service_contract_address: al_token_service_address
-    usdc_contract_address: al_usdc_address
-    bridge_contract_address: al_bridge_address
-    node_url: al_node.url.com|testnet3
-    wallet_path: keys/aleo.key
+    token_service_contract_address: token_service_v0002.aleo
+    usdc_contract_address: wusdc_token_v0002.aleo
+    bridge_contract_address: token_bridge_v0002.aleo
+    node_url: https://api.explorer.aleo.org/v1|testnet3
+    wallet_path: APrivateKey1zkpAypsxK9kpYJ8QetRAC3sXRZTSoJXYZCEBzywnHNTmmy5
     wallet_address: wallet_address
 collector_service_uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/

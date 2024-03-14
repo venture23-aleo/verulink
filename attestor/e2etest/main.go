@@ -40,4 +40,6 @@ func main() {
 			testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
 		}
 	}
+
+	testSuite.TestBringRelayDown(ctx)
 }

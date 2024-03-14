@@ -2,8 +2,9 @@ package aleo
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/venture23-aleo/attestor/e2etest/chains/aleo/rpc"
@@ -30,31 +31,46 @@ func NewClient(cfg *common.ChainConfig) *Client {
 		panic(err)
 	}
 
-	bt, err := os.ReadFile(cfg.WalletPath)
-	if err != nil {
-		panic(err)
-	}
-
 	return &Client{
 		name:                cfg.Name,
-		url:                 cfg.NodeUrl,
+		url:                 endPoint[0],
 		bridgeAddress:       cfg.BridgeContractAddress,
 		tokenServiceAddress: cfg.TokenServiceContractAddress,
 		rpc:                 rpcClient,
-		privateKey:          string(bt),
+		privateKey:          cfg.WalletPath,
 	}
 }
 
-func TransferUSDC(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, "snarkos", "developer", "execute", "wusdc_connector_v0003.aleo", "wusdc_send",
+func (c *Client) TransferUSDC(ctx context.Context) error {
+	fmt.Println(c.url)
+	fmt.Println(c.privateKey)
+	cmd := exec.CommandContext(ctx, "snarkos", "developer", "execute", "wusdc_connector_v0002.aleo", "wusdc_send",
 		"[0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,22u8,196u8,62u8,31u8,147u8,239u8,217u8,175u8,205u8,17u8,252u8,181u8,163u8,153u8,0u8,0u8,221u8,17u8,86u8,96u8]",
-		"1u128", "--private-key", "APrivateKey1zkpAypsxK9kpYJ8QetRAC3sXRZTSoJXYZCEBzywnHNTmmy5", "--query", "https://node.puzzle.online", "--broadcast",
-		"https://node.puzzle.online/testnet3/transaction/broadcast", "--priority-fee", "100",
+		"1u128", "--private-key", c.privateKey, "--query", c.url, "--broadcast",
+		c.url+"/testnet3/transaction/broadcast", "--priority-fee", "100",
 	)
-	output, err := cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		return err
 	}
-	_ = output
 	return nil
+}
+
+func (c *Client) GetLatestSequenceNumber(ctx context.Context) uint64 {
+	fmt.Println(c.bridgeAddress)
+	sequenceMap, err := c.rpc.GetMappingValue(ctx, c.bridgeAddress, "sequences", "28556963657430695u128")
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+	seqString := sequenceMap["28556963657430695u128"]
+	replacer := strings.NewReplacer("\"", "", "\\", "", "u64", "")
+	seqString = replacer.Replace(seqString)
+	sequenceInt, err := strconv.Atoi(seqString)
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+
+	return uint64(sequenceInt)
 }
