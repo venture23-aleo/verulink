@@ -35,7 +35,6 @@ func NewE2ETest() *E2ETest {
 }
 
 func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, dbServiceURI string) {
-	return 
 	ethClient := ethereum.NewClient(cfg)
 
 	// store latest sequence number
@@ -85,8 +84,7 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 	waitTime := averageBlockProducingTime * (FinalityHeight + 2) // 2 as a buffer to ensure the packet arrives in the db service
 	aleoClient := aleo.NewClient(cfg)
 
-	
-
+	sequenceNumber := aleoClient.GetLatestSequenceNumber(ctx)
 
 	err := aleoClient.TransferUSDC(ctx)
 	assert.NoError(e.t, err)
@@ -97,9 +95,9 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 
 	dbService := dbservice.NewDataBase(dbServiceURI)
 
-	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(17), AleoChainID, EthChainID) // check according to the next seq number
+	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(int(sequenceNumber) + 1), AleoChainID, EthChainID) // check according to the next seq number
 	assert.NoError(e.t, err)
-	assert.Equal(e.t, uint64(17), pktInfo.Sequence)
+	assert.Equal(e.t, sequenceNumber + 1, pktInfo.Sequence)
 	fmt.Println("✅ ALEO flow test passed")
 }
 
