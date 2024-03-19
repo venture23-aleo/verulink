@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"os/exec"
+	"strings"
+	"time"
 
 	"github.com/venture23-aleo/attestor/e2etest/attestor"
 	_ "github.com/venture23-aleo/attestor/e2etest/chains/aleo"
@@ -16,11 +20,15 @@ const (
 	aleo     = "aleo"
 )
 
-var testCycle int 
+var (
+	testCycle  int
+	configPath string
+)
+
 func init() {
 	flag.IntVar(&testCycle, "config", 1, "test cycle")
-}
 
+}
 
 func main() {
 	flag.Parse()
@@ -33,10 +41,36 @@ func main() {
 	testSuite := testsuite.NewE2ETest()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
-	attestor.WriteE2EConifg("/home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet3", 5475443, 17)
-	
-	
+
+	var aleoEndpoint string
+	var ethEndpoint string
+	for _, v := range config.Chains {
+		if v.Name == ethereum {
+			ethEndpoint = v.NodeUrl
+		}
+		if v.Name == aleo {
+			aleoEndpoint = v.NodeUrl
+		}
+	}
+
+	// setup reverse proxy servers to connect to the
+	aleoUrls := strings.Split(aleoEndpoint, "|")
+	fmt.Println(aleoUrls[0])
+	cmdAleo := exec.Command("../proxy/proxy", "--remoteUrl", aleoUrls[0], "--port", "3000", "&!")
+	err = cmdAleo.Start()
+	if err != nil {
+		panic(err)
+	}
+	cmdEthereum := exec.Command("../proxy/proxy", "--remoteUrl", ethEndpoint, "--port", "3001", "&!")
+	err = cmdEthereum.Start()
+	if err != nil {
+		panic(err)
+	}
+
+	time.Sleep(time.Second * 5)
+
+	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, aleoEndpoint, 5475443, 17)
+
 	for i := 0; i < testCycle; i++ {
 		attestor.RunRelayImage("../compose.yaml")
 		for _, v := range config.Chains {
@@ -47,7 +81,7 @@ func main() {
 				testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
 			}
 		}
-	
+
 		attestor.StopRelayImage("../compose.yaml")
 	}
 }

@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 )
 
 var (
@@ -20,7 +22,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if remoteUrl == "" || port == ""{
+	if remoteUrl == "" || port == "" {
 		panic(flag.ErrHelp)
 	}
 	remote, err := url.Parse(remoteUrl)
@@ -39,7 +41,8 @@ func main() {
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
 	http.HandleFunc("/", handler(proxy))
-	err = http.ListenAndServe(":" + port, nil)
+	fmt.Println(os.Getpid())
+	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		panic(err)
 	}

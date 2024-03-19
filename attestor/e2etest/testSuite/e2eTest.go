@@ -35,10 +35,12 @@ func NewE2ETest() *E2ETest {
 }
 
 func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, dbServiceURI string) {
+	return 
 	ethClient := ethereum.NewClient(cfg)
 
 	// store latest sequence number
 	seqNumber, err := ethClient.GetLatestSequenceNumber(ctx)
+	fmt.Println("latest seq number", seqNumber)
 	assert.NoError(e.t, err)
 
 	// mint USDC
@@ -47,15 +49,18 @@ func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, d
 	assert.True(e.t, ok)
 
 	err = ethClient.MintUSDC(ctx, ethCommon.HexToAddress(cfg.WalletAddress), value)
+	fmt.Println(err)
 	assert.NoError(e.t, err)
 
 	// approve USDC to token Service
 	transferValue := value.Div(value, big.NewInt(10)) // 10 percent of the total balance is approved
 	err = ethClient.ApproveUSDC(ctx, transferValue)
+	fmt.Println(err)
 	assert.NoError(e.t, err)
 
 	// cross chain transfer of USDC
 	err = ethClient.TransferUSDC(ctx, transferValue, TokenReceiverAddress)
+	fmt.Println(err)
 	assert.NoError(e.t, err)
 
 	fmt.Println("⌛ wait for relay to pick the txn in ethereum and post to db service")

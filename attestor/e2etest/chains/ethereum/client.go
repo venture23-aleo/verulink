@@ -49,7 +49,7 @@ func (c *Client) CreatePacket() {
 }
 
 func NewClient(cfg *common.ChainConfig) *Client {
-	rpc, err := rpc.Dial(cfg.NodeUrl)
+	rpc, err := rpc.Dial("http://localhost:3001/")
 	if err != nil {
 		panic(err)
 	}

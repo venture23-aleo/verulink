@@ -9,6 +9,7 @@ import (
 type E2EConfig struct {
 	Chains              []*ChainConfig `yaml:"chains"`
 	CollectorServiceURI string         `yaml:"collector_service_uri"`
+	WriteConfigPath             string   `yaml:"write_config_path"`
 }
 
 type ChainConfig struct {
@@ -20,7 +21,7 @@ type ChainConfig struct {
 	WalletPath                  string   `yaml:"wallet_path"`
 	WalletAddress               string   `yaml:"wallet_address"`
 	ChainID                     string   `yaml:"chain_id"`
-	DestChains                  []string `yaml:"dest_chain_ids"`
+	DestChains                  []string `yaml:"dest_chain_ids"`	
 }
 
 type Config []*ChainConfig
