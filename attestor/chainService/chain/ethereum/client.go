@@ -335,13 +335,11 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		case <-ticker.C:
 		}
 
-		if index == len(baseSeqNamespaces) {
-			index = 0
-		}
 		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
 			zap.String("namespace", baseSeqNamespaces[index]))
 
 		ns := baseSeqNamespaces[index]
+		fmt.Println("namespace is ", ns)
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
 		chainID := new(big.Int)
 		chainID.SetString(chainIDStr, 10)
@@ -382,6 +380,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 				ch <- pkt
 			}
 		}
+		index = (index + 1) % len(baseSeqNamespaces) // switch index to next destination id
 	}
 }
 
