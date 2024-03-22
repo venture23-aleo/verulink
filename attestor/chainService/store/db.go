@@ -100,7 +100,7 @@ func GetFirstKey[T keyConstraint](namespace string, keyType T) T {
 
 func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 	k := getKeyByteForKeyConstraint(key)
-	return exitsInGivenBucket(namespace, k)
+	return existsInGivenBucket(namespace, k)
 }
 
 // PruneBaseSeqNum basically works as follow.

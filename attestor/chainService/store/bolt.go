@@ -130,7 +130,7 @@ func getLastKeyValue(bucket string) (key, value []byte) {
 	return
 }
 
-func exitsInGivenBucket(bktName string, key []byte) (exist bool) {
+func existsInGivenBucket(bktName string, key []byte) (exist bool) {
 	db.View(func(tx *bbolt.Tx) error { // nolint
 		bkt := tx.Bucket([]byte(bktName))
 		if bkt == nil {
