@@ -58,7 +58,12 @@ type LoggerConfig struct {
 	OutputPath string `yaml:"output_dir"`
 }
 
-func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64) {
+func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64, benchmark bool) {
+	signingServiceHost := "signingservice"
+	if benchmark {
+		signingServiceHost = "localhost"
+		aleoNodeURL = "http://localhost:3000|testnet3"
+	}
 	relayConfig := &Config{
 		ChainConfigs: []*ChainConfig{
 			{
@@ -100,7 +105,7 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 		ConsumePacketWorker: 50,
 		Mode:                "dev",
 		SigningServiceConfig: SigningServiceConfig{
-			Host:     "signingservice",
+			Host:     signingServiceHost,
 			Port:     8080,
 			Endpoint: "/sign",
 			Scheme:   "http",

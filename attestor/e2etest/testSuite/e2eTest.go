@@ -35,7 +35,6 @@ func NewE2ETest() *E2ETest {
 }
 
 func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, dbServiceURI string) {
-	return 
 	ethClient := ethereum.NewClient(cfg)
 
 	// store latest sequence number

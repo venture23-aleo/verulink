@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,13 +22,14 @@ const (
 )
 
 var (
-	testCycle  int
-	configPath string
+	testCycle        int
+	configPath       string
+	benchMarkRelayer bool
 )
 
 func init() {
-	flag.IntVar(&testCycle, "config", 1, "test cycle")
-
+	flag.IntVar(&testCycle, "testCycle", 1, "test cycle")
+	flag.BoolVar(&benchMarkRelayer, "benchMark", false, "benchmark the relayer")
 }
 
 func main() {
@@ -56,7 +58,8 @@ func main() {
 	// setup reverse proxy servers to connect to the
 	aleoUrls := strings.Split(aleoEndpoint, "|")
 	fmt.Println(aleoUrls[0])
-	cmdAleo := exec.Command("../proxy/proxy", "--remoteUrl", aleoUrls[0], "--port", "3000", "&!")
+	
+	cmdAleo := exec.Command("../proxy/proxy", "--remoteUrl", aleoUrls[0], "--port", "3000", "--benchMark", strconv.FormatBool(benchMarkRelayer), "&!")
 	err = cmdAleo.Start()
 	if err != nil {
 		panic(err)
@@ -69,19 +72,38 @@ func main() {
 
 	time.Sleep(time.Second * 5)
 
-	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, aleoEndpoint, 5475443, 17)
+	fmt.Println(benchMarkRelayer)
 
-	for i := 0; i < testCycle; i++ {
-		attestor.RunRelayImage("../compose.yaml")
-		for _, v := range config.Chains {
-			switch v.Name {
-			case ethereum:
-				testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
-			case aleo:
-				testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
-			}
+	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, aleoEndpoint, 5475443, 17, benchMarkRelayer)
+
+	if benchMarkRelayer {
+		signingServiceCmd := exec.CommandContext(context.Background(), "../signingService/signingService", "--config", "../signingService/config.yaml", "--kp", "../signingService/keys.yaml", "--port", "8080","&!")
+		err := signingServiceCmd.Start()
+		if err != nil {
+			panic(err)
 		}
-
-		attestor.StopRelayImage("../compose.yaml")
+		fmt.Println("now starting chain service")
+		time.Sleep(time.Second * 5)
+		chainServiceCmd := exec.CommandContext(context.Background(), "../chainService/chainService", "--config", "../chainService/config.yaml", "&!")
+		err = chainServiceCmd.Start()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("chain service started")
+		
+		<-ctx.Done()
+	} else {
+		for i := 0; i < testCycle; i++ {
+			attestor.RunRelayImage("../compose.yaml")
+			for _, v := range config.Chains {
+				switch v.Name {
+				case ethereum:
+					testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
+				case aleo:
+					testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
+				}
+			}
+			attestor.StopRelayImage("../compose.yaml")
+		}
 	}
 }
