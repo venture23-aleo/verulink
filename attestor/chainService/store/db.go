@@ -55,16 +55,6 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 	return put(namespace, key, value)
 }
 
-func RetrieveAndDeleteFirstPacket(namespace string) (pkt *chain.Packet, err error) {
-	a, err := retrieveAndDeleteFirstKey(namespace)
-	if err != nil {
-		return nil, err
-	}
-	pkt = new(chain.Packet)
-	err = json.Unmarshal(a[1], pkt)
-	return
-}
-
 func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
 	s, err := retrieveAndDeleteNKeysFromFirst(namespace, n)
 	if err != nil {
