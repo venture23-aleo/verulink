@@ -248,6 +248,10 @@ program token_service_v0003.aleo {
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
+        // Assert new min transfer is less than max_transfer
+        let min_transfer= Mapping::get(min_transfers, token_address);
+        assert(max_transfer>=min_transfer);
+
         assert(Mapping::contains(max_transfers, token_address));
         Mapping::set(max_transfers, token_address, max_transfer);
     }
