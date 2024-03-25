@@ -234,6 +234,9 @@ program token_bridge_v0003.aleo {
         assert_eq(from, owner);
 
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
+        
+        // Check if the new threshold is below total attestors
+        assert(new_threshold <= total_attestors+1u8);
 
         assert(!Mapping::contains(attestors, new_attestor));
         Mapping::set(attestors, new_attestor, true);
