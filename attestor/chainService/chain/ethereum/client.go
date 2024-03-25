@@ -339,7 +339,6 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			zap.String("namespace", baseSeqNamespaces[index]))
 
 		ns := baseSeqNamespaces[index]
-		fmt.Println("namespace is ", ns)
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
 		chainID := new(big.Int)
 		chainID.SetString(chainIDStr, 10)
