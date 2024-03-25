@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
+import {AleoAddressLibrary} from "../common/libraries/AleoAddressLibrary.sol";
 import {PacketLibrary} from "../common/libraries/PacketLibrary.sol";
 import {Pausable} from "../common/Pausable.sol";
 import {AttestorManager} from "../base/bridge/AttestorManager.sol";
@@ -23,7 +24,6 @@ contract Bridge is
     Upgradeable
 {
     using PacketLibrary for PacketLibrary.InPacket;
-    
     
     /// @notice Event triggered when the destination chain is updated
     /// @param oldDestinationChainId The old destination chain ID
@@ -82,6 +82,10 @@ contract Bridge is
     {
         require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, signatures, quorumRequired);
+    }
+
+    function validateAleoAddress(string memory addr) public pure returns (bool) {
+        return AleoAddressLibrary.validateAleoAddr(addr);
     }
 
     /// @notice Sends a message packet to the specified destination chain

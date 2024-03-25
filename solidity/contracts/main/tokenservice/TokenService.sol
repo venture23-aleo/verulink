@@ -125,6 +125,7 @@ contract TokenService is
     /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
     function transfer(string memory receiver) external whenNotPaused virtual payable nonReentrant {
+        require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 

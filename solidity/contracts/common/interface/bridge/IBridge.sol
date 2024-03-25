@@ -23,4 +23,5 @@ interface IBridge {
     /// @param signatures The array of signatures to be validated
     /// @return The overall vote (YEA, NAY, or NULL) based on the provided signatures
     function consume(PacketLibrary.InPacket memory packet, bytes memory signatures) external returns (PacketLibrary.Vote);
+    function validateAleoAddress(string memory addr) external pure returns (bool);
 }
