@@ -15,11 +15,7 @@ func InitKVStore(path string) error {
 }
 
 func CloseDB() error {
-	err := closeDB()
-	if err != nil {
-		return err
-	}
-	return nil
+	return closeDB()
 }
 
 func CreateNamespaces(names []string) error {

@@ -19,11 +19,7 @@ func initDB(path string) error {
 }
 
 func closeDB() error {
-	err := db.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.Close()
 }
 
 func createBucket(ns string) error {
