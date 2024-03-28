@@ -87,8 +87,6 @@ func (s *signService) HashAndSignScreenedPacket(
 // communicate with signing service securely.
 func SetupSigner(cfg *config.SigningServiceConfig) error {
 	logger.GetLogger().Info("Setting up signer",
-		zap.String("username", cfg.Username),
-		zap.String("password", cfg.Password),
 		zap.String("scheme", cfg.Scheme),
 		zap.String("endpoint", cfg.Endpoint),
 		zap.String("host", cfg.Host),
