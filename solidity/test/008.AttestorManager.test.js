@@ -5,7 +5,7 @@ const { ethers } = hardhat;
 
 // Define the test suite
 describe('AttestorManager', () => {
-    let owner, attestorManagerImpl, AttestorManager, AttestorManagerProxy, initializeData, lib, proxiedV1, attestor, other, signer;
+    let owner, attestorManagerImpl, AttestorManager, AttestorManagerProxy, initializeData, aleolib, proxiedV1, attestor, other, signer;
 
     // Deploy a new AttestorManager contract before each test
     beforeEach(async () => {
@@ -14,11 +14,15 @@ describe('AttestorManager', () => {
         const lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
 
         // Deploy AttestorManager
         AttestorManager = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             },
         });
         let abi = AttestorManager.interface.format();
