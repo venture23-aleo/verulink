@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 	"time"
@@ -220,7 +221,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 	defer ticker.Stop()
 
-	var baseHeight uint64
+	var baseHeight uint64 = math.MaxUint64 // to ensure the starting seq number is set from the database entry
 	for dest := range cl.destChainsIDMap {
 		ns := baseSeqNumNameSpacePrefix + dest
 		_, startHeight := store.GetStartingSeqNumAndHeight(ns)
