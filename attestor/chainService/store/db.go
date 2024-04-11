@@ -15,11 +15,7 @@ func InitKVStore(path string) error {
 }
 
 func CloseDB() error {
-	err := closeDB()
-	if err != nil {
-		return err
-	}
-	return nil
+	return closeDB()
 }
 
 func CreateNamespaces(names []string) error {
@@ -53,16 +49,6 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 		return err
 	}
 	return put(namespace, key, value)
-}
-
-func RetrieveAndDeleteFirstPacket(namespace string) (pkt *chain.Packet, err error) {
-	a, err := retrieveAndDeleteFirstKey(namespace)
-	if err != nil {
-		return nil, err
-	}
-	pkt = new(chain.Packet)
-	err = json.Unmarshal(a[1], pkt)
-	return
 }
 
 func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
@@ -110,7 +96,7 @@ func GetFirstKey[T keyConstraint](namespace string, keyType T) T {
 
 func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 	k := getKeyByteForKeyConstraint(key)
-	return exitsInGivenBucket(namespace, k)
+	return existsInGivenBucket(namespace, k)
 }
 
 // PruneBaseSeqNum basically works as follow.

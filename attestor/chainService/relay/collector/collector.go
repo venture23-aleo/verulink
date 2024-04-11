@@ -17,7 +17,6 @@ import (
 
 const (
 	signatureEndPoint   = "signature"
-	unconfirmedEndPoint = "unconfirmed"
 	aleoTrue            = "true"
 )
 
