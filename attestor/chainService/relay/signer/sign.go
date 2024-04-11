@@ -126,6 +126,7 @@ func dial(u string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 400 || resp.StatusCode > 499 {
 		return fmt.Errorf("expected status code 4xx, got %d", resp.StatusCode)
