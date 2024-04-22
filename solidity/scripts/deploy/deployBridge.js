@@ -15,6 +15,7 @@ async function main() {
             PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
         },
     });
+    
     console.log("Deploying Bridge Impl with the account:", deployerSigner.address);
     const bridgeImpl = await Bridge.deploy();
     await bridgeImpl.deployed();

@@ -12,7 +12,6 @@ async function main() {
     const usdt = process.env.USDT_ADDR;
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const BlackListService = await ethers.getContractFactory("BlackListService");
-
     console.log("Deploying BlackListService Impl with the account:", deployerSigner.address);
     const blackListServiceImpl = await BlackListService.deploy();
     await blackListServiceImpl.deployed();

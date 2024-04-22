@@ -17,7 +17,6 @@ async function main() {
     console.log("Deploying Holding Proxy with the account:", deployerSigner.address);
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
     const initializeData = new ethers.utils.Interface(Holding.interface.format()).encodeFunctionData("Holding_init", [process.env.TOKENSERVICEPROXY_ADDRESS]);
-
     const holdingProxy = await ProxyContract.deploy(holdingImpl.address, initializeData);
     await holdingProxy.deployed();
     console.log("Holding Proxy Deployed to: ", holdingProxy.address);
