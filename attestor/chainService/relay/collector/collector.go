@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -102,23 +103,27 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
 
-
-	cert, err := os.ReadFile("/path")
+	caCert, err := os.ReadFile("/path")
 	if err != nil {
 		return err
 	}
 
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(cert)
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs: caCertPool,
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{cert},
 			},
 		},
 	}
-
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), io.NopCloser(buf))
 	if err != nil {
