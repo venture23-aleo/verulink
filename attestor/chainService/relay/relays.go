@@ -37,6 +37,7 @@ var (
 // after it pulls the packet.
 // Collecting fields makes it possible to write unit-tests by injecting custom dependency.
 type relay struct {
+	name      string
 	collector collector.CollectorI
 	signer    signer.SignI
 	screener  addressscreener.ScreenI
@@ -69,6 +70,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	}
 
 	r := relay{
+		name:      cfg.Name,
 		collector: collector.GetCollector(),
 		signer:    signer.GetSigner(),
 		screener:  addressscreener.GetScreener(),
@@ -182,6 +184,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
+		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=%s} 0", r.name))
 		return
 	}
 
@@ -189,6 +192,9 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		zap.String("source_chain", pkt.Source.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence),
 		zap.String("hash", hash), zap.String("signature", signature))
+	log := fmt.Sprintf("signing_service_request_passed{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
+		r.name, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature)
+	logger.PushLogsToPrometheus(log)
 
 	err = r.collector.SendToCollector(ctx, sp, hash, signature)
 	if err != nil {
@@ -197,6 +203,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			return
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
+		attestorName := "attestor1"
+		logger.PushLogsToPrometheus("db_service_post_fail{attestor:" + attestorName + "} 0")
 		return
 	}
 

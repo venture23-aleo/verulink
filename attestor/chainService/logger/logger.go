@@ -1,7 +1,10 @@
 package logger
 
 import (
+	"bytes"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"sync"
 
@@ -12,6 +15,7 @@ import (
 )
 
 var logger *zap.Logger
+var prometheusGatewayURL string
 var once sync.Once
 
 func init() {
@@ -26,9 +30,33 @@ func GetLogger() *zap.Logger {
 	return logger
 }
 
+func PushLogsToPrometheus(log string) {
+	payload := []byte(
+		fmt.Sprintf(`
+		%s
+		`, log))
+	req, err := http.NewRequest("POST", prometheusGatewayURL, bytes.NewBuffer(payload))
+	if err != nil {
+		GetLogger().Error("could not post logs to prometheus")
+		return
+	}
+
+	req.Header.Set("Content-Type", "text/plain")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		GetLogger().Error("could not post logs to prometheus")
+		return
+	}
+	defer resp.Body.Close()
+	fmt.Println("posted", resp.Status)
+}
+
 func InitLogging(mode string, cfg *config.LoggerConfig) {
 	once.Do(func() {
 		initLog(mode, cfg)
+		prometheusGatewayURL = cfg.PrometheusGatewayUrl
 	})
 }
 

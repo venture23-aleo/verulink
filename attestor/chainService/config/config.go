@@ -52,6 +52,7 @@ type ChainConfig struct {
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
+	Name                   string                 `yaml:"name"`
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
 	LogConfig              *LoggerConfig          `yaml:"log"`
 	DBDir                  string                 `yaml:"db_dir"`
@@ -63,9 +64,10 @@ type Config struct {
 }
 
 type LoggerConfig struct {
-	Encoding   string `yaml:"encoding"`
-	OutputDir  string `yaml:"output_dir"`
-	OutputPath string `yaml:"-"` // calculated based on OutputDir
+	Encoding             string `yaml:"encoding"`
+	OutputDir            string `yaml:"output_dir"`
+	OutputPath           string `yaml:"-"` // calculated based on OutputDir
+	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
 }
 
 type SigningServiceConfig struct {
