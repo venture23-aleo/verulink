@@ -7,15 +7,13 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 /// @dev This contract manages a list of attestors and their quorum requirements.
 abstract contract AttestorManager is OwnableUpgradeable {
 
-    /// @dev Event triggered when a new attestor is added with a specified quorum
+    /// @dev Event triggered when a new attestor is added
     /// @param attestor The address of the new attestor
-    /// @param quorum The quorum required for the attestor
-    event AttestorAdded(address attestor, uint256 quorum);
+    event AttestorAdded(address indexed attestor);
 
     /// @dev Event triggered when an attestor is removed
     /// @param attestor The address of the removed attestor
-    /// @param quorum The new quorum required after removal
-    event AttestorRemoved(address attestor, uint256 quorum);
+    event AttestorRemoved(address indexed attestor);
 
     /// @dev Event triggered when the quorum requirement is updated
     /// @param oldQuorum The previous quorum requirement
@@ -39,39 +37,47 @@ abstract contract AttestorManager is OwnableUpgradeable {
         return attestors[attestor];
     }
 
-    /// @notice Adds a new attestor with a specified quorum, callable only by the owner
+    /// @notice Adds a new attestor, callable only by the owner
     /// @param attestor The address of the new attestor
     /// @param newQuorumRequired The quorum required for the new attestor
     function addAttestor(address attestor, uint256 newQuorumRequired) public virtual onlyOwner {
+        _addAttestor(attestor);
+        updateQuorum(newQuorumRequired);
+    }
+
+    /// @notice Adds a new attestor, internal function
+    /// @param attestor The address of the new attestor
+    function _addAttestor(address attestor) internal virtual {
         require(attestor != address(0), "AttestorManager: zero address");
         require(!isAttestor(attestor), "AttestorManager: attestor already exists");
         attestors[attestor] = true;
-        quorumRequired = newQuorumRequired;
-        emit AttestorAdded(attestor, newQuorumRequired);
+        emit AttestorAdded(attestor);
     }
 
-    /// @notice Removes an attestor and updates the quorum requirement, callable only by the owner
+    /// @notice Removes an attestor, callable only by the owner
     /// @param attestor The address of the attestor to be removed
     /// @param newQuorumRequired The new quorum requirement after removal
     function removeAttestor(address attestor, uint256 newQuorumRequired) external virtual onlyOwner {
         require(attestors[attestor], "AttestorManager: unknown attestor");
         delete attestors[attestor];
-        quorumRequired = newQuorumRequired;
-        emit AttestorRemoved(attestor, newQuorumRequired);
+        emit AttestorRemoved(attestor);
+        updateQuorum(newQuorumRequired);
     }
 
-    /// @notice Adds multiple attestors with the same quorum requirement, callable only by the owner
+    /// @notice Adds multiple attestors, callable only by the owner
     /// @param _attestors The addresses of the new attestors
     /// @param newQuorumRequired The quorum required for the new attestors
     function addAttestors(address[] calldata _attestors, uint256 newQuorumRequired) external virtual onlyOwner {
-        for(uint256 i=0;i<_attestors.length;i++) {
-            addAttestor(_attestors[i], newQuorumRequired);
+        for(uint256 i=0; i<_attestors.length; i++) {
+            _addAttestor(_attestors[i]);
         }
+        updateQuorum(newQuorumRequired);
     }
 
     /// @notice Updates the quorum requirement, callable only by the owner
     /// @param newQuorumRequired The new quorum requirement
-    function updateQuorum(uint256 newQuorumRequired) external virtual onlyOwner {
+    function updateQuorum(uint256 newQuorumRequired) public virtual onlyOwner {
+        require(newQuorumRequired > 0, "AttestorManager: zero quorum");
         emit QuorumUpdated(quorumRequired, newQuorumRequired);
         quorumRequired = newQuorumRequired;
     }

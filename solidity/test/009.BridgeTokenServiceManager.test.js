@@ -41,14 +41,14 @@ describe('BridgeTokenServiceManager', () => {
         expect(contractOwner).to.equal(owner.address);
     });
 
-    // it('reverts if the contract is already initialized', async function () {
-    //     initializeData = new ethers.utils.Interface(BridgeTokenServiceManager.interface.format())
-    //         .encodeFunctionData("BridgeTokenServiceManager_init", []);
-    //     const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.address, initializeData);
-    //     await proxy.deployed();
-    //     await expect(proxiedV1["BridgeTokenServiceManager_init"]())
-    //         .to.be.revertedWith('Initializable: contract is already initialized');
-    // });
+    it('reverts if the contract is already initialized', async function () {
+        initializeData = new ethers.utils.Interface(BridgeTokenServiceManager.interface.format())
+            .encodeFunctionData("BridgeTokenServiceManager_init", []);
+        const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.address, initializeData);
+        await proxy.deployed();
+        await expect(proxiedV1["BridgeTokenServiceManager_init"]())
+            .to.be.revertedWith('Initializable: contract is already initialized');
+    });
 
     // Test adding a token service
     it('should add a token service', async () => {
