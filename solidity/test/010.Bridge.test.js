@@ -18,7 +18,7 @@ describe('Bridge', () => {
     let destChainId;
     let libInstance;
     let unknownAttestor;
-    let unknowndestChainId;
+    let aleolib;
     let unknowntokenService;
 
     function inPacketHash(inPacket) {
@@ -49,10 +49,14 @@ describe('Bridge', () => {
         libInstance = await lib.deploy();
         await libInstance.deployed();
         destChainId = 2;
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
 
         ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             },
         });
 
@@ -354,8 +358,9 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
     let ERC20TokenBridgeV2Impl;
     let ERC20TokenBridgeV2;
     let ERC20TokenBridgeProxy;
-    let tokenService;
+    let aleolib;
     let destChainId;
+    let tokenService;
 
     // Deploy a new HoldingV2 contract before each test
     beforeEach(async () => {
@@ -365,10 +370,14 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
 
         ERC20TokenBridgeV1 = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             },
         });
 
@@ -385,6 +394,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         ERC20TokenBridgeV2 = await ethers.getContractFactory("BridgeV2", {
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             },
         });
 

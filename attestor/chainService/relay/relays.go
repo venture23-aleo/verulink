@@ -85,14 +85,14 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	// chain for the truth and if valid then this packet will be send to pktCh
 	missedPktCh := make(chan *chain.MissedPacket)
 
-	go r.initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
+	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
 	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
-	go r.consumeMissedPackets(ctx, missedPktCh, pktCh)
+	go consumeMissedPackets(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
 }
 
 // initPacketFeeder starts the routine to fetch and manage the packets of all the registered chains
-func (relay) initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
+func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
 	ch := make(chan chain.IClient, len(cfgs))
 
 	for _, chainCfg := range cfgs {
@@ -205,7 +205,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 
 // consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
 // fetches corresponding packet from source chain and feeds it to pktCh
-func (r *relay) consumeMissedPackets(
+func consumeMissedPackets(
 	ctx context.Context, missedPktCh <-chan *chain.MissedPacket,
 	pktCh chan<- *chain.Packet) { // refetchCh Channel to signal collector
 

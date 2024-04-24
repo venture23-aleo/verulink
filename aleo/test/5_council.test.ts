@@ -40,7 +40,8 @@ import {
   getUpdateThresholdLeo,
   getTsPauseTokenLeo,
   getTsUnpauseTokenLeo,
-  getProposalVoteLeo
+  getProposalVoteLeo,
+  getTbTransferOwnershipLeo
 } from "../artifacts/js/js2leo/council_v0003";
 import {
   AddMember,
@@ -63,6 +64,7 @@ import {
   ProposalVoterKey,
   TsPauseToken,
   TsUnpauseToken,
+  TbTransferOwnership,
 } from "../artifacts/js/types/council_v0003";
 
 import { WithdrawalLimit } from "../artifacts/js/types/token_service_v0003";
@@ -115,6 +117,7 @@ const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> =
 
 describe.skip("Council", () => {
   const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
+  const aleoUser5 = new PrivateKey().to_address().to_string()
   const admin = council.address();
   const initialThreshold = 3;
 
@@ -815,6 +818,47 @@ describe.skip("Council", () => {
       }, TIMEOUT);
 
     });
+
+    describe("Transfer Ownership", () => {
+      const proposer = councilMember1;
+      let proposalId = 0;
+      let tbTransferOwnershipProposalHash = BigInt(0);
+
+      beforeEach(async () => {
+        council.connect(proposer);
+        expect(await bridge.owner_TB(true)).toBe(council.address());
+        expect(await council.members(councilMember1)).toBe(true);
+      }, TIMEOUT)
+
+      test("Propose", async () => {
+        const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+        proposalId = totalProposals + 1;
+        const tbTransferOwnership: TbTransferOwnership = {
+          id: proposalId,
+          new_owner: aleoUser5,
+        }
+        tbTransferOwnershipProposalHash = hashStruct(getTbTransferOwnershipLeo(tbTransferOwnership));
+
+        const [tx] = await council.propose(proposalId, tbTransferOwnershipProposalHash);
+        await council.wait(tx);
+
+        const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+        expect(totalProposalsAfter).toBe(totalProposals + 1);
+        expect(await council.proposals(proposalId)).toBe(tbTransferOwnershipProposalHash);
+
+      }, TIMEOUT)
+
+      test("Execute", async () => {
+        const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+
+        expect(await council.proposal_executed(tbTransferOwnershipProposalHash, false)).toBe(false);
+        const [tx] = await council.tb_transfer_ownership(proposalId, aleoUser5, signers);
+        await council.wait(tx);
+
+        expect(await council.proposal_executed(tbTransferOwnershipProposalHash)).toBe(true);
+        expect(await bridge.owner_TB(true)).toBe(aleoUser5);
+      }, TIMEOUT);
+    })
 
   });
 
