@@ -80,29 +80,6 @@ abstract contract ConsumedPacketManagerImpl {
         /* solhint-enable no-inline-assembly */
     }
 
-    /// @dev Splits a signature into its components (v, r, s)
-    /// @param sig The signature to be split
-    /// @return v The recovery id as part of the signature
-    /// @return r The R component of the signature
-    /// @return s The S component of the signature
-    function _splitSignature(bytes memory sig) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
-
-        assembly {
-            // first 32 bytes, after the length prefix.
-            r := mload(add(sig, 32))
-            // second 32 bytes.
-            s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes).
-            v := byte(0, mload(add(sig, 96)))
-        }
-
-        if (v < 27) {
-            v += 27;
-        }
-
-        // return (v, r, s);
-    }
-
     /// @dev Checks the signatures and returns the overall quorum vote
     /// @param packetHash Hash of the packet being checked
     /// @param signatures Array of signatures to be checked
@@ -119,7 +96,6 @@ abstract contract ConsumedPacketManagerImpl {
         bytes32 s;
         require(signatures.length >= (threshold * 65), "ConsumedPacketManagerImpl: inadequate signatures"); 
         for(uint256 i = 0; i < threshold; i++) {
-            // require(signatures[i].length == 65, "ConsumedPacketManagerImpl: invalid signature length");
             (v,r,s) = _signatureSplit(signatures, i);
             currentAttestor = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
 
@@ -137,9 +113,11 @@ abstract contract ConsumedPacketManagerImpl {
             require(currentAttestor > lastAttestor, "ConsumedPacketManagerImpl: Signers order mismatch");
             lastAttestor = currentAttestor; 
         }
-        unchecked {
-            if(yeas > nays && yeas >= threshold) return PacketLibrary.Vote.YEA;
-            else if(nays >= threshold) return PacketLibrary.Vote.NAY;
+        
+        if(yeas > nays && yeas >= threshold) {
+            return PacketLibrary.Vote.YEA;
+        } else if(nays >= threshold) {
+            return PacketLibrary.Vote.NAY;
         }
         return PacketLibrary.Vote.NULL;
     }

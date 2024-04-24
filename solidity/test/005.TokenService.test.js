@@ -28,7 +28,7 @@ const ALEO_CHAINID = 2;
 
 // Define the test suite
 describe('TokenService', () => {
-    let proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, ERC20TokenServiceImpl, ERC20TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
+    let proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, ERC20TokenServiceImpl, ERC20TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
     let blackListProxy;
     let erc20VaultServiceProxy;
     let EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy, proxiedEthVaultService;
@@ -36,15 +36,18 @@ describe('TokenService', () => {
 
     beforeEach(async () => {
         [owner, signer, bridge, other, attestor, attestor1] = await ethers.getSigners();
-        // chainId = 7;
 
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
         ERC20TokenBridge = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             }
         });
         erc20TokenBridge = await ERC20TokenBridge.deploy();
@@ -69,7 +72,6 @@ describe('TokenService', () => {
             const blackListServiceImpl = await BlackListService.deploy();
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
-            // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdTMock.address));
 
             initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
@@ -82,12 +84,10 @@ describe('TokenService', () => {
             const erc20VaultServiceImpl = await Erc20VaultService.deploy();
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
-            // initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData(["initialize"](usdcMock.address, "vaultservice", owner.address));
             initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
-            // console.log("vault proxy = ", erc20VaultServiceProxy.address);
         }
 
         {
@@ -117,7 +117,6 @@ describe('TokenService', () => {
         proxiedV1 = TokenService.attach(proxy.address);
         await proxiedV1.connect(owner).addToken(usdcMock.address, ALEO_CHAINID, erc20VaultServiceProxy.address, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
         await proxiedV1.connect(owner).addToken(usdTMock.address, ALEO_CHAINID, erc20VaultServiceProxy.address, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
-        // console.log("hello");
         await (await proxiedBridge.connect(owner).addTokenService(proxiedV1.address)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2)).wait();
@@ -140,7 +139,6 @@ describe('TokenService', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        // console.log("initializeData = ", initializeData);
         await expect(proxiedV1["TokenService_init(address,uint256,uint256,address)"](proxiedBridge.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
@@ -167,7 +165,6 @@ describe('TokenService', () => {
         // Mock USDC and USDT contracts to simulate blacklisting
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        // await(await usdcMock.connect(other).transfer(owner.address,150)).wait();
         await (await usdcMock.addBlackList(other.address)).wait();
 
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
@@ -195,15 +192,6 @@ describe('TokenService', () => {
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (unsupportedToken.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: token not supported");
     });
-
-
-    // Test for negative transfer
-    // it('should not transfer if he has less balance than inserted amount', async () => {
-    //     await (await usdcMock.mint(other.address, 90)).wait();
-    //     await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-    //     await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-    //         (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-    // });
 
     // // Test for transfer
     it('should transfer USDC', async () => {
@@ -378,16 +366,6 @@ describe('TokenService', () => {
         await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
         await proxiedV1.disable(ADDRESS_ONE, destchainID);
-        // deploying Holding Contract
-        // const Holding = await ethers.getContractFactory("Holding");
-        // const holdingImpl = await Holding.deploy();
-        // await holdingImpl.deployed();
-        // const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        // initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init", [proxiedV1.address]);
-        // const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
-        // await proxyHolding.deployed();
-        // proxiedHolding = Holding.attach(proxyHolding.address);
-        // await (await proxiedV1.setHolding(proxiedHolding.address)).wait();
         inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
@@ -597,26 +575,26 @@ describe('TokenService', () => {
             ["aleo.SenderAddress", usdcMock.address, 100, other.address],
             100
         ];
-        const tokenAddress = usdcMock.address;
-        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-        const min = 1;
-        const max = 100;
-        // console.log("inpacket1 = ", inPacket);
-        // Add token
-        // const ERC20TokenSupport = await ethers.getContractFactory("TokenService");
-        // const tokenSupportImpl = await ERC20TokenSupport.deploy();
-        // await tokenSupportImpl.deployed();
-        // let ERC20TokenSupportABI = ERC20TokenSupport.interface.format();
+        // const tokenAddress = usdcMock.address;
+        // const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        // const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        // const min = 1;
+        // const max = 100;
+        // // console.log("inpacket1 = ", inPacket);
+        // // Add token
+        // // const ERC20TokenSupport = await ethers.getContractFactory("TokenService");
+        // // const tokenSupportImpl = await ERC20TokenSupport.deploy();
+        // // await tokenSupportImpl.deployed();
+        // // let ERC20TokenSupportABI = ERC20TokenSupport.interface.format();
 
-        // const ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
-        // const initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenService_init", [other.address, ETH_CHAINID, ALEO_CHAINID, other.address]);
-        // const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, initializeData);
-        // await proxy.deployed();
-        // const proxiedContract = ERC20TokenSupport.attach(proxy.address);
-        // await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
-        // await proxiedContract.connect(owner).enable(inPacket[4][1], inPacket[2][0]);
-        // inPacket[4][1] = usdTMock.address;
+        // // const ERC20TokenSupportProxy = await ethers.getContractFactory('ProxyContract');
+        // // const initializeData = new ethers.utils.Interface(ERC20TokenSupportABI).encodeFunctionData("TokenService_init", [other.address, ETH_CHAINID, ALEO_CHAINID, other.address]);
+        // // const proxy = await ERC20TokenSupportProxy.deploy(tokenSupportImpl.address, initializeData);
+        // // await proxy.deployed();
+        // // const proxiedContract = ERC20TokenSupport.attach(proxy.address);
+        // // await proxiedContract.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        // // await proxiedContract.connect(owner).enable(inPacket[4][1], inPacket[2][0]);
+        // // inPacket[4][1] = usdTMock.address;
         await (await usdcMock.mint(other.address, 15000)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 10000)).wait();
         // await (await proxiedV1.connect(other)["transfer(address,uint256,string)"](usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
@@ -723,6 +701,7 @@ describe('TokenService', () => {
     //     await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: invalid signature length");
     // });
 
+
     it('should fail in double withdraw', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
@@ -733,13 +712,12 @@ describe('TokenService', () => {
             ['bytes32', 'uint8'],
             [packetHash, 1]
         );
-        // const randomAttestor = ethers.Wallet.createRandom();
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2)
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
-        // await (await proxiedV1.pause());
+      
         await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });
@@ -754,7 +732,6 @@ describe('TokenService', () => {
             ['bytes32', 'uint8'],
             [packetHash, 1]
         );
-        // const randomAttestor = ethers.Wallet.createRandom();
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         let newSignature1;
@@ -798,6 +775,7 @@ describe('TokenService', () => {
     //     // expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
     // });
 
+
     it('should not transferToVault if token is not supported', async () => {
         const tokenAddress = ethers.constants.AddressZero;
         await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).to.be.revertedWith("TokenService: token not supported");
@@ -821,7 +799,6 @@ describe('TokenService', () => {
         const min = 1;
         const max = 100;
         await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, ethers.constants.AddressZero, destTokenAddress, destTokenService, min, max);
-        // await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
         await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500))
             .to.be.revertedWith('TokenService: vault zero address');
     });
@@ -870,20 +847,6 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(erc20VaultServiceProxy.address)).to.equal(50);
     });
 
-    // it('should not transfer USDC if wrong length aleo address is given', async () => {
-    //     await (await usdcMock.mint(other.address, 150)).wait();
-    //     await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-    //     await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-    //         (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jz")).to.be.revertedWith("Wrong receiver Address");
-    // });
-
-    // it('should not transfer USDC if wrong length aleo address is given', async () => {
-    //     await (await usdcMock.mint(other.address, 150)).wait();
-    //     await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-    //     await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
-    //         (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27897")).to.be.revertedWith("Wrong receiver Address");
-    // });
-
     it('should not transfer USDC if given amount is greater than balance', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
@@ -899,6 +862,26 @@ describe('TokenService', () => {
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.reverted;
     });
+
+    it('should validate Aleo address', async () => {
+        const tokenAddress = ADDRESS_ONE;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner)["transfer(string)"]("aleo1g2vt2rag4fzug6aklxxxhhraza54gw0jr9q6myjtkm3jjmdtugqq6yrng8", { value: 100 });
+    });
+
+    it('should revert if Aleo address length is not 63', async () => {
+        const tokenAddress = ADDRESS_ONE;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const min = 1;
+        const max = 100;
+        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await expect(proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl2", { value: 100 })).to.be.revertedWith("Invalid Aleo address length");
+    });
 });
 
 // Define the test suite for ERC20TokenBridgeV2
@@ -913,24 +896,28 @@ describe('Upgradeabilty: TokenServiceV2', () => {
     let ERC20TokenServiceProxy;
     let USDCMock, usdcMock;
     let USDTMock, usdTMock;
-    let ERC20TokenBridge, erc20TokenBridge, proxiedBridge;
+    let ERC20TokenBridge, erc20TokenBridge, aleolib;
     let blackListProxy;
     let erc20VaultServiceProxy;
+
     // Deploy a new ERC20TokenServiceV2 contract before each test
     beforeEach(async () => {
         [owner, signer, other] = await ethers.getSigners();
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
-
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
         ERC20TokenBridge = await ethers.getContractFactory("Bridge", {
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             }
         });
+
         erc20TokenBridge = await ERC20TokenBridge.deploy();
         await erc20TokenBridge.deployed();
-        // console.log("erc20TokenBridge = ", erc20TokenBridge.address);
 
         USDCMock = await ethers.getContractFactory("USDCMock");
         usdcMock = await USDCMock.deploy();
@@ -944,7 +931,6 @@ describe('Upgradeabilty: TokenServiceV2', () => {
             const blackListServiceImpl = await BlackListService.deploy();
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
-            // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
             initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
             await blackListProxy.deployed();
@@ -956,7 +942,6 @@ describe('Upgradeabilty: TokenServiceV2', () => {
             const erc20VaultServiceImpl = await Erc20VaultService.deploy();
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
-            // initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData(["initialize"](usdcMock.address, "vaultservice", owner.address));
             initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();

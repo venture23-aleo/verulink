@@ -286,9 +286,6 @@ describe('Holding', () => {
         // Release tokens with the owner
         await (await proxiedV1["release(address,address)"](user, token)).wait();
         expect(await proxiedV1.unlocked(user, token)).to.be.equal(0);
-
-        // Try to release token as zero address as parameter for token address and expect it to revert 
-        // await expect(proxiedV1.connect(tokenService)["release(address,address,uint256)"](user, "0x0000000000000000000000000000000000000000", amount)).to.be.revertedWith("Zero Address"); 
     });
 
     it('should not allow to release tokens if zero address is given', async () => {

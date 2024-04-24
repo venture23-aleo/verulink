@@ -375,9 +375,9 @@ func TestManagePacket(t *testing.T) {
 
 		retryCh <- modelPacket
 		time.Sleep(time.Second) // wait to fill in the database
-		pkt, err := store.RetrieveAndDeleteFirstPacket(retryNs)
+		pkt, err := store.RetrieveAndDeleteNPackets(retryNs, 1)
 		assert.NoError(t, err)
-		assert.Equal(t, pkt, modelPacket)
+		assert.Equal(t, pkt[0], modelPacket)
 	})
 
 	t.Run("test manage packet for baseSeqNumNamespace", func(t *testing.T) {

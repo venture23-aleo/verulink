@@ -5,7 +5,7 @@ const { ethers } = hardhat;
 
 // Define the test suite
 describe('BridgeTokenServiceManager', () => {
-    let owner, other, BridgeTokenServiceManager, bridgeTokenServiceManagerImpl, BridgeTokenServiceManagerProxy, initializeData, lib, proxiedV1;
+    let owner, other, BridgeTokenServiceManager, bridgeTokenServiceManagerImpl, BridgeTokenServiceManagerProxy, initializeData, aleolib, proxiedV1;
 
     // Deploy a new BridgeTokenServiceManager contract before each test
     beforeEach(async () => {
@@ -14,9 +14,14 @@ describe('BridgeTokenServiceManager', () => {
         const libInstance = await lib.deploy();
         await libInstance.deployed();
 
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
+
         BridgeTokenServiceManager = await ethers.getContractFactory("Bridge",{
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             },
         });
         let BridgeTokenServiceManagerABI = BridgeTokenServiceManager.interface.format();
