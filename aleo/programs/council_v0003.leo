@@ -203,6 +203,9 @@ program council_v0003.aleo {
     }
 
     finalize update_vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
+        // Assert that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
         // Assert that the member has already voted the proposal earlier
         assert(Mapping::contains(proposal_votes, proposal_sign));
 
