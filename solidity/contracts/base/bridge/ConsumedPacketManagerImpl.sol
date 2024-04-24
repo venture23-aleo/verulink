@@ -96,7 +96,6 @@ abstract contract ConsumedPacketManagerImpl {
         bytes32 s;
         require(signatures.length >= (threshold * 65), "ConsumedPacketManagerImpl: inadequate signatures"); 
         for(uint256 i = 0; i < threshold; i++) {
-            // require(signatures[i].length == 65, "ConsumedPacketManagerImpl: invalid signature length");
             (v,r,s) = _signatureSplit(signatures, i);
             currentAttestor = _recover(packetHash, v, r, s, PacketLibrary.Vote.NAY);
 
