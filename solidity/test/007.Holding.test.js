@@ -148,12 +148,20 @@ describe('Holding', () => {
         const token = usdcMock.address;
         const amount = 100;
 
-        // await (await usdcMock.mint(tokenService.address, amount)).wait();
-        // await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
         // Lock tokens with the owner
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
         const lockAmount = await proxiedV1.locked(user, token);
         expect(lockAmount).to.be.equal(amount);
+    });
+
+    it('should revert when the amount passed is zero', async () => {
+        const user = ethers.Wallet.createRandom().address;
+        const token = usdcMock.address;
+        const amount = 0; // Amount set to zero
+    
+        // Attempt to lock tokens with zero amount and expect it to revert
+        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount))
+            .to.be.revertedWith("Holding: zero amount");
     });
 
     // Test that only the registered tokenservice can lock tokens
@@ -165,6 +173,15 @@ describe('Holding', () => {
         // await (await usdcMock.mint(tokenService.address, amount)).wait();
         // await (await usdcMock.connect(tokenService).approve(proxiedV1.address, amount)).wait();
         // Lock tokens with the owner
+        await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith('Holding: zero address');
+    });
+
+    it('should not allow to lock tokens if user address is zero address', async () => {
+        const user = ethers.constants.AddressZero;
+        const token = usdcMock.address;
+        const amount = 100;
+
+        // Lock the ERC20 tokens
         await expect(proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).to.be.revertedWith('Holding: zero address');
     });
 

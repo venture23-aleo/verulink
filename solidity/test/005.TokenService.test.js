@@ -681,6 +681,27 @@ describe('TokenService', () => {
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: unknown signer");
     });
 
+    // it('should not withdraw if invalid signature length', async () => {
+    //     await (await usdcMock.mint(other.address, 150)).wait();
+    //     await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+    //     await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+    //         (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+    //     const packetHash = inPacketHash(inPacket);
+    //     let message = ethers.utils.solidityKeccak256(
+    //         ['bytes32', 'uint8'],
+    //         [packetHash, 1]
+    //     );
+    //     // const randomAttestor = ethers.Wallet.createRandom();
+    //     const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+    //     const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+    //     const signatures = signature1 + signature2.slice(2) + "ab";
+    //     expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
+    //     expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+    //     // await (await proxiedV1.pause());
+    //     await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: invalid signature length");
+    // });
+
+
     it('should fail in double withdraw', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
@@ -696,6 +717,7 @@ describe('TokenService', () => {
         const signatures = signature1 + signature2.slice(2)
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+      
         await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });
@@ -724,6 +746,35 @@ describe('TokenService', () => {
             .to.emit(proxiedBridge, "Consumed")
             .withArgs(ALEO_CHAINID, inPacket[1], packetHash, 1);
     });
+
+    // it('should not withdraw if allowance is failed', async () => {
+    //     let FailedinPacket = [
+    //         1,
+    //         1,
+    //         [2, "aleo.TokenService"],
+    //         [7, proxiedV1.address],
+    //         ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+    //         100
+    //     ];
+    //     await (await usdcMock.mint(other.address, 150)).wait();
+    //     await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+    //     await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+    //         (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+    //     const packetHash = inPacketHash(FailedinPacket);
+    //     let message = ethers.utils.solidityKeccak256(
+    //         ['bytes32', 'uint8'],
+    //         [packetHash, 1]
+    //     );
+    //     const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+    //     const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+    //     const signatures = [signature1, signature2];
+    //     expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
+    //     expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+    //     await (await proxiedV1.connect(other).withdraw(FailedinPacket, signatures)).wait();
+    //     // expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(0);
+    //     // expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
+    // });
+
 
     it('should not transferToVault if token is not supported', async () => {
         const tokenAddress = ethers.constants.AddressZero;
