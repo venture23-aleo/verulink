@@ -158,6 +158,7 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting current height")
+		logger.PushLogsToPrometheus(fmt.Sprintf("fetch_current_block_height_fail{error=\"%s\"} 0",err.Error()))
 		return 0, err
 	}
 
@@ -199,6 +200,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 		}
 		packets = append(packets, commonPacket)
 		logger.GetLogger().Debug("packet fetched", zap.Uint64("sequence_number", commonPacket.Sequence))
+		logger.PushLogsToPrometheus(fmt.Sprintf("packet_fetched{sequenceNumber=\"%d\"} 1",commonPacket.Sequence))
 	}
 	return packets, nil
 }
@@ -250,6 +252,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx)
 			if err != nil {
 				logger.GetLogger().Error("error while getting block height", zap.Error(err))
+				logger.PushLogsToPrometheus(fmt.Sprintf("fetch_block_height_fail{error=\"%s\"} 0",err.Error() ))
 				break L1
 			}
 
@@ -273,6 +276,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 						zap.Uint64("start_height", startHeight),
 						zap.Uint64("end_height", endHeight),
 					)
+					logger.PushLogsToPrometheus(fmt.Sprintf("filter_packet_fail{error=\"%s\",startHeight=\"%d\",endHeight=\"%d\"} 0",
+					err.Error(),startHeight,endHeight))
 					break L1
 				}
 
@@ -301,12 +306,14 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 
 		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
+		logger.PushLogsToPrometheus(fmt.Sprintf("retry_ethereum_feed{namespace=\"%s\"} 1",retryPacketNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this seems to be the efficient approach.
 		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], retrievePacketNum)
 		if err != nil {
 			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
+			logger.PushLogsToPrometheus(fmt.Sprintf("retrive_retry_packets_fail{error=\"%s\"} 0",err.Error()))
 			goto indIncr
 		}
 
@@ -338,6 +345,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
 			zap.String("namespace", baseSeqNamespaces[index]))
+		logger.PushLogsToPrometheus(fmt.Sprintf("pruning_base_sequence_no{namespace=\"%s\"} 1",baseSeqNamespaces[index]))
 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
@@ -363,6 +371,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			pkts, err := cl.filterPacketLogs(ctx, s, e)
 			if err != nil {
 				logger.GetLogger().Error(err.Error())
+				logger.PushLogsToPrometheus(fmt.Sprintf("filter_packet_fail{error=\"%s\"} 0",err.Error()))
 				break
 			}
 
@@ -395,6 +404,8 @@ func (cl *Client) managePacket(ctx context.Context) {
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
+			logger.PushLogsToPrometheus(fmt.Sprintf("add_to_retry_packet{sourceChainId=\"%s\", destChainId=\"%s\", pktSeqNum=\"%d\"} 1", 
+			pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(),pkt.Sequence))
 			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
@@ -402,6 +413,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
+				logger.PushLogsToPrometheus(fmt.Sprintf("store_retry_packet_info_fail{error=\"%s\", namespace=\"%s\"} 0",ns,err.Error()))
 			}
 		case pkt := <-completedCh:
 			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
@@ -411,12 +423,16 @@ func (cl *Client) managePacket(ctx context.Context) {
 				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
+	
+			logger.PushLogsToPrometheus(fmt.Sprintf("update_base_sequence{namespace=\"%s\",sourceChainId=\"%s\", destChainId=\"%s\", pktSeqNum=\"%d\"} 1",
+			ns,pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(), pkt.Sequence))
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
 			if err != nil {
 				logger.GetLogger().Error(
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
+				logger.PushLogsToPrometheus(fmt.Sprintf("store_completed_packet_info_fail{error=\"%s\", namespace=\"%s\"} 0",ns,err.Error()))
 			}
 		}
 	}

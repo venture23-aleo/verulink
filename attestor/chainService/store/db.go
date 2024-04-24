@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
@@ -144,6 +145,7 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
 				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
+				logger.PushLogsToPrometheus(fmt.Sprintf("batch_removal_sequence_no_fail{error=\"%s\"} 0",err.Error()))
 			}
 		}(key)
 	}

@@ -55,6 +55,7 @@ func main() {
 
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().LogConfig)
 	logger.GetLogger().Info("Attestor started")
+	logger.PushLogsToPrometheus("attestor_started{} 1")
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()

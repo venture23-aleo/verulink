@@ -169,6 +169,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
+				logger.PushLogsToPrometheus(fmt.Sprintf("wallet_white_status_fail{error=\"%s\"} 0",err.Error()))
 			}
 			return
 		}
@@ -184,7 +185,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
-		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=%s} 0", r.name))
+		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=\"%s\"} 0", r.name))
 		return
 	}
 
@@ -203,12 +204,13 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			return
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
-		attestorName := "attestor1"
-		logger.PushLogsToPrometheus("db_service_post_fail{attestor:" + attestorName + "} 0")
+		logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_fail{attestor=\"%s\"} 0",r.name))
 		return
 	}
 
 	logger.GetLogger().Info("Yay packet successfully sent")
+	logger.PushLogsToPrometheus(fmt.Sprintf("process_packet_success{source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1", 
+	pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(),pkt.Sequence))
 }
 
 // consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
@@ -230,6 +232,8 @@ func consumeMissedPackets(
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
+			logger.PushLogsToPrometheus(fmt.Sprintf("fetch_missed_packet_fail{sourceChainId=\"%s\", destChainId=\"%s\", sequenceNo=\"%d\" error=\"%s\"} 0",
+			missedPkt.SourceChainID.String(),missedPkt.TargetChainID.String(),missedPkt.SeqNum,err.Error()))
 			continue
 		}
 
