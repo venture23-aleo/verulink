@@ -53,7 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().LogConfig)
+	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
 	logger.GetLogger().Info("Attestor started")
 	logger.PushLogsToPrometheus("attestor_started{} 1")
 

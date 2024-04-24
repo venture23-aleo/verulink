@@ -16,6 +16,7 @@ import (
 
 var logger *zap.Logger
 var prometheusGatewayURL string
+var AttestorName string
 var once sync.Once
 
 func init() {
@@ -53,10 +54,11 @@ func PushLogsToPrometheus(log string) {
 	fmt.Println("posted", resp.Status)
 }
 
-func InitLogging(mode string, cfg *config.LoggerConfig) {
+func InitLogging(mode, name string, cfg *config.LoggerConfig) {
 	once.Do(func() {
 		initLog(mode, cfg)
 		prometheusGatewayURL = cfg.PrometheusGatewayUrl
+		AttestorName = name
 	})
 }
 

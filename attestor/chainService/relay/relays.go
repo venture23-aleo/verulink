@@ -37,7 +37,6 @@ var (
 // after it pulls the packet.
 // Collecting fields makes it possible to write unit-tests by injecting custom dependency.
 type relay struct {
-	name      string
 	collector collector.CollectorI
 	signer    signer.SignI
 	screener  addressscreener.ScreenI
@@ -70,7 +69,6 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	}
 
 	r := relay{
-		name:      cfg.Name,
 		collector: collector.GetCollector(),
 		signer:    signer.GetSigner(),
 		screener:  addressscreener.GetScreener(),
@@ -169,7 +167,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
-				logger.PushLogsToPrometheus(fmt.Sprintf("wallet_white_status_fail{error=\"%s\"} 0",err.Error()))
+				logger.PushLogsToPrometheus(fmt.Sprintf("wallet_white_status_fail{error=\"%s\"} 0", err.Error()))
 			}
 			return
 		}
@@ -185,7 +183,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
-		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=\"%s\"} 0", r.name))
+		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=\"%s\"} 0", logger.AttestorName))
 		return
 	}
 
@@ -194,7 +192,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		zap.Uint64("seq_num", pkt.Sequence),
 		zap.String("hash", hash), zap.String("signature", signature))
 	log := fmt.Sprintf("signing_service_request_passed{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
-		r.name, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature)
+		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature)
 	logger.PushLogsToPrometheus(log)
 
 	err = r.collector.SendToCollector(ctx, sp, hash, signature)
@@ -204,13 +202,13 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			return
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
-		logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_fail{attestor=\"%s\"} 0",r.name))
+		logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_fail{attestor=\"%s\"} 0", logger.AttestorName))
 		return
 	}
 
 	logger.GetLogger().Info("Yay packet successfully sent")
-	logger.PushLogsToPrometheus(fmt.Sprintf("process_packet_success{source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1", 
-	pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(),pkt.Sequence))
+	logger.PushLogsToPrometheus(fmt.Sprintf("process_packet_success{source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1",
+		pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
 }
 
 // consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
@@ -233,7 +231,7 @@ func consumeMissedPackets(
 			logger.GetLogger().Error("Error while getting missed packet",
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
 			logger.PushLogsToPrometheus(fmt.Sprintf("fetch_missed_packet_fail{sourceChainId=\"%s\", destChainId=\"%s\", sequenceNo=\"%d\" error=\"%s\"} 0",
-			missedPkt.SourceChainID.String(),missedPkt.TargetChainID.String(),missedPkt.SeqNum,err.Error()))
+				missedPkt.SourceChainID.String(), missedPkt.TargetChainID.String(), missedPkt.SeqNum, err.Error()))
 			continue
 		}
 
