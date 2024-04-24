@@ -207,8 +207,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	}
 
 	logger.GetLogger().Info("Yay packet successfully sent")
-	logger.PushLogsToPrometheus(fmt.Sprintf("process_packet_success{source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1",
-		pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
+	logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_success{attestor=\"%s\",source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1",
+		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
 }
 
 // consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
@@ -230,8 +230,8 @@ func consumeMissedPackets(
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
-			logger.PushLogsToPrometheus(fmt.Sprintf("fetch_missed_packet_fail{sourceChainId=\"%s\", destChainId=\"%s\", sequenceNo=\"%d\" error=\"%s\"} 0",
-				missedPkt.SourceChainID.String(), missedPkt.TargetChainID.String(), missedPkt.SeqNum, err.Error()))
+			logger.PushLogsToPrometheus(fmt.Sprintf("consume_missed_packet_fail{attestor=\"%s\",sourceChainId=\"%s\", destChainId=\"%s\", sequenceNo=\"%d\" error=\"%s\"} 0",
+				logger.AttestorName,missedPkt.SourceChainID.String(), missedPkt.TargetChainID.String(), missedPkt.SeqNum, err.Error()))
 			continue
 		}
 

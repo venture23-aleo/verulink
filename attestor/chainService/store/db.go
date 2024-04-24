@@ -145,7 +145,7 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
 				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
-				logger.PushLogsToPrometheus(fmt.Sprintf("batch_removal_sequence_no_fail{error=\"%s\"} 0",err.Error()))
+				logger.PushLogsToPrometheus(fmt.Sprintf("db_service_batch_removal_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error()))
 			}
 		}(key)
 	}
