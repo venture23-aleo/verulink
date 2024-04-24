@@ -91,8 +91,7 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 		zap.String("endpoint", cfg.Endpoint),
 		zap.String("host", cfg.Host),
 	)
-	//TEST Prometheus
-	logger.PushLogsToPrometheus(fmt.Sprintf("signer_setup{scheme=\"%s\",endpoint=\"%s\",host=\"%s\"}", cfg.Scheme, cfg.Endpoint, cfg.Host))
+	logger.PushLogsToPrometheus(fmt.Sprintf("setup_signer{scheme=\"%s\", endpoint=\"%s\", host=\"%s\"} 1", cfg.Scheme,cfg.Endpoint,cfg.Host))
 	u := &url.URL{
 		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Path:   cfg.Endpoint,
