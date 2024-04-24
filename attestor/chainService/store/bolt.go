@@ -165,29 +165,6 @@ func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 	return ch
 }
 
-// retrieveAndDeleteFirstKey retrieves and deletes first key.
-// It will return error if the bucket is empty
-func retrieveAndDeleteFirstKey(bucket string) (a [2][]byte, err error) {
-	err = db.Update(func(tx *bbolt.Tx) error {
-		bkt := tx.Bucket([]byte(bucket))
-		c := bkt.Cursor()
-		key, value := c.First()
-		if key == nil {
-			return errors.New("empty bucket")
-		}
-		k := make([]byte, len(key))
-		v := make([]byte, len(value))
-		copy(k, key)
-		copy(v, value)
-		bkt.Delete(key) // nolint
-
-		a[0], a[1] = k, v
-		return nil
-	})
-
-	return
-}
-
 // retrieveAndDeleteNKeysFromFirst returns n number of keys from first index and deletes
 // them. It returns error if the bucket is empty
 func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err error) {
