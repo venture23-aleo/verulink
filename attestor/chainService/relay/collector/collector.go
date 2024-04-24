@@ -103,7 +103,7 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
 
-	caCert, err := os.ReadFile("/path")
+	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	cert, err := tls.LoadX509KeyPair("/Users/swopnilparajuli/Downloads/attestor1.crt", "/Users/swopnilparajuli/Downloads/attestor1.key")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -6,3 +6,4 @@ go.work*
 **/*UTC*
 **/*.db
 *.lock
+.DS_Store
