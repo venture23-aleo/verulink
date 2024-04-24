@@ -32,7 +32,7 @@ contract Erc20VaultService is VaultService, Upgradeable {
     /// @param amount The amount of ERC20 tokens to be transferred
     /// @return true if the transfer is successful, false otherwise
     function transfer(uint256 amount) external virtual onlyOwner returns (bool) {
-        require(IIERC20(token()).transfer(owner(), amount), "Erc20VaultService: erc20 transfer failed");
+        require(IIERC20(token).transfer(owner(), amount), "Erc20VaultService: erc20 transfer failed");
         return true;
     }
 

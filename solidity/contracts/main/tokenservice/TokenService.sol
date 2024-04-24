@@ -125,6 +125,7 @@ contract TokenService is
     /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
     function transfer(string memory receiver) external whenNotPaused virtual payable nonReentrant {
+        require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
@@ -133,6 +134,7 @@ contract TokenService is
     /// @param amount Amount of ERC20 tokens to be transferred
     /// @param receiver The intended receiver of the transferred tokens
     function transfer(address tokenAddress, uint256 amount, string memory receiver) external virtual whenNotPaused nonReentrant {
+        require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
         require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "TokenService: token transfer failed");
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));

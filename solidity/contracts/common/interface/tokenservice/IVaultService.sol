@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 /// @title IVaultService
 /// @dev Interface for interacting with a Vault Service.
 interface IVaultService {
-
+    
     /// @notice Returns the address of the associated token.
     /// @return address of the token.
     function token() external view returns (address);

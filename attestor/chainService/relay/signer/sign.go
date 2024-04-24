@@ -87,8 +87,6 @@ func (s *signService) HashAndSignScreenedPacket(
 // communicate with signing service securely.
 func SetupSigner(cfg *config.SigningServiceConfig) error {
 	logger.GetLogger().Info("Setting up signer",
-		zap.String("username", cfg.Username),
-		zap.String("password", cfg.Password),
 		zap.String("scheme", cfg.Scheme),
 		zap.String("endpoint", cfg.Endpoint),
 		zap.String("host", cfg.Host),
@@ -126,6 +124,7 @@ func dial(u string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 400 || resp.StatusCode > 499 {
 		return fmt.Errorf("expected status code 4xx, got %d", resp.StatusCode)

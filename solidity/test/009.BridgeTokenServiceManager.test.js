@@ -5,7 +5,7 @@ const { ethers } = hardhat;
 
 // Define the test suite
 describe('BridgeTokenServiceManager', () => {
-    let owner, other, BridgeTokenServiceManager, bridgeTokenServiceManagerImpl, BridgeTokenServiceManagerProxy, initializeData, lib, proxiedV1;
+    let owner, other, BridgeTokenServiceManager, bridgeTokenServiceManagerImpl, BridgeTokenServiceManagerProxy, initializeData, aleolib, proxiedV1;
 
     // Deploy a new BridgeTokenServiceManager contract before each test
     beforeEach(async () => {
@@ -14,9 +14,14 @@ describe('BridgeTokenServiceManager', () => {
         const libInstance = await lib.deploy();
         await libInstance.deployed();
 
+        aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
+        const aleoLibInstance = await aleolib.deploy();
+        await aleoLibInstance.deployed();
+
         BridgeTokenServiceManager = await ethers.getContractFactory("Bridge",{
             libraries: {
                 PacketLibrary: libInstance.address,
+                AleoAddressLibrary: aleoLibInstance.address,
             },
         });
         let BridgeTokenServiceManagerABI = BridgeTokenServiceManager.interface.format();
@@ -36,14 +41,14 @@ describe('BridgeTokenServiceManager', () => {
         expect(contractOwner).to.equal(owner.address);
     });
 
-    // it('reverts if the contract is already initialized', async function () {
-    //     initializeData = new ethers.utils.Interface(BridgeTokenServiceManager.interface.format())
-    //         .encodeFunctionData("BridgeTokenServiceManager_init", []);
-    //     const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.address, initializeData);
-    //     await proxy.deployed();
-    //     await expect(proxiedV1["BridgeTokenServiceManager_init"]())
-    //         .to.be.revertedWith('Initializable: contract is already initialized');
-    // });
+    it('reverts if the contract is already initialized', async function () {
+        initializeData = new ethers.utils.Interface(BridgeTokenServiceManager.interface.format())
+            .encodeFunctionData("BridgeTokenServiceManager_init", []);
+        const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.address, initializeData);
+        await proxy.deployed();
+        await expect(proxiedV1["BridgeTokenServiceManager_init"]())
+            .to.be.revertedWith('Initializable: contract is already initialized');
+    });
 
     // Test adding a token service
     it('should add a token service', async () => {

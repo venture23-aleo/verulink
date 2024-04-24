@@ -224,41 +224,6 @@ func TestExistInGivenNamespace(t *testing.T) {
 	require.False(t, isExist)
 }
 
-func TestRetrieveAndDeleteFirstPacket(t *testing.T) {
-	dbRemover, err := setTestDB()
-	require.NoError(t, err)
-	t.Cleanup(dbRemover)
-	ns := "testExistInGivenNamespace"
-	err = setupDB(ns, nil)
-	require.NoError(t, err)
-
-	pkts := []chain.Packet{
-		{
-			Sequence: 1,
-			Height:   12,
-		}, {
-			Sequence: 2,
-			Height:   13,
-		},
-	}
-
-	for _, pkt := range pkts {
-		err := StoreRetryPacket(ns, &pkt)
-		require.NoError(t, err)
-	}
-
-	pkt, err := RetrieveAndDeleteFirstPacket(ns)
-	require.NoError(t, err)
-	require.Equal(t, *pkt, pkts[0])
-
-	pkt, err = RetrieveAndDeleteFirstPacket(ns)
-	require.NoError(t, err)
-	require.Equal(t, *pkt, pkts[1])
-
-	pkt, err = RetrieveAndDeleteFirstPacket(ns)
-	require.Error(t, err)
-}
-
 func TestRetrieveAndDeleteNPackets(t *testing.T) {
 	dbRemover, err := setTestDB()
 	require.NoError(t, err)

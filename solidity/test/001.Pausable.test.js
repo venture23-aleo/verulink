@@ -2,7 +2,6 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-console.log("ethers = ", ethers.version);
 // Define the test suite
 describe('Pausable', () => {
     let owner, newOwner, other, PausableImpl, pausableInstance, pausable, OwnableImpl, ownableInstance, Proxy, initializeData, proxiedOwner;

@@ -113,10 +113,9 @@ func TestInitPacketFeeder(t *testing.T) {
 			},
 		}
 
-		r := relay{}
 		ctx := context.TODO()
 		pktCh := make(chan *chain.Packet)
-		go r.initPacketFeeder(ctx, cfgs, pktCh)
+		go initPacketFeeder(ctx, cfgs, pktCh)
 		time.Sleep(time.Second * 1)
 		require.True(t, startedToFeedAleoPkt)
 		require.True(t, startedToFeedEthereumPkt)
@@ -139,12 +138,11 @@ func TestInitPacketFeeder(t *testing.T) {
 			},
 		}
 
-		r := relay{}
 		ctx := context.TODO()
 		pktCh := make(chan *chain.Packet)
 
 		require.Panics(t, func() {
-			r.initPacketFeeder(ctx, cfgs, pktCh)
+			initPacketFeeder(ctx, cfgs, pktCh)
 		})
 
 	})
