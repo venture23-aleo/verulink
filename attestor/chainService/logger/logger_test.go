@@ -8,11 +8,12 @@ import (
 func TestLogger(t *testing.T) {
 	prometheusGatewayURL = "https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway"
 
-	attestorName := "attestor1"
-	srcChainId := "1"
-	pktSeq := 2
-	hash := "hash"
-	signature := "sign"
+	// attestorName := "attestor1"
+	// srcChainId := "1"
+	// pktSeq := 2
+	// hash := "hash"
+	// signature := "sign"
+	chainId:= "1"
 
 	// db_post{attestor="attestornameisthis"} 0
 
@@ -22,8 +23,9 @@ func TestLogger(t *testing.T) {
 
 	// PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=%s} 0", attestorName))
 
-	log := fmt.Sprintf("signing_service_request_passed{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
-		attestorName, srcChainId, pktSeq, hash, signature)
+	log:=fmt.Sprintf("chainService_aleo_feedPacket_sleeping_duration{chainID=\"%v\"} 1", chainId)
 	PushLogsToPrometheus(log)
+
+	//log2:= fmt.Sprintf("")
 
 }

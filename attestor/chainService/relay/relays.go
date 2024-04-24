@@ -169,6 +169,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
+				//TEST Prometheus
+				logger.PushLogsToPrometheus(fmt.Sprintf("store_white_status_fail{attestor=\"%s\"} 0", r.name))
 			}
 			return
 		}
@@ -184,17 +186,16 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
-		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=%s} 0", r.name))
+		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=\"%s\"} 0", r.name))
 		return
 	}
 
 	logger.GetLogger().Debug("packet hashed and signed",
 		zap.String("source_chain", pkt.Source.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence),
-		zap.String("hash", hash), zap.String("signature", signature))
-	log := fmt.Sprintf("signing_service_request_passed{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
-		r.name, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature)
-	logger.PushLogsToPrometheus(log)
+		zap.String("hash", hash), zap.String("signature", signature)) 
+	logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_passed{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
+	r.name, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature))
 
 	err = r.collector.SendToCollector(ctx, sp, hash, signature)
 	if err != nil {
@@ -204,11 +205,13 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
 		attestorName := "attestor1"
-		logger.PushLogsToPrometheus("db_service_post_fail{attestor:" + attestorName + "} 0")
+		logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_fail{attestor:\"%s\"} 0",attestorName))
 		return
 	}
 
 	logger.GetLogger().Info("Yay packet successfully sent")
+	//TEST Prometheus
+	logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_passed{attestor=\"%s\"} 1", r.name))
 }
 
 // consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
@@ -230,6 +233,7 @@ func consumeMissedPackets(
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
+			logger.PushLogsToPrometheus(fmt.Sprintf("get_missed_packet_fail{txID=\"%s\"} 0",missedPkt.TxnID))
 			continue
 		}
 
