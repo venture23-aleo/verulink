@@ -214,7 +214,7 @@ func TestGetPktsFromCollector(t *testing.T) {
 }
 
 func TestMTLSIntegration(t *testing.T) {
-	dbUrl := "https://aleomtls.ibriz.ai"
+	dbUrl := "https://aleomtls.ibriz.ai/"
 
 	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
 	assert.NoError(t, err)
@@ -230,6 +230,7 @@ func TestMTLSIntegration(t *testing.T) {
 			TLSClientConfig: &tls.Config{
 				RootCAs:      caCertPool,
 				Certificates: []tls.Certificate{cert},
+				InsecureSkipVerify: true,
 			},
 		},
 	}
