@@ -2,11 +2,14 @@ package collector
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -208,4 +211,31 @@ func TestGetPktsFromCollector(t *testing.T) {
 		case <-missedCh:
 		}
 	})
+}
+
+func TestMTLSIntegration(t *testing.T) {
+	dbUrl := "https://aleomtls.ibriz.ai/"
+
+	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
+	assert.NoError(t, err)
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	cert, err := tls.LoadX509KeyPair("/Users/swopnilparajuli/Downloads/attestor1.crt", "/Users/swopnilparajuli/Downloads/attestor1.key")
+	assert.NoError(t, err)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{cert},
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	resp, err := client.Get(dbUrl)
+	assert.NoError(t, err)
+	fmt.Println("response is", resp)
 }

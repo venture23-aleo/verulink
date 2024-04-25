@@ -3,11 +3,15 @@ package collector
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -97,13 +101,36 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
+
+	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
+	if err != nil {
+		return err
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	cert, err := tls.LoadX509KeyPair("/Users/swopnilparajuli/Downloads/attestor1.crt", "/Users/swopnilparajuli/Downloads/attestor1.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{cert},
+			},
+		},
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), io.NopCloser(buf))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("content-type", contentType)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
