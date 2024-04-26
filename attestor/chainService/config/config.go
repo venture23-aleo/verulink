@@ -78,8 +78,11 @@ type SigningServiceConfig struct {
 }
 
 type CollecterServiceConfig struct {
-	Uri              string        `yaml:"uri"`
-	CollectorWaitDur time.Duration `yaml:"collector_wait_dur"`
+	Uri                 string        `yaml:"uri"`
+	CollectorWaitDur    time.Duration `yaml:"collector_wait_dur"`
+	CaCertificate       string        `yaml:"ca_certificate"`
+	AttestorCertificate string        `yaml:"attestor_certificate"`
+	AttestorKey         string        `yaml:"attestor_key"`
 }
 
 var config *Config

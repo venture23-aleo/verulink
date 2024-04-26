@@ -60,7 +60,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	}
 
 	err = collector.SetupCollector(
-		cfg.CollectorServiceConfig.Uri,
+		cfg.CollectorServiceConfig,
 		chainIdToAddress,
 		cfg.CollectorServiceConfig.CollectorWaitDur,
 	)

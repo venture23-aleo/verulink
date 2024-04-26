@@ -15,6 +15,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 )
 
 func TestSetupCollector(t *testing.T) {
@@ -22,7 +23,7 @@ func TestSetupCollector(t *testing.T) {
 	chainIdToAddress := map[string]string{
 		"2": "aleoaddr",
 		"1": "ethAddr"}
-	err := SetupCollector(uri, chainIdToAddress, time.Second)
+	err := SetupCollector(config.CollecterServiceConfig{Uri: uri}, chainIdToAddress, time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, GetCollector())
 	assert.Equal(t, uri, collc.uri)
@@ -228,8 +229,8 @@ func TestMTLSIntegration(t *testing.T) {
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:      caCertPool,
-				Certificates: []tls.Certificate{cert},
+				RootCAs:            caCertPool,
+				Certificates:       []tls.Certificate{cert},
 				InsecureSkipVerify: true,
 			},
 		},

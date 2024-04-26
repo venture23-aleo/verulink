@@ -16,12 +16,13 @@ import (
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
 )
 
 const (
-	signatureEndPoint   = "signature"
-	aleoTrue            = "true"
+	signatureEndPoint = "signature"
+	aleoTrue          = "true"
 )
 
 // headers
@@ -67,6 +68,8 @@ type collector struct {
 	uri              string
 	chainIDToAddress map[string]string // chainID: walletAddress
 	collectorWaitDur time.Duration
+	caCert           *x509.CertPool
+	attestorCert     tls.Certificate
 }
 
 func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
@@ -102,24 +105,12 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
 
-	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
-	if err != nil {
-		return err
-	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	cert, err := tls.LoadX509KeyPair("/Users/swopnilparajuli/Downloads/attestor1.crt", "/Users/swopnilparajuli/Downloads/attestor1.key")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:      caCertPool,
-				Certificates: []tls.Certificate{cert},
+				RootCAs:            c.caCert,
+				Certificates:       []tls.Certificate{c.attestorCert},
+				InsecureSkipVerify: true,
 			},
 		},
 	}
@@ -235,11 +226,25 @@ func GetCollector() CollectorI {
 	return &collc
 }
 
-func SetupCollector(url string, chainIDToAddress map[string]string, waitTime time.Duration) error {
+func SetupCollector(cfg config.CollecterServiceConfig, chainIDToAddress map[string]string, waitTime time.Duration) error {
+	caCert, err := os.ReadFile(cfg.CaCertificate)
+	if err != nil {
+		return err
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	attestorCert, err := tls.LoadX509KeyPair(cfg.AttestorCertificate, cfg.AttestorKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 	collc = collector{
-		uri:              url,
+		uri:              cfg.Uri,
 		collectorWaitDur: waitTime,
 		chainIDToAddress: make(map[string]string),
+		caCert:           caCertPool,
+		attestorCert:     attestorCert,
 	}
 
 	for k, v := range chainIDToAddress {
