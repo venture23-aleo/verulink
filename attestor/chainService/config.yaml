@@ -1,4 +1,5 @@
 ---
+name: attestor1
 chains:
 - name: aleo
   chain_id: 6694886634403
@@ -35,6 +36,7 @@ consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_dir: /path/to/log/dir
+  prometheus_gateway_url: https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway
 mode: dev # dev/prod
 
 signing_service:
