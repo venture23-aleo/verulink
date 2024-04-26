@@ -51,6 +51,6 @@ collector_service:
   uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
-  ca_certificate: /Users/swopnilparajuli/Downloads/ca.cer 
-  attestor_certificate: /Users/swopnilparajuli/Downloads/attestor1.crt
-  attestor_key: /Users/swopnilparajuli/Downloads/attestor1.key
+  ca_certificate: /configs/ca.cer
+  attestor_certificate: /configs/attestor1.crt
+  attestor_key: /configs/attestor1.key

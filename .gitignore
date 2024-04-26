@@ -10,3 +10,6 @@ go.work*
 # solidity-coverage files
 coverage
 coverage.json
+*.cer
+*.key
+*.crt
