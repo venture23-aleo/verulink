@@ -167,7 +167,6 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
-				//TEST Prometheus
 				logger.PushLogsToPrometheus(fmt.Sprintf("store_white_status_fail{attestor=\"%s\"} 0", logger.AttestorName))
 			}
 			return

@@ -13,7 +13,7 @@ func getKillSignals() []os.Signal {
 		syscall.SIGILL,
 		syscall.SIGTRAP,
 		syscall.SIGABRT,
-		// syscall.SIGSTKFLT,
+		syscall.SIGSTKFLT,
 		syscall.SIGSYS,
 	}
 }

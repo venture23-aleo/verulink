@@ -135,7 +135,6 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 		case availableInHeight > curMaturedHeight:
 			dur := time.Duration(availableInHeight-curMaturedHeight) * avgBlockGenDur
 			logger.GetLogger().Info("Sleeping ", zap.Duration("duration", dur))
-			//TEST Prometheus
 			logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_feedPacket_sleeping_duration{client=\"%s\",duration=\"%s\"} 1",cl.name, dur))
 			time.Sleep(dur)
 		}
@@ -147,7 +146,6 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 
 		for { // pull all packets as long as all are matured against waitDuration
 			logger.GetLogger().Info("Getting packet", zap.Uint64("seqnum", nextSeqNum))
-			//TEST Prometheus
 			logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_feedPacket_getting_packet{client=\"%s\",seqnum=\"%d\"} 1",cl.name, nextSeqNum))
 			pkt, err := cl.getPktWithSeq(ctx, chainID, nextSeqNum)
 			if err != nil {
@@ -160,7 +158,6 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 					zap.Uint64("Seq_num", nextSeqNum),
 					zap.Error(err),
 				)
-				//TEST Prometheus
 				logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_feedPacket_fetching_error{client=\"%s\",seqnum=\"%d\"} 0",cl.name, nextSeqNum))
 				goto postFor
 			}
@@ -198,7 +195,6 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
 	h, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting height", zap.Error(err))
-		//TEST Prometheus
 		logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_blockHeightPriorWaitDur_error{client=\"%s\"} 0",cl.name))
 		return 0
 	}
@@ -224,7 +220,6 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			index = 0
 		}
 		logger.GetLogger().Info("pruning base sequence number", zap.String("namespace", baseSeqNamespaces[index]))
-		//TEST Prometheus
 		logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_pruneBaseSeqNum_namespace{client=\"%s\",namespace=\"%s\"} 1",cl.name, baseSeqNamespaces[index]))
 
 		var (
@@ -246,7 +241,6 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			if err != nil {
 				logger.GetLogger().Error("error while getting packet.",
 					zap.Uint64("seq_num", i), zap.Error(err))
-				//TEST Prometheus
 				logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_pruneBaseSeqNum_getting_packet_error{client=\"%s\",seqnum=\"%d\"} 0",cl.name, i))
 				continue
 			}
@@ -274,7 +268,6 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 			index = 0
 		}
 		logger.GetLogger().Info("retrying aleo feeds", zap.String("namespace", retryPacketNamespaces[index]))
-		//TEST Prometheus
 		logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_retryFeed_namespace{client=\"%s\",namespace=\"%s\"} 1", cl.name, retryPacketNamespaces[index]))
 
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
@@ -305,7 +298,6 @@ func (cl *Client) managePacket(ctx context.Context) {
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding packet to retry namespace", zap.Any("packet", pkt))
-			//TEST Prometheus
 			logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_managePacket_retryCh{client=\"%s\",packet=\"%v\"} 1", cl.name,pkt))
 			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
 			err := store.StoreRetryPacket(ns, pkt)
@@ -314,7 +306,6 @@ func (cl *Client) managePacket(ctx context.Context) {
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
-				//TEST Prometheus
 				logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_managePacket_retryCh_error{client=\"%s\",namespace=\"%s\"} 0",cl.name,ns))
 			}
 		case pkt := <-completedCh:
@@ -325,7 +316,6 @@ func (cl *Client) managePacket(ctx context.Context) {
 				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
-			//TEST Prometheus
 			logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_managePacket_completedCh{client=\"%v\",namespace=\"%s\",sourceChainId=\"%s\",destChainId=\"%s\"pktseqnum=\"%v\"} 1",cl.name,ns,pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(),pkt.Sequence))
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, 0)
 			if err != nil {
@@ -333,7 +323,6 @@ func (cl *Client) managePacket(ctx context.Context) {
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
-				//TEST Prometheus
 				logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_managePacket_completedCh_error{client=\"%s\",namespace=\"%s\"} 0",cl.name,ns))
 			}
 		}

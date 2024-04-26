@@ -23,7 +23,14 @@ func TestLogger(t *testing.T) {
 
 	// PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=%s} 0", attestorName))
 
-	log:=fmt.Sprintf("chainService_aleo_feedPacket_sleeping_duration{chainID=\"%v\"} 1", chainId)
+	type packet struct {
+		a string
+	}
+
+	pkt := new(packet)
+	pkt.a = "hello"
+
+	log:=fmt.Sprintf("chainService_aleo_managePacket_retryCh{client=\"%s\",packet=\"%v\"} 1", chainId,pkt)
 	PushLogsToPrometheus(log)
 
 	//log2:= fmt.Sprintf("")
