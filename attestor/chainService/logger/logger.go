@@ -51,7 +51,9 @@ func PushLogsToPrometheus(log string) {
 		return
 	}
 	defer resp.Body.Close()
-	fmt.Println("posted", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		GetLogger().Error("could not post logs to prometheus")
+	}
 }
 
 func InitLogging(mode, name string, cfg *config.LoggerConfig) {
