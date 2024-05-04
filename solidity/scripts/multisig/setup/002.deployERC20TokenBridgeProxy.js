@@ -18,6 +18,7 @@ const bytecode = ProxyContract.bytecode;
 const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
         PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+        AleoAddressLibrary: process.env.AleoAddressLibrary,
     },
 });
 

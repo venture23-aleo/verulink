@@ -18,6 +18,7 @@ const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
         PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+        AleoAddressLibrary: process.env.AleoAddressLibrary,
     },
 });
 
