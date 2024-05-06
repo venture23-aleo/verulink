@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ContractConfig, snarkDeploy, waitTransaction } from "@aleojs/core";
+import { ContractConfig, snarkDeploy, waitTransaction } from "@doko-js/core";
 import networkConfig from "../aleo-config";
 import { to_address } from "aleo-program-to-address";
 import { PrivateKey, TransactionModel } from "@aleohq/sdk";

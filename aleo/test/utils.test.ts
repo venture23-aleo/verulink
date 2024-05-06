@@ -2,7 +2,7 @@ import { PrivateKey } from "@aleohq/sdk";
 import { UtilsContract } from "../artifacts/js/utils";
 import { ALEO_ZERO_ADDRESS } from "../utils/constants";
 import { sign } from "aleo-signer";
-import { js2leo } from "@aleojs/core";
+import { js2leo } from "@doko-js/core";
 
 const utils = new UtilsContract({ mode: "evaluate" });
 

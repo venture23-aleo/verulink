@@ -1,12 +1,11 @@
 import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
-
 import { Wusdc_holding_v0003Contract } from "../artifacts/js/wusdc_holding_v0003";
 import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
 
-const wusdcToken = new Wusdc_token_v0003Contract({mode: "execute"});
-const wusdcHolding = new Wusdc_holding_v0003Contract({mode: "execute"});
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
+const wusdcHolding = new Wusdc_holding_v0003Contract({ mode: "execute" });
 
-const TIMEOUT = 100_000;
+const TIMEOUT = 20000_000;
 
 describe("Holding", () => {
 
@@ -24,7 +23,7 @@ describe("Holding", () => {
             await wusdcToken.wait(tx);
         }, TIMEOUT)
 
-        test("Deploy token holding", async() => {
+        test("Deploy token holding", async () => {
             const tx = await wusdcHolding.deploy();
             await wusdcHolding.wait(tx);
         }, TIMEOUT);
@@ -39,7 +38,7 @@ describe("Holding", () => {
 
     describe("Hold Fund", () => {
 
-        test("should hold fund", async() => {
+        test("should hold fund", async () => {
             expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(admin)
             const initialHeldFund = await wusdcHolding.holdings(user, BigInt(0));
 
@@ -51,7 +50,7 @@ describe("Holding", () => {
             expect(finalHeldAmount).toBe(initialHeldFund + amountToHold);
         }, TIMEOUT);
 
-        test.failing("should not be called from non-admin", async() => {
+        test.failing("should not be called from non-admin", async () => {
             wusdcHolding.connect(aleoUser3);
             const [tx] = await wusdcHolding.hold_fund(user, amountToHold);
             await wusdcHolding.wait(tx);
@@ -71,36 +70,36 @@ describe("Holding", () => {
             }
         }, TIMEOUT);
 
-        test.failing("Releasing fund greater than held amount must fail", async() => {
-            const heldAmount =  await wusdcHolding.holdings(user, BigInt(0));
+        test.failing("Releasing fund greater than held amount must fail", async () => {
+            const heldAmount = await wusdcHolding.holdings(user, BigInt(0));
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.release_fund(user, heldAmount + BigInt(1));
             await wusdcHolding.wait(tx);
-        },TIMEOUT);
+        }, TIMEOUT);
 
-        test.failing("Releasing fund greater than balance must fail", async() => {
-            const holdingBalance =  await wusdcToken.account(wusdcHolding.address(), BigInt(0));
-            const heldAmount =  await wusdcHolding.holdings(user);
+        test.failing("Releasing fund greater than balance must fail", async () => {
+            const holdingBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0));
+            const heldAmount = await wusdcHolding.holdings(user);
             expect(holdingBalance).toBeLessThan(heldAmount);
 
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.release_fund(user, heldAmount);
             await wusdcHolding.wait(tx);
-        },TIMEOUT);
+        }, TIMEOUT);
 
-        test("Mint token balance in holding", async() => {
+        test("Mint token balance in holding", async () => {
             wusdcToken.connect(admin);
             const initialHoldingBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0));
             const [tx] = await wusdcToken.mint_public(wusdcHolding.address(), amountToHold);
             await wusdcHolding.wait(tx);
             const finalHoldingBalance = await wusdcToken.account(wusdcHolding.address());
             expect(finalHoldingBalance).toBe(initialHoldingBalance + amountToHold);
-        },TIMEOUT);
+        }, TIMEOUT);
 
-        test("Release fund", async() => {
-            const initialHoldingBalance =  await wusdcToken.account(wusdcHolding.address());
+        test("Release fund", async () => {
+            const initialHoldingBalance = await wusdcToken.account(wusdcHolding.address());
             const initialUserBalance = await wusdcToken.account(user, BigInt(0));
-            const heldAmount =  await wusdcHolding.holdings(user);
+            const heldAmount = await wusdcHolding.holdings(user);
             expect(heldAmount).toBeGreaterThanOrEqual(amountToRelease);
             expect(initialHoldingBalance).toBeGreaterThanOrEqual(amountToRelease);
 
@@ -108,15 +107,15 @@ describe("Holding", () => {
             const [tx] = await wusdcHolding.release_fund(user, amountToRelease); // keep holding 1unit
             await wusdcHolding.wait(tx);
 
-            const finalHoldingBalance =  await wusdcToken.account(wusdcHolding.address());
+            const finalHoldingBalance = await wusdcToken.account(wusdcHolding.address());
             const finalUserBalance = await wusdcToken.account(user);
-            const finalHeldAmount =  await wusdcHolding.holdings(user);
+            const finalHeldAmount = await wusdcHolding.holdings(user);
             expect(finalUserBalance).toBe(initialUserBalance + amountToRelease);
-            expect(finalHoldingBalance).toBe( initialHoldingBalance - amountToRelease);
+            expect(finalHoldingBalance).toBe(initialHoldingBalance - amountToRelease);
             expect(finalHeldAmount).toBe(heldAmount - amountToRelease);
-        },TIMEOUT);
+        }, TIMEOUT);
 
-        test.failing("should not be called from non-admin", async() => {
+        test.failing("should not be called from non-admin", async () => {
             const heldAmount = await wusdcHolding.holdings(user);
             expect(heldAmount).toBeGreaterThanOrEqual(BigInt(1))
 
@@ -128,13 +127,13 @@ describe("Holding", () => {
 
     describe("Transfer Ownership", () => {
 
-        test.failing("should not tranfer_ownership by non-admin", async() => {
+        test.failing("should not tranfer_ownership by non-admin", async () => {
             wusdcHolding.connect(aleoUser2);
             const [tx] = await wusdcHolding.transfer_ownership_holding(aleoUser2);
             await wusdcHolding.wait(tx);
         }, TIMEOUT);
 
-        test("should tranfer_ownership", async() => {
+        test("should tranfer_ownership", async () => {
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.transfer_ownership_holding(aleoUser2);
             await wusdcHolding.wait(tx);

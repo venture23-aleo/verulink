@@ -115,7 +115,7 @@ const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> =
 }
 
 
-describe.skip("Council", () => {
+describe("Council", () => {
   const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string()
   const admin = council.address();
