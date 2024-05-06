@@ -275,7 +275,9 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		// this is the most efficient approach.
 		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], 10)
 		if err != nil {
-			//log error
+			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
+			logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_aleo_db_retrive_delete_packet_fail{attestor=\"%s\",error=\"%s\"} 0",
+			logger.AttestorName, err.Error()))
 			goto indIncr
 		}
 		for _, pkt := range pkts {
