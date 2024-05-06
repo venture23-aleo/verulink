@@ -158,7 +158,7 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting current height")
-		logger.PushLogsToPrometheus(fmt.Sprintf("chainService_eth_fetch_current_block_height_fail{attestor=\"%s\", error=\"%s\"} 0",logger.AttestorName,err.Error()))
+		logger.PushLogsToPrometheus(fmt.Sprintf("chainService_eth_fetch_current_block_height_fail{attestor=\"%s\", client=\"%s\"} 0",logger.AttestorName,cl.name))
 		return 0, err
 	}
 
@@ -276,8 +276,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 						zap.Uint64("start_height", startHeight),
 						zap.Uint64("end_height", endHeight),
 					)
-					logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_packet_filtered{attestor=\"%s\",error=\"%s\",startHeight=\"%d\",endHeight=\"%d\"} 0",
-					logger.AttestorName,err.Error(),startHeight,endHeight))
+					logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_packet_filtered{attestor=\"%s\",startHeight=\"%d\",endHeight=\"%d\"} 0",
+					logger.AttestorName,startHeight,endHeight))
 					break L1
 				}
 
