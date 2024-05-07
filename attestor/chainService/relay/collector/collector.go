@@ -183,12 +183,21 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		u.RawQuery = queryParams.Encode()
 
 		ctx, cncl := context.WithTimeout(ctx, time.Minute)
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:            c.caCert,
+					Certificates:       []tls.Certificate{c.attestorCert},
+					InsecureSkipVerify: true,
+				},
+			},
+		}
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			goto postFor
 		}
-
-		resp, err = http.DefaultClient.Do(req)
+		
+		resp, err = client.Do(req)
 		if err != nil {
 			goto postFor
 		}

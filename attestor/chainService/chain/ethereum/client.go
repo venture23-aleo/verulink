@@ -252,7 +252,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx)
 			if err != nil {
 				logger.GetLogger().Error("error while getting block height", zap.Error(err))
-				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_feedPacket_fetch_block_height_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error() ))
+				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_feedPacket_fetch_block_height_fail{attestor=\"%s\",client=\"%s\"} 0",logger.AttestorName,cl.name))
 				break L1
 			}
 
@@ -373,8 +373,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			pkts, err := cl.filterPacketLogs(ctx, s, e)
 			if err != nil {
 				logger.GetLogger().Error(err.Error())
-				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_prune_filter_packet_fail{attestor=\"%s\",error=\"%s\"} 0",
-				logger.AttestorName, err.Error()))
+				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_prune_filter_packet_fail{attestor=\"%s\",client=\"%s\"} 0",
+				logger.AttestorName, cl.name))
 				break
 			}
 

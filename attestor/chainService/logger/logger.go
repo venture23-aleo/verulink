@@ -52,7 +52,7 @@ func PushLogsToPrometheus(log string) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		GetLogger().Error("could not post logs to prometheus")
+		GetLogger().Error(fmt.Sprintf("could not post logs to prometheus: %d", resp.StatusCode))
 	}
 }
 
