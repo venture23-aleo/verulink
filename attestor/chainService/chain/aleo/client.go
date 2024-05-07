@@ -318,7 +318,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
-			logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_update_sequence_number_from_completedCh{attestor=\"%s\",client=\"%v\",namespace=\"%s\",sourceChainId=\"%s\",destChainId=\"%s\"pktseqnum=\"%v\"} 1", logger.AttestorName, cl.name, ns, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
+			logger.PushLogsToPrometheus(fmt.Sprintf("chainService_aleo_update_sequence_number_from_completedCh{attestor=\"%s\",client=\"%v\",namespace=\"%s\",sourceChainId=\"%s\",destChainId=\"%s\",pktseqnum=\"%v\"} 1", logger.AttestorName, cl.name, ns, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, 0)
 			if err != nil {
 				logger.GetLogger().Error(
