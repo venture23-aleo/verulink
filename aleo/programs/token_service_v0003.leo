@@ -227,7 +227,7 @@ program token_service_v0003.aleo {
         assert_eq(from, owner);
 
         // Assert new min transfer is less than max_transfer
-        let max_transfer= Mapping::get(max_transfers, token_address);
+        let max_transfer:u128= Mapping::get(max_transfers, token_address);
         assert(min_transfer<=max_transfer);
 
         assert(Mapping::contains(min_transfers, token_address));
@@ -249,7 +249,7 @@ program token_service_v0003.aleo {
         assert_eq(from, owner);
 
         // Assert new min transfer is less than max_transfer
-        let min_transfer= Mapping::get(min_transfers, token_address);
+        let min_transfer:u128= Mapping::get(min_transfers, token_address);
         assert(max_transfer>=min_transfer);
 
         assert(Mapping::contains(max_transfers, token_address));
