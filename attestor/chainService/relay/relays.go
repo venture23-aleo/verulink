@@ -183,7 +183,8 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
-		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=\"%s\"} 0", logger.AttestorName))
+		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 0",
+		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature))
 		return
 	}
 
@@ -191,7 +192,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		zap.String("source_chain", pkt.Source.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence),
 		zap.String("hash", hash), zap.String("signature", signature)) 
-	logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request_passed{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
+	logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
 	logger.AttestorName, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature))
 
 	err = r.collector.SendToCollector(ctx, sp, hash, signature)
@@ -201,12 +202,13 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			return
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
-		logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_fail{attestor=\"%s\"} 0", logger.AttestorName))
+		logger.PushLogsToPrometheus(fmt.Sprintf("post_signed_packet_to_db_service{attestor=\"%s\",source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 0",
+		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
 		return
 	}
 
 	logger.GetLogger().Info("Yay packet successfully sent")
-	logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_success{attestor=\"%s\",source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1",
+	logger.PushLogsToPrometheus(fmt.Sprintf("post_signed_packet_to_db_service{attestor=\"%s\",source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1",
 		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
 }
 

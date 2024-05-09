@@ -235,7 +235,7 @@ describe('TokenService', () => {
     it('should transfer USDT and checking if "Token not supported" in _packetify', async () => {
         await (await usdTMock.mint(other.address, 150)).wait();
         await (await usdTMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await proxiedV1.disable(usdTMock.address, destchainID);
+        await proxiedV1.disable(usdTMock.address);
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: token not supported");
     });
@@ -365,7 +365,7 @@ describe('TokenService', () => {
         // Add token
         await proxiedV1.connect(owner).addToken(ADDRESS_ONE, destchainID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
-        await proxiedV1.disable(ADDRESS_ONE, destchainID);
+        await proxiedV1.disable(ADDRESS_ONE);
         inPacket[4][1] = ADDRESS_ONE;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
@@ -462,6 +462,17 @@ describe('TokenService', () => {
         const signatures = signature1 + signature2.slice(2)
         await proxiedV1.withdraw(inPacket, signatures);
     });
+
+    // it('should revert with message "TokenService: insufficient quorum"', async () => {
+    //     // Set up the test scenario
+    //     const tokenAddress = ADDRESS_ONE;
+    //     const amount = 100;
+    //     const receiver = "aleo1g2vt2rag4fzug6aklxxxhhraza54gw0jr9q6myjtkm3jjmdtugqq6yrng8";
+    
+    //     // Call the withdraw function with quorum set to something other than YEA or NAY
+    //     await expect(proxiedV1.withdraw(packet, signaturesInsufficientQuorum))
+    //         .to.be.revertedWith("TokenService: insufficient quorum");
+    // });    
 
     //Test for withdraw
     it('should withdraw', async () => {
@@ -603,7 +614,7 @@ describe('TokenService', () => {
             ['bytes32', 'uint8'],
             [packetHash, 1]
         );
-        await (await proxiedV1.disable(usdcMock.address, ALEO_CHAINID)).wait();
+        await (await proxiedV1.disable(usdcMock.address)).wait();
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2)
@@ -701,7 +712,6 @@ describe('TokenService', () => {
     //     await expect (proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: invalid signature length");
     // });
 
-
     it('should fail in double withdraw', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
@@ -717,7 +727,7 @@ describe('TokenService', () => {
         const signatures = signature1 + signature2.slice(2)
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
-      
+
         await (await proxiedV1.connect(other).withdraw(inPacket, signatures)).wait();
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("ConsumedPacketManagerImpl: packet already consumed");
     });
@@ -774,7 +784,6 @@ describe('TokenService', () => {
     //     // expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(0);
     //     // expect(await usdcMock.balanceOf(other.address)).to.be.equal(150);
     // });
-
 
     it('should not transferToVault if token is not supported', async () => {
         const tokenAddress = ethers.constants.AddressZero;
@@ -863,7 +872,7 @@ describe('TokenService', () => {
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.reverted;
     });
 
-    it('should validate Aleo address', async () => {
+    it('should validate Aleo address for "transfer(string receiver)"', async () => {
         const tokenAddress = ADDRESS_ONE;
         const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
@@ -881,6 +890,25 @@ describe('TokenService', () => {
         const max = 100;
         await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await expect(proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl2", { value: 100 })).to.be.revertedWith("Invalid Aleo address length");
+    });
+
+    it('should revert if Aleo address length is not 63 for "transfer(address,uint256,string)"', async () => {
+        // Define test parameters
+        const tokenAddress = ADDRESS_ONE;
+        const destTokenAddress = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+        const receiver = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl2";
+        const value = 100;
+        const min = 1;
+        const max = 100;
+
+        // Add token with necessary details
+        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+
+        // Expect revert due to invalid Aleo address length
+        await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, value, receiver)).to.be.revertedWith("Invalid Aleo address length");
+        // await expect(proxiedV1.transfer(tokenAddress, value, receiver)).to.be.revertedWith("Invalid Aleo address length");
     });
 });
 
