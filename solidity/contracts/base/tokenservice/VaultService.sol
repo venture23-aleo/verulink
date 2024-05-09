@@ -20,12 +20,16 @@ abstract contract VaultService is IVaultService, OwnableUpgradeable {
     /// @param _name The name of the vault service
     function __VaultService_init(
         address _token,
-        string memory _name
+        string memory _name,
+        address _owner
     ) internal {
         __Ownable_init_unchained();
+        _transferOwnership(_owner);
         token = _token;
         name = _name;
     }
+
+    
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

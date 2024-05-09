@@ -37,8 +37,9 @@ contract BlackListService is IBlackListService, OwnableUpgradeable, Upgradeable 
     /// @dev Initializes the BlackListService contract
     /// @param _usdc Address of the USDC contract
     /// @param _usdt Address of the USDT contract
-    function BlackList_init(address _usdc, address _usdt) public virtual initializer {
+    function BlackList_init(address _usdc, address _usdt, address _owner) public virtual initializer {
         __Ownable_init();
+        _transferOwnership(_owner);
         usdc = _usdc;
         usdt = _usdt;
     }

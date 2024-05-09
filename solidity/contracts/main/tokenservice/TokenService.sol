@@ -44,7 +44,8 @@ contract TokenService is
     /// @param _destChainId Chain ID of the destination network
     /// @param _blackListService Address of the BlackListService contract
     function TokenService_init(
-        address bridge, 
+        address bridge,
+        address _owner,
         uint256 _chainId,
         uint256 _destChainId,
         address _blackListService
@@ -59,6 +60,7 @@ contract TokenService is
             address(this)
         );
         blackListService = IBlackListService(_blackListService);
+        _transferOwnership(_owner);
     }
 
     receive() external payable onlyOwner {

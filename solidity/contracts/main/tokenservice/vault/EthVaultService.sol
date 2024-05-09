@@ -17,9 +17,10 @@ contract EthVaultService is VaultService, Upgradeable {
     /// @dev Initializes the EthVaultService contract
     /// @param _name A descriptive name for the vault service
     function EthVaultService_init(
-        string memory _name
+        string memory _name,
+        address _owner
     ) public initializer {
-        __VaultService_init(ETH_TOKEN,_name);
+        __VaultService_init(ETH_TOKEN, _name, _owner);
     }
 
     /// @dev Authorizes an upgrade only if the caller is the owner

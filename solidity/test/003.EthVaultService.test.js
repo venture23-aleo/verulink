@@ -4,18 +4,18 @@ import hardhat from 'hardhat';
 const { ethers } = hardhat;
 // Define the test suite
 describe('EthVaultService', () => {
-    let owner, other,EthVaultServiceImpl, ethVaultServiceInstance, initializeData, EthVaultServiceProxy, proxiedEthVaultService;
+    let deployer, owner, other,EthVaultServiceImpl, ethVaultServiceInstance, initializeData, EthVaultServiceProxy, proxiedEthVaultService;
     let abi;
 
     beforeEach(async () => {
-        [owner, other] = await ethers.getSigners();
+        [deployer, owner, other] = await ethers.getSigners();
 
         EthVaultServiceImpl = await ethers.getContractFactory('EthVaultService');
         ethVaultServiceInstance = await EthVaultServiceImpl.deploy();
         await ethVaultServiceInstance.deployed();
         EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
         abi = EthVaultServiceImpl.interface.format();
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("EthVaultService_init", ["ETH Vault"]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("EthVaultService_init", ["ETH Vault", owner.address]);
         const ethVaultServiceProxy = await EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, initializeData);
         await ethVaultServiceProxy.deployed();
         proxiedEthVaultService = EthVaultServiceImpl.attach(ethVaultServiceProxy.address);
@@ -35,7 +35,7 @@ describe('EthVaultService', () => {
 
     // Test for second time initialize and revert
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedEthVaultService["EthVaultService_init(string)"]("ETH Vault 1.5"))
+        await expect(proxiedEthVaultService["EthVaultService_init(string,address)"]("ETH Vault 1.5", owner.address))
             .to.be.revertedWith('Initializable: contract is already initialized');
     });
 
@@ -45,7 +45,7 @@ describe('EthVaultService', () => {
     });
 
     it('should not transfer if balance is less than send amount', async() => {
-        await expect(proxiedEthVaultService.transfer(100000000000000)).to.be.revertedWith("EthVaultService: eth approval failed");
+        await expect(proxiedEthVaultService.connect(owner).transfer(100000000000000)).to.be.revertedWith("EthVaultService: eth approval failed");
     });
 
     it('should transfer', async() => {
@@ -54,7 +54,7 @@ describe('EthVaultService', () => {
             to: proxiedEthVaultService.address,
             value: ethers.utils.parseEther('10'),
           });
-        await(await proxiedEthVaultService.transfer(ethers.utils.parseEther('10'))).wait();
+        await(await proxiedEthVaultService.connect(owner).transfer(ethers.utils.parseEther('10'))).wait();
         expect(await ethers.provider.getBalance(proxiedEthVaultService.address)).to.be.equal(0);
         
     })
@@ -68,18 +68,18 @@ describe('EthVaultService', () => {
 
 
 describe("Erc20VaultService Upgradeability", () => {
-    let owner,upgradeData, newOwner, other, initializeData, Erc20VaultServiceProxy, EthVaultServiceV2, erc20VaultServiceV2Instance, ethVaultServiceV2Instance, EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy, proxiedEthVaultService;
+    let deployer, owner,upgradeData, newOwner, other, initializeData, Erc20VaultServiceProxy, EthVaultServiceV2, erc20VaultServiceV2Instance, ethVaultServiceV2Instance, EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy, proxiedEthVaultService;
     let abi;
         // Deploy a new Pausable contract before each test
     beforeEach(async () => {
-        [owner,  newOwner, other] = await ethers.getSigners();
+        [deployer, owner,  newOwner, other] = await ethers.getSigners();
 
         EthVaultServiceImpl = await ethers.getContractFactory('EthVaultService');
         ethVaultServiceInstance = await EthVaultServiceImpl.deploy();
         await ethVaultServiceInstance.deployed();
         EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
         abi = EthVaultServiceImpl.interface.format();
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("EthVaultService_init", ["ETH"]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("EthVaultService_init", ["ETH",owner.address]);
         const ethVaultServiceProxy = await EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, initializeData);
         await ethVaultServiceProxy.deployed();
         proxiedEthVaultService = EthVaultServiceImpl.attach(ethVaultServiceProxy.address);
@@ -91,7 +91,7 @@ describe("Erc20VaultService Upgradeability", () => {
 
         let EthVaultServiceV2ABI = EthVaultServiceV2.interface.format();
         upgradeData = new ethers.utils.Interface(EthVaultServiceV2ABI).encodeFunctionData("initializev2", [5]);
-        await proxiedEthVaultService.upgradeToAndCall(ethVaultServiceV2Instance.address, upgradeData);
+        await proxiedEthVaultService.connect(owner).upgradeToAndCall(ethVaultServiceV2Instance.address, upgradeData);
         Erc20VaultServiceProxy = EthVaultServiceV2.attach(ethVaultServiceProxy.address);
     });
 

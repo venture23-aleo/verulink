@@ -5,11 +5,11 @@ const { ethers } = hardhat;
 
 // Define the test suite
 describe('AttestorManager', () => {
-    let owner, attestorManagerImpl, AttestorManager, AttestorManagerProxy, initializeData, aleolib, proxiedV1, attestor, other, signer;
+    let deployer, owner, attestorManagerImpl, AttestorManager, AttestorManagerProxy, initializeData, aleolib, proxiedV1, attestor, other, signer;
 
     // Deploy a new AttestorManager contract before each test
     beforeEach(async () => {
-        [owner, attestor, other, signer] = await ethers.getSigners();
+        [deployer, owner, attestor, other, signer] = await ethers.getSigners();
 
         const lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
         const libInstance = await lib.deploy();
@@ -30,7 +30,7 @@ describe('AttestorManager', () => {
         attestorManagerImpl = await AttestorManager.deploy();
         await attestorManagerImpl.deployed();
         AttestorManagerProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Bridge_init", [2]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("Bridge_init", [2, owner.address]);
         const proxy = await AttestorManagerProxy.deploy(attestorManagerImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = AttestorManager.attach(proxy.address);
@@ -52,7 +52,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(newAttestor, quorumRequired)).wait();
 
         // Check if the attestor was added
         const isAttestor = await proxiedV1.isAttestor(newAttestor);
@@ -66,7 +66,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.updateQuorum(quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).updateQuorum(quorumRequired)).wait();
 
         // Check if the attestor was added
         // const isAttestor = await proxiedV1.isAttestor(newAttestor);
@@ -106,7 +106,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestors
-        await (await proxiedV1.addAttestors(attestors, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestors(attestors, quorumRequired)).wait();
 
         // Check if the attestor was added
         const isAttestor0 = await proxiedV1.isAttestor(attestors[0]);
@@ -153,19 +153,19 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(newAttestor, quorumRequired)).wait();
         const isAttestor = await proxiedV1.isAttestor(newAttestor);
         expect(isAttestor).to.be.true;
         const newQuorum = await proxiedV1.quorumRequired();
         expect(newQuorum).to.equal(quorumRequired);
         // Attempt to add an existing attestor
-        await expect(proxiedV1.addAttestor(newAttestor, quorumRequired)).to.be.revertedWith('AttestorManager: attestor already exists');
+        await expect(proxiedV1.connect(owner).addAttestor(newAttestor, quorumRequired)).to.be.revertedWith('AttestorManager: attestor already exists');
     });
 
     // Test attempting to add an attestor with zero address
     it('should revert when trying to add an attestor with zero address', async () => {
         // Attempt to add an attestor with zero address
-        await expect(proxiedV1.addAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('AttestorManager: zero address');
+        await expect(proxiedV1.connect(owner).addAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('AttestorManager: zero address');
     });
 
     // Test removing an attestor
@@ -174,10 +174,10 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(newAttestor, quorumRequired)).wait();
 
         // Remove attestor
-        await (await proxiedV1.removeAttestor(newAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).removeAttestor(newAttestor, quorumRequired)).wait();
 
         // Check if the attestor was removed
         const isAttestor = await proxiedV1.isAttestor(newAttestor);
@@ -204,13 +204,13 @@ describe('AttestorManager', () => {
         const nonExistingAttestor = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing attestor
-        await expect(proxiedV1.removeAttestor(nonExistingAttestor, 2)).to.be.revertedWith('AttestorManager: unknown attestor');
+        await expect(proxiedV1.connect(owner).removeAttestor(nonExistingAttestor, 2)).to.be.revertedWith('AttestorManager: unknown attestor');
     });
 
     // Test attempting to remove an attestor with zero address
     it('should revert when trying to remove an attestor with zero address', async () => {
         // Attempt to remove an attestor with zero address
-        await expect(proxiedV1.removeAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('AttestorManager: unknown attestor');
+        await expect(proxiedV1.connect(owner).removeAttestor(ethers.constants.AddressZero, 2)).to.be.revertedWith('AttestorManager: unknown attestor');
     });
 
     // Test onlyOwner modifier for addAttestor function
@@ -219,7 +219,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor with the owner
-        await (await proxiedV1.addAttestor(newAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(newAttestor, quorumRequired)).wait();
 
         // Try to add attestor with another account and expect it to revert
         await expect(
@@ -233,7 +233,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor with the owner
-        await (await proxiedV1.addAttestor(existingAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(existingAttestor, quorumRequired)).wait();
 
         // Try to remove attestor with another account and expect it to revert
         await expect(
@@ -245,7 +245,7 @@ describe('AttestorManager', () => {
         const newAttestor = ethers.Wallet.createRandom().address;
         const quorumRequired = 2;
 
-        const addAttestorTx = await proxiedV1.addAttestor(newAttestor, quorumRequired);
+        const addAttestorTx = await proxiedV1.connect(owner).addAttestor(newAttestor, quorumRequired);
 
         // Check event emission
         await expect(addAttestorTx)
@@ -258,9 +258,9 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor first
-        await (await proxiedV1.addAttestor(existingAttestor, quorumRequired)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(existingAttestor, quorumRequired)).wait();
 
-        const removeAttestorTx = await proxiedV1.removeAttestor(existingAttestor, quorumRequired);
+        const removeAttestorTx = await proxiedV1.connect(owner).removeAttestor(existingAttestor, quorumRequired);
 
         // Check event emission
         await expect(removeAttestorTx)
