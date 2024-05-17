@@ -97,8 +97,6 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 // checks the connection with signing service and collector service at
 // regular interval
 func checkHealthServices(ctx context.Context, duration time.Duration) {
-	logger.GetLogger().Info("here I am ")
-	logger.GetLogger().Info("durauotn ", zap.Duration("dd ", duration))
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
 
