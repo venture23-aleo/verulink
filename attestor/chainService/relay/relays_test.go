@@ -379,6 +379,7 @@ func TestProcessPackets(t *testing.T) {
 type collectorTest struct {
 	sendToCollector          func(sp *chain.ScreenedPacket, pktHash, signature string) error
 	receivePktsFromCollector func(ctx context.Context, ch chan<- *chain.MissedPacket)
+	checkHealth              func(ctx context.Context) error
 }
 
 func (c *collectorTest) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, signature string) error {
@@ -394,6 +395,13 @@ func (c *collectorTest) ReceivePktsFromCollector(
 	if c.receivePktsFromCollector != nil {
 		c.receivePktsFromCollector(ctx, ch)
 	}
+}
+
+func (c *collectorTest) CheckCollectorHealth(ctx context.Context) error {
+	if c.checkHealth(ctx) != nil {
+		return c.checkHealth(ctx)
+	}
+	return nil
 }
 
 type screenTest struct {
@@ -417,6 +425,7 @@ func (s *screenTest) Screen(pkt *chain.Packet) bool {
 
 type signTest struct {
 	signScreenedPacket func(sp *chain.ScreenedPacket) (string, string, error)
+	checkHealth        func(ctx context.Context) error
 }
 
 func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, string, error) {
@@ -425,4 +434,11 @@ func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.Scre
 	}
 
 	return "hash", "mySignature", nil
+}
+
+func (s *signTest) CheckSigningServiceHealth(ctx context.Context) error {
+	if s.checkHealth != nil {
+		return s.checkHealth(ctx)
+	}
+	return nil
 }

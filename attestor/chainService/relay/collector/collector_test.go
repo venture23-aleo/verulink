@@ -217,13 +217,14 @@ func TestGetPktsFromCollector(t *testing.T) {
 func TestMTLSIntegration(t *testing.T) {
 	dbUrl := "https://aleomtls.ibriz.ai/"
 
-	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
+	caCert, err := os.ReadFile("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.crt")
 	assert.NoError(t, err)
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair("/Users/swopnilparajuli/Downloads/attestor1.crt", "/Users/swopnilparajuli/Downloads/attestor1.key")
+	cert, err := tls.LoadX509KeyPair("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.crt", 
+	"/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.key")
 	assert.NoError(t, err)
 
 	client := &http.Client{
@@ -236,7 +237,11 @@ func TestMTLSIntegration(t *testing.T) {
 		},
 	}
 
-	resp, err := client.Get(dbUrl)
+	_, err = client.Get(dbUrl)
+	if err != nil {
+        fmt.Println("Connection failed:", err)
+        
+    }
 	assert.NoError(t, err)
-	fmt.Println("response is", resp)
+	
 }
