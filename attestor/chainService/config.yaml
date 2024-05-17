@@ -31,6 +31,7 @@ chains:
   dest_chains:
     - aleo
 
+check_health_service : 1m
 db_dir: /path/to/db/dir
 consume_packet_workers: 10 # Default is 10
 log:
@@ -48,7 +49,8 @@ signing_service:
   password: "password"
 
 collector_service:
-  uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
+  # uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
+  uri : https://aleomtls.ibriz.ai
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/ca.cer

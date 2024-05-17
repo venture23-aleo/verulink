@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 	common "github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
@@ -86,9 +87,51 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	missedPktCh := make(chan *chain.MissedPacket)
 
 	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
+	go checkHealthServices(ctx, cfg.CheckHealthServiceDur)
 	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
 	go consumeMissedPackets(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
+}
+
+
+// checks the connection with signing service and collector service at
+// regular interval
+func checkHealthServices(ctx context.Context, duration time.Duration) {
+	logger.GetLogger().Info("here I am ")
+	logger.GetLogger().Info("durauotn ", zap.Duration("dd ", duration))
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-ticker.C:
+			coll := collector.GetCollector()
+			err := coll.CheckCollectorHealth(ctx)
+			if err != nil {
+				logger.GetLogger().Error("Bad Connection to collector service")
+				logger.PushLogsToPrometheus(fmt.Sprintf("db_service_health{attestor=\"%s\"} 0", logger.AttestorName))
+				continue
+			}
+			logger.GetLogger().Info("Lively connection to collector service")
+			logger.PushLogsToPrometheus(fmt.Sprintf("db_service_health{attestor=\"%s\"} 1", logger.AttestorName))
+
+			signingService := signer.GetSigner()
+			err = signingService.CheckSigningServiceHealth(ctx)
+
+			if err != nil {
+				logger.GetLogger().Error("Connection to signing service failed")
+				logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_health{attestor=\"%s\"} 0", logger.AttestorName))
+				continue
+			}
+			logger.GetLogger().Info("Connection to signing service established")
+			logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_health{attestor=\"%s\"} 1", logger.AttestorName))
+
+		}
+	}
+
 }
 
 // initPacketFeeder starts the routine to fetch and manage the packets of all the registered chains
