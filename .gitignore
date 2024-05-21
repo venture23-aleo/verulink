@@ -13,3 +13,4 @@ coverage.json
 *.cer
 *.key
 *.crt
+*venv

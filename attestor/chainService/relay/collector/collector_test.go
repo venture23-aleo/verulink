@@ -237,11 +237,16 @@ func TestMTLSIntegration(t *testing.T) {
 		},
 	}
 
-	_, err = client.Get(dbUrl)
+	resp, err := client.Get(dbUrl)
 	if err != nil {
         fmt.Println("Connection failed:", err)
         
     }
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Bad request :", resp.StatusCode)
+	}
+	assert.Equal(t, resp.StatusCode,http.StatusOK)
 	assert.NoError(t, err)
 	
 }

@@ -90,6 +90,11 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		return err
+	}
+	
 	defer resp.Body.Close()
 	return nil
 }
