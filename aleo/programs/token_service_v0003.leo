@@ -332,20 +332,28 @@ program token_service_v0003.aleo {
         let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_addr, 0u128);
 
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
-            allowed_withdrawal = max_withdrawal;
-            snapshot_height = current_height;
-            amount_withdrawn = amount;
+            // allowed_withdrawal=max_withdrawal;
+            // snapshot_height = current_height;
+            // amount_withdrawn = amount;
+            Mapping::set(token_snapshot_withdrawal, wrapped_addr, max_withdrawal);
+            Mapping::set(token_snapshot_height, wrapped_addr, current_height);
+            Mapping::set(token_amount_withdrawn, wrapped_addr, amount);
+
         } else {
-            amount_withdrawn = amount_withdrawn + amount;
+            // amount_withdrawn = amount_withdrawn + amount;
+            Mapping::set(token_snapshot_withdrawal, wrapped_addr, allowed_withdrawal);
+            Mapping::set(token_snapshot_height, wrapped_addr, snapshot_height);
+            Mapping::set(token_amount_withdrawn, wrapped_addr, amount_withdrawn+amount);
+
         }
 
         if (current_supply >= withdrawal_limit.threshold_no_limit) {
             assert(amount_withdrawn <= allowed_withdrawal);
         }
 
-        Mapping::set(token_snapshot_withdrawal, wrapped_addr, allowed_withdrawal);
-        Mapping::set(token_snapshot_height, wrapped_addr, snapshot_height);
-        Mapping::set(token_amount_withdrawn, wrapped_addr, amount_withdrawn);
+        // Mapping::set(token_snapshot_withdrawal, wrapped_addr, allowed_withdrawal);
+        // Mapping::set(token_snapshot_height, wrapped_addr, snapshot_height);
+        // Mapping::set(token_amount_withdrawn, wrapped_addr, amount_withdrawn);
         
         // Decrease the total supply
         Mapping::set(total_supply, wrapped_addr, current_supply - amount);
