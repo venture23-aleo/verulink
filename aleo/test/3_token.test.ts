@@ -43,11 +43,12 @@ describe("Token", () => {
             expect(finalBalance).toBe(initialBalance + amount);
         }, TIMEOUT)
 
-        test.failing("Can only be called from admin", async () => {
+        test("Can only be called from admin", async () => {
             wusdcToken.connect(aleoUser3);
             const amount = BigInt(10_000);
             const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT)
     })
 
@@ -66,13 +67,14 @@ describe("Token", () => {
 
         }, TIMEOUT)
 
-        test.failing("Burns less than balance - must fail", async () => {
+        test("Burns less than balance - must fail", async () => {
             const amount = BigInt(100_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
             expect(initialBalance).toBeLessThan(amount);
 
             const [tx] = await wusdcToken.burn_public(aleoUser2, amount);
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
 
         }, TIMEOUT)
     })

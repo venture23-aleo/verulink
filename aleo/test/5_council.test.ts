@@ -206,7 +206,7 @@ describe("Council", () => {
       expect(await council.proposal_vote_counts(proposalHash)).toBe(1)
     }, TIMEOUT)
 
-    test.failing("Propose with invalid proposalId", async () => {
+    test("Propose with invalid proposalId", async () => {
       const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
       const updateThresholdProposal: UpdateThreshold = {
         id: proposalId,
@@ -216,11 +216,12 @@ describe("Council", () => {
 
       council.connect(councilMember1)
       const [proposeTx] = await council.propose(proposalId, proposalHash);
-      await proposeTx.wait();
+      const result = await proposeTx.wait();
+      expect(result.execution).toBeUndefined(); 
 
     }, TIMEOUT)
 
-    test.failing("Propose from non-council member", async () => {
+    test("Propose from non-council member", async () => {
       const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
       const updateThresholdProposal: UpdateThreshold = {
         id: proposalId,
@@ -230,21 +231,23 @@ describe("Council", () => {
 
       council.connect(aleoUser4)
       const [proposeTx] = await council.propose(proposalId, proposalHash);
-      await proposeTx.wait();
-
+      const result = await proposeTx.wait();
+      expect(result.execution).toBeUndefined(); 
     }, TIMEOUT)
 
-    test.failing("Vote from non council member fails", async () => {
+    test("Vote from non council member fails", async () => {
       council.connect(aleoUser4)
       const [voteTx] = await council.vote(proposalHash, true);
-      await voteTx.wait();
+      const result = await voteTx.wait();
+      expect(result.execution).toBeUndefined(); 
     }, TIMEOUT)
 
-    test.failing("Vote from council member1 fails", async () => {
+    test("Vote from council member1 fails", async () => {
       // This fails because propose is counted as a vote
       council.connect(councilMember1)
       const [voteTx] = await council.vote(proposalHash, true);
-      await voteTx.wait();
+      const result = await voteTx.wait();
+      expect(result.execution).toBeUndefined(); 
     }, TIMEOUT)
 
     test("Vote NO from council member2", async () => {
@@ -257,17 +260,19 @@ describe("Council", () => {
       expect(finalVotes).toBe(initialVotes + 1);
     }, TIMEOUT)
 
-    test.failing("Vote again from council member2 fails", async () => {
+    test("Vote again from council member2 fails", async () => {
       council.connect(councilMember2)
       const [voteTx] = await council.vote(proposalHash, true);
-      await voteTx.wait();
+      const result = await voteTx.wait();
+      expect(result.execution).toBeUndefined(); 
     }, TIMEOUT)
 
-    test.failing("Execute without enough votes fails", async () => {
+    test("Execute without enough votes fails", async () => {
       const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
       const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-      await updateThresholExecTx.wait();
+      const result = await updateThresholExecTx.wait();
+      expect(result.execution).toBeUndefined(); 
     }, TIMEOUT);
 
     test("Vote YES from council member3", async () => {
@@ -294,11 +299,12 @@ describe("Council", () => {
       expect(votes[2]).toBe(true);
     })
 
-    test.failing("Execute with both YES and NO votes fails", async () => {
+    test("Execute with both YES and NO votes fails", async () => {
       const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, councilMember3];
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
       const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-      await updateThresholExecTx.wait();
+      const result = await updateThresholExecTx.wait();
+      expect(result.execution).toBeUndefined(); 
     }, TIMEOUT);
 
     test("Change vote of council member2 to YES", async () => {
@@ -337,7 +343,7 @@ describe("Council", () => {
 
   })
 
-  describe.skip("Add member", () => {
+  describe("Add member", () => {
     const newMember = new PrivateKey().to_address().to_string()
     const updatedThreshold = 1;
     let proposalHash: bigint
@@ -391,7 +397,7 @@ describe("Council", () => {
     }, TIMEOUT)
   })
 
-  describe.skip("Remove member", () => {
+  describe("Remove member", () => {
     const oldMember = councilMember2
     const updatedThreshold = 1;
     let proposalHash: bigint
@@ -422,7 +428,7 @@ describe("Council", () => {
 
     }, TIMEOUT)
 
-    test.skip("Vote", async () => {
+    test("Vote", async () => {
       const initialVotes = await council.proposal_vote_counts(proposalHash);
       council.connect(councilMember2)
       const [voteTx] = await council.vote(proposalHash, true);
@@ -451,7 +457,7 @@ describe("Council", () => {
     }, TIMEOUT)
   })
 
-  describe.skip("Bridge", () => {
+  describe("Bridge", () => {
     const threshold = 1;
 
     test("Initialize Bridge", async () => {
@@ -868,7 +874,7 @@ describe("Council", () => {
 
   });
 
-  describe.skip("Token Service", () => {
+  describe("Token Service", () => {
 
     test("Initialize Token Service", async () => {
       const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;

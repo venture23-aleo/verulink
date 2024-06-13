@@ -55,10 +55,11 @@ describe("Holding", () => {
             expect(finalHeldAmount).toBe(initialHeldFund + amountToHold);
         }, TIMEOUT);
 
-        test.failing("should not be called from non-admin", async () => {
+        test("should not be called from non-admin", async () => {
             wusdcHolding.connect(aleoUser3);
             const [tx] = await wusdcHolding.hold_fund(user, amountToHold);
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT);
 
     });
@@ -75,21 +76,23 @@ describe("Holding", () => {
             }
         }, TIMEOUT);
 
-        test.failing("Releasing fund greater than held amount must fail", async () => {
+        test("Releasing fund greater than held amount must fail", async () => {
             const heldAmount = await wusdcHolding.holdings(user, BigInt(0));
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.release_fund(user, heldAmount + BigInt(1));
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT);
 
-        test.failing("Releasing fund greater than balance must fail", async () => {
+        test("Releasing fund greater than balance must fail", async () => {
             const holdingBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0));
             const heldAmount = await wusdcHolding.holdings(user);
             expect(holdingBalance).toBeLessThan(heldAmount);
 
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.release_fund(user, heldAmount);
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT);
 
         test("Mint token balance in holding", async () => {
@@ -120,22 +123,24 @@ describe("Holding", () => {
             expect(finalHeldAmount).toBe(heldAmount - amountToRelease);
         }, TIMEOUT);
 
-        test.failing("should not be called from non-admin", async () => {
+        test("should not be called from non-admin", async () => {
             const heldAmount = await wusdcHolding.holdings(user);
             expect(heldAmount).toBeGreaterThanOrEqual(BigInt(1))
 
             wusdcHolding.connect(aleoUser4);
             const [tx] = await wusdcHolding.release_fund(user, BigInt(1)); // release remaining 1unit
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT);
     });
 
     describe("Transfer Ownership", () => {
 
-        test.failing("should not tranfer_ownership by non-admin", async () => {
+        test("should not tranfer_ownership by non-admin", async () => {
             wusdcHolding.connect(aleoUser2);
             const [tx] = await wusdcHolding.transfer_ownership_holding(aleoUser2);
-            await tx.wait();
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT);
 
         test("should tranfer_ownership", async () => {
