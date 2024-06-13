@@ -1,9 +1,14 @@
 import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
 import { Wusdc_holding_v0003Contract } from "../artifacts/js/wusdc_holding_v0003";
 import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
+import { ExecutionMode} from "@doko-js/core";
 
-const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
-const wusdcHolding = new Wusdc_holding_v0003Contract({ mode: "execute" });
+
+const mode = ExecutionMode.SnarkExecute;
+
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: mode });
+
+const wusdcHolding = new Wusdc_holding_v0003Contract({mode: mode });
 
 const TIMEOUT = 20000_000;
 
@@ -20,18 +25,18 @@ describe("Holding", () => {
     describe("Deployment and setup", () => {
         test("Deploy token", async () => {
             const tx = await wusdcToken.deploy();
-            await wusdcToken.wait(tx);
+            await tx.wait();
         }, TIMEOUT)
 
         test("Deploy token holding", async () => {
             const tx = await wusdcHolding.deploy();
-            await wusdcHolding.wait(tx);
+            await tx.wait();
         }, TIMEOUT);
 
         test("Initialize token holding", async () => {
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.initialize_holding(admin);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
             expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(admin);
         }, TIMEOUT);
     });
@@ -44,7 +49,7 @@ describe("Holding", () => {
 
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.hold_fund(user, amountToHold);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
 
             const finalHeldAmount = await wusdcHolding.holdings(user);
             expect(finalHeldAmount).toBe(initialHeldFund + amountToHold);
@@ -53,7 +58,7 @@ describe("Holding", () => {
         test.failing("should not be called from non-admin", async () => {
             wusdcHolding.connect(aleoUser3);
             const [tx] = await wusdcHolding.hold_fund(user, amountToHold);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
         }, TIMEOUT);
 
     });
@@ -65,7 +70,7 @@ describe("Holding", () => {
             if (!isTokenInitialized) {
                 wusdcHolding.connect(admin);
                 const [tx] = await wusdcToken.initialize_token(admin);
-                await wusdcToken.wait(tx);
+                await tx.wait();
                 expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(admin);
             }
         }, TIMEOUT);
@@ -74,7 +79,7 @@ describe("Holding", () => {
             const heldAmount = await wusdcHolding.holdings(user, BigInt(0));
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.release_fund(user, heldAmount + BigInt(1));
-            await wusdcHolding.wait(tx);
+            await tx.wait();
         }, TIMEOUT);
 
         test.failing("Releasing fund greater than balance must fail", async () => {
@@ -84,14 +89,14 @@ describe("Holding", () => {
 
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.release_fund(user, heldAmount);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
         }, TIMEOUT);
 
         test("Mint token balance in holding", async () => {
             wusdcToken.connect(admin);
             const initialHoldingBalance = await wusdcToken.account(wusdcHolding.address(), BigInt(0));
             const [tx] = await wusdcToken.mint_public(wusdcHolding.address(), amountToHold);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
             const finalHoldingBalance = await wusdcToken.account(wusdcHolding.address());
             expect(finalHoldingBalance).toBe(initialHoldingBalance + amountToHold);
         }, TIMEOUT);
@@ -105,7 +110,7 @@ describe("Holding", () => {
 
             wusdcHolding.connect(admin)
             const [tx] = await wusdcHolding.release_fund(user, amountToRelease); // keep holding 1unit
-            await wusdcHolding.wait(tx);
+            await tx.wait();
 
             const finalHoldingBalance = await wusdcToken.account(wusdcHolding.address());
             const finalUserBalance = await wusdcToken.account(user);
@@ -121,7 +126,7 @@ describe("Holding", () => {
 
             wusdcHolding.connect(aleoUser4);
             const [tx] = await wusdcHolding.release_fund(user, BigInt(1)); // release remaining 1unit
-            await wusdcHolding.wait(tx);
+            await tx.wait();
         }, TIMEOUT);
     });
 
@@ -130,13 +135,13 @@ describe("Holding", () => {
         test.failing("should not tranfer_ownership by non-admin", async () => {
             wusdcHolding.connect(aleoUser2);
             const [tx] = await wusdcHolding.transfer_ownership_holding(aleoUser2);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
         }, TIMEOUT);
 
         test("should tranfer_ownership", async () => {
             wusdcHolding.connect(admin);
             const [tx] = await wusdcHolding.transfer_ownership_holding(aleoUser2);
-            await wusdcHolding.wait(tx);
+            await tx.wait();
             expect(await wusdcHolding.owner_holding(OWNER_INDEX)).toBe(aleoUser2);
         }, TIMEOUT)
     })
