@@ -1,11 +1,14 @@
 import { hashStruct } from "../../utils/hash";
 
-import { Council_v0003Contract } from "../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../artifacts/js/council";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../../utils/constants";
-import { ProposalVote } from "../../artifacts/js/types/council_v0003";
-import { getProposalVoteLeo } from "../../artifacts/js/js2leo/council_v0003";
+import { ProposalVote } from "../../artifacts/js/types/council";
+import { getProposalVoteLeo } from "../../artifacts/js/js2leo/council";
+import { ExecutionMode } from "@doko-js/core";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
+const mode = ExecutionMode.SnarkExecute;
+
+const council = new CouncilContract({mode, priorityFee: 10_000});
 
 export const validateProposer = async (proposer: string) => {
   const isMember = await council.members(proposer, false);

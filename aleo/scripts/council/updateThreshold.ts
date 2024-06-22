@@ -1,14 +1,17 @@
 import { hashStruct } from "../../utils/hash";
 
-import { Council_v0003Contract } from "../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../artifacts/js/council";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer } from "./councilUtils";
-import { UpdateThreshold } from "../../artifacts/js/types/council_v0003";
-import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/council_v0003";
+import { UpdateThreshold } from "../../artifacts/js/types/council";
+import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
+
+const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
+const council = new CouncilContract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////

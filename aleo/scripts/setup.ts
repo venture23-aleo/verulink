@@ -16,7 +16,8 @@ const bridge = new Token_bridge_v0003Contract();
 const wusdcToken = new Wusdc_token_v0003Contract();
 const wusdcConnector = new Wusdc_connector_v0003_0Contract();
 const tokenService = new Token_service_v0003Contract();
-const council = new Council_v0003Contract();
+const bridgeCouncil = new Bridge_councilContract({mode:ExecutionMode.SnarkExecute});
+const serviceCouncil = new Token_service_v0003Contract({mode:ExecutionMode.SnarkExecute});
 
 import {
   aleoUser1,
@@ -32,6 +33,8 @@ import {
   wusdcTimeframe,
 } from "../utils/testnet.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
+import { Bridge_councilContract } from "../artifacts/js/bridge_council";
+import { ExecutionMode } from "@doko-js/core";
 
 const initialAttestors = [
   aleoUser1,
@@ -98,12 +101,12 @@ const setup = async () => {
 
 export const validateSetup = async () => {
     const ownerTB = await bridge.owner_TB(true);
-    if (ownerTB != council.address()) {
+    if (ownerTB != bridgeCouncil.address()) {
       throw Error(`ownerTB is not council`);
     }
 
     const ownerTS = await tokenService.owner_TS(true);
-    if (ownerTS != council.address()) {
+    if (ownerTS != serviceCouncil.address()) {
       throw Error(`ownerTS is not council`);
     }
 
@@ -118,4 +121,4 @@ export const validateSetup = async () => {
     }
 }
 
-// setup();
+setup();

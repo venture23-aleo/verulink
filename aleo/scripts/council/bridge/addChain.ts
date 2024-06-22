@@ -1,15 +1,19 @@
 import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../../artifacts/js/council";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/council_v0003";
-import { TbAddChain } from "../../../artifacts/js/types/council_v0003";
+import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/bridge_council";
+import { TbAddChain } from "../../../artifacts/js/types/bridge_council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
+import { Bridge_councilContract } from "../../../artifacts/js/bridge_council";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
+const mode = ExecutionMode.SnarkExecute;
+const council = new CouncilContract({mode, priorityFee: 10_000});
+const bridge = new Token_bridge_v0003Contract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Bridge_councilContract({mode, priorityFee: 10_000});
 
 export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
 
@@ -72,7 +76,7 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
   }
 
   const bridgeOwner = await bridge.owner_TB(true);
-  if (bridgeOwner != council.address()) {
+  if (bridgeOwner != bridgeCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 
@@ -86,7 +90,7 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
 
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddChainProposalHash), SUPPORTED_THRESHOLD);
   console.log(voters)
-  const [addChainTx] = await council.tb_add_chain(
+  const [addChainTx] = await bridgeCouncil.tb_add_chain(
     tbAddChain.id,
     tbAddChain.chain_id,
     voters

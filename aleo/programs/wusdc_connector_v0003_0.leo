@@ -1,7 +1,7 @@
 import wusdc_token_v0003.aleo;
 import wusdc_holding_v0003.aleo;
 import token_service_v0003.aleo;
-import council_v0003.aleo;
+import council.aleo;
 
 program wusdc_connector_v0003_0.aleo {
 
@@ -99,7 +99,7 @@ program wusdc_connector_v0003_0.aleo {
     /// Update the existing connector program
     /// Can only be called if proposal with enough votes exist on council program
     transition update(public proposal_id: u32, public new_connector: address, public voters: [address; 5]) {
-        council_v0003.aleo/connector_update(proposal_id, WUSDC_TOKEN, new_connector, voters);
+        council.aleo/connector_update(proposal_id, WUSDC_TOKEN, new_connector, voters);
         wusdc_token_v0003.aleo/transfer_ownership_token(new_connector);
         wusdc_holding_v0003.aleo/transfer_ownership_holding(new_connector);
         token_service_v0003.aleo/update_connector_ts(WUSDC_TOKEN, new_connector);
@@ -109,7 +109,7 @@ program wusdc_connector_v0003_0.aleo {
     /// Release fund from holding program
     /// Can only be called if proposal with enough votes exist on council program
     transition wusdc_release(public proposal_id: u32, public receiver: address, public amount: u128, public voters: [address; 5]) {
-        council_v0003.aleo/holding_release(proposal_id, WUSDC_TOKEN, receiver, amount, voters);
+        council.aleo/holding_release(proposal_id, WUSDC_TOKEN, receiver, amount, voters);
         wusdc_holding_v0003.aleo/release_fund(receiver, amount);
     }
 

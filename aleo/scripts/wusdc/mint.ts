@@ -16,11 +16,14 @@ import { validateSetup } from "../setup";
 import { InPacket } from "../../artifacts/js/types/token_bridge_v0003";
 import { createRandomPacket } from "../../utils/packet";
 import { getBytes } from "ethers";
+import { ExecutionMode } from "@doko-js/core";
 
-const bridge = new Token_bridge_v0003Contract({ mode: "execute" });
-const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
-const wusdcConnecter = new Wusdc_connector_v0003_0Contract({ mode: "execute" });
-const tokenService = new Token_service_v0003Contract({ mode: "execute" });
+const mode = ExecutionMode.SnarkExecute;
+
+const bridge = new Token_bridge_v0003Contract({ mode});
+const wusdcToken = new Wusdc_token_v0003Contract({ mode});
+const wusdcConnecter = new Wusdc_connector_v0003_0Contract({ mode });
+const tokenService = new Token_service_v0003Contract({ mode });
 
 const ethUser = generateRandomEthAddr();
 const createPacket = (aleoUser: string, amount: bigint): InPacket => {

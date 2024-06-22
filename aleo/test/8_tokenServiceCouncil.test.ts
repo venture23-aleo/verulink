@@ -53,7 +53,7 @@ const wusdcToken = new Wusdc_token_v0003Contract({ mode });
 const TIMEOUT = 300000_000;
 
 const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
-const admin = council.address();
+const admin = tokenServiceCouncil.address();
 
 describe("Token Service", () => {
 
@@ -65,7 +65,7 @@ describe("Token Service", () => {
         );
         await initializeTx.wait();
       }
-      expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(council.address());
+      expect(await tokenService.owner_TS(OWNER_INDEX)).toBe(tokenServiceCouncil.address());
     },
       TIMEOUT
     );
@@ -137,7 +137,7 @@ describe("Token Service", () => {
       const proposer = councilMember1;
       let proposalId = 0;
       let TsUpdateMinimumTransferHash = BigInt(0);
-      const newMinTransfer = BigInt(1000)
+      const newMinTransfer = BigInt(10)
 
       beforeEach(async () => {
         council.connect(proposer);

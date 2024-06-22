@@ -1,14 +1,20 @@
 import { hashStruct } from "../../../utils/hash";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../../artifacts/js/council";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken } from "../../../artifacts/js/types/council_v0003";
-import { getTsAddTokenLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TsAddToken } from "../../../artifacts/js/types/token_service_council";
+import { getTsAddTokenLeo } from "../../../artifacts/js/js2leo/token_service_council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
+import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
+
+const mode = ExecutionMode.SnarkExecute;
+const serviceCouncil = new Token_service_councilContract({mode, priorityFee: 10_000});
+
+const council = new CouncilContract({mode, priorityFee: 10_000});
+const tokenService = new Token_service_v0003Contract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////
@@ -115,7 +121,7 @@ export const execAddToken = async (
   }
 
   const tokenServiceOwner = await tokenService.owner_TS(true);
-  if (tokenServiceOwner != council.address()) {
+  if (tokenServiceOwner != serviceCouncil.address()) {
     throw Error("Council is not the owner of tokenService program");
   }
 
@@ -134,7 +140,7 @@ export const execAddToken = async (
   validateExecution(tsAddTokenProposalHash);
 
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tsAddTokenProposalHash), SUPPORTED_THRESHOLD);
-  const [addChainTx] = await council.ts_add_token(
+  const [addChainTx] = await serviceCouncil.ts_add_token(
     tsAddToken.id,
     tsAddToken.token_address,
     tsAddToken.connector,

@@ -1,15 +1,20 @@
 import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../../artifacts/js/council";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbAddService } from "../../../artifacts/js/types/council_v0003";
-import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TbAddService } from "../../../artifacts/js/types/bridge_council";
+import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/bridge_council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
+import { Bridge_councilContract } from "../../../artifacts/js/bridge_council";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
+const mode = ExecutionMode.SnarkExecute;
+
+const council = new CouncilContract({mode, priorityFee: 10_000});
+const bridge = new Token_bridge_v0003Contract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Bridge_councilContract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////
@@ -81,7 +86,7 @@ export const execAddService = async (proposalId: number, tokenService: string) =
 
 
   const bridgeOwner = await bridge.owner_TB(true);
-  if (bridgeOwner != council.address()) {
+  if (bridgeOwner != bridgeCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 
@@ -94,7 +99,7 @@ export const execAddService = async (proposalId: number, tokenService: string) =
   validateExecution(tbAddTokenServiceProposalHash);
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddTokenServiceProposalHash), SUPPORTED_THRESHOLD);
 
-  const [addServiceTx] = await council.tb_add_service(
+  const [addServiceTx] = await bridgeCouncil.tb_add_service(
     tbAddService.id,
     tbAddService.service,
     voters

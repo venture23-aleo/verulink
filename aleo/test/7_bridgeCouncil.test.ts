@@ -79,7 +79,7 @@ const getVoteKeys = (proposalHash: bigint, voters: string[]): bigint[] => {
 
 const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
 const aleoUser5 = new PrivateKey().to_address().to_string()
-const admin = council.address();
+const admin = bridgeCouncil.address();
 
 
 describe("Bridge", () => {
@@ -100,11 +100,12 @@ describe("Bridge", () => {
     );
 
     test("Ensure proper setup", async () => {
-      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(council.address());
+      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(bridgeCouncil.address());
     }, TIMEOUT);
 
     describe("Add Chain", () => {
       const newChainId = ethChainId;
+      console.log("New chain id", newChainId);
       const proposer = councilMember1;
       let proposalId = 0;
       let tbAddChainProposalHash = BigInt(0);
@@ -116,12 +117,14 @@ describe("Bridge", () => {
       }, TIMEOUT)
 
       test("Propose", async () => {
+        console.log("Council address", council.address());
         const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
         proposalId = totalProposals + 1;
         const tbAddChain: TbAddChain = {
           id: proposalId,
           chain_id: newChainId
         };
+        console.log("Proposal id",proposalId);
         tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
 
         council.connect(councilMember1);
@@ -132,13 +135,15 @@ describe("Bridge", () => {
         expect(totalProposalsAfter).toBe(totalProposals + 1);
         expect(await council.proposals(proposalId)).toBe(tbAddChainProposalHash);
         expect(await council.proposal_vote_counts(tbAddChainProposalHash)).toBe(1)
-
+        console.log("Add chain proposal hash", tbAddChainProposalHash);
+        console.log("Proposal hash", await council.proposals(proposalId));
       }, TIMEOUT)
 
       test("Execute", async () => {
         const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
-        expect(await council.proposal_executed(tbAddChainProposalHash, false)).toBe(false);
-
+        const ans = await council.proposal_executed(tbAddChainProposalHash, false)
+        expect(ans).toBe(false);
+        console.log("Proposal executed ",ans)
         council.connect(councilMember1);
         const [tx] = await bridgeCouncil.tb_add_chain(proposalId, newChainId, signers);
         await tx.wait();
@@ -463,7 +468,7 @@ describe("Bridge", () => {
 
       beforeEach(async () => {
         council.connect(proposer);
-        expect(await bridge.owner_TB(true)).toBe(council.address());
+        expect(await bridge.owner_TB(true)).toBe(bridgeCouncil.address());
         expect(await council.members(councilMember1)).toBe(true);
       }, TIMEOUT)
 

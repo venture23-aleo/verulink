@@ -1,14 +1,20 @@
 import { hashStruct } from "../../../utils/hash";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../../artifacts/js/council";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TsRemoveToken } from "../../../artifacts/js/types/council_v0003";
 import { getTsRemoveTokenLeo } from "../../../artifacts/js/js2leo/council_v0003";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
+import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
+
+const mode = ExecutionMode.SnarkExecute;
+const serviceCouncil = new Token_service_councilContract({mode, priorityFee: 10_000});
+
+const council = new CouncilContract({mode, priorityFee: 10_000});
+const tokenService = new Token_service_v0003Contract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////
@@ -99,7 +105,7 @@ export const execAddToken = async (
   validateExecution(tbRemoveTokenProposalHash);
 
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tbRemoveTokenProposalHash), SUPPORTED_THRESHOLD);
-  const [removeTokenTx] = await council.ts_remove_token(
+  const [removeTokenTx] = await serviceCouncil.ts_remove_token(
     tsRemoveToken.id,
     tsRemoveToken.token_address,
     voters

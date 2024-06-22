@@ -1,14 +1,20 @@
 import { hashStruct } from "../../../utils/hash";
 import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../../artifacts/js/council";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsUnpauseToken } from "../../../artifacts/js/types/council_v0003";
-import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TsUnpauseToken } from "../../../artifacts/js/types/token_service_council";
+import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/token_service_council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
+import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
+
+const mode = ExecutionMode.SnarkExecute;
+const serviceCouncil = new Token_service_councilContract({mode, priorityFee: 10_000});
+
+const council = new CouncilContract({mode, priorityFee: 10_000});
+const tokenService = new Token_service_v0003Contract({mode, priorityFee: 10_000});
 
 
 //////////////////////
@@ -79,7 +85,7 @@ export const execUnpauseToken = async (proposalId: number, tokenAddr: string) =>
   }
 
   const tsOwner = await tokenService.owner_TS(true);
-  if (tsOwner != council.address()) {
+  if (tsOwner != serviceCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 
@@ -92,7 +98,7 @@ export const execUnpauseToken = async (proposalId: number, tokenAddr: string) =>
   validateExecution(tsUnpauseTokenHash);
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUnpauseTokenHash), 5);
 
-  const [unpauseTokenTx] = await council.ts_unpause_token(
+  const [unpauseTokenTx] = await serviceCouncil.ts_unpause_token(
     tsUnpauseToken.id,
     tsUnpauseToken.token_address,
     voters
