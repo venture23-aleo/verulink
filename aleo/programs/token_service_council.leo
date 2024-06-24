@@ -1,5 +1,5 @@
 import council.aleo;
-
+import token_service_v0003.aleo;
 
 program token_service_council.aleo
 {

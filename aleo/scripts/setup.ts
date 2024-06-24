@@ -58,44 +58,44 @@ const setup = async () => {
     councilThreshold,
     councilThreshold
   );
-  await deployWusdc();
+  // await deployWusdc();
 
-  // Bridge: Add ethereum chain
-  const addChainProposalId = await proposeAddChain(ethChainId);
-  await execAddChain(addChainProposalId, ethChainId);
+  // // Bridge: Add ethereum chain
+  // const addChainProposalId = await proposeAddChain(ethChainId);
+  // await execAddChain(addChainProposalId, ethChainId);
 
-  // Token Service: Add wusdc
-  const addTokenProposalId = await proposeAddToken(
-    wusdcToken.address(),
-    wusdcConnector.address(),
-    wusdcMinTransfer,
-    wusdcMaxTransfer,
-    wusdcOutgoingPercentage,
-    wusdcTimeframe,
-    wusdcMaxNoCap
-  );
-  await execAddToken(
-    addTokenProposalId,
-    wusdcToken.address(),
-    wusdcConnector.address(),
-    wusdcMinTransfer,
-    wusdcMaxTransfer,
-    wusdcOutgoingPercentage,
-    wusdcTimeframe,
-    wusdcMaxNoCap
-  );
+  // // Token Service: Add wusdc
+  // const addTokenProposalId = await proposeAddToken(
+  //   wusdcToken.address(),
+  //   wusdcConnector.address(),
+  //   wusdcMinTransfer,
+  //   wusdcMaxTransfer,
+  //   wusdcOutgoingPercentage,
+  //   wusdcTimeframe,
+  //   wusdcMaxNoCap
+  // );
+  // await execAddToken(
+  //   addTokenProposalId,
+  //   wusdcToken.address(),
+  //   wusdcConnector.address(),
+  //   wusdcMinTransfer,
+  //   wusdcMaxTransfer,
+  //   wusdcOutgoingPercentage,
+  //   wusdcTimeframe,
+  //   wusdcMaxNoCap
+  // );
 
-  // Token Bridge: Enable Service
-  const enableTokenServiceProposalId = await proposeAddService( tokenService.address());
-  await execAddService(enableTokenServiceProposalId, tokenService.address());
+  // // Token Bridge: Enable Service
+  // const enableTokenServiceProposalId = await proposeAddService( tokenService.address());
+  // await execAddService(enableTokenServiceProposalId, tokenService.address());
 
-  // Token Bridge: Unpause
-  const unpauseBridgeProposalId = await proposeUnpauseBridge();
-  await execUnpause(unpauseBridgeProposalId);
+  // // Token Bridge: Unpause
+  // const unpauseBridgeProposalId = await proposeUnpauseBridge();
+  // await execUnpause(unpauseBridgeProposalId);
 
-  // Wusdc Token: Unpause
-  const unpauseTokenProposalId = await proposeUnpauseToken(wusdcToken.address());
-  await execUnpauseToken(unpauseTokenProposalId, wusdcToken.address());
+  // // Wusdc Token: Unpause
+  // const unpauseTokenProposalId = await proposeUnpauseToken(wusdcToken.address());
+  // await execUnpauseToken(unpauseTokenProposalId, wusdcToken.address());
 
 };
 

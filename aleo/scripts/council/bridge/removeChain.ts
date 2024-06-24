@@ -78,7 +78,7 @@ export const execRemoveChain = async (proposalId: number, chainId: bigint) => {
     }
   
   const bridgeOwner = await bridge.owner_TB(true);
-  if (bridgeOwner != council.address()) {
+  if (bridgeOwner != bridgeCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 

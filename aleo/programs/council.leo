@@ -1,7 +1,3 @@
-// The 'council' program.
-import token_bridge_v0003.aleo;
-import token_service_v0003.aleo;
-
 program council.aleo {
 
     struct ProposalVote {

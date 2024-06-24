@@ -126,7 +126,7 @@ program wusdc_connector_v0003_0.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_address() -> [u8; 32] {
-        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,211u8,66u8,192u8,49u8,69u8,60u8,102u8,166u8,214u8,194u8,162u8,61u8,109u8,168u8,108u8,48u8,173u8,160u8,140u8,121u8];
+        return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 211u8, 66u8, 192u8, 49u8, 69u8, 60u8, 102u8, 166u8, 214u8, 194u8, 162u8, 61u8, 109u8, 168u8, 108u8, 48u8, 173u8, 160u8, 140u8, 121u8];
     }
 
     // Token Service Contract Address of the original token on the origin chain
@@ -134,9 +134,9 @@ program wusdc_connector_v0003_0.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_service_address() -> [u8; 32] {
-        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,254u8,172u8,15u8,211u8,35u8,103u8,218u8,148u8,68u8,152u8,179u8,159u8,61u8,30u8,189u8,100u8,204u8,136u8,225u8,60u8];
+        return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 37u8, 138u8, 119u8, 59u8, 25u8, 252u8, 200u8, 149u8, 142u8, 12u8, 225u8, 177u8, 177u8, 60u8, 131u8, 10u8, 80u8, 186u8, 124u8, 17u8];
     }
-
+    
     inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {
         return [
             0u8,

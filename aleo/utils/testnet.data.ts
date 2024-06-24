@@ -1,9 +1,9 @@
 // User address on Aleo
-export const aleoUser1 = "aleo1s567xd2j2ale8t008gf8cx82pn0784l2c22c7uemxtqcuf973cyqc6cz6t";
-export const aleoUser2 = "aleo1tvuwdl7remyvccqypa5lzehrdd5tnqpuy49jv7h6uw5au67pkupsjljwgn"
-export const aleoUser3 = "aleo154t7wtj5putqrkjaep99zztd7za23m7jnkh6csc328aqww8c6srsqcpe8k"
-export const aleoUser4 = "aleo1u4y9ntu2yegz29w4rppwvyzddyfw6scnzklf59q4ngjs5h6vqvfqqwad9n"
-export const aleoUser5 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px" // Devnet Wallet
+export const aleoUser1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
+export const aleoUser2 = "aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za"
+export const aleoUser3 = "aleo1j4zawcfr63f7h0r97vck9xd2y2dycvgagh6n6w9f8tf9n47muggq6kgeza"
+export const aleoUser4 = "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8"
+export const aleoUser5 = "aleo10ak7675mtc9expducvav0l82m9wcqd07mf7z26s2mkr8en8mkyqs70xqu2" // Devnet Wallet
 
 export const councilThreshold = 1;
 

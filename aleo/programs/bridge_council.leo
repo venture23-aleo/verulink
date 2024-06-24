@@ -1,5 +1,5 @@
 import council.aleo;
-
+import token_bridge_v0003.aleo;
 
 program bridge_council.aleo
 {
