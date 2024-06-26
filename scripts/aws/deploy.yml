@@ -2,7 +2,7 @@
 - name: Install Attestor on Ubuntu
   hosts: all
   remote_user: ubuntu
-  gather_facts: no
+  # gather_facts: no
   become: true
   vars_files:
     - secret.json
