@@ -187,27 +187,46 @@
       tags:
         - create_mtls_directory
 
+    # - name: Create individual files with secret data
+    #   vars:
+    #     secret_json_string: "{{ mtls_secret_data[mtls_secret_name] | from_json }}"
+    #     secret_files:
+    #       - name: "ca_certificate"
+    #         path: "{{ mtls_key_dir }}/ca.cer"
+    #         secret_key: "ca_certificate"
+    #       - name: "attestor_certificate"
+    #         path:  "{{ mtls_key_dir }}/attestor1.crt"
+    #         secret_key: "attestor_certificate"
+    #       - name: "attestor_key"
+    #         path: "{{ mtls_key_dir }}/attestor1.key"
+    #         secret_key: "attestor_key"
+    #   loop: "{{ secret_files }}"
+    #   ansible.builtin.copy:
+    #     content: "{{ secret_json_string[item.name] }}"
+    #     dest: "{{ item.path }}"
+    #     mode: '0400'
+    #   tags:
+    #     - create_secret_files
+
     - name: Create individual files with secret data
       vars:
-        secret_json_string: "{{ mtls_secret_data[mtls_secret_name] | from_json }}"
         secret_files:
           - name: "ca_certificate"
             path: "{{ mtls_key_dir }}/ca.cer"
             secret_key: "ca_certificate"
           - name: "attestor_certificate"
-            path:  "{{ mtls_key_dir }}/attestor1.crt"
+            path: "{{ mtls_key_dir }}/attestor1.crt"
             secret_key: "attestor_certificate"
           - name: "attestor_key"
             path: "{{ mtls_key_dir }}/attestor1.key"
             secret_key: "attestor_key"
       loop: "{{ secret_files }}"
       ansible.builtin.copy:
-        content: "{{ secret_json_string[item.name] }}"
+        content: "{{ mtls_secret_data[mtls_secret_name] | from_json | json_query(item.secret_key) }}"
         dest: "{{ item.path }}"
         mode: '0400'
       tags:
         - create_secret_files
-  
     - name: Update Jinja2 template
       ansible.builtin.template:
         src: keys.j2
