@@ -134,6 +134,7 @@ def handle_existing_keypair(ec2_client, key_name):
 
 def create_secret(secret_name, default_secret_name, key_value_pairs, file = False):
     # Check if a secret with the provided name exists and is not scheduled for deletion
+    secret_data_local = {}
     existing_secret = None
     try:
         existing_secret = secrets_manager.describe_secret(SecretId=secret_name)
@@ -162,14 +163,14 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
                         value = input(f"{prompt_message}: ")
                         if os.path.isfile(value):
                             with open(value, 'r') as file:
-                                secret_data[key] = file.read()
+                                secret_data_local[key] = file.read()
                             break
                         else:
                             logging.info("File does not exist. Please enter a valid file path.")
                     else:
                         value = pwinput.pwinput(prompt=f"{prompt_message}: ",mask='X')
                         if value:
-                            secret_data[key] = value
+                            secret_data_local[key] = value
                             break
                         else:
                             logging.info("Value cannot be empty. Please enter a valid value.")
@@ -196,20 +197,20 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
                         value = input(f"{prompt_message}: ")
                         if os.path.isfile(value):
                             with open(value, 'r') as file:
-                                secret_data[key] = file.read()
+                                secret_data_local[key] = file.read()
                             break
                         else:
                             logging.info("File does not exist. Please enter a valid file path.")
                     else:
                         value = pwinput.pwinput(prompt=f"{prompt_message}: ",mask='X')
                         if value:
-                            secret_data[key] = value
+                            secret_data_local[key] = value
                             break
                         else:
                             logging.info("Value cannot be empty. Please enter a valid value.")
 
         # Convert secret data to JSON string
-        secret_value = json.dumps(secret_data)
+        secret_value = json.dumps(secret_data_local)
         # Create the secret in AWS Secrets Manager
         secret_response = secrets_manager.create_secret(
             Name=secret_name,
@@ -220,7 +221,7 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
         # Print the ARN of the created secret
         logging.info(f"Secret created successfully with ARN: {secret_response['ARN']}")
         secret_arn = secret_response['ARN']
-    return secret_arn, secret_data
+    return secret_arn, secret_data_local
 
 def add_sg_rule(security_group_id):
     # Add SSH rule
@@ -624,7 +625,13 @@ if os.path.exists(temp_dir):
 os.makedirs(temp_dir, exist_ok=True)
 branch, url = get_branch_and_repo()
 clone_command = ['git', 'clone', '--single-branch', '--branch', branch, url, temp_dir]
-subprocess.run(clone_command, check=True)        
+# subprocess.run(clone_command, check=True)
+try:
+    result = subprocess.run(clone_command, check=True, timeout=600)
+except subprocess.TimeoutExpired:
+    print("Command timed out. Handle slow network or long-running command scenario.")
+except subprocess.CalledProcessError as e:
+    print(f"Command failed with return code {e.returncode}.")        
 zip_file = shutil.make_archive(temp_dir, 'zip', temp_dir)
 
 # Create a dictionary with the parameters

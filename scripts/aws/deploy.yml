@@ -172,11 +172,11 @@
         mtls_secret_data: "{{ lookup('amazon.aws.aws_secret', mtls_secret_name, bypath=true) }}"
       tags:
          - retrieve_mtls_secret
-    # - name: Debug mtls_secret_data
-    #   debug:
-    #     var: mtls_secret_data
-    #   tags:
-    #     - debug_mtls_secret_data
+    - name: Debug mtls_secret_data
+      debug:
+        var: mtls_secret_data
+      tags:
+        - debug_mtls_secret_data
     - name: Ensure mtls directory exists with restricted permissions
       ansible.builtin.file:
         path: "/home/ubuntu/verulink/attestor/chainService/.mtls"
