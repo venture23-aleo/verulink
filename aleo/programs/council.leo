@@ -369,7 +369,7 @@ program council.aleo {
 
     struct HoldingRelease {
         id: u32,
-        token_address: address,
+        token_id: field,
         connector: address,
         receiver: address,
         amount: u128
@@ -377,7 +377,7 @@ program council.aleo {
 
     transition holding_release(
         public id: u32,
-        public token_address: address,
+        public token_id: field,
         public receiver: address,
         public amount: u128,
         public voters: [address; 5],
@@ -385,7 +385,7 @@ program council.aleo {
     ) {
         let proposal: HoldingRelease  = HoldingRelease {
             id,
-            token_address,
+            token_id,
             connector: self.caller,
             receiver,
             amount
@@ -399,57 +399,6 @@ program council.aleo {
     }
 
     finalize holding_release(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
-        // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
-            assert(Mapping::contains(members, voters[i]));
-            assert(Mapping::get(proposal_votes, vote_keys[i]));
-        }
-
-        // Get the threshold
-        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
-
-        assert(votes >= threshold);
-
-        // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
-
-        // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
-    }
-
-    ///////////////////////////////////////////
-    ///////  Connector Program: Update ////////
-    ///////////////////////////////////////////
-
-    struct ConnectorUpdate {
-        id: u32,
-        token_address: address,
-        connector: address,
-        new_connector: address
-    }
-
-    transition connector_update (
-        public id: u32,
-        public token_address: address,
-        public new_connector: address,
-        public voters: [address; 5],
-        
-    ) {
-        let proposal: ConnectorUpdate  = ConnectorUpdate {
-            id,
-            token_address,
-            connector: self.caller,
-            new_connector
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
-
-        let votes: u8 = get_valid_unique_address_count(voters);
-        let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
-
-        return then finalize(proposal_hash, voters, vote_keys, votes);
-    }
-
-    finalize connector_update(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));

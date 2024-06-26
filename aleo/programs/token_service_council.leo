@@ -33,8 +33,7 @@ program token_service_council.aleo
 
     struct TsAddToken {
         id: u32,
-        token_address: address,
-        connector: address,
+        token_id: field,
         min_transfer: u128,
         max_transfer: u128,
         outgoing_percentage: u16,
@@ -44,8 +43,7 @@ program token_service_council.aleo
 
     transition ts_add_token(
         public id: u32, 
-        public token_address: address, 
-        public connector: address, 
+        public token_id: field, 
         public min_transfer: u128, 
         public max_transfer: u128, 
         public outgoing_percentage: u16, 
@@ -55,8 +53,7 @@ program token_service_council.aleo
     ) {
         let proposal: TsAddToken  = TsAddToken {
             id,
-            token_address,
-            connector,
+            token_id,
             min_transfer,
             max_transfer,
             outgoing_percentage,
@@ -66,7 +63,7 @@ program token_service_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/add_token_ts(token_address, connector, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
+        token_service_v0003.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -77,18 +74,18 @@ program token_service_council.aleo
 
     struct TsRemoveToken {
         id: u32,
-        token_address: address,
+        token_id: field,
     }
 
-    transition ts_remove_token(public id: u32, public token_address: address, public voters: [address; 5]) {
+    transition ts_remove_token(public id: u32, public token_id: field, public voters: [address; 5]) {
         let proposal: TsRemoveToken  = TsRemoveToken {
             id,
-            token_address,
+            token_id,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/remove_token_ts(token_address);
+        token_service_v0003.aleo/remove_token_ts(token_id);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -99,26 +96,26 @@ program token_service_council.aleo
 
     struct TsUpdateMinTransfer {
         id: u32,
-        token_address: address,
+        token_id: field,
         min_transfer: u128,
     }
 
     transition ts_update_min_transfer(
         public id: u32, 
-        public token_address: address, 
+        public token_id: field, 
         public min_transfer: u128, 
         public voters: [address; 5],
         
     ) {
         let proposal: TsUpdateMinTransfer  = TsUpdateMinTransfer {
             id,
-            token_address,
+            token_id,
             min_transfer,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/update_min_transfer_ts(token_address, min_transfer);
+        token_service_v0003.aleo/update_min_transfer_ts(token_id, min_transfer);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -129,26 +126,26 @@ program token_service_council.aleo
 
     struct TsUpdateMaxTransfer {
         id: u32,
-        token_address: address,
+        token_id: field,
         max_transfer: u128,
     }
 
     transition ts_update_max_transfer(
         public id: u32, 
-        public token_address: address, 
+        public token_id: field, 
         public max_transfer: u128, 
         public voters: [address; 5],
         
     ) {
         let proposal: TsUpdateMaxTransfer  = TsUpdateMaxTransfer {
             id,
-            token_address,
+            token_id,
             max_transfer,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/update_max_transfer_ts(token_address, max_transfer);
+        token_service_v0003.aleo/update_max_transfer_ts(token_id, max_transfer);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -160,23 +157,23 @@ program token_service_council.aleo
 
     struct TsPauseToken {
         id: u32,
-        token_address: address,
+        token_id: field,
     }
 
     transition ts_pause_token(
         public id: u32, 
-        public token_address: address, 
+        public token_id: field, 
         public voters: [address; 5],
         
     ) {
         let proposal: TsPauseToken  = TsPauseToken {
             id,
-            token_address,
+            token_id,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/pause_token_ts(token_address);
+        token_service_v0003.aleo/pause_token_ts(token_id);
 
         council.aleo/external_execute(id, proposal_hash, voters);
 
@@ -188,23 +185,23 @@ program token_service_council.aleo
 
     struct TsUnpauseToken {
         id: u32,
-        token_address: address,
+        token_id: field,
     }
 
     transition ts_unpause_token(
         public id: u32, 
-        public token_address: address, 
+        public token_id: field, 
         public voters: [address; 5],
         
     ) {
         let proposal: TsUnpauseToken  = TsUnpauseToken {
             id,
-            token_address,
+            token_id,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/unpause_token_ts(token_address);
+        token_service_v0003.aleo/unpause_token_ts(token_id);
 
         council.aleo/external_execute(id, proposal_hash, voters);
 
@@ -217,7 +214,7 @@ program token_service_council.aleo
 
     struct TsUpdateWithdrawalLimit {
         id: u32,
-        token_address: address,
+        token_id: field,
         percentage: u16,
         duration: u32,
         threshold_no_limit: u128
@@ -225,7 +222,7 @@ program token_service_council.aleo
 
     transition ts_update_outgoing_percentage(
         public id: u32, 
-        public token_address: address, 
+        public token_id: field, 
         public percentage: u16, 
         public duration: u32,
         public threshold_no_limit: u128,
@@ -234,7 +231,7 @@ program token_service_council.aleo
     ) {
         let proposal: TsUpdateWithdrawalLimit  = TsUpdateWithdrawalLimit {
             id,
-            token_address,
+            token_id,
             percentage,
             duration,
             threshold_no_limit
@@ -242,7 +239,7 @@ program token_service_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/update_withdrawal_limit(token_address, percentage, duration, threshold_no_limit);
+        token_service_v0003.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }

@@ -45,7 +45,7 @@ program token_bridge_v0003.aleo {
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         sender_address: [u8; 32],
         // Program Address of the wrapped asset on Aleo; Ex: wUSDC
-        dest_token_address: address,
+        dest_token_id: field,
         // Amount to mint on Aleo
         amount: u128
         // Address of the receiver on Aleo
@@ -521,7 +521,7 @@ program token_bridge_v0003.aleo {
     transition consume(
         public source_chain_id: u128, 
         public source_service_contract: [u8;32], 
-        public dest_token_address: address, 
+        public dest_token_id: field, 
         public sender_address: [u8; 32], 
         public receiver_address: address, 
         public amount: u128, 
@@ -543,7 +543,7 @@ program token_bridge_v0003.aleo {
 
         let message: InTokenMessage = InTokenMessage {
             sender_address,
-            dest_token_address,
+            dest_token_id,
             amount,
             receiver_address
         };
