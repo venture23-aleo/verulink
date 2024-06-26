@@ -207,18 +207,6 @@
         mode: '0400'
       tags:
         - create_secret_files
-
-    # - name: Update paths in configuration file
-    #   ansible.builtin.replace:
-    #     path: "{{ chainservice_home }}/config.yaml"  # Replace with the path to your YAML configuration file
-    #     regexp: "{{ item.name }}:.*"
-    #     replace: "{{ item.name }}: {{ mtls_key_dir }}/{{ item.path.split('/')[-1] }}"
-    #   loop:
-    #     - { name: "ca_certificate", path: "{{ mtls_key_dir }}/ca.cer" }
-    #     - { name: "attestor_certificate", path: "{{ mtls_key_dir }}/attestor1.crt" }
-    #     - { name: "attestor_key", path: "{{ mtls_key_dir }}/attestor1.key" }
-    #   tags:
-    #     - update_config_paths
   
     - name: Update Jinja2 template
       ansible.builtin.template:
