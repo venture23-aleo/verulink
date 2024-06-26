@@ -19,9 +19,7 @@ services:
       - type: bind
         source: ./chainService/config.yaml
         target: /configs/config.yaml
-      - ./chainService/ca.cer:/configs/ca.cer
-      - ./chainService/attestor1.key:/configs/attestor1.key
-      - ./chainService/attestor1.crt:/configs/attestor1.crt
+      - ./chainService/.mtls:/configs/.mtls
     environment:
       DB_PATH: *p
       LOG_PATH: *l
