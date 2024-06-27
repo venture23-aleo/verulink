@@ -119,7 +119,7 @@ program token_service_v0003.aleo {
         public max_supply: u128
     )-> field {
         let token_id: field = BHP256::hash_to_field(token_name);
-        mtsp.aleo/register_token();
+        mtsp.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
         return token_id then finalize(self.caller);
     }
     finalize register_token(from:address){
@@ -127,9 +127,9 @@ program token_service_v0003.aleo {
         assert_eq(from, owner);
     }
 
-    //////////////////////////////////
-    ///// Add/Remove Token ///////
-    //////////////////////////////////
+    ////////////////////////////////
+    ///// Add/Remove Token /////////
+    ////////////////////////////////
 
     transition add_token_ts(
         public token_id: field, 
@@ -496,7 +496,7 @@ program token_service_v0003.aleo {
             0u8,
             0u8,
             unpadded[0u32],
-            unpadded[1u32],origin_token_service_address
+            unpadded[1u32],
             unpadded[2u32],
             unpadded[3u32],
             unpadded[4u32],
