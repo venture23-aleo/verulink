@@ -50,6 +50,9 @@ program token_service_council.aleo
         public time: u32,
         public max_no_cap: u128,
         public voters: [address; 5],
+        public token_address: [u8; 20],
+        public token_service: [u8; 20],
+        public chain_id: u128
     ) {
         let proposal: TsAddToken  = TsAddToken {
             id,
@@ -63,7 +66,7 @@ program token_service_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_v0003.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap);
+        token_service_v0003.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }

@@ -24,6 +24,13 @@ program token_service_v0003.aleo {
         account: address,
         token_id: field
     }
+
+    struct ChainToken{
+        // Id of one of the supported chains.
+        chain_id: u128,
+        // Token_id of the aleo token.
+        token_id: field
+    }
     /// Stores the owner of this program
     /// The owner can be another program or wallet
     /// key = true: returns the address of the owner
@@ -64,6 +71,11 @@ program token_service_v0003.aleo {
     /// Tracks if the token is paused/unpaused
     /// Key is the address of the token program
     mapping token_status: field => bool;
+
+    /// Tracks the token service address of other chains
+    /// Key is the combination of chain_id and token_id
+    mapping other_chain_token_service: ChainToken => [u8; 32];
+    mapping other_chain_token_address: ChainToken => [u8; 32];
 
     const OWNER_INDEX: bool = true;
     const PAUSED_VALUE: bool = true;
@@ -138,11 +150,14 @@ program token_service_v0003.aleo {
         public percentage: u16, 
         public duration: u32,
         public threshold_no_limit: u128,
-        // corresponding token addresses and token service from the eth side.
+        // corresponding token addresses and token service from other chain.
+        public token_address: [u8; 20],
+        public token_service: [u8; 20],
+        public chain_id: u128
     ) {
         assert(max_transfer >= min_transfer);
         assert(percentage <= HUNDRED_PERCENTAGE);
-        return then finalize(self.caller, token_id, min_transfer, max_transfer, percentage, duration, threshold_no_limit);
+        return then finalize(self.caller, token_id, min_transfer, max_transfer, percentage, duration, threshold_no_limit, token_address, token_service, chain_id);
     }
 
     finalize add_token_ts(
@@ -152,7 +167,10 @@ program token_service_v0003.aleo {
         max_transfer: u128,
         percentage: u16, 
         duration: u32,
-        threshold_no_limit: u128
+        threshold_no_limit: u128,
+        public token_address: [u8; 20],
+        public token_service: [u8; 20],
+        public chain_id: u128
         
     ) {
         // Get the owner address
@@ -166,8 +184,15 @@ program token_service_v0003.aleo {
             threshold_no_limit
         };
 
+        let chain_token_info:ChainToken = ChainToken{
+            chain_id: chain_id, 
+            token_id: token_id
+        };
+
         assert(!Mapping::contains(added_tokens, token_id));
         Mapping::set(added_tokens, token_id, true);
+        Mapping::set(other_chain_token_address, chain_token_info, pad_20_to_32(token_address));
+        Mapping::set(other_chain_token_service, chain_token_info, pad_20_to_32(token_service));
         Mapping::set(token_withdrawal_limits, token_id, withdrawal_limit);
         Mapping::set(min_transfers, token_id, min_transfer);
         Mapping::set(max_transfers, token_id, max_transfer);
@@ -313,7 +338,10 @@ program token_service_v0003.aleo {
     transition token_send(
         public token_id: field, 
         public receiver: [u8; 20], 
-        public amount: u128
+        public amount: u128,
+        public dest_chain_id: u128,
+        public dest_token_service: [u8;20],
+        public dest_token_address: [u8;20]
     ) {
 
         let owner:TokenOwner = TokenOwner{
@@ -321,22 +349,34 @@ program token_service_v0003.aleo {
             token_id:token_id
         };
         mtsp.aleo/burn_public(owner, amount);
+        let chain_token_info: ChainToken = ChainToken{
+            chain_id: dest_chain_id,
+            token_id: token_id
+        };
         token_bridge_v0003.aleo/publish(
-            origin_chain_id(), 
-            origin_token_service_address(), 
-            origin_token_address(), 
+            dest_chain_id, 
+            pad_20_to_32(dest_token_service), 
+            pad_20_to_32(dest_token_address), 
             self.caller,
             pad_20_to_32(receiver),
             amount
         );
 
-        return then finalize (self.caller, token_id, amount);
+        return then finalize (self.caller, token_id, amount, chain_token_info, dest_token_address, dest_token_service);
     }
 
-    finalize token_send(from: address, wrapped_token_id: field, amount: u128) {
+    finalize token_send(from: address, wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20]) {
 
         let min_amount: u128 = Mapping::get(min_transfers, wrapped_token_id);
         assert(amount >= min_amount);
+
+        assert(Mapping::contains(other_chain_token_address, chain_token_info));
+        let stored_token_address:[u8;32] = Mapping::get(other_chain_token_address, chain_token_info);
+        assert_eq(stored_token_address, pad_20_to_32(dest_token_address));
+
+        assert(Mapping::contains(other_chain_token_service, chain_token_info));
+        let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
+        assert_eq(stored_token_service, pad_20_to_32(dest_token_service));
 
         let max_amount: u128 = Mapping::get(max_transfers, wrapped_token_id);
         assert(amount <= max_amount);
@@ -392,16 +432,15 @@ program token_service_v0003.aleo {
         public sequence: u64, 
         public height: u64, 
         public signers: [address; 5], 
-        public signs: [signature; 5]
-        // public source_chain_id: u128, 
-        // public source_token_service_address: [u8; 32], 
-        // public token_address: address, 
+        public signs: [signature; 5],
+        public source_chain_id: u128, 
+        public source_token_service_address: [u8; 20],
     ) -> bool {
 
         // call consume on bridge
         let screening_passed: bool = token_bridge_v0003.aleo/consume(
-            origin_chain_id(), 
-            origin_token_service_address(), 
+            source_chain_id, 
+            pad_20_to_32(source_token_service_address), 
             token_id, 
             pad_20_to_32(sender), 
             receiver, 
@@ -411,6 +450,12 @@ program token_service_v0003.aleo {
             signers, 
             signs
         );
+
+        let chain_token_info: ChainToken = ChainToken{
+            chain_id: source_chain_id,
+            token_id: token_id
+        };
+
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
 
@@ -428,17 +473,39 @@ program token_service_v0003.aleo {
 
         holding_v0003.aleo/hold_fund(receiver, token_id, held_amount);
 
-        return screening_passed then finalize(self.caller, token_id, amount);
+        return screening_passed then finalize(self.caller, token_id, amount, chain_token_info, source_token_service_address);
     }
 
-    finalize token_receive(connector: address, token_id: field, amount: u128) {
+    finalize token_receive(connector: address, token_id: field, amount: u128, chain_token_info:ChainToken, source_token_service_address: [u8;20]) {
 
         assert_eq(Mapping::get(token_status, token_id), UNPAUSED_VALUE);
+
+        assert(Mapping::contains(other_chain_token_service, chain_token_info));
+        let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
+        assert_eq(stored_token_service, pad_20_to_32(source_token_service_address));
 
         // Increase the total supply
         let current_supply: u128 = Mapping::get_or_use(total_supply, token_id, 0u128);
         Mapping::set(total_supply, token_id, current_supply + amount);
 
+    }
+
+    transition add_chain_to_existing_token(public chain_id: u128, public token_id: field, public token_service_address:[u8;20], public token_address:[u8;20]){
+        let token_chain_info:ChainToken = ChainToken{
+            token_id:token_id,
+            chain_id:chain_id
+        };
+        return then finalize(self.caller, token_chain_info, token_service_address, token_address);
+    }
+
+    finalize add_chain_to_existing_token(from:address, token_chain_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20]){
+        // token should have already been registered previously, otherwise use add_token_ts. 
+        assert(Mapping::get(added_tokens, token_chain_info.token_id));
+        // only council(owner) should be able to call this
+        assert_eq(from, Mapping::get(owner_TS, true));
+        //set these mappings with addresses.
+        Mapping::set(other_chain_token_service, token_chain_info, pad_20_to_32(token_service_address));
+        Mapping::set(other_chain_token_address, token_chain_info, pad_20_to_32(token_address));
     }
 
 
@@ -461,25 +528,25 @@ program token_service_v0003.aleo {
     // Chain Id of the network
     // Chain Id is generated as {network_type}:{chain_id} where `network_id` is represented as ASCII and `chain_id` is a number, `:` is separator
     // For Ethereum Sepolia testnet, chain_id: `eth:11155111` -> 28556963657430695
-    inline origin_chain_id() -> u128 {
-        return 28556963657430695u128;
-    }
+    // inline origin_chain_id() -> u128 {
+    //     return 28556963657430695u128;
+    // }
 
     // Contract Address of the original token on the origin chain
     // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
-    inline origin_token_address() -> [u8; 32] {
-        return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 211u8, 66u8, 192u8, 49u8, 69u8, 60u8, 102u8, 166u8, 214u8, 194u8, 162u8, 61u8, 109u8, 168u8, 108u8, 48u8, 173u8, 160u8, 140u8, 121u8];
-    }
+    // inline origin_token_address() -> [u8; 32] {
+    //     return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 211u8, 66u8, 192u8, 49u8, 69u8, 60u8, 102u8, 166u8, 214u8, 194u8, 162u8, 61u8, 109u8, 168u8, 108u8, 48u8, 173u8, 160u8, 140u8, 121u8];
+    // }
 
     // Token Service Contract Address of the original token on the origin chain
     // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
-    inline origin_token_service_address() -> [u8; 32] {
-        return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 37u8, 138u8, 119u8, 59u8, 25u8, 252u8, 200u8, 149u8, 142u8, 12u8, 225u8, 177u8, 177u8, 60u8, 131u8, 10u8, 80u8, 186u8, 124u8, 17u8];
-    }
+    // inline origin_token_service_address() -> [u8; 32] {
+    //     return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 37u8, 138u8, 119u8, 59u8, 25u8, 252u8, 200u8, 149u8, 142u8, 12u8, 225u8, 177u8, 177u8, 60u8, 131u8, 10u8, 80u8, 186u8, 124u8, 17u8];
+    // }
     
     inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {
         return [
