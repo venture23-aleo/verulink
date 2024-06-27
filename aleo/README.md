@@ -33,17 +33,17 @@ For EVM addresses (of 20 bytes), the first 12 bytes are 0s.
 > Representing as bytes32 allows to add support for other chains in the future with the same programs.
 
 Example:
-USDC Contract Address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 is represented as following
-[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 184, 105, 145, 198, 33, 139, 54, 193, 209, 157, 74, 46, 158, 176, 206, 54, 6, 235, 72 ]
+USDC Contract Address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 is represented as following\
+`[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 184, 105, 145, 198, 33, 139, 54, 193, 209, 157, 74, 46, 158, 176, 206, 54, 6, 235, 72 ]`
 
 ### String
 
-Since the string type is not supported on Aleo (yet), we represent string as ASCII-byte in hex, then concatenate all and convert to decimal again which will be stored as u128.
-Example: `USD Coin` is represented as following:
-String to ASCII-byte hex conversion: 55 53 44 20 43 6F 69 6E
-Concatenate together: 55534420436F696E
-Convert to Decimal: 6148332821651876206
-6148332821651876206 will be stored as u128 for the name field.
+Since the string type is not supported on Aleo (yet), we represent string as ASCII-byte in hex, then concatenate all and convert to decimal again which will be stored as u128.\
+Example: `USD Coin` is represented as following:\
+String to ASCII-byte hex conversion: `55 53 44 20 43 6F 69 6E`\
+Concatenate together: `55534420436F696E`\
+Convert to Decimal: `6148332821651876206`\
+`6148332821651876206` will be stored as `u128` for the `name` field.
 
 ## Token Bridge
 
