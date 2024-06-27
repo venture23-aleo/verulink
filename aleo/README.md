@@ -2,13 +2,12 @@
 
 This document provides overview of the implementation of Aleo programs for Aleo-Eth Multisig bridge. The overall architecture is discussed [here](../docs/architecture_overview.md).
 
-There are five main programs on Aleo that make up the bridge on Aleo.
+There are four main programs on Aleo that make up the bridge on Aleo.
 
 1. Token Bridge
 2. Token Service
-3. Token Program
+3. MTSP (Multi Token Support Program)
 4. Token Holding
-5. Token Connector
 
 ## Program Dependencies
 
@@ -16,21 +15,10 @@ The dependencies between these program has been been described in the following 
 
 ```mermaid
 flowchart LR
-subgraph Token_A
-  direction RL
-  TokenConnector_A -- imports --> TokenProgram_A
-  direction RL
-  TokenConnector_A -- imports --> TokenHolding_A
-end
-subgraph Token_B
-  direction RL
-  TokenConnector_B -- imports --> TokenProgram_B
-  direction RL
-  TokenConnector_B -- imports --> TokenHolding_B
-end
-Token_A -- imports --> TokenService
-Token_B -- imports --> TokenService
+TokenService -- imports --> TokenHolding
+TokenService -- imports --> MTSP
 TokenService -- imports --> TokenBridge
+TokenHolding -- imports --> MTSP
 
 ```
 
@@ -45,14 +33,17 @@ For EVM addresses (of 20 bytes), the first 12 bytes are 0s.
 > Representing as bytes32 allows to add support for other chains in the future with the same programs.
 
 Example:
-USDC Contract Address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 is represented as following
-[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 184, 105, 145, 198, 33, 139, 54, 193, 209, 157, 74, 46, 158, 176, 206, 54, 6, 235, 72 ]
+USDC Contract Address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48 is represented as following\
+`[ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 184, 105, 145, 198, 33, 139, 54, 193, 209, 157, 74, 46, 158, 176, 206, 54, 6, 235, 72 ]`
 
 ### String
 
-Since the string type is not supported on Aleo (yet), we represent string as ASCII-byte (zero-right-padded).
-Example: `USD Coin` is represented as following:
-[85, 83, 68, 32, 67, 111, 105, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Since the string type is not supported on Aleo (yet), we represent string as ASCII-byte in hex, then concatenate all and convert to decimal again which will be stored as u128.\
+Example: `USD Coin` is represented as following:\
+String to ASCII-byte hex conversion: `55 53 44 20 43 6F 69 6E`\
+Concatenate together: `55534420436F696E`\
+Convert to Decimal: `6148332821651876206`\
+`6148332821651876206` will be stored as `u128` for the `name` field.
 
 ## Token Bridge
 
@@ -61,37 +52,28 @@ Similarly, supported services can `publish` messages that will be transferred to
 
 ## Token Service
 
-Token Service validates the incoming messages and passes it to the Token Bridge to `publish` or `consume`.
-
-## Token Program
-
-This is the [ARC20 token](https://github.com/AleoHQ/ARCs/discussions/42) that represents bridged tokens on Aleo.
+Token Service validates the incoming messages and passes it to the Token Bridge to `publish` or `consume`. Also since Token Service imports MTSP, token service has to fulfill function of adding and registering new tokens in the MTSP without needing to deploy separate program for Tokens. This makes it redundant to deploy new programs for token which doesn't have any special functionality.
 
 ## Token Holding
 
-This program is responsible for holding disputed funds and transfers.
-
-## Token Connector
-
-This program acts as a connector between `Token Service` and `Token Holding` & `Token Program`. Since, Aleo has no support for interfaces yet, the connector is used.
+This program is responsible for holding disputed funds and transfers for every token that is being received through the bridge.
 
 ## Ownership and Upgradeability
 
 Each of the above program has a owner that performs admin functions. The owner can be set during initialization and the ownership can be transferred only from the current owner.
 
-| Programs        | Owner           |
-| --------------- | --------------- |
-| Token Bridge    | Council         |
-| Token Service   | Council         |
-| Token Program   | Token Connector |
-| Token Holding   | Token Connector |
-| Token Connector | Council         |
+| Programs      | Owner         |
+| ------------- | ------------- |
+| Token Bridge  | Council       |
+| Token Service | Council       |
+| Token Holding | Token Service |
+| MTSP          | Token Service |
 
 ### Council Program
 
 Council is a separate program that acts as a multisig to perform admin functions. Functions from council can be executed only if threshold of members (of council) vote to perform a particular action.
 
-Since our architecture features a single token bridge and token service program, the council imports these programs. However, as each token is deployed separately (as ARC20 token) and new tokens can be added over time, the token connector imports the council instead. If we move from a council program to a general multisig, there is no need to update the token bridge and token service but the for each token, new connector program needs to be deployed.
+Since our architecture features a single token bridge, token holding and token service program, the council imports these programs. Where council is responsible for executing different function that require voting from council members. For example to release fund from holding contract, council needs to propose release proposal with enough votes to pass the threshold, and calls release funtion in holding contract which will release assets to the actual receiver.
 
 # Testing
 
