@@ -247,5 +247,76 @@ program token_service_council.aleo
         council.aleo/external_execute(id, proposal_hash, voters);
     }
 
+    ////////////////////////////////////////////////
+    ///////  Holding Program : Release Fund ////////
+    ////////////////////////////////////////////////
+
+    struct HoldingRelease {
+        id: u32,
+        token_id: field,
+        connector: address,
+        receiver: address,
+        amount: u128
+    }
+
+    transition holding_release(
+        public id: u32,
+        public token_id: field,
+        public receiver: address,
+        public amount: u128,
+        public voters: [address; 5],
+        
+    ) {
+        let proposal: HoldingRelease  = HoldingRelease {
+            id,
+            token_id,
+            connector: self.caller,
+            receiver,
+            amount
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        token_service_v0003.aleo/holding_release(token_id,receiver,amount);
+
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
+
+    ////////////////////////////////////////////////
+    ///////  Token Service : Register Token ////////
+    ////////////////////////////////////////////////
+
+    struct RegisterToken {
+        id: u32,
+        token_name: u128,
+        symbol: u128,
+        decimals: u8,
+        max_supply: u128
+    }
+
+    transition register_token(
+        public id: u32,
+        public token_name: u128,
+        public symbol: u128,
+        public decimals: u8,
+        public max_supply: u128,
+        public voters: [address; 5],
+        
+    ) {
+        let proposal: RegisterToken  = RegisterToken {
+            id,
+            token_name,
+            symbol,
+            decimals,
+            max_supply
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        token_service_v0003.aleo/register_token(token_name, symbol, decimals, max_supply);
+
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
+
 
 }

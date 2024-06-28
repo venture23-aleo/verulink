@@ -11,7 +11,7 @@ export const evm2AleoArr = (evmAddr: string): number[] => {
   // if (evmAddr.length != 22)  {
   //   throw Error("EVM address must have size 20 bytes");
   // }
-  if(!isAddress(evmAddr)) {
+  if (!isAddress(evmAddr)) {
     throw Error("Not a valid Ethereum Address");
   }
   const array = Array.from(getBytes(evmAddr))
@@ -22,12 +22,27 @@ export const evm2AleoArr = (evmAddr: string): number[] => {
   return paddedArray;
 };
 
-export const aleoArr2Evm = (decimalArray: number[] ): string => {
-  const hexString: string = Array.from(Uint8Array.from(decimalArray)).slice( - EVM_ADDR_SIZE)
+export const evm2AleoArrWithoutPadding = (evmAddr: string): number[] => {
+  // TODO: verify valid EthAddress
+  // if (evmAddr.length != 22)  {
+  //   throw Error("EVM address must have size 20 bytes");
+  // }
+  if (!isAddress(evmAddr)) {
+    throw Error("Not a valid Ethereum Address");
+  }
+  const array = Array.from(getBytes(evmAddr))
+  const paddedArray = [
+    ...array,
+  ];
+  return paddedArray;
+};
+
+export const aleoArr2Evm = (decimalArray: number[]): string => {
+  const hexString: string = Array.from(Uint8Array.from(decimalArray)).slice(- EVM_ADDR_SIZE)
     .map((num) => num.toString(16).padStart(2, "0"))
     .join("");
   const hexStringWithPrefix = "0x" + hexString.toLowerCase();
-  if(!isAddress(hexStringWithPrefix)) {
+  if (!isAddress(hexStringWithPrefix)) {
     throw Error("Not a valid Ethereum Address");
   }
   return hexStringWithPrefix;

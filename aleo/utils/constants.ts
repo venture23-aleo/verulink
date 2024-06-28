@@ -31,6 +31,8 @@ export const ethTsContractAddr = "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c"
 // Token Service Contract Address on Ethereum
 export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
 
+export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
+
 const sepoliaChainId = 11155111
 export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
 export const aleoChainId = encodeNetworkChainId("aleo", 3);
