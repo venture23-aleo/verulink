@@ -60,6 +60,8 @@ type CollectorI interface {
 	// Note that, db-service will delete missed-packet entry from its collection only when attestor sends valid
 	// signature.
 	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
+
+	CheckCollectorHealth(ctx context.Context) error
 }
 
 var collc collector
@@ -70,6 +72,31 @@ type collector struct {
 	collectorWaitDur time.Duration
 	caCert           *x509.CertPool
 	attestorCert     tls.Certificate
+}
+
+func (c *collector) CheckCollectorHealth(ctx context.Context) error {
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            c.caCert,
+				Certificates:       []tls.Certificate{c.attestorCert},
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	resp, err := client.Get(c.uri)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return err
+	}
+	
+	defer resp.Body.Close()
+	return nil
 }
 
 func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
@@ -183,12 +210,21 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		u.RawQuery = queryParams.Encode()
 
 		ctx, cncl := context.WithTimeout(ctx, time.Minute)
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:            c.caCert,
+					Certificates:       []tls.Certificate{c.attestorCert},
+					InsecureSkipVerify: true,
+				},
+			},
+		}
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			goto postFor
 		}
-
-		resp, err = http.DefaultClient.Do(req)
+		
+		resp, err = client.Do(req)
 		if err != nil {
 			goto postFor
 		}

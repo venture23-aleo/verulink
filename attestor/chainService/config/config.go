@@ -61,6 +61,7 @@ type Config struct {
 	Mode                   string                 `yaml:"mode"`
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
+	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 }
 
 type LoggerConfig struct {

@@ -26,6 +26,8 @@ const (
 type SignI interface {
 	HashAndSignScreenedPacket(
 		ctx context.Context, sp *chain.ScreenedPacket) (hash string, signature string, err error)
+
+	CheckSigningServiceHealth(ctx context.Context) error
 }
 
 var s SignI
@@ -81,6 +83,15 @@ func (s *signService) HashAndSignScreenedPacket(
 	}
 
 	return
+}
+
+func (s *signService) CheckSigningServiceHealth(ctx context.Context) error {
+
+	err := dial(s.url)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // SetupSigner checks if url can be dialed and sets up given parameters for chainservice to
