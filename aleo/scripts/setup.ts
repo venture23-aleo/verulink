@@ -16,8 +16,8 @@ const bridge = new Token_bridge_v0003Contract();
 const wusdcToken = new Wusdc_token_v0003Contract();
 const wusdcConnector = new Wusdc_connector_v0003_0Contract();
 const tokenService = new Token_service_v0003Contract();
-const bridgeCouncil = new Bridge_councilContract({mode:ExecutionMode.SnarkExecute});
-const serviceCouncil = new Token_service_v0003Contract({mode:ExecutionMode.SnarkExecute});
+const bridgeCouncil = new Bridge_councilContract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Token_service_v0003Contract({ mode: ExecutionMode.SnarkExecute });
 
 import {
   aleoUser1,
@@ -35,6 +35,7 @@ import {
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
 import { Bridge_councilContract } from "../artifacts/js/bridge_council";
 import { ExecutionMode } from "@doko-js/core";
+import { hash } from "aleo-hasher";
 
 const initialAttestors = [
   aleoUser1,
@@ -51,6 +52,8 @@ const initialCouncilMembers = [
   aleoUser5,
 ];
 
+const token_id = BigInt(hash('bhp256', '6148332821651876206', "field"))
+
 const setup = async () => {
   await deployMainPrograms(
     initialAttestors,
@@ -58,67 +61,66 @@ const setup = async () => {
     councilThreshold,
     councilThreshold
   );
-  // await deployWusdc();
+  // Registers token in the mtsp through token_service.register_token
+  await deployWusdc();
 
-  // // Bridge: Add ethereum chain
-  // const addChainProposalId = await proposeAddChain(ethChainId);
-  // await execAddChain(addChainProposalId, ethChainId);
+  // Bridge: Add ethereum chain
+  const addChainProposalId = await proposeAddChain(ethChainId);
+  await execAddChain(addChainProposalId, ethChainId);
 
-  // // Token Service: Add wusdc
-  // const addTokenProposalId = await proposeAddToken(
-  //   wusdcToken.address(),
-  //   wusdcConnector.address(),
-  //   wusdcMinTransfer,
-  //   wusdcMaxTransfer,
-  //   wusdcOutgoingPercentage,
-  //   wusdcTimeframe,
-  //   wusdcMaxNoCap
-  // );
-  // await execAddToken(
-  //   addTokenProposalId,
-  //   wusdcToken.address(),
-  //   wusdcConnector.address(),
-  //   wusdcMinTransfer,
-  //   wusdcMaxTransfer,
-  //   wusdcOutgoingPercentage,
-  //   wusdcTimeframe,
-  //   wusdcMaxNoCap
-  // );
+  // Token Service: Add wusdc
+  const addTokenProposalId = await proposeAddToken(
+    wusdcToken.address(),
+    wusdcMinTransfer,
+    wusdcMaxTransfer,
+    wusdcOutgoingPercentage,
+    wusdcTimeframe,
+    wusdcMaxNoCap
+  );
+  await execAddToken(
+    addTokenProposalId,
+    wusdcToken.address(),
+    wusdcMinTransfer,
+    wusdcMaxTransfer,
+    wusdcOutgoingPercentage,
+    wusdcTimeframe,
+    wusdcMaxNoCap
+  );
 
-  // // Token Bridge: Enable Service
-  // const enableTokenServiceProposalId = await proposeAddService( tokenService.address());
-  // await execAddService(enableTokenServiceProposalId, tokenService.address());
+  // Token Bridge: Enable Service
+  const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
+  await execAddService(enableTokenServiceProposalId, tokenService.address());
 
-  // // Token Bridge: Unpause
-  // const unpauseBridgeProposalId = await proposeUnpauseBridge();
-  // await execUnpause(unpauseBridgeProposalId);
+  // Token Bridge: Unpause
+  const unpauseBridgeProposalId = await proposeUnpauseBridge();
+  await execUnpause(unpauseBridgeProposalId);
 
-  // // Wusdc Token: Unpause
-  // const unpauseTokenProposalId = await proposeUnpauseToken(wusdcToken.address());
-  // await execUnpauseToken(unpauseTokenProposalId, wusdcToken.address());
+  // Wusdc Token: Unpause
+  const unpauseTokenProposalId = await proposeUnpauseToken(token_id);
+  await execUnpauseToken(unpauseTokenProposalId, token_id);
 
 };
 
 export const validateSetup = async () => {
-    const ownerTB = await bridge.owner_TB(true);
-    if (ownerTB != bridgeCouncil.address()) {
-      throw Error(`ownerTB is not council`);
-    }
+  const ownerTB = await bridge.owner_TB(true);
+  if (ownerTB != bridgeCouncil.address()) {
+    throw Error(`ownerTB is not council`);
+  }
 
-    const ownerTS = await tokenService.owner_TS(true);
-    if (ownerTS != serviceCouncil.address()) {
-      throw Error(`ownerTS is not council`);
-    }
+  const ownerTS = await tokenService.owner_TS(true);
+  if (ownerTS != serviceCouncil.address()) {
+    throw Error(`ownerTS is not council`);
+  }
 
-    const ownerToken = await wusdcToken.token_owner(true);
-    if (ownerToken != wusdcConnector.address()) {
-      throw Error(`ownerToken is not connector`);
-    }
+  const ownerToken = await wusdcToken.token_owner(true);
+  if (ownerToken != wusdcConnector.address()) {
+    throw Error(`ownerToken is not connector`);
+  }
 
-    const bridgeStatus = await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX);
-    if (bridgeStatus != BRIDGE_UNPAUSED_VALUE) {
-      throw Error(`Bridge is paused`);
-    }
+  const bridgeStatus = await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX);
+  if (bridgeStatus != BRIDGE_UNPAUSED_VALUE) {
+    throw Error(`Bridge is paused`);
+  }
 }
 
 setup();

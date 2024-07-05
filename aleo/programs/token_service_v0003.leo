@@ -3,7 +3,6 @@
 import token_bridge_v0003.aleo;
 import mtsp.aleo;
 import holding_v0003.aleo;
-import council.aleo;
 
 program token_service_v0003.aleo {
 
@@ -519,8 +518,7 @@ program token_service_v0003.aleo {
         return z;
     }
 
-    transition wusdc_release(public proposal_id: u32, public token_id: field, public receiver: address, public amount: u128, public voters: [address; 5]) {
-        council.aleo/holding_release(proposal_id, token_id, receiver, amount, voters);
+    transition holding_release(public token_id: field, public receiver: address, public amount: u128) {
         holding_v0003.aleo/release_fund(receiver, token_id, amount);
     }
 
