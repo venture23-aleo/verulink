@@ -1,4 +1,4 @@
-import mtsp.aleo;
+import abc.aleo;
 
 program holding_v0003.aleo {
 
@@ -74,7 +74,7 @@ program holding_v0003.aleo {
     }
 
     transition release_fund(public user: address, public token_id :field, public amount: u128) {
-        mtsp.aleo/transfer_public(token_id, user, amount);
+        abc.aleo/transfer_public(token_id, user, amount);
 
         let token_holder: Holder = Holder{
             account: user,

@@ -10,7 +10,6 @@ import { ExecutionMode } from "@doko-js/core";
 
 import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
 import { hash } from "aleo-hasher";
-import { TsAddTokenLeo } from "../../../artifacts/js/types/council_v0003";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
 
 const mode = ExecutionMode.SnarkExecute;
@@ -23,7 +22,6 @@ const tokenService = new Token_service_v0003Contract({ mode, priorityFee: 10_000
 ///// Propose ////////
 //////////////////////
 export const proposeAddToken = async (
-  tokenAddress: string,
   minTransfer: bigint,
   maxTransfer: bigint,
   outgoingPercentage: number,
@@ -31,7 +29,8 @@ export const proposeAddToken = async (
   maxNoCap: bigint
 ): Promise<number> => {
 
-  console.log(`👍 Proposing to add token: ${tokenAddress}`)
+  const tokenId = BigInt(hash('bhp256', '6148332821651876206', "field"));
+  console.log(`👍 Proposing to add token: ${tokenId}`)
   // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
   // if (storedTokenConnector != ALEO_ZERO_ADDRESS) {
   //   throw Error(`Token ${tokenAddress} is already supported with ${tokenConnector} as connector`);
@@ -43,7 +42,7 @@ export const proposeAddToken = async (
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsAddToken: TsAddToken = {
     id: proposalId,
-    token_id: BigInt(hash('bhp256', '6148332821651876206', "field")),
+    token_id: tokenId,
     min_transfer: minTransfer,
     max_transfer: maxTransfer,
     outgoing_percentage: outgoingPercentage,
@@ -106,14 +105,14 @@ export const voteAddToken = async (
 export const execAddToken = async (
   //token_name
   proposalId: number,
-  tokenAddress: string,
   minTransfer: bigint,
   maxTransfer: bigint,
   outgoingPercentage: number,
   timeframe: number,
   maxNoCap: bigint
 ) => {
-  console.log(`Adding token ${tokenAddress}`)
+  const tokenId = BigInt(hash('bhp256', '6148332821651876206', "field"));
+  console.log(`Adding token ${tokenId}`)
   // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
   // if (storedTokenConnector != ALEO_ZERO_ADDRESS) {
   //   throw Error(`Token ${tokenAddress} is already supported with ${tokenConnector} as connector`);
@@ -126,7 +125,7 @@ export const execAddToken = async (
 
   const tsAddToken: TsAddToken = {
     id: proposalId,
-    token_id: BigInt(hash('bhp256', '6148332821651876206', "field")),
+    token_id: tokenId,
     min_transfer: minTransfer,
     max_transfer: maxTransfer,
     outgoing_percentage: outgoingPercentage,
@@ -159,6 +158,6 @@ export const execAddToken = async (
   //   throw Error(`❌ Unknown error.`);
   // }
 
-  console.log(` ✅ Token: ${tokenAddress} added successfully.`)
+  console.log(` ✅ Token: ${tokenId} added successfully.`)
 
 }

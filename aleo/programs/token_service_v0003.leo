@@ -1,7 +1,7 @@
 // The 'token_service' program.
 
 import token_bridge_v0003.aleo;
-import mtsp.aleo;
+import abc.aleo;
 import holding_v0003.aleo;
 
 program token_service_v0003.aleo {
@@ -30,6 +30,19 @@ program token_service_v0003.aleo {
         // Token_id of the aleo token.
         token_id: field
     }
+
+     struct TokenMetadata {
+        token_id: field,
+        name: u128, // ASCII text represented in bits, and the u128 value of the bitstring
+        symbol: u128, // ASCII text represented in bits, and the u128 value of the bitstring
+        decimals: u8,
+        supply: u128,
+        max_supply: u128,
+        admin: address,
+        external_authorization_required: bool, // whether or not this token requires authorization from an external program before transferring
+        external_authorization_party: address
+    }
+
     /// Stores the owner of this program
     /// The owner can be another program or wallet
     /// key = true: returns the address of the owner
@@ -121,7 +134,7 @@ program token_service_v0003.aleo {
     }
 
     ////////////////////////////////////
-    ///// Register token to MTSP ///////
+    ///// Register token to abc ///////
     ////////////////////////////////////
     transition register_token(
         public token_name: u128,
@@ -130,7 +143,7 @@ program token_service_v0003.aleo {
         public max_supply: u128
     )-> field {
         let token_id: field = BHP256::hash_to_field(token_name);
-        mtsp.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
+        abc.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
         return token_id then finalize(self.caller);
     }
     finalize register_token(from:address){
@@ -343,11 +356,7 @@ program token_service_v0003.aleo {
         public dest_token_address: [u8;20]
     ) {
 
-        let owner:TokenOwner = TokenOwner{
-            account: self.caller,
-            token_id:token_id
-        };
-        mtsp.aleo/burn_public(owner, amount);
+        abc.aleo/burn_public(token_id, self.caller, amount);
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
             token_id: token_id
@@ -468,7 +477,7 @@ program token_service_v0003.aleo {
             token_id: token_id
         };
         let authorize_until:u32 = 4294967295u32;
-        mtsp.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
+        abc.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
         holding_v0003.aleo/hold_fund(receiver, token_id, held_amount);
 
