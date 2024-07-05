@@ -1,6 +1,5 @@
 import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
-import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003";
-import { Council_v0003Contract } from "../artifacts/js/council_v0003";
+import { CouncilContract } from "../artifacts/js/council";
 import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
 import { InPacket, PacketId } from "../artifacts/js/types/token_bridge_v0003";
 import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
@@ -30,8 +29,9 @@ const mode = ExecutionMode.SnarkExecute;
 
 const bridge = new Token_bridge_v0003Contract({ mode: mode });
 const tokenService = new Token_service_v0003Contract({ mode: mode  });
-const wusdcToken = new Wusdc_token_v0003Contract({ mode: mode });
-const council = new Council_v0003Contract({mode: mode});
+const council = new CouncilContract({mode: mode});
+
+const tokenID = BigInt(123456789);
 
 
 const TIMEOUT = 20000_000;
@@ -49,7 +49,7 @@ const createPacket = (
     aleoChainId,
     ethTsContractAddr,
     aleoTsAddr,
-    wusdcToken.address(),
+    tokenID,
     ethUser
   );
 };
@@ -252,7 +252,7 @@ describe("Token Bridge ", () => {
       const [screeningPassed, tx] = await bridge.consume(
         packet.source.chain_id,
         packet.source.addr,
-        packet.message.dest_token_address,
+        packet.message.dest_token_id,
         packet.message.sender_address,
         packet.message.receiver_address,
         packet.message.amount,
@@ -296,7 +296,7 @@ describe("Token Bridge ", () => {
       const [screeningPassed, tx] = await bridge.consume(
         packet.source.chain_id,
         packet.source.addr,
-        packet.message.dest_token_address,
+        packet.message.dest_token_id,
         packet.message.sender_address,
         packet.message.receiver_address,
         packet.message.amount,
@@ -339,7 +339,7 @@ describe("Token Bridge ", () => {
       const [screeningPassed, tx] = await bridge.consume(
         packet.source.chain_id,
         packet.source.addr,
-        packet.message.dest_token_address,
+        packet.message.dest_token_id,
         packet.message.sender_address,
         packet.message.receiver_address,
         packet.message.amount,
@@ -389,7 +389,7 @@ describe("Token Bridge ", () => {
       const [screeningPassed, tx] = await bridge.consume(
         packet.source.chain_id,
         packet.source.addr,
-        packet.message.dest_token_address,
+        packet.message.dest_token_id,
         packet.message.sender_address,
         packet.message.receiver_address,
         packet.message.amount,
