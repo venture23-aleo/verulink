@@ -294,7 +294,7 @@ program token_service_council.aleo
         max_supply: u128
     }
 
-    transition register_token(
+    transition ts_register_token(
         public id: u32,
         public token_name: u128,
         public symbol: u128,
@@ -318,5 +318,63 @@ program token_service_council.aleo
         council.aleo/external_execute(id, proposal_hash, voters);
     }
 
+    //////////////////////////////////////////////////////
+    ///////  Token Service : Update Token Service ////////
+    //////////////////////////////////////////////////////
 
+    struct UpdateTokenServiceAddress {
+        id: u32,
+        chain_id: u128,
+        token_id: field,
+        token_service_address: [u8; 20]
+    }
+
+    transition ts_update_token_service_address(
+        public id: u32,
+        public chain_id: u128,
+        public token_id: field,
+        token_service_address: [u8; 20],
+        public voters: [address; 5],
+    ) {
+        let proposal: UpdateTokenServiceAddress  = UpdateTokenServiceAddress {
+            id,
+            chain_id,
+            token_id, 
+            token_service_address
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        token_service_v0003.aleo/update_other_chain_ts(chain_id, token_id, token_service_address);
+
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
+
+    struct UpdateTokenAddress {
+        id: u32,
+        chain_id: u128,
+        token_id: field,
+        token_address: [u8; 20]
+    }
+
+    transition ts_update_token_address(
+        public id: u32,
+        public chain_id: u128,
+        public token_id: field,
+        token_address: [u8; 20],
+        public voters: [address; 5],
+    ) {
+        let proposal: UpdateTokenAddress  = UpdateTokenAddress{
+            id,
+            chain_id,
+            token_id, 
+            token_address
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        token_service_v0003.aleo/update_other_chain_ta(chain_id, token_id, token_address);
+
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
 }

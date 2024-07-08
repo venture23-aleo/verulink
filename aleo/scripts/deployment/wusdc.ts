@@ -1,7 +1,3 @@
-
-import { Wusdc_token_v0003Contract } from "../../artifacts/js/wusdc_token_v0003";
-import { Wusdc_holding_v0003Contract } from "../../artifacts/js/wusdc_holding_v0003";
-import { Wusdc_connector_v0003_0Contract } from "../../artifacts/js/wusdc_connector_v0003_0";
 import { ExecutionMode } from "@doko-js/core";
 import { Token_service_v0003Contract } from "../../artifacts/js/token_service_v0003";
 import { CouncilContract } from "../../artifacts/js/council";
@@ -11,11 +7,12 @@ import { RegisterToken, RegisterTokenLeo } from "../../artifacts/js/types/token_
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
 import { Token_service_councilContract } from "../../artifacts/js/token_service_council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
+import { Holding_v0003Contract } from "../../artifacts/js/holding_v0003";
 
 const mode = ExecutionMode.SnarkExecute;
 export const deployWusdc = async () => {
   // const wusdcToken = new Wusdc_token_v0003Contract({mode});
-  // const wusdcHolding = new Wusdc_holding_v0003Contract({mode});
+  const wusdcHolding = new Holding_v0003Contract({mode});
   // const wusdcConnecter = new Wusdc_connector_v0003_0Contract({mode});
 
   // // Deploy token
@@ -23,8 +20,8 @@ export const deployWusdc = async () => {
   // await wusdcToken.wait(wusdcTokenDeployTx);
 
   // // Deploy holding
-  // const wusdcHoldingDeployTx = await wusdcHolding.deploy(); // 5_039_000
-  // await wusdcHolding.wait(wusdcHoldingDeployTx);
+  const wusdcHoldingDeployTx = await wusdcHolding.deploy(); // 5_039_000
+  await wusdcHolding.wait(wusdcHoldingDeployTx);
 
   // // Deploy connector
   // const wusdcConnectorDeployTx = await wusdcConnecter.deploy(); // 7_653_000

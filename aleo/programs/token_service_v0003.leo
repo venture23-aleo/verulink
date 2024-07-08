@@ -1,7 +1,7 @@
 // The 'token_service' program.
 
 import token_bridge_v0003.aleo;
-import abc.aleo;
+import multi_token_support_program_v1.aleo;
 import holding_v0003.aleo;
 
 program token_service_v0003.aleo {
@@ -133,23 +133,82 @@ program token_service_v0003.aleo {
         Mapping::set(owner_TS, OWNER_INDEX, new_owner);
     }
 
-    ////////////////////////////////////
-    ///// Register token to abc ///////
-    ////////////////////////////////////
+    //////////////////////////////////////////////////////////////
+    ///// Register token to multi_token_support_program_v1 ///////
+    //////////////////////////////////////////////////////////////
     transition register_token(
         public token_name: u128,
         public symbol: u128,
         public decimals: u8,
         public max_supply: u128
-    )-> field {
+    )-> public field {
         let token_id: field = BHP256::hash_to_field(token_name);
-        abc.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
+        multi_token_support_program_v1.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
         return token_id then finalize(self.caller);
     }
     finalize register_token(from:address){
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
     }
+
+    /////////////////////////////////////////////////
+    ///// Update token metadata /////////////////////
+    /////////////////////////////////////////////////
+    transition update_token_metadata(
+        public token_id: field,
+        public admin: address,
+        public external_authorization_party: address
+    ) {
+        multi_token_support_program_v1.aleo/update_token_management(token_id, admin, external_authorization_party);
+        return then finalize(self.caller);
+    }
+    finalize update_token_metadata(from:address){
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
+    }
+
+    /////////////////////////////////////////////////
+    ///// Update token_service of other chain ///////
+    /////////////////////////////////////////////////
+    transition update_other_chain_ts(
+        public chain_id: u128,
+        public token_id: field,
+        token_service_address: [u8; 20]
+    ) {
+        return then finalize(self.caller, chain_id, token_id, token_service_address);
+    }
+    finalize update_other_chain_ts(from:address, chain_id:u128, token_id: field, token_service_address: [u8;20]){
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
+        let chaintokeninfo:ChainToken = ChainToken{
+            chain_id: chain_id,
+            token_id: token_id
+        };
+        Mapping::contains(other_chain_token_service, chaintokeninfo);
+        Mapping::set(other_chain_token_service, chaintokeninfo, pad_20_to_32(token_service_address));
+    }
+
+    /////////////////////////////////////////////////
+    ///// Update token_address of other chain ///////
+    /////////////////////////////////////////////////
+    transition update_other_chain_ta(
+        public chain_id: u128,
+        public token_id: field,
+        token_address: [u8; 20]
+    ) {
+        return then finalize(self.caller, chain_id, token_id, token_address);
+    }
+    finalize update_other_chain_ta(from:address, chain_id:u128, token_id: field, token_address: [u8;20]){
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
+        let chaintokeninfo:ChainToken = ChainToken{
+            chain_id: chain_id,
+            token_id: token_id
+        };
+        Mapping::contains(other_chain_token_address, chaintokeninfo);
+        Mapping::set(other_chain_token_address, chaintokeninfo, pad_20_to_32(token_address));
+    }
+
 
     ////////////////////////////////
     ///// Add/Remove Token /////////
@@ -356,7 +415,7 @@ program token_service_v0003.aleo {
         public dest_token_address: [u8;20]
     ) {
 
-        abc.aleo/burn_public(token_id, self.caller, amount);
+        multi_token_support_program_v1.aleo/burn_public(token_id, self.caller, amount);
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
             token_id: token_id
@@ -477,7 +536,7 @@ program token_service_v0003.aleo {
             token_id: token_id
         };
         let authorize_until:u32 = 4294967295u32;
-        abc.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
+        multi_token_support_program_v1.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
         holding_v0003.aleo/hold_fund(receiver, token_id, held_amount);
 
