@@ -109,7 +109,12 @@ The user running the installer script should have the following IAM permissions.
                   "cloudshell:*"
               ],
               "Resource": "*"
-          }
+          },
+          {
+            "Effect": "Allow",
+            "Action": "s3:ListAllMyBuckets",
+            "Resource": "*"
+        }
       ]
   }
   ```
