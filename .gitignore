@@ -15,3 +15,6 @@ coverage.json
 *.key
 *.crt
 *venv
+*.pem
+.temp.*
+.temp
