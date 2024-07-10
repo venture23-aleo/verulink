@@ -13,6 +13,7 @@ import logging
 import crypt
 import socket
 import shutil
+from pathlib import Path
 
 from ansible import context
 from ansible.executor.playbook_executor import PlaybookExecutor
@@ -20,6 +21,7 @@ from ansible.inventory.manager import InventoryManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars.manager import VariableManager
 from ansible.playbook.play import Play
+
 
 
 # Set up logging configuration
@@ -30,6 +32,47 @@ BOLD_END = "\033[0m"
 INPUT_EMOJI = "⌨️"
 
 chainservice_config = './chainservice/config.yaml'
+playbook_path = './scripts/aws/deploy.yml'
+
+def deploy_attestor():
+    logging.info("\n * * * Deploying Attestor service...🚀 \n")
+    with open('./scripts/aws/secret.json', 'r') as f:
+        data = json.load(f)
+
+    public_ip_address = data['public_ip_address']
+    ssh_keyfile = data['ssh_private_key']
+    ansible_command = [
+        'ansible-playbook',
+        data['ansible_playbook'],
+        '-i', f'{public_ip_address},',
+        '-u', 'ubuntu',
+        '--private-key', f"{ssh_keyfile}.pem"
+    ]
+    result = subprocess.run(ansible_command)
+
+    if result.returncode == 0:
+        logging.info("Playbook executed successfully.✅")
+    else:
+        logging.info("An error occurred while executing the playbook.")
+
+
+def prompt_user_action():
+    while True:
+        action = input("Do you want to continue (C) deployment or reconfigure (R)? ").strip().lower()
+        if action in ['c', 'r']:
+            return action
+        print("Invalid input. Please enter 'C' to continue or 'R' to reconfigure.")
+
+
+config_done_flag = Path(".config.done")
+if config_done_flag.exists():
+    user_action = prompt_user_action()
+    print(user_action)
+    if user_action == 'c':
+        print("Starting deployment...")
+        deploy_attestor()
+        exit()
+
 
 def check_aws_authentication():
     # ANSI escape codes for colors
@@ -107,7 +150,7 @@ def create_key_pair(ec2_client, key_name):
         ec2_client.create_tags(
             Resources=[keypair_response['KeyPairId']],
             Tags=[
-                {'Key': 'Project', 'Value': 'Aleo-bridge'},
+                {'Key': 'Project', 'Value': 'verulink'},
                 {'Key': 'Name', 'Value': key_name}
             ]
         )
@@ -302,8 +345,8 @@ key_value_pairs = [
 ]
 
 # Get input for the secret name
-secret_name = get_input("Enter secret name", "dev/aleo-bridge/attestor/signingservice")
-secret_arn, secret_data = create_secret( secret_name, "dev/aleo-bridge/attestor/signingservice", key_value_pairs)
+secret_name = get_input("Enter secret name", "dev/verulink/attestor/signingservice")
+secret_arn, secret_data = create_secret( secret_name, "dev/verulink/attestor/signingservice", key_value_pairs)
 
 # Store Attestor MTLS Certificate and Keys on AWS Secret manager
 key_value_pairs = [
@@ -312,8 +355,8 @@ key_value_pairs = [
     ("attestor_key", "Enter attestor key file")
 ]
 print("Configuring MTLS...")
-mtls_secret_name = get_input("Enter MTLS secret name", "dev/aleo-bridge/attestor/mtls")
-mtls_secret_arn, mtls_secret_data = create_secret( mtls_secret_name, "dev/aleo-bridge/attestor/signingservice", key_value_pairs, file = True)
+mtls_secret_name = get_input("Enter MTLS secret name", "dev/verulink/attestor/mtls")
+mtls_secret_arn, mtls_secret_data = create_secret( mtls_secret_name, "dev/verulink/attestor/signingservice", key_value_pairs, file = True)
 
 
 
@@ -395,7 +438,7 @@ logging.info(f"IAM role {role_name} created with ARN: {role_arn}")
 iam_client.tag_role(
     RoleName=role_name,
     Tags=[
-        {'Key': 'Project', 'Value': 'Aleo-bridge'},
+        {'Key': 'Project', 'Value': 'verulink'},
         {'Key': 'Name', 'Value': 'aleo-attestor-role'}
     ]
 )
@@ -444,7 +487,7 @@ instance_params = {
 # Check if an EC2 instance with specific tags already exists
 existing_instances = ec2_client.describe_instances(
     Filters=[
-        {'Name': 'tag:Project', 'Values': ['Aleo-bridge']},
+        {'Name': 'tag:Project', 'Values': ['verulink']},
         {'Name': 'tag:Name', 'Values': ['aleo-attestor']},
         {'Name': 'instance-state-name', 'Values': ['running']}
     ]
@@ -473,7 +516,7 @@ if existing_instances['Reservations']:
         ec2_client.create_tags(
             Resources=[instance_id],
             Tags=[
-                {'Key': 'Project', 'Value': 'Aleo-bridge'},
+                {'Key': 'Project', 'Value': 'verulink'},
                 {'Key': 'Name', 'Value': 'aleo-attestor'}
             ]
         )
@@ -516,7 +559,7 @@ else:
     ec2_client.create_tags(
         Resources=[instance_id],
         Tags=[
-            {'Key': 'Project', 'Value': 'Aleo-bridge'},
+            {'Key': 'Project', 'Value': 'verulink'},
             {'Key': 'Name', 'Value': 'aleo-attestor'}
         ]
     )
@@ -574,15 +617,17 @@ logging.info("Checking Ansible connection to the newly created EC2 instance...")
 ansible_command = [
     "ansible",
     "all", 
-    "-i", public_ip_address,  # Ansible dynamic inventory with the instance ID
-    "-u", "ubuntu",         # Default SSH user for Amazon Linux instances
-    "-m", "ping",              # Ping module to test connection
+    "-i", f'{public_ip_address},',
+    "-u", "ubuntu",
+    "-m", "ping",
     "--private-key", f"{new_key_name}.pem"
 ]
+subprocess.run(ansible_command, capture_output=True)
 ansible_process = subprocess.run(ansible_command, capture_output=True)
 for attempt in range(2):
     if ansible_process.returncode == 0:
         logging.info("Ansible connection test successful. You can now proceed with further configurations.✅")
+        break
     else:
         print("Checking security group rules...")
         if check_port(public_ip_address, 22):
@@ -593,10 +638,6 @@ for attempt in range(2):
             logging.info("Security group rules updated. Retrying Ansible connection test...")
 
 
-# Install docker
-playbook_path = './scripts/aws/deploy.yml'
-
-logging.info("\n * * * Deploying Attestor service...🚀 \n")
 
 # sudo_pass = pwinput.pwinput(prompt=f"Input sudo password: ",mask='X')
 
@@ -609,8 +650,8 @@ key_value_pairs = [
     ("sudo_pass", "Input sudo password")
 ]
 print("Configuring sudoers...")
-sudo_secret_name = get_input("Enter secret name for sudo password", "dev/aleo-bridge/attestor/sudo_pass")
-sudo_secret_arn, sudo_secret_data = create_secret( sudo_secret_name, "dev/aleo-bridge/attestor/sudo_pass", key_value_pairs, file = False)
+sudo_secret_name = get_input("Enter secret name for sudo password", "dev/verulink/attestor/sudo_pass")
+sudo_secret_arn, sudo_secret_data = create_secret( sudo_secret_name, "dev/verulink/attestor/sudo_pass", key_value_pairs, file = False)
 
 
 # Zip code repo
@@ -642,7 +683,9 @@ secret_data = {
     "mtls_secret_name": mtls_secret_name,
     "install_artifact": zip_file,
     "sudo_password": sudo_secret_name,
-    "sudo_secret_name": sudo_secret_name
+    "sudo_secret_name": sudo_secret_name,
+    "ssh_private_key": new_key_name,
+    "ansible_playbook": playbook_path
     # "github_username": github_username,
     # "github_pass": github_pass
 }
@@ -665,21 +708,8 @@ with open(inventory_file, "w") as f:
     f.write("[all]\n")
     f.write(public_ip_address)
 
+## Set configuration done flag
+with open("./.temp/config.done", 'w') as file:
+    file.write('OK')
 
-
-ansible_command = [
-    'ansible-playbook',
-    playbook_path,
-    '-i', f'{public_ip_address},',
-    '-u', 'ubuntu',
-    '--private-key', f"{new_key_name}.pem"
-]
-# Run the command
-result = subprocess.run(ansible_command)
-
-# Check if the command was successful
-if result.returncode == 0:
-    logging.info("Playbook executed successfully.✅")
-else:
-    logging.info("An error occurred while executing the playbook.")
-
+deploy_attestor()
