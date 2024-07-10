@@ -322,7 +322,7 @@ ec2_client = boto3.client('ec2', region_name=region)
 
 # Get input parameters
 ami_id = get_input("Enter AMI ID", ami_id)
-instance_type = get_input("Enter instance type", "t2.micro")
+instance_type = get_input("Enter instance type", "t3.medium")
 
 # Specify the desired root disk size (in GB)
 desired_root_disk_size_gb = 25
