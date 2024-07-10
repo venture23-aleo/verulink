@@ -158,7 +158,7 @@ The user running the installer script should have the following IAM permissions.
 ### Deployment Steps:
 1. Clone the github project repository
     ```bash
-    git clone https://github.com/venture23-aleo/   verulink.git
+    git clone https://github.com/venture23-aleo/verulink.git
     ```
 2. cd into project directory 
    ```bash
