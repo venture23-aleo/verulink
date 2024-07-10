@@ -24,9 +24,6 @@ deploy-secretmanager:
 configure-aws:
 	aws configure --profile $(AWS_PROFILE)
 
-# Deploy automatically and run Python script
-deploy-to-aws: install-dependencies tar-attestor run-aws-deploy-script
-
 # Install Python dependencies using pip
 install-dependencies:
 	pip3 install -r scripts/aws/requirements.txt >/dev/null
@@ -37,7 +34,7 @@ tar-attestor:
 
 
 # Run the deploy_attestor.py script
-run-aws-deploy-script:
+deploy-to-aws:
 	python3 ./scripts/aws/deploy_attestor.py
 
 # Create a virtual environment using venv
