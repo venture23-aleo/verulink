@@ -17,106 +17,126 @@ The user running the installer script should have the following IAM permissions.
 
   ```json
   {
-      "Version": "2012-10-17",
-      "Statement": [
-          {
-              "Sid": "Statement1",
-              "Effect": "Allow",
-              "Action": [
-                  "ec2:AssociateIamInstanceProfile",
-                  "ec2:CreateKeyPair"
-              ],
-              "Resource": "*"
-          },
-          {
-              "Sid": "PolicyStatementToAllowUserToPassOneSpecificRole",
-              "Effect": "Allow",
-              "Action": [
-                  "iam:PassRole"
-              ],
-              "Resource": "arn:aws:iam::714859998736:role/centralized-relay-kms"
-          },
-          {
-              "Sid": "CentralizedRelayKmsPolicy",
-              "Effect": "Allow",
-              "Action": "kms:*",
-              "Resource": "*"
-          },
-          {
-              "Sid": "AllowViewAccountInfo",
-              "Effect": "Allow",
-              "Action": [
-                  "iam:GetAccountPasswordPolicy",
-                  "iam:GetAccountSummary"
-              ],
-              "Resource": "*"
-          },
-          {
-              "Sid": "AllowManageOwnPasswords",
-              "Effect": "Allow",
-              "Action": [
-                  "iam:ChangePassword",
-                  "iam:GetUser"
-              ],
-              "Resource": "arn:aws:iam::*:user/${aws:username}"
-          },
-          {
-              "Sid": "AllowManageOwnAccessKeys",
-              "Effect": "Allow",
-              "Action": [
-                  "iam:CreateAccessKey",
-                  "iam:DeleteAccessKey",
-                  "iam:ListAccessKeys",
-                  "iam:UpdateAccessKey",
-                  "iam:GetAccessKeyLastUsed"
-              ],
-              "Resource": "arn:aws:iam::*:user/${aws:username}"
-          },
-          {
-              "Sid": "AllowManageOwnSSHPublicKeys",
-              "Effect": "Allow",
-              "Action": [
-                  "iam:DeleteSSHPublicKey",
-                  "iam:GetSSHPublicKey",
-                  "iam:ListSSHPublicKeys",
-                  "iam:UpdateSSHPublicKey",
-                  "iam:UploadSSHPublicKey"
-              ],
-              "Resource": "arn:aws:iam::*:user/${aws:username}"
-          },
-          {
-              "Sid": "VisualEditor0",
-              "Effect": "Allow",
-              "Action": [
-                  "iam:CreateInstanceProfile",
-                  "iam:UpdateAssumeRolePolicy",
-                  "iam:PutUserPermissionsBoundary",
-                  "iam:AttachUserPolicy",
-                  "iam:CreateRole",
-                  "iam:AttachRolePolicy",
-                  "iam:PutRolePolicy",
-                  "iam:AddRoleToInstanceProfile",
-                  "iam:CreateAccessKey",
-                  "iam:CreatePolicy",
-                  "iam:PassRole",
-                  "iam:DetachRolePolicy",
-                  "iam:AttachGroupPolicy",
-                  "iam:PutUserPolicy",
-                  "iam:DetachGroupPolicy",
-                  "iam:CreatePolicyVersion",
-                  "iam:DetachUserPolicy",
-                  "iam:PutGroupPolicy",
-                  "iam:SetDefaultPolicyVersion",
-                  "cloudshell:*"
-              ],
-              "Resource": "*"
-          },
-          {
-            "Effect": "Allow",
-            "Action": "s3:ListAllMyBuckets",
-            "Resource": "*"
-        }
-      ]
+  "Version": "2012-10-17",
+  "Statement": [
+  	{
+  		"Sid": "Statement1",
+  		"Effect": "Allow",
+  		"Action": [
+  			"ec2:AssociateIamInstanceProfile",
+  			"ec2:CreateKeyPair",
+  			"ec2:DescribeImages",
+  			"ec2:CreateTags",
+  			"ec2:DescribeSecurityGroups",
+  			"ec2:CreateSecurityGroup",
+  			"ec2:AuthorizeSecurityGroupIngress",
+  			"ec2:DescribeInstances",
+  			"ec2:RunInstances",
+  			"ec2:TerminateInstances"
+  		],
+  		"Resource": "*"
+  	},
+  	{
+  		"Sid": "PolicyStatementToAllowUserToPassOneSpecificRole",
+  		"Effect": "Allow",
+  		"Action": [
+  			"iam:PassRole"
+  		],
+  		"Resource": "arn:aws:iam::714859998736:role/centralized-relay-kms"
+  	},
+  	{
+  		"Sid": "CentralizedRelayKmsPolicy",
+  		"Effect": "Allow",
+  		"Action": "kms:*",
+  		"Resource": "*"
+  	},
+  	{
+  		"Sid": "AllowViewAccountInfo",
+  		"Effect": "Allow",
+  		"Action": [
+  			"iam:GetAccountPasswordPolicy",
+  			"iam:GetAccountSummary"
+  		],
+  		"Resource": "*"
+  	},
+  	{
+  		"Sid": "AllowManageOwnPasswords",
+  		"Effect": "Allow",
+  		"Action": [
+  			"iam:ChangePassword",
+  			"iam:GetUser"
+  		],
+  		"Resource": "arn:aws:iam::*:user/${aws:username}"
+  	},
+  	{
+  		"Sid": "AllowManageOwnAccessKeys",
+  		"Effect": "Allow",
+  		"Action": [
+  			"iam:CreateAccessKey",
+  			"iam:DeleteAccessKey",
+  			"iam:ListAccessKeys",
+  			"iam:UpdateAccessKey",
+  			"iam:GetAccessKeyLastUsed"
+  		],
+  		"Resource": "arn:aws:iam::*:user/${aws:username}"
+  	},
+  	{
+  		"Sid": "AllowManageOwnSSHPublicKeys",
+  		"Effect": "Allow",
+  		"Action": [
+  			"iam:DeleteSSHPublicKey",
+  			"iam:GetSSHPublicKey",
+  			"iam:ListSSHPublicKeys",
+  			"iam:UpdateSSHPublicKey",
+  			"iam:UploadSSHPublicKey"
+  		],
+  		"Resource": "arn:aws:iam::*:user/${aws:username}"
+  	},
+  	{
+  		"Sid": "VisualEditor0",
+  		"Effect": "Allow",
+  		"Action": [
+  			"iam:CreateInstanceProfile",
+  			"iam:UpdateAssumeRolePolicy",
+  			"iam:PutUserPermissionsBoundary",
+  			"iam:AttachUserPolicy",
+  			"iam:CreateRole",
+  			"iam:AttachRolePolicy",
+  			"iam:PutRolePolicy",
+  			"iam:AddRoleToInstanceProfile",
+  			"iam:CreateAccessKey",
+  			"iam:CreatePolicy",
+  			"iam:PassRole",
+  			"iam:DetachRolePolicy",
+  			"iam:AttachGroupPolicy",
+  			"iam:PutUserPolicy",
+  			"iam:DetachGroupPolicy",
+  			"iam:CreatePolicyVersion",
+  			"iam:DetachUserPolicy",
+  			"iam:PutGroupPolicy",
+  			"iam:SetDefaultPolicyVersion",
+  			"iam:TagRole",
+  			"iam:GetRole",
+  			"iam:GetInstanceProfile",
+  			"cloudshell:*"
+  		],
+  		"Resource": "*"
+  	},
+  	{
+  		"Effect": "Allow",
+  		"Action": "s3:ListAllMyBuckets",
+  		"Resource": "*"
+  	},
+  	{
+  		"Effect": "Allow",
+  		"Action": [
+  			"secretsmanager:DescribeSecret",
+  			"secretsmanager:GetSecretValue",
+  			"secretsmanager:CreateSecret"
+  		],
+  		"Resource": "*"
+  	}
+  ]
   }
   ```
 </details>  
@@ -136,7 +156,7 @@ The user running the installer script should have the following IAM permissions.
 ### Deployment Steps:
 1. Clone the github project repository
     ```bash
-    git clone https://github.com/venture23-aleo/   verulink.git
+    git clone https://github.com/venture23-aleo/verulink.git
     ```
 2. cd into project directory 
    ```bash
