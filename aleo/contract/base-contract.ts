@@ -104,5 +104,6 @@ export class BaseContract {
     } else {
       this.config.privateKey = this.config.network.accounts[accountIndex];
     }
+    this.ctx = CreateExecutionContext(this.config);
   }
 }

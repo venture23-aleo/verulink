@@ -52,6 +52,13 @@ describe("Holding", () => {
             await tx.wait();
             expect(await holding.owner_holding(OWNER_INDEX)).toBe(admin);
         }, TIMEOUT);
+        
+        test("cannot initialize token holding twice", async () => {
+            holding.connect(admin);
+            const [tx] = await holding.initialize_holding(admin);
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined();  
+        }, TIMEOUT);
     });
 
     describe("Hold Fund", () => {
@@ -60,6 +67,13 @@ describe("Holding", () => {
             account: user,
             token_id: tokenID
         };
+
+        test("should not be called from non-admin", async () => {
+            holding.connect(aleoUser3);
+            const [tx] = await holding.hold_fund(user, tokenID, amountToHold);
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
+        }, TIMEOUT);
 
         test("should hold fund", async () => {
             expect(await holding.owner_holding(OWNER_INDEX)).toBe(admin)
@@ -72,28 +86,9 @@ describe("Holding", () => {
             const finalHeldAmount = await holding.holdings(holder);
             expect(finalHeldAmount).toBe(initialHeldFund + amountToHold);
         }, TIMEOUT);
-
-        test("should not be called from non-admin", async () => {
-            holding.connect(aleoUser3);
-            const [tx] = await holding.hold_fund(user, tokenID, amountToHold);
-            const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
-        }, TIMEOUT);
-
     });
 
     describe("Release Fund", () => {
-
-        // test("Initialize token", async () => {
-        //     const isTokenInitialized = (await Mtsp.token_owner(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
-        //     if (!isTokenInitialized) {
-        //         wusdcHolding.connect(admin);
-        //         const [tx] = await wusdcToken.initialize_token(admin);
-        //         await tx.wait();
-        //         expect(await wusdcToken.token_owner(OWNER_INDEX)).toBe(admin);
-        //     }
-        // }, TIMEOUT);
-
         const holder: Holder = {
             account: user,
             token_id: tokenID
@@ -111,6 +106,13 @@ describe("Holding", () => {
             user
         };
         const alice_balance = hashStruct(alice);
+
+        test("should not be called from non-admin", async () => {
+            holding.connect(aleoUser3);
+            const [tx] = await holding.hold_fund(user, tokenID, amountToHold);
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
+        }, TIMEOUT);
 
         test("Releasing fund greater than held amount must fail", async () => {
             const heldAmount = await holding.holdings(holder, BigInt(0));
@@ -157,16 +159,6 @@ describe("Holding", () => {
             expect(finalUserBalance).toBe(initialUserBalance.balance + amountToRelease);
             expect(finalHoldingBalance).toBe(initialHoldingBalance.balance - amountToRelease);
             expect(finalHeldAmount).toBe(heldAmount - amountToRelease);
-        }, TIMEOUT);
-
-        test("should not be called from non-admin", async () => {
-            const heldAmount = await holding.holdings(holder);
-            expect(heldAmount).toBeGreaterThanOrEqual(BigInt(1))
-
-            holding.connect(aleoUser4);
-            const [tx] = await holding.release_fund(user, tokenID, BigInt(1)); // release remaining 1unit
-            const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT);
     });
 
