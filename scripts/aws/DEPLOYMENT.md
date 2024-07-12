@@ -52,7 +52,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 			"Action": [
 				"iam:PassRole"
 			],
-			"Resource": "arn:aws:iam::714859998736:role/centralized-relay-kms"
+			"Resource": "*"
 		},
 		{
 			"Sid": "CentralizedRelayKmsPolicy",
