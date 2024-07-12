@@ -162,19 +162,23 @@ The user running the installer script should have the following IAM permissions.
    ```bash
    cd verulink
    ```
-3. Setup python virtual environment
+3. Checkout to `staging` branch
+    ```bash
+    git checkout staging
+    ```
+4. Setup python virtual environment
     ```bash
     make python-venv
     ```
-2. Activate python virtual environment
+5. Activate python virtual environment
     ```bash
     source venv/bin/activate
     ```
-2. Run the script
+6. Run the script
     ```bash
     make deploy-to-aws
     ```
-3. Provide all the inputs as the script asks.
+7. Provide all the inputs as the script asks.
     * AWS Region (default: `us-east-1`)
     * AMI ID
     * AWS Instance Type (default: `t3.medium`)
@@ -190,9 +194,16 @@ The user running the installer script should have the following IAM permissions.
         - Attestor key file
 
 
-4. Once successfully deployed, save the SSH key of the machine located in your home directory.
-5. If using CloudShell, download the key by going to **Actions** and selecting **Download file**. _Input the correct full path of the key file_.
-
+8. Once successfully deployed, save the SSH key of the machine located in your home directory.
+9. If using CloudShell, download the key by going to **Actions** and selecting **Download file**. _Input the correct full path of the key file_.
+10. Access the remote attestor machine via SSH and verify the services. The IP address is located in the `inventory.txt` file, and the SSH private key is also available in the same project directory.
+```bash
+ssh -i <private_key_file.pem> ubuntu@IP_ADDRESS
+```
+11. Verify the services: `chainService` and `signingService`
+```bash
+docker ps
+```
 ### Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:
 
@@ -210,6 +221,15 @@ ansible-playbook scripts/aws/deploy.yml -i inventory.txt -u ubuntu --private-key
 Alternatively, we can directly provide the public IP of the AWS EC2 instance instead of inventory.txt file
 ```bash
 ansible-playbook scripts/aws/deploy.yml -i 54.198.147.67, -u ubuntu --private-key attestor-ssh-key.pem
+```
+If no Docker containers are running, check the exited containers and view their logs.
+- Show exited containers
+```bash
+docker ps -a
+```
+- View the logs of the exited container
+```bash
+docker logs <container_id>
 ```
 > _**Note**_ : Once Attestor cloud instance configuration is complete, you can always choose `Continue Deployment` option. 
 
