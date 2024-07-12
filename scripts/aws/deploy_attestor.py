@@ -14,6 +14,9 @@ import crypt
 import socket
 import shutil
 from pathlib import Path
+import random
+import string
+import yaml
 
 from ansible import context
 from ansible.executor.playbook_executor import PlaybookExecutor
@@ -33,10 +36,11 @@ INPUT_EMOJI = "⌨️"
 
 chainservice_config = './chainservice/config.yaml'
 playbook_path = './scripts/aws/deploy.yml'
+secret_file = './scripts/aws/secret.json'
 
 def deploy_attestor():
     logging.info("\n * * * Deploying Attestor service...🚀 \n")
-    with open('./scripts/aws/secret.json', 'r') as f:
+    with open(secret_file, 'r') as f:
         data = json.load(f)
 
     public_ip_address = data['public_ip_address']
@@ -64,14 +68,15 @@ def prompt_user_action():
         print("Invalid input. Please enter 'C' to continue or 'R' to reconfigure.")
 
 
-config_done_flag = Path(".config.done")
+config_done_flag = Path("./.temp/config.done")
 if config_done_flag.exists():
     user_action = prompt_user_action()
-    print(user_action)
     if user_action == 'c':
         print("Starting deployment...")
         deploy_attestor()
         exit()
+    else:
+        os.remove(config_done_flag)
 
 
 def check_aws_authentication():
@@ -116,13 +121,10 @@ def get_latest_ubuntu_jammy_ami(region):
     return ami_id
 
 def cleanup_keypair(key_name):
-    # Specify the filename for the key file
     key_file_path = f"{key_name}.pem"
 
-    # Check if the key file exists before attempting to remove it
     if os.path.exists(key_file_path):
         try:
-            # Remove the key file
             os.remove(key_file_path)
             logging.info(f"SSH key file '{key_name}.pem' removed successfully.")
         except OSError as e:
@@ -146,7 +148,6 @@ def create_key_pair(ec2_client, key_name):
             key_file.write(keypair_response['KeyMaterial'])
         logging.info(f"New key pair '{key_name}' created and saved as {key_name}.pem ✅")
         copy_key_to_home_directory(key_name)
-        # Add tags to the key pair
         ec2_client.create_tags(
             Resources=[keypair_response['KeyPairId']],
             Tags=[
@@ -183,16 +184,13 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
         existing_secret = secrets_manager.describe_secret(SecretId=secret_name)
         try:
             if existing_secret['DeletedDate'] is not None:
-                # Secret exists but is scheduled for deletion, prompt the user for a different name
                 logging.info("A secret with this name is scheduled for deletion. Please choose a different name.")
                 secret_name = input("Enter a new secret name: ")
         except KeyError:
             pass
     except secrets_manager.exceptions.ResourceNotFoundException:
-        # Secret doesn't exist or is not found
         pass
 
-    # If the secret exists, confirm reusing it
     if existing_secret:
         reuse_secret = input("A secret with the provided name already exists. Do you want to reuse it? (yes/no): ").strip().lower()
         if reuse_secret == "yes":
@@ -217,11 +215,8 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
                             break
                         else:
                             logging.info("Value cannot be empty. Please enter a valid value.")
-            # # Get the password from the user
 
-            # Convert secret data to JSON string
             secret_value = json.dumps(secret_data)
-            # Create the secret in AWS Secrets Manager
             secret_response = secrets_manager.create_secret(
                 Name=secret_name,
                 Description="Secret for Ethereum and Aleo",
@@ -252,38 +247,37 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
                         else:
                             logging.info("Value cannot be empty. Please enter a valid value.")
 
-        # Convert secret data to JSON string
         secret_value = json.dumps(secret_data_local)
-        # Create the secret in AWS Secrets Manager
         secret_response = secrets_manager.create_secret(
             Name=secret_name,
             Description="Secret for Ethereum and Aleo",
             SecretString=secret_value
         )
 
-        # Print the ARN of the created secret
         logging.info(f"Secret created successfully with ARN: {secret_response['ARN']}")
         secret_arn = secret_response['ARN']
     return secret_arn, secret_data_local
 
 def add_sg_rule(security_group_id):
-    # Add SSH rule
-    ec2_client.authorize_security_group_ingress(
-        GroupId=security_group_id,
-        IpProtocol='tcp',
-        FromPort=22,
-        ToPort=22,
-        CidrIp='0.0.0.0/0'
-    )
-    
-    # Add "attestor" traffic rule
-    ec2_client.authorize_security_group_ingress(
-        GroupId=security_group_id,
-        IpProtocol='tcp',
-        FromPort=8080,  # Modify the port number as needed
-        ToPort=8080,    # Modify the port number as needed
-        CidrIp='0.0.0.0/0'
-    )
+    try:
+        ec2_client.authorize_security_group_ingress(
+            GroupId=security_group_id,
+            IpProtocol='tcp',
+            FromPort=22,
+            ToPort=22,
+            CidrIp='0.0.0.0/0'
+        )
+
+        ec2_client.authorize_security_group_ingress(
+            GroupId=security_group_id,
+            IpProtocol='tcp',
+            FromPort=8080,  # Modify the port number as needed
+            ToPort=8080,    # Modify the port number as needed
+            CidrIp='0.0.0.0/0'
+        )
+    except:
+        print(f"An error occurred while updating firewall")
+
 def check_port(host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(5)  # 5 seconds timeout
@@ -292,7 +286,6 @@ def check_port(host, port):
 
 def get_branch_and_repo():
     try:
-        # Get the current branch name using Git command
         branch_name = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
     except subprocess.CalledProcessError as e:
         print(f"Error getting current branch name: {e}")
@@ -306,7 +299,36 @@ def get_branch_and_repo():
         repo_url = None
 
     return branch_name, repo_url
-    
+
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
+
+def create_config_template(config_file):
+    with open(config_file, 'r') as file:
+        yaml_content = file.read()
+        data = yaml.safe_load(yaml_content)
+        aleo_wallet_placeholder = "{{ aleo_wallet_address }}"
+        ethereum_wallet_placeholder = "{{ ethereum_wallet_address }}"
+        for chain in data['chains']:
+            if chain['name'] == 'aleo':
+                chain['wallet_address'] = aleo_wallet_placeholder
+            elif chain['name'] == 'ethereum':
+                chain['wallet_address'] = ethereum_wallet_placeholder
+    yaml_str = yaml.dump(data, default_flow_style=False, sort_keys=False)
+    yaml_str = yaml_str.replace("'{{ aleo_wallet_address }}'", '{{ aleo_wallet_address }}')
+    yaml_str = yaml_str.replace("'{{ ethereum_wallet_address }}'", '{{ ethereum_wallet_address }}')
+
+    template_file = config_file + '.j2'
+    # Write the updated content to a Jinja2 template file
+    with open(template_file, 'w') as file:
+        file.write(yaml_str)
+    print("Jinja2 template created successfully.")
+
+######################################
+###  AWS Configuration starts here ###
+######################################  
+
 # Get AWS region with default value
 region = get_input("Enter AWS region", "us-east-1")
 ami_id = ''
@@ -320,23 +342,32 @@ except Exception as e:
 # Create an EC2 client
 ec2_client = boto3.client('ec2', region_name=region)
 
-# Get input parameters
 ami_id = get_input("Enter AMI ID", ami_id)
 instance_type = get_input("Enter instance type", "t3.medium")
 
 # Specify the desired root disk size (in GB)
 desired_root_disk_size_gb = 25
 
-key_name = "attestor-ssh-key"  # Update with your desired key name
+# Attestor name
+if os.path.exists(secret_file):
+        with open(secret_file, 'r') as f:
+            data = json.load(f)
+        
+        if 'attestor_name' in data:
+            attestor_name = data['attestor_name']
+        else:
+            attestor_name = get_input("Enter attestor name", "attestor-aleo-" + generate_random_string(5))
+
+else:
+    attestor_name = get_input("Enter attestor name", "attestor-aleo-" + generate_random_string(5))
+
+key_name = attestor_name + "-ssh-key"
 new_key_name = create_key_pair(ec2_client, key_name)
 
-# Create a Secrets Manager client
 secrets_manager = boto3.client('secretsmanager', region_name=region)
 
-# Dictionary to store secret data
 secret_data = {}
 
-# Store Attestor Private keys on AWS Secret manager
 key_value_pairs = [
     ("ethereum_private_key", "Enter Ethereum private key"),
     ("ethereum_wallet_address", "Enter Ethereum wallet address"),
@@ -360,7 +391,6 @@ mtls_secret_arn, mtls_secret_data = create_secret( mtls_secret_name, "dev/veruli
 
 
 
-# Create an IAM role with permissions to access Secrets Manager
 iam_client = boto3.client('iam')
 
 role_name = 'EC2SecretsManagerRole'
@@ -384,12 +414,10 @@ try:
     role_arn = role_response['Role']['Arn']
     logging.info(f"IAM role {role_name} created with ARN: {role_arn}")
 except iam_client.exceptions.EntityAlreadyExistsException:
-    # If the role already exists, use the existing role
     role_arn = iam_client.get_role(RoleName=role_name)['Role']['Arn']
     logging.info(f"IAM role {role_name} already exists. Using existing ARN: {role_arn}")
 
 
-# Attach policy to IAM role allowing access to Secrets Manager
 policy_document = {
     "Version": "2012-10-17",
     "Statement": [
@@ -401,7 +429,6 @@ policy_document = {
     ]
 }
 
-# Define the permissions policy for the role (grants access to Secrets Manager)
 permissions_policy_arn = 'arn:aws:iam::aws:policy/SecretsManagerReadWrite'
 
 # Create an instance profile
@@ -475,10 +502,10 @@ instance_params = {
     'MinCount': 1,
     'BlockDeviceMappings': [
         {
-            'DeviceName': '/dev/sda1',  # Root device name
+            'DeviceName': '/dev/sda1',
             'Ebs': {
-                'VolumeSize': desired_root_disk_size_gb,  # Root volume size
-                'VolumeType': 'gp2'  # Default volume type (General Purpose SSD)
+                'VolumeSize': desired_root_disk_size_gb,
+                'VolumeType': 'gp2' 
             }
         }
     ]
@@ -488,7 +515,8 @@ instance_params = {
 existing_instances = ec2_client.describe_instances(
     Filters=[
         {'Name': 'tag:Project', 'Values': ['verulink']},
-        {'Name': 'tag:Name', 'Values': ['aleo-attestor']},
+        {'Name': 'tag:Name', 'Values': [attestor_name]},
+        {'Name': 'tag:Environment', 'Values': ['Testnet']},
         {'Name': 'instance-state-name', 'Values': ['running']}
     ]
 )
@@ -517,7 +545,8 @@ if existing_instances['Reservations']:
             Resources=[instance_id],
             Tags=[
                 {'Key': 'Project', 'Value': 'verulink'},
-                {'Key': 'Name', 'Value': 'aleo-attestor'}
+                {'Key': 'Name', 'Value': attestor_name},
+                {'Key': 'Environment', 'Value': 'Testnet'}
             ]
         )
 
@@ -560,7 +589,8 @@ else:
         Resources=[instance_id],
         Tags=[
             {'Key': 'Project', 'Value': 'verulink'},
-            {'Key': 'Name', 'Value': 'aleo-attestor'}
+            {'Key': 'Name', 'Value': attestor_name},
+            {'Key': 'Environment', 'Value': 'Testnet'}
         ]
     )
     
@@ -646,12 +676,12 @@ for attempt in range(2):
 # github_pass = pwinput.pwinput(prompt=f"Input Github Password: ",mask='X')
 
 # Store Attestor MTLS Certificate and Keys on AWS Secret manager
-key_value_pairs = [
-    ("sudo_pass", "Input sudo password")
-]
-print("Configuring sudoers...")
-sudo_secret_name = get_input("Enter secret name for sudo password", "dev/verulink/attestor/sudo_pass")
-sudo_secret_arn, sudo_secret_data = create_secret( sudo_secret_name, "dev/verulink/attestor/sudo_pass", key_value_pairs, file = False)
+# key_value_pairs = [
+#     ("sudo_pass", "Input sudo password")
+# ]
+# print("Configuring sudoers...")
+# sudo_secret_name = get_input("Enter secret name for sudo password", "dev/verulink/attestor/sudo_pass")
+# sudo_secret_arn, sudo_secret_data = create_secret( sudo_secret_name, "dev/verulink/attestor/sudo_pass", key_value_pairs, file = False)
 
 
 # Zip code repo
@@ -682,10 +712,11 @@ secret_data = {
     "secret_name": secret_name,
     "mtls_secret_name": mtls_secret_name,
     "install_artifact": zip_file,
-    "sudo_password": sudo_secret_name,
-    "sudo_secret_name": sudo_secret_name,
+    # "sudo_password": sudo_secret_name,
+    # "sudo_secret_name": sudo_secret_name,
     "ssh_private_key": new_key_name,
-    "ansible_playbook": playbook_path
+    "ansible_playbook": playbook_path,
+    "attestor_name": attestor_name
     # "github_username": github_username,
     # "github_pass": github_pass
 }
@@ -708,8 +739,10 @@ with open(inventory_file, "w") as f:
     f.write("[all]\n")
     f.write(public_ip_address)
 
+# convert chainService config.yaml to ansible jinja2 template
+create_config_template('./attestor/chainService/config.yaml')
 ## Set configuration done flag
 with open("./.temp/config.done", 'w') as file:
     file.write('OK')
-
+print("### ☁️ Attestor node configuration complete ✅")
 deploy_attestor()

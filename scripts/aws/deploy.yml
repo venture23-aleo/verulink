@@ -112,20 +112,20 @@
       tags:
         - read_secret
         
-    - name: Set sudo password for ubuntu user
-      ansible.builtin.user:
-        name: "{{ USER }}"
-        password: "{{ secret_data.sudo_password | password_hash('sha512')}}"
-        update_password: always
-        shell: /bin/bash
-      tags:
-        - set_sudo_password
-    - name: Find sudoers files granting NOPASSWD to ubuntu
-      ansible.builtin.find:
-        paths: /etc/sudoers.d
-        patterns: '*ubuntu*'
-        recurse: no
-      register: sudoers_files
+    # - name: Set sudo password for ubuntu user
+    #   ansible.builtin.user:
+    #     name: "{{ USER }}"
+    #     password: "{{ secret_data.sudo_password | password_hash('sha512')}}"
+    #     update_password: always
+    #     shell: /bin/bash
+    #   tags:
+    #     - set_sudo_password
+    # - name: Find sudoers files granting NOPASSWD to ubuntu
+    #   ansible.builtin.find:
+    #     paths: /etc/sudoers.d
+    #     patterns: '*ubuntu*'
+    #     recurse: no
+    #   register: sudoers_files
 
     - name: Copy install artifact to remote machine and extract to home directory
       ansible.builtin.copy:
@@ -227,7 +227,7 @@
         mode: '0400'
       tags:
         - create_secret_files
-    - name: Update Jinja2 template
+    - name: Update keys in signingService config
       ansible.builtin.template:
         src: keys.j2
         dest: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService/keys.yaml"
@@ -240,6 +240,31 @@
         aleo_wallet_address: "{{ secret_json_string.aleo_wallet_address }}"
       tags:
         - update_jinja2
+    
+    - name: Replace attestor name
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: '^name: attestor1'
+        replace: 'name: {{ attestor_name }}'
+     
+    - name: Replace aleo wallet address
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24'
+        replace: 'wallet_address: {{ aleo_wallet_address }}'
+      vars:
+        secret_json_string: "{{ secret_data[secret_name] | from_json }}"
+        aleo_wallet_address: "{{ secret_json_string.aleo_wallet_address }}"
+
+    
+    - name: Replace eth wallet address
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff'
+        replace: 'wallet_address: {{ ethereum_wallet_address }}'
+      vars:
+        secret_json_string: "{{ secret_data[secret_name] | from_json }}"
+        ethereum_wallet_address: "{{ secret_json_string.ethereum_wallet_address }}"
 
     - name: Run docker-compose up -d
       ansible.builtin.command:
@@ -248,7 +273,7 @@
       tags:
         - deploy_attestor
     
-    - name: Update sudoers for ubuntu
-      ansible.builtin.shell:
-        cmd: sudo sed -i 's/NOPASSWD://' /etc/sudoers.d/*
+    # - name: Update sudoers for ubuntu
+    #   ansible.builtin.shell:
+    #     cmd: sudo sed -i 's/NOPASSWD://' /etc/sudoers.d/*
     
