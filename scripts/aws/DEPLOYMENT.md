@@ -254,7 +254,7 @@ In case of failure while deploying the attestor
 	```bash
 	make deploy-to-aws
 	```
-2. You will be be notified if you want to continue or reconfigure
+2. You will be notified if you want to continue or reconfigure
 	```bash
 	Do you want to continue (C) deployment or reconfigure (R)? 
 	```
