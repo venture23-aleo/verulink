@@ -4,13 +4,20 @@ The attestor service can be deployed using two method
 > To run from a local device, please make sure the AWS CLI tool and AWS access credentials have been correctly configured. 
   [Follow steps here.](#to-configure-aws-access) 
 2. Using AWS CloudShell from the AWS Management Console UI(Recommended)
+
+## Pre-Deployment steps 
+1. MTLS certiciate/ key and CA certificate 
+   **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.**
+   https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
+2. Have Ethereum and Aleo wallet address and priv keys ready
+   
 ## Steps
 
-Using AWS cloudShell, we don't need to install the dependencies to run the installer script.
+If using AWS cloudShell, no need to install the dependencies to run the installer script.
 
 ### To Configure AWS access
 1. Install [_**AWS CLI Tool**_](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)  
-2. Add IAM permission to user  
+2. Add IAM permission to user  (needed for both local and CloudShell)
 The user running the installer script should have the following IAM permissions.
   <details>
   <summary><strong>IAM Policy JSON</strong></summary>
@@ -144,7 +151,7 @@ The user running the installer script should have the following IAM permissions.
 [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_managed-policies.html)  
 3. Create AWS Access key  
     [To create AWS Access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey)
-3. Configuring aws credentials using Environment variables
+4. Configuring aws credentials using Environment variables
     Set AWS credentials and region as environment variables
     ```bash
     export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
@@ -162,7 +169,7 @@ The user running the installer script should have the following IAM permissions.
    ```bash
    cd verulink
    ```
-3. Checkout to `staging` branch
+3. Checkout to `staging` branch  (for staging deployment , for mainnet use `main`)
     ```bash
     git checkout staging
     ```
@@ -175,10 +182,11 @@ The user running the installer script should have the following IAM permissions.
     source venv/bin/activate
     ```
 6. Run the script
+   > Deployemnt is on docker container 
     ```bash
     make deploy-to-aws
     ```
-7. Provide all the inputs as the script asks.
+8. Provide all the inputs as the script asks.
     * AWS Region (default: `us-east-1`)
     * AMI ID
     * AWS Instance Type (default: `t3.medium`)
@@ -194,13 +202,13 @@ The user running the installer script should have the following IAM permissions.
         - Attestor key file
 
 
-8. Once successfully deployed, save the SSH key of the machine located in your home directory.
-9. If using CloudShell, download the key by going to **Actions** and selecting **Download file**. _Input the correct full path of the key file_.
-10. Access the remote attestor machine via SSH and verify the services. The IP address is located in the `inventory.txt` file, and the SSH private key is also available in the same project directory.
+9. Once successfully deployed, secure and backup the SSH key file  of the machine located in your home directory.
+   > Note: If using CloudShell, download the key by going to **Actions** and selecting **Download file**. _Input the correct full path of the key file_.
+10. Access the remote attestor machine via SSH and verify the services (From your deployment machine). The IP address is located in the `inventory.txt` file (in the current directory) and the SSH private key is also available in the same project directory.
 ```bash
 ssh -i <private_key_file.pem> ubuntu@IP_ADDRESS
 ```
-11. Verify the services: `chainService` and `signingService`
+10. Verify the services: `chainService` and `signingService`
 ```bash
 docker ps
 ```
@@ -208,6 +216,7 @@ docker ps
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:
 
 If you haven't made any changes, the default SSH key name remains "attestor-ssh-key.pem."
+> This command checks with AWS Secret Manager if the keys can be retreived.
 ```bash
 ansible-playbook scripts/aws/deploy.yml -i inventory.txt -u ubuntu --private-key=<ssh_key_name> --tags debug,retrieve_secret
 
@@ -231,6 +240,9 @@ docker ps -a
 ```bash
 docker logs <container_id>
 ```
-> _**Note**_ : Once Attestor cloud instance configuration is complete, you can always choose `Continue Deployment` option. 
+> _**Note**_ : Once Attestor cloud instance configuration is complete, you can always choose `Continue Deployment` option.
+
+
+
 
 
