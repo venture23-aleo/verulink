@@ -40,7 +40,7 @@ deploy-to-aws:
 # Create a virtual environment using venv
 python-venv:
 	python3 -m venv venv
-	source venv/bin/activate && pip3 install -r scripts/aws/requirements.txt
+	. venv/bin/activate && pip3 install -r scripts/aws/requirements.txt
 
 # Help target to display available targets
 help:
