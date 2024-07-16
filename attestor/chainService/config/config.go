@@ -52,6 +52,7 @@ type ChainConfig struct {
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
+	Name                   string                 `yaml:"name"`
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
 	LogConfig              *LoggerConfig          `yaml:"log"`
 	DBDir                  string                 `yaml:"db_dir"`
@@ -60,12 +61,14 @@ type Config struct {
 	Mode                   string                 `yaml:"mode"`
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
+	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 }
 
 type LoggerConfig struct {
-	Encoding   string `yaml:"encoding"`
-	OutputDir  string `yaml:"output_dir"`
-	OutputPath string `yaml:"-"` // calculated based on OutputDir
+	Encoding             string `yaml:"encoding"`
+	OutputDir            string `yaml:"output_dir"`
+	OutputPath           string `yaml:"-"` // calculated based on OutputDir
+	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
 }
 
 type SigningServiceConfig struct {
@@ -78,8 +81,11 @@ type SigningServiceConfig struct {
 }
 
 type CollecterServiceConfig struct {
-	Uri              string        `yaml:"uri"`
-	CollectorWaitDur time.Duration `yaml:"collector_wait_dur"`
+	Uri                 string        `yaml:"uri"`
+	CollectorWaitDur    time.Duration `yaml:"collector_wait_dur"`
+	CaCertificate       string        `yaml:"ca_certificate"`
+	AttestorCertificate string        `yaml:"attestor_certificate"`
+	AttestorKey         string        `yaml:"attestor_key"`
 }
 
 var config *Config

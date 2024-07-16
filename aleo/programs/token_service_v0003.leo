@@ -36,7 +36,7 @@ program token_service_v0003.aleo {
     /// Key is address of the token program
     mapping min_transfers: address => u128;
 
-    /// Stores the minimum amount that can be transferred via Token Service
+    /// Stores the maximum amount that can be transferred via Token Service
     /// Key is address of the token program
     mapping max_transfers: address => u128;
 
@@ -226,6 +226,10 @@ program token_service_v0003.aleo {
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
+        // Assert new min transfer is less than max_transfer
+        let max_transfer= Mapping::get(max_transfers, token_address);
+        assert(min_transfer<=max_transfer);
+
         assert(Mapping::contains(min_transfers, token_address));
         Mapping::set(min_transfers, token_address, min_transfer);
     }
@@ -243,6 +247,10 @@ program token_service_v0003.aleo {
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
+
+        // Assert new min transfer is less than max_transfer
+        let min_transfer= Mapping::get(min_transfers, token_address);
+        assert(max_transfer>=min_transfer);
 
         assert(Mapping::contains(max_transfers, token_address));
         Mapping::set(max_transfers, token_address, max_transfer);

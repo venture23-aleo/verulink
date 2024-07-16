@@ -106,7 +106,7 @@ program wusdc_token_v0003.aleo {
 
         // Increments `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.
-        // If `account[receiver] + amount` overflows, `transfer_public` is reverted.
+        // If `account[receiver] + amount` overflows, `mint_public` is reverted.
         let receiver_amount: u128 = Mapping::get_or_use(account, receiver, 0u128);
         Mapping::set(account, receiver, receiver_amount + amount);
     }
@@ -123,9 +123,9 @@ program wusdc_token_v0003.aleo {
         // Only owner can burn
         assert_eq(from, owner);
 
-        // Increments `account[receiver]` by `amount`.
+        // Decreases `account[receiver]` by `amount`.
         // If `account[receiver]` does not exist, it will be created.
-        // If `account[receiver] + amount` overflows, `transfer_public` is reverted.
+        // If `account[receiver] - amount` underflows, `burn_public` is reverted.
         let receiver_amount: u128 = Mapping::get_or_use(account, receiver, 0u128);
         Mapping::set(account, receiver, receiver_amount - amount);
     }

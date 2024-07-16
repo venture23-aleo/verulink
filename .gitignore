@@ -3,6 +3,7 @@ go.work*
 **/rust/target
 **/*.log
 *.txt
+!requirements.txt
 **/*UTC*
 **/*.db
 *.lock
@@ -10,4 +11,10 @@ go.work*
 # solidity-coverage files
 coverage
 coverage.json
-keys
+*.cer
+*.key
+*.crt
+*venv
+*.pem
+.temp.*
+.temp

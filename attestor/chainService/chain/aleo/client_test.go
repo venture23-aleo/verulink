@@ -412,7 +412,7 @@ func TestManagePacket2(t *testing.T) {
 	go client.managePacket(ctx)
 
 	completedCh <- modelPacket
-	time.Sleep(time.Millisecond * 10) // wait to fill in the database
+	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace(
 		baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)

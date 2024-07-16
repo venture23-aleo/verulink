@@ -3,7 +3,7 @@ module github.com/venture23-aleo/aleo-bridge/attestor/signingService
 go 1.21.3
 
 require (
-	github.com/ethereum/go-ethereum v1.13.11
+	github.com/ethereum/go-ethereum v1.13.15
 	github.com/stretchr/testify v1.8.4
 	// As long as aleo-bridge repo is private, one needs to set
 	// `GOPRIVATE=github.com/venture23-aleo/aleo-bridge` before running `go mod tidy`

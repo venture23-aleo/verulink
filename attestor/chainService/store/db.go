@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
@@ -15,11 +16,7 @@ func InitKVStore(path string) error {
 }
 
 func CloseDB() error {
-	err := closeDB()
-	if err != nil {
-		return err
-	}
-	return nil
+	return closeDB()
 }
 
 func CreateNamespaces(names []string) error {
@@ -53,16 +50,6 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 		return err
 	}
 	return put(namespace, key, value)
-}
-
-func RetrieveAndDeleteFirstPacket(namespace string) (pkt *chain.Packet, err error) {
-	a, err := retrieveAndDeleteFirstKey(namespace)
-	if err != nil {
-		return nil, err
-	}
-	pkt = new(chain.Packet)
-	err = json.Unmarshal(a[1], pkt)
-	return
 }
 
 func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
@@ -110,7 +97,7 @@ func GetFirstKey[T keyConstraint](namespace string, keyType T) T {
 
 func ExistInGivenNamespace[T keyConstraint](namespace string, key T) bool {
 	k := getKeyByteForKeyConstraint(key)
-	return exitsInGivenBucket(namespace, k)
+	return existsInGivenBucket(namespace, k)
 }
 
 // PruneBaseSeqNum basically works as follow.
@@ -158,6 +145,7 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
 				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
+				logger.PushLogsToPrometheus(fmt.Sprintf("db_service_batch_removal_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error()))
 			}
 		}(key)
 	}

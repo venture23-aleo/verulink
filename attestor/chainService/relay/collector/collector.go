@@ -3,22 +3,26 @@ package collector
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
 )
 
 const (
-	signatureEndPoint   = "signature"
-	unconfirmedEndPoint = "unconfirmed"
-	aleoTrue            = "true"
+	signatureEndPoint = "signature"
+	aleoTrue          = "true"
 )
 
 // headers
@@ -56,6 +60,8 @@ type CollectorI interface {
 	// Note that, db-service will delete missed-packet entry from its collection only when attestor sends valid
 	// signature.
 	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
+
+	CheckCollectorHealth(ctx context.Context) error
 }
 
 var collc collector
@@ -64,6 +70,33 @@ type collector struct {
 	uri              string
 	chainIDToAddress map[string]string // chainID: walletAddress
 	collectorWaitDur time.Duration
+	caCert           *x509.CertPool
+	attestorCert     tls.Certificate
+}
+
+func (c *collector) CheckCollectorHealth(ctx context.Context) error {
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            c.caCert,
+				Certificates:       []tls.Certificate{c.attestorCert},
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	resp, err := client.Get(c.uri)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return err
+	}
+	
+	defer resp.Body.Close()
+	return nil
 }
 
 func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
@@ -98,13 +131,24 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            c.caCert,
+				Certificates:       []tls.Certificate{c.attestorCert},
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), io.NopCloser(buf))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("content-type", contentType)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -166,12 +210,21 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		u.RawQuery = queryParams.Encode()
 
 		ctx, cncl := context.WithTimeout(ctx, time.Minute)
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:            c.caCert,
+					Certificates:       []tls.Certificate{c.attestorCert},
+					InsecureSkipVerify: true,
+				},
+			},
+		}
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			goto postFor
 		}
-
-		resp, err = http.DefaultClient.Do(req)
+		
+		resp, err = client.Do(req)
 		if err != nil {
 			goto postFor
 		}
@@ -194,6 +247,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		}
 		if err != nil { // for non nil error it should wait on ticker
 			logger.GetLogger().Error(err.Error())
+			logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_missed_packets_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error()))
 			continue
 		}
 
@@ -209,11 +263,25 @@ func GetCollector() CollectorI {
 	return &collc
 }
 
-func SetupCollector(url string, chainIDToAddress map[string]string, waitTime time.Duration) error {
+func SetupCollector(cfg config.CollecterServiceConfig, chainIDToAddress map[string]string, waitTime time.Duration) error {
+	caCert, err := os.ReadFile(cfg.CaCertificate)
+	if err != nil {
+		return err
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	attestorCert, err := tls.LoadX509KeyPair(cfg.AttestorCertificate, cfg.AttestorKey)
+	if err != nil {
+		log.Fatal(err)
+	}
 	collc = collector{
-		uri:              url,
+		uri:              cfg.Uri,
 		collectorWaitDur: waitTime,
 		chainIDToAddress: make(map[string]string),
+		caCert:           caCertPool,
+		attestorCert:     attestorCert,
 	}
 
 	for k, v := range chainIDToAddress {

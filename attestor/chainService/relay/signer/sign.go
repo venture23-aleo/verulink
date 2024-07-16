@@ -26,6 +26,8 @@ const (
 type SignI interface {
 	HashAndSignScreenedPacket(
 		ctx context.Context, sp *chain.ScreenedPacket) (hash string, signature string, err error)
+
+	CheckSigningServiceHealth(ctx context.Context) error
 }
 
 var s SignI
@@ -83,16 +85,24 @@ func (s *signService) HashAndSignScreenedPacket(
 	return
 }
 
+func (s *signService) CheckSigningServiceHealth(ctx context.Context) error {
+
+	err := dial(s.url)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // SetupSigner checks if url can be dialed and sets up given parameters for chainservice to
 // communicate with signing service securely.
 func SetupSigner(cfg *config.SigningServiceConfig) error {
 	logger.GetLogger().Info("Setting up signer",
-		zap.String("username", cfg.Username),
-		zap.String("password", cfg.Password),
 		zap.String("scheme", cfg.Scheme),
 		zap.String("endpoint", cfg.Endpoint),
 		zap.String("host", cfg.Host),
 	)
+	logger.PushLogsToPrometheus(fmt.Sprintf("relay_signer_setup{attestor=\"%s\",scheme=\"%s\", endpoint=\"%s\", host=\"%s\"} 1", logger.AttestorName, cfg.Scheme,cfg.Endpoint,cfg.Host))
 	u := &url.URL{
 		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Path:   cfg.Endpoint,
@@ -126,6 +136,7 @@ func dial(u string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < 400 || resp.StatusCode > 499 {
 		return fmt.Errorf("expected status code 4xx, got %d", resp.StatusCode)

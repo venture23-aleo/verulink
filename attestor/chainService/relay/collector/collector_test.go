@@ -2,16 +2,20 @@ package collector
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 )
 
 func TestSetupCollector(t *testing.T) {
@@ -19,7 +23,7 @@ func TestSetupCollector(t *testing.T) {
 	chainIdToAddress := map[string]string{
 		"2": "aleoaddr",
 		"1": "ethAddr"}
-	err := SetupCollector(uri, chainIdToAddress, time.Second)
+	err := SetupCollector(config.CollecterServiceConfig{Uri: uri}, chainIdToAddress, time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, GetCollector())
 	assert.Equal(t, uri, collc.uri)
@@ -208,4 +212,41 @@ func TestGetPktsFromCollector(t *testing.T) {
 		case <-missedCh:
 		}
 	})
+}
+
+func TestMTLSIntegration(t *testing.T) {
+	dbUrl := "https://aleomtls.ibriz.ai/"
+
+	caCert, err := os.ReadFile("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.crt")
+	assert.NoError(t, err)
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	cert, err := tls.LoadX509KeyPair("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.crt", 
+	"/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.key")
+	assert.NoError(t, err)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            caCertPool,
+				Certificates:       []tls.Certificate{cert},
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	resp, err := client.Get(dbUrl)
+	if err != nil {
+        fmt.Println("Connection failed:", err)
+        
+    }
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Bad request :", resp.StatusCode)
+	}
+	assert.Equal(t, resp.StatusCode,http.StatusOK)
+	assert.NoError(t, err)
+	
 }
