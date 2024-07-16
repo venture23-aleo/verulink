@@ -1,18 +1,18 @@
 ---
 chains: 
   - name: ethereum
-    token_service_contract_address: 0xFEac0FD32367da944498b39f3D1EbD64cC88E13c
-    usdc_contract_address: 0xD342C031453c66A6D6c2a23D6dA86c30adA08C79
-    bridge_contract_address: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
-    node_url: https://endpoints.omniatech.io/v1/eth/sepolia/public	
-    wallet_path: /home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4
-    wallet_address: 0x06f1153169c8909a8f3761da4e79274f712328c4
+    token_service_contract_address: 0x5554f1660e1464a86E9155374ea33b0Ab7b890Bd
+    usdc_contract_address: 0xD99e898842c566be038bf898b3e406f028a031E0
+    bridge_contract_address: 0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C
+    node_url: http://localhost:3001
+    wallet_path: /home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121
+    wallet_address: 0x2ca02613ce51b3ed6930e89c63c66219f8e41121
   - name: aleo
-    token_service_contract_address: token_service_v0002.aleo
-    usdc_contract_address: wusdc_token_v0002.aleo
-    bridge_contract_address: token_bridge_v0002.aleo
-    node_url: https://api.explorer.aleo.org/v1|testnet3
-    wallet_path: APrivateKey1zkpAypsxK9kpYJ8QetRAC3sXRZTSoJXYZCEBzywnHNTmmy5
+    token_service_contract_address: token_service_v0001.aleo
+    usdc_contract_address: wusdc_token_v0001.aleo
+    bridge_contract_address: token_bridge_v0001.aleo
+    node_url: http://localhost|testnet
+    wallet_path: APrivateKey1zkp4RfjRhZ9apYoF75EsPhEVKJijDoRTxeZRk7Y9C7bWt4B
     wallet_address: wallet_address
-collector_service_uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
-write_config_path: /home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml
+collector_service_uri: https://aleomtls.ibriz.ai
+write_config_path: ../chainService/config.yaml

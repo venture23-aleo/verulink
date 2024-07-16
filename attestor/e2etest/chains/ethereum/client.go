@@ -230,7 +230,7 @@ func loadWallet(path string) *ecdsa.PrivateKey {
 		panic(err)
 	}
 
-	wallet, err := keystore.DecryptKey(file, "hello")
+	wallet, err := keystore.DecryptKey(file, "Icon@123")
 	if err != nil {
 		panic(err)
 	}

@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	TokenReceiverAddress = "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6"
+	TokenReceiverAddress = "aleo1v7nr80exf6p2709py6xf692v9f69l5cm230w23tz2p9fhx954qpq7cm7p4"
 	FinalityHeight       = 1
 	EthChainID           = "28556963657430695"
 	AleoChainID          = "6694886634403"

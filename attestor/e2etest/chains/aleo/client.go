@@ -42,16 +42,18 @@ func NewClient(cfg *common.ChainConfig) *Client {
 }
 
 func (c *Client) TransferUSDC(ctx context.Context) error {
-	cmd := exec.CommandContext(ctx, "snarkos", "developer", "execute", "wusdc_connector_v0002.aleo", "wusdc_send",
-		"[0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,22u8,196u8,62u8,31u8,147u8,239u8,217u8,175u8,205u8,17u8,252u8,181u8,163u8,153u8,0u8,0u8,221u8,17u8,86u8,96u8]",
-		"1u128", "--private-key", c.privateKey, "--query", c.url, "--broadcast",
-		c.url+"/testnet3/transaction/broadcast", "--priority-fee", "100",
+	fmt.Println("here we are", c.privateKey, c.url)
+	cmd := exec.CommandContext(ctx, "snarkos", "developer", "execute", "wusdc_connector_v0001_1.aleo", "wusdc_send",
+		"[232u8, 173u8, 26u8, 65u8, 73u8, 166u8, 25u8, 249u8, 9u8, 115u8, 238u8, 73u8, 233u8, 16u8, 8u8, 81u8, 150u8, 224u8, 242u8, 37u8]",
+		"101u128", "--private-key", c.privateKey, "--network", "1", "--query", c.url, "--broadcast",
+		c.url+"/testnet/transaction/broadcast",
 	)
-	output, _ := cmd.Output()
+	output, err := cmd.Output()
 
-	// if err != nil {
-	// 	return err
-	// }
+	if err != nil {
+		fmt.Println("faced err ", err)
+		return err
+	}
 	fmt.Println(string(output))
 	return nil
 }

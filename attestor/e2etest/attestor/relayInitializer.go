@@ -39,11 +39,16 @@ type SigningServiceConfig struct {
 }
 
 type CollecterServiceConfig struct {
-	Uri string `yaml:"uri"`
+	Uri                 string        `yaml:"uri"`
+	CollectorWaitDur    time.Duration `yaml:"collector_wait_dur"`
+	CaCertificate       string        `yaml:"ca_certificate"`
+	AttestorCertificate string        `yaml:"attestor_certificate"`
+	AttestorKey         string        `yaml:"attestor_key"`
 }
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
+	Name                   string                 `yaml:"name"`
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
 	LogConfig              *LoggerConfig          `yaml:"log"`
 	DBDir                  string                 `yaml:"db_dir"`
@@ -52,25 +57,29 @@ type Config struct {
 	Mode                   string                 `yaml:"mode"`
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
+	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 }
 type LoggerConfig struct {
-	Encoding   string `yaml:"encoding"`
-	OutputPath string `yaml:"output_dir"`
+	Encoding             string `yaml:"encoding"`
+	OutputPath           string `yaml:"output_dir"`
+	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
 }
 
 func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64, benchmark bool) {
 	signingServiceHost := "signingservice"
 	if benchmark {
 		signingServiceHost = "localhost"
-		aleoNodeURL = "http://localhost:3000|testnet3"
+		aleoNodeURL = "http://localhost:3000|testnet"
+		ethNodeURL = "http://localhost:3001"
 	}
 	relayConfig := &Config{
+		Name: "e2eAttestor",
 		ChainConfigs: []*ChainConfig{
 			{
 				Name:           "aleo",
 				ChainID:        big.NewInt(6694886634403),
-				WalletAddress:  "aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7",
-				BridgeContract: "token_bridge_v0002.aleo",
+				WalletAddress:  "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8",
+				BridgeContract: "token_bridge_v0001.aleo",
 				NodeUrl:        aleoNodeURL,
 				StartSeqNum: map[string]uint64{
 					"ethereum": aleoStartSeqNumber,
@@ -84,8 +93,8 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 			{
 				Name:                       "ethereum",
 				ChainID:                    big.NewInt(28556963657430695),
-				WalletAddress:              "0x5Dc561633F195d44a530CdF0f288a409286797ff",
-				BridgeContract:             "0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193",
+				WalletAddress:              "0x832894550007B560BD35d28Ce564c2CCD690318F",
+				BridgeContract:             "0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C",
 				NodeUrl:                    ethNodeURL,
 				StartHeight:                ethStartHeight,
 				FinalityHeight:             1,
@@ -97,9 +106,11 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 				DestChains:                 []string{"aleo"},
 			},
 		},
+		CheckHealthServiceDur: time.Minute,
 		LogConfig: &LoggerConfig{
-			Encoding:   "console",
-			OutputPath: "log",
+			Encoding:             "console",
+			OutputPath:           "log",
+			PrometheusGatewayUrl: "https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway",
 		},
 		DBPath:              "db",
 		ConsumePacketWorker: 50,
@@ -113,7 +124,11 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 			Password: "password",
 		},
 		CollectorServiceConfig: CollecterServiceConfig{
-			Uri: "https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/",
+			Uri: "https://aleomtls.ibriz.ai",
+			CollectorWaitDur: time.Hour,
+			CaCertificate: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/ca.cer",
+			AttestorCertificate: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.crt",
+			AttestorKey: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.key",
 		},
 	}
 
@@ -132,7 +147,7 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 
 func BuildRelayImage() {
 	fmt.Println("🔨 building relay image")
-	composePath := "../compose.yaml"
+	composePath := "../../compose.yaml"
 	cmd := exec.CommandContext(context.Background(), "docker", "compose", "-f", composePath, "build")
 	_, err := cmd.Output()
 	if err != nil {

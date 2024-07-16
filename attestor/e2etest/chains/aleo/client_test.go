@@ -12,10 +12,10 @@ import (
 func TestGetLatestSeqNumber(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
 		Name:                        "aleo",
-		TokenServiceContractAddress: "token_service_v0002.aleo",
-		USDCContractAddress:         "wusdc_token_v0002.aleo",
-		BridgeContractAddress:       "token_bridge_v0002.aleo",
-		NodeUrl:                     "https://api.explorer.aleo.org/v1|testnet3",
+		TokenServiceContractAddress: "token_service_v0001.aleo",
+		USDCContractAddress:         "wusdc_token_v0001_1.aleo",
+		BridgeContractAddress:       "token_bridge_v0001.aleo",
+		NodeUrl:                     "https://api.explorer.aleo.org/v1|testnet",
 		WalletPath:                  "APrivateKey1zkpAypsxK9kpYJ8QetRAC3sXRZTSoJXYZCEBzywnHNTmmy5",
 		WalletAddress:               "wallet_address",
 	})
@@ -26,10 +26,10 @@ func TestGetLatestSeqNumber(t *testing.T) {
 func TestTransferUSDC(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
 		Name:                        "aleo",
-		TokenServiceContractAddress: "token_service_v0002.aleo",
-		USDCContractAddress:         "wusdc_token_v0002.aleo",
-		BridgeContractAddress:       "token_bridge_v0002.aleo",
-		NodeUrl:                     "https://node.puzzle.online|testnet3",
+		TokenServiceContractAddress: "token_service_v0001.aleo",
+		USDCContractAddress:         "wusdc_token_v0001_1.aleo",
+		BridgeContractAddress:       "token_bridge_v0001.aleo",
+		NodeUrl:                     "https://api.explorer.aleo.org/v1|testnet",
 		WalletPath:                  "APrivateKey1zkpAypsxK9kpYJ8QetRAC3sXRZTSoJXYZCEBzywnHNTmmy5",
 		WalletAddress:               "wallet_address",
 	})

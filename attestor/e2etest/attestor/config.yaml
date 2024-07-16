@@ -1,24 +1,25 @@
 chains:
     - name: aleo
       chain_id: "6694886634403"
-      bridge_contract: token_bridge_v0002.aleo
-      node_url: https://api.explorer.aleo.org/v1|testnet3
+      bridge_contract: token_bridge_v0001.aleo
+      node_url: https://api.explorer.aleo.org/v1|testnet
       pkt_validity_wait_dur: 1m0s
       feed_pkt_wait_dur: 0s
       finality_height: 1
       wallet_path: ""
       dest_chains:
         - ethereum
-      wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7
+      wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24
       sequence_num_start:
         ethereum: 12356
       start_height: 0
       filter_topic: ""
       retry_packet_wait_dur: 1m0s
       prune_base_seq_num_wait_dur: 1m0s
+
     - name: ethereum
       chain_id: "28556963657430695"
-      bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
+      bridge_contract: 0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C
       node_url: https://rpc.sepolia.org
       pkt_validity_wait_dur: 2s
       feed_pkt_wait_dur: 2s

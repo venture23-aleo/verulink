@@ -58,7 +58,7 @@ func main() {
 }
 
 func serveHttp(w http.ResponseWriter, r *http.Request) {
-	if r.URL.String() == "/testnet3/latest/height" {
+	if r.URL.String() == "/testnet/latest/height" {
 		w.Write([]byte("1000"))
 	} else {
 		urlList := strings.Split(r.URL.String(), "/")

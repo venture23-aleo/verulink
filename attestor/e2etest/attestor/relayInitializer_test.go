@@ -3,7 +3,7 @@ package attestor
 import "testing"
 
 func TestWriteConfig(t *testing.T) {
-	WriteE2EConifg("/home/sheldor/github.com/venture23-aleo/new-architecture/aleo-bridge/attestor/chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet3", 5433859, 17)
+	WriteE2EConifg("../../chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet", 6243094, 17,false)
 }
 
 func TestBuildDockerImage(t *testing.T) {
@@ -11,11 +11,11 @@ func TestBuildDockerImage(t *testing.T) {
 }
 
 func TestRunRelayImage(t *testing.T) {
-	RunRelayImage("")
+	RunRelayImage("../../compose.yaml")
 }
 
 func TestStopRelayImage(t *testing.T) {
-	StopRelayImage("")
+	StopRelayImage("../../compose.yaml")
 }
 
 func TestBuildRelayImage(t *testing.T) {
