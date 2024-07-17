@@ -37,6 +37,10 @@ export const evm2AleoArrWithoutPadding = (evmAddr: string): number[] => {
   return paddedArray;
 };
 
+export const prunePadding = (paddedArray: number[]):number[] =>{
+  return paddedArray.slice(12);
+}
+
 export const aleoArr2Evm = (decimalArray: number[]): string => {
   const hexString: string = Array.from(Uint8Array.from(decimalArray)).slice(- EVM_ADDR_SIZE)
     .map((num) => num.toString(16).padStart(2, "0"))

@@ -54,6 +54,13 @@ mapping allowances:
 	key as field.public;
 	value as u128.public;
 
+function balance_key:
+    input r0 as field.public;
+    input r1 as address.public;
+    cast r1 r0 into r2 as TokenOwner;
+    hash.bhp256 r2 into r3 as field;
+    output r3 as field.public;
+
 
 function transfer_public:
     input r0 as field.public;

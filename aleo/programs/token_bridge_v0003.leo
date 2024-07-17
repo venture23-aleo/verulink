@@ -510,7 +510,7 @@ program token_bridge_v0003.aleo {
     /// # Arguments:
     /// * `source_chain_id`: u32 - Source Chain Id
     /// * `source_service_contract`: [u8;32] - Service contract of the source service contract
-    /// * `token`: address - Address of the wrapped token on Aleo
+    /// * `token`: id - id of the wrapped token on Aleo
     /// * `sender`: address - Address of the sender on other chain
     /// * `receiver`: address - Address of the receiver on Aleo
     /// * `amount`: u64 - Amount to be minted on Aleo 
@@ -529,7 +529,7 @@ program token_bridge_v0003.aleo {
         public height: u64, 
         public signers: [address; 5], 
         public signs: [signature; 5]
-    ) -> bool {
+    ) -> public bool {
 
         let source: ForeignContract = ForeignContract {
             chain_id: source_chain_id,
@@ -650,7 +650,7 @@ program token_bridge_v0003.aleo {
         return unique_addresses;
     }
 
-    function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (bool, u8) {
+    function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (public bool, u8) {
         let unique_signers: u8 = get_valid_unique_address_count(signers);
         let yay_count: u8 = 0u8;
         let nay_count: u8 = 0u8;

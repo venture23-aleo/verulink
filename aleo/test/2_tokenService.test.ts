@@ -341,10 +341,7 @@ describe("Token Service ", () => {
         expect(await tokenService.total_supply(tokenID)).toBeGreaterThanOrEqual(amount)
         tokenService.connect(admin);
         mtsp.connect(admin);
-        let token_owner: TokenOwner = {
-          account: "aleo1f4xc78ykumx4pac8hlnle66nxptux3pwm2q24fslvhns3wh4tqgsj8f7yu",
-          token_id: tokenID
-        };
+        
         const [hash, balancetx] = await mtsp.balance_key(tokenID, admin);
         await balancetx.wait();
         let default_balance: Balance = {

@@ -502,7 +502,7 @@ program token_service_v0003.aleo {
         public signs: [signature; 5],
         public source_chain_id: u128, 
         public source_token_service_address: [u8; 20],
-    ) -> bool {
+    ) -> public bool {
 
         // call consume on bridge
         let screening_passed: bool = token_bridge_v0003.aleo/consume(
@@ -540,10 +540,10 @@ program token_service_v0003.aleo {
 
         holding_v0003.aleo/hold_fund(receiver, token_id, held_amount);
 
-        return screening_passed then finalize(self.caller, token_id, amount, chain_token_info, source_token_service_address);
+        return screening_passed then finalize(token_id, amount, chain_token_info, source_token_service_address);
     }
 
-    finalize token_receive(connector: address, token_id: field, amount: u128, chain_token_info:ChainToken, source_token_service_address: [u8;20]) {
+    finalize token_receive(token_id: field, amount: u128, chain_token_info:ChainToken, source_token_service_address: [u8;20]) {
 
         assert_eq(Mapping::get(token_status, token_id), UNPAUSED_VALUE);
 

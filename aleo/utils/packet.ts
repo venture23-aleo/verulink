@@ -31,7 +31,7 @@ export const createRandomPacket = (
     sequence: incomingSequence,
     source: {
       chain_id: sourceChainId,
-      addr: evm2AleoArrWithoutPadding(sourceTsContractAddr),
+      addr: evm2AleoArr(sourceTsContractAddr),
     },
     destination: {
       chain_id: destChainId,
@@ -39,7 +39,7 @@ export const createRandomPacket = (
     },
     message: {
       dest_token_id: destTokenId,
-      sender_address: evm2AleoArrWithoutPadding(senderAddr),
+      sender_address: evm2AleoArr(senderAddr),
       amount,
       receiver_address: receiver,
     },
