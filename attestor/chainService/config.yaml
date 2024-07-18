@@ -55,3 +55,7 @@ collector_service:
   ca_certificate: /configs/.mtls/ca.cer
   attestor_certificate: /configs/.mtls/attestor1.crt
   attestor_key: /configs/.mtls/attestor1.key
+
+metrics:
+    host: 172.17.0.1:9091
+    job_name: dev-push-gateway
