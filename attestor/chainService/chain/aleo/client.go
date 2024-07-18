@@ -172,7 +172,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 
 		postFor:
 			logger.GetLogger().Info("sleeping nowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
-			time.Sleep(10 * time.Millisecond) // todo: wait proper duration to avoid rate limit
+			time.Sleep(time.Second) // todo: wait proper duration to avoid rate limit
 		}
 	}
 }
