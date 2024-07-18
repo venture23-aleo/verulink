@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -60,6 +61,12 @@ func main() {
 func serveHttp(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/testnet/latest/height" {
 		w.Write([]byte("1000"))
+
+	} else if strings.Contains(r.URL.String(), "collector") {
+
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("100"))
+
 	} else {
 		urlList := strings.Split(r.URL.String(), "/")
 
@@ -75,11 +82,18 @@ func serveHttp(w http.ResponseWriter, r *http.Request) {
 			"source: {\\n    chain_id: %du128,\\n    addr: %s\\n  },\\n  "+
 			"destination: {\\n    chain_id: %du128,\\n    addr: %s},\\n  "+
 			"message: {\\n        sender_address: %s,\\n  dest_token_address: %s,\\n  amount: %su128,\\n  receiver_address: %s\\n     },\\n  "+
-			"height: %du64\\n}", 0, seqInt, 6694886634403, "aleo18wf4ggxpmey0hk3drgefdgup9xnudgekas9lvpzut3f4cf8scuzq78j08l",
+			"height: %du64\\n}", 0, seqInt, 6694886634403, "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8",
 			28556963657430695, modelEthAddress,
-			"aleo1tvuwdl7remyvccqypa5lzehrdd5tnqpuy49jv7h6uw5au67pkupsjljwgn", modelEthAddress,
+			"aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8", modelEthAddress,
 			"100", modelEthAddress, 105)
 
-		w.Write([]byte(packet))
+		randomNumber := rand.Int()
+		fmt.Println("the random number is ", randomNumber)
+		if randomNumber%2 == 0 {
+			fmt.Println("sendign packet ")
+			w.Write([]byte(packet))
+		} else {
+			w.Write([]byte("null"))
+		}
 	}
 }

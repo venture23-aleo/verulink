@@ -58,6 +58,7 @@ type Config struct {
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
 	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
+	MetricConfig           *MetricsConfig         `yaml:"metrics"`
 }
 type LoggerConfig struct {
 	Encoding             string `yaml:"encoding"`
@@ -65,12 +66,17 @@ type LoggerConfig struct {
 	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
 }
 
+type MetricsConfig struct {
+	Host    string `yaml:"host"`
+	JobName string `yaml:"job_name"`
+}
+
 func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64, benchmark bool) {
 	signingServiceHost := "signingservice"
 	if benchmark {
 		signingServiceHost = "localhost"
-		aleoNodeURL = "http://localhost:3000|testnet"
-		ethNodeURL = "http://localhost:3001"
+		aleoNodeURL = "http://localhost:3002|testnet"
+		// ethNodeURL = "http://localhost:3001"
 	}
 	relayConfig := &Config{
 		Name: "e2eAttestor",
@@ -84,7 +90,7 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 				StartSeqNum: map[string]uint64{
 					"ethereum": aleoStartSeqNumber,
 				},
-				PacketValidityWaitDuration: time.Minute,
+				PacketValidityWaitDuration: time.Millisecond * 20,
 				FinalityHeight:             1,
 				RetryPacketWaitDur:         time.Minute,
 				PruneBaseSeqNumberWaitDur:  time.Minute,
@@ -93,7 +99,7 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 			{
 				Name:                       "ethereum",
 				ChainID:                    big.NewInt(28556963657430695),
-				WalletAddress:              "0x832894550007B560BD35d28Ce564c2CCD690318F",
+				WalletAddress:              "0x684C68bE1b58f61a33888E0eE3EA63f021d8CB0a",
 				BridgeContract:             "0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C",
 				NodeUrl:                    ethNodeURL,
 				StartHeight:                ethStartHeight,
@@ -106,14 +112,18 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 				DestChains:                 []string{"aleo"},
 			},
 		},
-		CheckHealthServiceDur: time.Minute,
+		CheckHealthServiceDur: 5 * time.Second,
 		LogConfig: &LoggerConfig{
 			Encoding:             "console",
 			OutputPath:           "log",
 			PrometheusGatewayUrl: "https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway",
 		},
+		MetricConfig: &MetricsConfig{
+			Host:    "172.17.0.1:9091",
+			JobName: "dev-push-gateway",
+		},
 		DBPath:              "db",
-		ConsumePacketWorker: 50,
+		ConsumePacketWorker: 10,
 		Mode:                "dev",
 		SigningServiceConfig: SigningServiceConfig{
 			Host:     signingServiceHost,
@@ -124,11 +134,11 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 			Password: "password",
 		},
 		CollectorServiceConfig: CollecterServiceConfig{
-			Uri: "https://aleomtls.ibriz.ai",
-			CollectorWaitDur: time.Hour,
-			CaCertificate: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/ca.cer",
+			Uri:                 "https://aleomtls.ibriz.ai",
+			CollectorWaitDur:    time.Hour,
+			CaCertificate:       "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/ca.cer",
 			AttestorCertificate: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.crt",
-			AttestorKey: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.key",
+			AttestorKey:         "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.key",
 		},
 	}
 

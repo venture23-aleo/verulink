@@ -247,7 +247,6 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		}
 		if err != nil { // for non nil error it should wait on ticker
 			logger.GetLogger().Error(err.Error())
-			logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_missed_packets_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error()))
 			continue
 		}
 

@@ -63,25 +63,37 @@ func main() {
 	aleoUrls := strings.Split(aleoEndpoint, "|")
 	fmt.Println(aleoUrls[0])
 
-	cmdAleo := exec.Command("../proxy/proxy", "--remoteUrl", aleoUrls[0], "--port", "3000", "--benchMark", strconv.FormatBool(benchMarkRelayer), "&!")
+	cmdAleo := exec.Command("../proxy/proxy", "--remoteUrl", aleoUrls[0], "--port", "3002", "--benchMark", strconv.FormatBool(benchMarkRelayer), "&!")
+	
+	proxyServerLog, err := os.OpenFile("server.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer proxyServerLog.Close()
+
+	cmdAleo.Stdout = proxyServerLog
+	cmdAleo.Stderr = proxyServerLog
+	
 	err = cmdAleo.Start()
 	if err != nil {
 		panic(err)
 	}
 	defer cmdAleo.Process.Kill()
 
-	cmdEthereum := exec.Command("../proxy/proxy", "--remoteUrl", ethEndpoint, "--port", "3001", "&!")
-	err = cmdEthereum.Start()
-	if err != nil {
-		panic(err)
-	}
-	defer cmdEthereum.Process.Kill()
+	
+
+	// cmdEthereum := exec.Command("../proxy/proxy", "--remoteUrl", ethEndpoint, "--port", "3001", "&!")
+	// err = cmdEthereum.Start()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer cmdEthereum.Process.Kill()
 
 	time.Sleep(time.Second * 5)
 
 	fmt.Println(benchMarkRelayer)
 
-	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, aleoEndpoint, 5475443, 17, benchMarkRelayer)
+	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, aleoEndpoint, 6694886634403, 1, benchMarkRelayer)
 
 	// / setting up signal handling
 	sigCh := make(chan os.Signal, 1)
@@ -91,56 +103,46 @@ func main() {
 		log.Printf("Received signal: %s", sig)
 		cancel()
 		cmdAleo.Process.Kill()
-		cmdEthereum.Process.Kill()
+		// cmdEthereum.Process.Kill()
 	}()
-
 
 	if benchMarkRelayer {
 		fmt.Println("The benchmark test is running")
 
 		signingServiceCmd := exec.CommandContext(context.Background(), "../signingService/signingService", "--kp", "../signingService/keys.yaml", "--config", "../signingService/config.yaml", "--address", "0.0.0.0", "--port", "8080")
 
-		fmt.Println("next also")
 		signingLogFile, err := os.OpenFile("signingService.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer signingLogFile.Close()
-		fmt.Println("heree also")
 
 		signingServiceCmd.Stdout = signingLogFile
 		signingServiceCmd.Stderr = signingLogFile
 
-		fmt.Println("heree")
-
-		time.Sleep(time.Second * 5)
-
-		fmt.Println("awake")
 		// Start the chain service
-		chainServiceCmd := exec.CommandContext(context.Background(), "../chainService/chainService", "--config", "../chainService/config.yaml")
-
-		fmt.Println("looks good")
+		chainServiceCmd := exec.CommandContext(context.Background(), "../chainService/chainService", "--config", "../chainService/config.yaml", "--clean", "true")
 
 		chainLogFile, err := os.OpenFile("chainService.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err != nil {
-		    log.Fatal(err)
+			log.Fatal(err)
 		}
 		defer chainLogFile.Close()
 
 		chainServiceCmd.Stdout = chainLogFile
 		chainServiceCmd.Stderr = chainLogFile
 
-		if err = signingServiceCmd.Start(); err !=nil{
+		if err = signingServiceCmd.Start(); err != nil {
 			log.Fatal(err)
 		}
 
-		if err = chainServiceCmd.Start(); err !=nil{
+		time.Sleep(time.Second * 5)
+
+		if err = chainServiceCmd.Start(); err != nil {
 			log.Fatal(err)
 		}
 
 		fmt.Println("Chain service started")
-
-		
 
 		<-ctx.Done()
 	} else {
