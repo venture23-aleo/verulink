@@ -46,7 +46,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 	inPacketsCounter := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "packet_received",
-			Help: "Total packet recieved",
+			Help: "Total packet received",
 		}, packetLables)
 
 	outPacktesCounter := prometheus.NewCounterVec(
@@ -87,12 +87,12 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 	registry.MustRegister(hashedAndSignedPacketCounter)
 
 	return &PrometheusMetrics{
-		Registry:                registry,
-		InPacketsCounter:        inPacketsCounter,
-		DeliveredPacketsCounter: outPacktesCounter,
+		Registry:                     registry,
+		InPacketsCounter:             inPacketsCounter,
+		DeliveredPacketsCounter:      outPacktesCounter,
 		HashedAndSignedPacketCounter: hashedAndSignedPacketCounter,
-		AttestorService:         attestorHealth,
-		DBService:               dbServiceHealth,
-		SigningService:          signingSeviceHealth,
+		AttestorService:              attestorHealth,
+		DBService:                    dbServiceHealth,
+		SigningService:               signingSeviceHealth,
 	}
 }

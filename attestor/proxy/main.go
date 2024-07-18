@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -87,13 +86,15 @@ func serveHttp(w http.ResponseWriter, r *http.Request) {
 			"aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8", modelEthAddress,
 			"100", modelEthAddress, 105)
 
-		randomNumber := rand.Int()
-		fmt.Println("the random number is ", randomNumber)
-		if randomNumber%2 == 0 {
-			fmt.Println("sendign packet ")
-			w.Write([]byte(packet))
-		} else {
-			w.Write([]byte("null"))
-		}
+		w.Write([]byte(packet))
+
+		// randomNumber := rand.Int()
+		// fmt.Println("the random number is ", randomNumber)
+		// if randomNumber%2 == 0 {
+		// 	fmt.Println("sendign packet ")
+		// 	w.Write([]byte(packet))
+		// } else {
+		// 	w.Write([]byte("null"))
+		// }
 	}
 }
