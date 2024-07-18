@@ -108,9 +108,15 @@
 
     - name: Read secret data from local JSON file
       set_fact:
-        secret_data: "{{ lookup('file', secret_file_path) | from_json }}"
+        secret_data_local: "{{ lookup('file', secret_file_path) | from_json }}"
       tags:
         - read_secret
+    
+    - name: Set AWS region from local secret data
+      set_fact:
+        aws_region: "{{ secret_data_local.aws_region }}"
+      tags:
+        - set_aws_region
         
     # - name: Set sudo password for ubuntu user
     #   ansible.builtin.user:
@@ -152,7 +158,7 @@
 
     - name: Retrieve secret values from AWS Secrets Manager
       set_fact:
-        secret_data: "{{ lookup('amazon.aws.aws_secret', secret_name, bypath=true) }}"
+        secret_data: "{{ lookup('amazon.aws.aws_secret', secret_name, bypath=true, aws_region=aws_region) }}"
       tags:
          - retrieve_secret
     # - name: Debug secret_data
@@ -169,7 +175,7 @@
 
     - name: Retrieve secret values from AWS Secrets Manager
       set_fact:
-        mtls_secret_data: "{{ lookup('amazon.aws.aws_secret', mtls_secret_name, bypath=true) }}"
+        mtls_secret_data: "{{ lookup('amazon.aws.aws_secret', mtls_secret_name, bypath=true, aws_region=aws_region) }}"
       tags:
          - retrieve_mtls_secret
     # - name: Debug mtls_secret_data

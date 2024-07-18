@@ -716,7 +716,8 @@ secret_data = {
     # "sudo_secret_name": sudo_secret_name,
     "ssh_private_key": new_key_name,
     "ansible_playbook": playbook_path,
-    "attestor_name": attestor_name
+    "attestor_name": attestor_name,
+    "aws_region": region
     # "github_username": github_username,
     # "github_pass": github_pass
 }
