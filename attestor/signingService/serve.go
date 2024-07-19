@@ -53,6 +53,7 @@ func registerHandlers() {
 		data, err = io.ReadAll(r.Body)
 		if err != nil {
 			err = fmt.Errorf("error reading request body: %w", err)
+			log.Println(err)
 			return
 		}
 
@@ -60,6 +61,7 @@ func registerHandlers() {
 		hash, signature, err = chain.HashAndSign(data)
 		if err != nil {
 			err = fmt.Errorf("error hashing and signing data: %w", err)
+			log.Println(err)
 			return
 		}
 

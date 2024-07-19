@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/chain"
@@ -40,11 +41,13 @@ func main() {
 	err = config.LoadConfig(configPath)
 	if err != nil {
 		err = fmt.Errorf("can not load config path: %w", err)
+		log.Println(err)
 		return
 	}
 
 	if !aleo.IsAhsCommandAvailable() {
 		err = errors.New("Ahs(Aleo hasher+signer) command is not available")
+		log.Println(err)
 		return
 	}
 
@@ -53,6 +56,7 @@ func main() {
 	m, err := config.LoadKeys(keyPath)
 	if err != nil {
 		err = fmt.Errorf("unable to load keys: %w", err)
+		log.Println(err)
 		return
 	}
 
@@ -68,6 +72,7 @@ func main() {
 
 		if err != nil {
 			err = fmt.Errorf("error setting up private key: %w", err)
+			log.Println(err)
 			return
 		}
 	}
