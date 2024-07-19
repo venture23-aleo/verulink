@@ -52,12 +52,14 @@ func registerHandlers() {
 		var data []byte
 		data, err = io.ReadAll(r.Body)
 		if err != nil {
+			err = fmt.Errorf("error reading request body: %w", err)
 			return
 		}
 
 		var hash, signature string
 		hash, signature, err = chain.HashAndSign(data)
 		if err != nil {
+			err = fmt.Errorf("error hashing and signing data: %w", err)
 			return
 		}
 
