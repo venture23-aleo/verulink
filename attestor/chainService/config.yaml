@@ -49,7 +49,7 @@ signing_service:
   password: "password"
 
 collector_service:
-  uri : https://aleomtls.ibriz.ai
+  uri : https://aleomtls.venture23.xyz
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/.mtls/ca.cer
