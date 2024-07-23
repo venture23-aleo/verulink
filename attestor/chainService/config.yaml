@@ -41,12 +41,12 @@ log:
 mode: dev # dev/prod
 
 signing_service:
-    host: signingservice
-    port: 8080
-    endpoint: "/sign"
-    scheme: "http" # https, http, rpc, etc.
-    username: "username"
-    password: "password"
+  host: signingservice
+  port: 8080
+  endpoint: "/sign"
+  scheme: "http" # https, http, rpc, etc.
+  username: "username"
+  password: "password"
 collector_service:
   uri : https://aleomtls.venture23.xyz/
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
