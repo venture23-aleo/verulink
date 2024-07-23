@@ -6,9 +6,14 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/push"
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
+	"go.uber.org/zap"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
@@ -55,7 +60,31 @@ func main() {
 
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
 	logger.GetLogger().Info("Attestor started")
-	logger.PushLogsToPrometheus(fmt.Sprintf("attestor_started{attestor=\"%s\"} 1",logger.AttestorName))
+
+	host := config.GetConfig().MetricConfig.Host
+
+	job := config.GetConfig().MetricConfig.JobName
+
+	pusher := push.New(host, job)
+
+	pmetrics := metrics.NewPrometheusMetrics()
+	go func() {
+
+		for range time.Tick(5 * time.Second) {
+			gatherer := prometheus.Gatherers{
+				pmetrics.Registry,
+			}
+
+			if err := pusher.Gatherer(gatherer).Push(); err != nil {
+				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
+
+			} else {
+				logger.GetLogger().Info("Metrics pushed successfully.")
+			}
+			pmetrics = metrics.NewPrometheusMetrics()
+		}
+
+	}()
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
@@ -68,5 +97,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	relay.StartRelay(ctx, config.GetConfig())
+	relay.StartRelay(ctx, config.GetConfig(), pmetrics)
 }

@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -217,14 +218,14 @@ func TestGetPktsFromCollector(t *testing.T) {
 func TestMTLSIntegration(t *testing.T) {
 	dbUrl := "https://aleomtls.ibriz.ai/"
 
-	caCert, err := os.ReadFile("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.crt")
+	caCert, err := os.ReadFile("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/ca.cer")
 	assert.NoError(t, err)
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.crt", 
-	"/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor3.key")
+	cert, err := tls.LoadX509KeyPair("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor9.crt",
+		"/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor9.key")
 	assert.NoError(t, err)
 
 	client := &http.Client{
@@ -239,14 +240,17 @@ func TestMTLSIntegration(t *testing.T) {
 
 	resp, err := client.Get(dbUrl)
 	if err != nil {
-        fmt.Println("Connection failed:", err)
-        
-    }
+		fmt.Println("Connection failed:", err)
+
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	fmt.Println("Response Body:", string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("Bad request :", resp.StatusCode)
 	}
-	assert.Equal(t, resp.StatusCode,http.StatusOK)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
 	assert.NoError(t, err)
-	
+
 }

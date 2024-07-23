@@ -41,18 +41,20 @@ log:
 mode: dev # dev/prod
 
 signing_service:
-  host: signingservice
-  port: 8080
-  endpoint: "/sign"
-  scheme: "http" # https, http, rpc, etc.
-  username: "username"
-  password: "password"
-
+    host: signingservice
+    port: 8080
+    endpoint: "/sign"
+    scheme: "http" # https, http, rpc, etc.
+    username: "username"
+    password: "password"
 collector_service:
-  # uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
-  uri : https://aleomtls.ibriz.ai
+  uri : https://aleomtls.venture23.xyz/
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/.mtls/ca.cer
   attestor_certificate: /configs/.mtls/attestor1.crt
   attestor_key: /configs/.mtls/attestor1.key
+
+metrics:
+    host: https://prometheus-testnet.venture23.xyz:9096
+    job_name: dev-push-gateway

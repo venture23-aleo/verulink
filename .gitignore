@@ -18,3 +18,8 @@ coverage.json
 *.pem
 .temp.*
 .temp
+
+# ignore go build outputs
+/attestor/chainService/chainService
+/attestor/signingService/signingService
+/attestor/proxy/proxy
