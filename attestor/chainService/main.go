@@ -61,13 +61,9 @@ func main() {
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
 	logger.GetLogger().Info("Attestor started")
 
-	// TODO: remove the comments 
 	host := config.GetConfig().MetricConfig.Host
-	// scheme := config.GetConfig().MetricConfig.Scheme
 
 	job := config.GetConfig().MetricConfig.JobName
-	// prom := "http://prometheus-pg:9091"
-	// url := fmt.Sprintf("%s:://%s",scheme,host)
 
 	pusher := push.New(host, job)
 

@@ -164,14 +164,11 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 				availableInHeight = int64(pkt.Height)
 				break
 			}
-			// TODO: only for testing purpose Remove the logs later
-			logger.GetLogger().Info("the metric is added herrrrrrrrrrrrrrrrrrrrrrrrrrr")
 			cl.metrics.AddInPackets(logger.AttestorName, cl.name, pkt.Destination.ChainID.String())
 			ch <- pkt
 			nextSeqNum++
 
 		postFor:
-			logger.GetLogger().Info("sleeping nowwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
 			time.Sleep(time.Second) // todo: wait proper duration to avoid rate limit
 		}
 	}
