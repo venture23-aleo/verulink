@@ -14,6 +14,7 @@ import (
 	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 
 	ether "github.com/ethereum/go-ethereum"
@@ -145,6 +146,7 @@ type Client struct {
 	feedPktWaitDur            time.Duration
 	retryPacketWaitDur        time.Duration
 	pruneBaseSeqNumberWaitDur time.Duration
+	metrics                   *metrics.PrometheusMetrics
 }
 
 func (cl *Client) Name() string {
@@ -158,7 +160,6 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting current height")
-		logger.PushLogsToPrometheus(fmt.Sprintf("chainService_eth_fetch_current_block_height_fail{attestor=\"%s\", client=\"%s\"} 0",logger.AttestorName,cl.name))
 		return 0, err
 	}
 
@@ -200,7 +201,6 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 		}
 		packets = append(packets, commonPacket)
 		logger.GetLogger().Debug("packet fetched", zap.Uint64("sequence_number", commonPacket.Sequence))
-		logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_packet_filtered{attestor=\"%s\",sequenceNumber=\"%d\"} 1",logger.AttestorName,commonPacket.Sequence))
 	}
 	return packets, nil
 }
@@ -252,7 +252,6 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx)
 			if err != nil {
 				logger.GetLogger().Error("error while getting block height", zap.Error(err))
-				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_feedPacket_fetch_block_height_fail{attestor=\"%s\",client=\"%s\"} 0",logger.AttestorName,cl.name))
 				break L1
 			}
 
@@ -276,13 +275,12 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 						zap.Uint64("start_height", startHeight),
 						zap.Uint64("end_height", endHeight),
 					)
-					logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_packet_filtered{attestor=\"%s\",startHeight=\"%d\",endHeight=\"%d\"} 0",
-					logger.AttestorName,startHeight,endHeight))
 					break L1
 				}
 
 				for _, pkt := range pkts {
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
+						cl.metrics.AddInPackets(logger.AttestorName, cl.name, pkt.Destination.ChainID.String())
 						ch <- pkt
 					}
 				}
@@ -306,16 +304,12 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 
 		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
-		logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_fetch_retry_packet_from_db{attestor=\"%s\",client=\"%s\",namespace=\"%s\"} 1",
-		logger.AttestorName, cl.name, retryPacketNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this seems to be the efficient approach.
 		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], retrievePacketNum)
 		if err != nil {
 			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
-			logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_db_retrive_delete_packet_fail{attestor=\"%s\",error=\"%s\"} 0",
-			logger.AttestorName, err.Error()))
 			goto indIncr
 		}
 
@@ -347,7 +341,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
 			zap.String("namespace", baseSeqNamespaces[index]))
-		logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_prune_processed_base_sequence_num{attestor=\"%s\", namespace=\"%s\"} 1",logger.AttestorName,baseSeqNamespaces[index]))
+		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.name, 1)
 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
@@ -373,8 +367,6 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			pkts, err := cl.filterPacketLogs(ctx, s, e)
 			if err != nil {
 				logger.GetLogger().Error(err.Error())
-				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_prune_filter_packet_fail{attestor=\"%s\",client=\"%s\"} 0",
-				logger.AttestorName, cl.name))
 				break
 			}
 
@@ -407,8 +399,6 @@ func (cl *Client) managePacket(ctx context.Context) {
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
-			logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_add_packets_from_retryCh{attestor=\"%s\",sourceChainId=\"%s\", destChainId=\"%s\", pktSeqNum=\"%d\"} 1", 
-			logger.AttestorName, pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(),pkt.Sequence))
 			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
@@ -416,8 +406,6 @@ func (cl *Client) managePacket(ctx context.Context) {
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
-				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_add_packets_from_retryCh{attestor=\"%s\",namespace=\"%s\",error=\"%s\",} 0",
-				logger.AttestorName,ns,err.Error()))
 			}
 		case pkt := <-completedCh:
 			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
@@ -427,16 +415,13 @@ func (cl *Client) managePacket(ctx context.Context) {
 				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
 				zap.Uint64("pkt_seq_num", pkt.Sequence),
 			)
-	
-			logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_update_sequence_number_from_completedCh{attestor=\"%s\", namespace=\"%s\",sourceChainId=\"%s\", destChainId=\"%s\", pktSeqNum=\"%d\"} 1",
-			logger.AttestorName, ns,pkt.Source.ChainID.String(),pkt.Destination.ChainID.String(), pkt.Sequence))
+
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
 			if err != nil {
 				logger.GetLogger().Error(
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
-				logger.PushLogsToPrometheus(fmt.Sprintf("chainservice_eth_update_sequence_number_from_completedCh{attestor=\"%s\",error=\"%s\", namespace=\"%s\"} 0",logger.AttestorName,err.Error(),ns))
 			}
 		}
 	}
@@ -461,6 +446,10 @@ func (cl *Client) GetMissedPacket(
 		}
 	}
 	return nil, errors.New("packet not found")
+}
+
+func (cl *Client) SetMetrics(metrics *metrics.PrometheusMetrics) {
+	cl.metrics = metrics
 }
 
 // NewClient initializes Client and returns the interface to chain.IClient

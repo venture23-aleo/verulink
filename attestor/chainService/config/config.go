@@ -62,13 +62,18 @@ type Config struct {
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
 	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
+	MetricConfig           MetricsConfig          `yaml:"metrics"`
 }
 
 type LoggerConfig struct {
 	Encoding             string `yaml:"encoding"`
 	OutputDir            string `yaml:"output_dir"`
 	OutputPath           string `yaml:"-"` // calculated based on OutputDir
-	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
+}
+
+type MetricsConfig struct {
+	Host    string `yaml:"host"`
+	JobName string `yaml:"job_name"`
 }
 
 type SigningServiceConfig struct {

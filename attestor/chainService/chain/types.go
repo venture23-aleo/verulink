@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 )
 
 type ClientFunc func(cfg *config.ChainConfig) IClient
@@ -23,6 +24,7 @@ type IClient interface {
 	GetMissedPacket(
 		ctx context.Context, missedPkt *MissedPacket) (
 		*Packet, error)
+	SetMetrics(metrics *metrics.PrometheusMetrics)
 }
 
 type NetworkAddress struct {
