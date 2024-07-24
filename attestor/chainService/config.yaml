@@ -3,8 +3,8 @@ name: attestor1
 chains:
 - name: aleo
   chain_id: 6694886634403
-  wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24 # wallet indentifier
-  bridge_contract: token_bridge_v0001.aleo
+  wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za # wallet indentifier
+  bridge_contract: token_bridge_sg_v0002.aleo
   node_url: https://api.explorer.aleo.org/v1|testnet
   sequence_num_start:
     ethereum: 1
@@ -18,10 +18,10 @@ chains:
 
 - name: ethereum
   chain_id: 28556963657430695
-  wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
-  bridge_contract: 0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C
+  wallet_address: 0x684C68bE1b58f61a33888E0eE3EA63f021d8CB0a
+  bridge_contract: 0x6dd95E705A67e1b092BED58a898f912B58Cbdc85
   node_url: https://rpc.sepolia.org
-  start_height: 6243094
+  start_height: 6367626
   finality_height: 10
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   feed_pkt_wait_dur: 2s
@@ -47,7 +47,7 @@ signing_service:
   username: "username"
   password: "password"
 collector_service:
-  uri : https://aleomtls.venture23.xyz
+  uri : https://staging-aleomtls.venture23.xyz
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/.mtls/ca.cer
