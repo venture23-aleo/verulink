@@ -37,7 +37,6 @@ consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_dir: /path/to/log/dir
-  prometheus_gateway_url: https://prometheus-testnet.venture23.xyz:9096/metrics/job/dev-push-gateway
 mode: dev # dev/prod
 
 signing_service:
@@ -56,5 +55,5 @@ collector_service:
   attestor_key: /configs/.mtls/attestor1.key
 
 metrics:
-    host: https://prometheus-testnet.venture23.xyz:9096
-    job_name: dev-push-gateway
+  host: https://prometheus-testnet.venture23.xyz:9096
+  job_name: dev-push-gateway

@@ -61,9 +61,8 @@ type Config struct {
 	MetricConfig           *MetricsConfig         `yaml:"metrics"`
 }
 type LoggerConfig struct {
-	Encoding             string `yaml:"encoding"`
-	OutputPath           string `yaml:"output_dir"`
-	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
+	Encoding   string `yaml:"encoding"`
+	OutputPath string `yaml:"output_dir"`
 }
 
 type MetricsConfig struct {
@@ -114,9 +113,8 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 		},
 		CheckHealthServiceDur: 5 * time.Second,
 		LogConfig: &LoggerConfig{
-			Encoding:             "console",
-			OutputPath:           "log",
-			PrometheusGatewayUrl: "https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway",
+			Encoding:   "console",
+			OutputPath: "log",
 		},
 		MetricConfig: &MetricsConfig{
 			Host:    "172.17.0.1:9091",

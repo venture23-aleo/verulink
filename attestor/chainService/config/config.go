@@ -69,7 +69,6 @@ type LoggerConfig struct {
 	Encoding             string `yaml:"encoding"`
 	OutputDir            string `yaml:"output_dir"`
 	OutputPath           string `yaml:"-"` // calculated based on OutputDir
-	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
 }
 
 type MetricsConfig struct {
