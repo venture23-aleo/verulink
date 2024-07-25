@@ -65,7 +65,9 @@ func main() {
 
 	job := config.GetConfig().MetricConfig.JobName
 
-	pusher := push.New(host, job)
+	mode := config.GetConfig().Mode
+
+	pusher := push.New(host, job).Grouping("instance", mode)
 
 	pmetrics := metrics.NewPrometheusMetrics()
 	go func() {
