@@ -150,8 +150,6 @@ func InitConfig(flagArgs *FlagArgs) error {
 
 	if flagArgs.Mode == Production {
 		config.Mode = flagArgs.Mode
-	} else if flagArgs.Mode == "staging"{ // TODO: this change is only for staging should be removed on production
-		config.Mode = flagArgs.Mode
 	} else {
 		config.Mode = Development
 	}
