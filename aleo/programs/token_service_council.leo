@@ -312,8 +312,69 @@ program token_service_council.aleo
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
+        let token_id: field = BHP256::hash_to_field(token_name);
+        multi_token_support_program_v1.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
+
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
+
+    /////////////////////////////////////////////////
+    ///// Update token metadata /////////////////////
+    /////////////////////////////////////////////////
+    struct UpdateTokenMetadata{
+        id: u32,
+        token_id: field, 
+        admin: address,
+        external_authorization_party: address
+    }
+    transition update_token_metadata(
+        public id: u32,
+        public token_id: field,
+        public admin: address,
+        public external_authorization_party: address,
+        public voters: [address; 5]
+    ) {
+        let proposal: UpdateTokenMetadata  = UpdateTokenMetadata {
+            id,
+            token_id,
+            admin,
+            external_authorization_party,
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+        multi_token_support_program_v1.aleo/update_token_management(token_id, admin, external_authorization_party);
+        
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
+
+    // //////////////////////////////////////////////////////
+    // ///// Token Service : Give minting/burning role //////
+    // //////////////////////////////////////////////////////
+    // 1u8 => minter, 2u8 => burner and 3u8 => supply_manager (we could give supply manager to token_service)
+
+    struct SetRoleForToken {
+        id: u32,
+        token_id: field,
+        account: address
+        role: u8,
+    }
+
+    transition set_role_token(
+        public id: u32,
+        public token_id: field,
+        public account: address,
+        public role: u8,
+        public voters: [address; 5]
+    ) {
+        let proposal: SetRoleForToken  = SetRoleForToken {
+            id,
+            token_id, 
+            account,
+            role
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
        // Execute the proposal
-        token_service_v0003.aleo/register_token(token_name, symbol, decimals, max_supply);
+        multi_token_support_program_v1.aleo/set_role(token_id, account, role);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -333,7 +394,7 @@ program token_service_council.aleo
         public id: u32,
         public chain_id: u128,
         public token_id: field,
-        token_service_address: [u8; 20],
+        public token_service_address: [u8; 20],
         public voters: [address; 5],
     ) {
         let proposal: UpdateTokenServiceAddress  = UpdateTokenServiceAddress {
@@ -361,7 +422,7 @@ program token_service_council.aleo
         public id: u32,
         public chain_id: u128,
         public token_id: field,
-        token_address: [u8; 20],
+        public token_address: [u8; 20],
         public voters: [address; 5],
     ) {
         let proposal: UpdateTokenAddress  = UpdateTokenAddress{

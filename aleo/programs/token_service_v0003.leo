@@ -133,39 +133,6 @@ program token_service_v0003.aleo {
         Mapping::set(owner_TS, OWNER_INDEX, new_owner);
     }
 
-    //////////////////////////////////////////////////////////////
-    ///// Register token to multi_token_support_program_v1 ///////
-    //////////////////////////////////////////////////////////////
-    transition register_token(
-        public token_name: u128,
-        public symbol: u128,
-        public decimals: u8,
-        public max_supply: u128
-    )-> public field {
-        let token_id: field = BHP256::hash_to_field(token_name);
-        multi_token_support_program_v1.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, self.caller);
-        return token_id then finalize(self.caller);
-    }
-    finalize register_token(from:address){
-        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
-        assert_eq(from, owner);
-    }
-
-    /////////////////////////////////////////////////
-    ///// Update token metadata /////////////////////
-    /////////////////////////////////////////////////
-    transition update_token_metadata(
-        public token_id: field,
-        public admin: address,
-        public external_authorization_party: address
-    ) {
-        multi_token_support_program_v1.aleo/update_token_management(token_id, admin, external_authorization_party);
-        return then finalize(self.caller);
-    }
-    finalize update_token_metadata(from:address){
-        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
-        assert_eq(from, owner);
-    }
 
     /////////////////////////////////////////////////
     ///// Update token_service of other chain ///////
@@ -471,14 +438,14 @@ program token_service_v0003.aleo {
 
         } else {
             // amount_withdrawn = amount_withdrawn + amount;
-            Mapping::set(token_snapshot_withdrawal, wrapped_token_id, allowed_withdrawal);
-            Mapping::set(token_snapshot_height, wrapped_token_id, snapshot_height);
             Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn+amount);
 
         }
 
         if (current_supply >= withdrawal_limit.threshold_no_limit) {
-            assert(amount_withdrawn <= allowed_withdrawal);
+            let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, wrapped_token_id);
+            let withdrawal_allowed:u128 = Mapping::get(token_snapshot_withdrawal, wrapped_token_id);
+            assert(withdraw_amount <= withdrawal_allowed);
         }
 
         // Mapping::set(token_snapshot_withdrawal, wrapped_addr, allowed_withdrawal);
