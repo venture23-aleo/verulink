@@ -27,7 +27,7 @@ type SignI interface {
 	HashAndSignScreenedPacket(
 		ctx context.Context, sp *chain.ScreenedPacket) (hash string, signature string, err error)
 
-	CheckSigningServiceHealth(ctx context.Context) error
+	CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig) error
 }
 
 var s SignI
@@ -85,11 +85,26 @@ func (s *signService) HashAndSignScreenedPacket(
 	return
 }
 
-func (s *signService) CheckSigningServiceHealth(ctx context.Context) error {
+func (s *signService) CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig) error {
 
-	err := dial(s.url)
+	u := &url.URL{
+		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Path:   cfg.HealthEndpoint,
+		Scheme: cfg.Scheme,
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("expected status code 200, got status code %d", resp.StatusCode)
 	}
 	return nil
 }

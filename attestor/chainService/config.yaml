@@ -46,6 +46,7 @@ signing_service:
   scheme: "http" # https, http, rpc, etc.
   username: "username"
   password: "password"
+  health_end_point: "/health"
 collector_service:
   uri : https://staging-aleomtls.venture23.xyz
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively

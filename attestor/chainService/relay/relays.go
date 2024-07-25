@@ -90,7 +90,7 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 	missedPktCh := make(chan *chain.MissedPacket)
 
 	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh, metrics)
-	go r.checkHealthServices(ctx, cfg.CheckHealthServiceDur)
+	go r.checkHealthServices(ctx, &cfg.SigningServiceConfig, cfg.CheckHealthServiceDur)
 	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
 	go consumeMissedPackets(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
@@ -98,7 +98,7 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 
 // checks the connection with signing service and collector service at
 // regular interval
-func (r *relay) checkHealthServices(ctx context.Context, duration time.Duration) {
+func (r *relay) checkHealthServices(ctx context.Context, signingServiceConfig *config.SigningServiceConfig, duration time.Duration) {
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
 
@@ -113,21 +113,22 @@ func (r *relay) checkHealthServices(ctx context.Context, duration time.Duration)
 			if err != nil {
 				logger.GetLogger().Error("Bad Connection to collector service")
 				r.metrics.SetDBServiceHeatlh(logger.AttestorName, 0)
-				continue
+			} else {
+				logger.GetLogger().Info("Lively connection to collector service")
+				r.metrics.SetDBServiceHeatlh(logger.AttestorName, 1)
 			}
-			logger.GetLogger().Info("Lively connection to collector service")
-			r.metrics.SetDBServiceHeatlh(logger.AttestorName, 1)
 
+			// checking the health of signing service
 			signingService := signer.GetSigner()
-			err = signingService.CheckSigningServiceHealth(ctx)
+			err = signingService.CheckSigningServiceHealth(ctx, signingServiceConfig)
 
 			if err != nil {
-				logger.GetLogger().Error("Connection to signing service failed")
+				logger.GetLogger().Error("Connection to signing service failed", zap.Any("error", err.Error()))
 				r.metrics.SetSigningServiceHealth(logger.AttestorName, 0)
-				continue
+			} else {
+				logger.GetLogger().Info("Connection to signing service established")
+				r.metrics.SetSigningServiceHealth(logger.AttestorName, 1)
 			}
-			logger.GetLogger().Info("Connection to signing service established")
-			r.metrics.SetSigningServiceHealth(logger.AttestorName, 1)
 		}
 	}
 

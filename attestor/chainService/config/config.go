@@ -66,9 +66,9 @@ type Config struct {
 }
 
 type LoggerConfig struct {
-	Encoding             string `yaml:"encoding"`
-	OutputDir            string `yaml:"output_dir"`
-	OutputPath           string `yaml:"-"` // calculated based on OutputDir
+	Encoding   string `yaml:"encoding"`
+	OutputDir  string `yaml:"output_dir"`
+	OutputPath string `yaml:"-"` // calculated based on OutputDir
 }
 
 type MetricsConfig struct {
@@ -77,12 +77,13 @@ type MetricsConfig struct {
 }
 
 type SigningServiceConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Endpoint string `yaml:"endpoint"`
-	Scheme   string `yaml:"scheme"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	Endpoint       string `yaml:"endpoint"`
+	Scheme         string `yaml:"scheme"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	HealthEndpoint string `yaml:"health_end_point"`
 }
 
 type CollecterServiceConfig struct {
