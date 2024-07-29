@@ -48,7 +48,7 @@ func initLog(mode string, cfg *config.LoggerConfig) {
 		panic(err)
 	}
 	var mW io.Writer // multi-writer
-	if mode == config.Development {
+	if mode == config.Development || mode == config.Stage {
 		mW = io.MultiWriter(lumber, os.Stdout)
 	} else {
 		mW = io.MultiWriter(lumber)

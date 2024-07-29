@@ -65,9 +65,7 @@ func main() {
 
 	job := config.GetConfig().MetricConfig.JobName
 
-	// mode := config.GetConfig().Mode
-	// TODO: this change is only for staging branch
-	mode = "staging"
+	mode := config.GetConfig().Mode
 	pusher := push.New(host, job).Grouping("instance", mode)
 
 	pmetrics := metrics.NewPrometheusMetrics()

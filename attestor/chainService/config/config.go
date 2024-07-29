@@ -15,6 +15,7 @@ import (
 const (
 	Development = "dev"
 	Production  = "prod"
+	Stage       = "stage"
 )
 
 const (
@@ -149,6 +150,8 @@ func InitConfig(flagArgs *FlagArgs) error {
 	}
 
 	if flagArgs.Mode == Production {
+		config.Mode = flagArgs.Mode
+	} else if flagArgs.Mode == Stage {
 		config.Mode = flagArgs.Mode
 	} else {
 		config.Mode = Development

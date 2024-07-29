@@ -37,7 +37,7 @@ consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_dir: /path/to/log/dir
-mode: dev # dev/prod
+mode: stage # dev/prod
 
 signing_service:
   host: signingservice
