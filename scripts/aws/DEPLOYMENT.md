@@ -194,7 +194,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     * AWS Region (default: `us-east-1`)
     * AMI ID
     * AWS Instance Type (default: `t3.medium`)
-    * Attestor node name
+    * Attestor node name (Eg. stg_attestor_verulink_<yourcompanyname>)
     * AWS Secret Manager secret name for signing keys (default: `dev/verulink/attestor/signingservice`)
         - Ethereum private key
         - Ethereum wallet address
