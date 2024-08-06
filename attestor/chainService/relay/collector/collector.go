@@ -86,9 +86,19 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 		},
 	}
 
-	resp, err := client.Get(c.uri)
+	u, err := url.Parse(c.uri)
 	if err != nil {
 		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
