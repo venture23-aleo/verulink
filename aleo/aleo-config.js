@@ -6,13 +6,13 @@ export default {
   mainnet: {},
   networks: {
     // testnet: {
-    //   endpoint: "",
+    //   endpoint: "http:localhost:3030",
     //   accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1, process.env.ALEO_DEVNET_PRIVATE_KEY2, process.env.ALEO_DEVNET_PRIVATE_KEY3, process.env.ALEO_DEVNET_PRIVATE_KEY4],
     //   priorityFee: 0.01,
     // },
     testnet: {
       endpoint: "https://api.explorer.aleo.org/v1",
-      accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1],
+      accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1, process.env.ALEO_DEVNET_PRIVATE_KEY2, process.env.ALEO_DEVNET_PRIVATE_KEY3, process.env.ALEO_DEVNET_PRIVATE_KEY4],
       priorityFee: 0.01,
     },
   },

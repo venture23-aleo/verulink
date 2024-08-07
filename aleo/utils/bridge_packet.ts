@@ -16,9 +16,7 @@ export const createRandomPacket = (
   height?: bigint,
   version?: number
 ): InPacket => {
-  let incomingSequence = sequence ?? BigInt(
-    Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-  );
+  let incomingSequence = BigInt(10446744073709551615);
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 
   let bridgeVersion = version ?? PACKET_VERSION ;

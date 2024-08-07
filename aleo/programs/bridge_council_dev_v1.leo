@@ -1,7 +1,7 @@
-import council.aleo;
-import token_bridge_v0003.aleo;
+import council_dev_v1.aleo;
+import token_bridge_dev_v1.aleo;
 
-program bridge_council.aleo
+program bridge_council_dev_v1.aleo
 {
     ///////////////////////////////////////////
     /////// Bridge: Transfer Ownership ////////
@@ -20,9 +20,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/transfer_ownership_tb(new_owner);
+        token_bridge_dev_v1.aleo/transfer_ownership_tb(new_owner);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     /////////////////////////////////////
@@ -44,9 +44,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/add_attestor_tb(new_attestor, new_threshold);
+        token_bridge_dev_v1.aleo/add_attestor_tb(new_attestor, new_threshold);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     ////////////////////////////////////////
@@ -68,9 +68,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/remove_attestor_tb(existing_attestor, new_threshold);
+        token_bridge_dev_v1.aleo/remove_attestor_tb(existing_attestor, new_threshold);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     /////////////////////////////////////////
@@ -90,9 +90,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/update_threshold_tb(new_threshold);
+        token_bridge_dev_v1.aleo/update_threshold_tb(new_threshold);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////////
@@ -112,9 +112,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/add_chain_tb(chain_id);
+        token_bridge_dev_v1.aleo/add_chain_tb(chain_id);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -136,8 +136,8 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/remove_chain_tb(chain_id);
-        council.aleo/external_execute(id, proposal_hash, voters);
+        token_bridge_dev_v1.aleo/remove_chain_tb(chain_id);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -158,9 +158,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/add_service_tb(service);
+        token_bridge_dev_v1.aleo/add_service_tb(service);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -174,16 +174,16 @@ program bridge_council.aleo
     }
 
     transition tb_remove_service(public id: u32, public service: address, public voters: [address; 5]) {
-        let proposal: TbAddService = TbAddService {
+        let proposal: TbRemoveService = TbRemoveService {
             id,
             service
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/remove_service_tb(service);
+        token_bridge_dev_v1.aleo/remove_service_tb(service);
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -202,9 +202,9 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/pause_tb();
+        token_bridge_dev_v1.aleo/pause_tb();
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////
@@ -222,8 +222,8 @@ program bridge_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_bridge_v0003.aleo/unpause_tb();
+        token_bridge_dev_v1.aleo/unpause_tb();
 
-        council.aleo/external_execute(id, proposal_hash, voters);
+        council_dev_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 }

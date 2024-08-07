@@ -1,6 +1,6 @@
-import multi_token_support_program_v1.aleo;
+import multi_token_support_program.aleo;
 
-program holding_v0003.aleo {
+program holding_dev_v1.aleo {
 
     struct Holder{
         account : address, 
@@ -74,7 +74,7 @@ program holding_v0003.aleo {
     }
 
     transition release_fund(public user: address, public token_id :field, public amount: u128) {
-        multi_token_support_program_v1.aleo/transfer_public(token_id, user, amount);
+        multi_token_support_program.aleo/transfer_public(token_id, user, amount);
 
         let token_holder: Holder = Holder{
             account: user,

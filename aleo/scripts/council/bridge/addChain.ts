@@ -1,19 +1,19 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
-import { CouncilContract } from "../../../artifacts/js/council";
+import { Token_bridge_dev_v1Contract } from "../../../artifacts/js/token_bridge_dev_v1";
+import { Council_dev_v1Contract } from "../../../artifacts/js/council_dev_v1";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/bridge_council";
-import { TbAddChain } from "../../../artifacts/js/types/bridge_council";
+import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/bridge_council_dev_v1";
+import { TbAddChain } from "../../../artifacts/js/types/bridge_council_dev_v1";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Bridge_councilContract } from "../../../artifacts/js/bridge_council";
+import { Bridge_council_dev_v1Contract } from "../../../artifacts/js/bridge_council_dev_v1";
 
 const mode = ExecutionMode.SnarkExecute;
-const council = new CouncilContract({mode, priorityFee: 10_000});
-const bridge = new Token_bridge_v0003Contract({mode, priorityFee: 10_000});
-const bridgeCouncil = new Bridge_councilContract({mode, priorityFee: 10_000});
+const council = new Council_dev_v1Contract({mode, priorityFee: 10_000});
+const bridge = new Token_bridge_dev_v1Contract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Bridge_council_dev_v1Contract({mode, priorityFee: 10_000});
 
 export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
 

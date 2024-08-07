@@ -1,21 +1,21 @@
 import { hashStruct } from "../../../utils/hash";
-import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
-import { CouncilContract } from "../../../artifacts/js/council";
+import { Token_service_dev_v1Contract } from "../../../artifacts/js/token_service_dev_v1";
+import { Council_dev_v1Contract } from "../../../artifacts/js/council_dev_v1";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsUnpauseToken } from "../../../artifacts/js/types/token_service_council";
-import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/token_service_council";
+import { TsUnpauseToken } from "../../../artifacts/js/types/token_service_council_dev_v1";
+import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/token_service_council_dev_v1";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
+import { Token_service_council_dev_v1Contract } from "../../../artifacts/js/token_service_council_dev_v1";
 import { hash } from "aleo-hasher";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Token_service_councilContract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Token_service_council_dev_v1Contract({ mode, priorityFee: 10_000 });
 
-const council = new CouncilContract({ mode, priorityFee: 10_000 });
-const tokenService = new Token_service_v0003Contract({ mode, priorityFee: 10_000 });
+const council = new Council_dev_v1Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Token_service_dev_v1Contract({ mode, priorityFee: 10_000 });
 
 
 //////////////////////

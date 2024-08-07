@@ -75,6 +75,7 @@ export class BaseContract {
   // TODO: handle properly
   getAccounts(): string[] {
     const accounts = this.config.network.accounts.map((pvtKey) => {
+      console.log(pvtKey);
       return PrivateKey.from_string(pvtKey).to_address().to_string();
     });
     return accounts;

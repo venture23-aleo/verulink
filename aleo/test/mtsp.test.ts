@@ -2,6 +2,7 @@ import { ExecutionMode } from "@doko-js/core";
 import { Multi_token_support_program_v1Contract } from "../artifacts/js/multi_token_support_program_v1";
 import { hashStruct } from "../utils/hash";
 import { TokenOwner } from "../artifacts/js/types/holding_v0003";
+// import { Mtsp_v3Contract } from "../artifacts/js/mtsp_v3";
 
 const mtsp = new Multi_token_support_program_v1Contract({mode:ExecutionMode.SnarkExecute});
 (BigInt.prototype as any).toJSON = function () {
@@ -19,34 +20,34 @@ describe("Initialize state", () => {
     const [admin, aleouser2, aleoUser3, aleoUser4, aleoUser5] = mtsp.getAccounts();
     let token_hash ;
 
-    // test ("Deploy mtsp", async()=>{
-    //     const deployMtspTx = await mtsp.deploy();
-    //     await deployMtspTx.wait();
-    // }, TIMEOUT);
-    // test ("Register token", async()=>{
-    //     const [tx] = await mtsp.register_token(token_id, token_name, token_symbol, token_decimals, token_max_supply, false, admin);
-    //     await tx.wait();
-    // }, TIMEOUT);
+    test("Deploy mtsp", async()=>{
+        const deployMtspTx = await mtsp.deploy();
+        await deployMtspTx.wait();
+    }, TIMEOUT);
+    test("Register token", async()=>{
+        const [tx] = await mtsp.register_token(token_id, token_name, token_symbol, token_decimals, token_max_supply, false, admin);
+        await tx.wait();
+    }, TIMEOUT);
     
-    // test("Mint token", async()=>{
-    //     const [tx] = await mtsp.mint_public(token_id, admin, BigInt(10000), 4294967295);
-    //     await tx.wait();
-    //     let token_owner:TokenOwner = {
-    //         account: admin,
-    //         token_id: token_id
-    //     }
-    //     const hash = hashStruct(token_owner);
-    //     token_hash = hash;
-    //     console.log(token_hash);
-    //     const balance = await mtsp.authorized_balances(hash);
-    //     console.log("Balances ",balance);
-    // }, TIMEOUT);
+    test("Mint token", async()=>{
+        const [tx] = await mtsp.mint_public(token_id, admin, BigInt(10000), 4294967295);
+        await tx.wait();
+        let token_owner:TokenOwner = {
+            account: admin,
+            token_id: token_id
+        }
+        const hash = hashStruct(token_owner);
+        token_hash = hash;
+        console.log(token_hash);
+        const balance = await mtsp.authorized_balances(hash);
+        console.log("Balances ",balance);
+    }, TIMEOUT);
     test("Burn token", async()=>{
         let token_owner:TokenOwner = {
             account: admin,
             token_id: token_id
         }
-        const [tx] = await mtsp.burn_public(token_owner, BigInt(100));
+        const [tx] = await mtsp.burn_public(token_id, admin, BigInt(100));
         await tx.wait();
         // const bal = await mtsp.authorized_balances(token_hash);
         // console.log(bal);

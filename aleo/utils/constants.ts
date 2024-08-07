@@ -23,10 +23,10 @@ export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 export const OWNER_INDEX = true;
 
 // USDC Contract Address on Ethereum
-export const usdcContractAddr = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
+export const usdcContractAddr = "0xD99e898842c566be038bf898b3e406f028a031E0"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c"
+export const ethTsContractAddr = "0xf1d72ccBCcd340F4eA6243309cd9d240C0081660"
 
 // Token Service Contract Address on Ethereum
 export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
