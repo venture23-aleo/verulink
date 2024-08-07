@@ -35,6 +35,14 @@ services:
       - ./signingService/keys.yaml:/configs/keys.yaml
     ports:
       - 8080:8080
+  promtail:
+    image: grafana/promtail:2.4.1
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/promtail-config.yaml
+      - log-path:/var/log
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    ports:
+      - "9080:9080"
 
 volumes:
   db-path:
