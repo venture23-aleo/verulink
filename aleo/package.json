@@ -20,9 +20,10 @@
   },
   "dependencies": {
     "@aleohq/sdk": "^0.6.9",
-    "@doko-js/core": "file:../../../doko-js/packages/core/doko-js-core-0.2.0.tgz",
+    "@doko-js/core": "0.3.0",
     "@types/ejs": "^3.1.5",
     "aleo-hasher": "^0.1.2",
+    "aleo-hasher-web": "^0.1.0",
     "aleo-program-to-address": "^0.1.0",
     "aleo-signer": "^0.1.1",
     "axios": "^1.6.5",

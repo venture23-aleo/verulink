@@ -1,6 +1,6 @@
 import multi_token_support_program.aleo;
 
-program holding_dev_v1.aleo {
+program holding.aleo {
 
     struct Holder{
         account : address, 

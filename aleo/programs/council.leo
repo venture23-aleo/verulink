@@ -1,4 +1,4 @@
-program council_dev_v1.aleo {
+program council.aleo {
 
     struct ProposalVote {
         // Hash of the proposal
