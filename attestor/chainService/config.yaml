@@ -13,6 +13,7 @@ chains:
   finality_height: 1
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 1m
+  average_block_gen_dur: 1s
   dest_chains:
     - ethereum
 

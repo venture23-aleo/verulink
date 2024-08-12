@@ -19,7 +19,7 @@ import (
 
 const (
 	defaultValidityWaitDur     = time.Hour * 24
-	avgBlockGenDur             = time.Second
+	defaultAvgBlockGenDur      = time.Second
 	outPacket                  = "out_packets"
 	aleo                       = "aleo"
 	defaultRetryPacketWaitDur  = time.Hour
@@ -51,6 +51,7 @@ type Client struct {
 	validityWaitDur     time.Duration
 	retryPacketWaitDur  time.Duration
 	pruneBaseSeqWaitDur time.Duration
+	avgBlockGenDur      time.Duration
 	metrics             *metrics.PrometheusMetrics
 }
 
@@ -134,7 +135,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 		case availableInHeight == 0:
 			time.Sleep(cl.validityWaitDur)
 		case availableInHeight > curMaturedHeight:
-			dur := time.Duration(availableInHeight-curMaturedHeight) * avgBlockGenDur
+			dur := time.Duration(availableInHeight-curMaturedHeight) * cl.avgBlockGenDur
 			logger.GetLogger().Info("Sleeping ", zap.Duration("duration", dur))
 			time.Sleep(dur)
 		}
@@ -389,6 +390,11 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	pruneBaseSeqWaitDur := cfg.PruneBaseSeqNumberWaitDur
 	if pruneBaseSeqWaitDur == 0 {
 		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
+	}
+
+	avgBlockGenDur := cfg.AverageBlockGenDur
+	if avgBlockGenDur == 0 {
+		avgBlockGenDur = defaultAvgBlockGenDur
 	}
 
 	waitHeight := int64(validityWaitDur / avgBlockGenDur)

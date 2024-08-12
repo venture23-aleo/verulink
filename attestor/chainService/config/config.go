@@ -49,6 +49,7 @@ type ChainConfig struct {
 	FilterTopic                string            `yaml:"filter_topic"`       // useful for ethereum
 	RetryPacketWaitDur         time.Duration     `yaml:"retry_packet_wait_dur"`
 	PruneBaseSeqNumberWaitDur  time.Duration     `yaml:"prune_base_seq_num_wait_dur"`
+	AverageBlockGenDur         time.Duration     `yaml:"average_block_gen_dur"` // useful for aleo
 }
 
 type Config struct {
