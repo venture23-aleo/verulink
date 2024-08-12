@@ -19,8 +19,8 @@ const (
 )
 
 const (
-	dbFileName  = "attestorBolt.db"
-	logFileName = "attestor.log"
+	dbFileName  = "verulinkBolt.db"
+	logFileName = "verulink.log"
 	perm        = 744 // Read, execute and write permission for owner, and read-only permission for others
 )
 
