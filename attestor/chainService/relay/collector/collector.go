@@ -81,7 +81,6 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 			TLSClientConfig: &tls.Config{
 				RootCAs:            c.caCert,
 				Certificates:       []tls.Certificate{c.attestorCert},
-				InsecureSkipVerify: true,
 			},
 		},
 	}
@@ -147,7 +146,6 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 			TLSClientConfig: &tls.Config{
 				RootCAs:            c.caCert,
 				Certificates:       []tls.Certificate{c.attestorCert},
-				InsecureSkipVerify: true,
 			},
 		},
 	}
@@ -225,7 +223,6 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 				TLSClientConfig: &tls.Config{
 					RootCAs:            c.caCert,
 					Certificates:       []tls.Certificate{c.attestorCert},
-					InsecureSkipVerify: true,
 				},
 			},
 		}
