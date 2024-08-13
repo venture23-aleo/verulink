@@ -21,6 +21,7 @@ import (
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
@@ -123,6 +124,9 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 	}
 	return nil, errors.New("error")
 }
+func newMetrics() *metrics.PrometheusMetrics {
+	return metrics.NewPrometheusMetrics()
+}
 
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
@@ -162,6 +166,7 @@ func TestFeedPacket(t *testing.T) {
 		pruneBaseSeqNumberWaitDur: time.Hour,
 		feedPktWaitDur:            time.Nanosecond,
 		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
+		metrics:                   newMetrics(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -473,6 +478,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		nextBlockHeight:           10,
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
+		metrics:                   newMetrics(),
 	}
 
 	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")

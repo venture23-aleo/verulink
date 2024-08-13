@@ -24,7 +24,10 @@ func TestSetupCollector(t *testing.T) {
 	chainIdToAddress := map[string]string{
 		"2": "aleoaddr",
 		"1": "ethAddr"}
-	err := SetupCollector(config.CollecterServiceConfig{Uri: uri}, chainIdToAddress, time.Second)
+	err := SetupCollector(config.CollecterServiceConfig{Uri: uri,
+		CaCertificate:       "../../../chainService/.mtls/ca.cer",
+		AttestorCertificate: "../../../chainService/.mtls/attestor1.crt",
+		AttestorKey:         "../../../chainService/.mtls/attestor1.key"}, chainIdToAddress, time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, GetCollector())
 	assert.Equal(t, uri, collc.uri)
@@ -44,10 +47,21 @@ func TestSendToCollector(t *testing.T) {
 			"2": "aleoaddr",
 			"1": "ethAddr",
 		}
+
+		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
+	
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt", 
+		"../../../chainService/.mtls/attestor1.key")
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
+			caCert:           caCertPool,
+			attestorCert: attestorCert,
 		}
 		sp := &chain.ScreenedPacket{
 			Packet: &chain.Packet{
