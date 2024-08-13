@@ -2,6 +2,11 @@ package metrics
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"log"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -106,36 +111,35 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 
 func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig) (*push.Pusher, error) {
 	logger.GetLogger().Info("Initilizing metrics")
-	// TODO: setup for http client
-	// caCert, err := os.ReadFile(cfg.CaCertificate)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	
+	caCert, err := os.ReadFile(cfg.CaCertificate)
+	if err != nil {
+		return nil, err
+	}
 
-	// caCertPool := x509.NewCertPool()
-	// caCertPool.AppendCertsFromPEM(caCert)
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
 
-	// attestorCert, err := tls.LoadX509KeyPair(cfg.AttestorCertificate, cfg.AttestorKey)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// transport := &http.Transport{
-	// 	TLSClientConfig: &tls.Config{
-	// 		RootCAs:      caCertPool,
-	// 		Certificates: []tls.Certificate{attestorCert},
-	// 	},
-	// }
+	attestorCert, err := tls.LoadX509KeyPair(cfg.AttestorCertificate, cfg.AttestorKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			RootCAs:      caCertPool,
+			Certificates: []tls.Certificate{attestorCert},
+		},
+	}
 
-	// httpClient := &http.Client{
-	// 	Transport: transport,
-	// }
+	httpClient := &http.Client{
+		Transport: transport,
+	}
 
 	host := config.GetConfig().MetricConfig.Host
 	job := config.GetConfig().MetricConfig.JobName
 	mode := config.GetConfig().Mode
 
-	pusher := push.New(host, job).Grouping("instance", mode)
-	// pusher := push.New(host, job).Grouping("instance", mode).Client(httpClient)
+	pusher := push.New(host, job).Grouping("instance", mode).Client(httpClient)
 
 	return pusher, nil
 }
