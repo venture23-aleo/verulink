@@ -414,5 +414,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		validityWaitDur:     validityWaitDur,
 		retryPacketWaitDur:  retryPacketWaitDur,
 		pruneBaseSeqWaitDur: pruneBaseSeqWaitDur,
+		avgBlockGenDur:      avgBlockGenDur,
 	}
 }
