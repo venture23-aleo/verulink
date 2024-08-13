@@ -57,5 +57,5 @@ collector_service:
   attestor_key: /configs/.mtls/attestor1.key
 
 metrics:
-  host: https://prometheus-testnet.venture23.xyz:9096
+  host: https://pushgateway-aleomtls.venture23.xyz
   job_name: dev-push-gateway
