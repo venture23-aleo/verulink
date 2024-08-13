@@ -86,9 +86,9 @@ type ScreenedPacket struct {
 // MissedPacket denotes the information about a packet that db-service administrator has requested
 // for the attestors to re-process
 type MissedPacket struct {
-	TargetChainID *big.Int `json:"target_chain_id"`
-	SourceChainID *big.Int `json:"source_chain_id"`
-	SeqNum        uint64   `json:"seq_num"`
+	TargetChainID *big.Int `json:"destChainId"`
+	SourceChainID *big.Int `json:"sourceChainId"`
+	SeqNum        uint64   `json:"sequence"`
 	Height        uint64   `json:"height"`
-	TxnID         string   `json:"txn_id"`
+	TxnID         string   `json:"transactionHash"`
 }
