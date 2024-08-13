@@ -1,7 +1,14 @@
 package metrics
 
 import (
+	"context"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/push"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"go.uber.org/zap"
 )
 
 type PrometheusMetrics struct {
@@ -95,4 +102,64 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		DBService:                    dbServiceHealth,
 		SigningService:               signingSeviceHealth,
 	}
+}
+
+func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig) (*push.Pusher, error) {
+	logger.GetLogger().Info("Initilizing metrics")
+	// TODO: setup for http client
+	// caCert, err := os.ReadFile(cfg.CaCertificate)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// caCertPool := x509.NewCertPool()
+	// caCertPool.AppendCertsFromPEM(caCert)
+
+	// attestorCert, err := tls.LoadX509KeyPair(cfg.AttestorCertificate, cfg.AttestorKey)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// transport := &http.Transport{
+	// 	TLSClientConfig: &tls.Config{
+	// 		RootCAs:      caCertPool,
+	// 		Certificates: []tls.Certificate{attestorCert},
+	// 	},
+	// }
+
+	// httpClient := &http.Client{
+	// 	Transport: transport,
+	// }
+
+	host := config.GetConfig().MetricConfig.Host
+	job := config.GetConfig().MetricConfig.JobName
+	mode := config.GetConfig().Mode
+
+	pusher := push.New(host, job).Grouping("instance", mode)
+	// pusher := push.New(host, job).Grouping("instance", mode).Client(httpClient)
+
+	return pusher, nil
+}
+
+func PushMetrics(ctx context.Context, pusher *push.Pusher, pmetrics *PrometheusMetrics) {
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	for {
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			gatherer := prometheus.Gatherers{
+				pmetrics.Registry,
+			}
+			if err := pusher.Gatherer(gatherer).Push(); err != nil {
+				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
+			} else {
+				logger.GetLogger().Info("Metrics pushed successfully.")
+			}
+			pmetrics = NewPrometheusMetrics()
+		}
+	}
+
 }

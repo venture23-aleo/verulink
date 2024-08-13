@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/push"
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
@@ -61,42 +58,25 @@ func main() {
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
 	logger.GetLogger().Info("Attestor started")
 
-	host := config.GetConfig().MetricConfig.Host
+	pusher, err := metrics.InitMetrics(config.GetConfig().CollectorServiceConfig, config.GetConfig().MetricConfig)
+	if err != nil {
+		logger.GetLogger().Error("Error initializing metrics logging", zap.Error(err))
+	}
 
-	job := config.GetConfig().MetricConfig.JobName
-
-	mode := config.GetConfig().Mode
-	pusher := push.New(host, job).Grouping("instance", mode)
-
-	pmetrics := metrics.NewPrometheusMetrics()
-	go func() {
-
-		for range time.Tick(5 * time.Second) {
-			gatherer := prometheus.Gatherers{
-				pmetrics.Registry,
-			}
-
-			if err := pusher.Gatherer(gatherer).Push(); err != nil {
-				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
-
-			} else {
-				logger.GetLogger().Info("Metrics pushed successfully.")
-			}
-			pmetrics = metrics.NewPrometheusMetrics()
-		}
-
-	}()
-
+	
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
-
+	
 	err = store.InitKVStore(config.GetConfig().DBPath)
 	if err != nil {
 		fmt.Printf("Error while initializing db store: %s\n", err.Error())
 		os.Exit(1)
 	}
+
+	pmetrics := metrics.NewPrometheusMetrics()
+	go metrics.PushMetrics(ctx, pusher, pmetrics)
 
 	relay.StartRelay(ctx, config.GetConfig(), pmetrics)
 }
