@@ -79,8 +79,8 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:            c.caCert,
-				Certificates:       []tls.Certificate{c.attestorCert},
+				RootCAs:      c.caCert,
+				Certificates: []tls.Certificate{c.attestorCert},
 			},
 		},
 	}
@@ -103,7 +103,7 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 	if resp.StatusCode != http.StatusOK {
 		return err
 	}
-	
+
 	defer resp.Body.Close()
 	return nil
 }
@@ -144,8 +144,8 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:            c.caCert,
-				Certificates:       []tls.Certificate{c.attestorCert},
+				RootCAs:      c.caCert,
+				Certificates: []tls.Certificate{c.attestorCert},
 			},
 		},
 	}
@@ -204,7 +204,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		}
 
 		var (
-			missedPackets   []*chain.MissedPacket
+			missedPackets   *chain.MissedPacketDetails
 			err             error
 			resp            *http.Response
 			data            []byte
@@ -221,8 +221,8 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		client := &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					RootCAs:            c.caCert,
-					Certificates:       []tls.Certificate{c.attestorCert},
+					RootCAs:      c.caCert,
+					Certificates: []tls.Certificate{c.attestorCert},
 				},
 			},
 		}
@@ -230,7 +230,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		if err != nil {
 			goto postFor
 		}
-		
+
 		resp, err = client.Do(req)
 		if err != nil {
 			goto postFor
@@ -257,7 +257,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 			continue
 		}
 
-		for _, m := range missedPackets {
+		for _, m := range missedPackets.Data {
 			ch <- m
 		}
 		// Update index for next wallet address

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -91,4 +92,35 @@ type MissedPacket struct {
 	SeqNum        uint64   `json:"sequence"`
 	Height        uint64   `json:"height"`
 	TxnID         string   `json:"transactionHash"`
+}
+
+// MissedPacketDetails represents the structure sent by the db-service during polling.
+type MissedPacketDetails struct {
+	Data    []*MissedPacket `json:"data"`
+	Message string          `json:"message"`
+}
+
+// Custom unmarshal function to convert a JSON string into a *big.Int
+func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
+
+	mPKt := &struct {
+		TargetChainID string `json:"destChainId"`
+		SourceChainID string `json:"sourceChainId"`
+		SeqNum        uint64 `json:"sequence"`
+		Height        uint64 `json:"height"`
+		TxnID         string `json:"transactionHash"`
+	}{}
+
+	if err := json.Unmarshal(data, &mPKt); err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	packet.TargetChainID, _ = new(big.Int).SetString(mPKt.TargetChainID, 10)
+
+	packet.SourceChainID, _ = new(big.Int).SetString(mPKt.SourceChainID, 10)
+	packet.SeqNum = mPKt.SeqNum
+	packet.Height = mPKt.Height
+	packet.TxnID = mPKt.TxnID
+	return nil
 }

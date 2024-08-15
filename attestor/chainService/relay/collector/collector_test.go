@@ -145,7 +145,44 @@ func TestSendToCollector(t *testing.T) {
 
 func TestGetPktsFromCollector(t *testing.T) {
 
+	// setting json response form server
+	mPktString := &struct {
+		TargetChainID string `json:"destChainId"`
+		SourceChainID string `json:"sourceChainId"`
+		SeqNum        uint64 `json:"sequence"`
+		Height        uint64 `json:"height"`
+		TxnID         string `json:"transactionHash"`
+	}{
+		TargetChainID: "1",
+		SourceChainID: "2",
+		SeqNum:        1,
+		Height:        55,
+		TxnID:         "txnid",
+	}
+
+	mPktInfoString := &struct {
+		Data []*struct {
+			TargetChainID string `json:"destChainId"`
+			SourceChainID string `json:"sourceChainId"`
+			SeqNum        uint64 `json:"sequence"`
+			Height        uint64 `json:"height"`
+			TxnID         string `json:"transactionHash"`
+		} `json:"data"`
+		Message string `json:"message"`
+	}{
+		Data: []*struct {
+			TargetChainID string `json:"destChainId"`
+			SourceChainID string `json:"sourceChainId"`
+			SeqNum        uint64 `json:"sequence"`
+			Height        uint64 `json:"height"`
+			TxnID         string `json:"transactionHash"`
+		}{mPktString},
+		Message: "Test message",
+	}
+
 	t.Run("case: happy path", func(t *testing.T) {
+
+		// expected response
 		mPkt := &chain.MissedPacket{
 			TargetChainID: big.NewInt(1),
 			SourceChainID: big.NewInt(2),
@@ -155,8 +192,7 @@ func TestGetPktsFromCollector(t *testing.T) {
 		}
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			missedPacket := []*chain.MissedPacket{mPkt}
-			missedPktBt, _ := json.Marshal(&missedPacket)
+			missedPktBt, _ := json.Marshal(&mPktInfoString)
 			w.Write(missedPktBt)
 		}))
 		defer ts.Close()
@@ -183,13 +219,6 @@ func TestGetPktsFromCollector(t *testing.T) {
 
 	t.Run("case: error bad status code", func(t *testing.T) {
 		var firstUri string
-		mpkt := &chain.MissedPacket{
-			TargetChainID: big.NewInt(1),
-			SourceChainID: big.NewInt(2),
-			SeqNum:        uint64(1),
-			Height:        uint64(55),
-			TxnID:         "txnid",
-		}
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if firstUri == "" {
@@ -198,9 +227,7 @@ func TestGetPktsFromCollector(t *testing.T) {
 			} else {
 				assert.Equal(t, firstUri, r.RequestURI)
 			}
-			missedPackets := []*chain.MissedPacket{mpkt}
-
-			missedPktBt, _ := json.Marshal(&missedPackets)
+			missedPktBt, _ := json.Marshal(&mPktInfoString)
 			w.Write(missedPktBt)
 		}))
 		defer ts.Close()
