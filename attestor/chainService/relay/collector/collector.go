@@ -167,8 +167,6 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	if resp.StatusCode == http.StatusCreated {
 		if string(r) == "Duplicate Packet" {
 			return common.AlreadyRelayedPacket{}
-		} else {
-			return nil
 		}
 	}
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
