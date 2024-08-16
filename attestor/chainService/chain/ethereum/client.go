@@ -440,7 +440,7 @@ func (cl *Client) GetMissedPacket(
 	for _, pkt := range pkts {
 
 		if pkt.Sequence == missedPkt.SeqNum &&
-			pkt.Destination.ChainID == missedPkt.TargetChainID {
+			pkt.Destination.ChainID.Cmp(missedPkt.TargetChainID) == 0 {
 
 			return pkt, nil
 		}
