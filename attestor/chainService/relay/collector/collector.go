@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
 )
@@ -162,10 +163,14 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
-		return nil
-	}
 	r, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode == http.StatusCreated {
+		if string(r) == "Duplicate Packet" {
+			return common.AlreadyRelayedPacket{}
+		} else {
+			return nil
+		}
+	}
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
