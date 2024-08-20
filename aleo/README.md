@@ -62,18 +62,26 @@ This program is responsible for holding disputed funds and transfers for every t
 
 Each of the above program has a owner that performs admin functions. The owner can be set during initialization and the ownership can be transferred only from the current owner.
 
-| Programs      | Owner         |
-| ------------- | ------------- |
-| Token Bridge  | Council       |
-| Token Service | Council       |
-| Token Holding | Token Service |
-| MTSP          | Token Service |
+| Programs      | Owner                |
+| ------------- | ---------------------|
+| Token Bridge  | Bridge Council       |
+| Token Service | Service Council      |
+| Token Holding | Token Service        |
+| MTSP          | Token Service        |
 
 ### Council Program
 
 Council is a separate program that acts as a multisig to perform admin functions. Functions from council can be executed only if threshold of members (of council) vote to perform a particular action.
 
-Since our architecture features a single token bridge, token holding and token service program, the council imports these programs. Where council is responsible for executing different function that require voting from council members. For example to release fund from holding contract, council needs to propose release proposal with enough votes to pass the threshold, and calls release funtion in holding contract which will release assets to the actual receiver.
+With the limit in number of variables in SnarkOS, we have split the council and it's functionalities into three programs.
+
+**1. council.aleo:** The program where the state of the council is stored. It holds the addresses of the council members, current threshold, proposed proposals and the votes on those proposals. It also provides an *external_execute* function for the other council programs to call and verify that the proposal has enough votes to be executed.
+
+**2. token_service_council.aleo:** This program is the owner of the token_service and can call various parameter changing functions in the token_service if the proposal has enough votes. It calls the external_execute function provided by council.aleo program.
+
+**3.bridge_counci.aleo:** This program is the owner of the token_bridge and can call various parameter changing functions in the token_bridge if the proposal has enough votes. It also calls the external_execute function provided by council.aleo program.
+
+For example to release fund from holding contract, council needs to propose release proposal with enough votes to pass the threshold, and calls release function in holding contract which will release assets to the actual receiver.
 
 # Testing
 

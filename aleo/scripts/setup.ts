@@ -1,5 +1,5 @@
-import { Token_bridge_dev_v1Contract } from "../artifacts/js/token_bridge_dev_v1";
-import { Token_service_dev_v1Contract } from "../artifacts/js/token_service_dev_v1";
+import { Token_bridgeContract } from "../artifacts/js/token_bridge";
+import { Token_serviceContract } from "../artifacts/js/token_service";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -23,15 +23,15 @@ import {
   wusdcTimeframe,
 } from "../utils/testnet.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Bridge_council_dev_v1Contract } from "../artifacts/js/bridge_council_dev_v1";
+import { Bridge_councilContract } from "../artifacts/js/bridge_council";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
 
-const bridge = new Token_bridge_dev_v1Contract();
-const tokenService = new Token_service_dev_v1Contract();
-const bridgeCouncil = new Bridge_council_dev_v1Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Token_service_dev_v1Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Token_bridgeContract();
+const tokenService = new Token_serviceContract();
+const bridgeCouncil = new Bridge_councilContract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Token_serviceContract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
   aleoUser1,
