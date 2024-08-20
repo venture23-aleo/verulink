@@ -14,4 +14,4 @@
 2. Change the files constants.ts and testnet.data.ts accordingly.
     - For the file constants.ts, it requires you to update the usdcContractAddr obtained from the ethereum side. 
     - For the file testnet.data.ts, it requires you to update the initialAttestors and threshold you want to assign while initializing the programs. You can change these later from council.
-3. Run the file ./scripts/setup.ts. This file first deploys various programs, initializes the state of those programs, gives the minter and burner role of the tokens to the token_service, adds the chain to the bridge, adds the token_service to the bridge, adds the token to the token_service and finally unpauses bridge and the token.
+3. Run the file ./scripts/setup.ts. `npx tsx ./scripts/setup.ts` This file first deploys various programs, initializes the state of those programs, gives the minter and burner role of the tokens to the token_service, adds the chain to the bridge, adds the token_service to the bridge, adds the token to the token_service and finally unpauses bridge and the token.
