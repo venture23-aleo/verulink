@@ -65,6 +65,7 @@ type Config struct {
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
 	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 	MetricConfig           MetricsConfig          `yaml:"metrics"`
+	Version                string                    `yaml:"version"`
 }
 
 type LoggerConfig struct {

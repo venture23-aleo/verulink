@@ -24,6 +24,13 @@ type PrometheusMetrics struct {
 	AttestorService              *prometheus.GaugeVec
 	DBService                    *prometheus.GaugeVec
 	SigningService               *prometheus.GaugeVec
+	VersionInfo                  *prometheus.GaugeVec
+	ReceivedSequenceNo           *prometheus.GaugeVec
+	ProcessedSequenceNo          *prometheus.GaugeVec
+}
+
+func (m *PrometheusMetrics) StartVersion(attestorName string, version string) {
+	m.VersionInfo.WithLabelValues(attestorName, version).Set(1)
 }
 
 func (m *PrometheusMetrics) AddInPackets(attestorName string, chain string, destinationChain string) {
@@ -50,8 +57,16 @@ func (m *PrometheusMetrics) SetSigningServiceHealth(attestorName string, value f
 	m.SigningService.WithLabelValues(attestorName).Set(value)
 }
 
+func (m *PrometheusMetrics) UpdateReceivedSequence(attestorName string, sourceChain string, destinationChain string, sequenceNo float64) {
+	m.ReceivedSequenceNo.WithLabelValues(attestorName, sourceChain, destinationChain).Set(sequenceNo)
+}
+
+func (m *PrometheusMetrics) UpdateProcessedSequence(attestorName string, sourceChain string, destinationChain string, sequenceNo float64) {
+	m.ProcessedSequenceNo.WithLabelValues(attestorName, sourceChain, destinationChain).Set(sequenceNo)
+}
+
 func NewPrometheusMetrics() *PrometheusMetrics {
-	packetLables := []string{"attestor_name", "client_name", "destiantion_chain"}
+	packetLables := []string{"attestor_name", "source_chain", "destination_chain"}
 	outPakcetLables := []string{"attestor_name", "source_chain", "destination_chain"}
 	healthLabels := []string{"attestor_name"}
 	registry := prometheus.NewRegistry()
@@ -91,12 +106,33 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Help: "Shows the connection with signing service",
 		}, healthLabels)
 
+	versionInfo := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "attestor_version_info",
+			Help: "Show the version of the attestor",
+		}, []string{"attestor_name", "version"})
+
+	processedSeqInfo := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "processed_sequence_no",
+			Help: "Info for processed sequence of attestor",
+		}, packetLables)
+
+	receivedSeqInfo := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "received_sequence_no",
+			Help: "Info for recieved sequence of attestor",
+		}, packetLables)
+
 	registry.MustRegister(inPacketsCounter)
 	registry.MustRegister(outPacktesCounter)
 	registry.MustRegister(attestorHealth)
 	registry.MustRegister(dbServiceHealth)
 	registry.MustRegister(signingSeviceHealth)
 	registry.MustRegister(hashedAndSignedPacketCounter)
+	registry.MustRegister(versionInfo)
+	registry.MustRegister(receivedSeqInfo)
+	registry.MustRegister(processedSeqInfo)
 
 	return &PrometheusMetrics{
 		Registry:                     registry,
@@ -106,6 +142,9 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		AttestorService:              attestorHealth,
 		DBService:                    dbServiceHealth,
 		SigningService:               signingSeviceHealth,
+		VersionInfo:                  versionInfo,
+		ReceivedSequenceNo:           receivedSeqInfo,
+		ProcessedSequenceNo:          processedSeqInfo,
 	}
 }
 

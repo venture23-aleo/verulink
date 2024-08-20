@@ -280,7 +280,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 				for _, pkt := range pkts {
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
-						cl.metrics.AddInPackets(logger.AttestorName, cl.name, pkt.Destination.ChainID.String())
+						cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
+						cl.metrics.UpdateReceivedSequence(logger.AttestorName,cl.chainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
 						ch <- pkt
 					}
 				}
@@ -423,6 +424,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
+			cl.metrics.UpdateProcessedSequence(logger.AttestorName,pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
 		}
 	}
 }

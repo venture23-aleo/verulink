@@ -63,12 +63,11 @@ func main() {
 		logger.GetLogger().Error("Error initializing metrics logging", zap.Error(err))
 	}
 
-	
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
 	ctx, stop := signal.NotifyContext(ctx, getKillSignals()...)
 	defer stop()
-	
+
 	err = store.InitKVStore(config.GetConfig().DBPath)
 	if err != nil {
 		fmt.Printf("Error while initializing db store: %s\n", err.Error())
@@ -77,6 +76,7 @@ func main() {
 
 	pmetrics := metrics.NewPrometheusMetrics()
 	go metrics.PushMetrics(ctx, pusher, pmetrics)
+	pmetrics.StartVersion(logger.AttestorName, config.GetConfig().Version)
 
 	relay.StartRelay(ctx, config.GetConfig(), pmetrics)
 }

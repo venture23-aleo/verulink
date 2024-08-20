@@ -165,7 +165,8 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 				availableInHeight = int64(pkt.Height)
 				break
 			}
-			cl.metrics.AddInPackets(logger.AttestorName, cl.name, pkt.Destination.ChainID.String())
+			cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
+			cl.metrics.UpdateReceivedSequence(logger.AttestorName,cl.chainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
 			ch <- pkt
 			nextSeqNum++
 
@@ -317,6 +318,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
+			cl.metrics.UpdateProcessedSequence(logger.AttestorName,pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
 		}
 	}
 }
