@@ -226,7 +226,9 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	var baseHeight uint64 = math.MaxUint64
 	for dest := range cl.destChainsIDMap {
 		ns := baseSeqNumNameSpacePrefix + dest
-		_, startHeight := store.GetStartingSeqNumAndHeight(ns)
+		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
+		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest,float64(startSeqNum))
+
 		if startHeight < baseHeight {
 			baseHeight = startHeight
 		}
@@ -281,7 +283,6 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 				for _, pkt := range pkts {
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
 						cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
-						cl.metrics.UpdateReceivedSequence(logger.AttestorName,cl.chainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
 						ch <- pkt
 					}
 				}
@@ -424,7 +425,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
-			cl.metrics.UpdateProcessedSequence(logger.AttestorName,pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
+			cl.metrics.UpdateProcessedSequence(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), float64(pkt.Sequence))
 		}
 	}
 }

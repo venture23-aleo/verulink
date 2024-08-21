@@ -25,7 +25,7 @@ type PrometheusMetrics struct {
 	DBService                    *prometheus.GaugeVec
 	SigningService               *prometheus.GaugeVec
 	VersionInfo                  *prometheus.GaugeVec
-	ReceivedSequenceNo           *prometheus.GaugeVec
+	StartSequenceNo              *prometheus.GaugeVec
 	ProcessedSequenceNo          *prometheus.GaugeVec
 }
 
@@ -57,8 +57,8 @@ func (m *PrometheusMetrics) SetSigningServiceHealth(attestorName string, value f
 	m.SigningService.WithLabelValues(attestorName).Set(value)
 }
 
-func (m *PrometheusMetrics) UpdateReceivedSequence(attestorName string, sourceChain string, destinationChain string, sequenceNo float64) {
-	m.ReceivedSequenceNo.WithLabelValues(attestorName, sourceChain, destinationChain).Set(sequenceNo)
+func (m *PrometheusMetrics) StoredSequenceNo(attestorName string, sourceChain string, destinationChain string, sequenceNo float64) {
+	m.StartSequenceNo.WithLabelValues(attestorName, sourceChain, destinationChain).Set(sequenceNo)
 }
 
 func (m *PrometheusMetrics) UpdateProcessedSequence(attestorName string, sourceChain string, destinationChain string, sequenceNo float64) {
@@ -118,9 +118,9 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Help: "Info for processed sequence of attestor",
 		}, packetLables)
 
-	receivedSeqInfo := prometheus.NewGaugeVec(
+	startSeqInfo := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "received_sequence_no",
+			Name: "start_sequence_no",
 			Help: "Info for recieved sequence of attestor",
 		}, packetLables)
 
@@ -131,7 +131,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 	registry.MustRegister(signingSeviceHealth)
 	registry.MustRegister(hashedAndSignedPacketCounter)
 	registry.MustRegister(versionInfo)
-	registry.MustRegister(receivedSeqInfo)
+	registry.MustRegister(startSeqInfo)
 	registry.MustRegister(processedSeqInfo)
 
 	return &PrometheusMetrics{
@@ -143,14 +143,14 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		DBService:                    dbServiceHealth,
 		SigningService:               signingSeviceHealth,
 		VersionInfo:                  versionInfo,
-		ReceivedSequenceNo:           receivedSeqInfo,
+		StartSequenceNo:              startSeqInfo,
 		ProcessedSequenceNo:          processedSeqInfo,
 	}
 }
 
 func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig) (*push.Pusher, error) {
 	logger.GetLogger().Info("Initilizing metrics")
-	
+
 	caCert, err := os.ReadFile(cfg.CaCertificate)
 	if err != nil {
 		return nil, err

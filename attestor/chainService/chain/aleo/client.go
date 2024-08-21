@@ -108,6 +108,7 @@ func (cl *Client) Name() string {
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
 	ns := baseSeqNumNameSpacePrefix + chainID
 	startSeqNum, _ := store.GetStartingSeqNumAndHeight(ns)
+	cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), chainID,float64(startSeqNum))
 
 	if nextSeqNum < startSeqNum {
 		nextSeqNum = startSeqNum
@@ -166,7 +167,6 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 				break
 			}
 			cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
-			cl.metrics.UpdateReceivedSequence(logger.AttestorName,cl.chainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
 			ch <- pkt
 			nextSeqNum++
 
