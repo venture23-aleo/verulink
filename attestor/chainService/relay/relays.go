@@ -239,6 +239,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	err = r.collector.SendToCollector(ctx, sp, hash, signature)
 	if err != nil {
 		if errors.Is(err, common.AlreadyRelayedPacket{}) {
+			logger.GetLogger().Info("Duplicate packet detected")
 			err = nil // non-nil error will put packet in retry namespace
 			return
 		}
