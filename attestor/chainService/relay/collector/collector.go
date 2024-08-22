@@ -103,7 +103,7 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return err
+		return fmt.Errorf("expected status code %d, got %d", http.StatusCreated, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
