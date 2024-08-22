@@ -39,6 +39,7 @@ func TestSendToCollector(t *testing.T) {
 	t.Run("case: happy request ", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{"message":"create"}`))
 		}))
 		defer ts.Close()
 
@@ -49,19 +50,18 @@ func TestSendToCollector(t *testing.T) {
 		}
 
 		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
-	
 
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 
-		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt", 
-		"../../../chainService/.mtls/attestor1.key")
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
+			"../../../chainService/.mtls/attestor1.key")
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
 			caCert:           caCertPool,
-			attestorCert: attestorCert,
+			attestorCert:     attestorCert,
 		}
 		sp := &chain.ScreenedPacket{
 			Packet: &chain.Packet{
@@ -259,22 +259,21 @@ func TestGetPktsFromCollector(t *testing.T) {
 func TestMTLSIntegration(t *testing.T) {
 	dbUrl := "https://aleomtls.ibriz.ai/"
 
-	caCert, err := os.ReadFile("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/ca.cer")
+	caCert, err := os.ReadFile("../../../chainService/ca.cer")
 	assert.NoError(t, err)
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair("/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor9.crt",
-		"/home/aanya/ibriz/aleo/aleo-bridge/attestor/chainService/attestor9.key")
+	cert, err := tls.LoadX509KeyPair("../../../chainService/attestor-stresstest.crt",
+		"../../../chainService/attestor-stresstest.key")
 	assert.NoError(t, err)
 
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:            caCertPool,
-				Certificates:       []tls.Certificate{cert},
-				InsecureSkipVerify: true,
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{cert},
 			},
 		},
 	}

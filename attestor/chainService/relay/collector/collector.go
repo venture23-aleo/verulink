@@ -165,11 +165,20 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 
 	r, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode == http.StatusCreated {
-		if string(r) == "Duplicate Packet" {
+		var response = &struct {
+			Message string `json:"message"`
+		}{}
+
+		err = json.Unmarshal(r, response)
+		if err != nil {
+			return err
+		}
+		if response.Message == "Duplicate packet" {
 			return common.AlreadyRelayedPacket{}
 		}
 		return nil
 	}
+
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
