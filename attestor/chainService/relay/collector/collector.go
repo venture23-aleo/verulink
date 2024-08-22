@@ -98,11 +98,7 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return err
+		return err;
 	}
 
 	defer resp.Body.Close()
