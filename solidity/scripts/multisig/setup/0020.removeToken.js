@@ -3,20 +3,22 @@ const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
+import { approveTransaction, executeTransaction } from "../utils.js";
+
 import * as dotenv from "dotenv";
 dotenv.config();
-import { approveTransaction, executeTransaction } from "../utils.js";
 
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
   "https://rpc2.sepolia.org"
 );
+console.log("ethers version = ", ethers.version);
 
-async function ProposeAddTokenUSDCTransaction(deployerSigner) {
+async function ProposeRemoveTokenUSDCTransaction(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
-    signerOrProvider: deployerSigner,
+    signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
@@ -24,18 +26,18 @@ async function ProposeAddTokenUSDCTransaction(deployerSigner) {
     ethAdapter,
   });
 
-  const tokenAddress = process.env.USDC_ADDR;
-  const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS_USDC;
-  const destChainId = "6694886634403";
-  const destTokenAddress = "5595373416687012447808431171621112175713243308139308694591328825799485714900field";
-  const destTokenService = "aleo1rqps4l9fxw8mgpcqf7ljkwv3995nu460cd374s6q76v5jlmrngpsv4uxr4";
-  const min = "10";
-  const max = "1000000000000000000000000";
+  const tokenAddress = process.env.USDT_ADDR;
+  // const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS;
+  // const destChainId = "6694886634403";
+  // const destTokenAddress = "aleo1s7ewgjkuhxr7a9u6vjmst4khchkggxemqazrs8vy54x3prt74upqy6aveq";
+  // const destTokenService = "aleo18wf4ggxpmey0hk3drgefdgup9xnudgekas9lvpzut3f4cf8scuzq78j08l";
+  // const min = "10";
+  // const max = "1000000000000000000000000";
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");
   const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("addToken", [tokenAddress, destChainId, vault, destTokenAddress, destTokenService, min, max]);
+  const calldata = iface.encodeFunctionData("removeToken", [tokenAddress]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -70,7 +72,7 @@ async function ProposeAddTokenUSDCTransaction(deployerSigner) {
 (async () => {
   try {
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-    const safeTxHash = await ProposeAddTokenUSDCTransaction(deployerSigner);
+    const safeTxHash = await ProposeRemoveTokenUSDCTransaction(deployerSigner);
 
     // Approve transaction using additional signers
     const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
@@ -82,7 +84,7 @@ async function ProposeAddTokenUSDCTransaction(deployerSigner) {
     // Execute transaction
     const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
     await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
-    console.log("USDC added successfully!!!");
+    console.log("Token Succefully removed!!!");
   } catch (error) {
     console.error("Error processing transaction:", error);
   }

@@ -64,4 +64,4 @@ async function updateDestinationChainId(signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-updateDestinationChainId(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+// updateDestinationChainId(new ethers.Wallet(process.env.SECRET_KEY1, provider));

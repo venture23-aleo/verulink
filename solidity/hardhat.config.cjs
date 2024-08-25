@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomiclabs/hardhat-etherscan");
 require("hardhat-contract-sizer");
 require("dotenv").config()
 
@@ -11,7 +12,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 200,
+            runs: 400,
             details: { yul: false },
           }
         }
@@ -19,27 +20,39 @@ module.exports = {
     ]
   },
   networks: {
-    goerli: {
-      url: "https://eth-goerli.g.alchemy.com/v2/fLCeKO4GA9Gc3js8MUt9Djy7WHCFxATq",
-      accounts: [process.env.SECRET_KEY1]
-    },
     sepolia: {
       url: "https://rpc2.sepolia.org/",
-      accounts: [process.env.SECRET_KEY1,
-      process.env.SECRET_KEY2,
-      process.env.SECRET_KEY3,
-      process.env.SECRET_KEY4,
-      process.env.SECRET_KEY5,
-      process.env.SECRET_KEY6,
-      process.env.SECRET_KEY7]
+      accounts: [
+        process.env.SECRET_KEY1,
+        process.env.SECRET_KEY2,
+        process.env.SECRET_KEY3,
+        process.env.SECRET_KEY4,
+        process.env.SECRET_KEY5,
+        process.env.SECRET_KEY6,
+        process.env.SECRET_KEY7]
+    },
+    base: {
+      url: "https://sepolia.base.org",
+      accounts: [
+        process.env.SECRET_KEY1,
+        process.env.SECRET_KEY2,
+        process.env.SECRET_KEY3,
+        process.env.SECRET_KEY4,
+        process.env.SECRET_KEY5,
+        process.env.SECRET_KEY6,
+        process.env.SECRET_KEY7]
     },
   },
-
-  contractSizer: {
-    alphaSort: true,
-    runOnCompile: true
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_API_KEY,
+    }
   },
+  // contractSizer: {
+  //   alphaSort: true,
+  //   runOnCompile: true
+  // },
   mocha: {
     timeout: 100000000
-  }
+  },
 };

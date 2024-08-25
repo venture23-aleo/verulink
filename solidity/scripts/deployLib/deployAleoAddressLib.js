@@ -2,14 +2,18 @@ import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import * as dotenv from "dotenv";
 dotenv.config();
+import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://rpc2.sepolia.org"
+  );
   const AleoAddressLibrary = await ethers.getContractFactory("AleoAddressLibrary");
-  const [deployer] = await ethers.getSigners();
-  console.log("Deploying AleoAddressLibrary with the account:", deployer.address);
+  const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
   const aleoAddressLibrary = await AleoAddressLibrary.deploy();
   await aleoAddressLibrary.deployed();
-  console.log("AleoAddressLibrary Deployed to - ", aleoAddressLibrary.address);
+  updateEnvFile("AleoAddressLibrary", aleoAddressLibrary.address)
+  console.log("AleoAddressLibrary Deployed to:", aleoAddressLibrary.address);
 }
 main()
   .then(() => process.exit(0))

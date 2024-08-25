@@ -23,7 +23,7 @@ async function addToken(signer) {
     ethAdapter,
   });
 
-  const tokenAddress = process.env.ZERO_ADDRESS;
+  const tokenAddress = process.env.ONE_ADDRESS;
   const amount = ethers.utils.parseEther("0.001");
   // console.log("amount = ", amount);
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;

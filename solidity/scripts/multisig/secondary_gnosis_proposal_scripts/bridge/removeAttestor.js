@@ -11,7 +11,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 );
 console.log("ethers version = ", ethers.version);
 
-async function addAttestor(signer) {
+async function removeAttestor(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -22,11 +22,12 @@ async function addAttestor(signer) {
     ethAdapter,
   });
 
-  const attestor = "0x50Fb3B83A14edcBF070E9FB8D9395fb8587147da";
-  const newQuorumRequired = 2;
+  const attestor = "0x684C68bE1b58f61a33888E0eE3EA63f021d8CB0a";
+  const newQuorumRequired = 1;
   const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+      AleoAddressLibrary: process.env.AleoAddressLibrary,
     },
   });
   // console.log("ERC20TokenbridgeImpl = ", ERC20TokenbridgeImpl);
@@ -63,6 +64,6 @@ async function addAttestor(signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addAttestor(
+removeAttestor(
   new ethers.Wallet(process.env.SECRET_KEY1, provider)
 );

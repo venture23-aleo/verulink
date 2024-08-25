@@ -13,6 +13,10 @@ contract USDCMock is ERC20 {
         _mint(account, amount);
     }
 
+    function decimals() public view virtual override returns (uint8) {
+        return 6;
+    }
+
     function isBlacklisted(address account) public view returns (bool) {
         return blackLists[account];
     }

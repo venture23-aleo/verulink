@@ -12,7 +12,7 @@ const provider = new ethers.providers.JsonRpcProvider(
 );
 console.log("ethers version = ", ethers.version);
 
-async function addTokenService(signer) {
+async function removeTokenService(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
@@ -23,11 +23,12 @@ async function addTokenService(signer) {
     ethAdapter,
   });
 
-  const tokenService = "0x914d6560FF059Faa153201CBE73C95b6660085F1";
+  const tokenService = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11";
   const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
   const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+      AleoAddressLibrary: process.env.AleoAddressLibrary,
     },
   });
   const iface = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format());
@@ -62,4 +63,4 @@ async function addTokenService(signer) {
   await safeService.proposeTransaction(transactionConfig);
 }
 
-addTokenService(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+removeTokenService(new ethers.Wallet(process.env.SECRET_KEY1, provider));

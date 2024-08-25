@@ -1,57 +1,67 @@
 import * as dotenv from "dotenv";
-import hardhat from 'hardhat';
+import hardhat from "hardhat";
 const { ethers } = hardhat;
-import Safe, { SafeFactory } from "@safe-global/protocol-kit";
+import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
 import { CreateCallAbi } from "../secondary_gnosis_proposal_scripts/ABI/ABI.js";
-import { approveTransaction, executeTransaction, trimHexAddress, updateEnvFile } from "../utils.js"; // Assuming these utility functions are defined elsewhere
+import { approveTransaction, executeTransaction, trimHexAddress, updateEnvFile } from "../utils.js";
 
 dotenv.config();
 
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
-const provider = new ethers.providers.JsonRpcProvider(
-    "https://rpc2.sepolia.org"
-);
+const provider = new ethers.providers.JsonRpcProvider("https://rpc2.sepolia.org");
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-async function ProposeETHVaultServiceTransaction() {
-    const ETHVaultServiceImpl = await ethers.getContractFactory("EthVaultService");
+
+// Function to propose the Erc20Vault transaction
+async function ProposeErc20VaultUSDCTransaction() {
+    const Erc20VaultServiceImpl = await ethers.getContractFactory("Erc20VaultService");
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
     const bytecode = ProxyContract.bytecode;
 
+    const tokenAddr = process.env.USDC_ADDR;
     const ownerAddress = process.env.SAFE_ADDRESS;
+    const Erc20VaultService = process.env.ERC20VAULTSERVICEIMPL_ADDRESS_USDC;
 
-    const ETHVaultService = process.env.ETHVAULTSERVICEIMPL_ADDRESS;
-    const initializeData = new ethers.utils.Interface(ETHVaultServiceImpl.interface.format()).encodeFunctionData("EthVaultService_init", ["ETHVAULT", ownerAddress]);
-    const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [ETHVaultService, initializeData]);
+    const initializeData = new ethers.utils.Interface(Erc20VaultServiceImpl.interface.format()).encodeFunctionData(
+        "Erc20VaultService_init",
+        [tokenAddr, "ERC20VAULT", ownerAddress]
+    );
+
+    const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [Erc20VaultService, initializeData]);
 
     // Encode deployment
     const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
     const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
         0,
-        bytecode + _data.slice(2)
+        bytecode + _data.slice(2),
     ]);
 
     const ethAdapter = new EthersAdapter({
         ethers,
         signerOrProvider: deployerSigner,
     });
+
     const safeService = new SafeApiKit.default({
         txServiceUrl: "https://safe-transaction-sepolia.safe.global",
         ethAdapter,
     });
+
     const txData = {
         to: process.env.CREATECALL_CONTRACT_ADDRESS,
         value: "0",
         data: deployCallData,
     };
+
     const safeSdk = await Safe.default.create({
         ethAdapter: ethAdapter,
         safeAddress: SAFE_ADDRESS,
     });
+
     const safeTx = await safeSdk.createTransaction({
         safeTransactionData: txData,
     });
+
     const safeTxHash = await safeSdk.getTransactionHash(safeTx);
     const signature = await safeSdk.signTypedData(safeTx);
 
@@ -70,7 +80,7 @@ async function ProposeETHVaultServiceTransaction() {
 
 (async () => {
     try {
-        const safeTxHash = await ProposeETHVaultServiceTransaction();
+        const safeTxHash = await ProposeErc20VaultUSDCTransaction();
 
         // Approve transaction using additional signers
         const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
@@ -88,8 +98,8 @@ async function ProposeETHVaultServiceTransaction() {
         const trimmedAddress = trimHexAddress(hexAddress);
 
         // Update the .env file with the new contract address
-        updateEnvFile("ETHVAULTSERVICEPROXY_ADDRESS", ethers.utils.getAddress(trimmedAddress));
-        console.log("ETHVAULTSERVICEPROXY Contract Address:", ethers.utils.getAddress(trimmedAddress));
+        updateEnvFile("ERC20VAULTSERVICEPROXY_ADDRESS_USDT", ethers.utils.getAddress(trimmedAddress));
+        console.log("ERC20VAULTSERVICEPROXY_USDT Contract Address:", ethers.utils.getAddress(trimmedAddress));
     } catch (error) {
         console.error("Error processing transaction:", error);
     }

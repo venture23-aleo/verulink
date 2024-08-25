@@ -2,14 +2,18 @@ import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import * as dotenv from "dotenv";
 dotenv.config();
+import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://rpc2.sepolia.org"
+  );
   const PacketLibrary = await ethers.getContractFactory("PacketLibrary");
-  const [deployer] = await ethers.getSigners();
-  console.log("Deploying PacketLibrary with the account:", deployer.address);
+  const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
   const packetLibrary = await PacketLibrary.deploy();
   await packetLibrary.deployed();
-  console.log("PacketLibrary Deployed to - ", packetLibrary.address);
+  updateEnvFile("PACKET_LIBRARY_CONTRACT_ADDRESS", packetLibrary.address)
+  console.log("PacketLibrary Deployed to:", packetLibrary.address);
 }
 main()
   .then(() => process.exit(0))

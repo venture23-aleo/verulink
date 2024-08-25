@@ -3,19 +3,20 @@ const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-
 import * as dotenv from "dotenv";
 dotenv.config();
+import { approveTransaction, executeTransaction } from "../utils.js";
+
+const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
   "https://rpc2.sepolia.org"
 );
-console.log("ethers version = ", ethers.version);
 
-async function addTokenETH(signer) {
+async function ProposeAddTokenETHTransaction(deployerSigner) {
   const ethAdapter = new EthersAdapter({
     ethers,
-    signerOrProvider: signer,
+    signerOrProvider: deployerSigner,
   });
 
   const safeService = new SafeApiKit.default({
@@ -23,13 +24,13 @@ async function addTokenETH(signer) {
     ethAdapter,
   });
 
-  const tokenAddress = process.env.ZERO_ADDRESS;
+  const tokenAddress = process.env.ONE_ADDRESS;
   const vault = process.env.ETHVAULTSERVICEPROXY_ADDRESS;
   const destChainId = "6694886634403";
-  const destTokenAddress = "aleo1s7ewgjkuhxr7a9u6vjmst4khchkggxemqazrs8vy54x3prt74upqy6aveq";
-  const destTokenService = "aleo18wf4ggxpmey0hk3drgefdgup9xnudgekas9lvpzut3f4cf8scuzq78j08l";
+  const destTokenAddress = "8407163152768679817200595503789898686435014956247376136715234463968754771120field";
+  const destTokenService = "aleo1rqps4l9fxw8mgpcqf7ljkwv3995nu460cd374s6q76v5jlmrngpsv4uxr4";
   const min = "10";
-  const max = "990000000000000000000000";
+  const max = "1000000000000000000000000";
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");
@@ -51,7 +52,6 @@ async function addTokenETH(signer) {
   });
   const safeTxHash = await safeSdk.getTransactionHash(safeTx);
 
-  console.log("txn hash", safeTxHash);
   const signature = await safeSdk.signTypedData(safeTx);
 
   const transactionConfig = {
@@ -63,6 +63,27 @@ async function addTokenETH(signer) {
   };
 
   await safeService.proposeTransaction(transactionConfig);
+
+  return safeTxHash;
 }
 
-addTokenETH(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+(async () => {
+  try {
+    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const safeTxHash = await ProposeAddTokenETHTransaction(deployerSigner);
+
+    // Approve transaction using additional signers
+    const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+    const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+    await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+
+    // Execute transaction
+    const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+    await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
+    console.log("ETH added successfully!!!");
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+  }
+})();

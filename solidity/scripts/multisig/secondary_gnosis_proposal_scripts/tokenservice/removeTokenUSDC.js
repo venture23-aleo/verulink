@@ -24,11 +24,10 @@ async function removeTokenUSDC(signer) {
   });
 
   const tokenAddress = process.env.USDC_ADDR;
-  const destChainId = "6694886634403";
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");
   const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("removeToken", [tokenAddress, destChainId]);
+  const calldata = iface.encodeFunctionData("removeToken", [tokenAddress]);
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
