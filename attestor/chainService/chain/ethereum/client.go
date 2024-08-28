@@ -344,7 +344,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
 			zap.String("namespace", baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
+		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(),1)
 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
