@@ -108,7 +108,7 @@ func (cl *Client) Name() string {
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
 	ns := baseSeqNumNameSpacePrefix + chainID
 	startSeqNum, _ := store.GetStartingSeqNumAndHeight(ns)
-	cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), chainID,float64(startSeqNum))
+	cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), chainID, float64(startSeqNum))
 
 	if nextSeqNum < startSeqNum {
 		nextSeqNum = startSeqNum
@@ -195,8 +195,10 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
 	h, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting height", zap.Error(err))
+		cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 0)
 		return 0
 	}
+	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 1)
 	return h - cl.waitHeight
 }
 
@@ -219,7 +221,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			index = 0
 		}
 		logger.GetLogger().Info("pruning base sequence number", zap.String("namespace", baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.name, 1)
+		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		var (
 			startSeqNum, endSeqNum uint64
@@ -318,7 +320,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
-			cl.metrics.UpdateProcessedSequence(logger.AttestorName,pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(),float64(pkt.Sequence))
+			cl.metrics.UpdateProcessedSequence(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), float64(pkt.Sequence))
 		}
 	}
 }

@@ -160,9 +160,10 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting current height")
+		cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 0)
 		return 0, err
 	}
-
+	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 1)
 	return curHeight - cl.waitHeight, nil // total number of blocks that has to be passed in the waiting duration
 }
 
@@ -227,7 +228,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 	for dest := range cl.destChainsIDMap {
 		ns := baseSeqNumNameSpacePrefix + dest
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
-		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest,float64(startSeqNum))
+		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
 
 		if startHeight < baseHeight {
 			baseHeight = startHeight
@@ -343,7 +344,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
 			zap.String("namespace", baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.name, 1)
+		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")

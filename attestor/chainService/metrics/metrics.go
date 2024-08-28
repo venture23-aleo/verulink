@@ -27,6 +27,8 @@ type PrometheusMetrics struct {
 	VersionInfo                  *prometheus.GaugeVec
 	StartSequenceNo              *prometheus.GaugeVec
 	ProcessedSequenceNo          *prometheus.GaugeVec
+	AleoRPCSignal                *prometheus.GaugeVec
+	EhtereumRPCSignal            *prometheus.GaugeVec
 }
 
 func (m *PrometheusMetrics) StartVersion(attestorName string, version string) {
@@ -63,6 +65,14 @@ func (m *PrometheusMetrics) StoredSequenceNo(attestorName string, sourceChain st
 
 func (m *PrometheusMetrics) UpdateProcessedSequence(attestorName string, sourceChain string, destinationChain string, sequenceNo float64) {
 	m.ProcessedSequenceNo.WithLabelValues(attestorName, sourceChain, destinationChain).Set(sequenceNo)
+}
+
+func (m *PrometheusMetrics) UpdateAleoRPCStatus(attestorName string, sourceChain string, value float64) {
+	m.AleoRPCSignal.WithLabelValues(attestorName, sourceChain).Set(value)
+}
+
+func (m *PrometheusMetrics) UpdateEthRPCStatus(attestorName string, sourceChain string, value float64) {
+	m.EhtereumRPCSignal.WithLabelValues(attestorName, sourceChain).Set(value)
 }
 
 func NewPrometheusMetrics() *PrometheusMetrics {
@@ -124,6 +134,18 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 			Help: "Info for recieved sequence of attestor",
 		}, packetLables)
 
+	aleoRPC := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "aleo_rpc_status",
+			Help: "Status of the aleo rpc",
+		}, []string{"attestor_name", "chain_id"})
+
+	ethRPC := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "eth_rpc_status",
+			Help: "Status of the eth rpc",
+		}, []string{"attestor_name", "chain_id"})
+
 	registry.MustRegister(inPacketsCounter)
 	registry.MustRegister(outPacktesCounter)
 	registry.MustRegister(attestorHealth)
@@ -133,6 +155,8 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 	registry.MustRegister(versionInfo)
 	registry.MustRegister(startSeqInfo)
 	registry.MustRegister(processedSeqInfo)
+	registry.MustRegister(aleoRPC)
+	registry.MustRegister(ethRPC)
 
 	return &PrometheusMetrics{
 		Registry:                     registry,
@@ -145,6 +169,8 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		VersionInfo:                  versionInfo,
 		StartSequenceNo:              startSeqInfo,
 		ProcessedSequenceNo:          processedSeqInfo,
+		AleoRPCSignal:                aleoRPC,
+		EhtereumRPCSignal:            ethRPC,
 	}
 }
 
