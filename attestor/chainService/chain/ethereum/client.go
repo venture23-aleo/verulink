@@ -160,10 +160,10 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting current height")
-		cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 0)
+		cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), 0)
 		return 0, err
 	}
-	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 1)
+	cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), 1)
 	return curHeight - cl.waitHeight, nil // total number of blocks that has to be passed in the waiting duration
 }
 
