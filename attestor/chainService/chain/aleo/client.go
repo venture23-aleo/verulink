@@ -221,7 +221,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			index = 0
 		}
 		logger.GetLogger().Info("pruning base sequence number", zap.String("namespace", baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), 1)
+		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		var (
 			startSeqNum, endSeqNum uint64
