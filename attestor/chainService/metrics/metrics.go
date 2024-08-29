@@ -102,7 +102,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		prometheus.GaugeOpts{
 			Name: "chainservice_health",
 			Help: "Shows the chainservice health",
-		}, []string{"attestor_name", "client_name"})
+		}, []string{"attestor_name", "chain_id"})
 
 	dbServiceHealth := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
