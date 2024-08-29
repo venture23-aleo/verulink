@@ -156,7 +156,7 @@ program token_service.aleo {
             chain_id: chain_id,
             token_id: token_id
         };
-        Mapping::contains(other_chain_token_service, chaintokeninfo);
+        assert(Mapping::contains(other_chain_token_service, chaintokeninfo));
         Mapping::set(other_chain_token_service, chaintokeninfo, pad_20_to_32(token_service_address));
     }
 
@@ -177,7 +177,7 @@ program token_service.aleo {
             chain_id: chain_id,
             token_id: token_id
         };
-        Mapping::contains(other_chain_token_address, chaintokeninfo);
+        assert(Mapping::contains(other_chain_token_address, chaintokeninfo));
         Mapping::set(other_chain_token_address, chaintokeninfo, pad_20_to_32(token_address));
     }
 
