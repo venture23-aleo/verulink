@@ -1,8 +1,8 @@
 use rand_chacha::{ChaChaRng, rand_core::SeedableRng};
-use snarkvm_console_account::{PrivateKey,Signature};
-use snarkvm_console_algorithms::{ ToFields,ToBits, Address};
-use snarkvm_console_network::Testnet3;
-use snarkvm_console_program::{Plaintext, Literal, Network, LiteralType};
+use snarkvm::console::account::{PrivateKey,Signature};
+use snarkvm::console::algorithms::{ToFields, ToBits,Address};
+use snarkvm::console::network::MainnetV0;
+use snarkvm::console::program::{Plaintext,Literal,Network, LiteralType};
 use wasm_bindgen::prelude::*;
 
 use std::{str::FromStr, env};
@@ -44,23 +44,23 @@ pub fn main() {
 }
 
 pub fn sign(private_key: &str, message: &str) -> String {
-    let input = Plaintext::<Testnet3>::from_str(message).unwrap();
-    let account = PrivateKey::<Testnet3>::from_str(private_key).unwrap();
+    let input = Plaintext::<MainnetV0>::from_str(message).unwrap();
+    let account = PrivateKey::<MainnetV0>::from_str(private_key).unwrap();
     let mut rng: rand_chacha::ChaCha20Rng = ChaChaRng::from_entropy();
     let signature = account.sign(&input.to_fields().unwrap(), &mut rng).unwrap();
     signature.to_string()
 }
 
 pub fn derive_address(private_key: &str) -> String {
-    let account = PrivateKey::<Testnet3>::from_str(private_key).unwrap();
+    let account = PrivateKey::<MainnetV0>::from_str(private_key).unwrap();
     let address = Address::try_from(account).unwrap().to_string();
     address
 }
 
 pub fn sign_verify(sign: &str, address: &str, message: &str) -> bool {
-    let signature = Signature::<Testnet3>::from_str(sign).unwrap();
-    let address = Address::<Testnet3>::from_str(address).unwrap();
-    let message = Plaintext::<Testnet3>::from_str(message).unwrap();
+    let signature = Signature::<MainnetV0>::from_str(sign).unwrap();
+    let address = Address::<MainnetV0>::from_str(address).unwrap();
+    let message = Plaintext::<MainnetV0>::from_str(message).unwrap();
     signature.verify(&address, &message.to_fields().unwrap())
 }
 
@@ -80,20 +80,20 @@ pub fn help() {
 
 #[wasm_bindgen]
 pub fn hash(algorithm: &str, val: &str, output: &str) -> String {
-    let input = Plaintext::<Testnet3>::from_str(val).unwrap();
+    let input = Plaintext::<MainnetV0>::from_str(val).unwrap();
     let destination = LiteralType::from_str(output).unwrap();
 
     let output = match algorithm {
-        "bhp256" => Testnet3::hash_to_group_bhp256(&input.to_bits_le()).unwrap(),
-        "bhp512" => Testnet3::hash_to_group_bhp512(&input.to_bits_le()).unwrap(),
-        "bhp768" => Testnet3::hash_to_group_bhp768(&input.to_bits_le()).unwrap(),
-        "bhp1024" => Testnet3::hash_to_group_bhp1024(&input.to_bits_le()).unwrap(),
-        "keccak256" => Testnet3::hash_to_group_bhp256(&Testnet3::hash_keccak256(&input.to_bits_le()).unwrap()).unwrap(),
-        "ped64" => Testnet3::hash_to_group_ped64(&input.to_bits_le()).unwrap(),
-        "ped128" => Testnet3::hash_to_group_ped128(&input.to_bits_le()).unwrap(),
-        "sha3_256" => Testnet3::hash_to_group_bhp256(&Testnet3::hash_sha3_256(&input.to_bits_le()).unwrap()).unwrap(),
-        "sha3_384" => Testnet3::hash_to_group_bhp512(&Testnet3::hash_sha3_384(&input.to_bits_le()).unwrap()).unwrap(),
-        "sha3_512" => Testnet3::hash_to_group_bhp512(&Testnet3::hash_sha3_512(&input.to_bits_le()).unwrap()).unwrap(),
+        "bhp256" => MainnetV0::hash_to_group_bhp256(&input.to_bits_le()).unwrap(),
+        "bhp512" => MainnetV0::hash_to_group_bhp512(&input.to_bits_le()).unwrap(),
+        "bhp768" => MainnetV0::hash_to_group_bhp768(&input.to_bits_le()).unwrap(),
+        "bhp1024" => MainnetV0::hash_to_group_bhp1024(&input.to_bits_le()).unwrap(),
+        "keccak256" => MainnetV0::hash_to_group_bhp256(&MainnetV0::hash_keccak256(&input.to_bits_le()).unwrap()).unwrap(),
+        "ped64" => MainnetV0::hash_to_group_ped64(&input.to_bits_le()).unwrap(),
+        "ped128" => MainnetV0::hash_to_group_ped128(&input.to_bits_le()).unwrap(),
+        "sha3_256" => MainnetV0::hash_to_group_bhp256(&MainnetV0::hash_sha3_256(&input.to_bits_le()).unwrap()).unwrap(),
+        "sha3_384" => MainnetV0::hash_to_group_bhp512(&MainnetV0::hash_sha3_384(&input.to_bits_le()).unwrap()).unwrap(),
+        "sha3_512" => MainnetV0::hash_to_group_bhp512(&MainnetV0::hash_sha3_512(&input.to_bits_le()).unwrap()).unwrap(),
         _ => panic!("algorithm not supported")
     };
     let literal_output = Literal::Group(output);
@@ -107,7 +107,7 @@ fn test_sign() {
     let message = "1233032529535352533537970719453602118145153682706641379905676168317090198721field";
     let signature = sign(private_key, message);
 
-    let account = PrivateKey::<Testnet3>::from_str(private_key).unwrap();
+    let account = PrivateKey::<MainnetV0>::from_str(private_key).unwrap();
     let address = Address::try_from(account).unwrap().to_string();
 
    assert!(sign_verify(&signature, &address, message))
