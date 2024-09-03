@@ -128,6 +128,6 @@ func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
 }
 
 // CollectorResponse is a struct that represent the response sent by collector on ok
-type CollectorResponsestruct struct{
+type CollectorResponse struct{
 	Message string `json:"message"`
 }
