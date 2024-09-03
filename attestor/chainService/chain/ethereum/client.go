@@ -42,6 +42,8 @@ const (
 	// is no gap between subsequent keys.
 	defaultPruneBaseSeqWaitDur = time.Hour * 6
 	retrievePacketNum          = 10 // total number of retry-packets to expect in single query
+	UP                         = 1
+	DOWN                       = 0
 )
 
 // Namespaces
@@ -160,10 +162,10 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting current height")
-		cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), 0)
+		cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), DOWN)
 		return 0, err
 	}
-	cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), 1)
+	cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), UP)
 	return curHeight - cl.waitHeight, nil // total number of blocks that has to be passed in the waiting duration
 }
 

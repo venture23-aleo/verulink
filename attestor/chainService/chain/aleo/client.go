@@ -25,6 +25,8 @@ const (
 	defaultRetryPacketWaitDur  = time.Hour
 	defaultPruneBaseSeqWaitDur = time.Hour
 	nullString                 = "null"
+	UP                         = 1
+	DOWN                       = 0
 )
 
 // Namespaces
@@ -195,10 +197,10 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
 	h, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting height", zap.Error(err))
-		cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 0)
+		cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), DOWN)
 		return 0
 	}
-	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), 1)
+	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), UP)
 	return h - cl.waitHeight
 }
 
