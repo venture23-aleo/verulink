@@ -163,12 +163,9 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 
 	r, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode == http.StatusCreated {
-		var response = &struct {
-			Message string `json:"message"`
-		}{}
+		var response chain.CollectorResponse
 
-		err = json.Unmarshal(r, response)
-		if err != nil {
+		if err := json.Unmarshal(r, &response); err != nil {
 			return err
 		}
 		if response.Message == "Duplicate packet" {

@@ -9,6 +9,8 @@ import (
 	"math/big"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"go.uber.org/zap"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 )
 
@@ -112,7 +114,7 @@ func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
 	}{}
 
 	if err := json.Unmarshal(data, &mPKt); err != nil {
-		fmt.Println(err)
+		logger.GetLogger().Error("Error while unmarshaling missed packet ", zap.Error(err))
 		return err
 	}
 
@@ -123,4 +125,9 @@ func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
 	packet.Height = mPKt.Height
 	packet.TxnID = mPKt.TxnID
 	return nil
+}
+
+// CollectorResponse is a struct that represent the response sent by collector on ok
+type CollectorResponsestruct struct{
+	Message string `json:"message"`
 }
