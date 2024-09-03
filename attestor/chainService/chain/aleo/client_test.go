@@ -390,6 +390,7 @@ func TestManagePacket2(t *testing.T) {
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
+		metrics:             newMetrics(),
 	}
 
 	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
