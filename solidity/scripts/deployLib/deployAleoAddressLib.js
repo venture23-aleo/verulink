@@ -6,10 +6,9 @@ import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
   const provider = new ethers.providers.JsonRpcProvider(
-    "https://rpc2.sepolia.org"
-  );
+    process.env.PROVIDER
+);
   const AleoAddressLibrary = await ethers.getContractFactory("AleoAddressLibrary");
-  const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
   const aleoAddressLibrary = await AleoAddressLibrary.deploy();
   await aleoAddressLibrary.deployed();
   updateEnvFile("AleoAddressLibrary", aleoAddressLibrary.address)

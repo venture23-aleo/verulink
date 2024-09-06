@@ -6,16 +6,15 @@ import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
 
-    const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const ETHVaultService = await ethers.getContractFactory("EthVaultService");
     
     const ethVaultServiceImpl = await ETHVaultService.deploy();
     await ethVaultServiceImpl.deployed();
-    // updateEnvFile("ETHVAULTSERVICEIMPL_ADDRESS", ethVaultServiceImpl.address)
+    updateEnvFile("ETHVAULTSERVICEIMPL_ADDRESS", ethVaultServiceImpl.address)
     console.log("ETHVaultService Impl Deployed to: ", ethVaultServiceImpl.address);
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
@@ -24,11 +23,7 @@ async function main() {
     const ethVaultServiceProxy = await ProxyContract.deploy(ethVaultServiceImpl.address, initializeData);
     await ethVaultServiceProxy.deployed();
 
-    const ETHVaultServiceABI = ETHVaultService.interface.format();
-    const ETHVaultServiceContract = new ethers.Contract(ethVaultServiceProxy.address, ETHVaultServiceABI, deployerSigner);
-    // await ETHVaultServiceContract.transferOwnership(SAFE_ADDRESS);
-
-    // updateEnvFile("ETHVAULTSERVICEPROXY_ADDRESS", ethVaultServiceProxy.address)
+    updateEnvFile("ETHVAULTSERVICEPROXY_ADDRESS", ethVaultServiceProxy.address)
     console.log("ETHVaultService Proxy Deployed to: ", ethVaultServiceProxy.address);
 }
 main()

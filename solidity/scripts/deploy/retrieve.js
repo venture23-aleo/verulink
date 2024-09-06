@@ -5,21 +5,15 @@ dotenv.config();
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
-
-    const addr = process.env.ATTESTOR3;
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-    const Bridge = await ethers.getContractFactory("Bridge", {
-        libraries: {
-            PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-            AleoAddressLibrary: process.env.AleoAddressLibrary,
-        },
-    });
-    const bridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-    const BridgeABI = Bridge.interface.format();
-    const BridgeContract = new ethers.Contract(bridgeProxyAddress, BridgeABI, deployerSigner);
-    console.log(await BridgeContract.isAttestor(addr));
+    const BlackListService = await ethers.getContractFactory("BlackListService");
+    const blackListServiceProxyAddress = process.env.BLACKLISTSERVICEPROXY_ADDRESS;
+
+    const BlackListServiceABI = BlackListService.interface.format();
+    const BlackListServiceContract = new ethers.Contract(blackListServiceProxyAddress, BlackListServiceABI, deployerSigner);
+    console.log(await BlackListServiceContract.add(2, 3));
 }
 main()
     .then(() => process.exit(0))

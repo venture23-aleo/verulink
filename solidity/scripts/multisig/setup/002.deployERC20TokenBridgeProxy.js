@@ -10,7 +10,9 @@ import { approveTransaction, executeTransaction, trimHexAddress, updateEnvFile }
 dotenv.config();
 
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
-const provider = new ethers.providers.JsonRpcProvider("https://rpc2.sepolia.org");
+const provider = new ethers.providers.JsonRpcProvider(
+    process.env.PROVIDER
+);
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 
 async function ProposeTransaction() {
@@ -23,7 +25,7 @@ async function ProposeTransaction() {
     });
 
     const bytecode = ProxyContract.bytecode;
-    const destChainId = "6694886634403";
+    const destChainId = process.env.aleoChainId;
     const owner = process.env.SAFE_ADDRESS;
 
     const tokenbridgeimplementationAddress = process.env.TOKENBRIDGEIMPLEMENTATION_ADDRESS;
@@ -43,7 +45,7 @@ async function ProposeTransaction() {
     });
 
     const safeService = new SafeApiKit.default({
-        txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+        txServiceUrl: process.env.txServiceUrl,
         ethAdapter,
     });
 

@@ -5,16 +5,16 @@ dotenv.config();
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
 
     const tokenAddress = process.env.ONE_ADDRESS;
     const vault = process.env.ETHVAULTSERVICEPROXY_ADDRESS;
-    const destChainId = "6694886634403";
-    const destTokenAddress = "8407163152768679817200595503789898686435014956247376136715234463968754771120field";
-    const destTokenService = "aleo19250rwuhvzuee3hm7uah4d2a5ghmgvkccnxwq92txudaq4yesgxqh3gfra";
-    const min = "10";
-    const max = "1000000000000000000000000";
+    const destChainId = process.env.aleoChainId;
+    const destTokenAddress = process.env.destTokenAddressWETH;
+    const destTokenService = process.env.destTokenService;
+    const min = process.env.minWETH;
+    const max = process.env.maxWETH;
 
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const ERC20TokenService = await ethers.getContractFactory("TokenService");

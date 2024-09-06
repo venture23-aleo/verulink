@@ -7,41 +7,32 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { approveTransaction, executeTransaction } from "../utils.js";
 
-const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
+const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER);
 
-const provider = new ethers.providers.JsonRpcProvider(
-  process.env.PROVIDER
-);
-
-async function ProposeRemoveAttestorTransaction(deployerSigner) {
+async function proposeOwnershipTransferBlackListTransaction(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
-    signerOrProvider: deployerSigner,
+    signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
     txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-});
-
-  const attestor = process.env.ATTESTOR1;
-  const newQuorumRequired = process.env.NewQuorumRequired;
-  const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
-    libraries: {
-      PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-      AleoAddressLibrary: process.env.AleoAddressLibrary,
-    },
   });
-  const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-  const iface = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format());
-  const calldata = iface.encodeFunctionData("removeAttestor", [attestor, newQuorumRequired]);
+
+  const newowner = process.env.SENDER_ADDRESS;
+  const BlackListServiceProxy = process.env.BLACKLISTSERVICEPROXY_ADDRESS;
+  const BlackListService = await ethers.getContractFactory("BlackListService");
+  const iface = new ethers.utils.Interface(BlackListService.interface.format());
+  const calldata = iface.encodeFunctionData("transferOwnership", [newowner]);
+
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
   });
 
   const txData = {
-    to: tokenbridgeProxyAddress,
+    to: ethers.utils.getAddress(BlackListServiceProxy),
     value: "0",
     data: calldata,
   };
@@ -69,19 +60,20 @@ async function ProposeRemoveAttestorTransaction(deployerSigner) {
 (async () => {
   try {
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-    const safeTxHash = await ProposeRemoveAttestorTransaction(deployerSigner);
+    const safeTxHash = await proposeOwnershipTransferBlackListTransaction(deployerSigner);
 
     // Approve transaction using additional signers
     const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
     const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
 
-    await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
-    await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, secondSigner, process.env.SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, process.env.SAFE_ADDRESS);
 
     // Execute transaction
     const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
-    await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
-    console.log("Attestor Succefully removed!!!");
+    await executeTransaction(safeTxHash, executor, process.env.SAFE_ADDRESS);
+
+    console.log("Ownership Transferred!");
   } catch (error) {
     console.error("Error processing transaction:", error);
   }

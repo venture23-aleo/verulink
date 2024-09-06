@@ -10,7 +10,7 @@ import { approveTransaction, executeTransaction } from "../utils.js";
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
+  process.env.PROVIDER
 );
 
 async function ProposeAddTokenUSDCTransaction(deployerSigner) {
@@ -20,17 +20,17 @@ async function ProposeAddTokenUSDCTransaction(deployerSigner) {
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-  });
+});
 
   const tokenAddress = process.env.USDC_ADDR;
   const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS_USDC;
-  const destChainId = "6694886634403";
-  const destTokenAddress = "5595373416687012447808431171621112175713243308139308694591328825799485714900field";
-  const destTokenService = "aleo1rqps4l9fxw8mgpcqf7ljkwv3995nu460cd374s6q76v5jlmrngpsv4uxr4";
-  const min = "10";
-  const max = "1000000000000000000000000";
+  const destChainId = process.env.aleoChainId;
+  const destTokenAddress = process.env.destTokenAddress;
+  const destTokenService = process.env.destTokenService;
+  const min = process.env.min;
+  const max = process.env.max;
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");

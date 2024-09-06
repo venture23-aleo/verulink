@@ -5,21 +5,22 @@ dotenv.config();
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-    const newOwner = new ethers.Wallet(process.env.SECRET_KEY5, provider);
+    const newOwner = process.env.SAFE_ADDRESS;
     const Bridge = await ethers.getContractFactory("Bridge", {
         libraries: {
             PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+            AleoAddressLibrary: process.env.AleoAddressLibrary,
         },
     });
+
     const bridgeProxy = process.env.TOKENBRIDGEPROXY_ADDRESS;
-    let BridgeABI = Bridge.interface.format();
+    console.log("Transferring Ownership of Bridge to = ", newOwner);
+    const BridgeABI = Bridge.interface.format();
     const BridgeCotract = new ethers.Contract(bridgeProxy, BridgeABI, deployerSigner);
-    console.log("Transferring Ownership to = ", newOwner.address);
-    await BridgeCotract.transferOwnership(newOwner.address);
-    console.log("BridgeCotract New Owner = ", await BridgeCotract.owner());
+    await BridgeCotract.transferOwnership(newOwner);
 }
 main()
     .then(() => process.exit(0))

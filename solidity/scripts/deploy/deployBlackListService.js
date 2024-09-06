@@ -6,12 +6,12 @@ import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
 
     const usdc = process.env.USDC_ADDR;
     const usdt = process.env.USDT_ADDR;
-    const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
+    // const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const BlackListService = await ethers.getContractFactory("BlackListService");
@@ -26,9 +26,6 @@ async function main() {
 
     const blackListServiceProxy = await ProxyContract.deploy(blackListServiceImpl.address, initializeData);
     await blackListServiceProxy.deployed();
-    const BlackListServiceABI = BlackListService.interface.format();
-    const BlackListServiceContract = new ethers.Contract(blackListServiceProxy.address, BlackListServiceABI, deployerSigner);
-    await BlackListServiceContract.transferOwnership(SAFE_ADDRESS);
 
     updateEnvFile("BLACKLISTSERVICEPROXY_ADDRESS", blackListServiceProxy.address)
     console.log("BlackListService Proxy Deployed to: ", blackListServiceProxy.address);

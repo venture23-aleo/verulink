@@ -11,9 +11,8 @@ dotenv.config();
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
+  process.env.PROVIDER
 );
-console.log("ethers version = ", ethers.version);
 
 async function ProposeRemoveTokenUSDCTransaction(signer) {
   const ethAdapter = new EthersAdapter({
@@ -22,18 +21,11 @@ async function ProposeRemoveTokenUSDCTransaction(signer) {
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-  });
+});
 
   const tokenAddress = process.env.USDT_ADDR;
-  // const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS;
-  // const destChainId = "6694886634403";
-  // const destTokenAddress = "aleo1s7ewgjkuhxr7a9u6vjmst4khchkggxemqazrs8vy54x3prt74upqy6aveq";
-  // const destTokenService = "aleo18wf4ggxpmey0hk3drgefdgup9xnudgekas9lvpzut3f4cf8scuzq78j08l";
-  // const min = "10";
-  // const max = "1000000000000000000000000";
-
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");
   const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());

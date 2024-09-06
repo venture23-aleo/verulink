@@ -10,7 +10,7 @@ import { approveTransaction, executeTransaction } from "../utils.js";
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
+  process.env.PROVIDER
 );
 
 async function ProposeAddTokenServiceTransaction(deployerSigner) {
@@ -20,9 +20,9 @@ async function ProposeAddTokenServiceTransaction(deployerSigner) {
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-  });
+});
 
   const tokenService = process.env.TOKENSERVICEPROXY_ADDRESS;
   const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;

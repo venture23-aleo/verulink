@@ -12,7 +12,9 @@ const { ethers } = hardhat;
 
 // Initialize provider and signer
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
-const provider = new ethers.providers.JsonRpcProvider("https://rpc2.sepolia.org");
+const provider = new ethers.providers.JsonRpcProvider(
+    process.env.PROVIDER
+); 
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 
 async function ProposeTransaction() {
@@ -38,7 +40,7 @@ async function ProposeTransaction() {
     });
 
     const safeService = new SafeApiKit.default({
-        txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+        txServiceUrl: process.env.txServiceUrl,
         ethAdapter,
     });
 

@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import Safe, { SafeFactory } from "@safe-global/protocol-kit";
+import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
 import { CreateCallAbi } from "../secondary_gnosis_proposal_scripts/ABI/ABI.js";
@@ -11,7 +11,7 @@ dotenv.config();
 
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(
-    "https://rpc2.sepolia.org"
+    process.env.PROVIDER
 );
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
 async function ProposeETHVaultServiceTransaction() {
@@ -37,7 +37,7 @@ async function ProposeETHVaultServiceTransaction() {
         signerOrProvider: deployerSigner,
     });
     const safeService = new SafeApiKit.default({
-        txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+        txServiceUrl: process.env.txServiceUrl,
         ethAdapter,
     });
     const txData = {

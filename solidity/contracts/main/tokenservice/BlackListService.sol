@@ -63,7 +63,6 @@ contract BlackListService is IBlackListService, OwnableUpgradeable, Upgradeable 
         delete blackLists[account];
     }
 
-
     /// @notice Checks if an account is blacklisted
     /// @param account The address of the account to check
     /// @return true if the account is blacklisted, false otherwise

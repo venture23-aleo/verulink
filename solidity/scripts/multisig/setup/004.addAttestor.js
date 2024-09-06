@@ -10,7 +10,7 @@ import { approveTransaction, executeTransaction } from "../utils.js";
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
+  process.env.PROVIDER
 );
 
 async function ProposeAddAttestorTransaction(deployerSigner) {
@@ -20,12 +20,12 @@ async function ProposeAddAttestorTransaction(deployerSigner) {
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-  });
+});
 
-  const attestor = process.env.ATTESTOR4;
-  const newQuorumRequired = 4;
+  const attestor = process.env.ATTESTOR1;
+  const newQuorumRequired = process.env.NewQuorumRequired;
   const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,

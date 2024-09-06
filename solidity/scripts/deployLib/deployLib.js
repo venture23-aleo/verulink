@@ -6,10 +6,9 @@ import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
   const provider = new ethers.providers.JsonRpcProvider(
-    "https://rpc2.sepolia.org"
-  );
+    process.env.PROVIDER
+);
   const PacketLibrary = await ethers.getContractFactory("PacketLibrary");
-  const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
   const packetLibrary = await PacketLibrary.deploy();
   await packetLibrary.deployed();
   updateEnvFile("PACKET_LIBRARY_CONTRACT_ADDRESS", packetLibrary.address)
