@@ -457,4 +457,34 @@ program token_service_council.aleo
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
+
+    //////////////////////////////////////////////////////
+    ///////  Token Service : Remove Token Service ////////
+    //////////////////////////////////////////////////////
+
+    struct RemoveOtherChainAddresses {
+        id: u32,
+        chain_id: u128,
+        token_id: field,
+    }
+
+    transition ts_remove_other_chain_addresses(
+        public id: u32,
+        public chain_id: u128,
+        public token_id: field,
+        public voters: [address; 5],
+    ) {
+        let proposal: RemoveOtherChainAddresses  = RemoveOtherChainAddresses {
+            id,
+            chain_id,
+            token_id, 
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        token_service.aleo/remove_other_chain_addresses(chain_id, token_id);
+
+        council.aleo/external_execute(id, proposal_hash, voters);
+    }
+
 }

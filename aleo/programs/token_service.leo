@@ -181,6 +181,31 @@ program token_service.aleo {
         Mapping::set(other_chain_token_address, chaintokeninfo, pad_20_to_32(token_address));
     }
 
+    /////////////////////////////////////////////////
+    ///// REmove token_service of other chain ///////
+    /////////////////////////////////////////////////
+    transition remove_other_chain_addresses(
+        public chain_id: u128,
+        public token_id: field,
+    ) {
+        return then finalize(self.caller, chain_id, token_id);
+    }
+    finalize remove_other_chain_addresses(from:address, chain_id:u128, token_id: field){
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
+        assert_eq(from, owner);
+        let chaintokeninfo:ChainToken = ChainToken{
+            chain_id: chain_id,
+            token_id: token_id
+        };
+
+        // check if other chain token service exists in the mapping and remove it.
+        assert(Mapping::contains(other_chain_token_service, chaintokeninfo));
+        Mapping::remove(other_chain_token_service, chaintokeninfo);
+        // check if other chain token address exists in the mapping and remove it.
+        assert(Mapping::contains(other_chain_token_address, chaintokeninfo));
+        Mapping::remove(other_chain_token_address, chaintokeninfo);
+    }
+
 
     ////////////////////////////////
     ///// Add/Remove Token /////////
