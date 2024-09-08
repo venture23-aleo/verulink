@@ -1,6 +1,6 @@
 ---
 name: dev_attestor_verulink_v23
-version: 0.0.3
+version: 0.0.4
 chains:
 - name: aleo
   chain_id: 6694886634403
