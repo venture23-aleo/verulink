@@ -540,6 +540,11 @@ program token_service.aleo {
 
     transition holding_release(public token_id: field, public receiver: address, public amount: u128) {
         holding.aleo/release_fund(receiver, token_id, amount);
+        return then finalize(self.caller);
+    }
+    finalize holding_release(from: address){
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(owner, from);
     }
 
     
