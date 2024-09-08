@@ -55,39 +55,45 @@ program token_service.aleo {
     mapping owner_TS: bool => address;
 
     /// Stores the total supply of the token
-    /// Key is the address of the token program
+    /// Key is the token_id of the token program
     mapping total_supply: field => u128;
 
     /// Stores whether the tokens are added to the service.
     mapping added_tokens: field => bool;
 
     /// Stores the minimum amount that can be transferred via Token Service
-    /// Key is address of the token program
+    /// Key is token_id of the token program
     mapping min_transfers: field => u128;
 
     /// Stores the maximum amount that can be transferred via Token Service
-    /// Key is address of the token program
+    /// Key is token_id of the token program
     mapping max_transfers: field => u128;
 
     /// Stores the maximum percentage that can be transferred in the given duration
-    /// Key is the address of the token program
+    /// Key is the token_id of the token program
     mapping token_withdrawal_limits: field => WithdrawalLimit;
     
     /// Tracks the maximum amount that can be withdrawn until the next snapshot
-    /// Key is the address of the token program
+    /// Key is the token_id of the token program
     mapping token_snapshot_withdrawal: field => u128;
 
+    mapping token_snapshot_supply: field => u128;
+
     /// Tracks the height when the last snapshot happened
-    /// Key is the address of the token program
+    /// Key is the token_id of the token program
     mapping token_snapshot_height: field => u32;
 
     /// Tracks the amount withdrawn between the snapshots
-    /// Key is the address of the token program
+    /// Key is the token_id of the token program
     mapping token_amount_withdrawn: field => u128;
 
     /// Tracks if the token is paused/unpaused
-    /// Key is the address of the token program
+    /// Key is the token_id of the token program
     mapping token_status: field => bool;
+
+    /// Tracks the total amount of a certain token being held
+    /// Key is the token_id of the token.
+    mapping token_holding: field => u128;
 
     /// Tracks the token service address of other chains
     /// Key is the combination of chain_id and token_id
@@ -440,13 +446,14 @@ program token_service.aleo {
         let current_supply: u128 = Mapping::get(total_supply, wrapped_token_id);
         let current_height: u32 = block.height;
 
-        let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, current_supply);
 
         let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
         let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
 
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
-            Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
+            let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
+            // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
+            Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
             Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
             Mapping::set(token_amount_withdrawn, wrapped_token_id, amount);
 
@@ -454,11 +461,13 @@ program token_service.aleo {
             Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn+amount);
 
         }
+        let snapshot_supply:u128 = Mapping::get(token_snapshot_supply, wrapped_token_id);
 
-        if (current_supply >= withdrawal_limit.threshold_no_limit) {
+        if (snapshot_supply >= withdrawal_limit.threshold_no_limit) {
             let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, wrapped_token_id);
-            let withdrawal_allowed:u128 = Mapping::get(token_snapshot_withdrawal, wrapped_token_id);
-            assert(withdraw_amount <= withdrawal_allowed);
+            // let withdrawal_allowed:u128 = Mapping::get(token_snapshot_withdrawal, wrapped_token_id);
+            let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, snapshot_supply);
+            assert(withdraw_amount <= max_withdrawal);
         }
         
         // Decrease the total supply
@@ -516,10 +525,10 @@ program token_service.aleo {
 
         holding.aleo/hold_fund(receiver, token_id, held_amount);
 
-        return screening_passed then finalize(token_id, amount, chain_token_info, source_token_service_address);
+        return screening_passed then finalize(token_id, amount, held_amount, chain_token_info, source_token_service_address);
     }
 
-    finalize token_receive(token_id: field, amount: u128, chain_token_info:ChainToken, source_token_service_address: [u8;20]) {
+    finalize token_receive(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20]) {
 
         assert_eq(Mapping::get(token_status, token_id), UNPAUSED_VALUE);
 
@@ -530,6 +539,10 @@ program token_service.aleo {
         // Increase the total supply
         let current_supply: u128 = Mapping::get_or_use(total_supply, token_id, 0u128);
         Mapping::set(total_supply, token_id, current_supply + amount);
+
+        // Increase the held amount
+        let previously_held_amount:u128 = Mapping::get(token_holding, token_id);
+        Mapping::set(token_holding, token_id, previously_held_amount+held_amount);
 
     }
 
@@ -564,11 +577,13 @@ program token_service.aleo {
 
     transition holding_release(public token_id: field, public receiver: address, public amount: u128) {
         holding.aleo/release_fund(receiver, token_id, amount);
-        return then finalize(self.caller);
+        return then finalize(self.caller, token_id, amount);
     }
-    finalize holding_release(from: address){
+    finalize holding_release(from:address, token_id: field, amount:u128){
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(owner, from);
+        let held_amount:u128 = Mapping::get(token_holding, token_id);
+        Mapping::set(token_holding, token_id, held_amount-amount);
     }
 
     
