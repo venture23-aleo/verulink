@@ -12,6 +12,8 @@ async function main() {
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const ETHVaultService = await ethers.getContractFactory("EthVaultService");
     
+    console.log("Deploying EthVaultService Impl and Proxy...");
+
     const ethVaultServiceImpl = await ETHVaultService.deploy();
     await ethVaultServiceImpl.deployed();
     updateEnvFile("ETHVAULTSERVICEIMPL_ADDRESS", ethVaultServiceImpl.address)

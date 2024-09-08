@@ -19,4 +19,4 @@ npx hardhat run scripts/deploy/transferOwnershipTokenservice.js --network sepoli
 npx hardhat run scripts/deploy/transferOwnerShipHolding.js --network sepolia
 npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network sepolia
 npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia
+npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia 

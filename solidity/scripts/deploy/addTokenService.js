@@ -16,6 +16,7 @@ async function main() {
         },
     });
     const bridgeProxy = process.env.TOKENBRIDGEPROXY_ADDRESS;
+    console.log("Adding Tokenservice to Bridge...");
     const BridgeABI = Bridge.interface.format();
     const BridgeContract = new ethers.Contract(bridgeProxy, BridgeABI, deployerSigner);
     await BridgeContract.addTokenService(tokenServiceProxy);

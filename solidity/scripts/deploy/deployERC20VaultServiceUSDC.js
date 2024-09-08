@@ -13,6 +13,8 @@ async function main() {
     const tokenAddr = process.env.USDC_ADDR;
     const Erc20VaultService = await ethers.getContractFactory("Erc20VaultService");
 
+    console.log("Deploying Erc20VaultServiceUSDC Impl and Proxy...");
+
     const erc20VaultServiceImpl = await Erc20VaultService.deploy();
     await erc20VaultServiceImpl.deployed();
     updateEnvFile("ERC20VAULTSERVICEIMPL_ADDRESS_USDC", erc20VaultServiceImpl.address)

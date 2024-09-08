@@ -12,6 +12,8 @@ async function main() {
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const Holding = await ethers.getContractFactory("Holding")
 
+    console.log("Deploying Holding Impl and Proxy...");
+
     const holdingImpl = await Holding.deploy();
     await holdingImpl.deployed();
     updateEnvFile("HOLDINGIMPLEMENTATION_ADDRESS", holdingImpl.address);

@@ -27,10 +27,10 @@ async function ProposeAddTokenUSDCTransaction(deployerSigner) {
   const tokenAddress = process.env.USDC_ADDR;
   const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS_USDC;
   const destChainId = process.env.aleoChainId;
-  const destTokenAddress = process.env.destTokenAddress;
+  const destTokenAddress = process.env.destTokenAddressWUSDC;
   const destTokenService = process.env.destTokenService;
-  const min = process.env.min;
-  const max = process.env.max;
+  const min = process.env.minWUSDC;
+  const max = process.env.maxWUSDC;
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");

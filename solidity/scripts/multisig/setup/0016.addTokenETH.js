@@ -27,10 +27,10 @@ async function ProposeAddTokenETHTransaction(deployerSigner) {
   const tokenAddress = process.env.ONE_ADDRESS;
   const vault = process.env.ETHVAULTSERVICEPROXY_ADDRESS;
   const destChainId = process.env.aleoChainId;
-  const destTokenAddress = process.env.destTokenAddress;
+  const destTokenAddress = process.env.destTokenAddressWETH;
   const destTokenService = process.env.destTokenService;
-  const min = process.env.min;
-  const max = process.env.max;
+  const min = process.env.minWETH;
+  const max = process.env.maxWETH;
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");

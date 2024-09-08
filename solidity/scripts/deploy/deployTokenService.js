@@ -15,6 +15,8 @@ async function main() {
     const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
     const TokenService = await ethers.getContractFactory("TokenService");
 
+    console.log("Deploying TokenService Impl and Proxy...");
+
     const tokenServiceImpl = await TokenService.deploy();
     await tokenServiceImpl.deployed();
     console.log("TokenService Impl Deployed to: ", tokenServiceImpl.address);

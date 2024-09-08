@@ -18,6 +18,8 @@ async function main() {
         },
     });
 
+    console.log("Deploying Bridge Impl and Proxy...");
+
     const bridgeImpl = await Bridge.deploy();
     await bridgeImpl.deployed();
     console.log("Bridge Impl Deployed to: ", bridgeImpl.address);
