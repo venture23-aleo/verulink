@@ -425,7 +425,7 @@ program token_service_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service.aleo/update_other_chain_ts(chain_id, token_id, token_service_address);
+        token_service.aleo/update_other_chain_tokenservice(chain_id, token_id, token_service_address);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -453,7 +453,7 @@ program token_service_council.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service.aleo/update_other_chain_ta(chain_id, token_id, token_address);
+        token_service.aleo/update_other_chain_tokenaddress(chain_id, token_id, token_address);
 
         council.aleo/external_execute(id, proposal_hash, voters);
     }

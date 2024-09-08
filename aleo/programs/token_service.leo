@@ -142,14 +142,14 @@ program token_service.aleo {
     /////////////////////////////////////////////////
     ///// Update token_service of other chain ///////
     /////////////////////////////////////////////////
-    transition update_other_chain_ts(
+    transition update_other_chain_tokenservice(
         public chain_id: u128,
         public token_id: field,
         token_service_address: [u8; 20]
     ) {
         return then finalize(self.caller, chain_id, token_id, token_service_address);
     }
-    finalize update_other_chain_ts(from:address, chain_id:u128, token_id: field, token_service_address: [u8;20]){
+    finalize update_other_chain_tokenservice(from:address, chain_id:u128, token_id: field, token_service_address: [u8;20]){
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
         let chaintokeninfo:ChainToken = ChainToken{
@@ -163,14 +163,14 @@ program token_service.aleo {
     /////////////////////////////////////////////////
     ///// Update token_address of other chain ///////
     /////////////////////////////////////////////////
-    transition update_other_chain_ta(
+    transition update_other_chain_tokenaddress(
         public chain_id: u128,
         public token_id: field,
         token_address: [u8; 20]
     ) {
         return then finalize(self.caller, chain_id, token_id, token_address);
     }
-    finalize update_other_chain_ta(from:address, chain_id:u128, token_id: field, token_address: [u8;20]){
+    finalize update_other_chain_tokenaddress(from:address, chain_id:u128, token_id: field, token_address: [u8;20]){
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
         let chaintokeninfo:ChainToken = ChainToken{
@@ -414,10 +414,10 @@ program token_service.aleo {
             amount
         );
 
-        return then finalize (self.caller, token_id, amount, chain_token_info, dest_token_address, dest_token_service);
+        return then finalize (token_id, amount, chain_token_info, dest_token_address, dest_token_service);
     }
 
-    finalize token_send(from: address, wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20]) {
+    finalize token_send(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20]) {
 
         let min_amount: u128 = Mapping::get(min_transfers, wrapped_token_id);
         assert(amount >= min_amount);
@@ -442,7 +442,6 @@ program token_service.aleo {
 
         let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, current_supply);
 
-        let allowed_withdrawal: u128 = Mapping::get_or_use(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
         let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
         let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
 
@@ -512,7 +511,7 @@ program token_service.aleo {
             account: actual_receiver,
             token_id: token_id
         };
-        let authorize_until:u32 = 4294967295u32;
+        let authorize_until:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
         multi_token_support_program.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
         holding.aleo/hold_fund(receiver, token_id, held_amount);
