@@ -57,7 +57,10 @@ program token_service_council.aleo
         max_transfer: u128,
         outgoing_percentage: u16,
         time: u32,
-        max_no_cap: u128
+        max_no_cap: u128,
+        token_address: [u8; 20],
+        token_service: [u8; 20],
+        chain_id: u128
     }
 
     transition ts_add_token(
@@ -80,7 +83,10 @@ program token_service_council.aleo
             max_transfer,
             outgoing_percentage,
             time,
-            max_no_cap
+            max_no_cap,
+            token_address,
+            token_service,
+            chain_id
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
