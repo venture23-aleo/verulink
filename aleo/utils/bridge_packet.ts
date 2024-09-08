@@ -1,5 +1,5 @@
 import { Field } from "@aleohq/sdk";
-import { InPacket } from "../artifacts/js/types/token_bridge_v0003";
+import { InPacket } from "../artifacts/js/types/token_bridge_dev_v2";
 import { PACKET_VERSION } from "./constants";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr } from "./ethAddress";
 

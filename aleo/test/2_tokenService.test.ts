@@ -1,7 +1,7 @@
-import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
-import { InPacket } from "../artifacts/js/types/token_bridge_v0003";
-import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
-import { Multi_token_support_program_v1Contract } from "../artifacts/js/multi_token_support_program_v1";
+import { Token_bridge_dev_v2Contract } from "../artifacts/js/token_bridge_dev_v2";
+import { InPacket } from "../artifacts/js/types/token_bridge_dev_v2";
+import { Token_service_dev_v2Contract } from "../artifacts/js/token_service_dev_v2";
+import { Multi_token_support_programv1Contract } from "../artifacts/js/multi_token_support_programv1";
 
 import { aleoArr2Evm, evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
@@ -23,23 +23,24 @@ import {
 } from "../utils/constants";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
-import { WithdrawalLimit } from "../artifacts/js/types/token_service_v0003";
+import { WithdrawalLimit } from "../artifacts/js/types/token_service_dev_v2";
 import { ExecutionMode} from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/token_service_council";
-import { Holding_v0003Contract } from "../artifacts/js/holding_v0003";
-import { TokenMetadata } from "../artifacts/js/types/holding_v0003";
-import { Balance, TokenOwner } from "../artifacts/js/types/multi_token_support_program_v1";
+import { ChainToken } from "../artifacts/js/types/token_service_council_dev_v2";
+import { Holding_dev_v2Contract } from "../artifacts/js/holding_dev_v2";
+import { TokenMetadata } from "../artifacts/js/types/holding_dev_v2";
+import { Balance, TokenOwner } from "../artifacts/js/types/multi_token_support_programv1";
 import { hashStruct } from "../utils/hash";
-import { Mtsp_v3Contract } from "../artifacts/js/mtsp_v3";
+import { Token_service_council_dev_v2Contract } from "../artifacts/js/token_service_council_dev_v2";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const bridge = new Token_bridge_v0003Contract({ mode: mode });
-const tokenService = new Token_service_v0003Contract({ mode: mode  });
-const mtsp = new Multi_token_support_program_v1Contract({ mode: mode });
-const holding = new Holding_v0003Contract({mode});
+const bridge = new Token_bridge_dev_v2Contract({ mode: mode });
+const tokenService = new Token_service_dev_v2Contract({ mode: mode  });
+const mtsp = new Multi_token_support_programv1Contract({ mode: mode });
+const holding = new Holding_dev_v2Contract({mode});
+const tokenServiceCouncil = new Token_service_council_dev_v2Contract({mode:mode});
 
 let tokenID=BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
 
@@ -174,7 +175,7 @@ describe("Token Service ", () => {
     });
 
     test("Token Service: Register token", async () => {
-      const [token_id, registerTokenTransaction] = await tokenService.register_token(token_name, token_symbol, token_decimals, token_max_supply);
+      const [token_id, registerTokenTransaction] = await tokenServiceCouncil.ts_register_token(token_name, token_symbol, token_decimals, token_max_supply);
       tokenID = token_id;
       console.log(tokenID);
       registerTokenTransaction.wait();
@@ -763,7 +764,7 @@ describe("Token Service ", () => {
 
       test("should not update token address by non-owner", async () => {
           tokenService.connect(aleoUser3);
-          const [tx] = await tokenService.update_other_chain_ta(
+          const [tx] = await tokenService.update_other_chain_tokenaddress(
             ethChainId,
             tokenID,
             evm2AleoArrWithoutPadding(ethTsContractAddr3)
@@ -774,7 +775,7 @@ describe("Token Service ", () => {
 
       test("should not update token address if token id is not registered", async () => {
         tokenService.connect(admin);
-        const [tx] = await tokenService.update_other_chain_ta(
+        const [tx] = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
           unregisteredTokenID,
           evm2AleoArrWithoutPadding(ethTsContractAddr3)
@@ -785,7 +786,7 @@ describe("Token Service ", () => {
 
       test("should update token address by admin", async () => {
         tokenService.connect(admin);
-        const [tx] = await tokenService.update_other_chain_ta(
+        const [tx] = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
           tokenID,
           evm2AleoArrWithoutPadding(ethTsContractAddr3)
@@ -806,7 +807,7 @@ describe("Token Service ", () => {
 
       test("should not update token service by non-owner", async () => {
           tokenService.connect(aleoUser3);
-          const [tx] = await tokenService.update_other_chain_ts(
+          const [tx] = await tokenService.update_other_chain_tokenservice(
             ethChainId,
             tokenID,
             evm2AleoArrWithoutPadding(ethTsContractAddr3)
@@ -817,7 +818,7 @@ describe("Token Service ", () => {
 
       test("should not update token address if token id is not registered", async () => {
         tokenService.connect(admin);
-        const [tx] = await tokenService.update_other_chain_ts(
+        const [tx] = await tokenService.update_other_chain_tokenservice(
           ethChainId,
           unregisteredTokenID,
           evm2AleoArrWithoutPadding(ethTsContractAddr3)
@@ -828,7 +829,7 @@ describe("Token Service ", () => {
 
       test("should update token address by admin", async () => {
         tokenService.connect(admin);
-        const [tx] = await tokenService.update_other_chain_ts(
+        const [tx] = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
           tokenID,
           evm2AleoArrWithoutPadding(ethTsContractAddr3)

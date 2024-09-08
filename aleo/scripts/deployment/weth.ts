@@ -14,7 +14,7 @@ import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/token_service_cou
 };
 
 const mode = ExecutionMode.SnarkExecute;
-export const deployWusdc = async (token_name, symbol, decimals, max_supply) => {
+export const deployWeth = async (token_name, symbol, decimals, max_supply) => {
 
   const tokenService = new Token_service_dev_v2Contract({ mode, priorityFee: 10_000 });
   const tokenServiceCouncil = new Token_service_council_dev_v2Contract({ mode, priorityFee: 10_000 })

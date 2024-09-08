@@ -1,6 +1,6 @@
 import { js2leo as js2leoCommon } from '@doko-js/core';
 import { leo2js as leo2jsCommon } from '@doko-js/core';
-import { InPacket } from '../artifacts/js/types/token_bridge_dev_v1';
+import { InPacket } from '../artifacts/js/types/token_bridge_dev_v2';
 import { evm2AleoArr } from './ethAddress';
 import { aleoChainId, ethTsContractAddr } from './constants';
 

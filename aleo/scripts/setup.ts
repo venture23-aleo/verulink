@@ -1,6 +1,6 @@
-import { Token_bridgeContract } from "../artifacts/js/token_bridge";
-import { Token_serviceContract } from "../artifacts/js/token_service";
-import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId } from "../utils/constants";
+import { Token_bridge_dev_v2Contract } from "../artifacts/js/token_bridge_dev_v2";
+import { Token_service_dev_v2Contract } from "../artifacts/js/token_service_dev_v2";
+import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId, ethContractAddr, usdcContractAddr, usdtContractAddr } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
 import { execUnpause, proposeUnpauseBridge } from "./council/bridge/unpause";
@@ -10,96 +10,200 @@ import { deployMainPrograms } from "./deployment/mainPrograms";
 import { deployWusdc } from "./deployment/wusdc";
 
 import {
-  aleoUser1,
-  aleoUser2,
-  aleoUser3,
-  aleoUser4,
-  aleoUser5,
+  council1,council2,council3,council4,council5,
+  attestor1,attestor2,attestor3,attestor4,attestor5,
   councilThreshold,
   wusdcMaxNoCap,
   wusdcMaxTransfer,
   wusdcMinTransfer,
   wusdcOutgoingPercentage,
   wusdcTimeframe,
+  wusdcName,
+  wusdcSymbol,
+  wusdcDecimals,
+} from "../utils/testnet.data";
+import {
+  wusdtMaxNoCap,
+  wusdtMaxTransfer,
+  wusdtMinTransfer,
+  wusdtOutgoingPercentage,
+  wusdtTimeframe,
+  wusdtName,
+  wusdtSymbol,
+  wusdtDecimals
+} from "../utils/testnet.data";
+import {
+  wethMaxNoCap,
+  wethMaxTransfer,
+  wethMinTransfer,
+  wethOutgoingPercentage,
+  wethTimeframe,
+  wethName,
+  wethSymbol,
+  wethDecimals
 } from "../utils/testnet.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Bridge_councilContract } from "../artifacts/js/bridge_council";
+import { Bridge_council_dev_v2Contract } from "../artifacts/js/bridge_council_dev_v2";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
+import { deployWusdt } from "./deployment/wusdt";
+import { deployWeth } from "./deployment/weth";
 
-const bridge = new Token_bridgeContract();
-const tokenService = new Token_serviceContract();
-const bridgeCouncil = new Bridge_councilContract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Token_serviceContract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Token_bridge_dev_v2Contract();
+const tokenService = new Token_service_dev_v2Contract();
+const bridgeCouncil = new Bridge_council_dev_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Token_service_dev_v2Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
-  aleoUser1,
-  aleoUser2,
-  aleoUser3,
-  aleoUser4,
-  aleoUser5,
+  attestor1,
+  attestor2,
+  attestor3,
+  attestor4,
+  attestor5
 ];
 const initialCouncilMembers = [
-  aleoUser1,
-  aleoUser2,
-  aleoUser3,
-  aleoUser4,
-  aleoUser5,
+  council1,
+  council2,
+  council3,
+  council4,
+  council5,
 ];
 
-const token_id = leo2js.field(hash('bhp256', '6148332821651876206u128', "field"));
+const wusdc_id = leo2js.field(hash('bhp256', wusdcName.toString()+"u128", "field"));
+const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString()+"u128", 'field'));
+const weth_id = leo2js.field(hash('bhp256', wethName.toString()+"u128", 'field'));
+const max_supply = BigInt("18446744073709551615");
 
 const setup = async () => {
-  await deployMainPrograms(
-    initialAttestors,
-    initialCouncilMembers,
-    councilThreshold,
-    councilThreshold
-  );
-  // Registers token in the mtsp through token_service.register_token
-  await deployWusdc();
+  // await deployMainPrograms(
+  //   initialAttestors,
+  //   initialCouncilMembers,
+  //   councilThreshold,
+  //   councilThreshold
+  // );
+  // // Bridge: Add ethereum chain
+  // const addChainProposalId = await proposeAddChain(ethChainId);
+  // await execAddChain(addChainProposalId, ethChainId);
 
-  // Bridge: Add ethereum chain
-  const addChainProposalId = await proposeAddChain(ethChainId);
-  await execAddChain(addChainProposalId, ethChainId);
+  // // Token Bridge: Enable Service
+  // const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
+  // await execAddService(enableTokenServiceProposalId, tokenService.address());
 
-  // Token Service: Add wusdc
-  const addTokenProposalId = await proposeAddToken(
-    token_id,
-    wusdcMinTransfer,
-    wusdcMaxTransfer,
-    wusdcOutgoingPercentage,
-    wusdcTimeframe,
-    wusdcMaxNoCap
-  );
-  await execAddToken(
-    token_id,
-    addTokenProposalId,
-    wusdcMinTransfer,
-    wusdcMaxTransfer,
-    wusdcOutgoingPercentage,
-    wusdcTimeframe,
-    wusdcMaxNoCap
-  );
+  await wusdcSetupAndInit();
 
-  // Token service: Give role to the token service.
-  const roleProposalId = await proposeRole(token_id, 3);
-  await execRole(roleProposalId, token_id, 3);
+  await wusdtSetupandInit();
 
-  // Token Bridge: Enable Service
-  const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
-  await execAddService(enableTokenServiceProposalId, tokenService.address());
+  await wethSetupandInit();
 
   // Token Bridge: Unpause
   const unpauseBridgeProposalId = await proposeUnpauseBridge();
   await execUnpause(unpauseBridgeProposalId);
 
-  // Wusdc Token: Unpause
-  const unpauseTokenProposalId = await proposeUnpauseToken(token_id);
-  await execUnpauseToken(unpauseTokenProposalId, token_id);
-
 };
+
+async function wusdcSetupAndInit(){
+  // Registers token in the mtsp through token_service.register_token
+  await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
+
+  // Token Service: Add wusdc
+  const addWUSDCTokenProposalId = await proposeAddToken(
+    wusdc_id,
+    wusdcMinTransfer,
+    wusdcMaxTransfer,
+    wusdcOutgoingPercentage,
+    wusdcTimeframe,
+    wusdcMaxNoCap,
+    usdcContractAddr
+  );
+  await execAddToken(
+    wusdc_id,
+    addWUSDCTokenProposalId,
+    wusdcMinTransfer,
+    wusdcMaxTransfer,
+    wusdcOutgoingPercentage,
+    wusdcTimeframe,
+    wusdcMaxNoCap,
+    usdcContractAddr
+  );
+
+  // Token service: Give role to the token service.
+  const WUSDCroleProposalId = await proposeRole(wusdc_id, 3);
+  await execRole(WUSDCroleProposalId, wusdc_id, 3);
+
+  // Wusdc Token: Unpause
+  const WUSDCunpauseTokenProposalId = await proposeUnpauseToken(wusdc_id);
+  await execUnpauseToken(WUSDCunpauseTokenProposalId, wusdc_id);
+
+}
+
+async function wusdtSetupandInit(){
+  // Deploy Wusdt
+  await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
+
+  // Token Service: Add wusdt
+  const addWUSDTokenProposalId = await proposeAddToken(
+    wusdt_id,
+    wusdtMinTransfer,
+    wusdtMaxTransfer,
+    wusdtOutgoingPercentage,
+    wusdtTimeframe,
+    wusdtMaxNoCap,
+    usdtContractAddr
+  );
+  await execAddToken(
+    wusdt_id,
+    addWUSDTokenProposalId,
+    wusdtMinTransfer,
+    wusdtMaxTransfer,
+    wusdtOutgoingPercentage,
+    wusdtTimeframe,
+    wusdtMaxNoCap,
+    usdtContractAddr
+  );
+
+  // Token service: Give role to the token service.
+  const WUSDTroleProposalId = await proposeRole(wusdt_id, 3);
+  await execRole(WUSDTroleProposalId, wusdt_id, 3);
+
+  // Wusdt Token: Unpause
+  const WUSDTunpauseTokenProposalId = await proposeUnpauseToken(wusdt_id);
+  await execUnpauseToken(WUSDTunpauseTokenProposalId, wusdt_id);
+}
+
+async function wethSetupandInit(){
+    // Deploy Weth
+    await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
+
+    // Token Service: Add weth
+    const addWETHokenProposalId = await proposeAddToken(
+      weth_id,
+      wethMinTransfer,
+      wethMaxTransfer,
+      wethOutgoingPercentage,
+      wethTimeframe,
+      wethMaxNoCap,
+      ethContractAddr
+    );
+    await execAddToken(
+      weth_id,
+      addWETHokenProposalId,
+      wethMinTransfer,
+      wethMaxTransfer,
+      wethOutgoingPercentage,
+      wethTimeframe,
+      wethMaxNoCap,
+      ethContractAddr
+    );
+  
+    // Token service: Give role to the token service.
+    const WETHroleProposalId = await proposeRole(weth_id, 3);
+    await execRole(WETHroleProposalId, weth_id, 3);
+  
+    // Weth Token: Unpause
+    const WETHunpauseTokenProposalId = await proposeUnpauseToken(weth_id);
+    await execUnpauseToken(WETHunpauseTokenProposalId, weth_id);
+}
 
 // export const validateSetup = async () => {
 //   const ownerTB = await bridge.owner_TB(true);

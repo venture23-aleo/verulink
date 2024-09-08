@@ -1,10 +1,10 @@
 // The 'token_service' program.
 
-import token_bridge.aleo;
-import multi_token_support_program.aleo;
-import holding.aleo;
+import token_bridge_dev_v2.aleo;
+import multi_token_support_programv1.aleo;
+import holding_dev_v2.aleo;
 
-program token_service.aleo {
+program token_service_dev_v2.aleo {
 
     struct WithdrawalLimit {
         // Withdrawal limit represented as basis points.
@@ -406,12 +406,12 @@ program token_service.aleo {
         public dest_token_address: [u8;20]
     ) {
 
-        multi_token_support_program.aleo/burn_public(token_id, self.caller, amount);
+        multi_token_support_programv1.aleo/burn_public(token_id, self.caller, amount);
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
             token_id: token_id
         };
-        token_bridge.aleo/publish(
+        token_bridge_dev_v2.aleo/publish(
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
             pad_20_to_32(dest_token_address), 
@@ -490,7 +490,7 @@ program token_service.aleo {
     ) -> public bool {
 
         // call consume on bridge
-        let screening_passed: bool = token_bridge.aleo/consume(
+        let screening_passed: bool = token_bridge_dev_v2.aleo/consume(
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
             token_id, 
@@ -521,9 +521,9 @@ program token_service.aleo {
             token_id: token_id
         };
         let authorize_until:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
-        multi_token_support_program.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
+        multi_token_support_programv1.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
-        holding.aleo/hold_fund(receiver, token_id, held_amount);
+        holding_dev_v2.aleo/hold_fund(receiver, token_id, held_amount);
 
         return screening_passed then finalize(token_id, amount, held_amount, chain_token_info, source_token_service_address);
     }
@@ -576,7 +576,7 @@ program token_service.aleo {
     }
 
     transition holding_release(public token_id: field, public receiver: address, public amount: u128) {
-        holding.aleo/release_fund(receiver, token_id, amount);
+        holding_dev_v2.aleo/release_fund(receiver, token_id, amount);
         return then finalize(self.caller, token_id, amount);
     }
     finalize holding_release(from:address, token_id: field, amount:u128){

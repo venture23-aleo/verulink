@@ -24,9 +24,11 @@ export const OWNER_INDEX = true;
 
 // USDC Contract Address on Ethereum
 export const usdcContractAddr = "0xD99e898842c566be038bf898b3e406f028a031E0"
+export const usdtContractAddr = "0xCdF691Ab58a388AAed7EB231f5517418cf48F121"
+export const ethContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xf1d72ccBCcd340F4eA6243309cd9d240C0081660"
+export const ethTsContractAddr = "0x5E27a13E3ab20C6C7A36B57cbFaB5aEfE44E7ce2"
 
 // Token Service Contract Address on Ethereum
 export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"

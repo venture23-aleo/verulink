@@ -1,23 +1,23 @@
 import { hashStruct } from "../../../utils/hash";
-import { Council_dev_v1Contract } from "../../../artifacts/js/council_dev_v1";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr3, usdcContractAddr } from "../../../utils/constants";
-import { Token_service_dev_v1Contract } from "../../../artifacts/js/token_service_dev_v1";
+import { Council_dev_v2Contract } from "../../../artifacts/js/council_dev_v2";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, usdcContractAddr } from "../../../utils/constants";
+import { Token_service_dev_v2Contract } from "../../../artifacts/js/token_service_dev_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { SetRoleForToken } from "../../../artifacts/js/types/token_service_council_dev_v1";
-import { getSetRoleForTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/token_service_council_dev_v1";
+import { SetRoleForToken } from "../../../artifacts/js/types/token_service_council_dev_v2";
+import { getSetRoleForTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/token_service_council_dev_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Token_service_council_dev_v1Contract } from "../../../artifacts/js/token_service_council_dev_v1";
+import { Token_service_council_dev_v2Contract } from "../../../artifacts/js/token_service_council_dev_v2";
 import { hash } from "aleo-hasher";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
-import { getSetRoleForToken } from "../../../artifacts/js/leo2js/token_service_council_dev_v1";
+import { getSetRoleForToken } from "../../../artifacts/js/leo2js/token_service_council_dev_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Token_service_council_dev_v1Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Token_service_council_dev_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Council_dev_v1Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Token_service_dev_v1Contract({ mode, priorityFee: 10_000 });
+const council = new Council_dev_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Token_service_dev_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////

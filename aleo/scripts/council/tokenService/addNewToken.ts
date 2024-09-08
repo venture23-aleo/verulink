@@ -1,22 +1,22 @@
 import { hashStruct } from "../../../utils/hash";
-import { Council_dev_v1Contract } from "../../../artifacts/js/council_dev_v1";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr, ethTsContractAddr3, usdcContractAddr } from "../../../utils/constants";
-import { Token_service_dev_v1Contract } from "../../../artifacts/js/token_service_dev_v1";
+import { Council_dev_v2Contract } from "../../../artifacts/js/council_dev_v2";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr } from "../../../utils/constants";
+import { Token_service_dev_v2Contract } from "../../../artifacts/js/token_service_dev_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken } from "../../../artifacts/js/types/token_service_council_dev_v1";
-import { getTsAddTokenLeo } from "../../../artifacts/js/js2leo/token_service_council_dev_v1";
+import { TsAddToken } from "../../../artifacts/js/types/token_service_council_dev_v2";
+import { getTsAddTokenLeo } from "../../../artifacts/js/js2leo/token_service_council_dev_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Token_service_council_dev_v1Contract } from "../../../artifacts/js/token_service_council_dev_v1";
+import { Token_service_council_dev_v2Contract } from "../../../artifacts/js/token_service_council_dev_v2";
 import { hash } from "aleo-hasher";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Token_service_council_dev_v1Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Token_service_council_dev_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Council_dev_v1Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Token_service_dev_v1Contract({ mode, priorityFee: 10_000 });
+const council = new Council_dev_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Token_service_dev_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
@@ -28,6 +28,7 @@ export const proposeAddToken = async (
   outgoingPercentage: number,
   timeframe: number,
   maxNoCap: bigint,
+  tokenContractAddr: string
 ): Promise<number> => {
 
   
@@ -48,7 +49,10 @@ export const proposeAddToken = async (
     max_transfer: maxTransfer,
     outgoing_percentage: outgoingPercentage,
     time: timeframe,
-    max_no_cap: maxNoCap
+    max_no_cap: maxNoCap,
+    token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
+    token_service: evm2AleoArrWithoutPadding(ethTsContractAddr),
+    chain_id: ethChainId,
   };
   const tbAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
@@ -70,7 +74,8 @@ export const voteAddToken = async (
   maxTransfer: bigint,
   outgoingPercentage: number,
   timeframe: number,
-  maxNoCap: bigint
+  maxNoCap: bigint,
+  tokenContractAddr
 ) => {
   console.log(`👍 Voting to add token: ${tokenAddress}`)
   // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -86,7 +91,10 @@ export const voteAddToken = async (
     max_transfer: maxTransfer,
     outgoing_percentage: outgoingPercentage,
     time: timeframe,
-    max_no_cap: maxNoCap
+    max_no_cap: maxNoCap,
+    token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
+    token_service: evm2AleoArrWithoutPadding(ethTsContractAddr),
+    chain_id: ethChainId,
   };
   const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
@@ -111,7 +119,8 @@ export const execAddToken = async (
   maxTransfer: bigint,
   outgoingPercentage: number,
   timeframe: number,
-  maxNoCap: bigint
+  maxNoCap: bigint,
+  tokenContractAddr: string
 ) => {
   console.log(`Adding token ${tokenId}`)
   // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -131,7 +140,10 @@ export const execAddToken = async (
     max_transfer: maxTransfer,
     outgoing_percentage: outgoingPercentage,
     time: timeframe,
-    max_no_cap: maxNoCap
+    max_no_cap: maxNoCap,
+    token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
+    token_service: evm2AleoArrWithoutPadding(ethTsContractAddr),
+    chain_id: ethChainId
   };
   const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
@@ -147,7 +159,7 @@ export const execAddToken = async (
     tsAddToken.time,
     tsAddToken.max_no_cap,
     voters,
-    evm2AleoArrWithoutPadding(usdcContractAddr),
+    evm2AleoArrWithoutPadding(tokenContractAddr),
     evm2AleoArrWithoutPadding(ethTsContractAddr),
     ethChainId
   )

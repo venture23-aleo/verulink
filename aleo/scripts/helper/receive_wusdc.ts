@@ -1,12 +1,12 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Token_service_dev_v1Contract } from "../../artifacts/js/token_service_dev_v1";
-import { InPacket } from "../../artifacts/js/types/token_bridge_dev_v1";
+import { Token_service_dev_v2Contract } from "../../artifacts/js/token_service_dev_v2";
+import { InPacket } from "../../artifacts/js/types/token_bridge_dev_v2";
 import { createRandomPacket } from "../../utils/bridge_packet";
 import { ALEO_ZERO_ADDRESS, aleoChainId, ethChainId, ethTsContractAddr, ethTsContractAddr3 } from "../../utils/constants";
 import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../../utils/ethAddress";
 import { PrivateKey } from "@aleohq/sdk";
 import { signPacket } from "../../utils/sign";
-import { TokenOwner } from "../../artifacts/js/types/token_service_dev_v1";
+import { TokenOwner } from "../../artifacts/js/types/token_service_dev_v2";
 import { hashStruct } from "../../utils/hash";
 import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/multi_token_support_program";
 
@@ -16,7 +16,7 @@ const mode = ExecutionMode.SnarkExecute;
 let tokenID=BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
 const ethUser = generateRandomEthAddr();
 const receiver = ethUser.toLowerCase();
-const tokenService = new Token_service_dev_v1Contract({ mode });
+const tokenService = new Token_service_dev_v2Contract({ mode });
 
 // console.log(tokenService.getAccounts());
 

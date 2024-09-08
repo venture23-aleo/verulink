@@ -1,35 +1,31 @@
 import { hashStruct } from "../../../utils/hash";
-import { CouncilContract } from "../../../artifacts/js/council";
+import { Council_dev_v2Contract } from "../../../artifacts/js/council_dev_v2";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
-import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
+import { Token_service_dev_v2Contract } from "../../../artifacts/js/token_service_dev_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken, TsUpdateMinTransfer, TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/token_service_council";
-import { getTsAddTokenLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/token_service_council";
+import { TsAddToken, TsUpdateMinTransfer, TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/token_service_council_dev_v2";
+import { getTsAddTokenLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/token_service_council_dev_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
+import { Token_service_council_dev_v2Contract } from "../../../artifacts/js/token_service_council_dev_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Token_service_councilContract({mode, priorityFee: 10_000});
+const serviceCouncil = new Token_service_council_dev_v2Contract({mode, priorityFee: 10_000});
 
-const council = new CouncilContract({mode, priorityFee: 10_000});
-const tokenService = new Token_service_v0003Contract({mode, priorityFee: 10_000});
+const council = new Council_dev_v2Contract({mode, priorityFee: 10_000});
+const tokenService = new Token_service_dev_v2Contract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
 export const proposeUpdateOutPercentage = async (
-    tokenAddress: string,
+    tokenId: bigint,
     percentage: number,
     duration: number,
     threshold_no_limit: bigint
 ): Promise<number> => {
 
-  console.log(`👍 Proposing to update outgoing percentage of : ${tokenAddress}`)
-  const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-  if (storedTokenConnector == ALEO_ZERO_ADDRESS) {
-    throw Error(`Token ${tokenAddress} is not found`);
-  }
+  console.log(`👍 Proposing to update outgoing percentage of : ${tokenId}`)
 
   const proposer = council.getAccounts()[0];
   validateProposer(proposer);
@@ -37,7 +33,7 @@ export const proposeUpdateOutPercentage = async (
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimit = {
     id: proposalId,
-    token_address: tokenAddress,
+    token_id: tokenId,
     percentage: percentage,
     duration: duration,
     threshold_no_limit: threshold_no_limit
@@ -57,22 +53,18 @@ export const proposeUpdateOutPercentage = async (
 ///////////////////
 export const voteUpdateOutPercentage = async (
     proposalId: number, 
-    tokenAddress: string,
+    tokenId: bigint,
     percentage: number,
     duration: number,
     threshold_no_limit: bigint
 ) => {
-  console.log(`👍 Voting to update outgoing percentage of: ${tokenAddress}`)
-  const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-  if (storedTokenConnector == ALEO_ZERO_ADDRESS) {
-    throw Error(`Token ${tokenAddress} is not found`);
-  }
+  console.log(`👍 Voting to update outgoing percentage of: ${tokenId}`)
 
   const voter = council.getAccounts()[0];
 
   const tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimit = {
     id: proposalId,
-    token_address: tokenAddress,
+    token_id: tokenId,
     percentage: percentage,
     duration: duration,
     threshold_no_limit: threshold_no_limit
@@ -94,25 +86,21 @@ export const voteUpdateOutPercentage = async (
 //////////////////////
 export const execUpdateWithdrawalLimit = async (
     proposalId: number, 
-    tokenAddress: string,
+    tokenId: bigint,
     percentage: number,
     duration: number,
     threshold_no_limit: bigint
 ) => {
-  console.log(`Updating outgoing percentage of ${tokenAddress}`)
-  const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-  if (storedTokenConnector == ALEO_ZERO_ADDRESS) {
-    throw Error(`Token ${tokenAddress} is not found`);
-  }
+  console.log(`Updating outgoing percentage of ${tokenId}`)
 
   const tokenServiceOwner = await tokenService.owner_TS(true);
-  if (tokenServiceOwner != council.address()) {
+  if (tokenServiceOwner != serviceCouncil.address()) {
     throw Error("Council is not the owner of tokenService program");
   }
 
   const tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimit = {
     id: proposalId,
-    token_address: tokenAddress,
+    token_id: tokenId,
     percentage: percentage,
     duration: duration,
     threshold_no_limit: threshold_no_limit
@@ -125,7 +113,7 @@ export const execUpdateWithdrawalLimit = async (
 
   const [updateWithdrawalLimitTx] = await serviceCouncil.ts_update_outgoing_percentage(
     tsUpdateWithdrawalLimit.id,
-    tsUpdateWithdrawalLimit.token_address,
+    tsUpdateWithdrawalLimit.token_id,
     tsUpdateWithdrawalLimit.percentage,
     tsUpdateWithdrawalLimit.duration,
     tsUpdateWithdrawalLimit.threshold_no_limit,
@@ -140,11 +128,11 @@ export const execUpdateWithdrawalLimit = async (
     threshold_no_limit: threshold_no_limit
   };
 
-  const updatedWithdrawalLimit = await tokenService.token_withdrawal_limits(tokenAddress);
+  const updatedWithdrawalLimit = await tokenService.token_withdrawal_limits(tokenId);
   if (new_outgoing_percentage.percentage != updatedWithdrawalLimit.percentage) {
     throw Error(`❌ Unknown error.`);
   }
 
-  console.log(` ✅ Token: ${tokenAddress} minimum tranfer value updated successfully.`)
+  console.log(` ✅ Token: ${tokenId} minimum tranfer value updated successfully.`)
 
 }

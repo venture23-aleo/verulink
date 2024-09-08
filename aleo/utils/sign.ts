@@ -3,8 +3,8 @@ import { js2leo as js2leoCommon } from '@doko-js/core';
 import { sign, sign_verify } from "aleo-signer"
 
 import { hashStruct } from "./hash";
-import { InPacket, InPacketWithScreening } from '../artifacts/js/types/token_bridge_dev_v1';
-import { getInPacketLeo, getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/token_bridge_dev_v1';
+import { InPacket, InPacketWithScreening } from '../artifacts/js/types/token_bridge_dev_v2';
+import { getInPacketLeo, getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/token_bridge_dev_v2';
 
 export const signPacket = (packet: InPacket, screening_passed: boolean, privateKey: string) => {
 
