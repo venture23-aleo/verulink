@@ -1,23 +1,23 @@
-import { Token_bridge_dev_v2Contract } from "../../artifacts/js/token_bridge_dev_v2";
-import { Token_service_dev_v2Contract } from "../../artifacts/js/token_service_dev_v2";
-import { Council_dev_v2Contract } from "../../artifacts/js/council_dev_v2";
-import { Bridge_council_dev_v2Contract } from "../../artifacts/js/bridge_council_dev_v2";
-import { Token_service_council_dev_v2Contract } from "../../artifacts/js/token_service_council_dev_v2";
+import { Token_bridge_stg_v2Contract } from "../../artifacts/js/token_bridge_stg_v2";
+import { Token_service_stg_v2Contract } from "../../artifacts/js/token_service_stg_v2";
+import { Council_stg_v2Contract } from "../../artifacts/js/council_stg_v2";
+import { Bridge_council_stg_v2Contract } from "../../artifacts/js/bridge_council_stg_v2";
+import { Token_service_council_stg_v2Contract } from "../../artifacts/js/token_service_council_stg_v2";
 import { Multi_token_support_programv1Contract } from "../../artifacts/js/multi_token_support_programv1";
-import { Holding_dev_v2Contract } from "../../artifacts/js/holding_dev_v2";
+import { Holding_stg_v2Contract } from "../../artifacts/js/holding_stg_v2";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
 export const deployMainPrograms = async (initialAttestors: string[], initialCouncilMembers: string[], initialAttestorThreshold: number, initialCouncilThreshold: number) => {
 
-  const bridge = new Token_bridge_dev_v2Contract({ mode, priorityFee: 10_000 });
-  const tokenService = new Token_service_dev_v2Contract({ mode, priorityFee: 10_000 });
-  const council = new Council_dev_v2Contract({ mode, priorityFee: 10_000 });
-  const bridgeCouncil = new Bridge_council_dev_v2Contract({ mode, priorityFee: 10_000 });
-  const tokenServiceCouncil = new Token_service_council_dev_v2Contract({ mode, priorityFee: 10_000 });
+  const bridge = new Token_bridge_stg_v2Contract({ mode, priorityFee: 10_000 });
+  const tokenService = new Token_service_stg_v2Contract({ mode, priorityFee: 10_000 });
+  const council = new Council_stg_v2Contract({ mode, priorityFee: 10_000 });
+  const bridgeCouncil = new Bridge_council_stg_v2Contract({ mode, priorityFee: 10_000 });
+  const tokenServiceCouncil = new Token_service_council_stg_v2Contract({ mode, priorityFee: 10_000 });
   const mtsp = new Multi_token_support_programv1Contract({ mode, priorityFee: 10_000 });
-  const holding = new Holding_dev_v2Contract({ mode, priorityFee: 10_000 });
+  const holding = new Holding_stg_v2Contract({ mode, priorityFee: 10_000 });
 
   //Deploy mtsp for local devnet only
   // const mtspDeployTx = await mtsp.deploy();

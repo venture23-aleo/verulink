@@ -1,5 +1,5 @@
-import { Token_bridge_dev_v2Contract } from "../artifacts/js/token_bridge_dev_v2";
-import { Token_service_dev_v2Contract } from "../artifacts/js/token_service_dev_v2";
+import { Token_bridge_stg_v2Contract } from "../artifacts/js/token_bridge_stg_v2";
+import { Token_service_stg_v2Contract } from "../artifacts/js/token_service_stg_v2";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId, ethContractAddr, usdcContractAddr, usdtContractAddr } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -43,17 +43,17 @@ import {
   wethDecimals
 } from "../utils/testnet.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Bridge_council_dev_v2Contract } from "../artifacts/js/bridge_council_dev_v2";
+import { Bridge_council_stg_v2Contract } from "../artifacts/js/bridge_council_stg_v2";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
 import { deployWusdt } from "./deployment/wusdt";
 import { deployWeth } from "./deployment/weth";
 
-const bridge = new Token_bridge_dev_v2Contract();
-const tokenService = new Token_service_dev_v2Contract();
-const bridgeCouncil = new Bridge_council_dev_v2Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Token_service_dev_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Token_bridge_stg_v2Contract();
+const tokenService = new Token_service_stg_v2Contract();
+const bridgeCouncil = new Bridge_council_stg_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Token_service_stg_v2Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
   attestor1,
@@ -76,19 +76,19 @@ const weth_id = leo2js.field(hash('bhp256', wethName.toString()+"u128", 'field')
 const max_supply = BigInt("18446744073709551615");
 
 const setup = async () => {
-  // await deployMainPrograms(
-  //   initialAttestors,
-  //   initialCouncilMembers,
-  //   councilThreshold,
-  //   councilThreshold
-  // );
-  // // Bridge: Add ethereum chain
-  // const addChainProposalId = await proposeAddChain(ethChainId);
-  // await execAddChain(addChainProposalId, ethChainId);
+  await deployMainPrograms(
+    initialAttestors,
+    initialCouncilMembers,
+    councilThreshold,
+    councilThreshold
+  );
+  // Bridge: Add ethereum chain
+  const addChainProposalId = await proposeAddChain(ethChainId);
+  await execAddChain(addChainProposalId, ethChainId);
 
-  // // Token Bridge: Enable Service
-  // const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
-  // await execAddService(enableTokenServiceProposalId, tokenService.address());
+  // Token Bridge: Enable Service
+  const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
+  await execAddService(enableTokenServiceProposalId, tokenService.address());
 
   await wusdcSetupAndInit();
 

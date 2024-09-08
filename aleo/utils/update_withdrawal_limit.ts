@@ -1,5 +1,5 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Council_dev_v2Contract } from "../artifacts/js/council_dev_v2";
+import { Council_stg_v2Contract } from "../artifacts/js/council_stg_v2";
 import { proposeAddAttestor, execAddAttestor } from "../scripts/council/bridge/addAttestor";
 import { proposeRemoveAttestor, execRemoveAttestor } from "../scripts/council/bridge/removeAttestor";
 import {
@@ -10,7 +10,7 @@ import {
   } from "../utils/constants";
 import { execUpdateWithdrawalLimit, proposeUpdateOutPercentage } from "../scripts/council/tokenService/updateOutPercentage";
 
-const council = new Council_dev_v2Contract({ mode:ExecutionMode.SnarkExecute });
+const council = new Council_stg_v2Contract({ mode:ExecutionMode.SnarkExecute });
 
 
 const addAttestor = async() =>{
