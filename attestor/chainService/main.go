@@ -9,6 +9,8 @@ import (
 
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo"
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
+	"go.uber.org/zap"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
@@ -55,7 +57,11 @@ func main() {
 
 	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
 	logger.GetLogger().Info("Attestor started")
-	logger.PushLogsToPrometheus(fmt.Sprintf("attestor_started{attestor=\"%s\"} 1",logger.AttestorName))
+
+	pusher, err := metrics.InitMetrics(config.GetConfig().CollectorServiceConfig, config.GetConfig().MetricConfig)
+	if err != nil {
+		logger.GetLogger().Error("Error initializing metrics logging", zap.Error(err))
+	}
 
 	signal.Ignore(getIgnoreSignals()...)
 	ctx := context.Background()
@@ -68,5 +74,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	relay.StartRelay(ctx, config.GetConfig())
+	pmetrics := metrics.NewPrometheusMetrics()
+	go metrics.PushMetrics(ctx, pusher, pmetrics)
+	pmetrics.StartVersion(logger.AttestorName, config.GetConfig().Version)
+
+	relay.StartRelay(ctx, config.GetConfig(), pmetrics)
 }

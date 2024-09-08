@@ -3,36 +3,33 @@ package logger
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
-func TestLogger(t *testing.T) {
-	prometheusGatewayURL = "https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway"
+// TODO: add tests for promethues metrics push
 
-	// attestorName := "attestor1"
-	// srcChainId := "1"
-	// pktSeq := 2
-	// hash := "hash"
-	// signature := "sign"
-	chainId:= "1"
 
-	// db_post{attestor="attestornameisthis"} 0
+func TestCheckHealthInInterval(t *testing.T) {
+    duration := 1 * time.Second
+    ticker := time.NewTicker(duration)
+    defer ticker.Stop()
 
-	// log := fmt.Sprintf("test_prometheus{attestor=%s} 1", attestorName)
+    done := make(chan struct{})
+    defer close(done)
 
-	// PushLogsToPrometheus(log)
+    go func() {
+        for {
+            select {
+            case <-ticker.C:
+                fmt.Println("the ticker is hereee")
+                
+            case <-done:
+                return
+            }
+        }
+    }()
 
-	// PushLogsToPrometheus(fmt.Sprintf("signing_service_request_fail{attestor=%s} 0", attestorName))
+    time.Sleep(3 * duration) // Wait for 3 minutes
 
-	type packet struct {
-		a string
-	}
-
-	pkt := new(packet)
-	pkt.a = "hello"
-
-	log:=fmt.Sprintf("chainService_aleo_managePacket_retryCh{client=\"%s\",packet=\"%v\"} 1", chainId,pkt)
-	PushLogsToPrometheus(log)
-
-	//log2:= fmt.Sprintf("")
 
 }

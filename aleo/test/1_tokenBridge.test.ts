@@ -49,7 +49,7 @@ const createPacket = (
   );
 };
 
-describe.skip("Token Bridge ", () => {
+describe("Token Bridge ", () => {
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
 

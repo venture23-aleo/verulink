@@ -16,7 +16,7 @@ func constructAleoPacket(pkt *chainService.Packet) string {
 		"{ version: %du8, sequence: %du64, "+
 			"source: { chain_id: %du128, addr: %s }, "+
 			"destination: { chain_id: %du128, addr: %s }, "+
-			"message: { sender_address: %s, dest_token_address: %s , amount: %du128 , receiver_address: %s }, "+
+			"message: { sender_address: %s, dest_token_id: %s , amount: %du128 , receiver_address: %s }, "+
 			"height: %du64 }",
 		pkt.Version, pkt.Sequence, pkt.Source.ChainID,
 		constructEthAddressForAleoParameter(pkt.Source.Address),

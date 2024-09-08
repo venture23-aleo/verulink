@@ -3,17 +3,23 @@ package relay
 import (
 	"context"
 	"errors"
-	"flag"
 	"math"
+	"time"
+
+	"flag"
+	// "math"
 	"math/big"
 	"os"
+
 	"path/filepath"
 	"testing"
-	"time"
+
+	// "time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
 )
 
@@ -37,6 +43,13 @@ type feeder struct {
 	name            string
 	feed            func()
 	getMissedPacket func() (*chain.Packet, error)
+	setMetrics      func()
+}
+
+func (f *feeder) SetMetrics(metrics *metrics.PrometheusMetrics) {
+	if f.setMetrics != nil {
+		f.setMetrics()
+	}
 }
 
 func (f *feeder) FeedPacket(ctx context.Context, pktCh chan<- *chain.Packet) {
@@ -78,6 +91,10 @@ func getHasher(h *testHash) func(sp *chain.ScreenedPacket) string {
 	}
 }
 
+func newMetrics() *metrics.PrometheusMetrics{
+	return metrics.NewPrometheusMetrics()
+}
+
 func TestInitPacketFeeder(t *testing.T) {
 	t.Run("normal flow", func(t *testing.T) {
 		dbRemover := setupDB(t, "./normal-flow-bolt.db")
@@ -115,7 +132,8 @@ func TestInitPacketFeeder(t *testing.T) {
 
 		ctx := context.TODO()
 		pktCh := make(chan *chain.Packet)
-		go initPacketFeeder(ctx, cfgs, pktCh)
+		pmetrics := newMetrics()
+		go initPacketFeeder(ctx, cfgs, pktCh, pmetrics)
 		time.Sleep(time.Second * 1)
 		require.True(t, startedToFeedAleoPkt)
 		require.True(t, startedToFeedEthereumPkt)
@@ -140,9 +158,10 @@ func TestInitPacketFeeder(t *testing.T) {
 
 		ctx := context.TODO()
 		pktCh := make(chan *chain.Packet)
+		pmetrics := newMetrics()
 
 		require.Panics(t, func() {
-			initPacketFeeder(ctx, cfgs, pktCh)
+			initPacketFeeder(ctx, cfgs, pktCh, pmetrics)
 		})
 
 	})
@@ -212,6 +231,7 @@ func TestConsumePackets(t *testing.T) {
 			collector: &collectorTest{},
 			screener:  &screenTest{},
 			signer:    &signTest{},
+			metrics: newMetrics(),
 		}
 
 		pktCh := make(chan *chain.Packet)
@@ -259,6 +279,8 @@ func TestProcessPackets(t *testing.T) {
 			screener: &screenTest{
 				screen: func() bool { return true },
 			},
+
+			metrics: newMetrics(),
 		}
 
 		ethSeqNum := 23
@@ -303,6 +325,8 @@ func TestProcessPackets(t *testing.T) {
 			screener: &screenTest{
 				screen: func() bool { return true },
 			},
+
+			metrics: newMetrics(),
 		}
 
 		ethSeqNum := 23
@@ -352,6 +376,8 @@ func TestProcessPackets(t *testing.T) {
 			screener: &screenTest{
 				screen: func() bool { return true },
 			},
+
+			metrics: newMetrics(),
 		}
 
 		ethSeqNum := 23
@@ -379,6 +405,7 @@ func TestProcessPackets(t *testing.T) {
 type collectorTest struct {
 	sendToCollector          func(sp *chain.ScreenedPacket, pktHash, signature string) error
 	receivePktsFromCollector func(ctx context.Context, ch chan<- *chain.MissedPacket)
+	checkHealth              func(ctx context.Context) error
 }
 
 func (c *collectorTest) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, signature string) error {
@@ -394,6 +421,13 @@ func (c *collectorTest) ReceivePktsFromCollector(
 	if c.receivePktsFromCollector != nil {
 		c.receivePktsFromCollector(ctx, ch)
 	}
+}
+
+func (c *collectorTest) CheckCollectorHealth(ctx context.Context) error {
+	if c.checkHealth(ctx) != nil {
+		return c.checkHealth(ctx)
+	}
+	return nil
 }
 
 type screenTest struct {
@@ -417,6 +451,7 @@ func (s *screenTest) Screen(pkt *chain.Packet) bool {
 
 type signTest struct {
 	signScreenedPacket func(sp *chain.ScreenedPacket) (string, string, error)
+	checkHealth        func(ctx context.Context) error
 }
 
 func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.ScreenedPacket) (string, string, error) {
@@ -425,4 +460,11 @@ func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.Scre
 	}
 
 	return "hash", "mySignature", nil
+}
+
+func (s *signTest) CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig ) error {
+	if s.checkHealth != nil {
+		return s.checkHealth(ctx)
+	}
+	return nil
 }

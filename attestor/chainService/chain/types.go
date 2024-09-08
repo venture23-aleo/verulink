@@ -4,10 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 
 	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"go.uber.org/zap"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 )
 
 type ClientFunc func(cfg *config.ChainConfig) IClient
@@ -23,6 +27,7 @@ type IClient interface {
 	GetMissedPacket(
 		ctx context.Context, missedPkt *MissedPacket) (
 		*Packet, error)
+	SetMetrics(metrics *metrics.PrometheusMetrics)
 }
 
 type NetworkAddress struct {
@@ -84,9 +89,45 @@ type ScreenedPacket struct {
 // MissedPacket denotes the information about a packet that db-service administrator has requested
 // for the attestors to re-process
 type MissedPacket struct {
-	TargetChainID *big.Int `json:"target_chain_id"`
-	SourceChainID *big.Int `json:"source_chain_id"`
-	SeqNum        uint64   `json:"seq_num"`
+	TargetChainID *big.Int `json:"destChainId"`
+	SourceChainID *big.Int `json:"sourceChainId"`
+	SeqNum        uint64   `json:"sequence"`
 	Height        uint64   `json:"height"`
-	TxnID         string   `json:"txn_id"`
+	TxnID         string   `json:"transactionHash"`
+}
+
+// MissedPacketDetails represents the structure sent by the db-service during polling.
+type MissedPacketDetails struct {
+	Data    []*MissedPacket `json:"data"`
+	Message string          `json:"message"`
+}
+
+// Custom unmarshal function to convert a JSON string into a *big.Int
+func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
+
+	mPKt := &struct {
+		TargetChainID string `json:"destChainId"`
+		SourceChainID string `json:"sourceChainId"`
+		SeqNum        uint64 `json:"sequence"`
+		Height        uint64 `json:"height"`
+		TxnID         string `json:"transactionHash"`
+	}{}
+
+	if err := json.Unmarshal(data, &mPKt); err != nil {
+		logger.GetLogger().Error("Error while unmarshaling missed packet ", zap.Error(err))
+		return err
+	}
+
+	packet.TargetChainID, _ = new(big.Int).SetString(mPKt.TargetChainID, 10)
+
+	packet.SourceChainID, _ = new(big.Int).SetString(mPKt.SourceChainID, 10)
+	packet.SeqNum = mPKt.SeqNum
+	packet.Height = mPKt.Height
+	packet.TxnID = mPKt.TxnID
+	return nil
+}
+
+// CollectorResponse is a struct that represent the response sent by collector on ok
+type CollectorResponse struct{
+	Message string `json:"message"`
 }

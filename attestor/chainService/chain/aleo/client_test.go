@@ -12,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -124,6 +125,10 @@ func (mckAleoCl *mockAleoClient) Send(ctx context.Context, aleoPacket, privateKe
 	return nil
 }
 
+func newMetrics() *metrics.PrometheusMetrics {
+	return metrics.NewPrometheusMetrics()
+}
+
 func TestFeedPacket(t *testing.T) {
 	t.Log("case: happy path parsing")
 
@@ -190,6 +195,8 @@ func TestFeedPacket(t *testing.T) {
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
 			waitHeight:          1,
+			avgBlockGenDur:      time.Second,
+			metrics:             newMetrics(),
 		}
 		pktCh := make(chan *chain.Packet)
 
@@ -248,6 +255,8 @@ func TestFeedPacket(t *testing.T) {
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
 			waitHeight:          90,
+			avgBlockGenDur:      time.Second,
+			metrics:             newMetrics(),
 		}
 		pktCh := make(chan *chain.Packet)
 		go client.FeedPacket(context.Background(), pktCh)
@@ -381,6 +390,7 @@ func TestManagePacket2(t *testing.T) {
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
+		metrics:             newMetrics(),
 	}
 
 	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
@@ -462,6 +472,8 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		retryPacketWaitDur:  time.Hour,
 		destChainsIDMap:     map[string]uint64{big.NewInt(1).String(): 1},
 		pruneBaseSeqWaitDur: time.Second,
+		avgBlockGenDur:      time.Second,
+		metrics:             newMetrics(),
 	}
 
 	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"1")

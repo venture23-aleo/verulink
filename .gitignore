@@ -3,6 +3,7 @@ go.work*
 **/rust/target
 **/*.log
 *.txt
+!requirements.txt
 **/*UTC*
 **/*.db
 *.lock
@@ -13,3 +14,12 @@ coverage.json
 *.cer
 *.key
 *.crt
+*venv
+*.pem
+.temp.*
+.temp
+
+# ignore go build outputs
+/attestor/chainService/chainService
+/attestor/signingService/signingService
+/attestor/proxy/proxy
