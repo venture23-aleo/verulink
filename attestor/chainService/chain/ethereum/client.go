@@ -262,6 +262,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 			if maturedHeight < cl.nextBlockHeight {
 				diff := cl.nextBlockHeight - maturedHeight
+				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height",diff) )
 				time.Sleep((time.Duration(diff) * avgBlockGenDur))
 				break L1
 			}

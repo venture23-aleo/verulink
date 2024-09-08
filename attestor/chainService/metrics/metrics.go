@@ -224,8 +224,6 @@ func PushMetrics(ctx context.Context, pusher *push.Pusher, pmetrics *PrometheusM
 			}
 			if err := pusher.Gatherer(gatherer).Push(); err != nil {
 				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
-			} else {
-				logger.GetLogger().Info("Metrics pushed successfully.")
 			}
 			pmetrics = NewPrometheusMetrics()
 		}

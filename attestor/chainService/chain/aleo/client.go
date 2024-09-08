@@ -131,15 +131,18 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 
 		curMaturedHeight := cl.blockHeightPriorWaitDur(ctx)
 		if curMaturedHeight == 0 { // 0 means that there was some error while getting current height
+			logger.GetLogger().Info("Failed to get block, retrying after", zap.Duration("time",cl.validityWaitDur))
+			time.Sleep(cl.validityWaitDur)
 			continue
 		}
 
 		switch {
 		case availableInHeight == 0:
+			logger.GetLogger().Info("Sleeping aleo client for", zap.Duration("duration",cl.validityWaitDur))
 			time.Sleep(cl.validityWaitDur)
 		case availableInHeight > curMaturedHeight:
 			dur := time.Duration(availableInHeight-curMaturedHeight) * cl.avgBlockGenDur
-			logger.GetLogger().Info("Sleeping ", zap.Duration("duration", dur))
+			logger.GetLogger().Info("Sleeping aleo client", zap.Duration("duration", dur))
 			time.Sleep(dur)
 		}
 
