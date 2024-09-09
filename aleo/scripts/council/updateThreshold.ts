@@ -1,17 +1,17 @@
 import { hashStruct } from "../../utils/hash";
 
-import { CouncilContract } from "../../artifacts/js/council";
+import { Council_stg_v2Contract } from "../../artifacts/js/council_stg_v2";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer } from "./councilUtils";
-import { UpdateThreshold } from "../../artifacts/js/types/council";
-import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/council";
+import { UpdateThreshold } from "../../artifacts/js/types/council_stg_v2";
+import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/council_stg_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new CouncilContract({mode, priorityFee: 10_000});
+const council = new Council_stg_v2Contract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////
@@ -44,14 +44,15 @@ export const proposeUpdateThreshold = async (newThreshold: number): Promise<numb
 //////////////////////
 export const voteUpdateThreshold = async (proposalId: number, newThreshold: number) => {
 
-  console.log(`👍 Proposing to update Threshold: ${newThreshold}`)
+  console.log(`👍 Voting to update Threshold: ${newThreshold}`)
   const isOldThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
   if (isOldThreshold == newThreshold || newThreshold == 0) {
     throw Error(`${newThreshold} is invalid!`);
   }
-
-  const proposer = council.getAccounts()[0];
-  validateProposer(proposer);
+  council.connect("aleo1s9jt6t6esqg4caw0lzhr393f80jd5mw2w4mn0hudze60fvnrlq9s9ryctf");
+  const voter = council.getAccounts()[0];
+  console.log(voter);
+  // validateProposer(voter);
 
   const updateThresholdProposal: UpdateThreshold = {
     id: proposalId,
@@ -73,7 +74,7 @@ export const voteUpdateThreshold = async (proposalId: number, newThreshold: numb
 //////////////////////
 export const execUpdateThreshold = async (proposalId: number, newThreshold: number, ) => {
 
-    console.log(`👍 Proposing to update Threshold: ${newThreshold}`)
+    console.log(`👍 Executing to update Threshold: ${newThreshold}`)
     const isOldThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
     if (isOldThreshold == newThreshold || newThreshold == 0) {
       throw Error(`${newThreshold} is invalid!`);
@@ -93,3 +94,13 @@ export const execUpdateThreshold = async (proposalId: number, newThreshold: numb
 
     console.log(` ✅ Threshold update successfully.`)
 }
+
+
+const update = async() =>{
+  // const propid = await proposeUpdateThreshold(1);
+  // await voteUpdateThreshold(19, 1);
+  await execUpdateThreshold(19, 1);
+
+}
+
+update();
