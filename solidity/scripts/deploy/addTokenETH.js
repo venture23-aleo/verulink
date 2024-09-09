@@ -9,16 +9,16 @@ async function main() {
     );
 
     const tokenAddress = process.env.ONE_ADDRESS;
-    const vault = process.env.ETHVAULTSERVICEPROXY_ADDRESS;
-    const destChainId = process.env.aleoChainId;
-    const destTokenAddress = process.env.destTokenAddressWETH;
-    const destTokenService = process.env.destTokenService;
-    const min = process.env.minWETH;
-    const max = process.env.maxWETH;
+    const vault = process.env.ETHVAULTSERVICE_PROXY_ADDRESS;
+    const destChainId = process.env.ALEO_CHAINID;
+    const destTokenAddress = process.env.DEST_TOKEN_ADDRESS_WETH;
+    const destTokenService = process.env.DEST_TOKENSERVICE;
+    const min = process.env.MIN_WETH;
+    const max = process.env.MAX_WETH;
 
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const ERC20TokenService = await ethers.getContractFactory("TokenService");
-    const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
+    const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
     console.log("Adding ETH to tokenservice...");
     const ERC20TokenServiceABI = ERC20TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);

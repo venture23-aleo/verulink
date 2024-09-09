@@ -21,9 +21,14 @@ module.exports = {
   },
   networks: {
     sepolia: {
-      url: "https://rpc2.sepolia.org/",
+      url: process.env.PROVIDER,
       accounts: [
-        process.env.SECRET_KEY1]
+        process.env.DEPLOYER_PRIVATE_KEY]
+    },
+    mainnet: {
+      url: process.env.PROVIDER,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY]
     },
   },
   // etherscan: {
@@ -31,10 +36,10 @@ module.exports = {
   //     sepolia: process.env.ETHERSCAN_API_KEY,
   //   }
   // },
-  contractSizer: {
-    alphaSort: true,
-    runOnCompile: true
-  },
+  // contractSizer: {
+  //   alphaSort: true,
+  //   runOnCompile: true
+  // },
   mocha: {
     timeout: 100000000
   },

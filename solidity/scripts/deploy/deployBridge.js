@@ -9,12 +9,12 @@ async function main() {
         process.env.PROVIDER
     );
 
-    const destChainId = process.env.aleoChainId;
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const destChainId = process.env.ALEO_CHAINID;
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const Bridge = await ethers.getContractFactory("Bridge", {
         libraries: {
             PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-            AleoAddressLibrary: process.env.AleoAddressLibrary,
+            AleoAddressLibrary: process.env.ALEO_ADDRESS_LIBRARY,
         },
     });
 
@@ -23,7 +23,7 @@ async function main() {
     const bridgeImpl = await Bridge.deploy();
     await bridgeImpl.deployed();
     console.log("Bridge Impl Deployed to: ", bridgeImpl.address);
-    updateEnvFile("TOKENBRIDGEIMPLEMENTATION_ADDRESS", bridgeImpl.address);
+    updateEnvFile("TOKENBRIDGE_IMPLEMENTATION_ADDRESS", bridgeImpl.address);
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
 
     const initializeData = new ethers.utils.Interface(Bridge.interface.format()).encodeFunctionData("Bridge_init", [destChainId, deployerSigner.address]);
@@ -31,7 +31,7 @@ async function main() {
     const bridgeProxy = await ProxyContract.deploy(bridgeImpl.address, initializeData);
     await bridgeProxy.deployed();
 
-    updateEnvFile("TOKENBRIDGEPROXY_ADDRESS", bridgeProxy.address)
+    updateEnvFile("TOKENBRIDGE_PROXY_ADDRESS", bridgeProxy.address)
     console.log("Bridge Proxy Deployed to: ", bridgeProxy.address);
 }
 main()

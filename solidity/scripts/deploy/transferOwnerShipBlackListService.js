@@ -7,10 +7,10 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const newOwner = process.env.SAFE_ADDRESS;
     const BlackListService = await ethers.getContractFactory("BlackListService");
-    const blackListServiceProxy = process.env.BLACKLISTSERVICEPROXY_ADDRESS;
+    const blackListServiceProxy = process.env.BLACKLISTSERVICE_PROXY_ADDRESS;
     console.log("Transferring Ownership of BlackListService to = ", newOwner);
     const BlackListServiceABI = BlackListService.interface.format();
     const BlackListServiceContract = new ethers.Contract(blackListServiceProxy, BlackListServiceABI, deployerSigner);

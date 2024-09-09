@@ -9,14 +9,14 @@ async function main() {
         process.env.PROVIDER
     );
 
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const ETHVaultService = await ethers.getContractFactory("EthVaultService");
     
     console.log("Deploying EthVaultService Impl and Proxy...");
 
     const ethVaultServiceImpl = await ETHVaultService.deploy();
     await ethVaultServiceImpl.deployed();
-    updateEnvFile("ETHVAULTSERVICEIMPL_ADDRESS", ethVaultServiceImpl.address)
+    updateEnvFile("ETHVAULTSERVICE_IMPL_ADDRESS", ethVaultServiceImpl.address)
     console.log("ETHVaultService Impl Deployed to: ", ethVaultServiceImpl.address);
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
@@ -25,7 +25,7 @@ async function main() {
     const ethVaultServiceProxy = await ProxyContract.deploy(ethVaultServiceImpl.address, initializeData);
     await ethVaultServiceProxy.deployed();
 
-    updateEnvFile("ETHVAULTSERVICEPROXY_ADDRESS", ethVaultServiceProxy.address)
+    updateEnvFile("ETHVAULTSERVICE_PROXY_ADDRESS", ethVaultServiceProxy.address)
     console.log("ETHVaultService Proxy Deployed to: ", ethVaultServiceProxy.address);
 }
 main()

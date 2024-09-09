@@ -5,13 +5,10 @@ dotenv.config();
 import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    process.env.PROVIDER
-);
   const AleoAddressLibrary = await ethers.getContractFactory("AleoAddressLibrary");
   const aleoAddressLibrary = await AleoAddressLibrary.deploy();
   await aleoAddressLibrary.deployed();
-  updateEnvFile("AleoAddressLibrary", aleoAddressLibrary.address)
+  updateEnvFile("ALEO_ADDRESS_LIBRARY", aleoAddressLibrary.address)
   console.log("AleoAddressLibrary Deployed to:", aleoAddressLibrary.address);
 }
 main()

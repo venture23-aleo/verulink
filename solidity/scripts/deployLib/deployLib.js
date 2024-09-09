@@ -5,9 +5,6 @@ dotenv.config();
 import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    process.env.PROVIDER
-);
   const PacketLibrary = await ethers.getContractFactory("PacketLibrary");
   const packetLibrary = await PacketLibrary.deploy();
   await packetLibrary.deployed();

@@ -9,23 +9,23 @@ async function main() {
         process.env.PROVIDER
     );
 
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const Holding = await ethers.getContractFactory("Holding")
 
     console.log("Deploying Holding Impl and Proxy...");
 
     const holdingImpl = await Holding.deploy();
     await holdingImpl.deployed();
-    updateEnvFile("HOLDINGIMPLEMENTATION_ADDRESS", holdingImpl.address);
+    updateEnvFile("HOLDING_IMPLEMENTATION_ADDRESS", holdingImpl.address);
     console.log("Holding Impl Deployed to: ", holdingImpl.address);
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
     
-    const initializeData = new ethers.utils.Interface(Holding.interface.format()).encodeFunctionData("Holding_init", [process.env.TOKENSERVICEPROXY_ADDRESS, deployerSigner.address]);
+    const initializeData = new ethers.utils.Interface(Holding.interface.format()).encodeFunctionData("Holding_init", [process.env.TOKENSERVICE_PROXY_ADDRESS, deployerSigner.address]);
     const holdingProxy = await ProxyContract.deploy(holdingImpl.address, initializeData);
     await holdingProxy.deployed();
 
-    updateEnvFile("HOLDINGPROXY_ADDRESS", holdingProxy.address);
+    updateEnvFile("HOLDING_PROXY_ADDRESS", holdingProxy.address);
     console.log("Holding Proxy Deployed to: ", holdingProxy.address);
 }
 main()

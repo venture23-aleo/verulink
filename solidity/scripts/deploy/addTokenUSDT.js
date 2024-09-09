@@ -9,16 +9,17 @@ async function main() {
     );
 
     const tokenAddress = process.env.USDT_ADDR;
-    const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS_USDT;
-    const destChainId = process.env.aleoChainId;
-    const destTokenAddress = process.env.destTokenAddressWUSDT;
-    const destTokenService = process.env.destTokenService;
-    const min = process.env.minWUSDT;
-    const max = process.env.maxWUSDT;
+    const vault = process.env.ERC20VAULTSERVICE_PROXY_ADDRESS_USDT;
+    const destChainId = process.env.ALEO_CHAINID;
+    const destTokenAddress = process.env.DEST_TOKEN_ADDRESS_WETH;
+    const destTokenService = process.env.DEST_TOKENSERVICE;
+    const min = process.env.MIN_WUSDT;
+    const max = process.env.MAX_WUSDT;
 
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const ERC20TokenService = await ethers.getContractFactory("TokenService");
-    const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
+    const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
+    
     console.log("Adding USDT to tokenservice...");
     const ERC20TokenServiceABI = ERC20TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);

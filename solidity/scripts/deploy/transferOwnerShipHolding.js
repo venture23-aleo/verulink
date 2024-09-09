@@ -7,10 +7,10 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const newOwner = process.env.SAFE_ADDRESS;
     const Holding = await ethers.getContractFactory("Holding");
-    const holdingProxy = process.env.HOLDINGPROXY_ADDRESS;
+    const holdingProxy = process.env.HOLDING_PROXY_ADDRESS;
     console.log("Transferring Ownership of Holding to = ", newOwner);
     const HoldingABI = Holding.interface.format();
     const HoldingContract = new ethers.Contract(holdingProxy, HoldingABI, deployerSigner);

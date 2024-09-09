@@ -7,10 +7,10 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const newOwner = process.env.SAFE_ADDRESS;
     const TokenService = await ethers.getContractFactory("TokenService");
-    const tokenServiceProxy = process.env.TOKENSERVICEPROXY_ADDRESS;
+    const tokenServiceProxy = process.env.TOKENSERVICE_PROXY_ADDRESS;
     console.log("Transferring Ownership of TokenService to = ", newOwner);
     const TokenServiceABI = TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxy, TokenServiceABI, deployerSigner);

@@ -11,16 +11,15 @@ async function main() {
 
     const usdc = process.env.USDC_ADDR;
     const usdt = process.env.USDT_ADDR;
-    // const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const BlackListService = await ethers.getContractFactory("BlackListService");
 
     console.log("Deploying BlacklistService Impl and Proxy...");
 
     const blackListServiceImpl = await BlackListService.deploy();
     await blackListServiceImpl.deployed();
-    updateEnvFile("BLACKLISTSERVICEIMPLEMENTATION_ADDRESS", blackListServiceImpl.address)
+    updateEnvFile("BLACKLISTSERVICE_IMPLEMENTATION_ADDRESS", blackListServiceImpl.address)
     console.log("BlackListService Impl Deployed to: ", blackListServiceImpl.address);
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
@@ -29,7 +28,7 @@ async function main() {
     const blackListServiceProxy = await ProxyContract.deploy(blackListServiceImpl.address, initializeData);
     await blackListServiceProxy.deployed();
 
-    updateEnvFile("BLACKLISTSERVICEPROXY_ADDRESS", blackListServiceProxy.address)
+    updateEnvFile("BLACKLISTSERVICE_PROXY_ADDRESS", blackListServiceProxy.address)
     console.log("BlackListService Proxy Deployed to: ", blackListServiceProxy.address);
 }
 main()

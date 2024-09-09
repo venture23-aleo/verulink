@@ -29,7 +29,7 @@ async function proposeAddAttestorsBatchTransaction(signer) {
     process.env.ATTESTOR4,
     process.env.ATTESTOR5
   ];
-  const newQuorumRequired = 2;
+  const newQuorumRequired = process.env.NewQuorumRequired;
 
   // Get the contract factory for the "Bridge" contract
   const BridgeImpl = await ethers.getContractFactory("Bridge", {
