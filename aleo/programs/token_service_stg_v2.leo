@@ -541,7 +541,7 @@ program token_service_stg_v2.aleo {
         Mapping::set(total_supply, token_id, current_supply + amount);
 
         // Increase the held amount
-        let previously_held_amount:u128 = Mapping::get(token_holding, token_id);
+        let previously_held_amount:u128 = Mapping::get_or_use(token_holding, token_id, 0u128);
         Mapping::set(token_holding, token_id, previously_held_amount+held_amount);
 
     }
@@ -584,6 +584,15 @@ program token_service_stg_v2.aleo {
         assert_eq(owner, from);
         let held_amount:u128 = Mapping::get(token_holding, token_id);
         Mapping::set(token_holding, token_id, held_amount-amount);
+    }
+
+    transition holding_transfer_ownership(public new_owner: address) {
+        holding_stg_v2.aleo/transfer_ownership_holding(new_owner);
+        return then finalize(self.caller);
+    }
+    finalize holding_transfer_ownership(from:address){
+        let owner: address = Mapping::get(owner_TS, true);
+        assert_eq(owner, from);
     }
 
     

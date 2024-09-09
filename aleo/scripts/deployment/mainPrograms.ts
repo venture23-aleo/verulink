@@ -20,8 +20,8 @@ export const deployMainPrograms = async (initialAttestors: string[], initialCoun
   const holding = new Holding_stg_v2Contract({ mode, priorityFee: 10_000 });
 
   //Deploy mtsp for local devnet only
-  // const mtspDeployTx = await mtsp.deploy();
-  // await mtsp.wait(mtspDeployTx);
+  const mtspDeployTx = await mtsp.deploy();
+  await mtsp.wait(mtspDeployTx);
 
   // Deploy holding
   const wusdcHoldingDeployTx = await holding.deploy(); // 5_039_000

@@ -307,6 +307,32 @@ program token_service_council_stg_v2.aleo
         council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 
+    //////////////////////////////////////////////////////
+    ///////  Holding Program : Transfer Ownership ////////
+    //////////////////////////////////////////////////////
+
+    struct TransferOwnershipHolding {
+        id: u32,
+        new_owner: address
+    }
+
+    transition holding_ownership_transfer(
+        public id: u32,
+        public new_owner: address,
+        public voters : [address; 5]
+    ) {
+        let proposal: TransferOwnershipHolding  = TransferOwnershipHolding {
+            id,
+            new_owner
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        token_service_stg_v2.aleo/holding_transfer_ownership(new_owner);
+
+        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+    }
+
     ////////////////////////////////////////////////
     ///////  Token Service : Register Token ////////
     ////////////////////////////////////////////////

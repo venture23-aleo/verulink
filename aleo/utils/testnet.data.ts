@@ -2,7 +2,7 @@
 export const attestor1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
 export const attestor2 = "aleo1s9jt6t6esqg4caw0lzhr393f80jd5mw2w4mn0hudze60fvnrlq9s9ryctf"
 export const attestor3 = "aleo1j4zawcfr63f7h0r97vck9xd2y2dycvgagh6n6w9f8tf9n47muggq6kgeza"
-export const attestor4 = "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8"
+export const attestor4 = "aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za"
 export const attestor5 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px" // Devnet Wallet
 
 // User address on Aleo
@@ -20,7 +20,7 @@ export const wusdcMaxTransfer = BigInt(100_000_000_000);
 export const wusdcOutgoingPercentage = 10_00 // 10%
 export const wusdcTimeframe = 300; // per 300 block
 export const wusdcMaxNoCap = BigInt(990_000_000);
-export const wusdcName = BigInt('6835075976630000077916079342659');
+export const wusdcName = BigInt('683507597663000007791607934265902');
 export const wusdcSymbol = BigInt("6220970012935411249");
 export const wusdcDecimals = 6;
 
@@ -35,7 +35,7 @@ export const wusdtMaxTransfer = BigInt(100_000_000_000);
 export const wusdtOutgoingPercentage = 10_00 // 10%
 export const wusdtTimeframe = 300; // per 300 block
 export const wusdtMaxNoCap = BigInt(990_000_000);
-export const wusdtName = BigInt('6835075976630000077916079342676');
+export const wusdtName = BigInt('683507597663000007791607934267602');
 export const wusdtSymbol = BigInt("6220970013220623921");
 export const wusdtDecimals = 6;
 
@@ -50,7 +50,7 @@ export const wethMaxTransfer = BigInt(100_000_000_000_000_000_000);
 export const wethOutgoingPercentage = 10_00 // 10%
 export const wethTimeframe = 1; // per block
 export const wethMaxNoCap = BigInt(1_000_000_000_000_000_000);
-export const wethName = BigInt('6835075976630000077916095206472');
+export const wethName = BigInt('683507597663000007791609520647202');
 export const wethSymbol = BigInt('24283076290893361');
 export const wethDecimals = 18;
 
