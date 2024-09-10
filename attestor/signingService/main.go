@@ -7,10 +7,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/chain/aleo"
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/chain/ethereum"
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
+	"github.com/venture23-aleo/verulink/attestor/signingService/chain"
+	"github.com/venture23-aleo/verulink/attestor/signingService/chain/aleo"
+	"github.com/venture23-aleo/verulink/attestor/signingService/chain/ethereum"
+	"github.com/venture23-aleo/verulink/attestor/signingService/config"
 )
 
 var (

@@ -7,7 +7,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 func TestHash(t *testing.T) {

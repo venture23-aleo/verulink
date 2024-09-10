@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	common "github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
-	addressscreener "github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/address_screener"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/collector"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/signer"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	common "github.com/venture23-aleo/verulink/attestor/chainService/common"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	addressscreener "github.com/venture23-aleo/verulink/attestor/chainService/relay/address_screener"
+	"github.com/venture23-aleo/verulink/attestor/chainService/relay/collector"
+	"github.com/venture23-aleo/verulink/attestor/chainService/relay/signer"
 	"go.uber.org/zap"
 )
 

@@ -7,13 +7,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	aleoRpc "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo/rpc"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	aleoRpc "github.com/venture23-aleo/verulink/attestor/chainService/chain/aleo/rpc"
+	"github.com/venture23-aleo/verulink/attestor/chainService/common"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	"github.com/venture23-aleo/verulink/attestor/chainService/store"
+
 	"go.uber.org/zap"
 )
 
@@ -136,7 +137,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 
 		switch {
 		case availableInHeight == 0:
-			logger.GetLogger().Info("Sleeping aleo client for", zap.Duration("duration",cl.validityWaitDur))
+			logger.GetLogger().Info("Sleeping aleo client for", zap.Duration("duration", cl.validityWaitDur))
 			time.Sleep(cl.validityWaitDur)
 		case availableInHeight > curMaturedHeight:
 			dur := time.Duration(availableInHeight-curMaturedHeight) * cl.avgBlockGenDur

@@ -1,8 +1,8 @@
 package addressscreener
 
 import (
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/store"
 )
 
 type ScreenI interface {

@@ -8,7 +8,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 // HashAndSign returns the hash of screenedPacket and the signature of the attestor on the hash of

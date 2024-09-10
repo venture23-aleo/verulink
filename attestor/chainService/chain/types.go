@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"go.uber.org/zap"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 )
 
 type ClientFunc func(cfg *config.ChainConfig) IClient
@@ -128,6 +128,6 @@ func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
 }
 
 // CollectorResponse is a struct that represent the response sent by collector on ok
-type CollectorResponse struct{
+type CollectorResponse struct {
 	Message string `json:"message"`
 }

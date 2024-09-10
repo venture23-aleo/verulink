@@ -17,10 +17,10 @@ import (
 	// "time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	"github.com/venture23-aleo/verulink/attestor/chainService/store"
 )
 
 func getFlagArgs(configFile, dbDir string) *config.FlagArgs {
@@ -91,7 +91,7 @@ func getHasher(h *testHash) func(sp *chain.ScreenedPacket) string {
 	}
 }
 
-func newMetrics() *metrics.PrometheusMetrics{
+func newMetrics() *metrics.PrometheusMetrics {
 	return metrics.NewPrometheusMetrics()
 }
 
@@ -231,7 +231,7 @@ func TestConsumePackets(t *testing.T) {
 			collector: &collectorTest{},
 			screener:  &screenTest{},
 			signer:    &signTest{},
-			metrics: newMetrics(),
+			metrics:   newMetrics(),
 		}
 
 		pktCh := make(chan *chain.Packet)
@@ -462,7 +462,7 @@ func (s *signTest) HashAndSignScreenedPacket(ctx context.Context, sp *chain.Scre
 	return "hash", "mySignature", nil
 }
 
-func (s *signTest) CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig ) error {
+func (s *signTest) CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig) error {
 	if s.checkHealth != nil {
 		return s.checkHealth(ctx)
 	}

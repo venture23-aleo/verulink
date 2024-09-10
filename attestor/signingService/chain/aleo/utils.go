@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 // formats packet for aleo bridge contract

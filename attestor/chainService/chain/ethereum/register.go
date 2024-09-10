@@ -1,8 +1,8 @@
 package ethereum
 
 import (
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/relay"
 )
 
 var completedCh chan *chain.Packet

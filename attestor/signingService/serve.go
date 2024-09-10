@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
+	"github.com/venture23-aleo/verulink/attestor/signingService/chain"
+	"github.com/venture23-aleo/verulink/attestor/signingService/config"
 )
 
 // response body fields

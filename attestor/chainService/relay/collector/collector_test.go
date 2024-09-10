@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 )
 
 func TestSetupCollector(t *testing.T) {

@@ -11,15 +11,15 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
-
+	_ "github.com/venture23-aleo/verulink/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/aleo/rpc"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain/aleo/rpc"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/store"
 )
 
 func setupDB(p string) (func(), error) {

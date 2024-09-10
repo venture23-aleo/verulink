@@ -6,7 +6,6 @@ COPY ./signingService/go.mod ./signingService/go.sum ./
 RUN go mod download
 COPY ./signingService .
 
-ENV GOPRIVATE=github.com/venture23-aleo/aleo-bridge
 RUN go build -o signingservice .
 
 FROM rust:1.80.0 as aleo
