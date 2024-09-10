@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 func TestHash(t *testing.T) {

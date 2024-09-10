@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"time"
 
-	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 const (

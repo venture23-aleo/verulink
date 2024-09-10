@@ -1,26 +1,11 @@
-module github.com/venture23-aleo/aleo-bridge/attestor/signingService
+module github.com/venture23-aleo/verulink/attestor/signingService
 
 go 1.21.3
 
 require (
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/stretchr/testify v1.8.4
-	// As long as aleo-bridge repo is private, one needs to set
-	// `GOPRIVATE=github.com/venture23-aleo/aleo-bridge` before running `go mod tidy`
-	// and have proper access to the private repo.
-	// For example, we can provide access to some ssh key in github account and in the
-	// machine user shall replace https://github.com with git@github.com in .gitconfig file
-	// as follow:
-	// [user]
-	//    name = Laxmi Prasad Oli
-	//    email = olilaxmiprasad@gmail.com
-	//    signingkey = ~/.ssh/id_rsa.pub
-	//[gpg]
-	//    format = ssh
-	//
-	//[url "ssh://git@github.com/"]
-	//    insteadOf = https://github.com/
-	github.com/venture23-aleo/aleo-bridge/attestor/chainService v0.0.0-20240207073220-5bfebbf68114
+	github.com/venture23-aleo/verulink/attestor/chainService v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -45,4 +30,3 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
 
-replace github.com/venture23-aleo/aleo-bridge/attestor/chainService => ../chainService

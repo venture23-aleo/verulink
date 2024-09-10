@@ -15,10 +15,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/common"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 )
 
 const (
@@ -86,8 +86,6 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 		},
 	}
 
-
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.uri, nil)
 	if err != nil {
 		return err
@@ -96,7 +94,7 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		logger.GetLogger().Error(err.Error())
-		return err;
+		return err
 	}
 
 	if resp.StatusCode != http.StatusOK {

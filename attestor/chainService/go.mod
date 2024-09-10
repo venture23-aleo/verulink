@@ -1,4 +1,4 @@
-module github.com/venture23-aleo/aleo-bridge/attestor/chainService
+module github.com/venture23-aleo/verulink/attestor/chainService
 
 go 1.21.3
 

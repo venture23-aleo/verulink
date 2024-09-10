@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
+	"github.com/venture23-aleo/verulink/attestor/signingService/config"
 )
 
 const (

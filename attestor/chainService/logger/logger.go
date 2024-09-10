@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"

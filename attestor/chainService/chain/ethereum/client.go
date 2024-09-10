@@ -11,18 +11,18 @@ import (
 
 	"go.uber.org/zap"
 
-	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/metrics"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
-
+	abi "github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum/abi"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	"github.com/venture23-aleo/verulink/attestor/chainService/store"
+	
 	ether "github.com/ethereum/go-ethereum"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 const (
@@ -262,7 +262,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
 
 			if maturedHeight < cl.nextBlockHeight {
 				diff := cl.nextBlockHeight - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height",diff) )
+				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff))
 				time.Sleep((time.Duration(diff) * avgBlockGenDur))
 				break L1
 			}
@@ -347,7 +347,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
 			zap.String("namespace", baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(),float64(time.Now().Unix()))
+		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		ns := baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
