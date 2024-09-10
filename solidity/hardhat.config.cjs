@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-contract-sizer");
 require("dotenv").config()
@@ -31,11 +32,11 @@ module.exports = {
         process.env.DEPLOYER_PRIVATE_KEY]
     },
   },
-  // etherscan: {
-  //   apiKey: {
-  //     sepolia: process.env.ETHERSCAN_API_KEY,
-  //   }
-  // },
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_API_KEY,
+    }
+  },
   // contractSizer: {
   //   alphaSort: true,
   //   runOnCompile: true
