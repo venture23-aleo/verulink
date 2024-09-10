@@ -1,6 +1,6 @@
 import { Vlink_token_bridge_v1Contract } from "../artifacts/js/vlink_token_bridge_v1";
 import { Vlink_token_service_v1Contract } from "../artifacts/js/vlink_token_service_v1";
-import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId, ethContractAddr, usdcContractAddr, usdtContractAddr } from "../utils/constants";
+import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, ethContractAddr, usdcContractAddr, usdtContractAddr } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
 import { execUnpause, proposeUnpauseBridge } from "./council/bridge/unpause";
@@ -73,7 +73,6 @@ const initialCouncilMembers = [
 const wusdc_id = leo2js.field(hash('bhp256', wusdcName.toString()+"u128", "field"));
 const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString()+"u128", 'field'));
 const weth_id = leo2js.field(hash('bhp256', wethName.toString()+"u128", 'field'));
-const max_supply = BigInt("18446744073709551615");
 
 const setup = async () => {
   await deployMainPrograms(

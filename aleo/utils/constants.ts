@@ -38,3 +38,6 @@ export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
 const mainnetChainId = 1
 export const ethChainId = encodeNetworkChainId("eth", mainnetChainId);
 export const aleoChainId = encodeNetworkChainId("aleo", 1);
+
+// max_supply for Tokens, it is the highest u128 value
+export const max_supply = BigInt("340282366920938463463374607431768211455");
