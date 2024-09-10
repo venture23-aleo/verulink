@@ -1,14 +1,14 @@
 
-import { Council_stg_v2Contract } from "../artifacts/js/council_stg_v2";
+import { Vlink_council_v1Contract } from "../artifacts/js/vlink_council_v1";
 
-import { getProposalVoteLeo } from "../artifacts/js/js2leo/council_stg_v2";
-import { ProposalVote, ProposalVoterKey } from "../artifacts/js/types/council_stg_v2";
+import { getProposalVoteLeo } from "../artifacts/js/js2leo/vlink_council_v1";
+import { ProposalVote, ProposalVoterKey } from "../artifacts/js/types/vlink_council_v1";
 import { ALEO_ZERO_ADDRESS } from "./constants";
 import { hashStruct } from "./hash";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
-const council = new Council_stg_v2Contract({ mode });
+const council = new Vlink_council_v1Contract({ mode });
 
 const getVoteKeys = (proposalHash: bigint, voters: string[]): bigint[] => {
   const voteKeys = []

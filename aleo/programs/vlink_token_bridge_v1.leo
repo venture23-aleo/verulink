@@ -1,5 +1,5 @@
 // The 'bridge' program.
-program token_bridge_stg_v2.aleo {
+program vlink_token_bridge_v1.aleo {
 
     // Default Aleo Program
     struct AleoProgram {
@@ -138,7 +138,7 @@ program token_bridge_stg_v2.aleo {
     mapping sequences: u128 => u64;
 
     // The chain id of the Aleo network where this program is deployed
-    const ALEO_CHAIN_ID: u128 = 6694886634403u128;
+    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
 
     // Version of the packet
     const VERSION: u8 = 1u8;

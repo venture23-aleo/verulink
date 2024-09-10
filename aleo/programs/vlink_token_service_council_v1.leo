@@ -1,7 +1,7 @@
-import council_stg_v2.aleo;
-import token_service_stg_v2.aleo;
+import vlink_council_v1.aleo;
+import vlink_token_service_v1.aleo;
 
-program token_service_council_stg_v2.aleo
+program vlink_token_service_council_v1.aleo
 {
      //////////////////////////////////////////////
     /////// Token Service: Transfer Ownership ////
@@ -39,9 +39,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/transfer_ownership_ts(new_owner);
+        vlink_token_service_v1.aleo/transfer_ownership_ts(new_owner);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -91,9 +91,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id);
+        vlink_token_service_v1.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     /////////////////////////////////////////////
@@ -113,9 +113,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/remove_token_ts(token_id);
+        vlink_token_service_v1.aleo/remove_token_ts(token_id);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     ////////////////////////////////////////////////////////
@@ -143,9 +143,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/update_min_transfer_ts(token_id, min_transfer);
+        vlink_token_service_v1.aleo/update_min_transfer_ts(token_id, min_transfer);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     ////////////////////////////////////////////////////////
@@ -173,9 +173,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/update_max_transfer_ts(token_id, max_transfer);
+        vlink_token_service_v1.aleo/update_max_transfer_ts(token_id, max_transfer);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
 
@@ -201,9 +201,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/pause_token_ts(token_id);
+        vlink_token_service_v1.aleo/pause_token_ts(token_id);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -229,9 +229,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/unpause_token_ts(token_id);
+        vlink_token_service_v1.aleo/unpause_token_ts(token_id);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -267,9 +267,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        token_service_stg_v2.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
+        vlink_token_service_v1.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     ////////////////////////////////////////////////
@@ -302,9 +302,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service_stg_v2.aleo/holding_release(token_id,receiver,amount);
+        vlink_token_service_v1.aleo/holding_release(token_id,receiver,amount);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////////////////////////////
@@ -328,9 +328,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service_stg_v2.aleo/holding_transfer_ownership(new_owner);
+        vlink_token_service_v1.aleo/holding_transfer_ownership(new_owner);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     ////////////////////////////////////////////////
@@ -366,7 +366,7 @@ program token_service_council_stg_v2.aleo
         let token_id: field = BHP256::hash_to_field(token_name);
         multi_token_support_programv1.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, SELF_ADDRESS);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     /////////////////////////////////////////////////
@@ -394,7 +394,7 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
         multi_token_support_programv1.aleo/update_token_management(token_id, admin, external_authorization_party);
         
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     // //////////////////////////////////////////////////////
@@ -427,7 +427,7 @@ program token_service_council_stg_v2.aleo
        // Execute the proposal
         multi_token_support_programv1.aleo/set_role(token_id, account, role);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////////////////////////////
@@ -457,9 +457,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service_stg_v2.aleo/update_other_chain_tokenservice(chain_id, token_id, token_service_address);
+        vlink_token_service_v1.aleo/update_other_chain_tokenservice(chain_id, token_id, token_service_address);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     struct UpdateTokenAddress {
@@ -485,9 +485,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service_stg_v2.aleo/update_other_chain_tokenaddress(chain_id, token_id, token_address);
+        vlink_token_service_v1.aleo/update_other_chain_tokenaddress(chain_id, token_id, token_address);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////////////////////////////
@@ -514,9 +514,9 @@ program token_service_council_stg_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        token_service_stg_v2.aleo/remove_other_chain_addresses(chain_id, token_id);
+        vlink_token_service_v1.aleo/remove_other_chain_addresses(chain_id, token_id);
 
-        council_stg_v2.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
 
 }

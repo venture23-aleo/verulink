@@ -1,26 +1,30 @@
-import { ExecutionMode } from "@doko-js/core";
-import { Token_service_dev_v2Contract } from "../../artifacts/js/token_service_dev_v2";
-import { InPacket } from "../../artifacts/js/types/token_bridge_dev_v2";
+import { ExecutionMode, leo2js } from "@doko-js/core";
+import { Vlink_token_service_council_v1Contract } from "../../artifacts/js/vlink_token_service_council_v1";
+import { InPacket } from "../../artifacts/js/types/vlink_token_bridge_v1";
 import { createRandomPacket } from "../../utils/bridge_packet";
 import { ALEO_ZERO_ADDRESS, aleoChainId, ethChainId, ethTsContractAddr, ethTsContractAddr3 } from "../../utils/constants";
 import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../../utils/ethAddress";
 import { PrivateKey } from "@aleohq/sdk";
 import { signPacket } from "../../utils/sign";
-import { TokenOwner } from "../../artifacts/js/types/token_service_dev_v2";
+import { TokenOwner } from "../../artifacts/js/types/multi_token_support_programv1";
 import { hashStruct } from "../../utils/hash";
-import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/multi_token_support_program";
+import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/multi_token_support_programv1";
+import { Vlink_token_service_v1Contract } from "../../artifacts/js/vlink_token_service_v1";
+import { wusdcName } from "../../utils/mainnet.data";
+import { hash } from "aleo-hasher";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
-let tokenID=BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
+let tokenID = leo2js.field(hash('bhp256', wusdcName.toString()+"u128", "field"));
 const ethUser = generateRandomEthAddr();
 const receiver = ethUser.toLowerCase();
-const tokenService = new Token_service_dev_v2Contract({ mode });
+console.log("Receiver : ", receiver);
+const tokenService = new Vlink_token_service_v1Contract({ mode });
 
 // console.log(tokenService.getAccounts());
 
-const aleoUser1 = "aleo1s9jt6t6esqg4caw0lzhr393f80jd5mw2w4mn0hudze60fvnrlq9s9ryctf";
+const aleoUser1 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px";
 const admin = aleoUser1;
 
 const createPacket = (
@@ -43,7 +47,7 @@ const createPacket = (
 
   const receive_wusdc = async () =>{
     const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address());
-            const signature = signPacket(packet, true, "APrivateKey1zkp6pbBEyRwBMhu32RySNRQC4Y5kBjxwiGvYT7xNJXVHaxy");
+            const signature = signPacket(packet, true, "APrivateKey1zkp8CZNn3yeCseEtxuVPbDCwSyhGW6yZKUYKfgXmcpoGPWH");
             const signatures = [
               signature,
               signature,
@@ -102,6 +106,7 @@ const createPacket = (
               console.log(finalTokenSupply);
   }
 
+receive_wusdc();
 
 const getHash = () =>{
   const t_owner:TokenOwner ={

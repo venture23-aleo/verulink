@@ -1,20 +1,20 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Token_service_stg_v2Contract } from "../../artifacts/js/token_service_stg_v2";
-import { Council_stg_v2Contract } from "../../artifacts/js/council_stg_v2";
-import { getRegisterToken } from "../../artifacts/js/leo2js/token_service_council_stg_v2";
+import { Vlink_token_service_v1Contract } from "../../artifacts/js/vlink_token_service_v1";
+import { Vlink_council_v1Contract } from "../../artifacts/js/vlink_council_v1";
+import { getRegisterToken } from "../../artifacts/js/leo2js/vlink_token_service_council_v1";
 import { hashStruct } from "../../utils/hash";
-import { RegisterToken, RegisterTokenLeo } from "../../artifacts/js/types/token_service_council_stg_v2";
+import { RegisterToken, RegisterTokenLeo } from "../../artifacts/js/types/vlink_token_service_council_v1";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
-import { Token_service_council_stg_v2Contract } from "../../artifacts/js/token_service_council_stg_v2";
+import { Vlink_token_service_council_v1Contract } from "../../artifacts/js/vlink_token_service_council_v1";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
-import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/token_service_council_stg_v2";
+import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/vlink_token_service_council_v1";
 
 const mode = ExecutionMode.SnarkExecute;
 export const deployWusdt = async (token_name, symbol, decimals, max_supply) => {
 
-  const tokenService = new Token_service_stg_v2Contract({ mode, priorityFee: 10_000 });
-  const tokenServiceCouncil = new Token_service_council_stg_v2Contract({ mode, priorityFee: 10_000 })
-  const council = new Council_stg_v2Contract({ mode, priorityFee: 10_000 });
+  const tokenService = new Vlink_token_service_v1Contract({ mode, priorityFee: 10_000 });
+  const tokenServiceCouncil = new Vlink_token_service_council_v1Contract({ mode, priorityFee: 10_000 })
+  const council = new Vlink_council_v1Contract({ mode, priorityFee: 10_000 });
 
   // Propose wusdc registration
   const proposalId = (parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1);

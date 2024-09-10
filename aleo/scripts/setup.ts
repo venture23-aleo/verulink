@@ -1,5 +1,5 @@
-import { Token_bridge_stg_v2Contract } from "../artifacts/js/token_bridge_stg_v2";
-import { Token_service_stg_v2Contract } from "../artifacts/js/token_service_stg_v2";
+import { Vlink_token_bridge_v1Contract } from "../artifacts/js/vlink_token_bridge_v1";
+import { Vlink_token_service_v1Contract } from "../artifacts/js/vlink_token_service_v1";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, ethChainId, ethContractAddr, usdcContractAddr, usdtContractAddr } from "../utils/constants";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -21,7 +21,7 @@ import {
   wusdcName,
   wusdcSymbol,
   wusdcDecimals,
-} from "../utils/testnet.data";
+} from "../utils/mainnet.data";
 import {
   wusdtMaxNoCap,
   wusdtMaxTransfer,
@@ -31,7 +31,7 @@ import {
   wusdtName,
   wusdtSymbol,
   wusdtDecimals
-} from "../utils/testnet.data";
+} from "../utils/mainnet.data";
 import {
   wethMaxNoCap,
   wethMaxTransfer,
@@ -41,19 +41,19 @@ import {
   wethName,
   wethSymbol,
   wethDecimals
-} from "../utils/testnet.data";
+} from "../utils/mainnet.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Bridge_council_stg_v2Contract } from "../artifacts/js/bridge_council_stg_v2";
+import { Vlink_bridge_council_v1Contract } from "../artifacts/js/vlink_bridge_council_v1";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
 import { deployWusdt } from "./deployment/wusdt";
 import { deployWeth } from "./deployment/weth";
 
-const bridge = new Token_bridge_stg_v2Contract();
-const tokenService = new Token_service_stg_v2Contract();
-const bridgeCouncil = new Bridge_council_stg_v2Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Token_service_stg_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Vlink_token_bridge_v1Contract();
+const tokenService = new Vlink_token_service_v1Contract();
+const bridgeCouncil = new Vlink_bridge_council_v1Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Vlink_token_service_v1Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
   attestor1,

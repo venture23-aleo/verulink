@@ -4,7 +4,7 @@ import {
   ethTsContractAddr 
 } from "../../utils/constants";
 import { Token_bridge_v0003Contract } from "../../artifacts/js/token_bridge_v0003";
-import { } from "../../utils/testnet.data";
+import { } from "../../utils/mainnet.data";
 import { Wusdc_token_v0003Contract } from "../../artifacts/js/wusdc_token_v0003";
 import { Wusdc_connector_v0003_0Contract } from "../../artifacts/js/wusdc_connector_v0003_0";
 import { Address, PrivateKey } from "@aleohq/sdk";
