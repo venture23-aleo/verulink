@@ -1,15 +1,21 @@
 import { hashStruct } from "../../../utils/hash";
 
 import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { CouncilContract } from "../../../artifacts/js/council";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbRemoveChain } from "../../../artifacts/js/types/council_v0003";
-import { getTbRemoveChainLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TbRemoveChain } from "../../../artifacts/js/types/bridge_council";
+import { getTbRemoveChainLeo } from "../../../artifacts/js/js2leo/bridge_council";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const bridge = new Token_bridge_v0003Contract({mode: "execute", priorityFee: 10_000});
+import { Bridge_councilContract } from "../../../artifacts/js/bridge_council";
+
+const mode = ExecutionMode.SnarkExecute;
+const bridgeCouncil = new Bridge_councilContract({mode, priorityFee: 10_000});
+
+const council = new CouncilContract({mode, priorityFee: 10_000});
+const bridge = new Token_bridge_v0003Contract({mode, priorityFee: 10_000});
 
 export const proposeRemoveChain = async (chainId: bigint): Promise<number> => {
 
@@ -72,7 +78,7 @@ export const execRemoveChain = async (proposalId: number, chainId: bigint) => {
     }
   
   const bridgeOwner = await bridge.owner_TB(true);
-  if (bridgeOwner != council.address()) {
+  if (bridgeOwner != bridgeCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 
@@ -85,7 +91,7 @@ export const execRemoveChain = async (proposalId: number, chainId: bigint) => {
   validateExecution(tbRemoveChainProposalHash);
 
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tbRemoveChainProposalHash), SUPPORTED_THRESHOLD);
-  const [removeChainTx] = await council.tb_remove_chain(
+  const [removeChainTx] = await bridgeCouncil.tb_remove_chain(
     tbRemoveChain.id,
     tbRemoveChain.chain_id,
     voters

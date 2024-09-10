@@ -1,5 +1,5 @@
 // The 'bridge' program.
-program token_bridge_v0003.aleo {
+program vlink_token_bridge_v1.aleo {
 
     // Default Aleo Program
     struct AleoProgram {
@@ -45,7 +45,7 @@ program token_bridge_v0003.aleo {
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         sender_address: [u8; 32],
         // Program Address of the wrapped asset on Aleo; Ex: wUSDC
-        dest_token_address: address,
+        dest_token_id: field,
         // Amount to mint on Aleo
         amount: u128
         // Address of the receiver on Aleo
@@ -138,7 +138,7 @@ program token_bridge_v0003.aleo {
     mapping sequences: u128 => u64;
 
     // The chain id of the Aleo network where this program is deployed
-    const ALEO_CHAIN_ID: u128 = 6694886634403u128;
+    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
 
     // Version of the packet
     const VERSION: u8 = 1u8;
@@ -510,7 +510,7 @@ program token_bridge_v0003.aleo {
     /// # Arguments:
     /// * `source_chain_id`: u32 - Source Chain Id
     /// * `source_service_contract`: [u8;32] - Service contract of the source service contract
-    /// * `token`: address - Address of the wrapped token on Aleo
+    /// * `token`: id - id of the wrapped token on Aleo
     /// * `sender`: address - Address of the sender on other chain
     /// * `receiver`: address - Address of the receiver on Aleo
     /// * `amount`: u64 - Amount to be minted on Aleo 
@@ -521,7 +521,7 @@ program token_bridge_v0003.aleo {
     transition consume(
         public source_chain_id: u128, 
         public source_service_contract: [u8;32], 
-        public dest_token_address: address, 
+        public dest_token_id: field, 
         public sender_address: [u8; 32], 
         public receiver_address: address, 
         public amount: u128, 
@@ -529,7 +529,7 @@ program token_bridge_v0003.aleo {
         public height: u64, 
         public signers: [address; 5], 
         public signs: [signature; 5]
-    ) -> bool {
+    ) -> public bool {
 
         let source: ForeignContract = ForeignContract {
             chain_id: source_chain_id,
@@ -543,7 +543,7 @@ program token_bridge_v0003.aleo {
 
         let message: InTokenMessage = InTokenMessage {
             sender_address,
-            dest_token_address,
+            dest_token_id,
             amount,
             receiver_address
         };
@@ -650,7 +650,7 @@ program token_bridge_v0003.aleo {
         return unique_addresses;
     }
 
-    function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (bool, u8) {
+    function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (public bool, u8) {
         let unique_signers: u8 = get_valid_unique_address_count(signers);
         let yay_count: u8 = 0u8;
         let nay_count: u8 = 0u8;

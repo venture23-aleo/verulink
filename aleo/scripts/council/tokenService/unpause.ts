@@ -1,23 +1,30 @@
 import { hashStruct } from "../../../utils/hash";
-import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
-import { Council_v0003Contract } from "../../../artifacts/js/council_v0003";
+import { Vlink_token_service_v1Contract } from "../../../artifacts/js/vlink_token_service_v1";
+import { Vlink_council_v1Contract } from "../../../artifacts/js/vlink_council_v1";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsUnpauseToken } from "../../../artifacts/js/types/council_v0003";
-import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/council_v0003";
+import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_council_v1";
+import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v1";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
+import { ExecutionMode } from "@doko-js/core";
 
-const council = new Council_v0003Contract({mode: "execute", priorityFee: 10_000});
-const tokenService = new Token_service_v0003Contract({mode: "execute", priorityFee: 10_000});
+import { Vlink_token_service_council_v1Contract } from "../../../artifacts/js/vlink_token_service_council_v1";
+import { hash } from "aleo-hasher";
+
+const mode = ExecutionMode.SnarkExecute;
+const serviceCouncil = new Vlink_token_service_council_v1Contract({ mode, priorityFee: 10_000 });
+
+const council = new Vlink_council_v1Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v1Contract({ mode, priorityFee: 10_000 });
 
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
-export const proposeUnpauseToken = async (tokenAddr: string): Promise<number> => {
+export const proposeUnpauseToken = async (token_id: bigint): Promise<number> => {
 
-  console.log(`👍 Proposing to unpause token: ${tokenAddr}`)
-  const isTokenPaused = (await tokenService.token_status(tokenAddr, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
+  console.log(`👍 Proposing to unpause token: ${token_id}`)
+  const isTokenPaused = (await tokenService.token_status(token_id, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
   if (!isTokenPaused) {
     throw Error(`Token is already paused!`);
   }
@@ -28,11 +35,11 @@ export const proposeUnpauseToken = async (tokenAddr: string): Promise<number> =>
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsUnpauseToken: TsUnpauseToken = {
     id: proposalId,
-    token_address: tokenAddr
+    token_id
   };
-  const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken)); 
+  const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
-  const [proposeUnpauseTokenTx] = await council.propose(proposalId, tsUnpauseTokenHash); 
+  const [proposeUnpauseTokenTx] = await council.propose(proposalId, tsUnpauseTokenHash);
   await council.wait(proposeUnpauseTokenTx);
 
   getProposalStatus(tsUnpauseTokenHash);
@@ -43,24 +50,24 @@ export const proposeUnpauseToken = async (tokenAddr: string): Promise<number> =>
 ///////////////////
 ///// Vote ////////
 ///////////////////
-export const voteUnpauseToken = async (proposalId: number, tokenAddr: string) => {
+export const voteUnpauseToken = async (proposalId: number, token_id: bigint) => {
 
-  console.log(`👍 Voting to unpause token: ${tokenAddr}`)
-  const isTokenPaused = (await tokenService.token_status(tokenAddr, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
+  console.log(`👍 Voting to unpause token: ${token_id}`)
+  const isTokenPaused = (await tokenService.token_status(token_id, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
   if (!isTokenPaused) {
     throw Error(`Token is already paused!`);
   }
   const tsUnpauseToken: TsUnpauseToken = {
     id: proposalId,
-    token_address: tokenAddr
+    token_id
   };
-  const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken)); 
+  const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
   const voter = council.getAccounts()[0];
   validateVote(tsUnpauseTokenHash, voter);
 
-  const [voteUnpauseTx] = await council.vote(tsUnpauseTokenHash, true); 
-  
+  const [voteUnpauseTx] = await council.vote(tsUnpauseTokenHash, true);
+
   await council.wait(voteUnpauseTx);
 
   getProposalStatus(tsUnpauseTokenHash);
@@ -70,37 +77,37 @@ export const voteUnpauseToken = async (proposalId: number, tokenAddr: string) =>
 //////////////////////
 ///// Execute ////////
 //////////////////////
-export const execUnpauseToken = async (proposalId: number, tokenAddr: string) => {
+export const execUnpauseToken = async (proposalId: number, token_id: bigint) => {
 
-  console.log(`Unpausing token ${tokenAddr}`)
-  let isTokenPaused = (await tokenService.token_status(tokenAddr, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
+  console.log(`Unpausing token ${token_id}`)
+  let isTokenPaused = (await tokenService.token_status(token_id, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
   if (!isTokenPaused) {
     throw Error(`Bridge is already paused!`);
   }
 
   const tsOwner = await tokenService.owner_TS(true);
-  if (tsOwner != council.address()) {
+  if (tsOwner != serviceCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 
   const tsUnpauseToken: TsUnpauseToken = {
     id: proposalId,
-    token_address: tokenAddr
+    token_id
   };
-  const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken)); 
+  const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
   validateExecution(tsUnpauseTokenHash);
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUnpauseTokenHash), 5);
 
-  const [unpauseTokenTx] = await council.ts_unpause_token(
+  const [unpauseTokenTx] = await serviceCouncil.ts_unpause_token(
     tsUnpauseToken.id,
-    tsUnpauseToken.token_address,
+    tsUnpauseToken.token_id,
     voters
-  ); 
+  );
 
   await council.wait(unpauseTokenTx);
 
-  isTokenPaused = (await tokenService.token_status(tokenAddr, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
+  isTokenPaused = (await tokenService.token_status(token_id, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
   if (isTokenPaused) {
     console.log(`❌ Unknown error.`);
   }

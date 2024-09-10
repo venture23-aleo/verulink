@@ -1,6 +1,7 @@
+import { Field } from "@aleohq/sdk";
 import { InPacket } from "../artifacts/js/types/token_bridge_v0003";
 import { PACKET_VERSION } from "./constants";
-import { evm2AleoArr, generateRandomEthAddr } from "./ethAddress";
+import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr } from "./ethAddress";
 
 export const createRandomPacket = (
   receiver: string,
@@ -9,7 +10,7 @@ export const createRandomPacket = (
   destChainId: bigint,
   sourceTsContractAddr: string,
   destTsContractAddr: string,
-  destTokenAddr: string,
+  destTokenId: bigint,
   sender?: string,
   sequence?: bigint,
   height?: bigint,
@@ -37,7 +38,7 @@ export const createRandomPacket = (
       addr: destTsContractAddr,
     },
     message: {
-      dest_token_address: destTokenAddr,
+      dest_token_id: destTokenId,
       sender_address: evm2AleoArr(senderAddr),
       amount,
       receiver_address: receiver,

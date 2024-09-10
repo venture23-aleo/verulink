@@ -1,7 +1,7 @@
 import wusdc_token_v0003.aleo;
 import wusdc_holding_v0003.aleo;
 import token_service_v0003.aleo;
-import council_v0003.aleo;
+import council.aleo;
 
 program wusdc_connector_v0003_0.aleo {
 
@@ -99,7 +99,7 @@ program wusdc_connector_v0003_0.aleo {
     /// Update the existing connector program
     /// Can only be called if proposal with enough votes exist on council program
     transition update(public proposal_id: u32, public new_connector: address, public voters: [address; 5]) {
-        council_v0003.aleo/connector_update(proposal_id, WUSDC_TOKEN, new_connector, voters);
+        council.aleo/connector_update(proposal_id, WUSDC_TOKEN, new_connector, voters);
         wusdc_token_v0003.aleo/transfer_ownership_token(new_connector);
         wusdc_holding_v0003.aleo/transfer_ownership_holding(new_connector);
         token_service_v0003.aleo/update_connector_ts(WUSDC_TOKEN, new_connector);
@@ -109,7 +109,7 @@ program wusdc_connector_v0003_0.aleo {
     /// Release fund from holding program
     /// Can only be called if proposal with enough votes exist on council program
     transition wusdc_release(public proposal_id: u32, public receiver: address, public amount: u128, public voters: [address; 5]) {
-        council_v0003.aleo/holding_release(proposal_id, WUSDC_TOKEN, receiver, amount, voters);
+        council.aleo/holding_release(proposal_id, WUSDC_TOKEN, receiver, amount, voters);
         wusdc_holding_v0003.aleo/release_fund(receiver, amount);
     }
 
@@ -126,7 +126,7 @@ program wusdc_connector_v0003_0.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_address() -> [u8; 32] {
-        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,211u8,66u8,192u8,49u8,69u8,60u8,102u8,166u8,214u8,194u8,162u8,61u8,109u8,168u8,108u8,48u8,173u8,160u8,140u8,121u8];
+        return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 211u8, 66u8, 192u8, 49u8, 69u8, 60u8, 102u8, 166u8, 214u8, 194u8, 162u8, 61u8, 109u8, 168u8, 108u8, 48u8, 173u8, 160u8, 140u8, 121u8];
     }
 
     // Token Service Contract Address of the original token on the origin chain
@@ -134,9 +134,9 @@ program wusdc_connector_v0003_0.aleo {
     // Example: Contract Address of USDC on Ethereum
     // For EVM Chains, 20 bytes is formatted as following:
     inline origin_token_service_address() -> [u8; 32] {
-        return [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,254u8,172u8,15u8,211u8,35u8,103u8,218u8,148u8,68u8,152u8,179u8,159u8,61u8,30u8,189u8,100u8,204u8,136u8,225u8,60u8];
+        return [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 37u8, 138u8, 119u8, 59u8, 25u8, 252u8, 200u8, 149u8, 142u8, 12u8, 225u8, 177u8, 177u8, 60u8, 131u8, 10u8, 80u8, 186u8, 124u8, 17u8];
     }
-
+    
     inline pad_20_to_32(unpadded: [u8; 20]) -> [u8; 32] {
         return [
             0u8,

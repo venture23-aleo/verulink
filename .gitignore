@@ -14,6 +14,7 @@ coverage.json
 *.cer
 *.key
 *.crt
+keys.yaml
 *venv
 *.pem
 .temp.*

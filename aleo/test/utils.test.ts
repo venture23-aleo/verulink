@@ -3,8 +3,11 @@ import { UtilsContract } from "../artifacts/js/utils";
 import { ALEO_ZERO_ADDRESS } from "../utils/constants";
 import { sign } from "aleo-signer";
 import { js2leo } from "@doko-js/core";
+import { ExecutionMode} from "@doko-js/core";
 
-const utils = new UtilsContract({ mode: "evaluate" });
+const mode = ExecutionMode.SnarkExecute;
+
+const utils = new UtilsContract({ mode: mode});
 
 describe("Unique Addresses", () => {
     const addr1 = new PrivateKey().to_address().to_string();

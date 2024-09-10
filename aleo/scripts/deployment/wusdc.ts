@@ -1,27 +1,42 @@
+import { ExecutionMode } from "@doko-js/core";
+import { Vlink_token_service_v1Contract } from "../../artifacts/js/vlink_token_service_v1";
+import { Vlink_council_v1Contract } from "../../artifacts/js/vlink_council_v1";
+import { getRegisterToken } from "../../artifacts/js/leo2js/vlink_token_service_council_v1";
+import { hashStruct } from "../../utils/hash";
+import { RegisterToken, RegisterTokenLeo } from "../../artifacts/js/types/vlink_token_service_council_v1";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
+import { Vlink_token_service_council_v1Contract } from "../../artifacts/js/vlink_token_service_council_v1";
+import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
+import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/vlink_token_service_council_v1";
 
-import { Wusdc_token_v0003Contract } from "../../artifacts/js/wusdc_token_v0003";
-import { Wusdc_holding_v0003Contract } from "../../artifacts/js/wusdc_holding_v0003";
-import { Wusdc_connector_v0003_0Contract } from "../../artifacts/js/wusdc_connector_v0003_0";
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString()+"field";
+};
 
-export const deployWusdc = async () => {
-  const wusdcToken = new Wusdc_token_v0003Contract({mode: "execute"});
-  const wusdcHolding = new Wusdc_holding_v0003Contract({mode: "execute"});
-  const wusdcConnecter = new Wusdc_connector_v0003_0Contract({mode: "execute"});
+const mode = ExecutionMode.SnarkExecute;
+export const deployWusdc = async (token_name, symbol, decimals, max_supply) => {
 
-  // Deploy token
-  const wusdcTokenDeployTx = await wusdcToken.deploy(); // 11_912_000
-  await wusdcToken.wait(wusdcTokenDeployTx);
+  const tokenService = new Vlink_token_service_v1Contract({ mode, priorityFee: 10_000 });
+  const tokenServiceCouncil = new Vlink_token_service_council_v1Contract({ mode, priorityFee: 10_000 })
+  const council = new Vlink_council_v1Contract({ mode, priorityFee: 10_000 });
 
-  // Deploy holding
-  const wusdcHoldingDeployTx = await wusdcHolding.deploy(); // 5_039_000
-  await wusdcHolding.wait(wusdcHoldingDeployTx);
+  // Propose wusdc registration
+  const proposalId = (parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1);
+  const register_token: RegisterToken = {
+    id: proposalId,
+    token_name: token_name,
+    symbol: symbol,
+    decimals: decimals,
+    max_supply: max_supply
+  };
+  const registerTokenProposalHash = hashStruct(getRegisterTokenLeo(register_token));
+  const [proposeWusdcTx] = await council.propose(proposalId, registerTokenProposalHash)
+  await council.wait(proposeWusdcTx)
 
-  // Deploy connector
-  const wusdcConnectorDeployTx = await wusdcConnecter.deploy(); // 7_653_000
-  await wusdcConnecter.wait(wusdcConnectorDeployTx);
 
-  // Initialize wusdc
-  const [initializeWusdcTx] = await wusdcConnecter.initialize_wusdc(); // 239_906
-  await wusdcConnecter.wait(initializeWusdcTx);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(registerTokenProposalHash), SUPPORTED_THRESHOLD);
+  // Register wusdc
+  const [registerWusdcTx] = await tokenServiceCouncil.ts_register_token(proposalId, token_name, symbol, decimals, max_supply, voters)
+  await tokenService.wait(registerWusdcTx)
 
 }

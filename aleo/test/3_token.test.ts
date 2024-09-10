@@ -3,10 +3,13 @@ import { gettoken } from "../artifacts/js/leo2js/wusdc_token_v0003";
 import { Approval, token, tokenLeo } from "../artifacts/js/types/wusdc_token_v0003";
 import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003"
 import { getApprovalLeo } from "../artifacts/js/js2leo/wusdc_token_v0003";
-import { parseRecordString } from "@doko-js/core";
 import { hashStruct } from "../utils/hash";
+import { ExecutionMode, parseJSONLikeString} from "@doko-js/core";
 
-const wusdcToken = new Wusdc_token_v0003Contract({ mode: "execute" });
+
+const mode = ExecutionMode.SnarkExecute;
+
+const wusdcToken = new Wusdc_token_v0003Contract({ mode: mode });
 
 const TIMEOUT = 1000_000; // 1000 seconds
 
@@ -15,15 +18,15 @@ describe("Token", () => {
     const admin = aleoUser1
 
     describe("Setup", () => {
-        -
-            test("Deploy", async () => {
+        
+        test("Deploy", async () => {
                 const tx = await wusdcToken.deploy();
-                await wusdcToken.wait(tx);
-            }, TIMEOUT)
+                await tx.wait();
+        }, TIMEOUT)
 
         test("Initialize", async () => {
             const [tx] = await wusdcToken.initialize_token(admin)
-            await wusdcToken.wait(tx);
+            await tx.wait();
         }, TIMEOUT)
 
     })
@@ -34,17 +37,18 @@ describe("Token", () => {
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
 
             const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
             const finalBalance = await wusdcToken.account(aleoUser2);
             expect(finalBalance).toBe(initialBalance + amount);
         }, TIMEOUT)
 
-        test.failing("Can only be called from admin", async () => {
+        test("Can only be called from admin", async () => {
             wusdcToken.connect(aleoUser3);
             const amount = BigInt(10_000);
             const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
-            await wusdcToken.wait(tx);
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
         }, TIMEOUT)
     })
 
@@ -56,20 +60,21 @@ describe("Token", () => {
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
 
             const [tx] = await wusdcToken.burn_public(aleoUser2, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
             const finalBalance = await wusdcToken.account(aleoUser2);
             expect(finalBalance).toBe(initialBalance - amount);
 
         }, TIMEOUT)
 
-        test.failing("Burns less than balance - must fail", async () => {
+        test("Burns less than balance - must fail", async () => {
             const amount = BigInt(100_000);
             const initialBalance = await wusdcToken.account(aleoUser2, BigInt(0));
             expect(initialBalance).toBeLessThan(amount);
 
             const [tx] = await wusdcToken.burn_public(aleoUser2, amount);
-            await wusdcToken.wait(tx);
+            const result = await tx.wait();
+            expect(result.execution).toBeUndefined(); 
 
         }, TIMEOUT)
     })
@@ -88,7 +93,7 @@ describe("Token", () => {
 
             wusdcToken.connect(sender);
             const [tx] = await wusdcToken.transfer_public(receiver, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
             const senderFinalBalance = await wusdcToken.account(sender);
             const receiverFinalBalance = await wusdcToken.account(receiver);
@@ -104,9 +109,9 @@ describe("Token", () => {
             expect(senderInitialBalance).toBeGreaterThanOrEqual(amount);
 
             const [recordString, tx] = await wusdcToken.transfer_public_to_private(receiver, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
-            const tokenRecord: token = gettoken(parseRecordString(PrivateKey.from_string(receiverPrivateKey).to_view_key().decrypt(recordString)) as tokenLeo);
+            const tokenRecord: token = gettoken(parseJSONLikeString(PrivateKey.from_string(receiverPrivateKey).to_view_key().decrypt(recordString)) as tokenLeo);
             expect(tokenRecord.owner).toBe(receiver);
             expect(tokenRecord.amount).toBe(amount);
 
@@ -128,8 +133,8 @@ describe("Token", () => {
             expect(senderInitialBalance).toBeGreaterThanOrEqual(privateAmount);
 
             const [recordString, tx] = await wusdcToken.transfer_public_to_private(aleoUser2, privateAmount);
-            await wusdcToken.wait(tx);
-            tokenRecord = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(recordString)) as tokenLeo);
+            await tx.wait();
+            tokenRecord = gettoken(parseJSONLikeString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(recordString)) as tokenLeo);
 
             const senderFinalBalance = await wusdcToken.account(sender);
             expect(senderFinalBalance).toBe(senderInitialBalance - privateAmount);
@@ -140,10 +145,10 @@ describe("Token", () => {
 
             const receiverInitialBalance = await wusdcToken.account(aleoUser4, BigInt(0));
             const [remainingRecordString, pvtToPubTx] = await wusdcToken.transfer_private_to_public(tokenRecord, aleoUser4, amount);
-            await wusdcToken.wait(pvtToPubTx);
+            await pvtToPubTx.wait();
             const receiverFinalBalance = await wusdcToken.account(aleoUser4);
 
-            const remainingRecord: token = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(remainingRecordString)) as tokenLeo);
+            const remainingRecord: token = gettoken(parseJSONLikeString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(remainingRecordString)) as tokenLeo);
             expect(remainingRecord.amount).toBe(tokenRecord.amount - amount);
             expect(receiverFinalBalance).toBe(receiverInitialBalance + amount);
         }, TIMEOUT)
@@ -152,13 +157,13 @@ describe("Token", () => {
             const amount = BigInt(75);
 
             const [senderRecordString, receiverRecordString, tx] = await wusdcToken.transfer_private(tokenRecord, receiver, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
             wusdcToken.connect(sender);
-            const senderRecord: token = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(senderRecordString)) as tokenLeo);
+            const senderRecord: token = gettoken(parseJSONLikeString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(senderRecordString)) as tokenLeo);
 
             wusdcToken.connect(receiver);
-            const receiverRecord: token = gettoken(parseRecordString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(receiverRecordString)) as tokenLeo);
+            const receiverRecord: token = gettoken(parseJSONLikeString(PrivateKey.from_string(wusdcToken.config.privateKey).to_view_key().decrypt(receiverRecordString)) as tokenLeo);
 
             expect(senderRecord.amount).toBe(tokenRecord.amount - amount);
             expect(receiverRecord.amount).toBe(amount);
@@ -182,7 +187,7 @@ describe("Token", () => {
 
             wusdcToken.connect(approver);
             const [tx] = await wusdcToken.approve_public(spender, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
             const finalApproval = await wusdcToken.approvals(approvalHash, BigInt(0));
             expect(finalApproval).toBe(initialApproval + amount);
@@ -196,7 +201,7 @@ describe("Token", () => {
 
             wusdcToken.connect(spender);
             const [tx] = await wusdcToken.transfer_from_public(approver, receiver, amount);
-            await wusdcToken.wait(tx);
+            await tx.wait();
 
             const approverFinalBalance = await wusdcToken.account(approver);
             const finalApproval = await wusdcToken.approvals(approvalHash, BigInt(0));
@@ -214,7 +219,8 @@ describe("Token", () => {
 
 
 describe("Transition Test Cases", () => {
-    const wusdcToken = new Wusdc_token_v0003Contract({ mode: "evaluate" });
+    const mode_evaluate = ExecutionMode.LeoExecute
+    const wusdcToken = new Wusdc_token_v0003Contract({ mode: mode_evaluate });
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = wusdcToken.getAccounts();
 
     describe("Private Transfers", () => {

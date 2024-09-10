@@ -23,11 +23,18 @@ export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 export const OWNER_INDEX = true;
 
 // USDC Contract Address on Ethereum
-export const usdcContractAddr = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
+export const usdcContractAddr = "0xD99e898842c566be038bf898b3e406f028a031E0"
+export const usdtContractAddr = "0xCdF691Ab58a388AAed7EB231f5517418cf48F121"
+export const ethContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c"
+export const ethTsContractAddr = "0xEDc97cE21AcDC99Ef4DcC4ea0E55F01eDc646a09"
 
-const sepoliaChainId = 11155111
-export const ethChainId = encodeNetworkChainId("eth", sepoliaChainId);
-export const aleoChainId = encodeNetworkChainId("aleo", 3);
+// Token Service Contract Address on Ethereum
+export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
+
+export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
+
+const mainnetChainId = 1
+export const ethChainId = encodeNetworkChainId("eth", mainnetChainId);
+export const aleoChainId = encodeNetworkChainId("aleo", 1);
