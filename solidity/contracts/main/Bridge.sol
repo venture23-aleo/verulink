@@ -36,13 +36,15 @@ contract Bridge is
     /// @dev Initializes the Bridge contract
     /// @param _destChainId The initial destination chain ID
     function Bridge_init(
-        uint256 _destChainId
+        uint256 _destChainId,
+        address _owner
     ) public initializer {
         __Ownable_init_unchained();
         __Pausable_init_unchained();
         // __AttestorManager_init();
         // __BridgeTokenServiceManager_init();
-        destinationChainId = _destChainId;       
+        destinationChainId = _destChainId;
+        _transferOwnership(_owner);      
     }
 
     function _authorizeUpgrade(address) internal virtual view override {

@@ -133,9 +133,9 @@ npm run install:cli
 1. Clone the repository.
 
 ```bash
-git clone https://github.com/venture23-aleo/aleo-bridge.git
+git clone https://github.com/venture23-aleo/verulink.git
 
-cd aleo-bridge
+cd attestor
 
 # Change branch to update/readme-update-dokojs, after PR is merged git checkout develop
 git checkout update/readme-update-dokojs

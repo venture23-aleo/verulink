@@ -1,12 +1,9 @@
 package ethereum
 
 import (
-	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
-	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,14 +11,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	abi "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain/ethereum/abi"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/store"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	abi "github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum/abi"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	"github.com/venture23-aleo/verulink/attestor/chainService/store"
 )
 
 func setupDB(p string) (func(), error) {
@@ -123,6 +119,9 @@ func (mckBridgeCl *mockBridgeClient) ParsePacketDispatched(log types.Log) (*abi.
 	}
 	return nil, errors.New("error")
 }
+func newMetrics() *metrics.PrometheusMetrics {
+	return metrics.NewPrometheusMetrics()
+}
 
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
@@ -162,6 +161,7 @@ func TestFeedPacket(t *testing.T) {
 		pruneBaseSeqNumberWaitDur: time.Hour,
 		feedPktWaitDur:            time.Nanosecond,
 		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
+		metrics:                   newMetrics(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -352,6 +352,7 @@ func TestManagePacket(t *testing.T) {
 		err = store.CreateNamespaces(namespaces)
 		assert.NoError(t, err)
 		client := new(Client)
+		client.SetMetrics(newMetrics())
 
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
@@ -400,6 +401,7 @@ func TestManagePacket(t *testing.T) {
 		assert.NoError(t, err)
 
 		client := new(Client)
+		client.SetMetrics(newMetrics())
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
 			Version:  uint8(0),
@@ -473,6 +475,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		nextBlockHeight:           10,
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
+		metrics:                   newMetrics(),
 	}
 
 	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
@@ -498,41 +501,5 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 	for i := 10; i < 13; i++ {
 		pkt := <-pktCh
 		assert.Equal(t, pkt.Sequence, uint64(i))
-	}
-}
-
-func TestPrometheus(t *testing.T) {
-	// infoLog := prometheus.NewGauge(prometheus.GaugeOpts{
-	// 	Name: "info",
-	// 	// Namespace:   "some_metric",
-	// 	Help: "received packet from chain X",
-	// 	// ConstLabels: prometheus.Labels{"label": "val1", "hello": "world"},
-	// })
-	// if err := push.New("https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway", "db_backup").
-	// 	Collector(infoLog).
-	// 	Grouping("log", "attestors").
-	// 	Push(); err != nil {
-	// 	fmt.Println("Could not push info log to Pushgateway:", err)
-	// }
-
-	data := []byte(string(`{"height_count": "100000", "label": "aleo"}`))
-
-	buf := bytes.NewBuffer(data)
-
-	resp, _ := http.Post("https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway", "application/plaintext", buf)
-	fmt.Println(resp.Status)
-}
-
-func TestExamplePusher_Push(t *testing.T) {
-	completionTime := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "db_backup_last_completion_timestamp_seconds",
-		Help: "The timestamp of the last successful completion of a DB backup.",
-	})
-	completionTime.SetToCurrentTime()
-	if err := push.New("https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway", "dev-push-gateway").
-		Collector(completionTime).
-		Grouping("db", "customers").
-		Push(); err != nil {
-		fmt.Println("Could not push completion time to Pushgateway:", err)
 	}
 }

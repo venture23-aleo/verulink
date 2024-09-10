@@ -17,10 +17,11 @@ contract Erc20VaultService is VaultService, Upgradeable {
     /// @param _name A descriptive name for the vault service
     function Erc20VaultService_init(
         address _token,
-        string memory _name
+        string memory _name,
+        address _owner
     ) public initializer {
         require(_token != ZERO_ADDRESS && _token != ETH_TOKEN, "Erc20VaultService: only erc20 address");
-        __VaultService_init(_token, _name);
+        __VaultService_init(_token, _name, _owner);
     }
 
     /// @dev Authorizes an upgrade only if the caller is the owner

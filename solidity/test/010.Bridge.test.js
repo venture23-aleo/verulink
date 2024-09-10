@@ -7,7 +7,7 @@ describe('Bridge', () => {
     let Proxy;
     let bridgeImpl;
     let lib;
-    let owner;
+    let deployer, owner;
     let signer;
     let attestor1;
     let attestor2;
@@ -41,7 +41,7 @@ describe('Bridge', () => {
     }
 
     beforeEach(async () => {
-        [owner, attestor1, attestor2, signer, unknownAttestor, tokenService, unknowntokenService, other] = await ethers.getSigners();
+        [owner, attestor1, attestor2, signer, unknownAttestor, tokenService, unknowntokenService, other, deployer] = await ethers.getSigners();
         // [owner] = await ethers.getSigners();
 
         // Deploy ERC20TokenBridge
@@ -64,13 +64,13 @@ describe('Bridge', () => {
         await bridgeImpl.deployed();
 
         Proxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("Bridge_init(uint256)", [destChainId]);
+        initializeData = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format()).encodeFunctionData("Bridge_init(uint256,address)", [destChainId, owner.address]);
         const proxy = await Proxy.deploy(bridgeImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = ERC20TokenbridgeImpl.attach(proxy.address);
-        await (await proxiedV1.addAttestor(attestor1.address, 2)).wait();
-        await (await proxiedV1.addAttestor(attestor2.address, 2)).wait();
-        await (await proxiedV1.addTokenService(tokenService.address)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(attestor1.address, 2)).wait();
+        await (await proxiedV1.connect(owner).addAttestor(attestor2.address, 2)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(tokenService.address)).wait();
     });
 
     it('should have the correct owner and destinationChainId after initialization', async () => {
@@ -80,7 +80,7 @@ describe('Bridge', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedV1["Bridge_init(uint256)"](destChainId)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedV1["Bridge_init(uint256,address)"](destChainId,owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should check if a chain is supported', async () => {
@@ -93,7 +93,7 @@ describe('Bridge', () => {
 
     it('should update destinationChainId by the owner', async () => {
         const newDestChainId = 3; // Assuming a new destination chainId
-        await proxiedV1.updateDestinationChainId(newDestChainId);
+        await proxiedV1.connect(owner).updateDestinationChainId(newDestChainId);
 
         const updatedDestChainId = await proxiedV1.destinationChainId();
         expect(updatedDestChainId).to.equal(newDestChainId);
@@ -109,7 +109,7 @@ describe('Bridge', () => {
 
     it('should revert when updating to an already supported chain', async () => {
         const supportedChain = 2; // Already supported destination chainId is 2
-        await expect(proxiedV1.updateDestinationChainId(supportedChain)).to.be.revertedWith(
+        await expect(proxiedV1.connect(owner).updateDestinationChainId(supportedChain)).to.be.revertedWith(
             'Bridge: destination chain already supported'
         );
     });
@@ -175,7 +175,7 @@ describe('Bridge', () => {
         const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2);
-        await(await proxiedV1.pause());
+        await(await proxiedV1.connect(owner).pause());
         await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWith("Pausable: paused");
     });
 
@@ -267,7 +267,7 @@ describe('Bridge', () => {
             [2, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"], [ethers.Wallet.createRandom().address, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 10, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
             100
         ];
-        await(await proxiedV1.pause());
+        await(await proxiedV1.connect(owner).pause());
         await expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Pausable: paused");
     });
 
@@ -299,7 +299,7 @@ describe('Bridge', () => {
 describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
     let ERC20TokenBridgeV1Impl, initializeData, proxied, ERC20TokenBridgeV1, upgradeData;
     let lib;
-    let owner;
+    let deployer, owner;
     let signer;
     let other;
     let ERC20TokenBridgeV2Impl;
@@ -311,7 +311,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
 
     // Deploy a new HoldingV2 contract before each test
     beforeEach(async () => {
-        [owner, tokenService, signer, other] = await ethers.getSigners();
+        [deployer, owner, tokenService, signer, other] = await ethers.getSigners();
         destChainId = 2;
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
@@ -333,7 +333,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         let ERC20TokenBridgeABI = ERC20TokenBridgeV1.interface.format();
 
         ERC20TokenBridgeProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenBridgeABI).encodeFunctionData("Bridge_init(uint256)", [destChainId]);
+        initializeData = new ethers.utils.Interface(ERC20TokenBridgeABI).encodeFunctionData("Bridge_init(uint256,address)", [destChainId,owner.address]);
         const proxy = await ERC20TokenBridgeProxy.deploy(ERC20TokenBridgeV1Impl.address, initializeData);
         await proxy.deployed();
         proxied = ERC20TokenBridgeV1.attach(proxy.address);
@@ -350,7 +350,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         let ERC20TokenBridgeV2ABI = ERC20TokenBridgeV2.interface.format();
 
         upgradeData = new ethers.utils.Interface(ERC20TokenBridgeV2ABI).encodeFunctionData("initializev2", [5]);
-        await proxied.upgradeToAndCall(ERC20TokenBridgeV2Impl.address, upgradeData);
+        await proxied.connect(owner).upgradeToAndCall(ERC20TokenBridgeV2Impl.address, upgradeData);
         proxied = ERC20TokenBridgeV2.attach(proxy.address);
     });
 

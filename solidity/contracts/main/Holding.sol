@@ -46,9 +46,10 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
 
     /// @dev Initializes the Holding contract
     /// @param _tokenService Address of the token service
-    function Holding_init(address _tokenService) public initializer {
+    function Holding_init(address _tokenService, address _owner) public initializer {
         __Ownable_init_unchained();
         __Pausable_init_unchained();
+        _transferOwnership(_owner);
         supportedTokenServices[_tokenService] = true;
     }
 

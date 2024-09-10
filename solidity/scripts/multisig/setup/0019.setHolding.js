@@ -3,25 +3,26 @@ const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
+import { approveTransaction, executeTransaction } from "../utils.js";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
+const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
+  process.env.PROVIDER
 );
-console.log("ethers version = ", ethers.version);
 
-async function setHolding(signer) {
+async function ProposeSetHoldingTransaction(deployerSigner) {
   const ethAdapter = new EthersAdapter({
     ethers,
-    signerOrProvider: signer,
+    signerOrProvider: deployerSigner,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-  });
+});
 
   const new_holding = process.env.HOLDINGPROXY_ADDRESS;
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
@@ -44,7 +45,6 @@ async function setHolding(signer) {
   });
   const safeTxHash = await safeSdk.getTransactionHash(safeTx);
 
-  console.log("txn hash", safeTxHash);
   const signature = await safeSdk.signTypedData(safeTx);
 
   const transactionConfig = {
@@ -56,6 +56,27 @@ async function setHolding(signer) {
   };
 
   await safeService.proposeTransaction(transactionConfig);
+
+  return safeTxHash;
 }
 
-setHolding(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+(async () => {
+  try {
+    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const safeTxHash = await ProposeSetHoldingTransaction(deployerSigner);
+
+    // Approve transaction using additional signers
+    const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+    const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+    await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+
+    // Execute transaction
+    const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+    await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
+    console.log("Holding set successfully!!!");
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+  }
+})();

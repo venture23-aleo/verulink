@@ -3,33 +3,34 @@ const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-
 import * as dotenv from "dotenv";
 dotenv.config();
+import { approveTransaction, executeTransaction } from "../utils.js";
+
+const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 
 const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
+  process.env.PROVIDER
 );
-console.log("ethers version = ", ethers.version);
 
-async function addTokenUSDC(signer) {
+async function ProposeAddTokenUSDCTransaction(deployerSigner) {
   const ethAdapter = new EthersAdapter({
     ethers,
-    signerOrProvider: signer,
+    signerOrProvider: deployerSigner,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
-  });
+});
 
   const tokenAddress = process.env.USDC_ADDR;
-  const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS;
-  const destChainId = "6694886634403";
-  const destTokenAddress = "aleo1s7ewgjkuhxr7a9u6vjmst4khchkggxemqazrs8vy54x3prt74upqy6aveq";
-  const destTokenService = "aleo18wf4ggxpmey0hk3drgefdgup9xnudgekas9lvpzut3f4cf8scuzq78j08l";
-  const min = "10";
-  const max = "990000000000000000000000";
+  const vault = process.env.ERC20VAULTSERVICEPROXY_ADDRESS_USDC;
+  const destChainId = process.env.aleoChainId;
+  const destTokenAddress = process.env.destTokenAddressWUSDC;
+  const destTokenService = process.env.destTokenService;
+  const min = process.env.minWUSDC;
+  const max = process.env.maxWUSDC;
 
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
   const ERC20TokenService = await ethers.getContractFactory("TokenService");
@@ -51,7 +52,6 @@ async function addTokenUSDC(signer) {
   });
   const safeTxHash = await safeSdk.getTransactionHash(safeTx);
 
-  console.log("txn hash", safeTxHash);
   const signature = await safeSdk.signTypedData(safeTx);
 
   const transactionConfig = {
@@ -63,6 +63,27 @@ async function addTokenUSDC(signer) {
   };
 
   await safeService.proposeTransaction(transactionConfig);
+
+  return safeTxHash;
 }
 
-addTokenUSDC(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+(async () => {
+  try {
+    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const safeTxHash = await ProposeAddTokenUSDCTransaction(deployerSigner);
+
+    // Approve transaction using additional signers
+    const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+    const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+    await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+
+    // Execute transaction
+    const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+    await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
+    console.log("USDC added successfully!!!");
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+  }
+})();

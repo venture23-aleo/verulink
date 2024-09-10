@@ -1,0 +1,285 @@
+---
+- name: Install Attestor on Ubuntu
+  hosts: all
+  remote_user: ubuntu
+  # gather_facts: no
+  become: true
+  vars_files:
+    - secret.json
+  vars:
+    arch_mapping:  # Map ansible architecture {{ ansible_architecture }} names to Docker's architecture names
+      x86_64: amd64
+      aarch64: arm64
+    githubcred: "{{ github_username | urlencode }}:{{ github_token | urlencode }}"
+    GIT_BRANCH: develop
+    USER: ubuntu
+    PROJECT_NAME: verulink
+    SERVICE_NAME: attestor
+    secret_file_path: "./secret.json"
+    artifact_name: ".temp.zip"
+    chainservice_home: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService"
+    mtls_key_dir: "{{ chainservice_home }}/.mtls"
+  tasks:
+    - name: Retrieve sudo password from AWS Secrets Manager
+      set_fact:
+        ansible_become_pass: "{{ lookup('amazon.aws.aws_secret', sudo_secret_name, bypath=true) }}"
+      vars:
+        sudo_secret_name: sudo_secret_name
+      tags:
+        - retrieve_secret
+
+    - name: Update and upgrade all packages to the latest version
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - software-properties-common
+          - python3-pip
+    - name: Install boto3 using pip
+      ansible.builtin.pip:
+        name: boto3
+        state: present
+
+    - name: Create directory for Docker's GPG key
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker's official GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        keyring: /etc/apt/keyrings/docker.gpg
+        state: present
+
+    - name: Print architecture variables
+      ansible.builtin.debug:
+        msg: "Architecture: {{ ansible_architecture }}, Codename: {{ ansible_lsb.codename }}"
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ arch_mapping[ansible_architecture] | default(ansible_architecture) }}
+          signed-by=/etc/apt/keyrings/docker.gpg]
+          https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+        filename: docker
+        state: present
+
+    - name: Install Docker and related packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: true
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+        - unzip
+
+    - name: Add Docker group
+      ansible.builtin.group:
+        name: docker
+        state: present
+    
+    - name: Add user to Docker group
+      ansible.builtin.user:
+        name: "{{ USER }}"  
+        groups: docker      
+        append: yes         
+
+    - name: Enable and start Docker services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - docker.service
+        - containerd.service
+
+    - name: Read secret data from local JSON file
+      set_fact:
+        secret_data_local: "{{ lookup('file', secret_file_path) | from_json }}"
+      tags:
+        - read_secret
+    
+    - name: Set AWS region from local secret data
+      set_fact:
+        aws_region: "{{ secret_data_local.aws_region }}"
+      tags:
+        - set_aws_region
+        
+    # - name: Set sudo password for ubuntu user
+    #   ansible.builtin.user:
+    #     name: "{{ USER }}"
+    #     password: "{{ secret_data.sudo_password | password_hash('sha512')}}"
+    #     update_password: always
+    #     shell: /bin/bash
+    #   tags:
+    #     - set_sudo_password
+    # - name: Find sudoers files granting NOPASSWD to ubuntu
+    #   ansible.builtin.find:
+    #     paths: /etc/sudoers.d
+    #     patterns: '*ubuntu*'
+    #     recurse: no
+    #   register: sudoers_files
+
+    - name: Copy install artifact to remote machine and extract to home directory
+      ansible.builtin.copy:
+        src: "/{{ install_artifact }}"
+        dest: "/tmp"
+      register: tar_copy
+
+    - name: Ensure destination directory exists
+      ansible.builtin.file:
+        path: "/home/{{ USER }}/verulink"
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+      become: yes
+      become_user: root
+
+    - name: Unzip install artifact
+      ansible.builtin.shell:
+        cmd: sudo unzip -o /tmp/.temp.zip -d /home/ubuntu/verulink
+
+    - name: Change ownership
+      ansible.builtin.shell:
+        cmd: sudo chown -R ubuntu:ubuntu /home/ubuntu/verulink
+
+    - name: Retrieve secret values from AWS Secrets Manager
+      set_fact:
+        secret_data: "{{ lookup('amazon.aws.aws_secret', secret_name, bypath=true, aws_region=aws_region) }}"
+      tags:
+         - retrieve_secret
+    # - name: Debug secret_data
+    #   debug:
+    #     var: secret_data
+    #   tags:
+    #     - debug_secret_data
+
+    - name: Read secrets from AWS Secrets Manager
+      set_fact:
+        secret_json_string: "{{ secret_data[secret_name] | from_json }}"
+      tags:
+        - debug
+
+    - name: Retrieve secret values from AWS Secrets Manager
+      set_fact:
+        mtls_secret_data: "{{ lookup('amazon.aws.aws_secret', mtls_secret_name, bypath=true, aws_region=aws_region) }}"
+      tags:
+         - retrieve_mtls_secret
+    # - name: Debug mtls_secret_data
+    #   debug:
+    #     var: mtls_secret_data
+    #   tags:
+    #     - debug_mtls_secret_data
+    - name: Ensure mtls directory exists with restricted permissions
+      ansible.builtin.file:
+        path: "/home/ubuntu/verulink/attestor/chainService/.mtls"
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: '0700'
+      tags:
+        - create_mtls_directory
+
+    # - name: Create individual files with secret data
+    #   vars:
+    #     secret_json_string: "{{ mtls_secret_data[mtls_secret_name] | from_json }}"
+    #     secret_files:
+    #       - name: "ca_certificate"
+    #         path: "{{ mtls_key_dir }}/ca.cer"
+    #         secret_key: "ca_certificate"
+    #       - name: "attestor_certificate"
+    #         path:  "{{ mtls_key_dir }}/attestor1.crt"
+    #         secret_key: "attestor_certificate"
+    #       - name: "attestor_key"
+    #         path: "{{ mtls_key_dir }}/attestor1.key"
+    #         secret_key: "attestor_key"
+    #   loop: "{{ secret_files }}"
+    #   ansible.builtin.copy:
+    #     content: "{{ secret_json_string[item.name] }}"
+    #     dest: "{{ item.path }}"
+    #     mode: '0400'
+    #   tags:
+    #     - create_secret_files
+
+    - name: Create individual files with secret data
+      vars:
+        secret_files:
+          - name: "ca_certificate"
+            path: "{{ mtls_key_dir }}/ca.cer"
+            secret_key: "ca_certificate"
+          - name: "attestor_certificate"
+            path: "{{ mtls_key_dir }}/attestor1.crt"
+            secret_key: "attestor_certificate"
+          - name: "attestor_key"
+            path: "{{ mtls_key_dir }}/attestor1.key"
+            secret_key: "attestor_key"
+      loop: "{{ secret_files }}"
+      ansible.builtin.copy:
+        content: "{{ mtls_secret_data[mtls_secret_name] | from_json | json_query(item.secret_key) }}"
+        dest: "{{ item.path }}"
+        mode: '0400'
+      tags:
+        - create_secret_files
+    - name: Update keys in signingService config
+      ansible.builtin.template:
+        src: keys.j2
+        dest: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService/keys.yaml"
+        mode: "0400"
+      vars:
+        secret_json_string: "{{ secret_data[secret_name] | from_json }}"
+        ethereum_private_key: "{{ secret_json_string.ethereum_private_key }}"
+        ethereum_wallet_address: "{{ secret_json_string.ethereum_wallet_address }}"
+        aleo_private_key: "{{ secret_json_string.aleo_private_key }}"
+        aleo_wallet_address: "{{ secret_json_string.aleo_wallet_address }}"
+      tags:
+        - update_jinja2
+    
+    - name: Replace attestor name
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: '^name: attestor1'
+        replace: 'name: {{ attestor_name }}'
+     
+    - name: Replace aleo wallet address
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24'
+        replace: 'wallet_address: {{ aleo_wallet_address }}'
+      vars:
+        secret_json_string: "{{ secret_data[secret_name] | from_json }}"
+        aleo_wallet_address: "{{ secret_json_string.aleo_wallet_address }}"
+
+    
+    - name: Replace eth wallet address
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff'
+        replace: 'wallet_address: {{ ethereum_wallet_address }}'
+      vars:
+        secret_json_string: "{{ secret_data[secret_name] | from_json }}"
+        ethereum_wallet_address: "{{ secret_json_string.ethereum_wallet_address }}"
+
+    - name: Run docker-compose up -d
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}"  
+      tags:
+        - deploy_attestor
+    
+    # - name: Update sudoers for ubuntu
+    #   ansible.builtin.shell:
+    #     cmd: sudo sed -i 's/NOPASSWD://' /etc/sudoers.d/*
+    

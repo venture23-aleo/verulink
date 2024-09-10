@@ -15,9 +15,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/common"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 )
 
 const (
@@ -60,6 +61,8 @@ type CollectorI interface {
 	// Note that, db-service will delete missed-packet entry from its collection only when attestor sends valid
 	// signature.
 	ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket)
+
+	CheckCollectorHealth(ctx context.Context) error
 }
 
 var collc collector
@@ -70,6 +73,36 @@ type collector struct {
 	collectorWaitDur time.Duration
 	caCert           *x509.CertPool
 	attestorCert     tls.Certificate
+}
+
+func (c *collector) CheckCollectorHealth(ctx context.Context) error {
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      c.caCert,
+				Certificates: []tls.Certificate{c.attestorCert},
+			},
+		},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.uri, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.GetLogger().Error(err.Error())
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("expected status code %d, got %d", http.StatusCreated, resp.StatusCode)
+	}
+
+	defer resp.Body.Close()
+	return nil
 }
 
 func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacket, pktHash, sig string) error {
@@ -108,9 +141,8 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:            c.caCert,
-				Certificates:       []tls.Certificate{c.attestorCert},
-				InsecureSkipVerify: true,
+				RootCAs:      c.caCert,
+				Certificates: []tls.Certificate{c.attestorCert},
 			},
 		},
 	}
@@ -127,10 +159,19 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	}
 	defer resp.Body.Close()
 
+	r, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode == http.StatusCreated {
+		var response chain.CollectorResponse
+
+		if err := json.Unmarshal(r, &response); err != nil {
+			return err
+		}
+		if response.Message == "Duplicate packet" {
+			return common.AlreadyRelayedPacket{}
+		}
 		return nil
 	}
-	r, _ := io.ReadAll(resp.Body)
+
 	return fmt.Errorf("expected status code %d, got %d, response: %s", http.StatusCreated, resp.StatusCode, string(r))
 }
 
@@ -169,7 +210,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		}
 
 		var (
-			missedPackets   []*chain.MissedPacket
+			missedPackets   *chain.MissedPacketDetails
 			err             error
 			resp            *http.Response
 			data            []byte
@@ -186,9 +227,8 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		client := &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					RootCAs:            c.caCert,
-					Certificates:       []tls.Certificate{c.attestorCert},
-					InsecureSkipVerify: true,
+					RootCAs:      c.caCert,
+					Certificates: []tls.Certificate{c.attestorCert},
 				},
 			},
 		}
@@ -196,7 +236,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		if err != nil {
 			goto postFor
 		}
-		
+
 		resp, err = client.Do(req)
 		if err != nil {
 			goto postFor
@@ -220,11 +260,10 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		}
 		if err != nil { // for non nil error it should wait on ticker
 			logger.GetLogger().Error(err.Error())
-			logger.PushLogsToPrometheus(fmt.Sprintf("db_service_post_missed_packets_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error()))
 			continue
 		}
 
-		for _, m := range missedPackets {
+		for _, m := range missedPackets.Data {
 			ch <- m
 		}
 		// Update index for next wallet address

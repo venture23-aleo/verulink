@@ -1,56 +1,56 @@
+import * as dotenv from "dotenv";
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
+import { approveTransaction, executeTransaction } from "../../utils.js";
 
-import * as dotenv from "dotenv";
 dotenv.config();
 
-const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
-);
-console.log("ethers version = ", ethers.version);
+const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
+const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER);
 
-async function disableToken(signer) {
+async function proposeUpgradeTokenService(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
   });
 
-  const tokenAddress = process.env.USDC_ADDR;
-  const destChainId = 2;
-
+  const tokenaddress = process.env.USDC_ADDR;
   const tokenServiceProxyAddress = process.env.TOKENSERVICEPROXY_ADDRESS;
-  const ERC20TokenService = await ethers.getContractFactory("TokenService");
-  const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("disable", [tokenAddress, destChainId]);
+
+  // Fetch contract factory and encode function data
+  const TokenService = await ethers.getContractFactory("TokenService");
+  const deployerInterface = new ethers.utils.Interface(TokenService.interface.format());
+  const deployCallData = deployerInterface.encodeFunctionData("disable", [tokenaddress]);
+
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
-    safeAddress: process.env.SAFE_ADDRESS,
+    safeAddress: SAFE_ADDRESS,
   });
 
   const txData = {
     to: ethers.utils.getAddress(tokenServiceProxyAddress),
     value: "0",
-    data: calldata,
+    data: deployCallData,
   };
 
   const safeTx = await safeSdk.createTransaction({
     safeTransactionData: txData,
   });
+
   const safeTxHash = await safeSdk.getTransactionHash(safeTx);
 
-  console.log("txn hash", safeTxHash);
   const signature = await safeSdk.signTypedData(safeTx);
 
   const transactionConfig = {
-    safeAddress: process.env.SAFE_ADDRESS,
+    safeAddress: SAFE_ADDRESS,
     safeTransactionData: safeTx.data,
     safeTxHash: safeTxHash,
     senderAddress: process.env.SENDER_ADDRESS,
@@ -58,6 +58,28 @@ async function disableToken(signer) {
   };
 
   await safeService.proposeTransaction(transactionConfig);
+
+  return safeTxHash;
 }
 
-disableToken(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+(async () => {
+  try {
+    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const safeTxHash = await proposeUpgradeTokenService(deployerSigner);
+
+    // Approve the transaction using additional signers
+    const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+    const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+    await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+
+    // Execute the transaction
+    const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+    await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
+
+    console.log("Token disabled successfully!");
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+  }
+})();

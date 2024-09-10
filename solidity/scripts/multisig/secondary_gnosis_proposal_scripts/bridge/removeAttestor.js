@@ -5,41 +5,46 @@ import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
 import * as dotenv from "dotenv";
 dotenv.config();
+import { approveTransaction, executeTransaction } from "../../utils.js";
 
-const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
-);
-console.log("ethers version = ", ethers.version);
+const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
+const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER);
 
-async function addAttestor(signer) {
+async function proposeRomoveAttestorsTransaction(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
   });
 
-  const attestor = "0x50Fb3B83A14edcBF070E9FB8D9395fb8587147da";
-  const newQuorumRequired = 2;
-  const ERC20TokenbridgeImpl = await ethers.getContractFactory("Bridge", {
+  const attestortoberemoved = process.env.ATTESTOR1;
+  const newQuorumRequired = process.env.NewQuorumRequired;
+
+  // Get the contract factory for the "Bridge" contract
+  const BridgeImpl = await ethers.getContractFactory("Bridge", {
     libraries: {
       PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
+      AleoAddressLibrary: process.env.AleoAddressLibrary,
     },
   });
-  // console.log("ERC20TokenbridgeImpl = ", ERC20TokenbridgeImpl);
+
   const tokenbridgeProxyAddress = process.env.TOKENBRIDGEPROXY_ADDRESS;
-  const iface = new ethers.utils.Interface(ERC20TokenbridgeImpl.interface.format());
-  const calldata = iface.encodeFunctionData("removeAttestor", [attestor, newQuorumRequired]);
+  const iface = new ethers.utils.Interface(BridgeImpl.interface.format());
+
+  // Encode function call for adding attestors
+  const calldata = iface.encodeFunctionData("removeAttestor", [attestortoberemoved, newQuorumRequired]);
+
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
-    safeAddress: process.env.SAFE_ADDRESS,
+    safeAddress: SAFE_ADDRESS,
   });
 
   const txData = {
-    to: tokenbridgeProxyAddress,
+    to: ethers.utils.getAddress(tokenbridgeProxyAddress),
     value: "0",
     data: calldata,
   };
@@ -47,13 +52,13 @@ async function addAttestor(signer) {
   const safeTx = await safeSdk.createTransaction({
     safeTransactionData: txData,
   });
+
   const safeTxHash = await safeSdk.getTransactionHash(safeTx);
 
-  console.log("txn hash", safeTxHash);
   const signature = await safeSdk.signTypedData(safeTx);
 
   const transactionConfig = {
-    safeAddress: process.env.SAFE_ADDRESS,
+    safeAddress: SAFE_ADDRESS,
     safeTransactionData: safeTx.data,
     safeTxHash: safeTxHash,
     senderAddress: process.env.SENDER_ADDRESS,
@@ -61,8 +66,28 @@ async function addAttestor(signer) {
   };
 
   await safeService.proposeTransaction(transactionConfig);
+
+  return safeTxHash;
 }
 
-addAttestor(
-  new ethers.Wallet(process.env.SECRET_KEY1, provider)
-);
+(async () => {
+  try {
+    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const safeTxHash = await proposeRomoveAttestorsTransaction(deployerSigner);
+
+    // Approve the transaction using additional signers
+    const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+    const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+    await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+
+    // Execute the transaction
+    const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+    await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
+
+    console.log("Attestor removed successfully!");
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+  }
+})();

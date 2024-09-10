@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -14,8 +15,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 )
 
 func TestSetupCollector(t *testing.T) {
@@ -23,7 +24,10 @@ func TestSetupCollector(t *testing.T) {
 	chainIdToAddress := map[string]string{
 		"2": "aleoaddr",
 		"1": "ethAddr"}
-	err := SetupCollector(config.CollecterServiceConfig{Uri: uri}, chainIdToAddress, time.Second)
+	err := SetupCollector(config.CollecterServiceConfig{Uri: uri,
+		CaCertificate:       "../../../chainService/.mtls/ca.cer",
+		AttestorCertificate: "../../../chainService/.mtls/attestor1.crt",
+		AttestorKey:         "../../../chainService/.mtls/attestor1.key"}, chainIdToAddress, time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, GetCollector())
 	assert.Equal(t, uri, collc.uri)
@@ -35,6 +39,7 @@ func TestSendToCollector(t *testing.T) {
 	t.Run("case: happy request ", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{"message":"create"}`))
 		}))
 		defer ts.Close()
 
@@ -43,10 +48,20 @@ func TestSendToCollector(t *testing.T) {
 			"2": "aleoaddr",
 			"1": "ethAddr",
 		}
+
+		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
+			"../../../chainService/.mtls/attestor1.key")
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
+			caCert:           caCertPool,
+			attestorCert:     attestorCert,
 		}
 		sp := &chain.ScreenedPacket{
 			Packet: &chain.Packet{
@@ -130,7 +145,44 @@ func TestSendToCollector(t *testing.T) {
 
 func TestGetPktsFromCollector(t *testing.T) {
 
+	// setting json response form server
+	mPktString := &struct {
+		TargetChainID string `json:"destChainId"`
+		SourceChainID string `json:"sourceChainId"`
+		SeqNum        uint64 `json:"sequence"`
+		Height        uint64 `json:"height"`
+		TxnID         string `json:"transactionHash"`
+	}{
+		TargetChainID: "1",
+		SourceChainID: "2",
+		SeqNum:        1,
+		Height:        55,
+		TxnID:         "txnid",
+	}
+
+	mPktInfoString := &struct {
+		Data []*struct {
+			TargetChainID string `json:"destChainId"`
+			SourceChainID string `json:"sourceChainId"`
+			SeqNum        uint64 `json:"sequence"`
+			Height        uint64 `json:"height"`
+			TxnID         string `json:"transactionHash"`
+		} `json:"data"`
+		Message string `json:"message"`
+	}{
+		Data: []*struct {
+			TargetChainID string `json:"destChainId"`
+			SourceChainID string `json:"sourceChainId"`
+			SeqNum        uint64 `json:"sequence"`
+			Height        uint64 `json:"height"`
+			TxnID         string `json:"transactionHash"`
+		}{mPktString},
+		Message: "Test message",
+	}
+
 	t.Run("case: happy path", func(t *testing.T) {
+
+		// expected response
 		mPkt := &chain.MissedPacket{
 			TargetChainID: big.NewInt(1),
 			SourceChainID: big.NewInt(2),
@@ -140,8 +192,7 @@ func TestGetPktsFromCollector(t *testing.T) {
 		}
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			missedPacket := []*chain.MissedPacket{mPkt}
-			missedPktBt, _ := json.Marshal(&missedPacket)
+			missedPktBt, _ := json.Marshal(&mPktInfoString)
 			w.Write(missedPktBt)
 		}))
 		defer ts.Close()
@@ -168,13 +219,6 @@ func TestGetPktsFromCollector(t *testing.T) {
 
 	t.Run("case: error bad status code", func(t *testing.T) {
 		var firstUri string
-		mpkt := &chain.MissedPacket{
-			TargetChainID: big.NewInt(1),
-			SourceChainID: big.NewInt(2),
-			SeqNum:        uint64(1),
-			Height:        uint64(55),
-			TxnID:         "txnid",
-		}
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if firstUri == "" {
@@ -183,9 +227,7 @@ func TestGetPktsFromCollector(t *testing.T) {
 			} else {
 				assert.Equal(t, firstUri, r.RequestURI)
 			}
-			missedPackets := []*chain.MissedPacket{mpkt}
-
-			missedPktBt, _ := json.Marshal(&missedPackets)
+			missedPktBt, _ := json.Marshal(&mPktInfoString)
 			w.Write(missedPktBt)
 		}))
 		defer ts.Close()
@@ -217,26 +259,38 @@ func TestGetPktsFromCollector(t *testing.T) {
 func TestMTLSIntegration(t *testing.T) {
 	dbUrl := "https://aleomtls.ibriz.ai/"
 
-	caCert, err := os.ReadFile("/Users/swopnilparajuli/Downloads/ca.cer")
+	caCert, err := os.ReadFile("../../../chainService/ca.cer")
 	assert.NoError(t, err)
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	cert, err := tls.LoadX509KeyPair("/Users/swopnilparajuli/Downloads/attestor1.crt", "/Users/swopnilparajuli/Downloads/attestor1.key")
+	cert, err := tls.LoadX509KeyPair("../../../chainService/attestor-stresstest.crt",
+		"../../../chainService/attestor-stresstest.key")
 	assert.NoError(t, err)
 
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:            caCertPool,
-				Certificates:       []tls.Certificate{cert},
-				InsecureSkipVerify: true,
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{cert},
 			},
 		},
 	}
 
 	resp, err := client.Get(dbUrl)
+	if err != nil {
+		fmt.Println("Connection failed:", err)
+
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	fmt.Println("Response Body:", string(body))
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Bad request :", resp.StatusCode)
+	}
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
 	assert.NoError(t, err)
-	fmt.Println("response is", resp)
+
 }

@@ -1,0 +1,50 @@
+chains:
+    - name: aleo
+      chain_id: "6694886634403"
+      bridge_contract: token_bridge_v0001.aleo
+      node_url: https://api.explorer.aleo.org/v1|testnet
+      pkt_validity_wait_dur: 1m0s
+      feed_pkt_wait_dur: 0s
+      finality_height: 1
+      wallet_path: ""
+      dest_chains:
+        - ethereum
+      wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24
+      sequence_num_start:
+        ethereum: 12356
+      start_height: 0
+      filter_topic: ""
+      retry_packet_wait_dur: 1m0s
+      prune_base_seq_num_wait_dur: 1m0s
+
+    - name: ethereum
+      chain_id: "28556963657430695"
+      bridge_contract: 0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C
+      node_url: https://rpc.sepolia.org
+      pkt_validity_wait_dur: 2s
+      feed_pkt_wait_dur: 2s
+      finality_height: 64
+      wallet_path: ""
+      dest_chains:
+        - aleo
+      wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
+      sequence_num_start: {}
+      start_height: 50
+      filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
+      retry_packet_wait_dur: 1m0s
+      prune_base_seq_num_wait_dur: 1m0s
+log:
+    encoding: console
+    output_dir: log
+db_dir: ""
+consume_packet_workers: 50
+mode: dev
+signing_service:
+    host: signingservice
+    port: 8080
+    endpoint: /sign
+    scheme: http
+    username: username
+    password: password
+collector_service:
+    uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/

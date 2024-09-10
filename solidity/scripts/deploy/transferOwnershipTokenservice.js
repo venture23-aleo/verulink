@@ -5,17 +5,16 @@ dotenv.config();
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-    const newOwner = new ethers.Wallet(process.env.SECRET_KEY5, provider);
-    const ERC20TokenService = await ethers.getContractFactory("TokenService");
-    const tokenServiceProxy = process.env.TOKENSERVICEPROXY_ADDRESS;
-    let TokenServiceABI = ERC20TokenService.interface.format();
-    const TokenServiceCotract = new ethers.Contract(tokenServiceProxy, TokenServiceABI, deployerSigner);
-    console.log("Transferring Ownership to = ", newOwner.address);
-    await TokenServiceCotract.transferOwnership(newOwner.address);
-    console.log("TokenService New Owner = ", await TokenServiceCotract.owner());
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
+    const newOwner = process.env.SAFE_ADDRESS;
+    const TokenService = await ethers.getContractFactory("TokenService");
+    const tokenServiceProxy = process.env.TOKENSERVICE_PROXY_ADDRESS;
+    console.log("Transferring Ownership of TokenService to = ", newOwner);
+    const TokenServiceABI = TokenService.interface.format();
+    const TokenServiceContract = new ethers.Contract(tokenServiceProxy, TokenServiceABI, deployerSigner);
+    await TokenServiceContract.transferOwnership(newOwner);
 }
 main()
     .then(() => process.exit(0))

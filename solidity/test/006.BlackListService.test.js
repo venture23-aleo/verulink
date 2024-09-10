@@ -3,10 +3,10 @@ import hardhat from 'hardhat';
 const { ethers } = hardhat;
 
 describe("BlackListService", () => {
-    let owner, other, blackListServiceImpl, usdcMock, usdtMock, BlackListService, BlackListServiceProxy, initializeData, proxiedContract, attestor, otherAddress;
+    let deployer, owner, other, blackListServiceImpl, usdcMock, usdtMock, BlackListService, BlackListServiceProxy, initializeData, proxiedContract, attestor, otherAddress;
 
     beforeEach(async () => {
-        [owner, other] = await ethers.getSigners();
+        [owner, other, deployer] = await ethers.getSigners();
 
         // Deploy mock contracts or use your preferred testing library for mocks
         const USDCMock = await ethers.getContractFactory("USDCMock");
@@ -23,14 +23,14 @@ describe("BlackListService", () => {
         let abi = BlackListService.interface.format();
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
         // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address, owner.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxiedContract = BlackListService.attach(proxy.address);
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedContract["BlackList_init"](usdcMock.address, usdtMock.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedContract["BlackList_init"](usdcMock.address, usdtMock.address, owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it("should add to and remove from the black list", async () => {
@@ -159,10 +159,10 @@ describe("BlackListService", () => {
 
 // Define the test suite for ERC20TokenBridgeV2
 describe('Upgradeabilty: BlacklistServiceV2', () => {
-    let owner, other, blackListServiceImpl, blackListServiceImplV2, usdcMock, usdtMock, BlackListService,BlackListServiceV2, BlackListServiceProxy, initializeData, upgradeData, proxied, otherAddress;
+    let deployer, owner, other, blackListServiceImpl, blackListServiceImplV2, usdcMock, usdtMock, BlackListService,BlackListServiceV2, BlackListServiceProxy, initializeData, upgradeData, proxied, otherAddress;
 
     beforeEach(async () => {
-        [owner, other] = await ethers.getSigners();
+        [owner, other, deployer] = await ethers.getSigners();
 
         // Deploy mock contracts or use your preferred testing library for mocks
         const USDCMock = await ethers.getContractFactory("USDCMock");
@@ -179,7 +179,7 @@ describe('Upgradeabilty: BlacklistServiceV2', () => {
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
         let abi = BlackListService.interface.format();
         // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address, owner.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxied = BlackListService.attach(proxy.address);

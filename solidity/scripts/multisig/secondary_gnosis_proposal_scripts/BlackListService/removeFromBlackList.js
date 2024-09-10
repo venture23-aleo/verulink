@@ -3,31 +3,29 @@ const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-
 import * as dotenv from "dotenv";
 dotenv.config();
+import { approveTransaction, executeTransaction } from "../../utils.js";
 
-const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
-);
-console.log("ethers version = ", ethers.version);
+const provider = new ethers.providers.JsonRpcProvider("https://rpc2.sepolia.org");
 
-async function removeFromBlackList(signer) {
+async function proposeRemoveFromBlackListTransaction(signer) {
   const ethAdapter = new EthersAdapter({
     ethers,
     signerOrProvider: signer,
   });
 
   const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
+    txServiceUrl: process.env.txServiceUrl,
     ethAdapter,
   });
 
-  const accountToberemovedFromBlackListed = "0x2f3A40A3db8a7e3D09B0adfEfbCe4f6F81927557";
+  const accountTobeBlackListed = process.env.accountTobeBlackListed;
   const BlackListServiceProxy = process.env.BLACKLISTSERVICEPROXY_ADDRESS;
-  const ERC20TokenService = await ethers.getContractFactory("BlackListService");
-  const iface = new ethers.utils.Interface(ERC20TokenService.interface.format());
-  const calldata = iface.encodeFunctionData("removeFromBlackList", [accountToberemovedFromBlackListed]);
+  const BlackListService = await ethers.getContractFactory("BlackListService");
+  const iface = new ethers.utils.Interface(BlackListService.interface.format());
+  const calldata = iface.encodeFunctionData("removeFromBlackList", [accountTobeBlackListed]);
+
   const safeSdk = await Safe.default.create({
     ethAdapter: ethAdapter,
     safeAddress: process.env.SAFE_ADDRESS,
@@ -44,7 +42,6 @@ async function removeFromBlackList(signer) {
   });
   const safeTxHash = await safeSdk.getTransactionHash(safeTx);
 
-  console.log("txn hash", safeTxHash);
   const signature = await safeSdk.signTypedData(safeTx);
 
   const transactionConfig = {
@@ -56,6 +53,28 @@ async function removeFromBlackList(signer) {
   };
 
   await safeService.proposeTransaction(transactionConfig);
+
+  return safeTxHash;
 }
 
-removeFromBlackList(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+(async () => {
+  try {
+    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+    const safeTxHash = await proposeRemoveFromBlackListTransaction(deployerSigner);
+
+    // Approve transaction using additional signers
+    const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+    const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+    await approveTransaction(safeTxHash, secondSigner, process.env.SAFE_ADDRESS);
+    await approveTransaction(safeTxHash, thirdSigner, process.env.SAFE_ADDRESS);
+
+    // Execute transaction
+    const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+    await executeTransaction(safeTxHash, executor, process.env.SAFE_ADDRESS);
+
+    console.log("Account successfully removed from the blacklist!");
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+  }
+})();

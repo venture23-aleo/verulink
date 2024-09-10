@@ -5,11 +5,11 @@ const { ethers } = hardhat;
 
 // Define the test suite
 describe('BridgeTokenServiceManager', () => {
-    let owner, other, BridgeTokenServiceManager, bridgeTokenServiceManagerImpl, BridgeTokenServiceManagerProxy, initializeData, aleolib, proxiedV1;
+    let deployer, owner, other, BridgeTokenServiceManager, bridgeTokenServiceManagerImpl, BridgeTokenServiceManagerProxy, initializeData, aleolib, proxiedV1;
 
     // Deploy a new BridgeTokenServiceManager contract before each test
     beforeEach(async () => {
-        [owner, other] = await ethers.getSigners();
+        [deployer, owner, other] = await ethers.getSigners();
         const lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
@@ -29,7 +29,7 @@ describe('BridgeTokenServiceManager', () => {
         bridgeTokenServiceManagerImpl = await BridgeTokenServiceManager.deploy();
         await bridgeTokenServiceManagerImpl.deployed();
         BridgeTokenServiceManagerProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(BridgeTokenServiceManagerABI).encodeFunctionData("Bridge_init", [2]);
+        initializeData = new ethers.utils.Interface(BridgeTokenServiceManagerABI).encodeFunctionData("Bridge_init", [2, owner.address]);
         const proxy = await BridgeTokenServiceManagerProxy.deploy(bridgeTokenServiceManagerImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = BridgeTokenServiceManager.attach(proxy.address);
@@ -55,7 +55,7 @@ describe('BridgeTokenServiceManager', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
         // Add token service
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(newTokenService)).wait();
 
         // Check if the token service was added
         const isRegistered = await proxiedV1.isRegisteredTokenService(newTokenService);
@@ -85,15 +85,15 @@ describe('BridgeTokenServiceManager', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
         // Add token service
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(newTokenService)).wait();
         // Attempt to add an existing token service
-        await expect(proxiedV1.addTokenService(newTokenService)).to.be.revertedWith('BridgeTokenServiceManager: token service already exists');
+        await expect(proxiedV1.connect(owner).addTokenService(newTokenService)).to.be.revertedWith('BridgeTokenServiceManager: token service already exists');
     });
 
     // Test attempting to add a token service with zero address
     it('should revert when trying to add a token service with zero address', async () => {
         // Attempt to add a token service with zero address
-        await expect(proxiedV1.addTokenService(ethers.constants.AddressZero)).to.be.revertedWith('BridgeTokenServiceManager: zero address');
+        await expect(proxiedV1.connect(owner).addTokenService(ethers.constants.AddressZero)).to.be.revertedWith('BridgeTokenServiceManager: zero address');
     });
 
     // Test removing a token service
@@ -101,10 +101,10 @@ describe('BridgeTokenServiceManager', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
         // Add token service
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(newTokenService)).wait();
 
         // Remove token service
-        await (await proxiedV1.removeTokenService(newTokenService)).wait();
+        await (await proxiedV1.connect(owner).removeTokenService(newTokenService)).wait();
 
         // Check if the token service was removed
         const isRegistered = await proxiedV1.isRegisteredTokenService(newTokenService);
@@ -126,19 +126,19 @@ describe('BridgeTokenServiceManager', () => {
         const nonExistingTokenService = ethers.Wallet.createRandom().address;
 
         // Attempt to remove a non-existing token service
-        await expect(proxiedV1.removeTokenService(nonExistingTokenService)).to.be.revertedWith('BridgeTokenServiceManager: unknown token service');
+        await expect(proxiedV1.connect(owner).removeTokenService(nonExistingTokenService)).to.be.revertedWith('BridgeTokenServiceManager: unknown token service');
     });
 
     // Test attempting to remove a token service with zero address
     it('should revert when trying to remove a token service with zero address', async () => {
         // Attempt to remove a token service with zero address
-        await expect(proxiedV1.removeTokenService(ethers.constants.AddressZero)).to.be.revertedWith('BridgeTokenServiceManager: unknown token service');
+        await expect(proxiedV1.connect(owner).removeTokenService(ethers.constants.AddressZero)).to.be.revertedWith('BridgeTokenServiceManager: unknown token service');
     });
 
     it('should emit TokenServiceAdded event when adding a new token service', async () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
-        const addTokenServiceTx = await proxiedV1.addTokenService(newTokenService);
+        const addTokenServiceTx = await proxiedV1.connect(owner).addTokenService(newTokenService);
 
         // Check event emission
         await expect(addTokenServiceTx)
@@ -150,9 +150,9 @@ describe('BridgeTokenServiceManager', () => {
         const existingTokenService = ethers.Wallet.createRandom().address;
 
         // Add token service first
-        await (await proxiedV1.addTokenService(existingTokenService)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(existingTokenService)).wait();
 
-        const removeTokenServiceTx = await proxiedV1.removeTokenService(existingTokenService);
+        const removeTokenServiceTx = await proxiedV1.connect(owner).removeTokenService(existingTokenService);
 
         // Check event emission
         await expect(removeTokenServiceTx)
@@ -165,7 +165,7 @@ describe('BridgeTokenServiceManager', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
         // Add token service with the owner
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(newTokenService)).wait();
 
         // Try to add token service with another account and expect it to revert
         await expect(
@@ -178,7 +178,7 @@ describe('BridgeTokenServiceManager', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
         // Add token service with the owner
-        await (await proxiedV1.addTokenService(newTokenService)).wait();
+        await (await proxiedV1.connect(owner).addTokenService(newTokenService)).wait();
 
         // Try to remove token service with another account and expect it to revert
         await expect(

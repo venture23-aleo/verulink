@@ -1,28 +1,30 @@
 ---
-name: attestor1
+name: dev_attestor_verulink_v23
+version: 0.0.4
 chains:
 - name: aleo
   chain_id: 6694886634403
-  wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7 # wallet indentifier
-  bridge_contract: token_bridge_v0002.aleo
-  node_url: https://api.explorer.aleo.org/v1|testnet3
+  wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za # wallet indentifier
+  bridge_contract: token_bridge_dev_v0001.aleo
+  node_url: https://api.explorer.aleo.org/v1|testnet
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
-  pkt_validity_wait_dur: 1m
+  pkt_validity_wait_dur: 10s
   finality_height: 1
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 1m
+  average_block_gen_dur: 1s
   dest_chains:
     - ethereum
 
 - name: ethereum
   chain_id: 28556963657430695
-  wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff
-  bridge_contract: 0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193
+  wallet_address: 0x684C68bE1b58f61a33888E0eE3EA63f021d8CB0a
+  bridge_contract: 0x6dd95E705A67e1b092BED58a898f912B58Cbdc85
   node_url: https://rpc.sepolia.org
-  start_height: 5281000
-  finality_height: 64
+  start_height: 6367626
+  finality_height: 10
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   feed_pkt_wait_dur: 2s
   pkt_validity_wait_dur: 2s
@@ -31,12 +33,12 @@ chains:
   dest_chains:
     - aleo
 
+check_health_service : 1m
 db_dir: /path/to/db/dir
 consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_dir: /path/to/log/dir
-  prometheus_gateway_url: https://prometheus.ibriz.ai:9096/metrics/job/dev-push-gateway
 mode: dev # dev/prod
 
 signing_service:
@@ -46,11 +48,15 @@ signing_service:
   scheme: "http" # https, http, rpc, etc.
   username: "username"
   password: "password"
-
+  health_end_point: "/health"
 collector_service:
-  uri: https://aleobridge-dbservice-develop.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
+  uri : https://aleomtls.venture23.xyz
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
-  ca_certificate: /configs/ca.cer
-  attestor_certificate: /configs/attestor1.crt
-  attestor_key: /configs/attestor1.key
+  ca_certificate: /configs/.mtls/ca.cer
+  attestor_certificate: /configs/.mtls/attestor1.crt
+  attestor_key: /configs/.mtls/attestor1.key
+
+metrics:
+  host: https://pushgateway-aleomtls.venture23.xyz
+  job_name: dev-push-gateway

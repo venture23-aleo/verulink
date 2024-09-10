@@ -3,11 +3,10 @@ package store
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"sync"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"go.uber.org/zap"
 )
 
@@ -145,7 +144,6 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
 				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
-				logger.PushLogsToPrometheus(fmt.Sprintf("db_service_batch_removal_fail{attestor=\"%s\",error=\"%s\"} 0",logger.AttestorName,err.Error()))
 			}
 		}(key)
 	}

@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	common "github.com/venture23-aleo/aleo-bridge/attestor/chainService/common"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
-	addressscreener "github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/address_screener"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/collector"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/relay/signer"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	common "github.com/venture23-aleo/verulink/attestor/chainService/common"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	addressscreener "github.com/venture23-aleo/verulink/attestor/chainService/relay/address_screener"
+	"github.com/venture23-aleo/verulink/attestor/chainService/relay/collector"
+	"github.com/venture23-aleo/verulink/attestor/chainService/relay/signer"
 	"go.uber.org/zap"
 )
 
@@ -40,10 +42,11 @@ type relay struct {
 	collector collector.CollectorI
 	signer    signer.SignI
 	screener  addressscreener.ScreenI
+	metrics   *metrics.PrometheusMetrics
 }
 
 // StartRelay setups all the necessary environment for running the relay and starts it.
-func StartRelay(ctx context.Context, cfg *config.Config) {
+func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.PrometheusMetrics) {
 	err := signer.SetupSigner(&cfg.SigningServiceConfig)
 	if err != nil {
 		panic(err)
@@ -72,6 +75,7 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 		collector: collector.GetCollector(),
 		signer:    signer.GetSigner(),
 		screener:  addressscreener.GetScreener(),
+		metrics:   metrics,
 	}
 
 	// pktCh will receive all the packets from multiple sources and processes each packet.
@@ -85,14 +89,53 @@ func StartRelay(ctx context.Context, cfg *config.Config) {
 	// chain for the truth and if valid then this packet will be send to pktCh
 	missedPktCh := make(chan *chain.MissedPacket)
 
-	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh)
+	go initPacketFeeder(ctx, cfg.ChainConfigs, pktCh, metrics)
+	go r.checkHealthServices(ctx, &cfg.SigningServiceConfig, cfg.CheckHealthServiceDur)
 	go r.collector.ReceivePktsFromCollector(ctx, missedPktCh)
 	go consumeMissedPackets(ctx, missedPktCh, pktCh)
 	r.consumePackets(ctx, pktCh)
 }
 
+// checks the connection with signing service and collector service at
+// regular interval
+func (r *relay) checkHealthServices(ctx context.Context, signingServiceConfig *config.SigningServiceConfig, duration time.Duration) {
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-ticker.C:
+			coll := collector.GetCollector()
+			err := coll.CheckCollectorHealth(ctx)
+			if err != nil {
+				logger.GetLogger().Error("Bad Connection to collector service")
+				r.metrics.SetDBServiceHeatlh(logger.AttestorName, 0)
+			} else {
+				logger.GetLogger().Info("Lively connection to collector service")
+				r.metrics.SetDBServiceHeatlh(logger.AttestorName, 1)
+			}
+
+			// checking the health of signing service
+			signingService := signer.GetSigner()
+			err = signingService.CheckSigningServiceHealth(ctx, signingServiceConfig)
+
+			if err != nil {
+				logger.GetLogger().Error("Connection to signing service failed", zap.Any("error", err.Error()))
+				r.metrics.SetSigningServiceHealth(logger.AttestorName, 0)
+			} else {
+				logger.GetLogger().Info("Connection to signing service established")
+				r.metrics.SetSigningServiceHealth(logger.AttestorName, 1)
+			}
+		}
+	}
+
+}
+
 // initPacketFeeder starts the routine to fetch and manage the packets of all the registered chains
-func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet) {
+func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh chan<- *chain.Packet, m *metrics.PrometheusMetrics) {
 	ch := make(chan chain.IClient, len(cfgs))
 
 	for _, chainCfg := range cfgs {
@@ -101,6 +144,7 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 		}
 
 		chain := RegisteredClients[chainCfg.Name](chainCfg)
+		chain.SetMetrics(m)
 		chainIDToChain[chainCfg.ChainID.String()] = chain
 		ch <- chain
 	}
@@ -167,7 +211,6 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			err := r.screener.StoreWhiteStatus(pkt, isWhite)
 			if err != nil {
 				logger.GetLogger().Error("Error while storing white status", zap.Error(err))
-				logger.PushLogsToPrometheus(fmt.Sprintf("store_white_status_fail{attestor=\"%s\"} 0", logger.AttestorName))
 			}
 			return
 		}
@@ -183,33 +226,33 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 	if err != nil {
 		logger.GetLogger().Error(
 			"Error while signing packet", zap.Error(err), zap.Any("packet", pkt))
-		logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 0",
-		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature))
 		return
 	}
 
 	logger.GetLogger().Debug("packet hashed and signed",
 		zap.String("source_chain", pkt.Source.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence),
-		zap.String("hash", hash), zap.String("signature", signature)) 
-	logger.PushLogsToPrometheus(fmt.Sprintf("signing_service_request{attestor=\"%s\",source_chain_id=\"%s\",sequence=\"%d\",hash=\"%s\",signature=\"%s\"} 1",
-	logger.AttestorName, pkt.Source.ChainID.String(), pkt.Sequence, hash, signature))
+		zap.String("hash", hash), zap.String("signature", signature))
+
+	r.metrics.HashedAndSignedPacket(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String())
 
 	err = r.collector.SendToCollector(ctx, sp, hash, signature)
 	if err != nil {
 		if errors.Is(err, common.AlreadyRelayedPacket{}) {
+			logger.GetLogger().Info("Duplicate packet detected",
+				zap.String("source_chain", pkt.Source.ChainID.String()),
+				zap.Uint64("seq_num", pkt.Sequence))
 			err = nil // non-nil error will put packet in retry namespace
 			return
 		}
 		logger.GetLogger().Error("Error while putting signature", zap.Error(err))
-		logger.PushLogsToPrometheus(fmt.Sprintf("post_signed_packet_to_db_service{attestor=\"%s\",source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 0",
-		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
 		return
 	}
 
-	logger.GetLogger().Info("Yay packet successfully sent")
-	logger.PushLogsToPrometheus(fmt.Sprintf("post_signed_packet_to_db_service{attestor=\"%s\",source_chain_id=\"%s\",dest_chain_id=\"%s\",sequence=\"%d\"} 1",
-		logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), pkt.Sequence))
+	logger.GetLogger().Info("Packet successfully sent",
+		zap.String("source_chain", pkt.Source.ChainID.String()),
+		zap.Uint64("seq_num", pkt.Sequence))
+	r.metrics.DeliveredPackets(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String())
 }
 
 // consumeMissedPackets receives missed-packet info from collector-service into missedPktCh channel,
@@ -231,8 +274,6 @@ func consumeMissedPackets(
 		if err != nil {
 			logger.GetLogger().Error("Error while getting missed packet",
 				zap.Any("missed_packet", missedPkt), zap.Error(err))
-			logger.PushLogsToPrometheus(fmt.Sprintf("consume_missed_packet_fail{attestor=\"%s\",sourceChainId=\"%s\", destChainId=\"%s\", sequenceNo=\"%d\" error=\"%s\"} 0",
-				logger.AttestorName,missedPkt.SourceChainID.String(), missedPkt.TargetChainID.String(), missedPkt.SeqNum, err.Error()))
 			continue
 		}
 

@@ -4,85 +4,118 @@ const { ethers } = hardhat;
 import Safe, { SafeFactory } from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
-import {CreateCallAbi} from "../secondary_gnosis_proposal_scripts/ABI/ABI.js";
+import { CreateCallAbi } from "../secondary_gnosis_proposal_scripts/ABI/ABI.js";
+import { approveTransaction, executeTransaction, trimHexAddress, updateEnvFile } from "../utils.js";
 
 dotenv.config();
 
+// Initialize provider and signer
 const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
 const provider = new ethers.providers.JsonRpcProvider(
-    "https://rpc2.sepolia.org"
+    process.env.PROVIDER
 );
 const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-const ProxyContract = await ethers.getContractFactory("ProxyContract");
-const bytecode = ProxyContract.bytecode;
 
-const usdcAddress = process.env.USDC_ADDR;
-const usdtAddress = process.env.USDT_ADDR;
+async function ProposeTransaction() {
+    const BlackListService = await ethers.getContractFactory("BlackListService");
+    const ProxyContract = await ethers.getContractFactory("ProxyContract");
+    const bytecode = ProxyContract.bytecode;
 
-const tokenserviceimplementationAddress = process.env.BLACKLISTSERVICEIMPLEMENTATION_ADDRESS;
-const initializeData = new ethers.utils.Interface([{
-    "inputs": [
-        {
-            "internalType": "address",
-            "name": "_owner",
-            "type": "address"
-        },
-        {
-            "internalType": "address",
-            "name": "_usdc",
-            "type": "address"
-        },
-        {
-            "internalType": "address",
-            "name": "_usdt",
-            "type": "address"
-        }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-}]).encodeFunctionData("BlackList_init", [usdcAddress, usdtAddress]);
-const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [tokenserviceimplementationAddress, initializeData]);
+    const owner = process.env.SAFE_ADDRESS;
+    const usdcAddress = process.env.USDC_ADDR;
+    const usdtAddress = process.env.USDT_ADDR;
 
-// Encode deployment
-const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
-const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
-    0,
-    bytecode + _data.slice(2)
-]);
+    const blacklistserviceimplementationAddress = process.env.BLACKLISTSERVICEIMPLEMENTATION_ADDRESS;
+    const initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcAddress, usdtAddress, owner]);
 
-const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: deployerSigner,
-});
-const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
-    ethAdapter,
-});
-const txData = {
-    to: process.env.CREATECALL_CONTRACT_ADDRESS,
-    value: "0",
-    data: deployCallData,
-};
-const safeSdk = await Safe.default.create({
-    ethAdapter: ethAdapter,
-    safeAddress: SAFE_ADDRESS,
-});
-const safeTx = await safeSdk.createTransaction({
-    safeTransactionData: txData,
-});
-const safeTxHash = await safeSdk.getTransactionHash(safeTx);
+    const _data = new ethers.utils.AbiCoder().encode(["address", "bytes"], [blacklistserviceimplementationAddress, initializeData]);
 
-const signature = await safeSdk.signTypedData(safeTx);
-console.log("txn hash", safeTxHash);
+    // Encode deployment
+    const deployerInterface = new ethers.utils.Interface(CreateCallAbi);
+    const deployCallData = deployerInterface.encodeFunctionData("performCreate", [
+        0,
+        bytecode + _data.slice(2)
+    ]);
 
-const transactionConfig = {
-    safeAddress: SAFE_ADDRESS,
-    safeTransactionData: safeTx.data,
-    safeTxHash: safeTxHash,
-    senderAddress: process.env.SENDER_ADDRESS,
-    senderSignature: signature.data,
-};
+    const ethAdapter = new EthersAdapter({
+        ethers,
+        signerOrProvider: deployerSigner,
+    });
 
-await safeService.proposeTransaction(transactionConfig);
+    const safeService = new SafeApiKit.default({
+        txServiceUrl: process.env.txServiceUrl,
+        ethAdapter,
+    });
+
+    const txData = {
+        to: process.env.CREATECALL_CONTRACT_ADDRESS,
+        value: "0",
+        data: deployCallData,
+    };
+
+    const safeSdk = await Safe.default.create({
+        ethAdapter: ethAdapter,
+        safeAddress: SAFE_ADDRESS,
+    });
+
+    const safeTx = await safeSdk.createTransaction({
+        safeTransactionData: txData,
+    });
+
+    const safeTxHash = await safeSdk.getTransactionHash(safeTx);
+    const signature = await safeSdk.signTypedData(safeTx);
+
+    const transactionConfig = {
+        safeAddress: SAFE_ADDRESS,
+        safeTransactionData: safeTx.data,
+        safeTxHash: safeTxHash,
+        senderAddress: process.env.SENDER_ADDRESS,
+        senderSignature: signature.data,
+    };
+
+    await safeService.proposeTransaction(transactionConfig);
+
+    return safeTxHash;
+}
+
+// Main function to deploy, approve, execute, and handle results
+(async () => {
+    try {
+        // Deploy and propose transaction
+        const safeTxHash = await ProposeTransaction();
+        const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+        const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+        // Approve transaction (assuming a different signer if required for approval)
+        await approveTransaction(
+            safeTxHash,
+            secondSigner,
+            SAFE_ADDRESS
+        );
+        await approveTransaction(
+            safeTxHash,
+            thirdSigner,
+            SAFE_ADDRESS
+        );
+
+        // Execute transaction
+        const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+        const executionReceipt = await executeTransaction(
+            safeTxHash,
+            executor,
+            SAFE_ADDRESS
+        );
+
+        // Process the contract address from the logs
+        const hexAddress = executionReceipt.logs[5].data;
+        // console.log("executionReceipt = ", executionReceipt);
+
+        const trimmedAddress = trimHexAddress(hexAddress);
+
+        // Write the Deployed Proxy Contract to the .env file
+        updateEnvFile('BLACKLISTSERVICEPROXY_ADDRESS', ethers.utils.getAddress(trimmedAddress));
+        console.log("BLACKLISTSERVICEPROXY Contract Address:", ethers.utils.getAddress(trimmedAddress));
+    } catch (error) {
+        console.error("Error processing transaction:", error);
+    }
+})();

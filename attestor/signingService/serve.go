@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
+	"github.com/venture23-aleo/verulink/attestor/signingService/chain"
+	"github.com/venture23-aleo/verulink/attestor/signingService/config"
 )
 
 // response body fields
@@ -52,12 +52,16 @@ func registerHandlers() {
 		var data []byte
 		data, err = io.ReadAll(r.Body)
 		if err != nil {
+			err = fmt.Errorf("error reading request body: %w", err)
+			log.Println(err)
 			return
 		}
 
 		var hash, signature string
 		hash, signature, err = chain.HashAndSign(data)
 		if err != nil {
+			err = fmt.Errorf("error hashing and signing data: %w", err)
+			log.Println(err)
 			return
 		}
 
@@ -68,6 +72,11 @@ func registerHandlers() {
 		respData, _ := json.Marshal(m)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(respData))
+	})
+
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
 	})
 }
 

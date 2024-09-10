@@ -28,14 +28,14 @@ const ALEO_CHAINID = 2;
 
 // Define the test suite
 describe('TokenService', () => {
-    let proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, ERC20TokenServiceImpl, ERC20TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
+    let deployer, proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, ERC20TokenServiceImpl, ERC20TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
     let blackListProxy;
     let erc20VaultServiceProxy;
     let EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy, proxiedEthVaultService;
     let destchainID = 2;
 
     beforeEach(async () => {
-        [owner, signer, bridge, other, attestor, attestor1] = await ethers.getSigners();
+        [owner, signer, bridge, other, attestor, attestor1, deployer] = await ethers.getSigners();
 
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
@@ -52,7 +52,7 @@ describe('TokenService', () => {
         });
         erc20TokenBridge = await ERC20TokenBridge.deploy();
         await erc20TokenBridge.deployed();
-        initializeData = new ethers.utils.Interface(ERC20TokenBridge.interface.format()).encodeFunctionData("Bridge_init(uint256)", [ALEO_CHAINID]);
+        initializeData = new ethers.utils.Interface(ERC20TokenBridge.interface.format()).encodeFunctionData("Bridge_init(uint256,address)", [ALEO_CHAINID,owner.address]);
 
         Proxied = await ethers.getContractFactory('ProxyContract');
         proxy = await Proxied.deploy(erc20TokenBridge.address, initializeData);
@@ -73,7 +73,7 @@ describe('TokenService', () => {
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
 
-            initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
+            initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address, owner.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
             await blackListProxy.deployed();
             blackListProxy = BlackListService.attach(blackListProxy.address);
@@ -84,7 +84,7 @@ describe('TokenService', () => {
             const erc20VaultServiceImpl = await Erc20VaultService.deploy();
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
-            initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
+            initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault", owner.address]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
@@ -96,7 +96,7 @@ describe('TokenService', () => {
             await ethVaultServiceInstance.deployed();
             EthVaultServiceProxy = await ethers.getContractFactory('ProxyContract');
 
-            initializeData = new ethers.utils.Interface(EthVaultServiceImpl.interface.format()).encodeFunctionData("EthVaultService_init", ["ETH Vault"]);
+            initializeData = new ethers.utils.Interface(EthVaultServiceImpl.interface.format()).encodeFunctionData("EthVaultService_init", ["ETH Vault", owner.address]);
             const ethVaultServiceProxy = await EthVaultServiceProxy.deploy(ethVaultServiceInstance.address, initializeData);
             await ethVaultServiceProxy.deployed();
             proxiedEthVaultService = EthVaultServiceImpl.attach(ethVaultServiceProxy.address);
@@ -110,7 +110,7 @@ describe('TokenService', () => {
 
         ERC20TokenServiceImpl = await TokenService.deploy();
         await ERC20TokenServiceImpl.deployed();
-        initializeData = new ethers.utils.Interface(ERC20TokenServiceImpl.interface.format()).encodeFunctionData("TokenService_init", [proxiedBridge.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address]);
+        initializeData = new ethers.utils.Interface(ERC20TokenServiceImpl.interface.format()).encodeFunctionData("TokenService_init", [proxiedBridge.address, owner.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address]);
         proxy = await Proxied.deploy(ERC20TokenServiceImpl.address, initializeData);
         await proxy.deployed();
         ERC20TokenServiceImplAddr = ERC20TokenServiceImpl.address;
@@ -139,7 +139,7 @@ describe('TokenService', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedV1["TokenService_init(address,uint256,uint256,address)"](proxiedBridge.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedV1["TokenService_init(address,address,uint256,uint256,address)"](proxiedBridge.address, owner.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('should return "ERC20" as the token type', async () => {
@@ -152,7 +152,7 @@ describe('TokenService', () => {
         const newHoldingContract = ethers.Wallet.createRandom().address;
 
         // Update Holding contract with the owner
-        await (await proxiedV1.setHolding(newHoldingContract)).wait();
+        await (await proxiedV1.connect(owner).setHolding(newHoldingContract)).wait();
 
         // Try to Holding contract with another account and expect it to revert
         await expect(
@@ -176,7 +176,7 @@ describe('TokenService', () => {
         // Mock USDC and USDT contracts to simulate blacklisting
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await (await blackListProxy.addToBlackList(other.address)).wait();
+        await (await blackListProxy.connect(owner).addToBlackList(other.address)).wait();
 
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"))
@@ -209,7 +209,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 100 })).wait();
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(100);
     });
@@ -235,7 +235,7 @@ describe('TokenService', () => {
     it('should transfer USDT and checking if "Token not supported" in _packetify', async () => {
         await (await usdTMock.mint(other.address, 150)).wait();
         await (await usdTMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await proxiedV1.disable(usdTMock.address);
+        await proxiedV1.connect(owner).disable(usdTMock.address);
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdTMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.revertedWith("TokenService: token not supported");
     });
@@ -259,12 +259,12 @@ describe('TokenService', () => {
         const amountOutOfRange = 1000000000001; // Assuming this amount is out of the expected range
 
         // Mint some USDC tokens to the owner
-        await usdcMock.mint(owner.address, 100000000000000);
-        await usdcMock.approve(proxiedV1.address, 1000000000001);
+        await usdcMock.mint(other.address, 100000000000000);
+        await usdcMock.connect(other).approve(proxiedV1.address, 1000000000001);
 
         // Attempt to transfer tokens with an amount out of range
         await expect(
-            proxiedV1["transfer(address,uint256,string)"](usdcMock.address, amountOutOfRange, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")
+            proxiedV1.connect(other)["transfer(address,uint256,string)"](usdcMock.address, amountOutOfRange, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")
         ).to.be.revertedWith("TokenService: amount out of range");
     });
 
@@ -325,7 +325,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address)", [proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address,address)", [proxiedV1.address, owner.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -348,7 +348,7 @@ describe('TokenService', () => {
         const signatures = signature1 + signature2.slice(2)
 
         //set Holding contract in proxiedV1 which is TokenService 
-        await (await proxiedV1.setHolding(proxiedHolding.address)).wait();
+        await (await proxiedV1.connect(owner).setHolding(proxiedHolding.address)).wait();
         //add to blackList 
         await (await usdcMock.addBlackList(other.address)).wait();
 
@@ -385,7 +385,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address)", [proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address,address)", [proxiedV1.address,owner.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -423,7 +423,7 @@ describe('TokenService', () => {
         const holdingImpl = await Holding.deploy();
         await holdingImpl.deployed();
         const HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address)", [proxiedV1.address]);
+        initializeData = new ethers.utils.Interface(holdingImpl.interface.format()).encodeFunctionData("Holding_init(address,address)", [proxiedV1.address,owner.address]);
         const proxyHolding = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxyHolding.deployed();
         proxiedHolding = Holding.attach(proxyHolding.address);
@@ -614,7 +614,7 @@ describe('TokenService', () => {
             ['bytes32', 'uint8'],
             [packetHash, 1]
         );
-        await (await proxiedV1.disable(usdcMock.address)).wait();
+        await (await proxiedV1.connect(owner).disable(usdcMock.address)).wait();
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2)
@@ -636,7 +636,7 @@ describe('TokenService', () => {
         const signatures = signature1 + signature2.slice(2)
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
-        await (await proxiedV1.pause());
+        await (await proxiedV1.connect(owner).pause());
         await expect(proxiedV1.connect(other).withdraw(inPacket, signatures)).to.be.revertedWith("Pausable: paused");
     });
 
@@ -651,7 +651,7 @@ describe('TokenService', () => {
         const min = 1;
         const max = 1000;
 
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max);
         inPacket[4][1] = nTToken.address;
         const packetHash = inPacketHash(inPacket);
         let message = ethers.utils.solidityKeccak256(
@@ -662,7 +662,7 @@ describe('TokenService', () => {
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2)
 
-        await (await proxiedV1.setHolding(ethers.Wallet.createRandom().address)).wait();
+        await (await proxiedV1.connect(owner).setHolding(ethers.Wallet.createRandom().address)).wait();
 
         // replicate transfer to load some erc20 funds in the tokenservice
         await (await nTToken.mint(proxiedV1.address, 100000000)).wait();
@@ -796,7 +796,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
         await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500)).to.be.revertedWith('TokenService: eth transfer failed');
     });
@@ -807,7 +807,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, ethers.constants.AddressZero, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, ethers.constants.AddressZero, destTokenAddress, destTokenService, min, max);
         await expect(proxiedV1.connect(owner).transferToVault(tokenAddress, 500))
             .to.be.revertedWith('TokenService: vault zero address');
     });
@@ -818,8 +818,8 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
-        await (await proxiedV1.pause());
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await (await proxiedV1.connect(owner).pause());
         expect(proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).to.be.reverted;
     });
 
@@ -829,7 +829,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
         await expect(proxiedV1.connect(other).transferToVault(tokenAddress, 50)).to.be.revertedWith('Ownable: caller is not the owner');
     });
@@ -840,7 +840,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await (await proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", { value: 50 })).wait();
         await (await proxiedV1.connect(owner).transferToVault(tokenAddress, 50)).wait();
         expect(await ethers.provider.getBalance(proxiedEthVaultService.address)).to.be.equal(50);
@@ -867,7 +867,7 @@ describe('TokenService', () => {
     it('should not transfer USDC if contract is paused', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
-        await (await proxiedV1.pause());
+        await (await proxiedV1.connect(owner).pause());
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).to.be.reverted;
     });
@@ -878,7 +878,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await proxiedV1.connect(owner)["transfer(string)"]("aleo1g2vt2rag4fzug6aklxxxhhraza54gw0jr9q6myjtkm3jjmdtugqq6yrng8", { value: 100 });
     });
 
@@ -888,7 +888,7 @@ describe('TokenService', () => {
         const destTokenService = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
         const min = 1;
         const max = 100;
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
         await expect(proxiedV1.connect(owner)["transfer(string)"]("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl2", { value: 100 })).to.be.revertedWith("Invalid Aleo address length");
     });
 
@@ -903,7 +903,7 @@ describe('TokenService', () => {
         const max = 100;
 
         // Add token with necessary details
-        await proxiedV1.addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
+        await proxiedV1.connect(owner).addToken(tokenAddress, ALEO_CHAINID, proxiedEthVaultService.address, destTokenAddress, destTokenService, min, max);
 
         // Expect revert due to invalid Aleo address length
         await expect(proxiedV1.connect(other)["transfer(address,uint256,string)"]
@@ -915,7 +915,7 @@ describe('TokenService', () => {
 // Define the test suite for ERC20TokenBridgeV2
 describe('Upgradeabilty: TokenServiceV2', () => {
     let lib, ERC20TokenServiceV1Impl, initializeData, proxied, upgradeData;
-    let owner;
+    let deployer, owner;
     let signer;
     let other;
     let ERC20TokenServiceV1;
@@ -930,7 +930,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
 
     // Deploy a new ERC20TokenServiceV2 contract before each test
     beforeEach(async () => {
-        [owner, signer, other] = await ethers.getSigners();
+        [deployer, owner, signer, other] = await ethers.getSigners();
         lib = await ethers.getContractFactory("PacketLibrary", { from: signer.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
@@ -959,7 +959,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
             const blackListServiceImpl = await BlackListService.deploy();
             await blackListServiceImpl.deployed();
             const BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
-            initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address]);
+            initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData("BlackList_init", [usdcMock.address, usdTMock.address, owner.address]);
             blackListProxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
             await blackListProxy.deployed();
             blackListProxy = BlackListService.attach(blackListProxy.address);
@@ -970,7 +970,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
             const erc20VaultServiceImpl = await Erc20VaultService.deploy();
             await erc20VaultServiceImpl.deployed();
             const Erc20VaultServiceProxy = await ethers.getContractFactory('ProxyContract');
-            initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault"]);
+            initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [usdcMock.address, "USDC Vault", owner.address]);
             erc20VaultServiceProxy = await Erc20VaultServiceProxy.deploy(erc20VaultServiceImpl.address, initializeData);
             await erc20VaultServiceProxy.deployed();
             erc20VaultServiceProxy = Erc20VaultService.attach(erc20VaultServiceProxy.address);
@@ -981,7 +981,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
         await ERC20TokenServiceV1Impl.deployed();
 
         ERC20TokenServiceProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(ERC20TokenServiceV1.interface.format()).encodeFunctionData("TokenService_init(address,uint256,uint256,address)", [erc20TokenBridge.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address]);
+        initializeData = new ethers.utils.Interface(ERC20TokenServiceV1.interface.format()).encodeFunctionData("TokenService_init(address,address, uint256,uint256,address)", [erc20TokenBridge.address, owner.address, ETH_CHAINID, ALEO_CHAINID, blackListProxy.address]);
 
         const proxy = await ERC20TokenServiceProxy.deploy(ERC20TokenServiceV1Impl.address, initializeData);
         await proxy.deployed();
@@ -994,7 +994,7 @@ describe('Upgradeabilty: TokenServiceV2', () => {
         let ERC20TokenServiceV2ABI = ERC20TokenServiceV2.interface.format();
 
         upgradeData = new ethers.utils.Interface(ERC20TokenServiceV2ABI).encodeFunctionData("initializev2", [5]);
-        await proxied.upgradeToAndCall(ERC20TokenServiceV2Impl.address, upgradeData);
+        await proxied.connect(owner).upgradeToAndCall(ERC20TokenServiceV2Impl.address, upgradeData);
         proxied = ERC20TokenServiceV2.attach(proxy.address);
     });
 

@@ -15,11 +15,12 @@ import (
 const (
 	Development = "dev"
 	Production  = "prod"
+	Stage       = "stage"
 )
 
 const (
-	dbFileName  = "attestorBolt.db"
-	logFileName = "attestor.log"
+	dbFileName  = "verulinkBolt.db"
+	logFileName = "verulink.log"
 	perm        = 744 // Read, execute and write permission for owner, and read-only permission for others
 )
 
@@ -48,6 +49,7 @@ type ChainConfig struct {
 	FilterTopic                string            `yaml:"filter_topic"`       // useful for ethereum
 	RetryPacketWaitDur         time.Duration     `yaml:"retry_packet_wait_dur"`
 	PruneBaseSeqNumberWaitDur  time.Duration     `yaml:"prune_base_seq_num_wait_dur"`
+	AverageBlockGenDur         time.Duration     `yaml:"average_block_gen_dur"` // useful for aleo
 }
 
 type Config struct {
@@ -61,22 +63,30 @@ type Config struct {
 	Mode                   string                 `yaml:"mode"`
 	SigningServiceConfig   SigningServiceConfig   `yaml:"signing_service"`
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
+	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
+	MetricConfig           MetricsConfig          `yaml:"metrics"`
+	Version                string                    `yaml:"version"`
 }
 
 type LoggerConfig struct {
-	Encoding             string `yaml:"encoding"`
-	OutputDir            string `yaml:"output_dir"`
-	OutputPath           string `yaml:"-"` // calculated based on OutputDir
-	PrometheusGatewayUrl string `yaml:"prometheus_gateway_url"`
+	Encoding   string `yaml:"encoding"`
+	OutputDir  string `yaml:"output_dir"`
+	OutputPath string `yaml:"-"` // calculated based on OutputDir
+}
+
+type MetricsConfig struct {
+	Host    string `yaml:"host"`
+	JobName string `yaml:"job_name"`
 }
 
 type SigningServiceConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Endpoint string `yaml:"endpoint"`
-	Scheme   string `yaml:"scheme"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	Endpoint       string `yaml:"endpoint"`
+	Scheme         string `yaml:"scheme"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	HealthEndpoint string `yaml:"health_end_point"`
 }
 
 type CollecterServiceConfig struct {
@@ -142,6 +152,8 @@ func InitConfig(flagArgs *FlagArgs) error {
 	}
 
 	if flagArgs.Mode == Production {
+		config.Mode = flagArgs.Mode
+	} else if flagArgs.Mode == Stage {
 		config.Mode = flagArgs.Mode
 	} else {
 		config.Mode = Development

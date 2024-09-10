@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/venture23-aleo/aleo-bridge/attestor/signingService/config"
+	"github.com/venture23-aleo/verulink/attestor/signingService/config"
 )
 
 func TestValidateAleoPrivateKey(t *testing.T) {

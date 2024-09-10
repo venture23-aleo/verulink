@@ -5,17 +5,16 @@ dotenv.config();
 
 async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
-        "https://rpc2.sepolia.org"
+        process.env.PROVIDER
     );
-    const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
-    const newOwner = new ethers.Wallet(process.env.SECRET_KEY5, provider);
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
+    const newOwner = process.env.SAFE_ADDRESS;
     const Holding = await ethers.getContractFactory("Holding");
-    const holdingProxy = process.env.HOLDINGPROXY_ADDRESS;
+    const holdingProxy = process.env.HOLDING_PROXY_ADDRESS;
+    console.log("Transferring Ownership of Holding to = ", newOwner);
     const HoldingABI = Holding.interface.format();
-    const HoldingCotract = new ethers.Contract(holdingProxy, HoldingABI, deployerSigner);
-    console.log("Transferring Ownership to = ", newOwner.address);
-    await HoldingCotract.transferOwnership(newOwner.address);
-    console.log("Holding New Owner = ", await HoldingCotract.owner());
+    const HoldingContract = new ethers.Contract(holdingProxy, HoldingABI, deployerSigner);
+    await HoldingContract.transferOwnership(newOwner);    
 }
 main()
     .then(() => process.exit(0))

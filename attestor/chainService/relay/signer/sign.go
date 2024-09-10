@@ -11,9 +11,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/config"
-	"github.com/venture23-aleo/aleo-bridge/attestor/chainService/logger"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/config"
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"go.uber.org/zap"
 )
 
@@ -26,6 +26,8 @@ const (
 type SignI interface {
 	HashAndSignScreenedPacket(
 		ctx context.Context, sp *chain.ScreenedPacket) (hash string, signature string, err error)
+
+	CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig) error
 }
 
 var s SignI
@@ -83,6 +85,30 @@ func (s *signService) HashAndSignScreenedPacket(
 	return
 }
 
+func (s *signService) CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig) error {
+
+	u := &url.URL{
+		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Path:   cfg.HealthEndpoint,
+		Scheme: cfg.Scheme,
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("expected status code 200, got status code %d", resp.StatusCode)
+	}
+	return nil
+}
+
 // SetupSigner checks if url can be dialed and sets up given parameters for chainservice to
 // communicate with signing service securely.
 func SetupSigner(cfg *config.SigningServiceConfig) error {
@@ -91,7 +117,6 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 		zap.String("endpoint", cfg.Endpoint),
 		zap.String("host", cfg.Host),
 	)
-	logger.PushLogsToPrometheus(fmt.Sprintf("relay_signer_setup{attestor=\"%s\",scheme=\"%s\", endpoint=\"%s\", host=\"%s\"} 1", logger.AttestorName, cfg.Scheme,cfg.Endpoint,cfg.Host))
 	u := &url.URL{
 		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Path:   cfg.Endpoint,

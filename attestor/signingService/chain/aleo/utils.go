@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	chainService "github.com/venture23-aleo/aleo-bridge/attestor/chainService/chain"
+	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
 )
 
 // formats packet for aleo bridge contract
@@ -16,7 +16,7 @@ func constructAleoPacket(pkt *chainService.Packet) string {
 		"{ version: %du8, sequence: %du64, "+
 			"source: { chain_id: %du128, addr: %s }, "+
 			"destination: { chain_id: %du128, addr: %s }, "+
-			"message: { sender_address: %s, dest_token_address: %s , amount: %du128 , receiver_address: %s }, "+
+			"message: { sender_address: %s, dest_token_id: %s , amount: %du128 , receiver_address: %s }, "+
 			"height: %du64 }",
 		pkt.Version, pkt.Sequence, pkt.Source.ChainID,
 		constructEthAddressForAleoParameter(pkt.Source.Address),

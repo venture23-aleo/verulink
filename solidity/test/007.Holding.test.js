@@ -7,11 +7,11 @@ const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
 
 // Define the test suite
 describe('Holding', () => {
-    let owner, other, Holding, holdingImpl, HoldingProxy, initializeData, proxiedV1, tokenService, USDCMock, usdcMock;
+    let deployer, owner, other, Holding, holdingImpl, HoldingProxy, initializeData, proxiedV1, tokenService, USDCMock, usdcMock;
 
     // Deploy a new Holding contract before each test
     beforeEach(async () => {
-        [owner, other, tokenService] = await ethers.getSigners();
+        [owner, other, tokenService, deployer] = await ethers.getSigners();
         USDCMock = await ethers.getContractFactory("USDCMock");
         usdcMock = await USDCMock.deploy();
         await usdcMock.deployed();
@@ -23,7 +23,7 @@ describe('Holding', () => {
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
         // initializeData = new ethers.Interface(BlackListServiceABI).encodeFunctionData(["initialize(address)"](owner.address));
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address,address)", [tokenService.address, owner.address]);
         const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxy.deployed();
         proxiedV1 = Holding.attach(proxy.address);
@@ -37,7 +37,7 @@ describe('Holding', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedV1["Holding_init(address)"](tokenService.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedV1["Holding_init(address,address)"](tokenService.address,owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     // Test that only the owner can update the token service
@@ -45,7 +45,7 @@ describe('Holding', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
 
         // Update token service with the owner
-        await (await proxiedV1["addTokenService(address)"](newTokenService)).wait();
+        await (await proxiedV1.connect(owner)["addTokenService(address)"](newTokenService)).wait();
         expect(await proxiedV1.supportedTokenServices(newTokenService)).to.equal(true);
 
         // Try to update token service with another account and expect it to revert
@@ -55,12 +55,12 @@ describe('Holding', () => {
 
         // Try to update existed token service and expect it to revert
         await expect(
-            proxiedV1.addTokenService(newTokenService)
+            proxiedV1.connect(owner).addTokenService(newTokenService)
         ).to.be.revertedWith("Holding: known tokenService");  
 
         // Try to update token service with zero address and expect it to revert 
         await expect(
-            proxiedV1.addTokenService("0x0000000000000000000000000000000000000000")
+            proxiedV1.connect(owner).addTokenService("0x0000000000000000000000000000000000000000")
         ).to.be.revertedWith("Holding: zero address");  
     });
 
@@ -92,21 +92,21 @@ describe('Holding', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
     
         // Update token service with the owner
-        await (await proxiedV1["addTokenService(address)"](newTokenService)).wait();
+        await (await proxiedV1.connect(owner)["addTokenService(address)"](newTokenService)).wait();
 
         // Try to update token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).removeTokenService(newTokenService)
         ).to.be.revertedWith("Ownable: caller is not the owner");
 
-        const tx = await proxiedV1.removeTokenService(newTokenService);
+        const tx = await proxiedV1.connect(owner).removeTokenService(newTokenService);
         await tx.wait();
 
         expect(await proxiedV1.supportedTokenServices(newTokenService)).to.equal(false);
 
         // try to remove non-exist token service and expect it to revert
         await expect(
-            proxiedV1.removeTokenService(newTokenService)
+            proxiedV1.connect(owner).removeTokenService(newTokenService)
         ).to.be.revertedWith("Holding: unKnown tokenService");
         
         // Try to update remove token service as zero address as parameter and expect it to revert 
@@ -119,7 +119,7 @@ describe('Holding', () => {
         const newTokenService = ethers.Wallet.createRandom().address;
     
         // Update token service with the owner
-        await (await proxiedV1["addTokenService(address)"](newTokenService)).wait();
+        await (await proxiedV1.connect(owner)["addTokenService(address)"](newTokenService)).wait();
 
         // Try to update token service with another account and expect it to revert
         await expect(
@@ -224,7 +224,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
 
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         expect(await proxiedV1.unlocked(user,token)).to.be.equal(amount);
 
         // Try to unlock tokens with another account and expect it to revert
@@ -246,7 +246,7 @@ describe('Holding', () => {
 
         // Try to unlock an amount greater than what is locked and expect it to revert
         await expect(
-            proxiedV1.unlock(user, token, unlockAmount)
+            proxiedV1.connect(owner).unlock(user, token, unlockAmount)
         ).to.be.revertedWith("Holding: insufficient amount");
     });
 
@@ -282,7 +282,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
 
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         // Release tokens with the owner
         await (await proxiedV1["release(address,address)"](user, token)).wait();
         expect(await proxiedV1.unlocked(user, token)).to.be.equal(0);
@@ -325,9 +325,9 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
     
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         // contract is paued here
-        const tx = await proxiedV1.pause();
+        const tx = await proxiedV1.connect(owner).pause();
         // Release tokens with the owner, should revert back
         await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("Pausable: paused");
     });
@@ -344,7 +344,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
     
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(proxiedV1.address);
         // Release tokens with the owner, should revert back
@@ -362,7 +362,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
     
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(user);
         // Release tokens with the owner, should revert back
@@ -458,7 +458,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address)"](user, { value: amount })).wait();
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(100);
         // Unlock tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         // Call the 'release' function with token set to address(0) for ETH transfer
         await (await proxiedV1["release(address)"](user)).wait();
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(0);
@@ -484,7 +484,7 @@ describe('Holding', () => {
         let HoldingContractABI = Holding.interface.format();
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address,address)", [tokenService.address,owner.address]);
         const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxy.deployed();
         let proxiedHolding = Holding.attach(proxy.address);
@@ -508,7 +508,7 @@ describe('Holding', () => {
         let HoldingContractABI = Holding.interface.format();
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address,address)", [tokenService.address,owner.address]);
         const proxy = await HoldingProxy.deploy(holdingImpl.address, initializeData);
         await proxy.deployed();
         let proxiedHolding = Holding.attach(proxy.address);
@@ -575,7 +575,7 @@ describe('Holding', () => {
         await (await proxiedV1.connect(tokenService)["lock(address,address,uint256)"](user, token, amount)).wait();
 
         // Unlock and release tokens with the owner
-        await (await proxiedV1.unlock(user, token, amount)).wait();
+        await (await proxiedV1.connect(owner).unlock(user, token, amount)).wait();
         const tx = await proxiedV1["release(address,address)"](user, token);
 
         // Ensure the 'Released' event is emitted with the correct values
@@ -587,18 +587,18 @@ describe('Holding', () => {
 
 // Define the test suite for HoldingV2
 describe('Upgradeabilty: HoldingV2', () => {
-    let owner, other, HoldingV2, holdingV1Impl, HoldingProxy, initializeData, proxied, tokenService, HoldingV1, holdingV2Impl, upgradeData;
+    let deployer, owner, other, HoldingV2, holdingV1Impl, HoldingProxy, initializeData, proxied, tokenService, HoldingV1, holdingV2Impl, upgradeData;
 
     // Deploy a new HoldingV2 contract before each test
     beforeEach(async () => {
-        [owner, tokenService, other] = await ethers.getSigners();
+        [deployer, owner, tokenService, other] = await ethers.getSigners();
         HoldingV1 = await ethers.getContractFactory("Holding");
         holdingV1Impl = await HoldingV1.deploy();
         await holdingV1Impl.deployed();
         let HoldingContractABI = HoldingV1.interface.format();
 
         HoldingProxy = await ethers.getContractFactory('ProxyContract');
-        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address)", [tokenService.address]);
+        initializeData = new ethers.utils.Interface(HoldingContractABI).encodeFunctionData("Holding_init(address,address)", [tokenService.address,owner.address]);
         const proxy = await HoldingProxy.deploy(holdingV1Impl.address, initializeData);
         await proxy.deployed();
         proxied = HoldingV1.attach(proxy.address);
@@ -609,7 +609,7 @@ describe('Upgradeabilty: HoldingV2', () => {
         let HoldingContractV2ABI = HoldingV2.interface.format();
 
         upgradeData = new ethers.utils.Interface(HoldingContractV2ABI).encodeFunctionData("initializev2", [5]);
-        await proxied.upgradeToAndCall(holdingV2Impl.address, upgradeData);
+        await proxied.connect(owner).upgradeToAndCall(holdingV2Impl.address, upgradeData);
         proxied = HoldingV2.attach(proxy.address);
     });
 

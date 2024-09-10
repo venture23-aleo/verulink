@@ -1,61 +1,90 @@
+import * as dotenv from "dotenv";
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import Safe from "@safe-global/protocol-kit";
 import { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
+import { approveTransaction, executeTransaction } from "../../utils.js";
 
-import * as dotenv from "dotenv";
 dotenv.config();
 
-const provider = new ethers.providers.JsonRpcProvider(
-  "https://rpc2.sepolia.org"
-);
-console.log("ethers version = ", ethers.version);
+const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
+const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER);
 
-async function removeTokenService(signer) {
-  const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: signer,
-  });
+async function proposeUpgradeTransaction(signer) {
+    // Retrieve the contract factory with linked libraries
+    const HoldingImpl = await ethers.getContractFactory("Holding");
 
-  const safeService = new SafeApiKit.default({
-    txServiceUrl: "https://safe-transaction-sepolia.safe.global",
-    ethAdapter,
-  });
+    const tokenservice = process.env.TOKENSERVICEPROXY_ADDRESS;
+    const HoldingProxyAddress = process.env.HOLDINGPROXY_ADDRESS;
 
-  const tokenService = process.env.USDC_ADDR;
-  const holdingProxyAddress = process.env.HOLDINGPROXY_ADDRESS;
-  const HoldingImpl = await ethers.getContractFactory("Holding");
-  const iface = new ethers.utils.Interface(HoldingImpl.interface.format());
-  const calldata = iface.encodeFunctionData("removeTokenService", [tokenService]);
-  const safeSdk = await Safe.default.create({
-    ethAdapter: ethAdapter,
-    safeAddress: process.env.SAFE_ADDRESS,
-  });
+    // Encode the function call for upgrading the contract
+    const deployerInterface = new ethers.utils.Interface(HoldingImpl.interface.format());
+    const deployCallData = deployerInterface.encodeFunctionData("removeTokenService", [
+        tokenservice
+    ]);
 
-  const txData = {
-    to: ethers.utils.getAddress(holdingProxyAddress),
-    value: "0",
-    data: calldata,
-  };
+    // Setup the Ethers adapter and Safe SDK
+    const ethAdapter = new EthersAdapter({
+        ethers,
+        signerOrProvider: signer,
+    });
 
-  const safeTx = await safeSdk.createTransaction({
-    safeTransactionData: txData,
-  });
-  const safeTxHash = await safeSdk.getTransactionHash(safeTx);
+    const safeService = new SafeApiKit.default({
+        txServiceUrl: process.env.txServiceUrl,
+        ethAdapter,
+    });
 
-  console.log("txn hash", safeTxHash);
-  const signature = await safeSdk.signTypedData(safeTx);
+    const txData = {
+        to: ethers.utils.getAddress(HoldingProxyAddress),
+        value: "0",
+        data: deployCallData,
+    };
 
-  const transactionConfig = {
-    safeAddress: process.env.SAFE_ADDRESS,
-    safeTransactionData: safeTx.data,
-    safeTxHash: safeTxHash,
-    senderAddress: process.env.SENDER_ADDRESS,
-    senderSignature: signature.data,
-  };
+    const safeSdk = await Safe.default.create({
+        ethAdapter: ethAdapter,
+        safeAddress: SAFE_ADDRESS,
+    });
 
-  await safeService.proposeTransaction(transactionConfig);
+    const safeTx = await safeSdk.createTransaction({
+        safeTransactionData: txData,
+    });
+
+    const safeTxHash = await safeSdk.getTransactionHash(safeTx);
+
+    const signature = await safeSdk.signTypedData(safeTx);
+
+    const transactionConfig = {
+        safeAddress: SAFE_ADDRESS,
+        safeTransactionData: safeTx.data,
+        safeTxHash: safeTxHash,
+        senderAddress: process.env.SENDER_ADDRESS,
+        senderSignature: signature.data,
+    };
+
+    await safeService.proposeTransaction(transactionConfig);
+
+    return safeTxHash;
 }
 
-removeTokenService(new ethers.Wallet(process.env.SECRET_KEY1, provider));
+(async () => {
+    try {
+        const deployerSigner = new ethers.Wallet(process.env.SECRET_KEY1, provider);
+        const safeTxHash = await proposeUpgradeTransaction(deployerSigner);
+
+        // Approve the transaction using additional signers
+        const secondSigner = new ethers.Wallet(process.env.SECRET_KEY2, provider);
+        const thirdSigner = new ethers.Wallet(process.env.SECRET_KEY3, provider);
+
+        await approveTransaction(safeTxHash, secondSigner, SAFE_ADDRESS);
+        await approveTransaction(safeTxHash, thirdSigner, SAFE_ADDRESS);
+
+        // Execute the transaction
+        const executor = new ethers.Wallet(process.env.SECRET_KEY4, provider);
+        await executeTransaction(safeTxHash, executor, SAFE_ADDRESS);
+
+        console.log("Tokenservice addition successful!");
+    } catch (error) {
+        console.error("Error processing transaction:", error);
+    }
+})();
