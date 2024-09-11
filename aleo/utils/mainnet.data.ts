@@ -49,7 +49,7 @@ export const wethMinTransfer = BigInt(500_000_000_000_000); //0.0005 = 5*10^14
 export const wethMaxTransfer = BigInt(100_000_000_000_000_000_000);
 export const wethOutgoingPercentage = 10_00 // 10%
 export const wethTimeframe = 28_800; // per block
-export const wethMaxNoCap = BigInt(1_000_000_000_000_000_000); // 40 eth
+export const wethMaxNoCap = BigInt(40_000_000_000_000_000_000); // 40 eth
 export const wethName = BigInt('1447384136');
 export const wethSymbol = BigInt('1984255048');
 export const wethDecimals = 18;
