@@ -1,7 +1,7 @@
 chain:
   ethereum:
-    private_key: **
-    wallet_address: 0x5dc561633f195d44a530cdf0f288a409286797ff
+    private_key: <ethereum_private_key>
+    wallet_address: <ethereum_wallet_address>
   aleo:
-    private_key: **
-    wallet_address: aleo1zgyyxkjxadc4y7aks4rscmz6sq59wljrjckuwgrwsx034uxkkuyqmtjdw7
+    private_key: <aleo_private_key>
+    wallet_address: <aleo_wallet_address>

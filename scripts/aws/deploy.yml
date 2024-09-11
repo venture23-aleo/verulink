@@ -221,10 +221,10 @@
             path: "{{ mtls_key_dir }}/ca.cer"
             secret_key: "ca_certificate"
           - name: "attestor_certificate"
-            path: "{{ mtls_key_dir }}/attestor1.crt"
+            path: "{{ mtls_key_dir }}/{{ attestor_name }}.crt"
             secret_key: "attestor_certificate"
           - name: "attestor_key"
-            path: "{{ mtls_key_dir }}/attestor1.key"
+            path: "{{ mtls_key_dir }}/{{ attestor_name }}.key"
             secret_key: "attestor_key"
       loop: "{{ secret_files }}"
       ansible.builtin.copy:
@@ -250,13 +250,13 @@
     - name: Replace attestor name
       replace:
         path: "{{ chainservice_home }}/config.yaml"
-        regexp: '^name: attestor1'
+        regexp: '^name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>'
         replace: 'name: {{ attestor_name }}'
      
     - name: Replace aleo wallet address
       replace:
         path: "{{ chainservice_home }}/config.yaml"
-        regexp: 'wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24'
+        regexp: 'wallet_address: <your_aleo_wallet_address>'
         replace: 'wallet_address: {{ aleo_wallet_address }}'
       vars:
         secret_json_string: "{{ secret_data[secret_name] | from_json }}"
@@ -266,7 +266,7 @@
     - name: Replace eth wallet address
       replace:
         path: "{{ chainservice_home }}/config.yaml"
-        regexp: 'wallet_address: 0x5Dc561633F195d44a530CdF0f288a409286797ff'
+        regexp: 'wallet_address: <your_ethereum_wallet_address>'
         replace: 'wallet_address: {{ ethereum_wallet_address }}'
       vars:
         secret_json_string: "{{ secret_data[secret_name] | from_json }}"
