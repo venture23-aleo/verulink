@@ -50,7 +50,7 @@ signing_service:
   password: "password"
   health_end_point: "/health"
 collector_service:
-  uri : https://dbservice-mainnet-mtls.verulink.com
+  uri : <collector_service_url>
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/.mtls/ca.cer
@@ -58,5 +58,5 @@ collector_service:
   attestor_key: /configs/.mtls/attestor1.key
 
 metrics:
-  host: https://pushgateway-mtls.verulink.com
+  host: <prometheus_pushgateway_url>
   job_name: prod-push-gateway
