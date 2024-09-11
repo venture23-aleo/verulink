@@ -29,124 +29,90 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	{
 	"Version": "2012-10-17",
 	"Statement": [
-		{
-			"Sid": "Statement1",
-			"Effect": "Allow",	
-			"Action": [
-				"ec2:AssociateIamInstanceProfile",
-				"ec2:CreateKeyPair",
-				"ec2:DescribeImages",
-				"ec2:CreateTags",
-				"ec2:DescribeSecurityGroups",
-				"ec2:CreateSecurityGroup",
-				"ec2:AuthorizeSecurityGroupIngress",
-				"ec2:DescribeInstances",
-				"ec2:RunInstances",
-				"ec2:TerminateInstances"
-			],
-			"Resource": "*"
-		},
-		{
-			"Sid": "PolicyStatementToAllowUserToPassOneSpecificRole",
-			"Effect": "Allow",
-			"Action": [
-				"iam:PassRole"
-			],
-			"Resource": "*"
-		},
-		{
-			"Sid": "CentralizedRelayKmsPolicy",
-			"Effect": "Allow",
-			"Action": "kms:*",
-			"Resource": "*"
-		},
-		{
-			"Sid": "AllowViewAccountInfo",
-			"Effect": "Allow",
-			"Action": [
-				"iam:GetAccountPasswordPolicy",
-				"iam:GetAccountSummary"
-			],
-			"Resource": "*"
-		},
-		{
-			"Sid": "AllowManageOwnPasswords",
-			"Effect": "Allow",
-			"Action": [
-				"iam:ChangePassword",
-				"iam:GetUser"
-			],
-			"Resource": "arn:aws:iam::*:user/${aws:username}"
-		},
-		{
-			"Sid": "AllowManageOwnAccessKeys",
-			"Effect": "Allow",
-			"Action": [
-				"iam:CreateAccessKey",
-				"iam:DeleteAccessKey",
-				"iam:ListAccessKeys",
-				"iam:UpdateAccessKey",
-				"iam:GetAccessKeyLastUsed"
-			],
-			"Resource": "arn:aws:iam::*:user/${aws:username}"
-		},
-		{
-			"Sid": "AllowManageOwnSSHPublicKeys",
-			"Effect": "Allow",
-			"Action": [
-				"iam:DeleteSSHPublicKey",
-				"iam:GetSSHPublicKey",
-				"iam:ListSSHPublicKeys",
-				"iam:UpdateSSHPublicKey",
-				"iam:UploadSSHPublicKey"
-			],
-			"Resource": "arn:aws:iam::*:user/${aws:username}"
-		},
-		{
-			"Sid": "VisualEditor0",
-			"Effect": "Allow",
-			"Action": [
-				"iam:CreateInstanceProfile",
-				"iam:UpdateAssumeRolePolicy",
-				"iam:PutUserPermissionsBoundary",
-				"iam:AttachUserPolicy",
-				"iam:CreateRole",
-				"iam:AttachRolePolicy",
-				"iam:PutRolePolicy",
-				"iam:AddRoleToInstanceProfile",
-				"iam:CreateAccessKey",
-				"iam:CreatePolicy",
-				"iam:PassRole",
-				"iam:DetachRolePolicy",
-				"iam:AttachGroupPolicy",
-				"iam:PutUserPolicy",
-				"iam:DetachGroupPolicy",
-				"iam:CreatePolicyVersion",
-				"iam:DetachUserPolicy",
-				"iam:PutGroupPolicy",
-				"iam:SetDefaultPolicyVersion",
-				"iam:TagRole",
-				"iam:GetRole",
-				"iam:GetInstanceProfile",
-				"cloudshell:*"
-			],
-			"Resource": "*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": "s3:ListAllMyBuckets",
-			"Resource": "*"
-		},
-		{
-			"Effect": "Allow",
-			"Action": [
-				"secretsmanager:DescribeSecret",
-				"secretsmanager:GetSecretValue",
-				"secretsmanager:CreateSecret",
-				"secretsmanager:ListSecrets"
-			],
-			"Resource": "*"
-		}
+	  {
+	    "Sid": "EC2Permissions",
+	    "Effect": "Allow",
+	    "Action": [
+	      "ec2:AssociateIamInstanceProfile",
+	      "ec2:CreateKeyPair",
+	      "ec2:DescribeImages",
+	      "ec2:CreateTags",
+	      "ec2:DescribeSecurityGroups",
+	      "ec2:CreateSecurityGroup",
+	      "ec2:AuthorizeSecurityGroupIngress",
+	      "ec2:DescribeInstances",
+	      "ec2:RunInstances",
+	      "ec2:TerminateInstances"
+	    ],
+	    "Resource": "*"
+	  },
+	  {
+	    "Sid": "IAMPermissions",
+	    "Effect": "Allow",
+	    "Action": [
+	      "iam:PassRole",
+	      "iam:GetAccountPasswordPolicy",
+	      "iam:GetAccountSummary",
+	      "iam:ChangePassword",
+	      "iam:GetUser",
+	      "iam:CreateAccessKey",
+	      "iam:DeleteAccessKey",
+	      "iam:ListAccessKeys",
+	      "iam:UpdateAccessKey",
+	      "iam:GetAccessKeyLastUsed",
+	      "iam:DeleteSSHPublicKey",
+	      "iam:GetSSHPublicKey",
+	      "iam:ListSSHPublicKeys",
+	      "iam:UpdateSSHPublicKey",
+	      "iam:UploadSSHPublicKey",
+	      "iam:CreateInstanceProfile",
+	      "iam:UpdateAssumeRolePolicy",
+	      "iam:PutUserPermissionsBoundary",
+	      "iam:AttachUserPolicy",
+	      "iam:CreateRole",
+	      "iam:AttachRolePolicy",
+	      "iam:PutRolePolicy",
+	      "iam:AddRoleToInstanceProfile",
+	      "iam:CreateAccessKey",
+	      "iam:CreatePolicy",
+	      "iam:DetachRolePolicy",
+	      "iam:AttachGroupPolicy",
+	      "iam:PutUserPolicy",
+	      "iam:DetachGroupPolicy",
+	      "iam:CreatePolicyVersion",
+	      "iam:DetachUserPolicy",
+	      "iam:PutGroupPolicy",
+	      "iam:SetDefaultPolicyVersion",
+	      "iam:TagRole",
+	      "iam:GetRole",
+	      "iam:GetInstanceProfile"
+	    ],
+	    "Resource": "*"
+	  },
+	  {
+	    "Sid": "KMSAndSecretsManagerPermissions",
+	    "Effect": "Allow",
+	    "Action": [
+	      "kms:*",
+	      "secretsmanager:DescribeSecret",
+	      "secretsmanager:GetSecretValue",
+	      "secretsmanager:CreateSecret",
+	      "secretsmanager:ListSecrets"
+	    ],
+	    "Resource": "*"
+	  },
+	  {
+	    "Sid": "S3Permissions",
+	    "Effect": "Allow",
+	    "Action": "s3:ListAllMyBuckets",
+	    "Resource": "*"
+	  },
+	  {
+	    "Sid": "CloudShellPermissions",
+	    "Effect": "Allow",
+	    "Action": "cloudshell:*",
+	    "Resource": "*"
+	  }
 	]
 	}
 	```
@@ -194,7 +160,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     * AWS Region (default: `us-east-1`)
     * AMI ID
     * AWS Instance Type (default: `t3.medium`)
-    * Attestor node name (Eg. stg_attestor_verulink_<yourcompanyname>)
+    * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. stg_attestor_verulink_demox_labs)
     * AWS Secret Manager secret name for signing keys (default: `dev/verulink/attestor/signingservice`)
         - Ethereum private key
         - Ethereum wallet address
@@ -261,4 +227,17 @@ In case of failure while deploying the attestor
 3. If you are using the same configuration like MTLS certificates, Ethereum and Aleo keys, we can just type "C" to **continue with deployment**. \
 	If you are changing any of them, type "R" to **reconfigure** with new values.
 
+4. If the following error occurs, follow the steps provided below:
+```TASK [Retrieve sudo password from AWS Secrets Manager] ******************************************************************************************************************************
+objc[844]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called.
+objc[844]: +[__NSCFConstantString initialize] may have been in progress in another thread when fork() was called. We cannot safely call it or ignore it in the fork() child process. Crashing instead. Set a breakpoint on objc_initializeAfterForkError to debug.
+ERROR! A worker was found in a dead state
+2024-09-08 09:44:45 INFO: An error occurred while executing the playbook.
+```
 
+[Follow this stack thread](https://stackoverflow.com/questions/50168647/multiprocessing-causes-python-to-crash-and-gives-an-error-may-have-been-in-progr)
+
+or
+```
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+```
