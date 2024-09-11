@@ -1,0 +1,5 @@
+ansible
+jsonpath_ng
+pwinput
+boto3
+passlib

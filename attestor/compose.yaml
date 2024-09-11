@@ -1,0 +1,41 @@
+x-dbpath: &p # server as value holder for compose file
+  /db
+
+x-logpath: &l
+  /log
+
+services:
+  chainservice:
+    depends_on:
+      - signingservice
+    build: ./chainService
+    volumes:
+      - type: volume
+        source: db-path
+        target: *p
+      - type: volume
+        source: log-path
+        target: *l      
+      - type: bind
+        source: ./chainService/config.yaml
+        target: /configs/config.yaml
+      - ./chainService/.mtls:/configs/.mtls
+    environment:
+      DB_PATH: *p
+      LOG_PATH: *l
+      LOG_ENC: json
+      MODE: prod
+      CLEAN_START: false
+  signingservice:
+    build:
+      context: .
+      dockerfile: ./signingService/Dockerfile
+    volumes:
+      - ./signingService/config.yaml:/configs/config.yaml
+      - ./signingService/keys.yaml:/configs/keys.yaml
+    ports:
+      - 8080:8080
+      
+volumes:
+  db-path:
+  log-path:

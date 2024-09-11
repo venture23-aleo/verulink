@@ -1,2 +1,26 @@
+# Ignore files for attestor
 go.work*
-attestor/rust/aleo_hash/target
+**/rust/target
+**/*.log
+*.txt
+!requirements.txt
+**/*UTC*
+**/*.db
+*.lock
+.DS_Store
+# solidity-coverage files
+coverage
+coverage.json
+*.cer
+*.key
+*.crt
+keys.yaml
+*venv
+*.pem
+.temp.*
+.temp
+
+# ignore go build outputs
+/attestor/chainService/chainService
+/attestor/signingService/signingService
+/attestor/proxy/proxy
