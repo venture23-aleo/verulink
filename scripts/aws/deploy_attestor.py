@@ -356,10 +356,10 @@ if os.path.exists(secret_file):
         if 'attestor_name' in data:
             attestor_name = data['attestor_name']
         else:
-            attestor_name = get_input("Enter attestor name", "attestor-aleo-" + generate_random_string(5))
+            attestor_name = get_input("Enter attestor name", "mainnet_attestor_verulink_" + generate_random_string(5))
 
 else:
-    attestor_name = get_input("Enter attestor name", "attestor-aleo-" + generate_random_string(5))
+    attestor_name = get_input("Enter attestor name", "mainnet_attestor_verulink_" + generate_random_string(5))
 
 key_name = attestor_name + "-ssh-key"
 new_key_name = create_key_pair(ec2_client, key_name)
@@ -376,8 +376,8 @@ key_value_pairs = [
 ]
 
 # Get input for the secret name
-secret_name = get_input("Enter secret name", "dev/verulink/attestor/signingservice")
-secret_arn, secret_data = create_secret( secret_name, "dev/verulink/attestor/signingservice", key_value_pairs)
+secret_name = get_input("Enter secret name", "mainnet/verulink/attestor/signingservice")
+secret_arn, secret_data = create_secret( secret_name, "mainnet/verulink/attestor/signingservice", key_value_pairs)
 
 # Store Attestor MTLS Certificate and Keys on AWS Secret manager
 key_value_pairs = [
@@ -386,8 +386,8 @@ key_value_pairs = [
     ("attestor_key", "Enter attestor key file")
 ]
 print("Configuring MTLS...")
-mtls_secret_name = get_input("Enter MTLS secret name", "dev/verulink/attestor/mtls")
-mtls_secret_arn, mtls_secret_data = create_secret( mtls_secret_name, "dev/verulink/attestor/signingservice", key_value_pairs, file = True)
+mtls_secret_name = get_input("Enter MTLS secret name", "mainnet/verulink/attestor/mtls")
+mtls_secret_arn, mtls_secret_data = create_secret( mtls_secret_name, "mainnet/verulink/attestor/signingservice", key_value_pairs, file = True)
 
 
 
@@ -470,7 +470,7 @@ iam_client.tag_role(
     ]
 )
 
-default_sg_name = 'attestor-sg'  # Default security group name
+default_sg_name = 'mainnet-attestor-sg'  # Default security group name
 default_sg_description = 'Default security group for attestor'  # Default security group description
 
 existing_security_groups = ec2_client.describe_security_groups(
@@ -516,7 +516,7 @@ existing_instances = ec2_client.describe_instances(
     Filters=[
         {'Name': 'tag:Project', 'Values': ['verulink']},
         {'Name': 'tag:Name', 'Values': [attestor_name]},
-        {'Name': 'tag:Environment', 'Values': ['Testnet']},
+        {'Name': 'tag:Environment', 'Values': ['Mainnet']},
         {'Name': 'instance-state-name', 'Values': ['running']}
     ]
 )
@@ -546,7 +546,7 @@ if existing_instances['Reservations']:
             Tags=[
                 {'Key': 'Project', 'Value': 'verulink'},
                 {'Key': 'Name', 'Value': attestor_name},
-                {'Key': 'Environment', 'Value': 'Testnet'}
+                {'Key': 'Environment', 'Value': 'Mainnet'}
             ]
         )
 
@@ -590,7 +590,7 @@ else:
         Tags=[
             {'Key': 'Project', 'Value': 'verulink'},
             {'Key': 'Name', 'Value': attestor_name},
-            {'Key': 'Environment', 'Value': 'Testnet'}
+            {'Key': 'Environment', 'Value': 'Mainnet'}
         ]
     )
     

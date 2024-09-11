@@ -1,35 +1,35 @@
 ---
-name: prod_attestor_verulink_<yourCompanyIdentifier>
-version: 1.0.0
+name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
+version: 1.0.1
 chains:
 - name: aleo
-  chain_id: 6694886634401
-  wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za # wallet indentifier
-  bridge_contract: vlink_token_bridge_v1.aleo
+  chain_id: 6694886634403
+  wallet_address: <your_aleo_wallet_address> # wallet indentifier
+  bridge_contract: token_bridge_sg_v1.aleo
   node_url: https://api.explorer.aleo.org/v1|testnet
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
-  pkt_validity_wait_dur: 86400s
-  finality_height: 28800
-  retry_packet_wait_dur: 30m
-  prune_base_seq_num_wait_dur: 30m
-  average_block_gen_dur: 3s
+  pkt_validity_wait_dur: 10s
+  finality_height: 1
+  retry_packet_wait_dur: 1m
+  prune_base_seq_num_wait_dur: 1m
+  average_block_gen_dur: 1s
   dest_chains:
     - ethereum
 
 - name: ethereum
-  chain_id: 27234042785
-  wallet_address: 0x684C68bE1b58f61a33888E0eE3EA63f021d8CB0a
-  bridge_contract: 
-  node_url: 
-  start_height: 
-  finality_height: 7200
+  chain_id: 28556963657430695
+  wallet_address: <your_ethereum_wallet_address>
+  bridge_contract: 0x5F05BbC23a0d07C52374c9cb028E757b20Fd68b2
+  node_url: https://rpc.sepolia.org
+  start_height: 6484960
+  finality_height: 10
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
-  feed_pkt_wait_dur: 15m
-  pkt_validity_wait_dur: 86400s
-  retry_packet_wait_dur: 30m
-  prune_base_seq_num_wait_dur: 30m
+  feed_pkt_wait_dur: 2s
+  pkt_validity_wait_dur: 2s
+  retry_packet_wait_dur: 1m
+  prune_base_seq_num_wait_dur: 1m
   dest_chains:
     - aleo
 
@@ -39,15 +39,15 @@ consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_dir: /path/to/log/dir
-mode: prod # dev/prod
+mode: dev # dev/prod
 
 signing_service:
   host: signingservice
   port: 8080
   endpoint: "/sign"
   scheme: "http" # https, http, rpc, etc.
-  username: "<signing_service_username>"
-  password: "<signing_service_password>"
+  username: "username"
+  password: "password"
   health_end_point: "/health"
 collector_service:
   uri : https://dbservice-mainnet-mtls.verulink.com
@@ -58,5 +58,5 @@ collector_service:
   attestor_key: /configs/.mtls/attestor1.key
 
 metrics:
-  host: https://pushgateway-aleomtls.venture23.xyz
-  job_name: dev-push-gateway
+  host: https://pushgateway-mtls.verulink.com
+  job_name: prod-push-gateway
