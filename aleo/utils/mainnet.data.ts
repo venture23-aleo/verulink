@@ -15,13 +15,13 @@ export const council5 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5
 export const councilThreshold = 1;
 
 // vusdc related data
-export const wusdcMinTransfer = BigInt(10);
-export const wusdcMaxTransfer = BigInt(100_000_000_000);
+export const wusdcMinTransfer = BigInt(1_000_000);
+export const wusdcMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wusdcOutgoingPercentage = 10_00 // 10%
-export const wusdcTimeframe = 300; // per 300 block
-export const wusdcMaxNoCap = BigInt(990_000_000);
-export const wusdcName = BigInt('683507597663000007791607934265902');
-export const wusdcSymbol = BigInt("6220970012935411249");
+export const wusdcTimeframe = 28_800; // per 28_800 block
+export const wusdcMaxNoCap = BigInt(100_000_000_000);
+export const wusdcName = BigInt('370798707779');
+export const wusdcSymbol = BigInt("508237661251");
 export const wusdcDecimals = 6;
 
 // const token_name = BigInt('6148332821651876206')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
@@ -30,13 +30,13 @@ export const wusdcDecimals = 6;
 // const max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
 
 // vusdt related data
-export const wusdtMinTransfer = BigInt(10);
-export const wusdtMaxTransfer = BigInt(100_000_000_000);
+export const wusdtMinTransfer = BigInt(1_000_000);
+export const wusdtMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wusdtOutgoingPercentage = 10_00 // 10%
-export const wusdtTimeframe = 300; // per 300 block
-export const wusdtMaxNoCap = BigInt(990_000_000);
-export const wusdtName = BigInt('683507597663000007791607934267602');
-export const wusdtSymbol = BigInt("6220970013220623921");
+export const wusdtTimeframe = 28_800; // per 28_800 block
+export const wusdtMaxNoCap = BigInt(100_000_000_000);
+export const wusdtName = BigInt('370798707796');
+export const wusdtSymbol = BigInt("508237661268");
 export const wusdtDecimals = 6;
 
 // const token_name = BigInt('375093675092')//"WUSDT" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
@@ -45,13 +45,13 @@ export const wusdtDecimals = 6;
 // const max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
 
 // veth related data
-export const wethMinTransfer = BigInt(100);
+export const wethMinTransfer = BigInt(500_000_000_000_000); //0.0005 = 5*10^14
 export const wethMaxTransfer = BigInt(100_000_000_000_000_000_000);
 export const wethOutgoingPercentage = 10_00 // 10%
-export const wethTimeframe = 1; // per block
-export const wethMaxNoCap = BigInt(1_000_000_000_000_000_000);
-export const wethName = BigInt('683507597663000007791609520647202');
-export const wethSymbol = BigInt('24283076290893361');
+export const wethTimeframe = 28_800; // per block
+export const wethMaxNoCap = BigInt(1_000_000_000_000_000_000); // 40 eth
+export const wethName = BigInt('1447384136');
+export const wethSymbol = BigInt('1984255048');
 export const wethDecimals = 18;
 
 // const token_name = BigInt('1464161352')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646

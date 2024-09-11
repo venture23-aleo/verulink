@@ -279,7 +279,6 @@ program vlink_token_service_council_v1.aleo
     struct HoldingRelease {
         id: u32,
         token_id: field,
-        connector: address,
         receiver: address,
         amount: u128
     }
@@ -295,7 +294,6 @@ program vlink_token_service_council_v1.aleo
         let proposal: HoldingRelease  = HoldingRelease {
             id,
             token_id,
-            connector: self.caller,
             receiver,
             amount
         };
