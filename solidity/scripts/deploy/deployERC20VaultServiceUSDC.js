@@ -30,7 +30,7 @@ async function main() {
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
 
-    const initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [tokenAddr, "ERC20VAULT", deployerSigner.address]);
+    const initializeData = new ethers.utils.Interface(Erc20VaultService.interface.format()).encodeFunctionData("Erc20VaultService_init", [tokenAddr, "ERC20VAULTUSDC", deployerSigner.address]);
     const erc20VaultServiceProxy = await ProxyContract.deploy(erc20VaultServiceImpl.address, initializeData);
     await erc20VaultServiceProxy.deployTransaction.wait(3);
     console.log("Erc20VaultServiceUSDC Proxy Deployed to: ", erc20VaultServiceProxy.address);
