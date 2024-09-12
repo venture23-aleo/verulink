@@ -17,6 +17,8 @@ from pathlib import Path
 import random
 import string
 import yaml
+import uuid
+import requests
 
 from ansible import context
 from ansible.executor.playbook_executor import PlaybookExecutor
@@ -176,7 +178,89 @@ def handle_existing_keypair(ec2_client, key_name):
         copy_key_to_home_directory(new_key_name)
         return new_key_name
 
-def create_secret(secret_name, default_secret_name, key_value_pairs, file = False):
+# def create_secret(secret_name, default_secret_name, key_value_pairs, file = False):
+#     # Check if a secret with the provided name exists and is not scheduled for deletion
+#     secret_data_local = {}
+#     existing_secret = None
+#     try:
+#         existing_secret = secrets_manager.describe_secret(SecretId=secret_name)
+#         try:
+#             if existing_secret['DeletedDate'] is not None:
+#                 logging.info("A secret with this name is scheduled for deletion. Please choose a different name.")
+#                 secret_name = input("Enter a new secret name: ")
+#         except KeyError:
+#             pass
+#     except secrets_manager.exceptions.ResourceNotFoundException:
+#         pass
+
+#     if existing_secret:
+#         reuse_secret = input("A secret with the provided name already exists. Do you want to reuse it? (yes/no): ").strip().lower()
+#         if reuse_secret == "yes":
+#             secret_arn = existing_secret['ARN']
+#             logging.info(f"Reusing existing secret '{secret_name}' with ARN: {secret_arn}")
+#         else:
+#             secret_name = get_input("Enter secret name", default_secret_name)
+#             for key, prompt_message in key_value_pairs:
+#                 while True:
+#                     if file:
+#                         value = input(f"{prompt_message}: ")
+#                         if os.path.isfile(value):
+#                             with open(value, 'r') as file:
+#                                 secret_data_local[key] = file.read()
+#                             break
+#                         else:
+#                             logging.info("File does not exist. Please enter a valid file path.")
+#                     else:
+#                         value = pwinput.pwinput(prompt=f"{prompt_message}: ",mask='X')
+#                         if value:
+#                             secret_data_local[key] = value
+#                             break
+#                         else:
+#                             logging.info("Value cannot be empty. Please enter a valid value.")
+
+#             secret_value = json.dumps(secret_data)
+#             secret_response = secrets_manager.create_secret(
+#                 Name=secret_name,
+#                 Description="Secret for Ethereum and Aleo",
+#                 SecretString=secret_value
+#             )
+
+#             logging.info(f"Secret created successfully with ARN: {secret_response['ARN']}")
+    
+#             secret_arn = secret_response['ARN']
+#             logging.info(f"Secret created with ARN: {secret_arn}✅")
+#     else:
+    
+#         for key, prompt_message in key_value_pairs:
+#                 while True:
+#                     if file:
+#                         value = input(f"{prompt_message}: ")
+#                         if os.path.isfile(value):
+#                             with open(value, 'r') as file:
+#                                 secret_data_local[key] = file.read()
+#                             break
+#                         else:
+#                             logging.info("File does not exist. Please enter a valid file path.")
+#                     else:
+#                         value = pwinput.pwinput(prompt=f"{prompt_message}: ",mask='X')
+#                         if value:
+#                             secret_data_local[key] = value
+#                             break
+#                         else:
+#                             logging.info("Value cannot be empty. Please enter a valid value.")
+
+#         secret_value = json.dumps(secret_data_local)
+#         secret_response = secrets_manager.create_secret(
+#             Name=secret_name,
+#             Description="Secret for Ethereum and Aleo",
+#             SecretString=secret_value
+#         )
+
+#         logging.info(f"Secret created successfully with ARN: {secret_response['ARN']}")
+#         secret_arn = secret_response['ARN']
+#     return secret_arn, secret_data_local
+
+def create_secret(secret_name, default_secret_name, key_value_pairs, file=False):
     # Check if a secret with the provided name exists and is not scheduled for deletion
     secret_data_local = {}
     existing_secret = None
@@ -196,56 +280,95 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
         if reuse_secret == "yes":
             secret_arn = existing_secret['ARN']
             logging.info(f"Reusing existing secret '{secret_name}' with ARN: {secret_arn}")
+
+            # Fetch current secret values to allow updates
+            secret_value = secrets_manager.get_secret_value(SecretId=secret_name)
+            secret_data_local = json.loads(secret_value['SecretString'])
+
+            # Ask the user if they want to update existing key-value pairs
+            for key, prompt_message in key_value_pairs:
+                if key in secret_data_local:
+                    update_value = input(f"Do you want to update the value for '{key}'? (yes/no): ").strip().lower()
+                    if update_value == "yes":
+                        value = None
+                        while True:
+                            if file:
+                                value = input(f"{prompt_message}: ")
+                                if os.path.isfile(value):
+                                    with open(value, 'r') as file_content:
+                                        secret_data_local[key] = file_content.read()
+                                    break
+                                else:
+                                    logging.info("File does not exist. Please enter a valid file path.")
+                            else:
+                                value = pwinput.pwinput(prompt=f"{prompt_message}: ", mask='X')
+                                if value:
+                                    secret_data_local[key] = value
+                                    break
+                                else:
+                                    logging.info("Value cannot be empty. Please enter a valid value.")
+                else:
+                    # If the key doesn't exist, prompt the user to add a new value
+                    logging.info(f"The key '{key}' does not exist. Adding new value.")
+                    value = pwinput.pwinput(prompt=f"{prompt_message}: ", mask='X')
+                    if value:
+                        secret_data_local[key] = value
+
+            # Update the secret with the new values
+            secret_value_updated = json.dumps(secret_data_local)
+            secret_response = secrets_manager.update_secret(
+                SecretId=secret_name,
+                Description="Updated secret for Ethereum and Aleo",
+                SecretString=secret_value_updated
+            )
+            logging.info(f"Secret updated successfully with ARN: {secret_response['ARN']}")
+
         else:
-            secret_name = get_input("Enter secret name", default_secret_name)
+            secret_name = get_input("Enter a new secret name", default_secret_name)
             for key, prompt_message in key_value_pairs:
                 while True:
                     if file:
                         value = input(f"{prompt_message}: ")
                         if os.path.isfile(value):
-                            with open(value, 'r') as file:
-                                secret_data_local[key] = file.read()
+                            with open(value, 'r') as file_content:
+                                secret_data_local[key] = file_content.read()
                             break
                         else:
                             logging.info("File does not exist. Please enter a valid file path.")
                     else:
-                        value = pwinput.pwinput(prompt=f"{prompt_message}: ",mask='X')
+                        value = pwinput.pwinput(prompt=f"{prompt_message}: ", mask='X')
                         if value:
                             secret_data_local[key] = value
                             break
                         else:
                             logging.info("Value cannot be empty. Please enter a valid value.")
 
-            secret_value = json.dumps(secret_data)
+            secret_value = json.dumps(secret_data_local)
             secret_response = secrets_manager.create_secret(
                 Name=secret_name,
                 Description="Secret for Ethereum and Aleo",
                 SecretString=secret_value
             )
-
             logging.info(f"Secret created successfully with ARN: {secret_response['ARN']}")
-    
-            secret_arn = secret_response['ARN']
-            logging.info(f"Secret created with ARN: {secret_arn}✅")
     else:
-    
+        # Secret does not exist, create a new one
         for key, prompt_message in key_value_pairs:
-                while True:
-                    if file:
-                        value = input(f"{prompt_message}: ")
-                        if os.path.isfile(value):
-                            with open(value, 'r') as file:
-                                secret_data_local[key] = file.read()
-                            break
-                        else:
-                            logging.info("File does not exist. Please enter a valid file path.")
+            while True:
+                if file:
+                    value = input(f"{prompt_message}: ")
+                    if os.path.isfile(value):
+                        with open(value, 'r') as file_content:
+                            secret_data_local[key] = file_content.read()
+                        break
                     else:
-                        value = pwinput.pwinput(prompt=f"{prompt_message}: ",mask='X')
-                        if value:
-                            secret_data_local[key] = value
-                            break
-                        else:
-                            logging.info("Value cannot be empty. Please enter a valid value.")
+                        logging.info("File does not exist. Please enter a valid file path.")
+                else:
+                    value = pwinput.pwinput(prompt=f"{prompt_message}: ", mask='X')
+                    if value:
+                        secret_data_local[key] = value
+                        break
+                    else:
+                        logging.info("Value cannot be empty. Please enter a valid value.")
 
         secret_value = json.dumps(secret_data_local)
         secret_response = secrets_manager.create_secret(
@@ -253,10 +376,9 @@ def create_secret(secret_name, default_secret_name, key_value_pairs, file = Fals
             Description="Secret for Ethereum and Aleo",
             SecretString=secret_value
         )
-
         logging.info(f"Secret created successfully with ARN: {secret_response['ARN']}")
-        secret_arn = secret_response['ARN']
-    return secret_arn, secret_data_local
+
+    return secret_response['ARN'], secret_data_local
 
 def add_sg_rule(security_group_id):
     try:
@@ -268,13 +390,13 @@ def add_sg_rule(security_group_id):
             CidrIp='0.0.0.0/0'
         )
 
-        ec2_client.authorize_security_group_ingress(
-            GroupId=security_group_id,
-            IpProtocol='tcp',
-            FromPort=8080,  # Modify the port number as needed
-            ToPort=8080,    # Modify the port number as needed
-            CidrIp='0.0.0.0/0'
-        )
+        # ec2_client.authorize_security_group_ingress(
+        #     GroupId=security_group_id,
+        #     IpProtocol='tcp',
+        #     FromPort=8080,  # Modify the port number as needed
+        #     ToPort=8080,    # Modify the port number as needed
+        #     CidrIp='0.0.0.0/0'
+        # )
     except:
         print(f"An error occurred while updating firewall")
 
@@ -389,7 +511,9 @@ print("Configuring MTLS...")
 mtls_secret_name = get_input("Enter MTLS secret name", "mainnet/verulink/attestor/mtls")
 mtls_secret_arn, mtls_secret_data = create_secret( mtls_secret_name, "mainnet/verulink/attestor/signingservice", key_value_pairs, file = True)
 
-
+print("Configuring DB Service and Prometheus Connection..")
+collector_service_url = get_input("Enter collector service url", "")
+prometheus_pushgateway_url = get_input("Enter prometheus pushgateway url", "")
 
 iam_client = boto3.client('iam')
 
@@ -705,6 +829,22 @@ except subprocess.CalledProcessError as e:
     print(f"Command failed with return code {e.returncode}.")        
 zip_file = shutil.make_archive(temp_dir, 'zip', temp_dir)
 
+def get_machine_id():
+    return uuid.getnode()
+
+def get_instance_id():
+    try:
+        response = requests.get("http://169.254.169.254/latest/meta-data/instance-id", timeout=2)
+        if response.status_code == 200:
+            return response.text
+        else:
+            raise Exception("Unable to retrieve instance-id.")
+    except requests.RequestException as e:
+        print(f"Error fetching instance-id: {e}")
+        random_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
+        return f"i-{random_id}"
+    
+
 # Create a dictionary with the parameters
 current_directory = os.path.abspath(os.getcwd())
 secret_data = {
@@ -717,7 +857,11 @@ secret_data = {
     "ssh_private_key": new_key_name,
     "ansible_playbook": playbook_path,
     "attestor_name": attestor_name,
-    "aws_region": region
+    "aws_region": region,
+    "signer_username": get_machine_id(),
+    "signer_password": get_instance_id(),
+    "collector_service_url": collector_service_url,
+    "prometheus_pushgateway_url": prometheus_pushgateway_url
     # "github_username": github_username,
     # "github_pass": github_pass
 }
