@@ -15,13 +15,13 @@ npx hardhat run scripts/deploy/addTokenUSDC.js --network sepolia
 npx hardhat run scripts/deploy/addTokenUSDT.js --network sepolia
 npx hardhat run scripts/deploy/addTokenETH.js --network sepolia
 npx hardhat run scripts/deploy/addAttestor.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipBridge.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipBlackListService.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnershipTokenservice.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipHolding.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network sepolia
-npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia 
+# npx hardhat run scripts/deploy/transferOwnerShipBridge.js --network sepolia
+# npx hardhat run scripts/deploy/transferOwnerShipBlackListService.js --network sepolia
+# npx hardhat run scripts/deploy/transferOwnershipTokenservice.js --network sepolia
+# npx hardhat run scripts/deploy/transferOwnerShipHolding.js --network sepolia
+# npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network sepolia
+# npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network sepolia
+# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia 
 # npx hardhat run scripts/deploy/addAttestorBatch.js --network sepolia 
 
 # Mainnet:
