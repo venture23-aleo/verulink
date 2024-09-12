@@ -1,11 +1,11 @@
 ---
 name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
-version: 1.0.0
+version: 1.0.2
 chains:
 - name: aleo
   chain_id: 6694886634401
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
-  bridge_contract: vlink_token_bridge_v1.aleo
+  bridge_contract: vlink_token_service_v2.aleo
   node_url: https://api.explorer.provable.com/v1|testnet
   sequence_num_start:
     ethereum: 1
@@ -21,13 +21,13 @@ chains:
 - name: ethereum
   chain_id: 27234042785
   wallet_address: <your_ethereum_wallet_address>
-  bridge_contract: 0x58E7CDE6E29bFF85f64e90710D9e7377F968717a
+  bridge_contract: 0x15E53390EaF022421E0B27048E0C11776081f75d
   node_url: https://rpc2.sepolia.org
-  start_height: 6671410
-  finality_height: 25
+  start_height: 6676394
+  finality_height: 20
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   feed_pkt_wait_dur: 30s
-  pkt_validity_wait_dur: 300s
+  pkt_validity_wait_dur: 240s
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 30m
   dest_chains:
@@ -39,7 +39,7 @@ consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
   output_dir: /path/to/log/dir
-mode: dev # dev/prod
+mode: prod # dev/prod
 
 signing_service:
   host: signingservice
