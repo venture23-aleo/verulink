@@ -18,6 +18,7 @@
     secret_file_path: "./secret.json"
     artifact_name: ".temp.zip"
     chainservice_home: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService"
+    signingservice_home: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService"
     mtls_key_dir: "{{ chainservice_home }}/.mtls"
   tasks:
     - name: Retrieve sudo password from AWS Secrets Manager
@@ -95,7 +96,39 @@
       ansible.builtin.user:
         name: "{{ USER }}"  
         groups: docker      
-        append: yes         
+        append: yes       
+
+    - name: Get machine ID
+      ansible.builtin.command: "cat /sys/class/dmi/id/product_uuid"
+      register: machine_id_output
+      changed_when: false
+
+    - name: Set machine ID
+      set_fact:
+        machine_id: "{{ machine_id_output.stdout }}"
+
+    - name: Fetch instance ID from AWS metadata service
+      ansible.builtin.uri:
+        url: "http://169.254.169.254/latest/meta-data/instance-id"
+        return_content: yes
+        timeout: 2
+      register: instance_id_response
+      ignore_errors: yes
+
+    - name: Check if instance ID retrieval was successful
+      set_fact:
+        instance_id: "{{ instance_id_response.content if instance_id_response.status == 200 else 'failed' }}"
+
+    - name: Generate random instance ID if metadata service fails
+      set_fact:
+        instance_id: "{{ 'i-' + lookup('password', '/dev/null length=10 chars=ascii_letters+digits') }}"
+      when: instance_id == "failed"
+
+    - name: Display machine and instance IDs
+      debug:
+        msg: 
+          - "Machine ID: {{ machine_id }}"
+          - "Instance ID: {{ instance_id }}"
 
     - name: Enable and start Docker services
       ansible.builtin.systemd:
@@ -253,6 +286,18 @@
         regexp: '^name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>'
         replace: 'name: {{ attestor_name }}'
      
+    - name: Update colleter service url
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'uri : <collector_service_url>'
+        replace: 'uri : {{ collector_service_url }}'
+    
+    - name: Update prometheus pushgateway url
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'host: <prometheus_pushgateway_url>'
+        replace: 'host: {{ prometheus_pushgateway_url }}'
+
     - name: Replace aleo wallet address
       replace:
         path: "{{ chainservice_home }}/config.yaml"
@@ -262,6 +307,29 @@
         secret_json_string: "{{ secret_data[secret_name] | from_json }}"
         aleo_wallet_address: "{{ secret_json_string.aleo_wallet_address }}"
 
+    - name: Update signer service username
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'username:.*'
+        replace: 'username: "{{ machine_id }}"'
+    
+    - name: Update signer service password
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'password:.*'
+        replace: 'password: "{{ machine_id }}"'
+    
+    - name: Update signer service username
+      replace:
+        path: "{{ signingservice_home }}/config.yaml"
+        regexp: 'username:.*'
+        replace: 'username: "{{ machine_id }}"'
+    
+    - name: Update signer service password
+      replace:
+        path: "{{ signingservice_home }}/config.yaml"
+        regexp: 'password:.*'
+        replace: 'password: "{{ machine_id }}"'
     
     - name: Replace eth wallet address
       replace:
@@ -271,6 +339,13 @@
       vars:
         secret_json_string: "{{ secret_data[secret_name] | from_json }}"
         ethereum_wallet_address: "{{ secret_json_string.ethereum_wallet_address }}"
+
+    - name: Replace mtls key file names
+      replace:
+        path: "{{ chainservice_home }}/config.yaml"
+        regexp: 'attestor1'
+        replace: '{{ attestor_name }}'
+    
 
     - name: Run docker-compose up -d
       ansible.builtin.command:
