@@ -41,8 +41,6 @@ contract Bridge is
     ) public initializer {
         __Ownable_init_unchained();
         __Pausable_init_unchained();
-        // __AttestorManager_init();
-        // __BridgeTokenServiceManager_init();
         destinationChainId = _destChainId;
         _transferOwnership(_owner);      
     }
