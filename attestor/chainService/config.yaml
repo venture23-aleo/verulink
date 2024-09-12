@@ -27,7 +27,7 @@ chains:
   finality_height: 25
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   feed_pkt_wait_dur: 30s
-  pkt_validity_wait_dur: 300s
+  pkt_validity_wait_dur: 240s
   retry_packet_wait_dur: 1m
   prune_base_seq_num_wait_dur: 30m
   dest_chains:
