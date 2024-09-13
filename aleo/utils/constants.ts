@@ -23,21 +23,21 @@ export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 export const OWNER_INDEX = true;
 
 // USDC Contract Address on Ethereum
-export const usdcContractAddr = "0xD99e898842c566be038bf898b3e406f028a031E0"
-export const usdtContractAddr = "0xCdF691Ab58a388AAed7EB231f5517418cf48F121"
+export const usdcContractAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+export const usdtContractAddr = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 export const ethContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xEDc97cE21AcDC99Ef4DcC4ea0E55F01eDc646a09"
+export const ethTsContractAddr = ""
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
+// export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
 
-export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
+// export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
 
 const mainnetChainId = 1
-export const ethChainId = encodeNetworkChainId("eth", mainnetChainId);
-export const aleoChainId = encodeNetworkChainId("aleo", 1);
+export const ethChainId = 27234042785;
+export const aleoChainId = 6694886634401;
 
 // max_supply for Tokens, it is the highest u128 value
 export const max_supply = BigInt("340282366920938463463374607431768211455");
