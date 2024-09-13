@@ -1,5 +1,5 @@
 import hardhat from 'hardhat';
-const { ethers } = hardhat;
+const { ethers, run } = hardhat;
 import * as dotenv from "dotenv";
 dotenv.config();
 import { updateEnvFile } from "../multisig/utils.js";
@@ -18,8 +18,15 @@ async function main() {
     console.log("Deploying TokenService Impl and Proxy...");
 
     const tokenServiceImpl = await TokenService.deploy();
-    await tokenServiceImpl.deployed();
+    await tokenServiceImpl.deployTransaction.wait(3);
     console.log("TokenService Impl Deployed to: ", tokenServiceImpl.address);
+    // Verification process
+    console.log("Verifying impl contract...");
+    await run("verify:verify", {
+        address: tokenServiceImpl.address,
+        constructorArguments: [], // Pass the constructor arguments here
+        contract: "contracts/main/tokenservice/TokenService.sol:TokenService"
+    });
     updateEnvFile("TOKENSERVICE_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address)
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
@@ -27,10 +34,17 @@ async function main() {
         [bridgeAddress, deployerSigner.address, chainId, destChainId, process.env.BLACKLISTSERVICE_PROXY_ADDRESS]);
 
     const tokenServiceProxy = await ProxyContract.deploy(tokenServiceImpl.address, initializeData);
-    await tokenServiceProxy.deployed();
+    await tokenServiceProxy.deployTransaction.wait(3);
 
-    updateEnvFile("TOKENSERVICE_PROXY_ADDRESS", tokenServiceProxy.address)
     console.log("TokenService Proxy Deployed to: ", tokenServiceProxy.address);
+    console.log("Verifying proxy contract...");
+
+    await run("verify:verify", {
+        address: tokenServiceProxy.address,
+        constructorArguments: [tokenServiceImpl.address, initializeData], // Pass the constructor arguments here
+        contract: "contracts/proxies/Proxy.sol:ProxyContract"
+    });
+    updateEnvFile("TOKENSERVICE_PROXY_ADDRESS", tokenServiceProxy.address)
 }
 main()
     .then(() => process.exit(0))

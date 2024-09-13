@@ -21,11 +21,11 @@ async function main() {
     });
 
     const tokenbridgeProxyAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
-    console.log("Adding Attestor");
+    console.log("Removing Attestor");
     const BridgeABI = Bridge.interface.format();
     const BridgeContract = new ethers.Contract(tokenbridgeProxyAddress, BridgeABI, deployerSigner);
-    await BridgeContract.addAttestor(attestor, newQuorumRequired);
-    console.log("Attestor added successfully!");
+    await BridgeContract.removeAttestor(attestor, newQuorumRequired);
+    console.log("Attestor removed successfully!");
 }
 main()
     .then(() => process.exit(0))

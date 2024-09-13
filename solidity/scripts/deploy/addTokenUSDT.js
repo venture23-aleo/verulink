@@ -11,7 +11,7 @@ async function main() {
     const tokenAddress = process.env.USDT_ADDR;
     const vault = process.env.ERC20VAULTSERVICE_PROXY_ADDRESS_USDT;
     const destChainId = process.env.ALEO_CHAINID;
-    const destTokenAddress = process.env.DEST_TOKEN_ADDRESS_WETH;
+    const destTokenAddress = process.env.DEST_TOKEN_ADDRESS_WUSDT;
     const destTokenService = process.env.DEST_TOKENSERVICE;
     const min = process.env.MIN_WUSDT;
     const max = process.env.MAX_WUSDT;
