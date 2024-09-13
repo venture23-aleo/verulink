@@ -1,7 +1,7 @@
 import { Token_bridge_dev_v2Contract } from "../artifacts/js/token_bridge_dev_v2";
 import { InPacket } from "../artifacts/js/types/token_bridge_dev_v2";
 import { Token_service_dev_v2Contract } from "../artifacts/js/token_service_dev_v2";
-import { Multi_token_support_programv1Contract } from "../artifacts/js/multi_token_support_programv1";
+import { token_registryContract } from "../artifacts/js/token_registry";
 
 import { aleoArr2Evm, evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
@@ -28,7 +28,7 @@ import { ExecutionMode} from "@doko-js/core";
 import { ChainToken } from "../artifacts/js/types/token_service_council_dev_v2";
 import { Holding_dev_v2Contract } from "../artifacts/js/holding_dev_v2";
 import { TokenMetadata } from "../artifacts/js/types/holding_dev_v2";
-import { Balance, TokenOwner } from "../artifacts/js/types/multi_token_support_programv1";
+import { Balance, TokenOwner } from "../artifacts/js/types/token_registry";
 import { hashStruct } from "../utils/hash";
 import { Token_service_council_dev_v2Contract } from "../artifacts/js/token_service_council_dev_v2";
 
@@ -38,7 +38,7 @@ const mode = ExecutionMode.SnarkExecute;
 
 const bridge = new Token_bridge_dev_v2Contract({ mode: mode });
 const tokenService = new Token_service_dev_v2Contract({ mode: mode  });
-const mtsp = new Multi_token_support_programv1Contract({ mode: mode });
+const mtsp = new token_registryContract({ mode: mode });
 const holding = new Holding_dev_v2Contract({mode});
 const tokenServiceCouncil = new Token_service_council_dev_v2Contract({mode:mode});
 

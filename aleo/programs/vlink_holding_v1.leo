@@ -1,4 +1,4 @@
-import multi_token_support_programv1.aleo;
+import token_registry.aleo;
 
 program vlink_holding_v1.aleo {
 
@@ -74,7 +74,7 @@ program vlink_holding_v1.aleo {
     }
 
     transition release_fund(public user: address, public token_id :field, public amount: u128) {
-        multi_token_support_programv1.aleo/transfer_public(token_id, user, amount);
+        token_registry.aleo/transfer_public(token_id, user, amount);
 
         let token_holder: Holder = Holder{
             account: user,
