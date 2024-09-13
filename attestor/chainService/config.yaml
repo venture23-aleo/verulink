@@ -1,18 +1,18 @@
 ---
 name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
-version: 1.0.2
+version: 1.0.0
 chains:
 - name: aleo
   chain_id: 6694886634401
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
-  bridge_contract: vlink_token_service_v2.aleo
-  node_url: https://api.explorer.provable.com/v1|testnet
+  bridge_contract: vlink_token_bridge_v1.aleo
+  node_url: 
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
-  pkt_validity_wait_dur: 300s
-  finality_height: 100
-  retry_packet_wait_dur: 1m
+  pkt_validity_wait_dur: 86400s
+  finality_height: 28800
+  retry_packet_wait_dur: 10m
   prune_base_seq_num_wait_dur: 30m
   average_block_gen_dur: 3s
   dest_chains:
@@ -21,14 +21,14 @@ chains:
 - name: ethereum
   chain_id: 27234042785
   wallet_address: <your_ethereum_wallet_address>
-  bridge_contract: 0x15E53390EaF022421E0B27048E0C11776081f75d
-  node_url: https://rpc2.sepolia.org
-  start_height: 6676394
-  finality_height: 25
+  bridge_contract: 
+  node_url: 
+  start_height: 
+  finality_height: 7050
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
-  feed_pkt_wait_dur: 30s
-  pkt_validity_wait_dur: 300s
-  retry_packet_wait_dur: 1m
+  feed_pkt_wait_dur: 15m
+  pkt_validity_wait_dur: 84600s
+  retry_packet_wait_dur: 10m
   prune_base_seq_num_wait_dur: 30m
   dest_chains:
     - aleo

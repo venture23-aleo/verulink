@@ -1,7 +1,7 @@
 // The 'token_service' program.
 
 import vlink_token_bridge_v1.aleo;
-import multi_token_support_programv1.aleo;
+import token_registry.aleo;
 import vlink_holding_v1.aleo;
 
 program vlink_token_service_v1.aleo {
@@ -406,7 +406,7 @@ program vlink_token_service_v1.aleo {
         public dest_token_address: [u8;20]
     ) {
 
-        multi_token_support_programv1.aleo/burn_public(token_id, self.caller, amount);
+        token_registry.aleo/burn_public(token_id, self.caller, amount);
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
             token_id: token_id
@@ -521,7 +521,7 @@ program vlink_token_service_v1.aleo {
             token_id: token_id
         };
         let authorize_until:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
-        multi_token_support_programv1.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
+        token_registry.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
         vlink_holding_v1.aleo/hold_fund(receiver, token_id, held_amount);
 

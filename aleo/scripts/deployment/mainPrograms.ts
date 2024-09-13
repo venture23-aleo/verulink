@@ -3,7 +3,7 @@ import { Vlink_token_service_v1Contract } from "../../artifacts/js/vlink_token_s
 import { Vlink_council_v1Contract } from "../../artifacts/js/vlink_council_v1";
 import { Vlink_bridge_council_v1Contract } from "../../artifacts/js/vlink_bridge_council_v1";
 import { Vlink_token_service_council_v1Contract } from "../../artifacts/js/vlink_token_service_council_v1";
-import { Multi_token_support_programv1Contract } from "../../artifacts/js/multi_token_support_programv1";
+import { Token_registryContract } from "../../artifacts/js/token_registry";
 import { Vlink_holding_v1Contract } from "../../artifacts/js/vlink_holding_v1";
 import { ExecutionMode } from "@doko-js/core";
 
@@ -16,7 +16,7 @@ export const deployMainPrograms = async (initialAttestors: string[], initialCoun
   const council = new Vlink_council_v1Contract({ mode, priorityFee: 10_000 });
   const bridgeCouncil = new Vlink_bridge_council_v1Contract({ mode, priorityFee: 10_000 });
   const tokenServiceCouncil = new Vlink_token_service_council_v1Contract({ mode, priorityFee: 10_000 });
-  const mtsp = new Multi_token_support_programv1Contract({ mode, priorityFee: 10_000 });
+  const mtsp = new Token_registryContract({ mode, priorityFee: 10_000 });
   const holding = new Vlink_holding_v1Contract({ mode, priorityFee: 10_000 });
 
   //Deploy mtsp for local devnet only

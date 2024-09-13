@@ -362,7 +362,7 @@ program vlink_token_service_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         let token_id: field = BHP256::hash_to_field(token_name);
-        multi_token_support_programv1.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, SELF_ADDRESS);
+        token_registry.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, SELF_ADDRESS);
 
         vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -390,7 +390,7 @@ program vlink_token_service_council_v1.aleo
             external_authorization_party,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
-        multi_token_support_programv1.aleo/update_token_management(token_id, admin, external_authorization_party);
+        token_registry.aleo/update_token_management(token_id, admin, external_authorization_party);
         
         vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }
@@ -423,7 +423,7 @@ program vlink_token_service_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        multi_token_support_programv1.aleo/set_role(token_id, account, role);
+        token_registry.aleo/set_role(token_id, account, role);
 
         vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
     }

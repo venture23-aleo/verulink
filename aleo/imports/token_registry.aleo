@@ -1,4 +1,6 @@
-program multi_token_support_programv1.aleo;
+import credits.aleo;
+
+program token_registry.aleo;
 
 record Token:
     owner as address.private;
@@ -62,7 +64,7 @@ function transfer_public:
     cast r1 r0 into r5 as TokenOwner;
     hash.bhp256 r5 into r6 as field;
     async transfer_public r0 r1 r2 self.caller r4 r6 into r7;
-    output r7 as multi_token_support_programv1.aleo/transfer_public.future;
+    output r7 as token_registry.aleo/transfer_public.future;
 finalize transfer_public:
     input r0 as field.public;
     input r1 as address.public;
@@ -107,7 +109,7 @@ function transfer_public_as_signer:
     cast r1 r0 into r5 as TokenOwner;
     hash.bhp256 r5 into r6 as field;
     async transfer_public_as_signer r0 r1 r2 self.signer r4 r6 into r7;
-    output r7 as multi_token_support_programv1.aleo/transfer_public_as_signer.future;
+    output r7 as token_registry.aleo/transfer_public_as_signer.future;
 finalize transfer_public_as_signer:
     input r0 as field.public;
     input r1 as address.public;
@@ -154,7 +156,7 @@ function transfer_private:
     async transfer_private r2.external_authorization_required r2.authorized_until into r7;
     output r4 as Token.record;
     output r6 as Token.record;
-    output r7 as multi_token_support_programv1.aleo/transfer_private.future;
+    output r7 as token_registry.aleo/transfer_private.future;
 finalize transfer_private:
     input r0 as boolean.public;
     input r1 as u32.public;
@@ -173,7 +175,7 @@ function transfer_private_to_public:
     hash.bhp256 r5 into r6 as field;
     async transfer_private_to_public r2.token_id r0 r1 r2.authorized_until r2.external_authorization_required r6 into r7;
     output r4 as Token.record;
-    output r7 as multi_token_support_programv1.aleo/transfer_private_to_public.future;
+    output r7 as token_registry.aleo/transfer_private_to_public.future;
 finalize transfer_private_to_public:
     input r0 as field.public;
     input r1 as address.public;
@@ -215,7 +217,7 @@ function transfer_public_to_private:
     hash.bhp256 r6 into r7 as field;
     async transfer_public_to_private r0 r2 self.caller r3 r7 into r8;
     output r5 as Token.record;
-    output r8 as multi_token_support_programv1.aleo/transfer_public_to_private.future;
+    output r8 as token_registry.aleo/transfer_public_to_private.future;
 finalize transfer_public_to_private:
     input r0 as field.public;
     input r1 as u128.public;
@@ -258,11 +260,11 @@ function split:
 
 function initialize:
     async initialize  into r0;
-    output r0 as multi_token_support_programv1.aleo/initialize.future;
+    output r0 as token_registry.aleo/initialize.future;
 finalize initialize:
     contains registered_tokens[3443843282313283355522573239085696902919850365217539366784739393210722344986field] into r0;
     assert.eq r0 false;
-    cast 3443843282313283355522573239085696902919850365217539366784739393210722344986field 1095517519u128 1095517519u128 6u8 0u128 10000000000000000u128 mtsp_creditsv1.aleo false multi_token_support_programv1.aleo into r1 as TokenMetadata;
+    cast 3443843282313283355522573239085696902919850365217539366784739393210722344986field 1095517519u128 1095517519u128 6u8 0u128 10000000000000000u128 wrapped_credits.aleo false token_registry.aleo into r1 as TokenMetadata;
     set r1 into registered_tokens[3443843282313283355522573239085696902919850365217539366784739393210722344986field];
 
 function register_token:
@@ -277,7 +279,7 @@ function register_token:
     assert.eq r7 true;
     cast r0 r1 r2 r3 0u128 r4 self.caller r5 r6 into r8 as TokenMetadata;
     async register_token r8 into r9;
-    output r9 as multi_token_support_programv1.aleo/register_token.future;
+    output r9 as token_registry.aleo/register_token.future;
 finalize register_token:
     input r0 as TokenMetadata.public;
     contains registered_tokens[r0.token_id] into r1;
@@ -291,7 +293,7 @@ function update_token_management:
     is.neq r0 3443843282313283355522573239085696902919850365217539366784739393210722344986field into r3;
     assert.eq r3 true;
     async update_token_management r0 r1 r2 self.caller into r4;
-    output r4 as multi_token_support_programv1.aleo/update_token_management.future;
+    output r4 as token_registry.aleo/update_token_management.future;
 finalize update_token_management:
     input r0 as field.public;
     input r1 as address.public;
@@ -317,7 +319,7 @@ function set_role:
     cast r1 r0 into r9 as TokenOwner;
     hash.bhp256 r9 into r10 as field;
     async set_role r0 r2 self.caller r10 into r11;
-    output r11 as multi_token_support_programv1.aleo/set_role.future;
+    output r11 as token_registry.aleo/set_role.future;
 finalize set_role:
     input r0 as field.public;
     input r1 as u8.public;
@@ -335,7 +337,7 @@ function remove_role:
     cast r1 r0 into r3 as TokenOwner;
     hash.bhp256 r3 into r4 as field;
     async remove_role r0 self.caller r4 into r5;
-    output r5 as multi_token_support_programv1.aleo/remove_role.future;
+    output r5 as token_registry.aleo/remove_role.future;
 finalize remove_role:
     input r0 as field.public;
     input r1 as address.public;
@@ -354,7 +356,7 @@ function mint_public:
     cast r1 r0 into r6 as TokenOwner;
     hash.bhp256 r6 into r7 as field;
     async mint_public r0 r1 r2 r3 self.caller r5 r7 into r8;
-    output r8 as multi_token_support_programv1.aleo/mint_public.future;
+    output r8 as token_registry.aleo/mint_public.future;
 finalize mint_public:
     input r0 as field.public;
     input r1 as address.public;
@@ -399,7 +401,7 @@ finalize mint_public:
 
 function mint_private:
     input r0 as field.public;
-    input r1 as address.public;
+    input r1 as address.private;
     input r2 as u128.public;
     input r3 as boolean.public;
     input r4 as u32.public;
@@ -408,7 +410,7 @@ function mint_private:
     hash.bhp256 r6 into r7 as field;
     async mint_private r0 r2 r3 r4 self.caller r7 into r8;
     output r5 as Token.record;
-    output r8 as multi_token_support_programv1.aleo/mint_private.future;
+    output r8 as token_registry.aleo/mint_private.future;
 finalize mint_private:
     input r0 as field.public;
     input r1 as u128.public;
@@ -448,7 +450,7 @@ function burn_public:
     cast self.caller r0 into r5 as TokenOwner;
     hash.bhp256 r5 into r6 as field;
     async burn_public r3 r2 self.caller r6 r4 into r7;
-    output r7 as multi_token_support_programv1.aleo/burn_public.future;
+    output r7 as token_registry.aleo/burn_public.future;
 finalize burn_public:
     input r0 as TokenOwner.public;
     input r1 as u128.public;
@@ -510,7 +512,7 @@ function burn_private:
     hash.bhp256 r4 into r5 as field;
     async burn_private r0.token_id r1 self.caller r5 into r6;
     output r3 as Token.record;
-    output r6 as multi_token_support_programv1.aleo/burn_private.future;
+    output r6 as token_registry.aleo/burn_private.future;
 finalize burn_private:
     input r0 as field.public;
     input r1 as u128.public;
@@ -538,7 +540,7 @@ function prehook_public:
     input r2 as u32.public;
     hash.bhp256 r0 into r3 as field;
     async prehook_public r0 r1 r2 self.caller r3 into r4;
-    output r4 as multi_token_support_programv1.aleo/prehook_public.future;
+    output r4 as token_registry.aleo/prehook_public.future;
 finalize prehook_public:
     input r0 as TokenOwner.public;
     input r1 as u128.public;
@@ -573,7 +575,7 @@ function prehook_private:
     async prehook_private r0.token_id self.caller into r6;
     output r4 as Token.record;
     output r5 as Token.record;
-    output r6 as multi_token_support_programv1.aleo/prehook_private.future;
+    output r6 as token_registry.aleo/prehook_private.future;
 finalize prehook_private:
     input r0 as field.public;
     input r1 as address.public;
@@ -588,7 +590,7 @@ function approve_public:
     cast self.caller r1 r0 into r3 as Allowance;
     hash.bhp256 r3 into r4 as field;
     async approve_public r2 r4 into r5;
-    output r5 as multi_token_support_programv1.aleo/approve_public.future;
+    output r5 as token_registry.aleo/approve_public.future;
 finalize approve_public:
     input r0 as u128.public;
     input r1 as field.public;
@@ -603,7 +605,7 @@ function unapprove_public:
     cast self.caller r1 r0 into r3 as Allowance;
     hash.bhp256 r3 into r4 as field;
     async unapprove_public r2 r4 into r5;
-    output r5 as multi_token_support_programv1.aleo/unapprove_public.future;
+    output r5 as token_registry.aleo/unapprove_public.future;
 finalize unapprove_public:
     input r0 as u128.public;
     input r1 as field.public;
@@ -623,7 +625,7 @@ function transfer_from_public:
     cast r2 r0 into r8 as TokenOwner;
     hash.bhp256 r8 into r9 as field;
     async transfer_from_public r0 r1 r2 r3 r5 r7 r9 into r10;
-    output r10 as multi_token_support_programv1.aleo/transfer_from_public.future;
+    output r10 as token_registry.aleo/transfer_from_public.future;
 finalize transfer_from_public:
     input r0 as field.public;
     input r1 as address.public;
@@ -677,7 +679,7 @@ function transfer_from_public_to_private:
     hash.bhp256 r9 into r10 as field;
     async transfer_from_public_to_private r0 r1 r3 r4 r8 r10 into r11;
     output r6 as Token.record;
-    output r11 as multi_token_support_programv1.aleo/transfer_from_public_to_private.future;
+    output r11 as token_registry.aleo/transfer_from_public_to_private.future;
 finalize transfer_from_public_to_private:
     input r0 as field.public;
     input r1 as address.public;

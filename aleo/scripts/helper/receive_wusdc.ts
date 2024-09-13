@@ -6,9 +6,9 @@ import { ALEO_ZERO_ADDRESS, aleoChainId, ethChainId, ethTsContractAddr, ethTsCon
 import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../../utils/ethAddress";
 import { PrivateKey } from "@aleohq/sdk";
 import { signPacket } from "../../utils/sign";
-import { TokenOwner } from "../../artifacts/js/types/multi_token_support_programv1";
+import { TokenOwner } from "../../artifacts/js/types/token_registry";
 import { hashStruct } from "../../utils/hash";
-import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/multi_token_support_programv1";
+import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/token_registry";
 import { Vlink_token_service_v1Contract } from "../../artifacts/js/vlink_token_service_v1";
 import { wusdcName } from "../../utils/mainnet.data";
 import { hash } from "aleo-hasher";

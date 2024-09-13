@@ -46,7 +46,7 @@ export const wusdtDecimals = 6;
 
 // veth related data
 export const wethMinTransfer = BigInt(500_000_000_000_000); //0.0005 = 5*10^14
-export const wethMaxTransfer = BigInt(100_000_000_000_000_000_000);
+export const wethMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wethOutgoingPercentage = 10_00 // 10%
 export const wethTimeframe = 28_800; // per block
 export const wethMaxNoCap = BigInt(40_000_000_000_000_000_000); // 40 eth
