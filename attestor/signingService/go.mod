@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	github.com/ethereum/go-ethereum v1.13.15
 	github.com/stretchr/testify v1.8.4
-	github.com/venture23-aleo/verulink/attestor/chainService v1.0.0-rc2
+	github.com/venture23-aleo/verulink/attestor/chainService v1.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
