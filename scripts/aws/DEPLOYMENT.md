@@ -97,7 +97,8 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	      "secretsmanager:DescribeSecret",
 	      "secretsmanager:GetSecretValue",
 	      "secretsmanager:CreateSecret",
-	      "secretsmanager:ListSecrets"
+	      "secretsmanager:ListSecrets",
+              "secretsmanager:UpdateSecret"
 	    ],
 	    "Resource": "*"
 	  },

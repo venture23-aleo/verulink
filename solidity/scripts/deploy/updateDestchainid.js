@@ -8,9 +8,8 @@ async function main() {
         process.env.PROVIDER
     );
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
-    
-    const attestor = process.env.ATTESTOR2;
-    const newQuorumRequired = process.env.NEW_QUORUM_REQUIRED;
+    // New destChainId
+    const newDestChainId = process.env.ALEO_CHAINID;
 
     // Get the contract factory for the "Bridge" contract
     const Bridge = await ethers.getContractFactory("Bridge", {
@@ -21,11 +20,11 @@ async function main() {
     });
 
     const tokenbridgeProxyAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
-    console.log("Adding Attestor");
+    console.log("Updating destChainId");
     const BridgeABI = Bridge.interface.format();
     const BridgeContract = new ethers.Contract(tokenbridgeProxyAddress, BridgeABI, deployerSigner);
-    await BridgeContract.addAttestor(attestor, newQuorumRequired);
-    console.log("Attestor added successfully!");
+    await BridgeContract.updateDestinationChainId(newDestChainId);
+    console.log("destChainId updated successfully!");
 }
 main()
     .then(() => process.exit(0))

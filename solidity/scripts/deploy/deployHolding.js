@@ -1,5 +1,5 @@
 import hardhat from 'hardhat';
-const { ethers } = hardhat;
+const { ethers, run } = hardhat;
 import * as dotenv from "dotenv";
 dotenv.config();
 import { updateEnvFile } from "../multisig/utils.js";
@@ -15,18 +15,31 @@ async function main() {
     console.log("Deploying Holding Impl and Proxy...");
 
     const holdingImpl = await Holding.deploy();
-    await holdingImpl.deployed();
-    updateEnvFile("HOLDING_IMPLEMENTATION_ADDRESS", holdingImpl.address);
+    await holdingImpl.deployTransaction.wait(3);
     console.log("Holding Impl Deployed to: ", holdingImpl.address);
+    console.log("Verifying impl contract...");
+    await run("verify:verify", {
+        address: holdingImpl.address,
+        constructorArguments: [], // Pass the constructor arguments here
+        contract: "contracts/main/Holding.sol:Holding"
+    });
+    updateEnvFile("HOLDING_IMPLEMENTATION_ADDRESS", holdingImpl.address);
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
     
     const initializeData = new ethers.utils.Interface(Holding.interface.format()).encodeFunctionData("Holding_init", [process.env.TOKENSERVICE_PROXY_ADDRESS, deployerSigner.address]);
     const holdingProxy = await ProxyContract.deploy(holdingImpl.address, initializeData);
-    await holdingProxy.deployed();
+    await holdingProxy.deployTransaction.wait(3);
 
-    updateEnvFile("HOLDING_PROXY_ADDRESS", holdingProxy.address);
     console.log("Holding Proxy Deployed to: ", holdingProxy.address);
+    console.log("Verifying proxy contract...");
+
+    await run("verify:verify", {
+        address: holdingProxy.address,
+        constructorArguments: [holdingImpl.address, initializeData], // Pass the constructor arguments here
+        contract: "contracts/proxies/Proxy.sol:ProxyContract"
+    });
+    updateEnvFile("HOLDING_PROXY_ADDRESS", holdingProxy.address);
 }
 main()
     .then(() => process.exit(0))

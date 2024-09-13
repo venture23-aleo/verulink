@@ -2,9 +2,9 @@ FROM golang:1.21.6 as signingservice
 WORKDIR /chainService
 COPY ./chainService .
 WORKDIR /signingservice
-COPY ./signingService/go.mod ./signingService/go.sum ./
+COPY ./signingService ./
 RUN go mod download
-COPY ./signingService .
+RUN go mod tidy
 
 RUN go build -o signingservice .
 
