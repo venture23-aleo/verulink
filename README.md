@@ -2,7 +2,7 @@
 ![verulinkfinal_4](https://github.com/user-attachments/assets/deef25ea-aa59-492a-b2e3-051b213102c2)
 
 # What is Verulink?
-Verulink is a trusted bridge platform that is designed to help move assets between Aleo and Ethereum blockchain., one of the most widely used blockchain platforms known for its smart contract functionality and vibrant ecosystem. This connection allows users to transfer major assets like ETH, USDC, and USDT seamlessly between the two chains, leveraging the strengths of both platforms.
+Verulink is a trusted bridge platform that is designed to help move assets between Aleo and Ethereum blockchain. This connection allows users to transfer major assets like ETH, USDC, and USDT seamlessly between the two chains, leveraging the strengths of both platforms.
 
 ## Architecture Overview
 [Architecture Doc](./docs/architecture_overview.md)
