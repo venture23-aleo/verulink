@@ -6,7 +6,7 @@ chains:
   chain_id: 6694886634401
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
   bridge_contract: vlink_token_bridge_v1.aleo
-  node_url: 
+  node_url: http://44.224.120.105:3030|mainnet
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
@@ -21,9 +21,9 @@ chains:
 - name: ethereum
   chain_id: 27234042785
   wallet_address: <your_ethereum_wallet_address>
-  bridge_contract: 
-  node_url: 
-  start_height: 
+  bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
+  node_url: https://eth.llamarpc.com
+  start_height: 20740576
   finality_height: 7050
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
   feed_pkt_wait_dur: 15m
