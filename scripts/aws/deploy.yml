@@ -269,7 +269,7 @@
     - name: Update keys in signingService config
       ansible.builtin.template:
         src: keys.j2
-        dest: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService/keys.yaml"
+        dest: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService/secrets.yaml"
         mode: "0400"
       vars:
         secret_json_string: "{{ secret_data[secret_name] | from_json }}"
