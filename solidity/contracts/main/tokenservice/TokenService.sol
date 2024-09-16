@@ -11,18 +11,20 @@ import {Holding} from "../Holding.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
-
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title TokenService Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
-contract TokenService is 
+contract TokenService is
     OwnableUpgradeable,
     Pausable,
     TokenSupport,
     ReentrancyGuardUpgradeable,
     Upgradeable
 {
-    /// @dev immutable Address of Eth 
+    using SafeERC20 for IIERC20;
+
+    /// @dev immutable Address of Eth
     address immutable ETH_TOKEN = address(1);
 
     /// @dev Address of the Bridge contract
@@ -55,25 +57,21 @@ contract TokenService is
         __Pausable_init_unchained();
         __ReentrancyGuard_init_unchained();
         erc20Bridge = IBridge(bridge);
-        self = PacketLibrary.InNetworkAddress(
-            _chainId, 
-            address(this)
-        );
+        self = PacketLibrary.InNetworkAddress(_chainId, address(this));
         blackListService = IBlackListService(_blackListService);
         _transferOwnership(_owner);
     }
 
-    receive() external payable onlyOwner {
-    }
+    receive() external payable onlyOwner {}
 
     /// @dev Authorizes an upgrade only if the caller is the owner
-    function _authorizeUpgrade(address) internal virtual view override {
+    function _authorizeUpgrade(address) internal view virtual override {
         require(msg.sender == owner());
     }
 
     /// @notice Returns the type of token managed by the TokenService
     /// @return string representation of the token type ("ERC20")
-    function tokenType() public virtual pure returns (string memory) {
+    function tokenType() public pure virtual returns (string memory) {
         return "ERC20";
     }
 
@@ -86,15 +84,18 @@ contract TokenService is
     /// @notice Transfers ETH to the vault and locks it in the Holding contract
     /// @param token  Address of the ERC20 token
     /// @param amount Amount of tokens to be transferred
-    function transferToVault(address token, uint256 amount) external virtual onlyOwner nonReentrant {
+    function transferToVault(
+        address token,
+        uint256 amount
+    ) external virtual onlyOwner nonReentrant {
         require(isEnabledToken(token), "TokenService: token not supported");
         address vault = supportedTokens[token].vault;
         require(vault != address(0), "TokenService: vault zero address");
-        if(token == ETH_TOKEN) {
-            (bool sent,) = vault.call{value: amount}("");
+        if (token == ETH_TOKEN) {
+            (bool sent, ) = payable(vault).call{value: amount}("");
             require(sent, "TokenService: eth transfer failed");
-        }else {
-            require(IIERC20(token).transfer(vault, amount), "TokenService: erc20 transfer failed");
+        } else {
+            IIERC20(token).safeTransfer(vault, amount);
         }
     }
 
@@ -103,12 +104,23 @@ contract TokenService is
     /// @param amount Amount of tokens or ETH to be transferred
     /// @param receiver The intended receiver of the transferred tokens or ETH
     /// @return packet representation of the transaction
-    function _packetify(address tokenAddress, uint256 amount, string memory receiver) 
-        internal view returns (PacketLibrary.OutPacket memory packet)
-    {
-        require(!blackListService.isBlackListed(msg.sender), "TokenService: sender blacklisted");
-        require(isEnabledToken(tokenAddress), "TokenService: token not supported");
-        require(isAmountInRange(tokenAddress, amount), "TokenService: amount out of range");
+    function _packetify(
+        address tokenAddress,
+        uint256 amount,
+        string memory receiver
+    ) internal view returns (PacketLibrary.OutPacket memory packet) {
+        require(
+            !blackListService.isBlackListed(msg.sender),
+            "TokenService: sender blacklisted"
+        );
+        require(
+            isEnabledToken(tokenAddress),
+            "TokenService: token not supported"
+        );
+        require(
+            isAmountInRange(tokenAddress, amount),
+            "TokenService: amount out of range"
+        );
 
         packet.sourceTokenService = self;
         packet.destTokenService = PacketLibrary.OutNetworkAddress(
@@ -117,8 +129,8 @@ contract TokenService is
         );
         packet.message = PacketLibrary.OutTokenMessage(
             msg.sender,
-            supportedTokens[tokenAddress].destTokenAddress, 
-            amount, 
+            supportedTokens[tokenAddress].destTokenAddress,
+            amount,
             receiver
         );
         packet.height = block.number;
@@ -126,28 +138,40 @@ contract TokenService is
 
     /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
-    function transfer(string memory receiver) external whenNotPaused virtual payable nonReentrant {
+    function transfer(
+        string memory receiver
+    ) external payable virtual whenNotPaused nonReentrant {
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
-    /// @notice Transfers ERC20 tokens to the destination chain via the bridge
-    /// @param tokenAddress Address of the ERC20 token
-    /// @param amount Amount of ERC20 tokens to be transferred
-    /// @param receiver The intended receiver of the transferred tokens
-    function transfer(address tokenAddress, uint256 amount, string memory receiver) external virtual whenNotPaused nonReentrant {
+    function transfer(
+        address tokenAddress,
+        uint256 amount,
+        string memory receiver
+    ) external virtual whenNotPaused nonReentrant {
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
-        require(IIERC20(tokenAddress).transferFrom(msg.sender, address(this), amount), "TokenService: token transfer failed");
+        IIERC20(tokenAddress).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
     /// @notice Transfers ERC20 tokens to the destination chain via the bridge
     /// @param packet incoming packet containing information to withdraw
     /// @param signatures arrays of signature of attestor
-    function withdraw(PacketLibrary.InPacket memory packet, bytes memory signatures) external virtual nonReentrant whenNotPaused {
-        require(packet.destTokenService.addr == address(this),"TokenService: invalid token service");
-        
+    function withdraw(
+        PacketLibrary.InPacket memory packet,
+        bytes memory signatures
+    ) external virtual nonReentrant whenNotPaused {
+        require(
+            packet.destTokenService.addr == address(this),
+            "TokenService: invalid token service"
+        );
+
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
         uint256 amount = packet.message.amount;
@@ -155,23 +179,26 @@ contract TokenService is
         require(isEnabledToken(tokenAddress), "TokenService: invalid token");
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
-        if(PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
-            if(tokenAddress == ETH_TOKEN) {
+        if (
+            PacketLibrary.Vote.NAY == quorum ||
+            blackListService.isBlackListed(receiver)
+        ) {
+            if (tokenAddress == ETH_TOKEN) {
                 // eth lock
-                holding.lock{value:amount}(receiver);
-            }else {
-                require(IIERC20(tokenAddress).transfer(address(holding), amount),"TokenService: token holding failed");
+                holding.lock{value: amount}(receiver);
+            } else {
+                IIERC20(tokenAddress).safeTransfer(address(holding), amount);
                 holding.lock(receiver, tokenAddress, amount);
             }
-        }else if(quorum == PacketLibrary.Vote.YEA){
-            if(tokenAddress == ETH_TOKEN) {
+        } else if (quorum == PacketLibrary.Vote.YEA) {
+            if (tokenAddress == ETH_TOKEN) {
                 // eth transfer
-                (bool sent,) = payable(receiver).call{value: amount}("");
+                (bool sent, ) = payable(receiver).call{value: amount}("");
                 require(sent, "TokenService: eth withdraw failed");
-            }else {
-                require(IIERC20(tokenAddress).transfer(receiver, amount), "TokenService: withdraw failed");
-            }  
-        }else {
+            } else {
+                IIERC20(tokenAddress).safeTransfer(receiver, amount);
+            }
+        } else {
             revert("TokenService: insufficient quorum");
         }
     }

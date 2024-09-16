@@ -348,7 +348,7 @@ describe('Holding', () => {
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(proxiedV1.address);
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("Holding: erc20 release failed");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
     });
 
     it('should not release if release to user is blacklisted', async () => {
@@ -366,7 +366,7 @@ describe('Holding', () => {
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(user);
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("Holding: erc20 release failed");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
     });
 
     // Test for holding contract is blacklisted before releasing
