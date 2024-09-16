@@ -1,7 +1,0 @@
-chain:
-  ethereum:
-    private_key: <ethereum_private_key>
-    wallet_address: <ethereum_wallet_address>
-  aleo:
-    private_key: <aleo_private_key>
-    wallet_address: <aleo_wallet_address>
