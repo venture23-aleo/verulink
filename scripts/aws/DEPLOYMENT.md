@@ -9,6 +9,7 @@ The attestor service can be deployed using two method
 1. MTLS certiciate/ key and CA certificate \
    **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
    https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
+   **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready
    
 ## Setup
@@ -165,7 +166,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     * AWS Region (default: `us-east-1`)
     * AMI ID
     * AWS Instance Type (default: `t3.medium`)
-    * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. mainnet_attestor_verulink_demox_labs)
+    * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. mainnet_attestor_verulink_v23)
     * AWS Secret Manager secret name for signing keys (default: `mainnet/verulink/attestor/signingservice`)
         - Ethereum private key
         - Ethereum wallet address
@@ -245,4 +246,14 @@ ERROR! A worker was found in a dead state
 or
 ```
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+```
+
+### mTLS Key and CSR Creation
+1. Generate private key:
+```
+openssl genpkey -algorithm RSA -out attestor.key -pkeyopt rsa_keygen_bits:4096
+```
+2. Create csr
+```
+openssl req -new -key attestor.key -out attestor.csr -subj "/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=example.com"
 ```
