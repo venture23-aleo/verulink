@@ -14,7 +14,6 @@ coverage.json
 *.cer
 *.key
 *.crt
-keys.yaml
 *venv
 *.pem
 .temp.*
@@ -24,3 +23,6 @@ keys.yaml
 /attestor/chainService/chainService
 /attestor/signingService/signingService
 /attestor/proxy/proxy
+
+# ignore keys
+attestor/signingService/secrets.yaml

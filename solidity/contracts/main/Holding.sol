@@ -6,9 +6,12 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {Pausable} from "../common/Pausable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title A contract that implements OwnableUpgradeable, ReentrancyGuardUpgradeable, Pausable, Initializable and Upgradeable Contracts for Holding token 
 contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Upgradeable {
+
+    using SafeERC20 for IIERC20;
 
     /// @notice Event triggered when tokens are locked
     /// @param account The address of the account whose tokens are locked
@@ -142,7 +145,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     function release(address user, address token) external virtual checkZeroAddress(token){
         require(token != ETH_TOKEN, "Holding: eth token Address");
         uint256 amount = _release(user, token);
-        require(IIERC20(token).transfer(user, amount), "Holding: erc20 release failed");
+        IIERC20(token).safeTransfer(user, amount);
     }
 
     /// @notice Releases ETH to a user

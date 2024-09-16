@@ -9,6 +9,7 @@ The attestor service can be deployed using two method
 1. MTLS certiciate/ key and CA certificate \
    **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
    https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
+   **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready
    
 ## Setup
@@ -98,7 +99,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	      "secretsmanager:GetSecretValue",
 	      "secretsmanager:CreateSecret",
 	      "secretsmanager:ListSecrets",
-              "secretsmanager:UpdateSecret"
+          "secretsmanager:UpdateSecret"
 	    ],
 	    "Resource": "*"
 	  },
@@ -140,9 +141,9 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
    ```bash
    cd verulink
    ```
-3. Checkout to `staging` branch  (for staging deployment , for mainnet use `main`)
+3. Checkout to `main` branch 
     ```bash
-    git checkout staging
+    git checkout main
     ```
 4. Setup python virtual environment
     ```bash
@@ -153,6 +154,10 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     source venv/bin/activate
     ```
 6. Run the script
+   > **_Note_**: To work around the issue described in the **Troubleshooting** section, it is recommended to export the environment variable `OBJC_DISABLE_INITIALIZE_FORK_SAFETY`.
+   ```
+   export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+   ```
    > Deployment is on docker container 
     ```bash
     make deploy-to-aws
@@ -161,13 +166,13 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     * AWS Region (default: `us-east-1`)
     * AMI ID
     * AWS Instance Type (default: `t3.medium`)
-    * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. stg_attestor_verulink_demox_labs)
-    * AWS Secret Manager secret name for signing keys (default: `dev/verulink/attestor/signingservice`)
+    * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. mainnet_attestor_verulink_v23)
+    * AWS Secret Manager secret name for signing keys (default: `mainnet/verulink/attestor/signingservice`)
         - Ethereum private key
         - Ethereum wallet address
         - Aleo private key
         - Aleo wallet address
-    * AWS Secret Manager secret name MTLS secret name (default: `dev/verulink/attestor/mtls`)
+    * AWS Secret Manager secret name MTLS secret name (default: `mainnet/verulink/attestor/mtls`)
         - MTLS ca certificate file
         - Attestor certificate file
         - Attestor key file
@@ -191,7 +196,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 ## Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:
 
-If you haven't made any changes, the default SSH key name remains "attestor-ssh-key.pem."
+If you haven't made any changes, the default SSH key name remains "`mainnet_attestor_verulink_<attestor_name>-ssh-key.pem`."
 > This command checks with AWS Secret Manager if the keys can be retreived.
 ```bash
 ansible-playbook scripts/aws/deploy.yml -i inventory.txt -u ubuntu --private-key=<ssh_key_name> --tags debug,retrieve_secret
@@ -241,4 +246,14 @@ ERROR! A worker was found in a dead state
 or
 ```
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+```
+
+### mTLS Key and CSR Creation
+1. Generate private key:
+```
+openssl genpkey -algorithm RSA -out attestor.key -pkeyopt rsa_keygen_bits:4096
+```
+2. Create csr
+```
+openssl req -new -key attestor.key -out attestor.csr -subj "/C=US/ST=State/L=City/O=Organization/OU=OrgUnit/CN=example.com"
 ```
