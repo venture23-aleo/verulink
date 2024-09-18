@@ -838,7 +838,7 @@ def get_instance_id():
         if response.status_code == 200:
             return response.text
         else:
-            raise Exception("Unable to retrieve instance-id.")
+            print("Unable to retrieve instance-id.")
     except requests.RequestException as e:
         print(f"Error fetching instance-id: {e}")
         random_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
