@@ -3,7 +3,7 @@ The attestor service can be deployed using two method
 1. From local device
 > To run from a local device, please make sure the AWS CLI tool and AWS access credentials have been correctly configured. 
   [Follow steps here.](#to-configure-aws-access) 
-2. Using AWS CloudShell from the AWS Management Console UI(Recommended)
+2. Using AWS CloudShell from the AWS Management Console UI(**Recommended**)
 
 ## Pre-Deployment steps 
 1. MTLS certiciate/ key and CA certificate \
@@ -190,7 +190,9 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	```
 	Verify the logs in services
 	```bash
-	docker logs -f attestor-chainservice-1
+	docker exec -it <attestor-chainservice-id> sh
+	cd ../logs
+	cat verulink.log
 	```
 
 ## Troubleshooting
