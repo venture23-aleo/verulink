@@ -6,7 +6,7 @@ chains:
   chain_id: 6694886634401
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
   bridge_contract: vlink_token_bridge_v1.aleo
-  node_url: 
+  node_url: https://api.explorer.provable.com/v1|mainnet
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
