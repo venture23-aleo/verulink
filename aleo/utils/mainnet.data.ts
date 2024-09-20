@@ -1,16 +1,16 @@
 // User address on Aleo
-export const attestor1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
-export const attestor2 = "aleo1s9jt6t6esqg4caw0lzhr393f80jd5mw2w4mn0hudze60fvnrlq9s9ryctf"
-export const attestor3 = "aleo1j4zawcfr63f7h0r97vck9xd2y2dycvgagh6n6w9f8tf9n47muggq6kgeza"
-export const attestor4 = "aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za"
-export const attestor5 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px" // Devnet Wallet
+export const attestor1 = "aleo1nzn3ma4q4xzmrvnkfs675slta87pdnyn5ctr9lc7ueuzhrvdlgrq38cj7u";
+export const attestor2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
+export const attestor3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
+export const attestor4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
+export const attestor5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc" // Devnet Wallet
 
 // User address on Aleo
-export const council1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
-export const council2 = "aleo1s9jt6t6esqg4caw0lzhr393f80jd5mw2w4mn0hudze60fvnrlq9s9ryctf"
-export const council3 = "aleo1j4zawcfr63f7h0r97vck9xd2y2dycvgagh6n6w9f8tf9n47muggq6kgeza"
-export const council4 = "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8"
-export const council5 = "aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px" // Devnet Wallet
+export const council1 = "aleo1a0rugumrjvf86gw3aqkzqvun4m73xxxhgfpra3gtkmw2p2uw2y9q0dwz3f";
+export const council2 = "aleo1tr9t0ac0h5g6mr8n7xkmmn5264deenjqdxctyce42m9u40hspvxqc27dsu"
+export const council3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
+export const council4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
+export const council5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc" // Devnet Wallet
 
 export const councilThreshold = 1;
 
@@ -49,7 +49,7 @@ export const wethMinTransfer = BigInt(500_000_000_000_000); //0.0005 = 5*10^14
 export const wethMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wethOutgoingPercentage = 10_00 // 10%
 export const wethTimeframe = 28_800; // per block
-export const wethMaxNoCap = BigInt(40_000_000_000_000_000_000); // 40 eth
+export const wethMaxNoCap = BigInt("40000000000000000000"); // 40 eth
 export const wethName = BigInt('1447384136');
 export const wethSymbol = BigInt('1984255048');
 export const wethDecimals = 18;
