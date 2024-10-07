@@ -199,6 +199,7 @@ func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig
 
 	httpClient := &http.Client{
 		Transport: transport,
+		Timeout: time.Second * 30,
 	}
 
 	host := config.GetConfig().MetricConfig.Host
