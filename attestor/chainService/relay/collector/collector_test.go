@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -56,12 +55,19 @@ func TestSendToCollector(t *testing.T) {
 
 		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
 			"../../../chainService/.mtls/attestor1.key")
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caCertPool,
+					Certificates: []tls.Certificate{attestorCert},
+				},
+			},
+		}
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
-			caCert:           caCertPool,
-			attestorCert:     attestorCert,
+			collectorClient:  client,
 		}
 		sp := &chain.ScreenedPacket{
 			Packet: &chain.Packet{
@@ -87,10 +93,28 @@ func TestSendToCollector(t *testing.T) {
 			"2": "aleoaddr",
 			"1": "ethAddr",
 		}
+
+		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
+			"../../../chainService/.mtls/attestor1.key")
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caCertPool,
+					Certificates: []tls.Certificate{attestorCert},
+				},
+			},
+		}
+
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
+			collectorClient:  client,
 		}
 		sp := &chain.ScreenedPacket{
 			Packet: &chain.Packet{
@@ -120,10 +144,26 @@ func TestSendToCollector(t *testing.T) {
 			"2": "aleoaddr",
 			"1": "ethAddr",
 		}
+		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
+			"../../../chainService/.mtls/attestor1.key")
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caCertPool,
+					Certificates: []tls.Certificate{attestorCert},
+				},
+			},
+		}
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
+			collectorClient: client,
 		}
 		sp := &chain.ScreenedPacket{
 			Packet: &chain.Packet{
@@ -202,10 +242,27 @@ func TestGetPktsFromCollector(t *testing.T) {
 			"2": "aleoaddr",
 			"1": "ethAddr",
 		}
+
+		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
+			"../../../chainService/.mtls/attestor1.key")
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caCertPool,
+					Certificates: []tls.Certificate{attestorCert},
+				},
+			},
+		}
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
+			collectorClient: client,
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -238,10 +295,27 @@ func TestGetPktsFromCollector(t *testing.T) {
 			"2": "aleoaddr",
 			"1": "ethAddr",
 		}
+
+		caCert, _ := os.ReadFile("../../../chainService/.mtls/ca.cer")
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		attestorCert, _ := tls.LoadX509KeyPair("../../../chainService/.mtls/attestor1.crt",
+			"../../../chainService/.mtls/attestor1.key")
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caCertPool,
+					Certificates: []tls.Certificate{attestorCert},
+				},
+			},
+		}
 		collec := &collector{
 			uri:              uri,
 			chainIDToAddress: chainIdToAddress,
 			collectorWaitDur: time.Second,
+			collectorClient: client,
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
@@ -256,41 +330,3 @@ func TestGetPktsFromCollector(t *testing.T) {
 	})
 }
 
-func TestMTLSIntegration(t *testing.T) {
-	dbUrl := "https://aleomtls.ibriz.ai/"
-
-	caCert, err := os.ReadFile("../../../chainService/ca.cer")
-	assert.NoError(t, err)
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	cert, err := tls.LoadX509KeyPair("../../../chainService/attestor-stresstest.crt",
-		"../../../chainService/attestor-stresstest.key")
-	assert.NoError(t, err)
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs:      caCertPool,
-				Certificates: []tls.Certificate{cert},
-			},
-		},
-	}
-
-	resp, err := client.Get(dbUrl)
-	if err != nil {
-		fmt.Println("Connection failed:", err)
-
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	fmt.Println("Response Body:", string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("Bad request :", resp.StatusCode)
-	}
-	assert.Equal(t, resp.StatusCode, http.StatusOK)
-	assert.NoError(t, err)
-
-}

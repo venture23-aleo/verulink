@@ -71,27 +71,20 @@ type collector struct {
 	uri              string
 	chainIDToAddress map[string]string // chainID: walletAddress
 	collectorWaitDur time.Duration
-	caCert           *x509.CertPool
-	attestorCert     tls.Certificate
+	collectorClient  *http.Client
 }
 
 func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs:      c.caCert,
-				Certificates: []tls.Certificate{c.attestorCert},
-			},
-		},
-	}
+	ctx, cncl := context.WithTimeout(ctx, time.Minute)
+	defer cncl()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.uri, nil)
 	if err != nil {
 		return err
 	}
 
-	resp, err := client.Do(req)
+	resp, err := c.collectorClient.Do(req)
 	if err != nil {
 		logger.GetLogger().Error(err.Error())
 		return err
@@ -138,22 +131,13 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
 
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs:      c.caCert,
-				Certificates: []tls.Certificate{c.attestorCert},
-			},
-		},
-	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), io.NopCloser(buf))
 	if err != nil {
 		return err
 	}
 
 	req.Header.Set("content-type", contentType)
-	resp, err := client.Do(req)
+	resp, err := c.collectorClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -224,20 +208,13 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 		u.RawQuery = queryParams.Encode()
 
 		ctx, cncl := context.WithTimeout(ctx, time.Minute)
-		client := &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs:      c.caCert,
-					Certificates: []tls.Certificate{c.attestorCert},
-				},
-			},
-		}
+
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			goto postFor
 		}
 
-		resp, err = client.Do(req)
+		resp, err = c.collectorClient.Do(req)
 		if err != nil {
 			goto postFor
 		}
@@ -288,12 +265,19 @@ func SetupCollector(cfg config.CollecterServiceConfig, chainIDToAddress map[stri
 	if err != nil {
 		log.Fatal(err)
 	}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      caCertPool,
+				Certificates: []tls.Certificate{attestorCert},
+			},
+		},
+	}
 	collc = collector{
 		uri:              cfg.Uri,
 		collectorWaitDur: waitTime,
 		chainIDToAddress: make(map[string]string),
-		caCert:           caCertPool,
-		attestorCert:     attestorCert,
+		collectorClient:  client,
 	}
 
 	for k, v := range chainIDToAddress {
