@@ -214,19 +214,17 @@ func PushMetrics(ctx context.Context, pusher *push.Pusher, pmetrics *PrometheusM
 
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
+
+	pusher.Gatherer(pmetrics.Registry)
 	for {
 
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			gatherer := prometheus.Gatherers{
-				pmetrics.Registry,
-			}
-			if err := pusher.Gatherer(gatherer).Push(); err != nil {
+			if err := pusher.Push(); err != nil {
 				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
 			}
-			pmetrics = NewPrometheusMetrics()
 		}
 	}
 
