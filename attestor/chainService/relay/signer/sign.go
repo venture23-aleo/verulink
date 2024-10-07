@@ -48,6 +48,8 @@ func (s *signService) HashAndSignScreenedPacket(
 	}
 
 	r := bytes.NewBuffer(data)
+	ctx, cncl := context.WithTimeout(ctx, time.Second*30)
+	defer cncl()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.url, r)
 	if err != nil {
 		return
@@ -129,7 +131,9 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 		User:   url.UserPassword(cfg.Username, cfg.Password),
 	}
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
 
 	err := dial(u.String(), client)
 	if err != nil {
