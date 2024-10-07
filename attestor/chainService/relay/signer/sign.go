@@ -33,7 +33,8 @@ type SignI interface {
 var s SignI
 
 type signService struct {
-	url string
+	url          string
+	signerClient *http.Client
 }
 
 // HashAndSignScreendedPacket calls the signing service to hash and sign the screened packets
@@ -47,12 +48,14 @@ func (s *signService) HashAndSignScreenedPacket(
 	}
 
 	r := bytes.NewBuffer(data)
+	ctx, cncl := context.WithTimeout(ctx, time.Second*30)
+	defer cncl()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.url, r)
 	if err != nil {
 		return
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.signerClient.Do(req)
 	if err != nil {
 		return
 	}
@@ -92,12 +95,16 @@ func (s *signService) CheckSigningServiceHealth(ctx context.Context, cfg *config
 		Path:   cfg.HealthEndpoint,
 		Scheme: cfg.Scheme,
 	}
+
+	ctx, cncl := context.WithTimeout(ctx, time.Second*30)
+	defer cncl()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.signerClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -124,20 +131,25 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 		User:   url.UserPassword(cfg.Username, cfg.Password),
 	}
 
-	err := dial(u.String())
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+
+	err := dial(u.String(), client)
 	if err != nil {
 		return err
 	}
 
 	s = &signService{
-		url: u.String(),
+		url:          u.String(),
+		signerClient: client,
 	}
 	return nil
 }
 
 // dial simply sends post request on sign endpoint.
 // without proper request body it should respond with status in 4xx range.
-func dial(u string) error {
+func dial(u string, client *http.Client) error {
 
 	ctx, cncl := context.WithTimeout(context.TODO(), time.Second*30)
 	defer cncl()
@@ -146,7 +158,7 @@ func dial(u string) error {
 		return err
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
