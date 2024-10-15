@@ -149,7 +149,7 @@ contract TokenService is
         nonReentrant 
     {
         if (!this.evaluateRateLimit(ETH_TOKEN, msg.value)) {
-            revert("MetaCoinWithRateLimit: rate limit exceeded");
+            revert("Predicate: Bridge rate limit exceeded");
         }
         bytes memory encodedSigAndArgs = abi.encodeWithSignature("_transfer(string)", receiver);
         require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "Predicate: unauthorized transaction");
@@ -170,7 +170,7 @@ contract TokenService is
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
         if (!this.evaluateRateLimit(tokenAddress, amount)) {
-            revert("MetaCoinWithRateLimit: rate limit exceeded");
+            revert("Predicate: Bridge rate limit exceeded");
         }
         bytes memory encodedSigAndArgs = abi.encodeWithSignature(
             "_transfer(address,uint256,string)",
