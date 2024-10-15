@@ -2,6 +2,7 @@
   "name": "Aleo-Eth-Bridge",
   "type": "module",
   "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-toolbox": "2.0.2",
     "@nomicfoundation/hardhat-verify": "^2.0.9",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
