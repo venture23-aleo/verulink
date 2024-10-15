@@ -38,6 +38,9 @@ module.exports = {
       sepolia: process.env.ETHERSCAN_API_KEY,
     }
   },
+  remappings: [
+    "predicate/=lib/predicate-contracts/src/"
+  ],
   // contractSizer: {
   //   alphaSort: true,
   //   runOnCompile: true

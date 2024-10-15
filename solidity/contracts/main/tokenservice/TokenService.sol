@@ -12,6 +12,8 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {PredicateClient} from "../../../lib/predicate-contracts/src/mixins/PredicateClient.sol";
+import {RateLimiter} from "../../../lib/predicate-contracts/src/mixins/RateLimiter.sol";
 
 /// @title TokenService Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
@@ -20,7 +22,9 @@ contract TokenService is
     Pausable,
     TokenSupport,
     ReentrancyGuardUpgradeable,
-    Upgradeable
+    Upgradeable,
+    RateLimiter,
+    PredicateClient
 {
     using SafeERC20 for IIERC20;
 
@@ -138,9 +142,23 @@ contract TokenService is
 
     /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
-    function transfer(
+    function transfer(string memory receiver, PredicateMessage calldata predicateMessage) 
+        public 
+        payable 
+        whenNotPaused 
+        nonReentrant 
+    {
+        if (!this.evaluateRateLimit(ETH_TOKEN, msg.value)) {
+            revert("MetaCoinWithRateLimit: rate limit exceeded");
+        }
+        bytes memory encodedSigAndArgs = abi.encodeWithSignature("_transfer(string)", receiver);
+        require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "Predicate: unauthorized transaction");
+        _transfer(receiver);
+    }
+
+    function _transfer(
         string memory receiver
-    ) external payable virtual whenNotPaused nonReentrant {
+    ) internal payable virtual {
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
@@ -148,8 +166,28 @@ contract TokenService is
     function transfer(
         address tokenAddress,
         uint256 amount,
-        string memory receiver
+        string memory receiver,
+        PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
+        if (!this.evaluateRateLimit(tokenAddress, amount)) {
+            revert("MetaCoinWithRateLimit: rate limit exceeded");
+        }
+        bytes memory encodedSigAndArgs = abi.encodeWithSignature(
+            "_transfer(address,uint256,string)",
+            tokenAddress,
+            amount,
+            receiver
+        );
+        require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "GuardedERC20Transfer: unauthorized transaction");
+        _transfer(tokenAddress, amount, receiver);
+    }
+
+    
+    function _transfer(
+        address tokenAddress,
+        uint256 amount,
+        string memory receiver
+    ) internal virtual {
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
         IIERC20(tokenAddress).safeTransferFrom(

@@ -10,9 +10,9 @@ remappings = [
     "ds-test/=node_modules/@thirdweb-dev/dynamic-contracts/lib/forge-std/lib/ds-test/",
     "erc721a-upgradeable/=node_modules/erc721a-upgradeable/",
     "eth-gas-reporter/=node_modules/eth-gas-reporter/",
-    "forge-std/=node_modules/@thirdweb-dev/dynamic-contracts/lib/forge-std/",
     "hardhat/=node_modules/hardhat/",
     "sstore2/=node_modules/@thirdweb-dev/dynamic-contracts/lib/sstore2/",
+    "@predicate/=lib/predicate-contracts/src/"
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
