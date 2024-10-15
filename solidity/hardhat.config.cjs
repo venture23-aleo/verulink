@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-foundry");
 require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-contract-sizer");
@@ -37,6 +38,9 @@ module.exports = {
       sepolia: process.env.ETHERSCAN_API_KEY,
     }
   },
+  remappings: [
+    "predicate/=lib/predicate-contracts/src/"
+  ],
   // contractSizer: {
   //   alphaSort: true,
   //   runOnCompile: true
