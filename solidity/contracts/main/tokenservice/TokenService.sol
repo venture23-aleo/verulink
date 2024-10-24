@@ -13,6 +13,10 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {PredicateClient} from "predicate-contracts/src/mixins/PredicateClient.sol";
+import {PredicateMessage} from "predicate-contracts/src/interfaces/IPredicateClient.sol";
+import {IPredicateManager} from "predicate-contracts/src/interfaces/IPredicateManager.sol";
+
 /// @title TokenService Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
 contract TokenService is
@@ -20,7 +24,8 @@ contract TokenService is
     Pausable,
     TokenSupport,
     ReentrancyGuardUpgradeable,
-    Upgradeable
+    Upgradeable,
+    PredicateClient
 {
     using SafeERC20 for IIERC20;
 
@@ -136,11 +141,15 @@ contract TokenService is
         packet.height = block.number;
     }
 
-    /// @notice Transfers ETH to the destination chain via the bridge
-    /// @param receiver The intended receiver of the transferred ETH
-    function transfer(
-        string memory receiver
-    ) external payable virtual whenNotPaused nonReentrant {
+    function transfer(string calldata receiver, PredicateMessage calldata predicateMessage) 
+        public 
+        payable 
+        whenNotPaused 
+        nonReentrant 
+    {
+        bytes memory encodedSigAndArgs = abi.encodeWithSignature("_transfer(string)", receiver);
+        require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "Predicate: unauthorized transaction");
+
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
@@ -148,8 +157,25 @@ contract TokenService is
     function transfer(
         address tokenAddress,
         uint256 amount,
-        string memory receiver
+        string calldata receiver,
+        PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
+        bytes memory encodedSigAndArgs = abi.encodeWithSignature(
+            "_transfer(address,uint256,string)",
+            tokenAddress,
+            amount,
+            receiver
+        );
+        require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "GuardedERC20Transfer: unauthorized transaction");
+        _transfer(tokenAddress, amount, receiver);
+    }
+
+
+    function _transfer(
+        address tokenAddress,
+        uint256 amount,
+        string calldata receiver
+    ) internal virtual {
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
         IIERC20(tokenAddress).safeTransferFrom(
@@ -201,6 +227,27 @@ contract TokenService is
         } else {
             revert("TokenService: insufficient quorum");
         }
+    }
+
+    /**
+     * @notice Updates the policy ID
+     * @param _policyID policy ID from onchain
+     */
+    function setPolicy(
+        string memory _policyID
+    ) external onlyOwner {
+        policyID = _policyID;
+        serviceManager.setPolicy(_policyID);
+    }
+
+    /**
+     * @notice Function for setting the ServiceManager
+     * @param _serviceManager address of the service manager
+     */
+    function setPredicateManager(
+        address _serviceManager
+    ) public onlyOwner {
+        serviceManager = IPredicateManager(_serviceManager);
     }
 
     /**
