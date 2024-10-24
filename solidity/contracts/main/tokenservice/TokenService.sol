@@ -13,9 +13,9 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {PredicateClient} from "predicate-contracts/src/mixins/PredicateClient.sol";
-import {PredicateMessage} from "predicate-contracts/src/interfaces/IPredicateClient.sol";
-import {IPredicateManager} from "predicate-contracts/src/interfaces/IPredicateManager.sol";
+import {PredicateClient} from "@predicate/contracts/src/mixins/PredicateClient.sol";
+import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
+import {IPredicateManager} from "@predicate/contracts/src/interfaces/IPredicateManager.sol";
 
 /// @title TokenService Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
@@ -167,15 +167,7 @@ contract TokenService is
             receiver
         );
         require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "GuardedERC20Transfer: unauthorized transaction");
-        _transfer(tokenAddress, amount, receiver);
-    }
-
-
-    function _transfer(
-        address tokenAddress,
-        uint256 amount,
-        string calldata receiver
-    ) internal virtual {
+        
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
         IIERC20(tokenAddress).safeTransferFrom(

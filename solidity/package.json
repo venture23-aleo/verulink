@@ -19,7 +19,7 @@
   "dependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@thirdweb-dev/contracts": "3.11.0",
-    "predicate-contracts": "^1.0.8"
+    "@predicate/contracts": "^1.0.9",
+    "@thirdweb-dev/contracts": "3.11.0"
   }
 }
