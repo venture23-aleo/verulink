@@ -140,7 +140,7 @@ contract TokenService is
 
     /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
-    function transfer(string memory receiver, PredicateMessage calldata predicateMessage) 
+    function transfer(string calldata receiver, PredicateMessage calldata predicateMessage) 
         public 
         payable 
         whenNotPaused 
@@ -152,7 +152,7 @@ contract TokenService is
     }
 
     function _transfer(
-        string memory receiver
+        string calldata receiver
     ) internal payable virtual {
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
@@ -161,7 +161,7 @@ contract TokenService is
     function transfer(
         address tokenAddress,
         uint256 amount,
-        string memory receiver,
+        string calldata receiver,
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
         bytes memory encodedSigAndArgs = abi.encodeWithSignature(
@@ -178,7 +178,7 @@ contract TokenService is
     function _transfer(
         address tokenAddress,
         uint256 amount,
-        string memory receiver
+        string calldata receiver
     ) internal virtual {
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
