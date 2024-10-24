@@ -12,8 +12,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {PredicateClient} from "../../../lib/predicate-contracts/src/mixins/PredicateClient.sol";
-import {RateLimiter} from "../../../lib/predicate-contracts/src/mixins/RateLimiter.sol";
+import {PredicateClient} from "predicate-contracts/src/mixins/PredicateClient.sol";
 
 /// @title TokenService Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
@@ -23,7 +22,6 @@ contract TokenService is
     TokenSupport,
     ReentrancyGuardUpgradeable,
     Upgradeable,
-    RateLimiter,
     PredicateClient
 {
     using SafeERC20 for IIERC20;
@@ -148,9 +146,6 @@ contract TokenService is
         whenNotPaused 
         nonReentrant 
     {
-        if (!this.evaluateRateLimit(ETH_TOKEN, msg.value)) {
-            revert("Predicate: Bridge rate limit exceeded");
-        }
         bytes memory encodedSigAndArgs = abi.encodeWithSignature("_transfer(string)", receiver);
         require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "Predicate: unauthorized transaction");
         _transfer(receiver);
@@ -169,9 +164,6 @@ contract TokenService is
         string memory receiver,
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
-        if (!this.evaluateRateLimit(tokenAddress, amount)) {
-            revert("Predicate: Bridge rate limit exceeded");
-        }
         bytes memory encodedSigAndArgs = abi.encodeWithSignature(
             "_transfer(address,uint256,string)",
             tokenAddress,
