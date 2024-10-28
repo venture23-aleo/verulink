@@ -36,9 +36,9 @@ jobs:
       - name: Build and push Docker image - chainService
         run: 
           echo ${{ env.tag }}
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }} ./chainService
+          docker build -t chainservice:latest ./chainService
           docker images
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
+          # docker push ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
 
       - name: Build and push Docker image - signingService
         run: 
