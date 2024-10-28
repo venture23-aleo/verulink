@@ -23,7 +23,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+      - name: test
+        run: pwd & ls
       - name: Build and push Docker image - chainService
         uses: docker/build-push-action@v3
         with:
