@@ -7,7 +7,7 @@ on:
     branches:
     - 'main'
     - '**'
-
+    
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -22,15 +22,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image - signingService
-        working-directory: attestor/signingService
         uses: docker/build-push-action@v3
         with:
+          context: ./attestor/signingService
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice
           tag: latest
 
       - name: Build and push Docker image - chainService
-        working-directory: attestor/chainService
         uses: docker/build-push-action@v3
         with:
+          context: ./attestor/chainService
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/chainservice
           tag: latest
