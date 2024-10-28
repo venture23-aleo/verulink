@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+
       - name: Get the Docker image tag
         id: tag
         run: |
@@ -39,6 +39,8 @@ jobs:
           context: ./attestor/chainService
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/chainservice
           tag: ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
+      - name: Push docker images - chainservice
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
 
       - name: Build and push Docker image - signingService
         uses: docker/build-push-action@v3
@@ -47,5 +49,7 @@ jobs:
           file: ./attestor/signingService/Dockerfile
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice
           tag: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice:${{ env.tag }}
+      - name: Push docker image - signingservice
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/signingservice:${{ env.tag }}
 
       
