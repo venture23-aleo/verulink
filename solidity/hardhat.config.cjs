@@ -20,18 +20,18 @@ module.exports = {
       }
     ]
   },
-  // networks: {
-  //   sepolia: {
-  //     url: process.env.PROVIDER,
-  //     accounts: [
-  //       process.env.DEPLOYER_PRIVATE_KEY]
-  //   },
-  //   mainnet: {
-  //     url: process.env.PROVIDER,
-  //     accounts: [
-  //       process.env.DEPLOYER_PRIVATE_KEY]
-  //   },
-  // },
+  networks: {
+    sepolia: {
+      url: process.env.PROVIDER,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY]
+    },
+    mainnet: {
+      url: process.env.PROVIDER,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY]
+    },
+  },
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY,

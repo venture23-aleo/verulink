@@ -144,15 +144,22 @@ contract TokenService is
     function transfer(string calldata receiver, PredicateMessage calldata predicateMessage) 
         public 
         payable 
+        virtual
         whenNotPaused 
         nonReentrant 
     {
         bytes memory encodedSigAndArgs = abi.encodeWithSignature("_transfer(string)", receiver);
         require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "Predicate: unauthorized transaction");
+        _transfer(receiver);
+    }
 
+    function _transfer(
+        string memory receiver
+    ) internal {
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
+
 
     function transfer(
         address tokenAddress,
@@ -167,7 +174,14 @@ contract TokenService is
             receiver
         );
         require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "GuardedERC20Transfer: unauthorized transaction");
-        
+        _transfer(tokenAddress, amount, receiver);
+    }
+
+    function _transfer(
+        address tokenAddress,
+        uint256 amount,
+        string calldata receiver
+    ) internal {
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
         IIERC20(tokenAddress).safeTransferFrom(
