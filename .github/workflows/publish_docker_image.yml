@@ -29,18 +29,22 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: verulink
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: test
         run: pwd & ls
       - name: Build and push Docker image - chainService
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }} ./chainService
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
+          docker build -t verulink/chainservice:${{ env.tag }} ./chainService
+          docker push verulink/chainservice:${{ env.tag }}
 
       - name: Build and push Docker image - signingService
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/signingservice:${{ env.tag }} -f ./signingService/Dockerfile .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/signingservice:${{ env.tag }}
+          docker build -t verulink/signingservice:${{ env.tag }} -f ./signingService/Dockerfile .
+          docker push verulink/signingservice:${{ env.tag }}
 
+      - name Print Docker images
+        run: | 
+          echo "verulink/chainservice:${{ env.tag }}"
+          echo "verulink/signingservice:${{ env.tag }}"
       
