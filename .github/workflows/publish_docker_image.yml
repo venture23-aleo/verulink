@@ -31,7 +31,7 @@ jobs:
       - name: test
         run: pwd & ls
       - name: Build and push Docker image - chainService
-        run: 
+        run: |
           echo ${{ env.tag }}
           cd attestor
           cd chainService
@@ -40,7 +40,7 @@ jobs:
           # docker push ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
 
       - name: Build and push Docker image - signingService
-        run: 
+        run: |
           cd attestor
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/signingservice:${{ env.tag }} -f ./signingService/Dockerfile .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/signingservice:${{ env.tag }}
