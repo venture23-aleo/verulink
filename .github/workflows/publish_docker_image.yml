@@ -28,15 +28,15 @@ jobs:
       - name: Build and push Docker image - chainService
         uses: docker/build-push-action@v3
         with:
-          context: ./chainService
+          context: ./attestor/chainService
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/chainservice
           tag: latest
 
       - name: Build and push Docker image - signingService
         uses: docker/build-push-action@v3
         with:
-          context: .
-          file: ./signingService/Dockerfile
+          context: ./attestor
+          file: ./attestor/signingService/Dockerfile
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice
           tag: latest
 
