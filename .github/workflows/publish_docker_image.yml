@@ -7,10 +7,13 @@ on:
     branches:
     - 'main'
     - '**'
-    
+
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: attestor 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -21,16 +24,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image - signingService
-        uses: docker/build-push-action@v3
-        with:
-          context: ./attestor/signingService
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice
-          tag: latest
-
       - name: Build and push Docker image - chainService
         uses: docker/build-push-action@v3
         with:
-          context: ./attestor/chainService
+          context: ./chainService
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/chainservice
           tag: latest
+
+      - name: Build and push Docker image - signingService
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./signingService/Dockerfile
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice
+          tag: latest
+
+      

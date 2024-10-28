@@ -1,8 +1,8 @@
 FROM golang:1.21.6 as signingservice
 WORKDIR /chainService
-COPY ../chainService .
+COPY ./chainService .
 WORKDIR /signingservice
-COPY ../signingService ./
+COPY ./signingService ./
 RUN go mod download
 RUN go mod tidy
 
@@ -10,7 +10,7 @@ RUN go build -o signingservice .
 
 FROM rust:1.80.0 as aleo
 WORKDIR /app
-COPY ../signingService/rust .
+COPY ./signingService/rust .
 RUN cargo install --path .
 RUN cargo build
 
