@@ -22,12 +22,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image - signingService
+        workding-directory: attestor/signingService
         uses: docker/build-push-action@v3
         with:
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/signingservice
           tag: latest
 
       - name: Build and push Docker image - chainService
+        workding-directory: attestor/chainService
         uses: docker/build-push-action@v3
         with:
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/chainservice
