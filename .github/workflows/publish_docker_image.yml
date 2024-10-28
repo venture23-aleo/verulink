@@ -35,6 +35,7 @@ jobs:
         run: pwd & ls
       - name: Build and push Docker image - chainService
         run: 
+          echo ${{ env.tag }}
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }} ./chainService
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/chainservice:${{ env.tag }}
 
