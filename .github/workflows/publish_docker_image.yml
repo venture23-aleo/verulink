@@ -43,7 +43,7 @@ jobs:
           docker build -t verulink/signingservice:${{ env.tag }} -f ./signingService/Dockerfile .
           docker push verulink/signingservice:${{ env.tag }}
 
-      - name Print Docker images
+      - name: Print Docker images
         run: | 
           echo "verulink/chainservice:${{ env.tag }}"
           echo "verulink/signingservice:${{ env.tag }}"
