@@ -12,20 +12,18 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import {PredicateClient} from "@predicate/contracts/src/mixins/PredicateClient.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
-import {IPredicateManager} from "@predicate/contracts/src/interfaces/IPredicateManager.sol";
+import {PredicateService} from "./PredicateService/PredicateService.sol";
 
 /// @title TokenService Contract
-/// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
+/// @dev Inherits PredicateService to handle predicate verification
 contract TokenService is
     OwnableUpgradeable,
     Pausable,
     TokenSupport,
     ReentrancyGuardUpgradeable,
     Upgradeable,
-    PredicateClient
+    PredicateService
 {
     using SafeERC20 for IIERC20;
 
@@ -43,7 +41,6 @@ contract TokenService is
 
     /// @dev Information about the token service's network address
     PacketLibrary.InNetworkAddress public self;
-
 
     /// @dev Initializes the TokenService contract
     /// @param bridge Address of the bridge contract
@@ -141,39 +138,34 @@ contract TokenService is
         packet.height = block.number;
     }
 
-    function transfer(string calldata receiver, PredicateMessage calldata predicateMessage) 
-        public 
-        payable 
-        virtual
-        whenNotPaused 
-        nonReentrant 
-    {
-        bytes memory encodedSigAndArgs = abi.encodeWithSignature("_transfer(string)", receiver);
-        require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "Predicate: unauthorized transaction");
+    /// @notice Transfers ETH with predicate authorization
+    /// @param receiver The intended receiver of the transferred ETH
+    /// @param predicateMessage Predicate authorization message
+    function transfer(
+        string calldata receiver,
+        PredicateMessage calldata predicateMessage
+    ) public payable virtual whenNotPaused nonReentrant {
+        _handlePredicateMessage(receiver, predicateMessage);
         _transfer(receiver);
     }
 
-    function _transfer(
-        string memory receiver
-    ) internal {
+    function _transfer(string memory receiver) internal {
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
-
+    /// @notice Transfers ERC20 tokens with predicate authorization
+    /// @param tokenAddress The address of the ERC20 token
+    /// @param amount Amount of tokens to be transferred
+    /// @param receiver The intended receiver of the transferred tokens
+    /// @param predicateMessage Predicate authorization message
     function transfer(
         address tokenAddress,
         uint256 amount,
         string calldata receiver,
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
-        bytes memory encodedSigAndArgs = abi.encodeWithSignature(
-            "_transfer(address,uint256,string)",
-            tokenAddress,
-            amount,
-            receiver
-        );
-        require(_authorizeTransaction(predicateMessage, encodedSigAndArgs), "GuardedERC20Transfer: unauthorized transaction");
+        _handlePredicateMessage(tokenAddress, amount, receiver, predicateMessage);
         _transfer(tokenAddress, amount, receiver);
     }
 
@@ -233,27 +225,6 @@ contract TokenService is
         } else {
             revert("TokenService: insufficient quorum");
         }
-    }
-
-    /**
-     * @notice Updates the policy ID
-     * @param _policyID policy ID from onchain
-     */
-    function setPolicy(
-        string memory _policyID
-    ) external onlyOwner {
-        policyID = _policyID;
-        serviceManager.setPolicy(_policyID);
-    }
-
-    /**
-     * @notice Function for setting the ServiceManager
-     * @param _serviceManager address of the service manager
-     */
-    function setPredicateManager(
-        address _serviceManager
-    ) public onlyOwner {
-        serviceManager = IPredicateManager(_serviceManager);
     }
 
     /**

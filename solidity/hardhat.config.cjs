@@ -31,11 +31,27 @@ module.exports = {
       accounts: [
         process.env.DEPLOYER_PRIVATE_KEY]
     },
+    holesky: {
+      url: process.env.PROVIDER,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY]
+    }
   },
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY,
-    }
+      holesky: process.env.ETHERSCAN_API_KEY,
+    },
+    customChains: [
+      {
+        network: "holesky",
+        chainId: 17000,
+        urls: {
+          apiURL: "https://api-holesky.etherscan.io/api",
+          browserURL: "https://holesky.etherscan.io/",
+        },
+      },
+    ]
   },
   // contractSizer: {
   //   alphaSort: true,
