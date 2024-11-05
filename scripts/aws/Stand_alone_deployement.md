@@ -1,6 +1,6 @@
 # Attestor Standalone Deployment Guide
 
-This guide explains how to deploy the attestor using Docker published images. The images are available on Docker Hub: [chainService](#) and [signingService](#).
+This guide explains how to deploy the attestor using Docker published images. The images are available on Docker Hub: [chainservice](https://hub.docker.com/r/verulink/chainservice) and [signingservice](https://hub.docker.com/r/verulink/signingservice).
 
 ### Project Structure
 
@@ -17,7 +17,7 @@ project-root/
 │
 ├── signingService/
 │   ├── config.yaml         # Configuration file for signingService
-│   └── secrets.keys        # Secret keys for signingService
+│   └── secrets.yaml        # Secret keys for signingService
 │
 └── compose.yaml            # Docker Compose file 
 ```
@@ -32,7 +32,7 @@ The `.mtls` folder stores the certificates required for mTLS connections for the
 
 The `config.yaml` for signingService contains parameters for the signing functionality of the attestor. You can find the configuration file [here](https://github.com/venture23-aleo/verulink/blob/main/attestor/signingService/config.yaml).
 
-The `secrets.keys` file contains your private keys. Below is the format for the `secrets.keys` file:
+The `secrets.yaml` file contains your private keys. Below is the format for the `secrets.yaml` file:
 
 ```yaml
 chain:
@@ -59,7 +59,7 @@ services:
   chainservice:
     depends_on:
       - signingservice
-    image: verulink/chainService
+    image: verulink/chainservice:8a428f7
     volumes:
       - type: volume
         source: db-path
@@ -78,7 +78,7 @@ services:
       MODE: prod
       CLEAN_START: false
   signingservice:
-    image: verulink/signingService
+    image: verulink/signingservice:8a428f7
     volumes:
       - ./signingService/config.yaml:/configs/config.yaml
       - ./signingService/secrets.yaml:/configs/keys.yaml
@@ -111,5 +111,5 @@ volumes:
 
 ### Troubleshooting:
 
-- **Volume Mount Issues**: Ensure that all local files (like `config.yaml`, `.mtls`, `secrets.keys`) exist at the specified paths relative to the project root.
+- **Volume Mount Issues**: Ensure that all local files (like `config.yaml`, `.mtls`, `secrets.yaml`) exist at the specified paths relative to the project root.
 - **Port Conflicts**: If port `8080` is already in use, modify the port mapping in the `signingservice` section of the `compose.yaml`.
