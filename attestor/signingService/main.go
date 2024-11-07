@@ -15,6 +15,7 @@ import (
 
 var (
 	keyPath    string
+	isSecretId  bool
 	configPath string
 	address    string
 	port       int
@@ -25,6 +26,7 @@ func init() {
 	flag.StringVar(&configPath, "config", "config.yaml", "configuration for running signing service")
 	flag.StringVar(&address, "address", "0.0.0.0", "network address")
 	flag.IntVar(&port, "port", 8080, "port")
+	flag.BoolVar(&isSecretId, "sid", true, "configuration to use secrets from AWS secret manager")
 }
 
 func main() {
@@ -53,7 +55,7 @@ func main() {
 
 	// key verification
 
-	m, err := config.LoadKeys(keyPath)
+	m, err := config.LoadKeys(isSecretId,keyPath)
 	if err != nil {
 		err = fmt.Errorf("unable to load keys: %w", err)
 		log.Println(err)

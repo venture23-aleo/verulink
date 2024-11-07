@@ -32,7 +32,6 @@ services:
       dockerfile: ./signingService/Dockerfile
     volumes:
       - ./signingService/config.yaml:/configs/config.yaml
-      - ./signingService/secrets.yaml:/configs/keys.yaml
     ports:
       - 8080:8080
       
