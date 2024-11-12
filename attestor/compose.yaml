@@ -10,6 +10,8 @@ services:
       signingservice:
         condition: service_healthy # Wait for the signingservice to be healthy
     build: ./chainService
+    image : verulink/chainservice:8a428f7
+    pull_policy: build # build or always
     volumes:
       - type: volume
         source: db-path
@@ -31,6 +33,8 @@ services:
     build:
       context: .
       dockerfile: ./signingService/Dockerfile
+    image: verulink/signingservice:8a428f7
+    pull_policy: build
     volumes:
       - ./signingService/config.yaml:/configs/config.yaml
     ports:
