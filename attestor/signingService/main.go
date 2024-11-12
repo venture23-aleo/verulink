@@ -15,7 +15,7 @@ import (
 
 var (
 	keyPath    string
-	isSecretId  bool
+	isSecretId bool
 	configPath string
 	address    string
 	port       int
@@ -54,8 +54,7 @@ func main() {
 	}
 
 	// key verification
-
-	m, err := config.LoadKeys(isSecretId,keyPath)
+	m, err := config.LoadKeys(isSecretId, keyPath)
 	if err != nil {
 		err = fmt.Errorf("unable to load keys: %w", err)
 		log.Println(err)

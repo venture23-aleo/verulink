@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"time"
 
 	awscfg "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -93,7 +94,9 @@ func LoadKeys(isSecretId bool, keyPath string) (map[string]*KeyPair, error) {
 
 func fetchKeysFromSecretsManager() (map[string]*KeyPair, error) {
 
-	awsconfig, err := awscfg.LoadDefaultConfig(context.TODO(), awscfg.WithRegion(cfg.Region))
+	ctx, cncl := context.WithTimeout(context.Background(), time.Minute*1)
+	defer cncl()
+	awsconfig, err := awscfg.LoadDefaultConfig(ctx, awscfg.WithRegion(cfg.Region))
 	if err != nil {
 		return nil, fmt.Errorf("unable to load AWS SDK config: %w", err)
 	}
@@ -103,7 +106,7 @@ func fetchKeysFromSecretsManager() (map[string]*KeyPair, error) {
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(cfg.SecretId),
 	}
-	result, err := client.GetSecretValue(context.TODO(), input)
+	result, err := client.GetSecretValue(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve secret from AWS: %w", err)
 	}

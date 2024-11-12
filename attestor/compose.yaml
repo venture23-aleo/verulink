@@ -7,7 +7,8 @@ x-logpath: &l
 services:
   chainservice:
     depends_on:
-      - signingservice
+      signingservice:
+        condition: service_healthy # Wait for the signingservice to be healthy
     build: ./chainService
     volumes:
       - type: volume
@@ -34,7 +35,12 @@ services:
       - ./signingService/config.yaml:/configs/config.yaml
     ports:
       - 8080:8080
-      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"] 
+      interval: 20s 
+      timeout: 10s   
+      retries: 3     
+      start_period: 20s
 volumes:
   db-path:
   log-path:
