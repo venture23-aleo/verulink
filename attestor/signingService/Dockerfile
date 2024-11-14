@@ -26,5 +26,5 @@ EXPOSE 8080
 # signingservice expects user to provide input in its run time while
 # asking for decrypt key. It is recommended that attestor encrypt their
 # wallet credentials and provide decrypt key at runtime
-CMD ["./signingservice --config=/configs/config.yaml --sid=true --port 8080"]
+CMD ["./signingservice --config=/configs/config.yaml --sid=$LOAD_SECRETS --kp=/configs/keys.yaml --port 8080"]
 ENTRYPOINT ["/bin/sh", "-c"]
