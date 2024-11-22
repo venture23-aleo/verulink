@@ -25,4 +25,5 @@ coverage.json
 /attestor/proxy/proxy
 
 # ignore keys
-attestor/signingService/secrets.yaml
+**/secrets.yaml
+**/auth_secrets.yaml

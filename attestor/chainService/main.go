@@ -11,22 +11,22 @@ import (
 	_ "github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 	"go.uber.org/zap"
-	
+
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"github.com/venture23-aleo/verulink/attestor/chainService/relay"
 	"github.com/venture23-aleo/verulink/attestor/chainService/store"
-
 )
 
 // flags
 var (
-	configFile string
-	dbDir      string
-	logDir     string
-	logEnc     string
-	mode       string
-	cleanStart bool
+	configFile      string
+	dbDir           string
+	logDir          string
+	logEnc          string
+	mode            string
+	cleanStart      bool
+	authSecretsFile string
 )
 
 func init() {
@@ -36,18 +36,20 @@ func init() {
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
 	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
 	flag.BoolVar(&cleanStart, "clean", false, "Remove local db and start")
+	flag.StringVar(&authSecretsFile, "auth-secrets", "", "contains credentials to connect to signing service")
 }
 
 func main() {
 	flag.Parse()
 
 	flagArgs := &config.FlagArgs{
-		ConfigFile: configFile,
-		DBDir:      dbDir,
-		LogDir:     logDir,
-		LogEnc:     logEnc,
-		Mode:       mode,
-		CleanStart: cleanStart,
+		ConfigFile:      configFile,
+		DBDir:           dbDir,
+		LogDir:          logDir,
+		LogEnc:          logEnc,
+		Mode:            mode,
+		CleanStart:      cleanStart,
+		AuthSecretsFile: authSecretsFile,
 	}
 
 	err := config.InitConfig(flagArgs)

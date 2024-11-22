@@ -23,6 +23,7 @@ services:
         source: ./chainService/config.yaml
         target: /configs/config.yaml
       - ./chainService/.mtls:/configs/.mtls
+      - ./chainService/auth_secrets.yaml:/configs/auth_secrets.yaml
     environment:
       DB_PATH: *p
       LOG_PATH: *l
@@ -47,7 +48,7 @@ services:
       retries: 3     
       start_period: 20s
     environment:
-      LOAD_SECRETS: true
+      AWS_SECRETS_MANAGER: true
 volumes:
   db-path:
   log-path:

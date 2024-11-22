@@ -25,12 +25,13 @@ const (
 )
 
 type FlagArgs struct {
-	ConfigFile string
-	DBDir      string
-	LogDir     string
-	LogEnc     string
-	Mode       string
-	CleanStart bool
+	ConfigFile      string
+	DBDir           string
+	LogDir          string
+	LogEnc          string
+	Mode            string
+	CleanStart      bool
+	AuthSecretsFile string
 }
 
 type ChainConfig struct {
@@ -65,7 +66,8 @@ type Config struct {
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
 	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 	MetricConfig           MetricsConfig          `yaml:"metrics"`
-	Version                string                    `yaml:"version"`
+	Version                string                 `yaml:"version"`
+	Credentials            Creds                  `yaml:"creds"`
 }
 
 type LoggerConfig struct {
@@ -84,8 +86,6 @@ type SigningServiceConfig struct {
 	Port           int    `yaml:"port"`
 	Endpoint       string `yaml:"endpoint"`
 	Scheme         string `yaml:"scheme"`
-	Username       string `yaml:"username"`
-	Password       string `yaml:"password"`
 	HealthEndpoint string `yaml:"health_end_point"`
 }
 
@@ -123,6 +123,12 @@ func InitConfig(flagArgs *FlagArgs) error {
 		config.SigningServiceConfig.Scheme != "http" {
 		return fmt.Errorf("%s scheme is not supported", config.SigningServiceConfig.Scheme)
 	}
+
+	err = InitKeys(flagArgs)
+	if err != nil {
+		return fmt.Errorf("Error while loading secrets.: %v", err)
+	}
+	config.Credentials = *GetCredentials()
 
 	if config.ConsumePacketWorker == 0 {
 		config.ConsumePacketWorker = 10

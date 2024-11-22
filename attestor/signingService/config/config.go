@@ -28,10 +28,7 @@ type ChainConfig struct {
 }
 
 type config struct {
-	Chains   []ChainConfig `yaml:"chains"`
-	Cred     Cred          `yaml:"cred"`
-	SecretId string        `yaml:"secret_id"`
-	Region   string        `yaml:"region"`
+	Chains []ChainConfig `yaml:"chains"`
 }
 
 // Secret denotes the key pair stored in aws secret manager
@@ -43,6 +40,7 @@ type Secret struct {
 }
 
 var cfg *config
+var keyCfg *KeyConfig
 
 func LoadConfig(configPath string) error {
 	b, err := os.ReadFile(configPath)
@@ -60,13 +58,16 @@ func GetChains() []ChainConfig {
 }
 
 func GetUsernamePassword() (string, string) {
-	return cfg.Cred.Username, cfg.Cred.Password
+	return keyCfg.Cred.Username, keyCfg.Cred.Password
 }
 
 /***********************************Keys***********************************************/
 
 type KeyConfig struct {
 	ChainKeys map[string]*KeyPair `yaml:"chain"`
+	SecretId  string              `yaml:"secret_id"`
+	Region    string              `yaml:"region"`
+	Cred      Cred                `yaml:"cred"`
 }
 
 type KeyPair struct {
@@ -76,27 +77,28 @@ type KeyPair struct {
 
 func LoadKeys(isSecretId bool, keyPath string) (map[string]*KeyPair, error) {
 
-	if isSecretId {
-		return fetchKeysFromSecretsManager()
-	}
 	b, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
 	}
-	keyCfg := new(KeyConfig)
+	keyCfg = new(KeyConfig)
 	err = yaml.Unmarshal(b, keyCfg)
 	if err != nil {
 		return nil, err
 	}
 
+	if isSecretId {
+		return fetchKeysFromSecretsManager(keyCfg.Region, keyCfg.SecretId)
+	}
+
 	return keyCfg.ChainKeys, nil
 }
 
-func fetchKeysFromSecretsManager() (map[string]*KeyPair, error) {
+func fetchKeysFromSecretsManager(region string, secretId string) (map[string]*KeyPair, error) {
 
 	ctx, cncl := context.WithTimeout(context.Background(), time.Minute*1)
 	defer cncl()
-	awsconfig, err := awscfg.LoadDefaultConfig(ctx, awscfg.WithRegion(cfg.Region))
+	awsconfig, err := awscfg.LoadDefaultConfig(ctx, awscfg.WithRegion(region))
 	if err != nil {
 		return nil, fmt.Errorf("unable to load AWS SDK config: %w", err)
 	}
@@ -104,7 +106,7 @@ func fetchKeysFromSecretsManager() (map[string]*KeyPair, error) {
 	client := secretsmanager.NewFromConfig(awsconfig)
 
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(cfg.SecretId),
+		SecretId: aws.String(secretId),
 	}
 	result, err := client.GetSecretValue(ctx, input)
 	if err != nil {

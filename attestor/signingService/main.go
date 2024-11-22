@@ -26,7 +26,7 @@ func init() {
 	flag.StringVar(&configPath, "config", "config.yaml", "configuration for running signing service")
 	flag.StringVar(&address, "address", "0.0.0.0", "network address")
 	flag.IntVar(&port, "port", 8080, "port")
-	flag.BoolVar(&isSecretId, "sid", true, "configuration to use secrets from AWS secret manager")
+	flag.BoolVar(&isSecretId, "secrets", true, "configuration to use secrets from AWS secret manager")
 }
 
 func main() {
