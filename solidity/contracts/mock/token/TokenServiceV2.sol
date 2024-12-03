@@ -23,6 +23,30 @@ contract TokenServiceV2 is TokenService {
         verulinkpredicate = _verulinkPredicate;
     }
 
+    /**
+     * @notice Updates the policy ID by calling the setPolicy function of VerulinkPredicate
+     * @param _policyID The new policy ID to be updated
+     */
+    function updatePolicyId(string memory _policyID) external onlyOwner {
+        require(
+            address(verulinkpredicate) != address(0),
+            "VerulinkPredicate: Zero Address"
+        );
+        verulinkpredicate.setPolicy(_policyID);
+    }
+
+    /**
+     * @notice Updates the service manager by calling the setPredicateManager function of VerulinkPredicate
+     * @param _serviceManager The address of the new service manager
+     */
+    function updateServiceManager(address _serviceManager) external onlyOwner {
+        require(
+            address(verulinkpredicate) != address(0),
+            "VerulinkPredicate: Zero Address"
+        );
+        verulinkpredicate.setPredicateManager(_serviceManager);
+    }
+
     /// @notice Overrides the ETH transfer function from TokenService to always revert
     /// @dev This is inherited from the base contract but now always reverts.
     function transfer(
