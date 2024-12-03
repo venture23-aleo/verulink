@@ -12,20 +12,20 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
-import {PredicateService} from "./PredicateService/PredicateService.sol";
+// import {VerulinkPredicate} from "../../main/tokenservice/PredicateService/VerulinkPredicate.sol";
 
 /// @title TokenService Contract
-/// @dev Inherits PredicateService to handle predicate verification
+/// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
 contract TokenService is
     OwnableUpgradeable,
     Pausable,
     TokenSupport,
     ReentrancyGuardUpgradeable,
-    Upgradeable,
-    PredicateService
+    Upgradeable
 {
     using SafeERC20 for IIERC20;
+
+    // VerulinkPredicate verulinkpredicate;
 
     /// @dev immutable Address of Eth
     address immutable ETH_TOKEN = address(1);
@@ -41,6 +41,7 @@ contract TokenService is
 
     /// @dev Information about the token service's network address
     PacketLibrary.InNetworkAddress public self;
+
 
     /// @dev Initializes the TokenService contract
     /// @param bridge Address of the bridge contract
@@ -138,42 +139,20 @@ contract TokenService is
         packet.height = block.number;
     }
 
-    /// @notice Transfers ETH with predicate authorization
+    /// @notice Transfers ETH to the destination chain via the bridge
     /// @param receiver The intended receiver of the transferred ETH
-    /// @param predicateMessage Predicate authorization message
     function transfer(
-        string calldata receiver,
-        PredicateMessage calldata predicateMessage
-    ) public payable virtual whenNotPaused nonReentrant {
-        _handlePredicateMessage(receiver, predicateMessage);
-        _transfer(receiver);
-    }
-
-    function _transfer(string memory receiver) internal {
+        string memory receiver
+    ) external payable virtual whenNotPaused nonReentrant {
         require(erc20Bridge.validateAleoAddress(receiver));
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
-    /// @notice Transfers ERC20 tokens with predicate authorization
-    /// @param tokenAddress The address of the ERC20 token
-    /// @param amount Amount of tokens to be transferred
-    /// @param receiver The intended receiver of the transferred tokens
-    /// @param predicateMessage Predicate authorization message
     function transfer(
         address tokenAddress,
         uint256 amount,
-        string calldata receiver,
-        PredicateMessage calldata predicateMessage
+        string memory receiver
     ) external virtual whenNotPaused nonReentrant {
-        _handlePredicateMessage(tokenAddress, amount, receiver, predicateMessage);
-        _transfer(tokenAddress, amount, receiver);
-    }
-
-    function _transfer(
-        address tokenAddress,
-        uint256 amount,
-        string calldata receiver
-    ) internal {
         require(erc20Bridge.validateAleoAddress(receiver));
         require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
         IIERC20(tokenAddress).safeTransferFrom(

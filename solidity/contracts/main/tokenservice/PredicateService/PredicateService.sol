@@ -10,7 +10,6 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 /// @notice An abstract contract for predicate-based authorization
 /// @dev Inherits PredicateClient and provides verification functions for secure transactions.
 abstract contract PredicateService is PredicateClient, OwnableUpgradeable {
-
     /// @notice Verifies predicate for a transaction with receiver and predicate for ETH message.
     /// @param receiver The intended receiver address of the transaction.
     /// @param predicateMessage The predicate message to verify authorization.
@@ -56,7 +55,7 @@ abstract contract PredicateService is PredicateClient, OwnableUpgradeable {
      * @notice Updates the policy ID
      * @param _policyID policy ID from onchain
      */
-    function setPolicy(string memory _policyID) external onlyOwner {
+    function setPolicy(string memory _policyID) external virtual onlyOwner {
         policyID = _policyID;
         serviceManager.setPolicy(_policyID);
     }
@@ -65,7 +64,7 @@ abstract contract PredicateService is PredicateClient, OwnableUpgradeable {
      * @notice Function for setting the ServiceManager
      * @param _serviceManager address of the service manager
      */
-    function setPredicateManager(address _serviceManager) public onlyOwner {
+    function setPredicateManager(address _serviceManager) public virtual onlyOwner {
         serviceManager = IPredicateManager(_serviceManager);
     }
 }
