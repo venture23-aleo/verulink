@@ -5,8 +5,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenService} from "../../main/tokenservice/TokenService.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
-// import {PredicateService} from "../../main/tokenservice/PredicateService/PredicateService.sol";
-import {VerulinkPredicate} from "../../main/tokenservice/PredicateService/VerulinkPredicate.sol";
+import {PredicateService} from "../../main/tokenservice/PredicateService/PredicateService.sol";
 
 /// @title TokenServiceV2 Contract
 /// @dev Inherits TokenService and PredicateService for predicate-based authorization
@@ -16,11 +15,11 @@ contract TokenServiceV2 is TokenService {
     using SafeERC20 for IIERC20;
 
     /// @notice Sets the VerulinkPredicate contract for predicate-based authorization, callable by owner only
-    /// @param _verulinkPredicate Address of the VerulinkPredicate contract
-    function setVerulinkPredicate(
-        VerulinkPredicate _verulinkPredicate
+    /// @param _predicateservice Address of the VerulinkPredicate contract
+    function setPredicateService(
+        PredicateService _predicateservice
     ) external virtual onlyOwner {
-        verulinkpredicate = _verulinkPredicate;
+        predicateservice = _predicateservice;
     }
 
     /// @notice Overrides the ETH transfer function from TokenService to always revert
@@ -49,7 +48,7 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) public payable virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        verulinkpredicate.handleVerulinkPredicate(receiver, predicateMessage);
+        predicateservice.handlePredicateMessage(receiver, predicateMessage);
 
         // Perform ETH transfer
         _transferWithPredicate(receiver);
@@ -77,7 +76,7 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        verulinkpredicate.handleVerulinkPredicate(
+        predicateservice.handlePredicateMessage(
             tokenAddress,
             amount,
             receiver,
@@ -119,5 +118,5 @@ contract TokenServiceV2 is TokenService {
      */
     uint256[49] private __gap;
 
-    VerulinkPredicate verulinkpredicate;
+    PredicateService predicateservice;
 }

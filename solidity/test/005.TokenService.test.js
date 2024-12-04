@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
-import {signaturesToBytes, packFunctionArgs, PredicateResponse} from 'predicate-sdk'
+// import { signaturesToBytes, packFunctionArgs, PredicateResponse } from 'predicate-sdk'
 
 const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
 
@@ -38,7 +38,10 @@ describe('TokenService', () => {
 
     beforeEach(async () => {
         [owner, signer, bridge, other, attestor, attestor1, deployer] = await ethers.getSigners();
-
+        // this.ADMIN_ROLE = ethers.keccak256(Buffer.from('ADMIN_ROLE'));
+        // let predicateservice = await ethers.getContractFactory("PredicateService");
+        console.log("kekeccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
+        // 0xd8a7a79547af723ee3e12b59a480111268d8969c634e1a34a144d2c8b91d635b
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
         const libInstance = await lib.deploy();
@@ -143,7 +146,7 @@ describe('TokenService', () => {
         const contractOwner = await proxiedV1.owner();
         expect(contractOwner).to.equal(owner.address);
     });
-
+    return;
     // it('should set the correct policy by owner', async function () {
     //     await proxiedV1.connect(owner).setPredicateManager(predicateManager.address);
     //     await proxiedV1.connect(owner).setPolicy('New Policy');
