@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
+import {signaturesToBytes, packFunctionArgs, PredicateResponse} from 'predicate-sdk'
 
 const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
 
