@@ -4,7 +4,6 @@ pragma solidity ^0.8.19;
 import {PredicateClient} from "@predicate/contracts/src/mixins/PredicateClient.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {IPredicateManager} from "@predicate/contracts/src/interfaces/IPredicateManager.sol";
-// import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /// @title PredicateService

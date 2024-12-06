@@ -16,7 +16,7 @@ async function main() {
     console.log("Adding PredicateService to tokenservice...");
     const ERC20TokenServiceABI = ERC20TokenServiceV2.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);
-    // await TokenServiceContract.connect(deployerSigner).setPredicateService(process.env.PREDICATE_SERVICE);
+    await TokenServiceContract.setPredicateService(process.env.PREDICATE_SERVICE);
     console.log("PredicateService added successfully!!!");
 }
 main()

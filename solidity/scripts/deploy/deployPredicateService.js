@@ -15,15 +15,15 @@ async function main() {
     console.log("Deploying PredicateService...");
 
     const predicateservice = await PredicateService.deploy();
-    await predicateservice.deployTransaction.wait(1);
+    await predicateservice.deployTransaction.wait(3);
     console.log("PredicateService Deployed to: ", predicateservice.address);
-    // // Verification process
-    // console.log("Verifying PredicateService contract...");
-    // await run("verify:verify", {
-    //     address: predicateservice.address,
-    //     constructorArguments: [], // Pass the constructor arguments here
-    //     contract: "contracts/main/tokenservice/PredicateService/PredicateService.sol"
-    // });
+    // Verification process
+    console.log("Verifying PredicateService contract...");
+    await run("verify:verify", {
+        address: predicateservice.address,
+        constructorArguments: [], // Pass the constructor arguments here
+        contract: "contracts/main/tokenservice/PredicateService/PredicateService.sol:PredicateService"
+    });
     updateEnvFile("PREDICATE_SERVICE", predicateservice.address);
 }
 main()

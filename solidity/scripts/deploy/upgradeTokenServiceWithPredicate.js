@@ -17,7 +17,7 @@ async function main() {
     const ERC20TokenServiceABI = TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);
     await TokenServiceContract.upgradeTo(tokenservicenewimpl);
-    console.log("TokenService Implementation upgraded successfully!!!");
+    console.log("TokenService Proxy upgraded successfully!!!");
 }
 main()
     .then(() => process.exit(0))
