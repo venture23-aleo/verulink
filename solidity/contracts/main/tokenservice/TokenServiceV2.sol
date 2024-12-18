@@ -48,7 +48,7 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) public payable virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        predicateservice.handlePredicateMessage(receiver, predicateMessage);
+        predicateservice.handlePredicateMessage(receiver, predicateMessage, msg.value);
 
         // Perform ETH transfer
         _transferWithPredicate(receiver);
@@ -80,7 +80,8 @@ contract TokenServiceV2 is TokenService {
             tokenAddress,
             amount,
             receiver,
-            predicateMessage
+            predicateMessage,
+            0
         );
 
         // Perform ERC20 token transfer
