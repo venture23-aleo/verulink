@@ -28,7 +28,7 @@ contract PredicateService is PredicateClient, AccessControl {
     /// @notice Verifies predicate for a transaction with receiver and predicate for ETH message.
     /// @param receiver The intended receiver address of the transaction.
     /// @param predicateMessage The predicate message to verify authorization.
-    function handlePredicateMessage(
+    function handleMessage(
         string memory receiver,
         PredicateMessage calldata predicateMessage,
         uint256 msgValue
@@ -37,18 +37,14 @@ contract PredicateService is PredicateClient, AccessControl {
             "_transfer(string)",
             receiver
         );
-        require(
-            _authorizeTransaction(predicateMessage, encodedSigAndArgs, msg.sender, msgValue),
-            "PredicateService: unauthorized transaction"
-        );
-        return true;
+        return _authorizeTransaction(predicateMessage, encodedSigAndArgs, msg.sender, msgValue);
     }
 
     /// @notice Verifies predicate for a transaction with receiver, amount, and predicate message.
     /// @param receiver The intended receiver address of the transaction.
     /// @param predicateMessage The predicate message to verify authorization.
     /// @param amount The amount required for the transaction.
-    function handlePredicateMessage(
+    function handleMessage(
         address tokenAddress,
         uint256 amount,
         string memory receiver,
@@ -61,11 +57,7 @@ contract PredicateService is PredicateClient, AccessControl {
             amount,
             receiver
         );
-        require(
-            _authorizeTransaction(predicateMessage, encodedSigAndArgs, msg.sender, msgValue),
-            "PredicateService: unauthorized transaction"
-        );
-        return true;
+        return _authorizeTransaction(predicateMessage, encodedSigAndArgs, msg.sender, msgValue);
     }
 
     /**

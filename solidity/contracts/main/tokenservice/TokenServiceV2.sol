@@ -5,7 +5,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenService} from "../../main/tokenservice/TokenService.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
-import {PredicateService} from "../../main/tokenservice/PredicateService/PredicateService.sol";
+import {PredicateService} from "../../main/tokenservice/predicate/PredicateService.sol";
 
 /// @title TokenServiceV2 Contract
 /// @dev Inherits TokenService and PredicateService for predicate-based authorization
@@ -26,8 +26,8 @@ contract TokenServiceV2 is TokenService {
     /// @dev This is inherited from the base contract but now always reverts.
     function transfer(
         string memory
-    ) public payable virtual override whenNotPaused nonReentrant {
-        revert("TokenServiceV2: Base transfer function is disabled");
+    ) public payable virtual override {
+        revert("TokenService: Unavailable function. Use new version");
     }
 
     /// @notice Overrides the ERC20 transfer function from TokenService to always revert
@@ -36,8 +36,8 @@ contract TokenServiceV2 is TokenService {
         address,
         uint256,
         string memory
-    ) public virtual override whenNotPaused nonReentrant {
-        revert("TokenServiceV2: Base transfer function is disabled");
+    ) public virtual override {
+        revert("TokenService: Unavailable function. Use new version.");
     }
 
     /// @notice Transfers ETH with predicate authorization
@@ -48,20 +48,11 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) public payable virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        predicateservice.handlePredicateMessage(receiver, predicateMessage, msg.value);
+        require(predicateservice.handleMessage(receiver, predicateMessage, msg.value),
+            "TokenService: unauthorized from Predicate") ;
 
         // Perform ETH transfer
-        _transferWithPredicate(receiver);
-    }
-
-    /// @notice Internal function to handle ETH transfers
-    /// @param receiver The intended receiver of the ETH
-    function _transferWithPredicate(string memory receiver) internal virtual {
-        require(
-            erc20Bridge.validateAleoAddress(receiver),
-            "Invalid receiver address"
-        );
-        erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
+        _transfer(receiver);
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization
@@ -76,30 +67,40 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        predicateservice.handlePredicateMessage(
+        require(predicateservice.handleMessage(
             tokenAddress,
             amount,
             receiver,
             predicateMessage,
             0
-        );
+        ), "TokenService: unauthorized from Predicate");
 
         // Perform ERC20 token transfer
-        _transferWithPredicate(tokenAddress, amount, receiver);
+        _transfer(tokenAddress, amount, receiver);
+    }
+
+    /// @notice Internal function to handle ETH transfers
+    /// @param receiver The intended receiver of the ETH
+    function _transfer(string memory receiver) internal virtual {
+        require(
+            erc20Bridge.validateAleoAddress(receiver),
+            "TokenService: Invalid receiver address"
+        );
+        erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
 
     /// @notice Internal function to handle ERC20 transfers
     /// @param tokenAddress The address of the ERC20 token
     /// @param amount Amount of tokens to be transferred
     /// @param receiver The intended receiver of the tokens
-    function _transferWithPredicate(
+    function _transfer(
         address tokenAddress,
         uint256 amount,
         string calldata receiver
     ) internal virtual {
         require(
             erc20Bridge.validateAleoAddress(receiver),
-            "Invalid receiver address"
+            "TokenService: Invalid receiver address"
         );
         require(tokenAddress != ETH_TOKEN, "ETH transfer not allowed here");
 
