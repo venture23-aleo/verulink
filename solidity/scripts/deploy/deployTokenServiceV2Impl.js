@@ -15,7 +15,7 @@ async function main() {
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const TokenService = await ethers.getContractFactory("TokenServiceV2");
 
-    console.log("Deploying TokenService Impl and Proxy...");
+    console.log("Deploying TokenServiceV2");
 
     const tokenServiceImpl = await TokenService.deploy();
     await tokenServiceImpl.deployTransaction.wait(3);
@@ -25,7 +25,7 @@ async function main() {
     await run("verify:verify", {
         address: tokenServiceImpl.address,
         constructorArguments: [], // Pass the constructor arguments here
-        contract: "contracts/mock/token/TokenServiceV2.sol:TokenServiceV2"
+        contract: "contracts/main/tokenservice/TokenServiceV2.sol:TokenServiceV2"
     });
     updateEnvFile("TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address);
 }

@@ -5,6 +5,8 @@ dotenv.config();
 import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
+    let serviceManager = "0x4FC1132230fE16f67531D82ACbB9d78993B23825";
+    let policyId = "sg-policy-membership-multi-op";
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
@@ -14,15 +16,15 @@ async function main() {
 
     console.log("Deploying PredicateService...");
 
-    const predicateservice = await PredicateService.deploy();
+    const predicateservice = await PredicateService.deploy(serviceManager, policyId);
     await predicateservice.deployTransaction.wait(3);
     console.log("PredicateService Deployed to: ", predicateservice.address);
     // Verification process
     console.log("Verifying PredicateService contract...");
     await run("verify:verify", {
         address: predicateservice.address,
-        constructorArguments: [], // Pass the constructor arguments here
-        contract: "contracts/main/tokenservice/PredicateService/PredicateService.sol:PredicateService"
+        constructorArguments: [serviceManager,policyId], // Pass the constructor arguments here
+        contract: "contracts/main/tokenservice/predicate/PredicateService.sol:PredicateService"
     });
     updateEnvFile("PREDICATE_SERVICE", predicateservice.address);
 }

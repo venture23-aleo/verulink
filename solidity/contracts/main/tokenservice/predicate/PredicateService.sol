@@ -15,12 +15,7 @@ contract PredicateService is PredicateClient, AccessControl {
         0xd8a7a79547af723ee3e12b59a480111268d8969c634e1a34a144d2c8b91d635b;
 
     /// @notice Constructor sets the deployer as the DEFAULT_ADMIN_ROLE and assigns SERVICE_ROLE
-    // constructor(address _serviceManagerAddress, string memory _policyID) {
-    //     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    //     _initPredicateClient(_serviceManagerAddress, _policyID);
-    // }
-
-    function initPredicateClient(address _serviceManagerAddress, string memory _policyID) public {
+    constructor(address _serviceManagerAddress, string memory _policyID) {
         _initPredicateClient(_serviceManagerAddress, _policyID);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -31,13 +26,14 @@ contract PredicateService is PredicateClient, AccessControl {
     function handleMessage(
         string memory receiver,
         PredicateMessage calldata predicateMessage,
+        address msgSender,
         uint256 msgValue
     ) public onlyRole(SERVICE_ROLE) returns (bool) {
         bytes memory encodedSigAndArgs = abi.encodeWithSignature(
             "_transfer(string)",
             receiver
         );
-        return _authorizeTransaction(predicateMessage, encodedSigAndArgs, msg.sender, msgValue);
+        return _authorizeTransaction(predicateMessage, encodedSigAndArgs, msgSender, msgValue);
     }
 
     /// @notice Verifies predicate for a transaction with receiver, amount, and predicate message.
@@ -49,6 +45,7 @@ contract PredicateService is PredicateClient, AccessControl {
         uint256 amount,
         string memory receiver,
         PredicateMessage calldata predicateMessage,
+        address msgSender,
         uint256 msgValue
     ) public onlyRole(SERVICE_ROLE) returns (bool) {
         bytes memory encodedSigAndArgs = abi.encodeWithSignature(
@@ -57,7 +54,7 @@ contract PredicateService is PredicateClient, AccessControl {
             amount,
             receiver
         );
-        return _authorizeTransaction(predicateMessage, encodedSigAndArgs, msg.sender, msgValue);
+        return _authorizeTransaction(predicateMessage, encodedSigAndArgs, msgSender, msgValue);
     }
 
     /**

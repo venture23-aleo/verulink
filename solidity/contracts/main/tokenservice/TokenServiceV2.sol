@@ -48,7 +48,7 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) public payable virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        require(predicateservice.handleMessage(receiver, predicateMessage, msg.value),
+        require(predicateservice.handleMessage(receiver, predicateMessage, msg.sender, msg.value),
             "TokenService: unauthorized from Predicate") ;
 
         // Perform ETH transfer
@@ -72,6 +72,7 @@ contract TokenServiceV2 is TokenService {
             amount,
             receiver,
             predicateMessage,
+            msg.sender,
             0
         ), "TokenService: unauthorized from Predicate");
 
@@ -120,5 +121,5 @@ contract TokenServiceV2 is TokenService {
      */
     uint256[49] private __gap;
 
-    PredicateService predicateservice;
+    PredicateService public predicateservice;
 }
