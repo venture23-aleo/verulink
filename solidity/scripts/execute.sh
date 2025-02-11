@@ -62,15 +62,23 @@
 # npx hardhat run scripts/deploy/addAttestorBatch.js --network holesky 
 
 
-npx hardhat run scripts/deploy/deployTokenServiceTest.js --network holesky 
+#npx hardhat run scripts/deploy/updateVaultAddress.js --network holesky
+#npx hardhat run scripts/deploy/transferEthToVault.js --network holesky
+#npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network holesky
+#npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network holesky
+
+
+# npx hardhat run scripts/deploy/deployTokenServiceTest.js --network holesky
 
 # npx hardhat run scripts/deploy/deployPredicateService.js --network holesky
 # npx hardhat run scripts/deploy/addServiceManager.js --network holesky
 # npx hardhat run scripts/deploy/addPolicyId.js --network holesky
 # npx hardhat run scripts/deploy/grantRole.js --network holesky
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
-npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
+# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
 # npx hardhat run scripts/deploy/addPredicateService.js --network holesky
+
+#npx hardhat run scripts/deploy/manageWhitelist.js --network holesky
 
 # Mainnet:
 # Deployment, Setup and transferOwnerShip to Multisig using single owner:
