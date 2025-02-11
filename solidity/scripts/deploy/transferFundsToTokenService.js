@@ -1,9 +1,7 @@
 import hardhat from 'hardhat';
 const { ethers } = hardhat;
 import * as dotenv from "dotenv";
-import axios from "axios";
 
-import { packFunctionArgs, signaturesToBytes } from "predicate-sdk";
 dotenv.config();
 
 async function main() {
