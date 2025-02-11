@@ -22,17 +22,26 @@
 # npx hardhat run scripts/deploy/transferOwnerShipHolding.js --network sepolia
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network sepolia
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network sepolia
-# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia 
-# npx hardhat run scripts/deploy/addAttestorBatch.js --network sepolia 
+# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia
+# npx hardhat run scripts/deploy/addAttestorBatch.js --network sepolia
 
+# npx hardhat run scripts/deploy/updateVaultAddress.js --network sepolia
+# npx hardhat run scripts/deploy/transferEthToVault.js --network sepolia
+# npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network sepolia
+# npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network sepolia
 
 # npx hardhat run scripts/deploy/deployPredicateService.js --network sepolia
-# npx hardhat run scripts/deploy/addServiceManager.js --network sepolia
-# npx hardhat run scripts/deploy/addPolicyId.js --network sepolia
 # npx hardhat run scripts/deploy/grantRole.js --network sepolia
+
 #npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network sepolia
 #npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network sepolia
 #npx hardhat run scripts/deploy/addPredicateService.js --network sepolia
+
+# npx hardhat run scripts/deploy/addWhitelistAddress.js --network sepolia
+# npx hardhat run scripts/deploy/removeWhitelistAddress.js --network sepolia
+
+# npx hardhat run scripts/deploy/enablePredicateService.js --network sepolia
+# npx hardhat run scripts/deploy/disablePredicateService.js --network sepolia
 
 # Testnet: Holesky
 # Deployment, Setup and transferOwnerShip to Multisig using single owner:
@@ -58,27 +67,28 @@
 # npx hardhat run scripts/deploy/transferOwnerShipHolding.js --network holesky
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network holesky
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network holesky
-# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network holesky 
-# npx hardhat run scripts/deploy/addAttestorBatch.js --network holesky 
-
-
-#npx hardhat run scripts/deploy/updateVaultAddress.js --network holesky
-#npx hardhat run scripts/deploy/transferEthToVault.js --network holesky
-#npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network holesky
-#npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network holesky
-
+# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network holesky
+# npx hardhat run scripts/deploy/addAttestorBatch.js --network holesky
 
 # npx hardhat run scripts/deploy/deployTokenServiceTest.js --network holesky
 
+# npx hardhat run scripts/deploy/updateVaultAddress.js --network holesky
+# npx hardhat run scripts/deploy/transferEthToVault.js --network holesky
+# npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network holesky
+# npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network holesky
+
 # npx hardhat run scripts/deploy/deployPredicateService.js --network holesky
-# npx hardhat run scripts/deploy/addServiceManager.js --network holesky
-# npx hardhat run scripts/deploy/addPolicyId.js --network holesky
 # npx hardhat run scripts/deploy/grantRole.js --network holesky
+
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
 # npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
 # npx hardhat run scripts/deploy/addPredicateService.js --network holesky
 
-#npx hardhat run scripts/deploy/manageWhitelist.js --network holesky
+# npx hardhat run scripts/deploy/addWhitelistAddress.js --network holesky
+# npx hardhat run scripts/deploy/removeWhitelistAddress.js --network holesky
+
+# npx hardhat run scripts/deploy/enablePredicateService.js --network holesky
+# npx hardhat run scripts/deploy/disablePredicateService.js --network holesky
 
 # Mainnet:
 # Deployment, Setup and transferOwnerShip to Multisig using single owner:
@@ -103,9 +113,8 @@
 # npx hardhat run scripts/deploy/transferOwnerShipHolding.js --network mainnet
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network mainnet
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network mainnet
-# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network mainnet 
+# npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network mainnet
 # npx hardhat run scripts/deploy/addAttestorBatch.js --network mainnet
-
 
 npx hardhat run scripts/deploy/updateVaultAddress.js --network mainnet
 npx hardhat run scripts/deploy/transferEthToVault.js --network mainnet
@@ -119,4 +128,8 @@ npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network mainnet
 npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network mainnet
 npx hardhat run scripts/deploy/addPredicateService.js --network mainnet
 
-npx hardhat run scripts/deploy/manageWhitelist.js --network mainnet
+npx hardhat run scripts/deploy/addWhitelistAddress.js --network mainnet
+npx hardhat run scripts/deploy/removeWhitelistAddress.js --network mainnet
+
+npx hardhat run scripts/deploy/enablePredicateService.js --network mainnet
+npx hardhat run scripts/deploy/disablePredicateService.js --network mainnet
