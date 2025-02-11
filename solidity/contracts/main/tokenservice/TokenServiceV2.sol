@@ -91,7 +91,7 @@ contract TokenServiceV2 is TokenService {
             predicateMessage,
             msg.sender,
             0
-        ), "TokenService: unauthorized from Predicate");
+        ), "TokenService: unauthorizedFromPredicate");
 
         // Perform ERC20 token transfer
         _transfer(tokenAddress, amount, receiver);
@@ -102,7 +102,7 @@ contract TokenServiceV2 is TokenService {
     function _transfer(string memory receiver) internal virtual {
         require(
             erc20Bridge.validateAleoAddress(receiver),
-            "TokenService: Invalid receiver address"
+            "TokenService: InvalidReceiverAddress"
         );
         erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
     }
@@ -118,9 +118,9 @@ contract TokenServiceV2 is TokenService {
     ) internal virtual {
         require(
             erc20Bridge.validateAleoAddress(receiver),
-            "TokenService: Invalid receiver address"
+            "TokenService: InvalidReceiverAddress"
         );
-        require(tokenAddress != ETH_TOKEN, "ETH transfer not allowed here");
+        require(tokenAddress != ETH_TOKEN, "ETHTransferNotAllowed");
 
         // Transfer tokens to this contract
         IIERC20(tokenAddress).safeTransferFrom(
