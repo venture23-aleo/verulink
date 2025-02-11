@@ -36,19 +36,21 @@ contract TokenServiceV2 is TokenService {
     /// @notice Overrides the ETH transfer function from TokenService to always revert
     /// @dev This is inherited from the base contract but now always reverts.
     function transfer(
-        string memory
+        string memory receiver
     ) public payable virtual override {
-        revert("TokenService: Unavailable function. Use new version");
+        require(!isPredicateEnabled, "TokenService: PredicateAuthorizationEnabled");
+        _transfer(receiver);
     }
 
     /// @notice Overrides the ERC20 transfer function from TokenService to always revert
     /// @dev This is inherited from the base contract but now always reverts.
     function transfer(
-        address,
-        uint256,
-        string memory
+        address tokenAddress,
+        uint256 amount,
+        string calldata receiver
     ) public virtual override {
-        revert("TokenService: Unavailable function. Use new version.");
+        require(!isPredicateEnabled, "TokenService: PredicateAuthorizationEnabled");
+        _transfer(tokenAddress, amount, receiver);
     }
 
     /// @notice Transfers ETH with predicate authorization
@@ -59,8 +61,13 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) public payable virtual whenNotPaused nonReentrant {
         // Handle predicate verification
-        require(predicateservice.handleMessage(receiver, predicateMessage, msg.sender, msg.value),
-            "TokenService: unauthorized from Predicate") ;
+        require(isPredicateEnabled, "TokenService: PredicateAuthorizationDisabled");
+        require(predicateservice.handleMessage(
+            receiver, 
+            predicateMessage, 
+            msg.sender, 
+            msg.value),
+            "TokenService: unauthorizedFromPredicate") ;
 
         // Perform ETH transfer
         _transfer(receiver);
@@ -78,6 +85,7 @@ contract TokenServiceV2 is TokenService {
         PredicateMessage calldata predicateMessage
     ) external virtual whenNotPaused nonReentrant {
         // Handle predicate verification
+        require(isPredicateEnabled, "TokenService: PredicateAuthorizationDisabled");
         require(predicateservice.handleMessage(
             tokenAddress,
             amount,
