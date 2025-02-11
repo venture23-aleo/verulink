@@ -4,20 +4,15 @@ on:
   pull_request:
     branches:
       - "**"
-
-env:
-  FOUNDRY_PROFILE: ci
+    paths:
+      - "solidity/**"
 
 defaults:
   run:
-    working-directory: contracts/solidity
+    working-directory: solidity
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Aleo Bridge Solidity Tests
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +22,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20.16.0
+          node-version: 20
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install
 
-      - name: Run Hardhat Tests
+      - name: Compile Contracts
+        run: npx hardhat compile
+
+      - name: Run Tests
         run: npx hardhat test
