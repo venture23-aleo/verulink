@@ -22,6 +22,17 @@ contract TokenServiceV2 is TokenService {
         predicateservice = _predicateservice;
     }
 
+    /// @notice Enables or disables predicate-based authorization, callable by owner only
+    function enablePredicate() external virtual onlyOwner {
+        require(!isPredicateEnabled, "TokenService: PredicateAuthorizationAlreadyEnabled");
+        isPredicateEnabled = true;
+    }
+
+    function disablePredicate() external virtual onlyOwner {
+        require(isPredicateEnabled, "TokenService: PredicateAuthorizationAlreadyDisabled");
+        isPredicateEnabled = false;
+    }
+
     /// @notice Overrides the ETH transfer function from TokenService to always revert
     /// @dev This is inherited from the base contract but now always reverts.
     function transfer(
