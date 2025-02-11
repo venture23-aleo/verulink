@@ -19,24 +19,18 @@ jobs:
 
     name: Aleo Bridge Solidity Tests
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          submodules: recursive
+          node-version: 20.16.0
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
+      - name: Install Dependencies
+        run: npm install
 
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge remappings
-          forge build --sizes
-        id: build
-
-      - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+      - name: Run Hardhat Tests
+        run: npx hardhat test
