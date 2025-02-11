@@ -133,10 +133,26 @@ contract TokenServiceV2 is TokenService {
         erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
     }
 
+    receive() external payable virtual override onlyWhitelistedSender {}
+    
+    function manageWhitelist(address _addr, bool value) external virtual onlyOwner {
+        if (!value){
+            delete isWhitelistedSender[_addr];}
+        else{
+            isWhitelistedSender[_addr] = value;}
+    }
+
+    modifier onlyWhitelistedSender() {
+        require(isWhitelistedSender[msg.sender] || msg.sender == owner(), "TokenService: SenderIsNotWhitelisted");
+        _;
+    }
+
     /**
      * @dev Reserved storage for future upgrades
      */
     uint256[49] private __gap;
 
     PredicateService public predicateservice;
+    bool public isPredicateEnabled;
+    mapping (address => bool) public isWhitelistedSender;
 }
