@@ -104,4 +104,19 @@
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDC.js --network mainnet
 # npx hardhat run scripts/deploy/transferOwnerShipERC20VaultServiceUSDT.js --network mainnet
 # npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network mainnet 
-# npx hardhat run scripts/deploy/addAttestorBatch.js --network mainnet 
+# npx hardhat run scripts/deploy/addAttestorBatch.js --network mainnet
+
+
+npx hardhat run scripts/deploy/updateVaultAddress.js --network mainnet
+npx hardhat run scripts/deploy/transferEthToVault.js --network mainnet
+npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network mainnet
+npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network mainnet
+
+npx hardhat run scripts/deploy/deployPredicateService.js --network mainnet
+npx hardhat run scripts/deploy/grantRole.js --network mainnet
+
+npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network mainnet
+npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network mainnet
+npx hardhat run scripts/deploy/addPredicateService.js --network mainnet
+
+npx hardhat run scripts/deploy/manageWhitelist.js --network mainnet
