@@ -64,7 +64,7 @@ contract TokenService is
         _transferOwnership(_owner);
     }
 
-    receive() external payable onlyOwner {}
+    receive() external virtual payable onlyOwner {}
 
     /// @dev Authorizes an upgrade only if the caller is the owner
     function _authorizeUpgrade(address) internal view virtual override {
