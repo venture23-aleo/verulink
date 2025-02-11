@@ -7,42 +7,35 @@ on:
   pull_request:
     branches:
       - "**"
- 
+
 
 defaults:
   run:
-    working-directory: contracts/evm/xcall
+    working-directory: solidity
 
 jobs:
-  code-coverage:
+  coverage:
     runs-on: ubuntu-latest
-    env:
-      CARGO_TERM_COLOR: always
+
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
 
-      - name: Build Contracts
-        run: |
-          forge remappings
-          forge build
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
 
-      - name: Generate code coverage
-        run: |
-          export PATH=$PATH:$HOME/.config/.foundry/bin
-          forge coverage --report lcov
-          sudo apt-get install lcov
-          lcov --remove lcov.info 'test/*' 'script/*' '**/library/*' '**/libraries/**' > lcov2.info
-      - name: Upload coverage to Codecov
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Coverage
+        run: npx hardhat coverage
+
+      - name: Upload Coverage Report
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: lcov2.info
-          flags: solidity
-          fail_ci_if_error: true
+          files: coverage/lcov.info
+          flags: unittests
+          name: codecov-coverage
