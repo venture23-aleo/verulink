@@ -12,8 +12,6 @@ import {PredicateService} from "../../main/tokenservice/predicate/PredicateServi
 contract TokenServiceV2 is TokenService {
     using SafeERC20 for IIERC20;
 
-    using SafeERC20 for IIERC20;
-
     /// @notice Sets the VerulinkPredicate contract for predicate-based authorization, callable by owner only
     /// @param _predicateservice Address of the VerulinkPredicate contract
     function setPredicateService(
