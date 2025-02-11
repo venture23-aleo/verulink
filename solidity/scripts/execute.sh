@@ -25,6 +25,15 @@
 # npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network sepolia 
 # npx hardhat run scripts/deploy/addAttestorBatch.js --network sepolia 
 
+
+# npx hardhat run scripts/deploy/deployPredicateService.js --network sepolia
+# npx hardhat run scripts/deploy/addServiceManager.js --network sepolia
+# npx hardhat run scripts/deploy/addPolicyId.js --network sepolia
+# npx hardhat run scripts/deploy/grantRole.js --network sepolia
+#npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network sepolia
+#npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network sepolia
+#npx hardhat run scripts/deploy/addPredicateService.js --network sepolia
+
 # Testnet: Holesky
 # Deployment, Setup and transferOwnerShip to Multisig using single owner:
 # npx hardhat run scripts/deployLib/deployLib.js --network holesky
