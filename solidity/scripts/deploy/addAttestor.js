@@ -9,7 +9,7 @@ async function main() {
     );
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     
-    const attestor = process.env.ATTESTOR2;
+    const attestor = process.env.ATTESTOR1;
     const newQuorumRequired = process.env.NEW_QUORUM_REQUIRED;
 
     // Get the contract factory for the "Bridge" contract

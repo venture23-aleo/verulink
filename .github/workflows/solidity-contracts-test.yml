@@ -4,39 +4,32 @@ on:
   pull_request:
     branches:
       - "**"
-
-env:
-  FOUNDRY_PROFILE: ci
+    paths:
+      - "solidity/**"
 
 defaults:
   run:
-    working-directory: contracts/solidity
+    working-directory: solidity
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Aleo Bridge Solidity Tests
+  test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          submodules: recursive
+          node-version: 20
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Run Forge build
+      - name: Install Dependencies
         run: |
-          forge --version
-          forge remappings
-          forge build --sizes
-        id: build
+          npm install
 
-      - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+      - name: Compile Contracts
+        run: npx hardhat compile
+
+      - name: Run Tests
+        run: npx hardhat test

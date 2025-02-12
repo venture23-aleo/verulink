@@ -24,6 +24,8 @@ contract TokenService is
 {
     using SafeERC20 for IIERC20;
 
+    // VerulinkPredicate verulinkpredicate;
+
     /// @dev immutable Address of Eth
     address immutable ETH_TOKEN = address(1);
 
@@ -62,7 +64,7 @@ contract TokenService is
         _transferOwnership(_owner);
     }
 
-    receive() external payable onlyOwner {}
+    receive() external virtual payable onlyOwner {}
 
     /// @dev Authorizes an upgrade only if the caller is the owner
     function _authorizeUpgrade(address) internal view virtual override {
