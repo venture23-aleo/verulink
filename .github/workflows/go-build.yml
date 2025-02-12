@@ -25,10 +25,10 @@ jobs:
 
       # checkout relayer
       - name: checkout relayer
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # setup cache
-      - uses: actions/cache@v1
+      - uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -45,7 +45,7 @@ jobs:
 
       # upload resulting binaries
       - name: upload binaries
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: aleo
           path: ./build/aleo
