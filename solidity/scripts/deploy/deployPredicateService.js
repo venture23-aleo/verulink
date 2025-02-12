@@ -5,8 +5,8 @@ dotenv.config();
 import { updateEnvFile } from "../multisig/utils.js";
 
 async function main() {
-    let serviceManager = "0xcb397f4bDF93213851Ef1c84439Dd3497Dff66c1";
-    let policyId = "x-strict-membership-policy";
+    let serviceManager = "0xf6f4a30eef7cf51ed4ee1415fb3bfdaf3694b0d2";
+    let policyId = "x-aleo-6a52de9724a6e8f2";
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
