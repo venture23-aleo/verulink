@@ -135,11 +135,16 @@ contract TokenServiceV2 is TokenService {
 
     receive() external payable virtual override onlyWhitelistedSender {}
     
-    function manageWhitelist(address _addr, bool value) external virtual onlyOwner {
-        if (!value){
-            delete isWhitelistedSender[_addr];}
-        else{
-            isWhitelistedSender[_addr] = value;}
+    function addWhitelistAddress(address _addr) external virtual onlyOwner {
+        if (!isWhitelistedSender[_addr]){
+            isWhitelistedSender[_addr] = true;
+        }
+    }
+
+    function removeWhitelistAddress(address _addr) external virtual onlyOwner {
+        if (isWhitelistedSender[_addr]){
+            delete isWhitelistedSender[_addr];
+        }
     }
 
     modifier onlyWhitelistedSender() {
