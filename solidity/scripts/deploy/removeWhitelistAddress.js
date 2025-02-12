@@ -17,7 +17,7 @@ async function main() {
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, TokenServiceABI, deployerSigner);
 
     console.log("Managing whitelist for TokenService...");
-    await TokenServiceContract.manageWhitelist(vaultAddress, false); // true for removing from whitelist
+    await TokenServiceContract.removeWhitelistAddress(vaultAddress);
     console.log("Whitelist managed successfully!!!");
 }
 main()
