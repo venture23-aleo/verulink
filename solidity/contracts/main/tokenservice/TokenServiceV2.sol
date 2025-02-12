@@ -35,7 +35,7 @@ contract TokenServiceV2 is TokenService {
     /// @dev This is inherited from the base contract but now always reverts.
     function transfer(
         string memory receiver
-    ) public payable virtual override {
+    ) public payable virtual override whenNotPaused nonReentrant{
         require(!isPredicateEnabled, "TokenService: PredicateAuthorizationEnabled");
         _transfer(receiver);
     }
@@ -46,7 +46,7 @@ contract TokenServiceV2 is TokenService {
         address tokenAddress,
         uint256 amount,
         string calldata receiver
-    ) public virtual override {
+    ) public virtual override whenNotPaused nonReentrant{
         require(!isPredicateEnabled, "TokenService: PredicateAuthorizationEnabled");
         _transfer(tokenAddress, amount, receiver);
     }
