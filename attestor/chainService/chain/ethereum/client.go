@@ -213,8 +213,8 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 // The range of block numbers to filter logs is set in defaultHeightDifferenceForFilterLogs.
 // It parses the logs and if packet has destination chainID that this attestor supports then
 // it will be send to the channel ch.
-func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
-	go cl.managePacket(ctx)
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
+	go cl.managePacket(ctx, completedCh, retryCh)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
@@ -313,7 +313,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this seems to be the efficient approach.
-		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], retrievePacketNum)
+		pkts, err := store.RetrieveAndDeleteNPackets(cl.retryPacketNamespacesOfClient[index], retrievePacketNum)
 		if err != nil {
 			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
 			goto indIncr
@@ -324,7 +324,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		}
 
 	indIncr:
-		index = (index + 1) % len(retryPacketNamespaces) // switch index to next destination id
+		index = (index + 1) % len(cl.retryPacketNamespacesOfClient) // switch index to next destination id
 	}
 }
 
@@ -345,11 +345,11 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		case <-ticker.C:
 		}
 
-		logger.GetLogger().Info("pruning ethereum base sequence number namespace",
-			zap.String("namespace", baseSeqNamespaces[index]))
+		logger.GetLogger().Info("pruning base sequence number namespace of ",zap.String("chain", cl.name),
+			zap.String("namespace", cl.baseSeqNamespacesOfClient[index]))
 		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
-		ns := baseSeqNamespaces[index]
+		ns := cl.baseSeqNamespacesOfClient[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
 		chainID := new(big.Int)
 		chainID.SetString(chainIDStr, 10)
@@ -390,7 +390,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 				ch <- pkt
 			}
 		}
-		index = (index + 1) % len(baseSeqNamespaces) // switch index to next destination id
+		index = (index + 1) % len(cl.baseSeqNamespacesOfClient) // switch index to next destination id
 	}
 }
 
@@ -398,7 +398,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 // It puts packets from retryCh into retry-packet namespace to retry them later.
 // If the packets comes inot completedCh, then its sequence number and height will be
 // put into sequence number namespace to later on prune base sequence number
-func (cl *Client) managePacket(ctx context.Context) {
+func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -470,6 +470,8 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 
 	destChainsMap := make(map[string]bool)
 	var namespaces []string
+	var baseSeqNamespaces []string
+	var retryPacketNamespaces []string
 	for _, destChain := range cfg.DestChains {
 		rns := retryPacketNamespacePrefix + destChain
 		bns := baseSeqNumNameSpacePrefix + destChain
@@ -516,17 +518,20 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	}
 
 	return &Client{
-		name:                      name,
-		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
-		eth:                       ethclient,
-		bridge:                    bridgeClient,
-		destChainsIDMap:           destChainsMap,
-		waitHeight:                waitHeight,
-		chainID:                   cfg.ChainID,
-		nextBlockHeight:           cfg.StartHeight,
-		filterTopic:               ethCommon.HexToHash(cfg.FilterTopic),
-		feedPktWaitDur:            feedPktWaitDur,
-		retryPacketWaitDur:        retryPacketWaitDur,
-		pruneBaseSeqNumberWaitDur: pruneBaseSeqWaitDur,
+		name:                          name,
+		address:                       ethCommon.HexToAddress(cfg.BridgeContract),
+		eth:                           ethclient,
+		bridge:                        bridgeClient,
+		destChainsIDMap:               destChainsMap,
+		waitHeight:                    waitHeight,
+		chainID:                       cfg.ChainID,
+		nextBlockHeight:               cfg.StartHeight,
+		filterTopic:                   ethCommon.HexToHash(cfg.FilterTopic),
+		feedPktWaitDur:                feedPktWaitDur,
+		retryPacketWaitDur:            retryPacketWaitDur,
+		pruneBaseSeqNumberWaitDur:     pruneBaseSeqWaitDur,
+		baseSeqNamespacesOfClient:     baseSeqNamespaces,
+		retryPacketNamespacesOfClient: retryPacketNamespaces,
+		averageBlockGenDur:            avgBlockGenDur,
 	}
 }

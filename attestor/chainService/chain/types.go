@@ -21,7 +21,7 @@ type IClient interface {
 	// Name gives the name of the client
 	Name() string
 	// FeedPacket fetches the packet from the source chain and sends it to the channel `ch`
-	FeedPacket(ctx context.Context, ch chan<- *Packet)
+	FeedPacket(ctx context.Context, ch chan<- *Packet, compCh chan *Packet, retryCh chan *Packet)
 	// GetMissedPacket queries the db-service for information about the packet the attestor
 	// node has to reverify and resign
 	GetMissedPacket(

@@ -180,7 +180,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 	}
 }
 
-func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet) {
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compCh chan *chain.Packet, retryCh chan *chain.Packet) {
 	go cl.managePacket(ctx)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)

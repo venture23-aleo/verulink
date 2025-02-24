@@ -28,7 +28,7 @@ var (
 	RegisteredRetryChannels = map[string]chan *chain.Packet{}
 	// RegisteredCompleteChannels stores channel for each chain to receive and handle packets that has successfully
 	// been stored in db-service.
-	RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
+	RegisteredCompleteChannels = map[string]chan *chain.Packet{} // TODO : this was set send only but now need bidirectional
 )
 
 var (
@@ -160,7 +160,7 @@ func initPacketFeeder(ctx context.Context, cfgs []*config.ChainConfig, pktCh cha
 					ch <- chain
 				}
 			}()
-			chain.FeedPacket(ctx, pktCh)
+			chain.FeedPacket(ctx, pktCh, RegisteredCompleteChannels[chain.Name()], RegisteredRetryChannels[chain.Name()])
 		}()
 	}
 }
