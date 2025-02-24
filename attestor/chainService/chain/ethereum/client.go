@@ -307,14 +307,13 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 			return
 		case <-ticker.C:
 		}
-
-		logger.GetLogger().Info("retrying ethereum feed", zap.String("namespace", retryPacketNamespaces[index]))
+		logger.GetLogger().Info("retrying feed for ", zap.String("chain", cl.name), zap.String("namespace", cl.retryPacketNamespacesOfClient[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this seems to be the efficient approach.
 		pkts, err := store.RetrieveAndDeleteNPackets(cl.retryPacketNamespacesOfClient[index], retrievePacketNum)
 		if err != nil {
-			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
+			logger.GetLogger().Error("error while retrieving retry packets",zap.String("chain", cl.name), zap.Error(err))
 			goto indIncr
 		}
 

@@ -137,11 +137,11 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 
 		switch {
 		case availableInHeight == 0:
-			logger.GetLogger().Info("Sleeping aleo client for", zap.Duration("duration", cl.validityWaitDur))
+			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", cl.validityWaitDur))
 			time.Sleep(cl.validityWaitDur)
 		case availableInHeight > curMaturedHeight:
 			dur := time.Duration(availableInHeight-curMaturedHeight) * cl.avgBlockGenDur
-			logger.GetLogger().Info("Sleeping aleo client", zap.Duration("duration", dur))
+			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", dur))
 			time.Sleep(dur)
 		}
 
@@ -151,7 +151,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 		}
 
 		for { // pull all packets as long as all are matured against waitDuration
-			logger.GetLogger().Info("Getting packet", zap.Uint64("seqnum", nextSeqNum))
+			logger.GetLogger().Info("Getting packet for", zap.String("chainId", chainID), zap.Uint64("seqnum", nextSeqNum))
 			pkt, err := cl.getPktWithSeq(ctx, chainID, nextSeqNum)
 			if err != nil {
 				if errors.Is(err, common.ErrPacketNotFound{}) {
@@ -159,7 +159,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 					break
 				}
 
-				logger.GetLogger().Error("Error while fetching aleo packets",
+				logger.GetLogger().Error("Error while fetching aleo packets for", zap.String("chainId", chainID),
 					zap.Uint64("Seq_num", nextSeqNum),
 					zap.Error(err),
 				)
@@ -245,7 +245,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			pkt, err := cl.getPktWithSeq(ctx, chainID, i)
 			if err != nil {
 				logger.GetLogger().Error("error while getting packet.",
-					zap.Uint64("seq_num", i), zap.Error(err))
+					zap.String("chainId", chainID), zap.Uint64("seq_num", i), zap.Error(err))
 				continue
 			}
 			ch <- pkt
