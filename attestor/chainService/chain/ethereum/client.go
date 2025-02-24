@@ -32,8 +32,8 @@ const (
 	// defaultFeedPktWaitDur sets ticker in FeedPacket. It is chosen to be two-third of time taken
 	// for blockchain to produce defaultHeightDifferenceForFilterLogs number of blocks so that
 	// it shall never lag with blockchain.
-	defaultFeedPktWaitDur = defaultHeightDifferenceForFilterLogs * avgBlockGenDur * 2 / 3
-	avgBlockGenDur        = time.Second * 12 // average duration for block generation
+	defaultFeedPktWaitDur = defaultHeightDifferenceForFilterLogs * defaultavgBlockGenDur * 2 / 3
+	defaultavgBlockGenDur = time.Second * 12 // average duration for block generation
 	// defaultRetryPacketWaitDur regularly fetches packets from local store(currently boltdb)
 	// These are those packets that were failed to process i.e. some error occurred while packets
 	// were being processed.
@@ -52,10 +52,6 @@ const (
 	retryPacketNamespacePrefix = "ethereum_rpns"
 )
 
-var (
-	baseSeqNamespaces     []string
-	retryPacketNamespaces []string
-)
 
 type ethClientI interface {
 	GetCurrentBlock(ctx context.Context) (uint64, error)
@@ -144,11 +140,14 @@ type Client struct {
 	// i.e if waitHeight is 10 and packet is available in block height 100 then
 	// packet is matured if current block number is >= 110 and it is immatured
 	// if current block number is < 110
-	waitHeight                uint64
-	feedPktWaitDur            time.Duration
-	retryPacketWaitDur        time.Duration
-	pruneBaseSeqNumberWaitDur time.Duration
-	metrics                   *metrics.PrometheusMetrics
+	waitHeight                    uint64
+	feedPktWaitDur                time.Duration
+	retryPacketWaitDur            time.Duration
+	pruneBaseSeqNumberWaitDur     time.Duration
+	averageBlockGenDur            time.Duration
+	metrics                       *metrics.PrometheusMetrics
+	retryPacketNamespacesOfClient []string
+	baseSeqNamespacesOfClient     []string
 }
 
 func (cl *Client) Name() string {
@@ -262,8 +261,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 
 			if maturedHeight < cl.nextBlockHeight {
 				diff := cl.nextBlockHeight - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff))
-				time.Sleep((time.Duration(diff) * avgBlockGenDur))
+				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff)) // TODO: this log might not be required
+				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				break L1
 			}
 
@@ -510,6 +509,11 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	pruneBaseSeqWaitDur := cfg.PruneBaseSeqNumberWaitDur
 	if pruneBaseSeqWaitDur == 0 {
 		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
+	}
+
+	avgBlockGenDur := cfg.AverageBlockGenDur
+	if avgBlockGenDur == 0 {
+		avgBlockGenDur = defaultavgBlockGenDur
 	}
 
 	waitHeight := uint64(validityWaitDur / avgBlockGenDur)

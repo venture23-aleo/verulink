@@ -4,6 +4,7 @@ version: 1.0.1
 chains:
 - name: aleo
   chain_id: 6694886634401
+  chain_type: aleo
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
   bridge_contract: vlink_token_bridge_v1.aleo
   node_url: https://api.explorer.provable.com/v1|mainnet
@@ -20,6 +21,7 @@ chains:
 
 - name: ethereum
   chain_id: 27234042785
+  chain_type: ethereum
   wallet_address: <your_ethereum_wallet_address>
   bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
   node_url: https://eth.llamarpc.com

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum"
+
 	common "github.com/venture23-aleo/verulink/attestor/chainService/common"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
@@ -76,6 +78,27 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 		signer:    signer.GetSigner(),
 		screener:  addressscreener.GetScreener(),
 		metrics:   metrics,
+	}
+
+	for _, ch := range cfg.ChainConfigs {
+
+		switch ch.ChainType {
+		case "ethereum":
+
+			RegisteredClients[ch.Name] = ethereum.NewClient // register eth client and save the namespaces as well 
+
+			var completedCh = make(chan *chain.Packet)
+			RegisteredCompleteChannels[ch.Name] = completedCh
+
+			var retryCh = make(chan *chain.Packet)
+			RegisteredRetryChannels[ch.Name] = retryCh
+		case "aleo":
+			// aleo client is registered with init() function in aleo package
+			// RegisteredClients[ch.Name] = aleo.NewClient
+		default: // TODO: is default required? this indicates that only ethereum and aleo chain types are supported
+			panic(fmt.Sprintf("unsupported chain type defined %s", ch.ChainType))
+		}
+
 	}
 
 	// pktCh will receive all the packets from multiple sources and processes each packet.

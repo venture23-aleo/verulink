@@ -35,6 +35,7 @@ type FlagArgs struct {
 
 type ChainConfig struct {
 	Name                       string            `yaml:"name"`
+	ChainType                  string            `yaml:"chain_type"`
 	ChainID                    *big.Int          `yaml:"chain_id"`
 	BridgeContract             string            `yaml:"bridge_contract"`
 	NodeUrl                    string            `yaml:"node_url"`
@@ -65,7 +66,7 @@ type Config struct {
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
 	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 	MetricConfig           MetricsConfig          `yaml:"metrics"`
-	Version                string                    `yaml:"version"`
+	Version                string                 `yaml:"version"`
 }
 
 type LoggerConfig struct {
