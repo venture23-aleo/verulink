@@ -61,7 +61,8 @@ func main() {
 	}
 
 	for chainName, cfg := range m {
-		switch chainName {
+		switch cfg.ChainType {
+			
 		case chain.Aleo:
 			err = aleo.SetUpPrivateKey(cfg)
 		case chain.Ethereum:

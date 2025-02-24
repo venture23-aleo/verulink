@@ -54,6 +54,7 @@ type KeyConfig struct {
 type KeyPair struct {
 	PrivateKey    string `yaml:"private_key"`
 	WalletAddress string `yaml:"wallet_address"`
+	ChainType     string `yaml:"chain_type"`
 }
 
 func LoadKeys(keyPath string) (map[string]*KeyPair, error) {
