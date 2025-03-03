@@ -39,6 +39,7 @@ func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
 		Name:                       "ethereum",
 		ChainID:                    big.NewInt(1),
+		ChainType:                  "ethereum",
 		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:                    "https://rpc.sepolia.org",
 		PacketValidityWaitDuration: time.Hour * 24,
@@ -75,6 +76,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 	cfg := &config.ChainConfig{
 		Name:                       "ethereum",
 		ChainID:                    big.NewInt(1),
+		ChainType:                  "ethereum",
 		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:                    "https://rpc.sepolia.org",
 		PacketValidityWaitDuration: time.Hour * 24,
@@ -125,6 +127,8 @@ func newMetrics() *metrics.PrometheusMetrics {
 
 func TestFeedPacket(t *testing.T) {
 	pktCh := make(chan *chain.Packet)
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
 
 	client := &Client{
 		eth: &mockEthClient{
@@ -167,7 +171,7 @@ func TestFeedPacket(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go client.FeedPacket(ctx, pktCh)
+	go client.FeedPacket(ctx, pktCh, completedCh, retryCh)
 
 	modelPacket := &chain.Packet{
 		Version:  uint8(0),
@@ -202,6 +206,7 @@ func TestRetryFeed(t *testing.T) {
 	t.Run("case: retry packets for dstAleo retry packet name spaces", func(t *testing.T) {
 		dbRemover, err := setupDB("db")
 		assert.NoError(t, err)
+		var retryPacketNamespaces []string
 		t.Cleanup(func() {
 			dbRemover()
 			retryPacketNamespaces = nil
@@ -212,7 +217,8 @@ func TestRetryFeed(t *testing.T) {
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace)
 
 		client := &Client{
-			retryPacketWaitDur: time.Nanosecond,
+			retryPacketWaitDur:            time.Nanosecond,
+			retryPacketNamespacesOfClient: retryPacketNamespaces,
 		}
 
 		// store packet in retry bucket
@@ -259,6 +265,7 @@ func TestRetryFeed(t *testing.T) {
 	t.Run("case: retry packets for multiple retry packet name space", func(t *testing.T) {
 		dbRemover, err := setupDB("db")
 		assert.NoError(t, err)
+		var retryPacketNamespaces []string
 		t.Cleanup(func() {
 			dbRemover()
 			retryPacketNamespaces = nil
@@ -270,7 +277,8 @@ func TestRetryFeed(t *testing.T) {
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace, dstSolNameSpace)
 
 		client := &Client{
-			retryPacketWaitDur: time.Nanosecond,
+			retryPacketWaitDur:            time.Nanosecond,
+			retryPacketNamespacesOfClient: retryPacketNamespaces,
 		}
 
 		// store packet in retry bucket
@@ -335,9 +343,11 @@ func TestRetryFeed(t *testing.T) {
 
 func TestManagePacket(t *testing.T) {
 	t.Log("case: manage packet that comes in retry ch")
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
 
 	t.Run("test manage packet for retrynamespace", func(t *testing.T) {
-
+		var retryPacketNamespaces []string
 		dbRemover, err := setupDB("db")
 		assert.NoError(t, err)
 		t.Cleanup(func() {
@@ -353,6 +363,7 @@ func TestManagePacket(t *testing.T) {
 		assert.NoError(t, err)
 		client := new(Client)
 		client.SetMetrics(newMetrics())
+		client.retryPacketNamespacesOfClient = retryPacketNamespaces
 
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
@@ -377,7 +388,7 @@ func TestManagePacket(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go client.managePacket(ctx)
+		go client.managePacket(ctx, completedCh, retryCh)
 
 		retryCh <- modelPacket
 		time.Sleep(time.Second) // wait to fill in the database
@@ -387,6 +398,7 @@ func TestManagePacket(t *testing.T) {
 	})
 
 	t.Run("test manage packet for baseSeqNumNamespace", func(t *testing.T) {
+		var baseSeqNamespaces []string
 		dbRemover, err := setupDB("tmp/test-manage-packet.db")
 		require.NoError(t, err)
 		t.Cleanup(func() {
@@ -402,6 +414,7 @@ func TestManagePacket(t *testing.T) {
 
 		client := new(Client)
 		client.SetMetrics(newMetrics())
+		client.baseSeqNamespacesOfClient = baseSeqNamespaces
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
 			Version:  uint8(0),
@@ -425,7 +438,7 @@ func TestManagePacket(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go client.managePacket(ctx)
+		go client.managePacket(ctx, completedCh, retryCh)
 		completedCh <- modelPacket
 		time.Sleep(time.Second) // wait to fill in the database
 		exists := store.ExistInGivenNamespace[uint64](bseqNs, modelPacket.Sequence)
@@ -440,8 +453,12 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 	dbRemover, err := setupDB("tmp/db")
 	require.NoError(t, err)
 	t.Cleanup(dbRemover)
-
+	var baseSeqNamespaces []string
 	var eventLogs []types.Log
+
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
+	store.CreateNamespace(baseSeqNamespaces[0])
+
 	client := &Client{
 		eth: &mockEthClient{
 			getCurHeight: func() (uint64, error) { return 50, nil },
@@ -476,10 +493,8 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
 		metrics:                   newMetrics(),
+		baseSeqNamespacesOfClient: baseSeqNamespaces,
 	}
-
-	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
-	store.CreateNamespace(baseSeqNamespaces[0])
 
 	for i := 0; i < 15; i++ {
 		if i < 10 || i > 12 {

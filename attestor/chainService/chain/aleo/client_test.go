@@ -199,11 +199,13 @@ func TestFeedPacket(t *testing.T) {
 			metrics:             newMetrics(),
 		}
 		pktCh := make(chan *chain.Packet)
+		completedCh := make(chan *chain.Packet)
+		retryCh := make(chan *chain.Packet)
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		go client.FeedPacket(ctx, pktCh)
+		go client.FeedPacket(ctx, pktCh, completedCh, retryCh)
 
 		assert.Equal(t, client.destChainsIDMap[dstChainId], uint64(1))
 
@@ -259,7 +261,9 @@ func TestFeedPacket(t *testing.T) {
 			metrics:             newMetrics(),
 		}
 		pktCh := make(chan *chain.Packet)
-		go client.FeedPacket(context.Background(), pktCh)
+		completedCh := make(chan *chain.Packet)
+		retryCh := make(chan *chain.Packet)
+		go client.FeedPacket(context.Background(), pktCh, completedCh, retryCh)
 
 		ctx, cncl := context.WithTimeout(context.Background(), time.Second*10)
 		defer cncl()
