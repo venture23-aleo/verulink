@@ -1,7 +1,7 @@
-import { Token_bridge_dev_v2Contract } from "../artifacts/js/token_bridge_dev_v2";
-import { InPacket } from "../artifacts/js/types/token_bridge_dev_v2";
-import { Token_service_dev_v2Contract } from "../artifacts/js/token_service_dev_v2";
-import { token_registryContract } from "../artifacts/js/token_registry";
+import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
+import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Token_registryContract } from "../artifacts/js/token_registry";
 
 import { aleoArr2Evm, evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
@@ -17,35 +17,35 @@ import {
   aleoChainId,
   ethChainId,
   ethTsContractAddr,
-  ethTsContractAddr2,
-  ethTsContractAddr3,
+  ethTsRandomContractAddress,
+  ethTsRandomContractAddress2,
   usdcContractAddr,
 } from "../utils/constants";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
-import { WithdrawalLimit } from "../artifacts/js/types/token_service_dev_v2";
-import { ExecutionMode} from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/token_service_council_dev_v2";
-import { Holding_dev_v2Contract } from "../artifacts/js/holding_dev_v2";
-import { TokenMetadata } from "../artifacts/js/types/holding_dev_v2";
+import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { ExecutionMode } from "@doko-js/core";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v2";
+import { Vlink_holding_v1Contract } from "../artifacts/js/vlink_holding_v1";
+import { TokenMetadata } from "../artifacts/js/types/vlink_holding_v1";
 import { Balance, TokenOwner } from "../artifacts/js/types/token_registry";
 import { hashStruct } from "../utils/hash";
-import { Token_service_council_dev_v2Contract } from "../artifacts/js/token_service_council_dev_v2";
+import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const bridge = new Token_bridge_dev_v2Contract({ mode: mode });
-const tokenService = new Token_service_dev_v2Contract({ mode: mode  });
-const mtsp = new token_registryContract({ mode: mode });
-const holding = new Holding_dev_v2Contract({mode});
-const tokenServiceCouncil = new Token_service_council_dev_v2Contract({mode:mode});
+const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
+const tokenService = new Vlink_token_service_v2Contract({ mode: mode });
+const mtsp = new Token_registryContract({ mode: mode });
+const holding = new Vlink_holding_v1Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode: mode });
 
-let tokenID=BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
+let tokenID = BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
 
 (BigInt.prototype as any).toJSON = function () {
-  return this.toString()+"field";
+  return this.toString() + "field";
 };
 
 const newTokenID = BigInt(987456123);
@@ -53,7 +53,7 @@ const newTokenID = BigInt(987456123);
 const eth2TokenInfo: ChainToken = {
   chain_id: ethChainId,
   token_id: newTokenID
-} 
+}
 
 
 const TIMEOUT = 20000_000;
@@ -154,7 +154,7 @@ describe("Token Service ", () => {
       expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE)).toBe(BRIDGE_UNPAUSED_VALUE);
     }, TIMEOUT)
 
-    test("Holding: Initialize", async()=>{
+    test("Holding: Initialize", async () => {
       const [tx] = await holding.initialize_holding(tokenService.address());
       await tx.wait();
     }, TIMEOUT)
@@ -175,7 +175,8 @@ describe("Token Service ", () => {
     });
 
     test("Token Service: Register token", async () => {
-      const [token_id, registerTokenTransaction] = await tokenServiceCouncil.ts_register_token(token_name, token_symbol, token_decimals, token_max_supply);
+      const signers = [admin, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+      const [token_id, registerTokenTransaction] = await tokenServiceCouncil.ts_register_token(1, token_name, token_symbol, token_decimals, token_max_supply, signers);
       tokenID = token_id;
       console.log(tokenID);
       registerTokenTransaction.wait();
@@ -257,7 +258,7 @@ describe("Token Service ", () => {
 
       const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
 
-      const [screeningPassed, tx] = await tokenService.token_receive(
+      const [screeningPassed, tx] = await tokenService.token_receive_public(
         prunePadding(packet.message.sender_address),
         packet.message.dest_token_id,
         packet.message.receiver_address,
@@ -298,7 +299,7 @@ describe("Token Service ", () => {
       ];
 
       tokenService.connect(admin)
-      const [screeningPassed, tx] = await tokenService.token_receive(
+      const [screeningPassed, tx] = await tokenService.token_receive_public(
         prunePadding(packet.message.sender_address),
         packet.message.dest_token_id,
         packet.message.receiver_address,
@@ -308,10 +309,10 @@ describe("Token Service ", () => {
         signers,
         signatures,
         packet.source.chain_id,
-        evm2AleoArrWithoutPadding(ethTsContractAddr2),
+        evm2AleoArrWithoutPadding(ethTsRandomContractAddress),
       );
       const result = await tx.wait();
-      expect(result.execution).toBeUndefined(); 
+      expect(result.execution).toBeUndefined();
 
     },
       TIMEOUT
@@ -325,7 +326,7 @@ describe("Token Service ", () => {
     console.log(tokenID);
     const destChainId = ethChainId;
     const destTsAddr = ethTsContractAddr.toLowerCase();
-    const destTsAddr2 = ethTsContractAddr2.toLowerCase();
+    const destTsAddr2 = ethTsRandomContractAddress.toLowerCase();
 
     const destToken = usdcContractAddr.toLowerCase();
     const sender = aleoUser5
@@ -349,9 +350,9 @@ describe("Token Service ", () => {
         expect(await tokenService.total_supply(tokenID)).toBeGreaterThanOrEqual(amount)
         tokenService.connect(admin);
         mtsp.connect(admin);
-        
-          // const [hash, balancetx] = await mtsp.balance_key(tokenID, admin);
-        const owner : TokenOwner = {
+
+        // const [hash, balancetx] = await mtsp.balance_key(tokenID, admin);
+        const owner: TokenOwner = {
           account: admin,
           token_id: tokenID
         }
@@ -363,10 +364,10 @@ describe("Token Service ", () => {
           authorized_until: 0
         }
         console.log(hash);
-        console.log(evm2AleoArrWithoutPadding(destTsAddr),evm2AleoArrWithoutPadding(destToken));
-        const balance:Balance = await mtsp.authorized_balances(hash, default_balance);
+        console.log(evm2AleoArrWithoutPadding(destTsAddr), evm2AleoArrWithoutPadding(destToken));
+        const balance: Balance = await mtsp.authorized_balances(hash, default_balance);
         console.log(balance);
-        if(balance.balance>amount){
+        if (balance.balance > amount) {
           const [tx] = await tokenService.token_send(
             tokenID,
             evm2AleoArrWithoutPadding(receiver),
@@ -377,7 +378,7 @@ describe("Token Service ", () => {
           );
           await tx.wait();
         }
-        
+
 
         const finalTokenSupply = await tokenService.total_supply(tokenID);
         expect(finalTokenSupply).toBe(initialTokenSupply - amount);
@@ -454,14 +455,14 @@ describe("Token Service ", () => {
         tokenService.connect(aleoUser3); //changing the contract caller account to non owner
         const [tx] = await tokenService.pause_token_ts(tokenID);
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("should not pause if token Id is not present", async () => {
         tokenService.connect(admin); //changing the contract caller account to non owner
         const [tx] = await tokenService.pause_token_ts(wrongTokenID);
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("owner can pause", async () => {
@@ -475,14 +476,14 @@ describe("Token Service ", () => {
         tokenService.connect(aleoUser3);
         const [tx] = await tokenService.unpause_token_ts(tokenID);
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("should not unpause if token Id is not present", async () => {
         tokenService.connect(admin); //changing the contract caller account to non owner
         const [tx] = await tokenService.unpause_token_ts(wrongTokenID);
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("owner can unpause", async () => {
@@ -550,7 +551,7 @@ describe("Token Service ", () => {
             ethChainId
           );
           const result = await tx.wait();
-          expect(result.execution).toBeUndefined(); 
+          expect(result.execution).toBeUndefined();
 
         }, TIMEOUT);
 
@@ -571,7 +572,7 @@ describe("Token Service ", () => {
             ethChainId
           );
           const result = await tx.wait();
-          expect(result.execution).toBeUndefined(); 
+          expect(result.execution).toBeUndefined();
         }, TIMEOUT);
       });
 
@@ -583,7 +584,7 @@ describe("Token Service ", () => {
           tokenService.connect(aleoUser3);
           const [tx] = await tokenService.remove_token_ts(newTokenID);
           const result = await tx.wait();
-          expect(result.execution).toBeUndefined(); 
+          expect(result.execution).toBeUndefined();
         }, TIMEOUT);
 
         test("Owner can remove token", async () => {
@@ -607,7 +608,7 @@ describe("Token Service ", () => {
           tokenService.connect(admin);
           const [tx] = await tokenService.remove_token_ts(newTokenID);
           const result = await tx.wait();
-          expect(result.execution).toBeUndefined(); 
+          expect(result.execution).toBeUndefined();
         },
           TIMEOUT
         );
@@ -624,7 +625,7 @@ describe("Token Service ", () => {
           newMinTransfer
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("cannot update if minimum transfer greater than maximum transfer", async () => {
@@ -635,7 +636,7 @@ describe("Token Service ", () => {
           maxTransfer + BigInt(20)
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
 
@@ -646,7 +647,7 @@ describe("Token Service ", () => {
           newMinTransfer
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("owner can update minimum transfer", async () => {
@@ -671,7 +672,7 @@ describe("Token Service ", () => {
           newMaxTransfer
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("cannot update maximum transfer if unregistered tokenID is given", async () => {
@@ -681,7 +682,7 @@ describe("Token Service ", () => {
           newMaxTransfer
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("cannot update if maximum transfer lesser than minimum transfer", async () => {
@@ -692,7 +693,7 @@ describe("Token Service ", () => {
           minTransfer - BigInt(20)
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("owner can update maximum transfer", async () => {
@@ -736,7 +737,7 @@ describe("Token Service ", () => {
           newLimit.threshold_no_limit
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("should not update withdrawal by non-admin", async () => {
@@ -748,7 +749,7 @@ describe("Token Service ", () => {
           newLimit.threshold_no_limit
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
     })
@@ -763,14 +764,14 @@ describe("Token Service ", () => {
       }
 
       test("should not update token address by non-owner", async () => {
-          tokenService.connect(aleoUser3);
-          const [tx] = await tokenService.update_other_chain_tokenaddress(
-            ethChainId,
-            tokenID,
-            evm2AleoArrWithoutPadding(ethTsContractAddr3)
-          );
-          const result = await tx.wait();
-          expect(result.execution).toBeUndefined(); 
+        tokenService.connect(aleoUser3);
+        const [tx] = await tokenService.update_other_chain_tokenaddress(
+          ethChainId,
+          tokenID,
+          evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
+        );
+        const result = await tx.wait();
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT);
 
       test("should not update token address if token id is not registered", async () => {
@@ -778,10 +779,10 @@ describe("Token Service ", () => {
         const [tx] = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
           unregisteredTokenID,
-          evm2AleoArrWithoutPadding(ethTsContractAddr3)
+          evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT)
 
       test("should update token address by admin", async () => {
@@ -789,10 +790,10 @@ describe("Token Service ", () => {
         const [tx] = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
           tokenID,
-          evm2AleoArrWithoutPadding(ethTsContractAddr3)
+          evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
         );
         await tx.wait();
-        expect(tokenService.other_chain_token_address(ethTokenInfo)).toStrictEqual(evm2AleoArr(ethTsContractAddr3))
+        expect(tokenService.other_chain_token_address(ethTokenInfo)).toStrictEqual(evm2AleoArr(ethTsRandomContractAddress2))
       }, TIMEOUT)
     });
 
@@ -806,14 +807,14 @@ describe("Token Service ", () => {
       }
 
       test("should not update token service by non-owner", async () => {
-          tokenService.connect(aleoUser3);
-          const [tx] = await tokenService.update_other_chain_tokenservice(
-            ethChainId,
-            tokenID,
-            evm2AleoArrWithoutPadding(ethTsContractAddr3)
-          );
-          const result = await tx.wait();
-          expect(result.execution).toBeUndefined(); 
+        tokenService.connect(aleoUser3);
+        const [tx] = await tokenService.update_other_chain_tokenservice(
+          ethChainId,
+          tokenID,
+          evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
+        );
+        const result = await tx.wait();
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT)
 
       test("should not update token address if token id is not registered", async () => {
@@ -821,10 +822,10 @@ describe("Token Service ", () => {
         const [tx] = await tokenService.update_other_chain_tokenservice(
           ethChainId,
           unregisteredTokenID,
-          evm2AleoArrWithoutPadding(ethTsContractAddr3)
+          evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
         );
         const result = await tx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       }, TIMEOUT)
 
       test("should update token address by admin", async () => {
@@ -832,10 +833,10 @@ describe("Token Service ", () => {
         const [tx] = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
           tokenID,
-          evm2AleoArrWithoutPadding(ethTsContractAddr3)
+          evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
         );
         await tx.wait();
-        expect(tokenService.other_chain_token_service(ethTokenInfo)).toStrictEqual(evm2AleoArr(ethTsContractAddr3))
+        expect(tokenService.other_chain_token_service(ethTokenInfo)).toStrictEqual(evm2AleoArr(ethTsRandomContractAddress2))
       }, TIMEOUT)
     });
 
@@ -845,7 +846,7 @@ describe("Token Service ", () => {
         tokenService.connect(aleoUser3);
         const [transferOwnershipTx] = await tokenService.transfer_ownership_ts(aleoUser3);
         const result = await transferOwnershipTx.wait();
-        expect(result.execution).toBeUndefined(); 
+        expect(result.execution).toBeUndefined();
       },
         TIMEOUT
       );
@@ -886,31 +887,31 @@ describe('Transition Failing Test cases', () => {
         ethChainId
       );
 
-    test.failing('Percentage greater than 100 should fail', async () => {
-      await tokenService.add_token_ts(
-        newTokenID,
-        BigInt(100),
-        BigInt(100_000),
-        101_00,
-        1,
-        BigInt(100),
-        evm2AleoArr(usdcContractAddr),
-        evm2AleoArr(ethTsContractAddr),
-        ethChainId
-      );
+      test.failing('Percentage greater than 100 should fail', async () => {
+        await tokenService.add_token_ts(
+          newTokenID,
+          BigInt(100),
+          BigInt(100_000),
+          101_00,
+          1,
+          BigInt(100),
+          evm2AleoArr(usdcContractAddr),
+          evm2AleoArr(ethTsContractAddr),
+          ethChainId
+        );
+      })
+
+      test.failing('Updating withdrawal limit with percentage greater than 100 should fail', async () => {
+        await tokenService.update_withdrawal_limit(
+          tokenID,
+          101_00,
+          1,
+          BigInt(100)
+        )
+      })
     })
 
-    test.failing('Updating withdrawal limit with percentage greater than 100 should fail', async () => {
-      await tokenService.update_withdrawal_limit(
-        tokenID,
-        101_00,
-        1,
-        BigInt(100)
-      )
-    })
-  })
-
-});
+  });
 
 });
 

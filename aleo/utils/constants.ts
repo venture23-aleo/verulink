@@ -29,6 +29,9 @@ export const ethContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
 export const ethTsContractAddr = ""
+export const ethTsRandomContractAddress = ""
+export const ethTsRandomContractAddress2 = ""
+
 
 // Token Service Contract Address on Ethereum
 // export const ethTsContractAddr2 = "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79"
@@ -36,8 +39,11 @@ export const ethTsContractAddr = ""
 // export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
 
 const mainnetChainId = 1
-export const ethChainId = 27234042785;
-export const aleoChainId = 6694886634401;
+export const ethChainId = BigInt(27234042785);
+export const aleoChainId = BigInt(6694886634401);
+
+export const PRIVATE_VERSION = 2;
+export const PUBLIC_VERSION = 1;
 
 // max_supply for Tokens, it is the highest u128 value
 export const max_supply = BigInt("340282366920938463463374607431768211455");
