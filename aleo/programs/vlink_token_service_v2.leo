@@ -100,12 +100,6 @@ program vlink_token_service_v2.aleo {
     mapping other_chain_token_service: ChainToken => [u8; 32];
     mapping other_chain_token_address: ChainToken => [u8; 32];
 
-    // to set platform fee
-    mapping platform_fee: bool => u128;
-
-    // to set execute_fee
-    mapping execute_fee: bool => u128;
-
     const OWNER_INDEX: bool = true;
     const PAUSED_VALUE: bool = true;
     const UNPAUSED_VALUE: bool = false;
@@ -413,13 +407,9 @@ program vlink_token_service_v2.aleo {
         public dest_chain_id: u128,
         public dest_token_service: [u8;20],
         public dest_token_address: [u8;20],
-        public platform_fee_deduct: u128,
-        public execution_fee: u128
-    ) -> Future{
+        ) -> Future{
 
         let burn: Future = token_registry.aleo/burn_public(token_id, self.caller, amount);
-
-        let fee_deduction: Future = token_registry.aleo/mint_public(token_id, vlink_token_service_v2.aleo, platform_fee_deduct, authorize_until);
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
@@ -431,17 +421,15 @@ program vlink_token_service_v2.aleo {
             pad_20_to_32(dest_token_address), 
             self.caller,
             pad_20_to_32(receiver),
-            amount - platform_fee_deduct,
-            execution_fee
+            amount        
         );
 
-        return finalize_token_send(token_id, amount, chain_token_info, dest_token_address, dest_token_service, platform_fee_deduct, burn, fee_deduction, publish);
+        return finalize_token_send(token_id, amount, chain_token_info, dest_token_address, dest_token_service, burn, publish);
     }
 
-    async function finalize_token_send(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], fee: u128, f0: Future, f1: Future, f2: Future) {
+    async function finalize_token_send(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], f0: Future, f1: Future) {
         f0.await();
         f1.await();
-        f2.await();
         // ASSERT FEE OF AGRUMENT AND OF MAPPING
         let min_amount: u128 = Mapping::get(min_transfers, wrapped_token_id);
         assert(amount >= min_amount);
@@ -489,11 +477,8 @@ program vlink_token_service_v2.aleo {
         }
         
         // Decrease the total supply
-        Mapping::set(total_supply, wrapped_token_id, current_supply - amount + fee);
+        Mapping::set(total_supply, wrapped_token_id, current_supply - amount);
 
-        // fee is checked here 
-        let fee_platform: u128 = Mapping::get_or_use(platform_fee, true, 0u128);
-        assert_eq(fee, fee_platform);
     }
 
 
@@ -503,84 +488,84 @@ program vlink_token_service_v2.aleo {
     
     //// token send privately 
 
-    //  async transition token_send_private(
-    //     public token_id: field, 
-    //     public receiver: [u8; 20], 
-    //     public amount: u128,
-    //     public dest_chain_id: u128,
-    //     public dest_token_service: [u8;20],
-    //     public dest_token_address: [u8;20],
-    //     token_record: token_registry.aleo/Token
-    // ) -> (token_registry.aleo/Token, Future){
+     async transition token_send_private(
+        public token_id: field, 
+        public receiver: [u8; 20], 
+        public amount: u128,
+        public dest_chain_id: u128,
+        public dest_token_service: [u8;20],
+        public dest_token_address: [u8;20],
+        token_record: token_registry.aleo/Token
+    ) -> (token_registry.aleo/Token, Future){
 
-    //     let burn_private: (token_registry.aleo/Token, Future) = token_registry.aleo/burn_private(token_record, amount);
-    //     let chain_token_info: ChainToken = ChainToken{
-    //         chain_id: dest_chain_id,
-    //         token_id: token_id
-    //     };
-    //     let publish : Future = vlink_token_bridge_v2.aleo/publish(
-    //         dest_chain_id, 
-    //         pad_20_to_32(dest_token_service), 
-    //         pad_20_to_32(dest_token_address), 
-    //         self.caller,
-    //         pad_20_to_32(receiver),
-    //         amount
-    //     );
+        let (return_record, burn_private): (token_registry.aleo/Token, Future) = token_registry.aleo/burn_private(token_record, amount);
+        let chain_token_info: ChainToken = ChainToken{
+            chain_id: dest_chain_id,
+            token_id: token_id
+        };
+        let publish : Future = vlink_token_bridge_v2.aleo/publish(
+            dest_chain_id, 
+            pad_20_to_32(dest_token_service), 
+            pad_20_to_32(dest_token_address), 
+            self.address,
+            pad_20_to_32(receiver),
+            amount
+        );
 
-    //     return (burn_private.0, finalize_token_send_private(token_id, amount, chain_token_info, dest_token_address, dest_token_service, burn_private.1, publish));
-    // }
+        return (return_record, finalize_token_send_private(token_id, amount, chain_token_info, dest_token_address, dest_token_service, burn_private, publish));
+    }
 
-    // async function finalize_token_send_private(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], f0: Future, f1: Future) {
-    //     f0.await();
-    //     f1.await();
-    //     let min_amount: u128 = Mapping::get(min_transfers, wrapped_token_id);
-    //     assert(amount >= min_amount);
+    async function finalize_token_send_private(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], f0: Future, f1: Future) {
+        f0.await();
+        f1.await();
+        let min_amount: u128 = Mapping::get(min_transfers, wrapped_token_id);
+        assert(amount >= min_amount);
 
-    //     assert(Mapping::contains(other_chain_token_address, chain_token_info));
-    //     let stored_token_address:[u8;32] = Mapping::get(other_chain_token_address, chain_token_info);
-    //     assert_eq(stored_token_address, pad_20_to_32(dest_token_address));
+        assert(Mapping::contains(other_chain_token_address, chain_token_info));
+        let stored_token_address:[u8;32] = Mapping::get(other_chain_token_address, chain_token_info);
+        assert_eq(stored_token_address, pad_20_to_32(dest_token_address));
 
-    //     assert(Mapping::contains(other_chain_token_service, chain_token_info));
-    //     let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
-    //     assert_eq(stored_token_service, pad_20_to_32(dest_token_service));
+        assert(Mapping::contains(other_chain_token_service, chain_token_info));
+        let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
+        assert_eq(stored_token_service, pad_20_to_32(dest_token_service));
 
-    //     let max_amount: u128 = Mapping::get(max_transfers, wrapped_token_id);
-    //     assert(amount <= max_amount);
+        let max_amount: u128 = Mapping::get(max_transfers, wrapped_token_id);
+        assert(amount <= max_amount);
 
-    //     assert_eq(Mapping::get(token_status, wrapped_token_id), UNPAUSED_VALUE);
+        assert_eq(Mapping::get(token_status, wrapped_token_id), UNPAUSED_VALUE);
 
-    //     let withdrawal_limit: WithdrawalLimit = Mapping::get(token_withdrawal_limits, wrapped_token_id);
+        let withdrawal_limit: WithdrawalLimit = Mapping::get(token_withdrawal_limits, wrapped_token_id);
 
-    //     let current_supply: u128 = Mapping::get(total_supply, wrapped_token_id);
-    //     let current_height: u32 = block.height;
+        let current_supply: u128 = Mapping::get(total_supply, wrapped_token_id);
+        let current_height: u32 = block.height;
 
 
-    //     let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
-    //     let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
+        let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
+        let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
 
-    //     if ( current_height - snapshot_height > withdrawal_limit.duration) {
-    //         let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
-    //         // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
-    //         Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
-    //         Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
-    //         Mapping::set(token_amount_withdrawn, wrapped_token_id, amount);
+        if ( current_height - snapshot_height > withdrawal_limit.duration) {
+            let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
+            // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
+            Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
+            Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
+            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount);
 
-    //     } else {
-    //         Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn+amount);
+        } else {
+            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn+amount);
 
-    //     }
-    //     let snapshot_supply:u128 = Mapping::get(token_snapshot_supply, wrapped_token_id);
+        }
+        let snapshot_supply:u128 = Mapping::get(token_snapshot_supply, wrapped_token_id);
 
-    //     if (snapshot_supply >= withdrawal_limit.threshold_no_limit) {
-    //         let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, wrapped_token_id);
-    //         // let withdrawal_allowed:u128 = Mapping::get(token_snapshot_withdrawal, wrapped_token_id);
-    //         let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, snapshot_supply);
-    //         assert(withdraw_amount <= max_withdrawal);
-    //     }
+        if (snapshot_supply >= withdrawal_limit.threshold_no_limit) {
+            let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, wrapped_token_id);
+            // let withdrawal_allowed:u128 = Mapping::get(token_snapshot_withdrawal, wrapped_token_id);
+            let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, snapshot_supply);
+            assert(withdraw_amount <= max_withdrawal);
+        }
         
-    //     // Decrease the total supply
-    //     Mapping::set(total_supply, wrapped_token_id, current_supply - amount);
-    // }
+        // Decrease the total supply
+        Mapping::set(total_supply, wrapped_token_id, current_supply - amount);
+    }
 
 
 
@@ -600,8 +585,7 @@ program vlink_token_service_v2.aleo {
         public signers: [address; 5], 
         public signs: [signature; 5],
         public source_chain_id: u128, 
-        public source_token_service_address: [u8; 20],
-        public fee: u128
+        public source_token_service_address: [u8; 20]
     ) -> (public bool, Future) {
         let version: u8 = 1u8;
         // call consume on bridge
@@ -636,21 +620,17 @@ program vlink_token_service_v2.aleo {
             account: actual_receiver,
             token_id: token_id
         };
-        let mint: Future = token_registry.aleo/mint_public(token_id, actual_receiver, amount-fee, authorize_until);
-
-        // this is addded 
-        let mint_executor: Future = token_registry.aleo/mint_public(token_id, self.caller, fee, authorize_until);
+        let mint: Future = token_registry.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
         let hold: Future = vlink_holding_v1.aleo/hold_fund(receiver, token_id, held_amount);
 
-        return (screening_passed.0, finalize_token_receive_public(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee, screening_passed.1, mint, mint_executor, hold));
+        return (screening_passed.0, finalize_token_receive_public(token_id, amount, held_amount, chain_token_info, source_token_service_address, screening_passed.1, mint, hold));
     }
 
-    async function finalize_token_receive_public(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee: u128, f0: Future, f1: Future, f2: Future, f3: Future) {
+    async function finalize_token_receive_public(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], f0: Future, f1: Future, f2: Future) {
         f0.await();
         f1.await();
         f2.await();
-        f3.await();
         assert_eq(Mapping::get(token_status, token_id), UNPAUSED_VALUE);
 
         assert(Mapping::contains(other_chain_token_service, chain_token_info));
@@ -664,10 +644,6 @@ program vlink_token_service_v2.aleo {
         // Increase the held amount
         let previously_held_amount:u128 = Mapping::get_or_use(token_holding, token_id, 0u128);
         Mapping::set(token_holding, token_id, previously_held_amount+held_amount);
-
-        // executr_fee is checked here 
-        let fee_execute: u128 = Mapping::get_or_use(platform_fee, true, 0u128);
-        assert_eq(fee, fee_execute);
 
     }
 
@@ -850,26 +826,6 @@ program vlink_token_service_v2.aleo {
             unpadded[18u32],
             unpadded[19u32],
         ];
-    }
-
-    async transition set_platform_fee(public fee: u128) -> Future{
-        return finalize_set_platform_fee(self.caller, fee);
-    }
-
-    async function finalize_set_platform_fee(from:address, fee: u128){
-        let owner: address = Mapping::get(owner_TS, true);
-        assert_eq(owner, from);
-        platform_fee.set(true, fee);
-    }
-
-    async transition set_executor_fee(public fee: u128) -> Future{
-        return finalize_set_executor_fee(self.caller, fee);
-    }
-
-    async function finalize_set_executor_fee(from:address, fee: u128){
-        let owner: address = Mapping::get(owner_TS, true);
-        assert_eq(owner, from);
-        execute_fee.set(true, fee);
     }
 
 }

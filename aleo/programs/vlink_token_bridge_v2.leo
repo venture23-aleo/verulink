@@ -35,7 +35,6 @@ program vlink_token_bridge_v2.aleo {
         // For EVM Chains, 20 bytes is formatted as following:
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         receiver_address: [u8; 32],
-        execution_fee: u128
     }
 
 
@@ -419,7 +418,6 @@ program vlink_token_bridge_v2.aleo {
         public sender: address, 
         public receiver: [u8; 32], 
         public amount: u128,
-        public execution_fee: u128
     ) -> Future{
 
         // Cannot directly pass struct as parameter in cross-contract call.
@@ -438,7 +436,6 @@ program vlink_token_bridge_v2.aleo {
             sender, 
             receiver, 
             amount,
-            execution_fee
         ));
     }
 
@@ -450,7 +447,6 @@ program vlink_token_bridge_v2.aleo {
         sender_address: address, 
         receiver_address: [u8; 32], 
         amount: u128,
-        execution_fee: u128
     ) {
         // Assert that the bridge is unpaused
         assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
@@ -482,8 +478,7 @@ program vlink_token_bridge_v2.aleo {
             sender_address,
             dest_token_address,
             amount,
-            receiver_address,
-            execution_fee
+            receiver_address
         };
 
         const VERSION: u8 = 1u8;
