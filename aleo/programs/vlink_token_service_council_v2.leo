@@ -83,7 +83,9 @@ program vlink_token_service_council_v2.aleo
         public voters: [address; 5],
         public token_address: [u8; 20],
         public token_service: [u8; 20],
-        public chain_id: u128
+        public chain_id: u128,
+        public fee_of_platform: u16,
+        public fee_of_relayer: u128
     ) -> Future{
         let proposal: TsAddToken  = TsAddToken {
             id,
@@ -100,7 +102,7 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_token : Future = vlink_token_service_v2.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id);
+        let add_token : Future = vlink_token_service_v2.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id, fee_of_platform, fee_of_relayer);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
@@ -602,6 +604,8 @@ program vlink_token_service_council_v2.aleo
         public token_service_address: [u8; 20],
         public token_address: [u8; 20],
         public voters: [address; 5],
+        public fee_of_platform: u16,
+        public fee_of_relayer: u128
     ) -> Future{
         let proposal: AddChainExistingToken  = AddChainExistingToken {
             id,
@@ -613,7 +617,7 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let add_chain: Future = vlink_token_service_v2.aleo/add_chain_to_existing_token(chain_id, token_id, token_service_address, token_address);
+        let add_chain: Future = vlink_token_service_v2.aleo/add_chain_to_existing_token(chain_id, token_id, token_service_address, token_address, fee_of_platform, fee_of_relayer);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
@@ -658,6 +662,77 @@ program vlink_token_service_council_v2.aleo
     }
 
     async function finalize_remove_OC_addresses(f0: Future, f1: Future) {
+        f0.await();
+        f1.await();
+    }
+
+
+    struct UpdateRelayerFee {
+        id: u32,
+        chain_id: u128,
+        token_id: field,
+        fee: u128
+    }
+
+    async transition ts_update_relayer_fee(
+        public id: u32,
+        public chain_id: u128,
+        public token_id: field,
+        public fee: u128,
+        public voters: [address; 5],
+    ) -> Future {
+        let proposal: UpdateRelayerFee = UpdateRelayerFee {
+            id,
+            chain_id,
+            token_id,
+            fee
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let update_relayer_fee: Future = vlink_token_service_v2.aleo/update_relayer_fee(chain_id, token_id, fee);
+
+        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+
+        return finalize_ts_update_RF(update_relayer_fee, external_execute);
+    }
+
+    async function finalize_ts_update_RF(f0: Future, f1: Future) {
+        f0.await();
+        f1.await();
+    }
+
+
+
+    struct UpdatePlatformFee {
+        id: u32,
+        chain_id: u128,
+        token_id: field,
+        fee: u16
+    }
+ 
+    async transition ts_update_platform_fee(
+        public id: u32,
+        public chain_id: u128,
+        public token_id: field,
+        public fee: u16,
+        public voters: [address; 5],
+    ) -> Future {
+        let proposal: UpdatePlatformFee = UpdatePlatformFee {
+            id,
+            chain_id,
+            token_id,
+            fee
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+        let update_platform_fee: Future = vlink_token_service_v2.aleo/update_platform_fee(chain_id, token_id, fee);
+
+        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+
+        return finalize_ts_update_PF(update_platform_fee, external_execute);
+    }
+
+    async function finalize_ts_update_PF(f0: Future, f1: Future) {
         f0.await();
         f1.await();
     }
