@@ -14,6 +14,7 @@ import (
 type ChainConfig struct {
 	Name                       string            `yaml:"name"`
 	ChainID                    *big.Int          `yaml:"chain_id"`
+	ChainType                  string            `yaml:"chain_type"`
 	BridgeContract             string            `yaml:"bridge_contract"`
 	NodeUrl                    string            `yaml:"node_url"`
 	PacketValidityWaitDuration time.Duration     `yaml:"pkt_validity_wait_dur"`
@@ -27,15 +28,17 @@ type ChainConfig struct {
 	FilterTopic                string            `yaml:"filter_topic"`       // useful for ethereum
 	RetryPacketWaitDur         time.Duration     `yaml:"retry_packet_wait_dur"`
 	PruneBaseSeqNumberWaitDur  time.Duration     `yaml:"prune_base_seq_num_wait_dur"`
+	AverageBlockGenDur         time.Duration     `yaml:"average_block_gen_dur"`
 }
 
 type SigningServiceConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Endpoint string `yaml:"endpoint"`
-	Scheme   string `yaml:"scheme"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	Endpoint       string `yaml:"endpoint"`
+	Scheme         string `yaml:"scheme"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	HealthEndpoint string `yaml:"health_end_point"`
 }
 
 type CollecterServiceConfig struct {
@@ -70,69 +73,92 @@ type MetricsConfig struct {
 	JobName string `yaml:"job_name"`
 }
 
-func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoStartSeqNumber uint64, benchmark bool) {
+func WriteE2EConifg(path, ethNodeURL, baseNodeURL, aleoNodeURL string, ethStartHeight, baseStartHeight, aleoStartSeqNumber uint64, benchmark bool) {
 	signingServiceHost := "signingservice"
 	if benchmark {
 		signingServiceHost = "localhost"
 		aleoNodeURL = "http://localhost:3002|testnet"
-		// ethNodeURL = "http://localhost:3001"
+		ethNodeURL = "http://localhost:3001"
+		baseNodeURL = "http://localhost:3003"
 	}
 	relayConfig := &Config{
 		Name: "e2eAttestor",
 		ChainConfigs: []*ChainConfig{
 			{
 				Name:           "aleo",
+				ChainType:      "aleo",
 				ChainID:        big.NewInt(6694886634403),
-				WalletAddress:  "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8",
-				BridgeContract: "token_bridge_v0001.aleo",
+				WalletAddress:  "aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za",
+				BridgeContract: "token_bridge_stg_v2.aleo",
 				NodeUrl:        aleoNodeURL,
 				StartSeqNum: map[string]uint64{
 					"ethereum": aleoStartSeqNumber,
 				},
-				PacketValidityWaitDuration: time.Millisecond * 20,
-				FinalityHeight:             1,
-				RetryPacketWaitDur:         time.Minute,
-				PruneBaseSeqNumberWaitDur:  time.Minute,
-				DestChains:                 []string{"ethereum"},
+				PacketValidityWaitDuration: time.Minute * 1,
+				FinalityHeight:             21,
+				RetryPacketWaitDur:         time.Minute * 2,
+				PruneBaseSeqNumberWaitDur:  time.Minute * 5,
+				DestChains:                 []string{"ethereum", "base"},
+				AverageBlockGenDur:         time.Second * 3,
 			},
 			{
 				Name:                       "ethereum",
+				ChainType:                  "ethereum",
 				ChainID:                    big.NewInt(28556963657430695),
-				WalletAddress:              "0x684C68bE1b58f61a33888E0eE3EA63f021d8CB0a",
-				BridgeContract:             "0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C",
+				WalletAddress:              "0x832894550007B560BD35d28Ce564c2CCD690318F",
+				BridgeContract:             "0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6",
 				NodeUrl:                    ethNodeURL,
 				StartHeight:                ethStartHeight,
 				FinalityHeight:             1,
 				FilterTopic:                "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
-				FeedPacketWaitDuration:     time.Second * 2,
-				PacketValidityWaitDuration: time.Second * 2,
+				FeedPacketWaitDuration:     time.Minute * 1,
+				PacketValidityWaitDuration: time.Minute * 2,
 				RetryPacketWaitDur:         time.Minute,
 				PruneBaseSeqNumberWaitDur:  time.Minute,
 				DestChains:                 []string{"aleo"},
+				AverageBlockGenDur:         time.Second * 12,
+			},
+			{
+				Name:                       "base",
+				ChainType:                  "ethereum",
+				ChainID:                    big.NewInt(84532),
+				WalletAddress:              "0x832894550007B560BD35d28Ce564c2CCD690318F",
+				BridgeContract:             "",
+				NodeUrl:                    baseNodeURL,
+				StartHeight:                baseStartHeight,
+				FinalityHeight:             1,
+				FilterTopic:                "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
+				FeedPacketWaitDuration:     time.Minute * 1,
+				PacketValidityWaitDuration: time.Minute * 2,
+				RetryPacketWaitDur:         time.Minute,
+				PruneBaseSeqNumberWaitDur:  time.Minute,
+				DestChains:                 []string{"aleo"},
+				AverageBlockGenDur:         time.Second * 2,
 			},
 		},
-		CheckHealthServiceDur: 5 * time.Second,
+		CheckHealthServiceDur: time.Minute,
 		LogConfig: &LoggerConfig{
 			Encoding:   "console",
 			OutputPath: "log",
 		},
 		MetricConfig: &MetricsConfig{
 			Host:    "172.17.0.1:9091",
-			JobName: "dev-push-gateway",
+			JobName: "e2etest-push-gateway",
 		},
 		DBPath:              "db",
 		ConsumePacketWorker: 10,
 		Mode:                "dev",
 		SigningServiceConfig: SigningServiceConfig{
-			Host:     signingServiceHost,
-			Port:     8080,
-			Endpoint: "/sign",
-			Scheme:   "http",
-			Username: "username",
-			Password: "password",
+			Host:           signingServiceHost,
+			Port:           8080,
+			Endpoint:       "/sign",
+			Scheme:         "http",
+			Username:       "username",
+			Password:       "password",
+			HealthEndpoint: "/health",
 		},
 		CollectorServiceConfig: CollecterServiceConfig{
-			Uri:                 "https://aleomtls.ibriz.ai",
+			Uri:                 "https://staging-aleomtls.venture233.xyz",
 			CollectorWaitDur:    time.Hour,
 			CaCertificate:       "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/ca.cer",
 			AttestorCertificate: "/home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.crt",
@@ -152,7 +178,6 @@ func WriteE2EConifg(path, ethNodeURL, aleoNodeURL string, ethStartHeight, aleoSt
 		panic(err)
 	}
 }
-
 func BuildRelayImage() {
 	fmt.Println("🔨 building relay image")
 	composePath := "../../compose.yaml"

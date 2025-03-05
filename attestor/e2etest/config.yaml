@@ -6,13 +6,21 @@ chains:
     bridge_contract_address: 0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C
     node_url: http://localhost:3001
     wallet_path: /home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121
-    wallet_address: 0x2ca02613ce51b3ed6930e89c63c66219f8e41121
+    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
   - name: aleo
+    token_service_contract_address: token_service_stg_v2.aleo
+    usdc_contract_address: wusdc_token_v0001.aleo
+    bridge_contract_address: token_bridge_stg_v2.aleo
+    node_url: http://localhost:3002|testnet
+    wallet_path: APrivateKey1zkp4RfjRhZ9apYoF75EsPhEVKJijDoRTxeZRk7Y9C7bWt4B
+    wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za
+
+  - name: base
     token_service_contract_address: token_service_v0001.aleo
     usdc_contract_address: wusdc_token_v0001.aleo
     bridge_contract_address: token_bridge_v0001.aleo
-    node_url: http://localhost|testnet
-    wallet_path: APrivateKey1zkp4RfjRhZ9apYoF75EsPhEVKJijDoRTxeZRk7Y9C7bWt4B
-    wallet_address: wallet_address
-collector_service_uri: https://aleomtls.ibriz.ai
+    node_url: wss://base-sepolia.drpc.org
+    wallet_path: /home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121
+    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
+collector_service_uri: https://staging-aleomtls.venture233.xyz
 write_config_path: ../chainService/config.yaml

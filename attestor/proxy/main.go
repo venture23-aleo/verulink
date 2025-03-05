@@ -67,12 +67,23 @@ func serveHttp(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("100"))
 
 	} else {
+		// /testnet/program/token_bridge_stg_v2.aleo/mapping/out_packets/%7Bchain_id:84532u128,sequence:1u64%7D
 		urlList := strings.Split(r.URL.String(), "/")
+	
+		replacer := strings.NewReplacer("%7B", "", "chain_id:", "", "u128", "", "sequence:", "", "u64", "", "%7D", "")
+		
 
-		replacer := strings.NewReplacer("sequence:", "", "u64", "", "%7D", "")
-
-		seq := replacer.Replace(strings.Split(urlList[len(urlList)-1], ",")[1])
-		seqInt, err := strconv.Atoi(seq)
+		lastPart := urlList[len(urlList)-1]
+		params := strings.Split(lastPart, ",")
+		
+		chainID := replacer.Replace(params[0])
+		
+		chainId, err := strconv.Atoi(chainID)
+		if err != nil {
+			return
+		}
+		sequence  := replacer.Replace(params[1])
+		seqInt, err := strconv.Atoi(sequence)
 		if err != nil {
 			return
 		}
@@ -82,9 +93,9 @@ func serveHttp(w http.ResponseWriter, r *http.Request) {
 			"destination: {\\n    chain_id: %du128,\\n    addr: %s},\\n  "+
 			"message: {\\n        sender_address: %s,\\n  dest_token_address: %s,\\n  amount: %su128,\\n  receiver_address: %s\\n     },\\n  "+
 			"height: %du64\\n}", 0, seqInt, 6694886634403, "aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8",
-			28556963657430695, modelEthAddress,
+			chainId, modelEthAddress,
 			"aleo1fcg4k0sacadavag292p7x9ggm6889aay6wn9m8ftnmynh67cg5xsx8ycu8", modelEthAddress,
-			"100", modelEthAddress, 105)
+			"100", modelEthAddress, 1002)
 
 		w.Write([]byte(packet))
 
