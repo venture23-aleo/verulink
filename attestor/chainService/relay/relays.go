@@ -254,6 +254,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 
 	logger.GetLogger().Debug("packet hashed and signed",
 		zap.String("source_chain", pkt.Source.ChainID.String()),
+		zap.String("dest_chain",pkt.Destination.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence),
 		zap.String("hash", hash), zap.String("signature", signature))
 
