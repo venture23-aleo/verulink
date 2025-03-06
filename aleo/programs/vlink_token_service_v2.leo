@@ -400,7 +400,7 @@ program vlink_token_service_v2.aleo {
     ///// Token Transfers ///////
     /////////////////////////////
 
-    async transition token_send(
+    async transition token_send_public(
         public token_id: field, 
         public receiver: [u8; 20], 
         public amount: u128,
@@ -424,10 +424,10 @@ program vlink_token_service_v2.aleo {
             amount        
         );
 
-        return finalize_token_send(token_id, amount, chain_token_info, dest_token_address, dest_token_service, burn, publish);
+        return finalize_token_send_public(token_id, amount, chain_token_info, dest_token_address, dest_token_service, burn, publish);
     }
 
-    async function finalize_token_send(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], f0: Future, f1: Future) {
+    async function finalize_token_send_public(wrapped_token_id: field, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], f0: Future, f1: Future) {
         f0.await();
         f1.await();
         // ASSERT FEE OF AGRUMENT AND OF MAPPING
@@ -652,7 +652,7 @@ program vlink_token_service_v2.aleo {
     // this is for private withdrawl
 
     struct Image {
-        pre_Image: field,
+        pre_image: field,
         receiver: address
     }
 
@@ -673,8 +673,8 @@ program vlink_token_service_v2.aleo {
         let version: u8 = 2u8;
 
         let image: Image = Image {
-          pre_Image: pre_image,
-          receiver: receiver  
+          pre_image,
+          receiver  
         };
 
         let image_address: address = BHP256::hash_to_address(image);

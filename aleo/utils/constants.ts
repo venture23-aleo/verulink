@@ -16,7 +16,8 @@ export const BRIDGE_UNPAUSED_VALUE = 1;
 export const TOKEN_PAUSED_VALUE = true;
 export const TOKEN_UNPAUSED_VALUE = false;
 
-export const PACKET_VERSION = 1;
+export const PACKET_VERSION_PUBLIC = 1;
+export const PACKET_VERSION_PRIVATE = 2;
 
 export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";
 
