@@ -29,9 +29,19 @@ export const usdtContractAddr = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 export const ethContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = ""
-export const ethTsRandomContractAddress = ""
-export const ethTsRandomContractAddress2 = ""
+export const ethTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const ethTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
+export const ethTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
+
+// Token Service Contract Address on Base
+export const baseTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const baseTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
+export const baseTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
+
+// Token Service Contract Address on Arbitrum
+export const arbitrumTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const arbitrumTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
+export const arbitrumTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
 
 // Token Service Contract Address on Ethereum
@@ -42,6 +52,8 @@ export const ethTsRandomContractAddress2 = ""
 const mainnetChainId = 1
 export const ethChainId = BigInt(27234042785);
 export const aleoChainId = BigInt(6694886634401);
+export const baseChainId = BigInt(84532);
+export const arbitrumChainId = BigInt(421614);
 
 export const PRIVATE_VERSION = 2;
 export const PUBLIC_VERSION = 1;
