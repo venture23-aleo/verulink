@@ -19,7 +19,8 @@ import {
   ethTsRandomContractAddress,
   PUBLIC_VERSION,
   baseChainId,
-  arbitrumChainId
+  arbitrumChainId,
+  usdtContractAddr
 } from "../utils/constants";
 
 import { PrivateKey } from "@aleohq/sdk";
@@ -510,7 +511,7 @@ describe("Token Bridge ", () => {
 
     const destChainId = ethChainId;
     const destTsAddr = ethTsContractAddr.toLowerCase();
-    const destToken = usdcContractAddr.toLowerCase();
+    const destToken = usdtContractAddr.toLowerCase();
     const sender = aleoUser5
     const receiver = ethUser.toLowerCase()
     const amount = BigInt(100);
@@ -590,7 +591,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("Publish on Eth",
+    test("Publish on Eth",
       async () => {
         // adding chain 
         bridge.connect(admin)
@@ -941,7 +942,6 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    //TODO: fail
     test("Screening passed for eth", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, ethChainId);
 
@@ -982,12 +982,12 @@ describe("Token Bridge ", () => {
         signatures
       );
 
-      // await tx.wait();
-      // expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
+      await tx.wait();
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
     },
       TIMEOUT
     );
-    //TODO: fail
+
     test.skip("Screening passed for base", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, baseChainId);
 
@@ -1029,11 +1029,11 @@ describe("Token Bridge ", () => {
       );
 
       await tx.wait();
-      // expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
     },
       TIMEOUT
     );
-    //TODO: fail
+
     test.skip("Screening passed for arbitrum", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, arbitrumChainId);
 
@@ -1075,12 +1075,12 @@ describe("Token Bridge ", () => {
       );
 
       await tx.wait();
-      // expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
     },
       TIMEOUT
     );
-    //TODO: fail
-    test.skip("if consumed the same packet again, transaction should be failed and undefined", async () => {
+
+    test("if consumed the same packet again, transaction should be failed and undefined", async () => {
       let packetId: PacketId = {
         chain_id: packet.source.chain_id,
         sequence: packet.sequence
@@ -1121,7 +1121,7 @@ describe("Token Bridge ", () => {
     },
       TIMEOUT
     );
-    //TODO: fail
+
     test.skip("Screening failed", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, ethChainId);
       let packetId: PacketId = {
