@@ -10,8 +10,8 @@ export const createRandomPacket = (
   sourceTsContractAddr: string,
   destTsContractAddr: string,
   destTokenId: bigint,
+  version: number,
   sender?: string,
-  version?: number,
   sequence?: bigint,
   height?: bigint,
 
