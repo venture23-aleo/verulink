@@ -42,16 +42,16 @@ var (
 )
 
 type Client struct {
-	aleoClient aleoRpc.IAleoRPC
-	name       string
-	programID  string
-	queryUrl   string
-	network    string
-	chainID    *big.Int
-	waitHeight int64
+	aleoClient     aleoRpc.IAleoRPC
+	name           string
+	programID      string
+	queryUrl       string
+	network        string
+	chainID        *big.Int
+	waitHeightsMap map[string]int64
 	// map of destChain to sequence number to start from
 	destChainsIDMap     map[string]uint64
-	validityWaitDur     time.Duration
+	validityWaitDursMap map[string]time.Duration
 	retryPacketWaitDur  time.Duration
 	pruneBaseSeqWaitDur time.Duration
 	avgBlockGenDur      time.Duration
@@ -130,22 +130,22 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 		default:
 		}
 
-		curMaturedHeight := cl.blockHeightPriorWaitDur(ctx)
+		curMaturedHeight := cl.blockHeightPriorWaitDur(ctx, chainID)
 		if curMaturedHeight == 0 { // 0 means that there was some error while getting current height
 			continue
 		}
 
 		switch {
 		case availableInHeight == 0:
-			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", cl.validityWaitDur))
-			time.Sleep(cl.validityWaitDur)
+			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", cl.validityWaitDursMap[chainID]))
+			time.Sleep(cl.validityWaitDursMap[chainID])
 		case availableInHeight > curMaturedHeight:
 			dur := time.Duration(availableInHeight-curMaturedHeight) * cl.avgBlockGenDur
 			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", dur))
 			time.Sleep(dur)
 		}
 
-		curMaturedHeight = cl.blockHeightPriorWaitDur(ctx)
+		curMaturedHeight = cl.blockHeightPriorWaitDur(ctx, chainID)
 		if curMaturedHeight == 0 {
 			continue
 		}
@@ -195,7 +195,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compC
 // below this height is ready to be processed.
 // If any error occurs it logs error and returns 0. Caller should assume error occurrence
 // if it receives 0.
-func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
+func (cl *Client) blockHeightPriorWaitDur(ctx context.Context, destChaindId string) int64 {
 	h, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
 		logger.GetLogger().Error("error while getting height", zap.Error(err))
@@ -203,7 +203,8 @@ func (cl *Client) blockHeightPriorWaitDur(ctx context.Context) int64 {
 		return 0
 	}
 	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), UP)
-	return h - cl.waitHeight
+	waitHeight := cl.waitHeightsMap[destChaindId]
+	return h - waitHeight
 }
 
 // pruneBaseSeqNum updates the sequence number upto which the attestor has processed all the
@@ -362,7 +363,16 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	}
 
 	var namespaces []string
-	for _, destChainId := range cfg.DestChains {
+
+	validityWaitDursMap := make(map[string]time.Duration, 0)
+	waitHeightsMap := make(map[string]int64, 0)
+
+	avgBlockGenDur := cfg.AverageBlockGenDur
+	if avgBlockGenDur == 0 {
+		avgBlockGenDur = defaultAvgBlockGenDur
+	}
+
+	for destChainId, duration := range cfg.DestChains {
 		rns := retryPacketNamespacePrefix + destChainId
 		bns := baseSeqNumNameSpacePrefix + destChainId
 		namespaces = append(namespaces, rns, bns)
@@ -373,6 +383,19 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		if _, ok := destChainsSeqMap[destChainId]; !ok {
 			destChainsSeqMap[destChainId] = 1 // By default start from 1
 		}
+
+		validityWaitDursMap[destChainId] = duration.PacketValidityWaitDuration
+		if validityWaitDursMap[destChainId] == 0 {
+			validityWaitDursMap[destChainId] = defaultValidityWaitDur
+		}
+
+		waitHeight := int64(validityWaitDursMap[destChainId] / avgBlockGenDur)
+		if waitHeight < int64(duration.FinalityHeight) {
+			waitHeight = int64(duration.FinalityHeight)
+		}
+
+		waitHeightsMap[destChainId] = waitHeight
+
 	}
 
 	err = store.CreateNamespaces(namespaces)
@@ -385,11 +408,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		name = aleo
 	}
 
-	validityWaitDur := cfg.PacketValidityWaitDuration
-	if validityWaitDur == 0 {
-		validityWaitDur = defaultValidityWaitDur
-	}
-
 	retryPacketWaitDur := cfg.RetryPacketWaitDur
 	if retryPacketWaitDur == 0 {
 		retryPacketWaitDur = defaultRetryPacketWaitDur
@@ -400,16 +418,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
 	}
 
-	avgBlockGenDur := cfg.AverageBlockGenDur
-	if avgBlockGenDur == 0 {
-		avgBlockGenDur = defaultAvgBlockGenDur
-	}
-
-	waitHeight := int64(validityWaitDur / avgBlockGenDur)
-	if waitHeight < int64(cfg.FinalityHeight) {
-		waitHeight = int64(cfg.FinalityHeight)
-	}
-
 	return &Client{
 		queryUrl:            urlSlice[0],
 		network:             urlSlice[1],
@@ -418,10 +426,10 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		programID:           cfg.BridgeContract,
 		name:                name,
 		destChainsIDMap:     destChainsSeqMap,
-		waitHeight:          waitHeight,
-		validityWaitDur:     validityWaitDur,
 		retryPacketWaitDur:  retryPacketWaitDur,
 		pruneBaseSeqWaitDur: pruneBaseSeqWaitDur,
 		avgBlockGenDur:      avgBlockGenDur,
+		validityWaitDursMap: validityWaitDursMap,
+		waitHeightsMap:      waitHeightsMap,
 	}
 }
