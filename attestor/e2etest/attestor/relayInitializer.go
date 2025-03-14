@@ -12,23 +12,30 @@ import (
 )
 
 type ChainConfig struct {
-	Name                       string            `yaml:"name"`
-	ChainID                    *big.Int          `yaml:"chain_id"`
-	ChainType                  string            `yaml:"chain_type"`
-	BridgeContract             string            `yaml:"bridge_contract"`
-	NodeUrl                    string            `yaml:"node_url"`
-	PacketValidityWaitDuration time.Duration     `yaml:"pkt_validity_wait_dur"`
-	FeedPacketWaitDuration     time.Duration     `yaml:"feed_pkt_wait_dur"`
-	FinalityHeight             uint64            `yaml:"finality_height"`
-	WalletPath                 string            `yaml:"wallet_path"`
-	DestChains                 []string          `yaml:"dest_chains"`
-	WalletAddress              string            `yaml:"wallet_address"`
-	StartSeqNum                map[string]uint64 `yaml:"sequence_num_start"` // useful for aleo
-	StartHeight                uint64            `yaml:"start_height"`       // useful for ethereum
-	FilterTopic                string            `yaml:"filter_topic"`       // useful for ethereum
-	RetryPacketWaitDur         time.Duration     `yaml:"retry_packet_wait_dur"`
-	PruneBaseSeqNumberWaitDur  time.Duration     `yaml:"prune_base_seq_num_wait_dur"`
-	AverageBlockGenDur         time.Duration     `yaml:"average_block_gen_dur"`
+	Name                       string                    `yaml:"name"`
+	ChainID                    *big.Int                  `yaml:"chain_id"`
+	ChainType                  string                    `yaml:"chain_type"`
+	BridgeContract             string                    `yaml:"bridge_contract"`
+	NodeUrl                    string                    `yaml:"node_url"`
+	// PacketValidityWaitDuration time.Duration             `yaml:"pkt_validity_wait_dur"`
+	// FeedPacketWaitDuration     time.Duration             `yaml:"feed_pkt_wait_dur"`
+	// FinalityHeight             uint64                    `yaml:"finality_height"`
+	WalletPath                 string                    `yaml:"wallet_path"`
+	DestChains                 map[string]DurationConfig `yaml:"dest_chains"`
+	WalletAddress              string                    `yaml:"wallet_address"`
+	StartSeqNum                map[string]uint64         `yaml:"sequence_num_start"` // useful for aleo
+	// StartHeight                uint64                    `yaml:"start_height"`       // useful for ethereum
+	FilterTopic                string                    `yaml:"filter_topic"`       // useful for ethereum
+	RetryPacketWaitDur         time.Duration             `yaml:"retry_packet_wait_dur"`
+	PruneBaseSeqNumberWaitDur  time.Duration             `yaml:"prune_base_seq_num_wait_dur"`
+	AverageBlockGenDur         time.Duration             `yaml:"average_block_gen_dur"`
+}
+
+type DurationConfig struct {
+	PacketValidityWaitDuration time.Duration `yaml:"pkt_validity_wait_dur"`
+	FinalityHeight             uint64        `yaml:"finality_height"`
+	FeedPacketWaitDuration     time.Duration `yaml:"feed_pkt_wait_dur"`
+	StartHeight                uint64        `yaml:"start_height"`
 }
 
 type SigningServiceConfig struct {
@@ -93,13 +100,23 @@ func WriteE2EConifg(path, ethNodeURL, baseNodeURL, aleoNodeURL string, ethStartH
 				NodeUrl:        aleoNodeURL,
 				StartSeqNum: map[string]uint64{
 					"ethereum": aleoStartSeqNumber,
+					"base":     10,
 				},
-				PacketValidityWaitDuration: time.Minute * 1,
-				FinalityHeight:             21,
+				// PacketValidityWaitDuration: time.Minute * 1,
+				// FinalityHeight:             21,
 				RetryPacketWaitDur:         time.Minute * 2,
 				PruneBaseSeqNumberWaitDur:  time.Minute * 5,
-				DestChains:                 []string{"ethereum", "base"},
-				AverageBlockGenDur:         time.Second * 3,
+				DestChains: map[string]DurationConfig{
+					"ethereum": {
+						PacketValidityWaitDuration: time.Minute * 1,
+						FinalityHeight:             21,
+					},
+					"base": {
+						PacketValidityWaitDuration: time.Minute * 2,
+						FinalityHeight:             23,
+					},
+				},
+				AverageBlockGenDur: time.Second * 3,
 			},
 			{
 				Name:                       "ethereum",
@@ -108,32 +125,52 @@ func WriteE2EConifg(path, ethNodeURL, baseNodeURL, aleoNodeURL string, ethStartH
 				WalletAddress:              "0x832894550007B560BD35d28Ce564c2CCD690318F",
 				BridgeContract:             "0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6",
 				NodeUrl:                    ethNodeURL,
-				StartHeight:                ethStartHeight,
-				FinalityHeight:             1,
+				// StartHeight:                ethStartHeight,
+				// FinalityHeight:             1,
 				FilterTopic:                "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
-				FeedPacketWaitDuration:     time.Minute * 1,
-				PacketValidityWaitDuration: time.Minute * 2,
+				// FeedPacketWaitDuration:     time.Second * 1,
+				// PacketValidityWaitDuration: time.Minute * 2,
 				RetryPacketWaitDur:         time.Minute,
 				PruneBaseSeqNumberWaitDur:  time.Minute,
-				DestChains:                 []string{"aleo"},
-				AverageBlockGenDur:         time.Second * 12,
+				DestChains: map[string]DurationConfig{
+					"aleo": {
+						PacketValidityWaitDuration: time.Minute * 1,
+						FinalityHeight:             1,
+						FeedPacketWaitDuration:     time.Minute,
+						StartHeight:                ethStartHeight,
+					},
+					"base": {
+						PacketValidityWaitDuration: time.Minute * 2,
+						FinalityHeight:             23,
+						FeedPacketWaitDuration:     time.Minute * 2,
+						StartHeight:                10,
+					},
+				},
+				AverageBlockGenDur: time.Second * 12,
 			},
 			{
 				Name:                       "base",
 				ChainType:                  "ethereum",
 				ChainID:                    big.NewInt(84532),
 				WalletAddress:              "0x832894550007B560BD35d28Ce564c2CCD690318F",
-				BridgeContract:             "",
+				BridgeContract:             "0x5410567256E7187b0a6A3C67E240A85d063C3aF5",
 				NodeUrl:                    baseNodeURL,
-				StartHeight:                baseStartHeight,
-				FinalityHeight:             1,
+				// StartHeight:                baseStartHeight,
+				// FinalityHeight:             1,
 				FilterTopic:                "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
-				FeedPacketWaitDuration:     time.Minute * 1,
-				PacketValidityWaitDuration: time.Minute * 2,
+				// FeedPacketWaitDuration:     time.Minute * 1,
+				// PacketValidityWaitDuration: time.Minute * 2,
 				RetryPacketWaitDur:         time.Minute,
 				PruneBaseSeqNumberWaitDur:  time.Minute,
-				DestChains:                 []string{"aleo"},
-				AverageBlockGenDur:         time.Second * 2,
+				DestChains: map[string]DurationConfig{
+					"aleo": {
+						PacketValidityWaitDuration: time.Minute * 1,
+						FinalityHeight:             21,
+						FeedPacketWaitDuration:     time.Minute,
+						StartHeight:                ethStartHeight,
+					},
+				},
+				AverageBlockGenDur: time.Second * 2,
 			},
 		},
 		CheckHealthServiceDur: time.Minute,

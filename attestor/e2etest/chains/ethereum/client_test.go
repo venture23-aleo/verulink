@@ -13,10 +13,11 @@ import (
 func TestSendEther(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
 		Name:                        "ethereum",
-		NodeUrl:                     "https://endpoints.omniatech.io/v1/eth/sepolia/public",
-		BridgeContractAddress:       "0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C",
-		TokenServiceContractAddress: "0x5554f1660e1464a86E9155374ea33b0Ab7b890Bd",
-		WalletPath:                  "/home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
+		NodeUrl:                     "wss://eth-sepolia.g.alchemy.com/v2/P_VAeggfVcHemP-tZ7wLQNIrWS6xaWvK",
+		BridgeContractAddress:       "0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6",
+		TokenServiceContractAddress: "0x40ba26EA0f0dE70780A151EAF3F47501e5Cd522A",
+		WalletPath:                  "../../testSuite/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
+		USDCContractAddress:         "0x532842De9470816Cf7cc7Cee2d15f19593fBaf64",
 	})
 	err := client.TransferEther(context.Background())
 	assert.Nil(t, err)
@@ -24,63 +25,63 @@ func TestSendEther(t *testing.T) {
 
 func TestMintUSDC(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
-		Name:                        "ethereum",
-		NodeUrl:                     "https://endpoints.omniatech.io/v1/eth/sepolia/public",
-		BridgeContractAddress:       "0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193",
-		TokenServiceContractAddress: "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c",
-		WalletPath:                  "/home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4",
-		USDCContractAddress:         "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79",
+		Name:                        "base",
+		NodeUrl:                     "wss://base-sepolia-rpc.publicnode.com",
+		BridgeContractAddress:       "0x5410567256E7187b0a6A3C67E240A85d063C3aF5",
+		TokenServiceContractAddress: "0x0c1F973927B2D1403727977E8b3Da8A42d640AC0",
+		WalletPath:                  "../../testSuite/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
+		USDCContractAddress:         "0x555eC249d1eB0db553AE8df14f4baE287F9CE62a",
 	})
 
 	value := new(big.Int)
 	value, ok := value.SetString("100000000000000000000", 10)
 	assert.True(t, ok)
-	err := client.MintUSDC(context.Background(), ethCommon.HexToAddress("0x218600eC01a8Fd9Bf9DEc0C91ac2ec480331Bc9B"), value)
+	err := client.MintUSDC(context.Background(), ethCommon.HexToAddress("0x2cA02613Ce51b3eD6930E89C63c66219f8E41121"), value, "84532")
 	assert.NoError(t, err)
 }
 
 func TestApproveUSDC(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
-		Name:                        "ethereum",
-		NodeUrl:                     "https://endpoints.omniatech.io/v1/eth/sepolia/public",
-		BridgeContractAddress:       "0xC89f5074765Ac2aF3E3b0D9C9fc6079895F02193",
-		TokenServiceContractAddress: "0xFEac0FD32367da944498b39f3D1EbD64cC88E13c",
-		WalletPath:                  "/home/sheldor/.ethereum/keystore/UTC--2024-01-18T08-23-57.207701022Z--06f1153169c8909a8f3761da4e79274f712328c4",
-		USDCContractAddress:         "0xD342C031453c66A6D6c2a23D6dA86c30adA08C79",
+		Name:                        "base",
+		NodeUrl:                     "wss://base-sepolia-rpc.publicnode.com",
+		BridgeContractAddress:       "0x5410567256E7187b0a6A3C67E240A85d063C3aF5",
+		TokenServiceContractAddress: "0x0c1F973927B2D1403727977E8b3Da8A42d640AC0",
+		WalletPath:                  "../../testSuite/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
+		USDCContractAddress:         "0x555eC249d1eB0db553AE8df14f4baE287F9CE62a",
 	})
 	value := new(big.Int)
-	value, ok := value.SetString("10000000000000000000", 10)
+	value, ok := value.SetString("10000000000000000000", 10) // 10 USDC
 	assert.True(t, ok)
-	err := client.ApproveUSDC(context.Background(), value)
+	err := client.ApproveUSDC(context.Background(), value, "84532")
 	assert.NoError(t, err)
 }
 
 func TestTransferUSDC(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
-		Name:                        "ethereum",
-		NodeUrl:                     "https://endpoints.omniatech.io/v1/eth/sepolia/public",
-		BridgeContractAddress:       "0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C",
-		TokenServiceContractAddress: "0x5554f1660e1464a86E9155374ea33b0Ab7b890Bd",
-		WalletPath:                  "/home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
-		USDCContractAddress:         "0xD99e898842c566be038bf898b3e406f028a031E0",
+		Name:                        "base",
+		NodeUrl:                     "wss://base-sepolia-rpc.publicnode.com",
+		BridgeContractAddress:       "0x5410567256E7187b0a6A3C67E240A85d063C3aF5",
+		TokenServiceContractAddress: "0x0c1F973927B2D1403727977E8b3Da8A42d640AC0",
+		WalletPath:                  "../../testSuite/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
+		USDCContractAddress:         "0x555eC249d1eB0db553AE8df14f4baE287F9CE62a",
 	})
 
 	value := new(big.Int)
-	value, ok := value.SetString("100000000000000000", 10)
+	value, ok := value.SetString("5000000000000000000", 10) // 5 USDC
 	assert.True(t, ok)
 
-	err := client.TransferUSDC(context.Background(), value, "aleo1v7nr80exf6p2709py6xf692v9f69l5cm230w23tz2p9fhx954qpq7cm7p4")
+	err := client.TransferUSDC(context.Background(), value, "aleo1v7nr80exf6p2709py6xf692v9f69l5cm230w23tz2p9fhx954qpq7cm7p4", "84532")
 	assert.NoError(t, err)
 }
-
+// got error in transfer -> 0x2dbf87d19074bb4d00955441087127109539f958a6c04dfa420399b8b8a39c6d
 func TestSequence(t *testing.T) {
 	client := NewClient(&common.ChainConfig{
-		Name:                        "ethereum",
-		NodeUrl:                     "https://endpoints.omniatech.io/v1/eth/sepolia/public",
-		BridgeContractAddress:       "0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C",
-		TokenServiceContractAddress: "0x5554f1660e1464a86E9155374ea33b0Ab7b890Bd",
-		WalletPath:                  "/home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
-		USDCContractAddress:         "0xD99e898842c566be038bf898b3e406f028a031E0",
+		Name:                        "base",
+		NodeUrl:                     "wss://base-sepolia-rpc.publicnode.com",
+		BridgeContractAddress:       "0x5410567256E7187b0a6A3C67E240A85d063C3aF5",
+		TokenServiceContractAddress: "0x0c1F973927B2D1403727977E8b3Da8A42d640AC0",
+		WalletPath:                  "../../testSuite/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121",
+		USDCContractAddress:         "0x555eC249d1eB0db553AE8df14f4baE287F9CE62a",
 	})
 
 	sequence, err := client.GetLatestSequenceNumber(context.Background())

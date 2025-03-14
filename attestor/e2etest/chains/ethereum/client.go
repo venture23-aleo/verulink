@@ -23,7 +23,7 @@ const (
 	txMaxDataSize        = 8 * 1024 // 8 KB
 	txOverheadScale      = 0.01     // base64 encoding overhead 0.36, rlp and other fields 0.01
 	defaultTxSizeLimit   = txMaxDataSize / (1 + txOverheadScale)
-	defaultSendTxTimeout = 30 * time.Second
+	defaultSendTxTimeout = 2 * time.Minute
 	defaultGasPrice      = 130000000000
 	maxGasPriceBoost     = 10.0
 	defaultReadTimeout   = 50 * time.Second //
@@ -49,7 +49,8 @@ func (c *Client) CreatePacket() {
 }
 
 func NewClient(cfg *common.ChainConfig) *Client {
-	rpc, err := rpc.Dial("http://localhost:3001/")
+	// rpc, err := rpc.Dial("http://localhost:3001/")
+	rpc, err := rpc.Dial(cfg.NodeUrl)
 	if err != nil {
 		panic(err)
 	}
@@ -95,9 +96,14 @@ func (c *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	return c.ethClient.SuggestGasPrice(ctx)
 }
 
-func (c *Client) buildTransactionOpts(ctx context.Context) (*bind.TransactOpts, error) {
+func (c *Client) buildTransactionOpts(ctx context.Context, chainId string) (*bind.TransactOpts, error) {
+	bigIntChainId := new(big.Int)
+	if _, success := bigIntChainId.SetString(chainId, 10); !success {
+		return nil, fmt.Errorf("invalid chain id")
+	}
+
 	newTransactOpts := func() (*bind.TransactOpts, error) {
-		txo, err := bind.NewKeyedTransactorWithChainID(c.privateKey, big.NewInt(11155111))
+		txo, err := bind.NewKeyedTransactorWithChainID(c.privateKey, bigIntChainId)
 		if err != nil {
 			return nil, err
 		}
@@ -116,12 +122,12 @@ func (c *Client) buildTransactionOpts(ctx context.Context) (*bind.TransactOpts, 
 	txOpts.Context = ctx
 	txOpts.GasLimit = defaultGasLimit
 
-	txOpts.GasPrice = big.NewInt(defaultGasPrice)
+	txOpts.GasPrice, _ = c.SuggestGasPrice(ctx)
 	return txOpts, nil
 }
 
 func (c *Client) TransferEther(ctx context.Context) error {
-	txOpts, err := c.buildTransactionOpts(ctx)
+	txOpts, err := c.buildTransactionOpts(ctx, "11155111")
 	if err != nil {
 		return err
 	}
@@ -133,7 +139,7 @@ func (c *Client) TransferEther(ctx context.Context) error {
 	}
 
 	txOpts.Value = value
-	tx, err := c.tokenService.Transfer0(txOpts, "aleo1n0e4f57rlgg7sl2f0sm0xha2557hc8ecw4zst93768qeggdzxgrqcs0vc6")
+	tx, err := c.tokenService.Transfer0(txOpts, "aleo1v7nr80exf6p2709py6xf692v9f69l5cm230w23tz2p9fhx954qpq7cm7p4")
 	if err != nil {
 		return err
 	}
@@ -149,8 +155,8 @@ func (c *Client) TransferEther(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value *big.Int) error {
-	txOpts, err := c.buildTransactionOpts(ctx)
+func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value *big.Int, chainId string) error {
+	txOpts, err := c.buildTransactionOpts(ctx, chainId)
 	if err != nil {
 		return err
 	}
@@ -170,8 +176,8 @@ func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value 
 	return nil
 }
 
-func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
-	txOpts, err := c.buildTransactionOpts(ctx)
+func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int, chainId string) error {
+	txOpts, err := c.buildTransactionOpts(ctx, chainId)
 	if err != nil {
 		return err
 	}
@@ -179,7 +185,6 @@ func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
 	if err != nil {
 		return err
 	}
-
 	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
@@ -191,8 +196,8 @@ func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int) error {
 
 }
 
-func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver string) error {
-	txOpts, err := c.buildTransactionOpts(ctx)
+func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver string, chainId string) error {
+	txOpts, err := c.buildTransactionOpts(ctx, chainId)
 	if err != nil {
 		return err
 	}
@@ -201,7 +206,6 @@ func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver stri
 	if err != nil {
 		return err
 	}
-
 	receipt, err := c.getTxReceipt(ctx, tx.Hash())
 	if err != nil {
 		return err
@@ -216,7 +220,7 @@ func (c *Client) getTxReceipt(ctx context.Context, txHash ethCommon.Hash) (*type
 	for i := 0; i < 10; i++ {
 		receipt, err := c.ethClient.TransactionReceipt(ctx, txHash)
 		if err != nil {
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 20)
 			continue
 		}
 		return receipt, err

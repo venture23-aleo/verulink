@@ -10,10 +10,19 @@ chains:
       finality_height: 21
       wallet_path: ""
       dest_chains:
-        - ethereum
-        - base
+        base:
+            pkt_validity_wait_dur: 2m0s
+            finality_height: 23
+            feed_pkt_wait_dur: 0s
+            start_height: 0
+        ethereum:
+            pkt_validity_wait_dur: 1m0s
+            finality_height: 21
+            feed_pkt_wait_dur: 0s
+            start_height: 0
       wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za
       sequence_num_start:
+        base: 10
         ethereum: 1
       start_height: 0
       filter_topic: ""
@@ -26,11 +35,20 @@ chains:
       bridge_contract: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
       node_url: https://eth-sepolia.g.alchemy.com/v2/WddzdzI2o9S3COdT73d5w6AIogbKq4X-
       pkt_validity_wait_dur: 2m0s
-      feed_pkt_wait_dur: 1m0s
+      feed_pkt_wait_dur: 1s
       finality_height: 1
       wallet_path: ""
       dest_chains:
-        - aleo
+        aleo:
+            pkt_validity_wait_dur: 1m0s
+            finality_height: 21
+            feed_pkt_wait_dur: 1m0s
+            start_height: 6243094
+        base:
+            pkt_validity_wait_dur: 2m0s
+            finality_height: 23
+            feed_pkt_wait_dur: 2m0s
+            start_height: 10
       wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
       sequence_num_start: {}
       start_height: 6243094
@@ -48,7 +66,11 @@ chains:
       finality_height: 1
       wallet_path: ""
       dest_chains:
-        - aleo
+        aleo:
+            pkt_validity_wait_dur: 1m0s
+            finality_height: 21
+            feed_pkt_wait_dur: 1m0s
+            start_height: 6243094
       wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
       sequence_num_start: {}
       start_height: 22689851
@@ -69,6 +91,7 @@ signing_service:
     scheme: http
     username: username
     password: password
+    health_end_point: /health
 collector_service:
     uri: https://staging-aleomtls.venture233.xyz
     collector_wait_dur: 1h0m0s

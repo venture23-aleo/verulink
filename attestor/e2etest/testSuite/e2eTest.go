@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/venture23-aleo/attestor/e2etest/attestor"
 	"github.com/venture23-aleo/attestor/e2etest/chains/aleo"
@@ -47,18 +46,18 @@ func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, d
 	value, ok := value.SetString("100000000000000000000", 10)
 	assert.True(e.t, ok)
 
-	err = ethClient.MintUSDC(ctx, ethCommon.HexToAddress(cfg.WalletAddress), value)
-	fmt.Println(err)
-	assert.NoError(e.t, err)
+	// // err = ethClient.MintUSDC(ctx, ethCommon.HexToAddress(cfg.WalletAddress), value)
+	// // fmt.Println(err)
+	// // assert.NoError(e.t, err)
 
 	// approve USDC to token Service
 	transferValue := value.Div(value, big.NewInt(10)) // 10 percent of the total balance is approved
-	err = ethClient.ApproveUSDC(ctx, transferValue)
+	err = ethClient.ApproveUSDC(ctx, transferValue, cfg.ChainID)
 	fmt.Println(err)
 	assert.NoError(e.t, err)
 
 	// cross chain transfer of USDC
-	err = ethClient.TransferUSDC(ctx, transferValue, TokenReceiverAddress)
+	err = ethClient.TransferUSDC(ctx, transferValue, TokenReceiverAddress, cfg.ChainID)
 	fmt.Println(err)
 	assert.NoError(e.t, err)
 

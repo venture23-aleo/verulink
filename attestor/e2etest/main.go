@@ -92,7 +92,8 @@ func main() {
 
 	fmt.Println(benchMarkRelayer)
 
-	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, "", aleoEndpoint, 6694886634403, 0, 1, benchMarkRelayer)
+	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, "wss://base-sepolia-rpc.publicnode.com", 
+	aleoEndpoint, 7879352, 22957975, 1, benchMarkRelayer)
 
 	// / setting up signal handling
 	sigCh := make(chan os.Signal, 1)
