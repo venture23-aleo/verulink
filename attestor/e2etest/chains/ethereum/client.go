@@ -42,6 +42,7 @@ type Client struct {
 	usdc                *abi.USDC
 	privateKey          *ecdsa.PrivateKey
 	walletAddress       ethCommon.Address
+	chainId             string
 }
 
 func (c *Client) CreatePacket() {
@@ -89,6 +90,7 @@ func NewClient(cfg *common.ChainConfig) *Client {
 		ethClient:           ethClient,
 		usdc:                usdcClient,
 		usdcAddress:         usdcContractAddress,
+		chainId:             cfg.ChainID,
 	}
 }
 
@@ -171,8 +173,9 @@ func (c *Client) MintUSDC(ctx context.Context, address ethCommon.Address, value 
 		return err
 	}
 	if receipt.Status != 1 {
-		return fmt.Errorf("error in transaction")
+		return fmt.Errorf("error in transaction: %v", tx.Hash())
 	}
+	fmt.Println("Minted txn ", tx.Hash())
 	return nil
 }
 
@@ -190,8 +193,9 @@ func (c *Client) ApproveUSDC(ctx context.Context, value *big.Int, chainId string
 		return err
 	}
 	if receipt.Status != 1 {
-		return fmt.Errorf("error in transaction")
+		return fmt.Errorf("error in transaction: %v", tx.Hash())
 	}
+	fmt.Println("USDC approval sucess ", tx.Hash())
 	return nil
 
 }
@@ -211,8 +215,9 @@ func (c *Client) TransferUSDC(ctx context.Context, value *big.Int, receiver stri
 		return err
 	}
 	if receipt.Status != 1 {
-		return fmt.Errorf("error in transaction")
+		return fmt.Errorf("error in transaction: %v", tx.Hash())
 	}
+	fmt.Println("USDC transffered ", tx.Hash())
 	return nil
 }
 

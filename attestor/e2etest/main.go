@@ -50,13 +50,16 @@ func main() {
 	defer cancel()
 
 	var aleoEndpoint string
-	var ethEndpoint string
+	var ethEndpoint, baseEndpoint string
 	for _, v := range config.Chains {
 		if v.Name == ethereum {
 			ethEndpoint = v.NodeUrl
 		}
 		if v.Name == aleo {
 			aleoEndpoint = v.NodeUrl
+		}
+		if v.Name == base {
+			baseEndpoint = v.NodeUrl
 		}
 	}
 
@@ -92,8 +95,8 @@ func main() {
 
 	fmt.Println(benchMarkRelayer)
 
-	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, "wss://base-sepolia-rpc.publicnode.com", 
-	aleoEndpoint, 7879352, 22957975, 1, benchMarkRelayer)
+	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, baseEndpoint,
+		aleoEndpoint, 7892221, 22962406, 1, benchMarkRelayer)
 
 	// / setting up signal handling
 	sigCh := make(chan os.Signal, 1)
@@ -153,10 +156,11 @@ func main() {
 				switch v.Name {
 				case ethereum:
 					testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
+				case base:
+					fmt.Println(config.CollectorServiceURI)
+					testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
 				case aleo:
 					testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
-				// case base:
-				// 	testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
 				}
 
 			}

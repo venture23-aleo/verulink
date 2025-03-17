@@ -5,9 +5,6 @@ chains:
       chain_type: aleo
       bridge_contract: token_bridge_stg_v2.aleo
       node_url: https://api.explorer.aleo.org/v1|testnet
-      pkt_validity_wait_dur: 1m0s
-      feed_pkt_wait_dur: 0s
-      finality_height: 21
       wallet_path: ""
       dest_chains:
         base:
@@ -24,7 +21,6 @@ chains:
       sequence_num_start:
         base: 10
         ethereum: 1
-      start_height: 0
       filter_topic: ""
       retry_packet_wait_dur: 2m0s
       prune_base_seq_num_wait_dur: 5m0s
@@ -34,14 +30,11 @@ chains:
       chain_type: ethereum
       bridge_contract: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
       node_url: https://eth-sepolia.g.alchemy.com/v2/WddzdzI2o9S3COdT73d5w6AIogbKq4X-
-      pkt_validity_wait_dur: 2m0s
-      feed_pkt_wait_dur: 1s
-      finality_height: 1
       wallet_path: ""
       dest_chains:
         aleo:
             pkt_validity_wait_dur: 1m0s
-            finality_height: 21
+            finality_height: 1
             feed_pkt_wait_dur: 1m0s
             start_height: 6243094
         base:
@@ -51,7 +44,6 @@ chains:
             start_height: 10
       wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
       sequence_num_start: {}
-      start_height: 6243094
       filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
       retry_packet_wait_dur: 1m0s
       prune_base_seq_num_wait_dur: 1m0s
@@ -59,11 +51,8 @@ chains:
     - name: base
       chain_id: "84532"
       chain_type: ethereum
-      bridge_contract: ""
+      bridge_contract: 0x5410567256E7187b0a6A3C67E240A85d063C3aF5
       node_url: wss://base-sepolia.drpc.org
-      pkt_validity_wait_dur: 2m0s
-      feed_pkt_wait_dur: 1m0s
-      finality_height: 1
       wallet_path: ""
       dest_chains:
         aleo:
@@ -73,7 +62,6 @@ chains:
             start_height: 6243094
       wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
       sequence_num_start: {}
-      start_height: 22689851
       filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
       retry_packet_wait_dur: 1m0s
       prune_base_seq_num_wait_dur: 1m0s
@@ -93,11 +81,11 @@ signing_service:
     password: password
     health_end_point: /health
 collector_service:
-    uri: https://staging-aleomtls.venture233.xyz
+    uri: https://staging-aleomtls.venture23.xyz
     collector_wait_dur: 1h0m0s
-    ca_certificate: /home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/ca.cer
-    attestor_certificate: /home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.crt
-    attestor_key: /home/aanya/ibriz/aleo/bridge/verulink/attestor/chainService/.mtls/attestor9.key
+    ca_certificate: /configs/.mtls/ca.cer
+    attestor_certificate: /configs/.mtls/attestor1.crt
+    attestor_key: /configs/.mtls/attestor1.key
 check_health_service: 1m0s
 metrics:
     host: 172.17.0.1:9091
