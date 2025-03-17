@@ -1,6 +1,5 @@
 import { Field } from "@aleohq/sdk";
-import { InPacket } from "../artifacts/js/types/token_bridge_v0003";
-import { PACKET_VERSION } from "./constants";
+import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v2";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr } from "./ethAddress";
 
 export const createRandomPacket = (
@@ -11,19 +10,20 @@ export const createRandomPacket = (
   sourceTsContractAddr: string,
   destTsContractAddr: string,
   destTokenId: bigint,
+  version: number,
   sender?: string,
   sequence?: bigint,
   height?: bigint,
-  version?: number
+
 ): InPacket => {
   let incomingSequence = sequence ?? BigInt(
     Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
   );
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 
-  let bridgeVersion = version ?? PACKET_VERSION ;
+  let bridgeVersion = version;
 
-  let senderAddr = sender ?? generateRandomEthAddr() ;
+  let senderAddr = sender ?? generateRandomEthAddr();
 
   // Create a packet
   const packet: InPacket = {
