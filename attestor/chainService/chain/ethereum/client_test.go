@@ -42,12 +42,15 @@ func TestNewClient(t *testing.T) {
 		ChainType:                  "ethereum",
 		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:                    "https://rpc.sepolia.org",
-		PacketValidityWaitDuration: time.Hour * 24,
-		DestChains:                 []string{"2"},
+		DestChains:                 map[string]config.DurationConfig{
+			"2": {
+				PacketValidityWaitDuration: time.Hour * 24,
+				StartHeight: 100,
+			},
+		},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
-		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("happy path", func(t *testing.T) {
@@ -79,12 +82,15 @@ func TestNewClientUninitializedDB(t *testing.T) {
 		ChainType:                  "ethereum",
 		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:                    "https://rpc.sepolia.org",
-		PacketValidityWaitDuration: time.Hour * 24,
-		DestChains:                 []string{"2"},
+		DestChains:                 map[string]config.DurationConfig{
+			"2": {
+				PacketValidityWaitDuration: time.Hour * 24,
+				StartHeight: 100,
+			},
+		},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
-		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("case: uninitialized database", func(t *testing.T) {
@@ -160,10 +166,10 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeight:           9,
+		nextHeightMap: map[string]uint64{common.Big2.String(): 9},
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
-		feedPktWaitDur:            time.Nanosecond,
+		feePacketDurationMap: map[string]time.Duration{common.Big2.String(): time.Nanosecond},
 		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
 		metrics:                   newMetrics(),
 	}
@@ -193,13 +199,13 @@ func TestFeedPacket(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	assert.Equal(t, uint64(9), client.nextBlockHeight)
+	assert.Equal(t, uint64(9), client.nextHeightMap[common.Big2.String()])
 
 	pkt := <-pktCh
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(11), client.nextBlockHeight)
+	assert.Equal(t, uint64(11), client.nextHeightMap[common.Big2.String()])
 }
 
 func TestRetryFeed(t *testing.T) {
@@ -489,7 +495,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeight:           10,
+		nextHeightMap: map[string]uint64{common.Big2.String():10},
 		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
 		metrics:                   newMetrics(),

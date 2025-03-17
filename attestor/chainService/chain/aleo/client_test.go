@@ -39,16 +39,19 @@ func setupDB(p string) (func(), error) {
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
-		Name:                       "aleo",
-		ChainID:                    big.NewInt(1),
-		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:                    "https://node.url|testnet3",
-		PacketValidityWaitDuration: time.Hour * 24,
-		DestChains:                 []string{"1"},
+		Name:           "aleo",
+		ChainID:        big.NewInt(1),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		DestChains: map[string]config.DurationConfig{
+			"1": {
+				PacketValidityWaitDuration: time.Hour * 24,
+				StartHeight:                100,
+			},
+		},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
-		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("happy path", func(t *testing.T) {
@@ -78,16 +81,19 @@ func TestNewClientUninitializedDB(t *testing.T) {
 
 	store.CloseDB()
 	cfg := &config.ChainConfig{
-		Name:                       "aleo",
-		ChainID:                    big.NewInt(2),
-		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:                    "https://node.url|testnet3",
-		PacketValidityWaitDuration: time.Hour * 24,
-		DestChains:                 []string{"1"},
+		Name:           "aleo",
+		ChainID:        big.NewInt(2),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		DestChains: map[string]config.DurationConfig{
+			"1": {
+				PacketValidityWaitDuration: time.Hour * 24,
+				StartHeight:                100,
+			},
+		},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
-		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("case: uninitialized database", func(t *testing.T) {
@@ -194,7 +200,7 @@ func TestFeedPacket(t *testing.T) {
 			destChainsIDMap:     map[string]uint64{dstChainId: uint64(1)},
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
-			waitHeight:          1,
+			waitHeightsMap:      map[string]int64{dstChainId: 1},
 			avgBlockGenDur:      time.Second,
 			metrics:             newMetrics(),
 		}
@@ -213,7 +219,7 @@ func TestFeedPacket(t *testing.T) {
 		assert.Equal(t, pkt, expectedPacket)
 	})
 
-	t.Run("should not feed packet if height is immature", func(t *testing.T) {
+	 t.Run("should not feed packet if height is immature", func(t *testing.T) {
 
 		aleoPacket := &aleoPacket{
 			version:  "0u8",
@@ -256,7 +262,7 @@ func TestFeedPacket(t *testing.T) {
 			destChainsIDMap:     map[string]uint64{dstChainId: uint64(1)},
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
-			waitHeight:          90,
+			waitHeightsMap:      map[string]int64{dstChainId: 90},
 			avgBlockGenDur:      time.Second,
 			metrics:             newMetrics(),
 		}
