@@ -412,6 +412,7 @@ program vlink_token_bridge_v2.aleo {
     /// * `receiver`: [u8; 32] - Receiver of the message on destination chain
     /// * `amount`: u128 - Amount being sent to the receiver
     async transition publish(
+        public version: u8,
         public destination_chain_id: u128, 
         public destination_service_contract: [u8; 32], 
         public token: [u8; 32], 
@@ -429,6 +430,7 @@ program vlink_token_bridge_v2.aleo {
         // };
 
         return (finalize_publish (
+            version,
             self.caller, 
             destination_chain_id, 
             destination_service_contract, 
@@ -440,6 +442,7 @@ program vlink_token_bridge_v2.aleo {
     }
 
     async function finalize_publish(
+        version: u8,
         source_service_program: address, 
         destination_chain_id: u128, 
         destination_service_contract: [u8; 32], 
@@ -481,10 +484,9 @@ program vlink_token_bridge_v2.aleo {
             receiver_address
         };
 
-        const VERSION: u8 = 1u8;
         // Construct
         let packet: OutPacket = OutPacket {
-            version: VERSION,
+            version: version,
             source,
             destination,
             sequence: target_sequence_no,
