@@ -133,15 +133,15 @@ type Client struct {
 	// destChainsIDMap stores list of destination chain-ids that this attestor shall support
 	destChainsIDMap map[string]bool
 	// nextBlockHeight is next start height for filter logs
-	chainID         *big.Int
-	filterTopic     ethCommon.Hash
+	chainID     *big.Int
+	filterTopic ethCommon.Hash
 	// waitHeightsMaps is a map that stores waitHeight
 	// waitHeight is number of blocks to pass before considering a block as matured.
 	// i.e if waitHeight is 10 and packet is available in block height 100 then
 	// packet is matured if current block number is >= 110 and it is immatured
 	// if current block number is < 110
-	waitHeightsMaps               map[string]uint64
-	feePacketDurationMap          map[string]time.Duration
+	waitHeightsMaps      map[string]uint64
+	feePacketDurationMap map[string]time.Duration
 	// startHeightMaps               map[string]uint64
 	retryPacketWaitDur            time.Duration
 	pruneBaseSeqNumberWaitDur     time.Duration
@@ -244,7 +244,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 
 			if maturedHeight < cl.nextHeightMap[destchain] {
 				diff := cl.nextHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff)) // TODO: this log might not be required
+				logger.GetLogger().Info("Sleeping eth client for ", zap.Any("chain",cl.name), zap.Uint64("height", diff)) // TODO: this log might not be required
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				break L1
 			}
@@ -293,9 +293,14 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 	go cl.retryFeed(ctx, ch)
 
 	for dest := range cl.destChainsIDMap {
-		logger.GetLogger().Info("how many time is this loop running",zap.Any("hmm", dest))
 		var baseHeight uint64 = math.MaxUint64
-		ns := baseSeqNumNameSpacePrefix + dest
+		var ns string
+		if cl.name != "ethereum"{
+			ns = baseSeqNumNameSpacePrefix + cl.name+ dest  // ethereum_bsns_base_6694886634403, 3 //ethereum_bsns_ethereum_6694886634403, 200
+		} else {
+			ns = baseSeqNumNameSpacePrefix + dest 
+			
+		}
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
 		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
 
@@ -417,7 +422,12 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
-			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
+			var ns string
+			if cl.name != "ethereum"{
+				ns = retryPacketNamespacePrefix + cl.name+pkt.Destination.ChainID.String()
+			}else {
+				ns = retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
+			}
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -426,7 +436,12 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
+			var ns string
+			if cl.name != "ethereum"{
+				ns = baseSeqNumNameSpacePrefix + cl.name+pkt.Destination.ChainID.String()
+			}else {
+				ns = baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
+			}
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
 				zap.String("source_chain_id", pkt.Source.ChainID.String()),
@@ -495,8 +510,14 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	}
 
 	for destChain, duration := range cfg.DestChains {
-		rns := retryPacketNamespacePrefix + destChain
-		bns := baseSeqNumNameSpacePrefix + destChain
+		var rns, bns string
+		if cfg.Name != "ethereum" {
+			rns = retryPacketNamespacePrefix + cfg.Name + destChain
+			bns = baseSeqNumNameSpacePrefix + cfg.Name + destChain
+		} else {
+			rns = retryPacketNamespacePrefix + destChain // TODO : THE KEY BECAME SAME
+			bns = baseSeqNumNameSpacePrefix + destChain
+		}
 		namespaces = append(namespaces, rns, bns)
 
 		retryPacketNamespaces = append(retryPacketNamespaces, rns)
