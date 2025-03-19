@@ -1,10 +1,10 @@
 // The 'token_service' program.
 
-import vlink_token_bridge_v1.aleo;
+import vlink_token_bridge_v2.aleo;
 import token_registry.aleo;
 import vlink_holding_v1.aleo;
 
-program vlink_token_service_v1.aleo {
+program vlink_token_service_v2.aleo {
 
     struct WithdrawalLimit {
         // Withdrawal limit represented as basis points.
@@ -411,7 +411,7 @@ program vlink_token_service_v1.aleo {
             chain_id: dest_chain_id,
             token_id: token_id
         };
-        vlink_token_bridge_v1.aleo/publish(
+        vlink_token_bridge_v2.aleo/publish(
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
             pad_20_to_32(dest_token_address), 
@@ -490,7 +490,7 @@ program vlink_token_service_v1.aleo {
     ) -> public bool {
 
         // call consume on bridge
-        let screening_passed: bool = vlink_token_bridge_v1.aleo/consume(
+        let screening_passed: bool = vlink_token_bridge_v2.aleo/consume(
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
             token_id, 

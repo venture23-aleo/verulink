@@ -42,4 +42,3 @@ export const decodeNetworkChainId = (encodedChainId: number | bigint) => {
     chainId,
   };
 };
-

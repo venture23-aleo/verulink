@@ -1,7 +1,7 @@
-import vlink_council_v1.aleo;
-import vlink_token_bridge_v1.aleo;
+import vlink_council_v2.aleo;
+import vlink_token_bridge_v2.aleo;
 
-program vlink_bridge_council_v1.aleo
+program vlink_bridge_council_v2.aleo
 {
     ///////////////////////////////////////////
     /////// Bridge: Transfer Ownership ////////
@@ -20,9 +20,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/transfer_ownership_tb(new_owner);
+        vlink_token_bridge_v2.aleo/transfer_ownership_tb(new_owner);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 
     /////////////////////////////////////
@@ -44,9 +44,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/add_attestor_tb(new_attestor, new_threshold);
+        vlink_token_bridge_v2.aleo/add_attestor_tb(new_attestor, new_threshold);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 
     ////////////////////////////////////////
@@ -68,9 +68,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/remove_attestor_tb(existing_attestor, new_threshold);
+        vlink_token_bridge_v2.aleo/remove_attestor_tb(existing_attestor, new_threshold);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 
     /////////////////////////////////////////
@@ -90,9 +90,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/update_threshold_tb(new_threshold);
+        vlink_token_bridge_v2.aleo/update_threshold_tb(new_threshold);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////////
@@ -112,9 +112,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/add_chain_tb(chain_id);
+        vlink_token_bridge_v2.aleo/add_chain_tb(chain_id);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -136,8 +136,8 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/remove_chain_tb(chain_id);
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_token_bridge_v2.aleo/remove_chain_tb(chain_id);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -158,9 +158,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/add_service_tb(service);
+        vlink_token_bridge_v2.aleo/add_service_tb(service);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -181,9 +181,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/remove_service_tb(service);
+        vlink_token_bridge_v2.aleo/remove_service_tb(service);
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
     }
 
@@ -202,9 +202,9 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/pause_tb();
+        vlink_token_bridge_v2.aleo/pause_tb();
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 
     //////////////////////////////
@@ -222,8 +222,8 @@ program vlink_bridge_council_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        vlink_token_bridge_v1.aleo/unpause_tb();
+        vlink_token_bridge_v2.aleo/unpause_tb();
 
-        vlink_council_v1.aleo/external_execute(id, proposal_hash, voters);
+        vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
     }
 }

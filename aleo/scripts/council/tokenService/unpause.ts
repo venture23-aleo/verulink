@@ -1,21 +1,21 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_token_service_v1Contract } from "../../../artifacts/js/vlink_token_service_v1";
-import { Vlink_council_v1Contract } from "../../../artifacts/js/vlink_council_v1";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_council_v1";
-import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v1";
+import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
+import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Vlink_token_service_council_v1Contract } from "../../../artifacts/js/vlink_token_service_council_v1";
+import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { hash } from "aleo-hasher";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v1Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v1Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v1Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
 
 
 //////////////////////
@@ -39,8 +39,8 @@ export const proposeUnpauseToken = async (token_id: bigint): Promise<number> => 
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
-  const [proposeUnpauseTokenTx] = await council.propose(proposalId, tsUnpauseTokenHash);
-  await council.wait(proposeUnpauseTokenTx);
+  const proposeUnpauseTokenTx = await council.propose(proposalId, tsUnpauseTokenHash);
+  await proposeUnpauseTokenTx.wait();
 
   getProposalStatus(tsUnpauseTokenHash);
 
@@ -66,9 +66,9 @@ export const voteUnpauseToken = async (proposalId: number, token_id: bigint) => 
   const voter = council.getAccounts()[0];
   validateVote(tsUnpauseTokenHash, voter);
 
-  const [voteUnpauseTx] = await council.vote(tsUnpauseTokenHash, true);
+  const voteUnpauseTx = await council.vote(tsUnpauseTokenHash, true);
 
-  await council.wait(voteUnpauseTx);
+  await voteUnpauseTx.wait();
 
   getProposalStatus(tsUnpauseTokenHash);
 
@@ -99,13 +99,13 @@ export const execUnpauseToken = async (proposalId: number, token_id: bigint) => 
   validateExecution(tsUnpauseTokenHash);
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUnpauseTokenHash), 5);
 
-  const [unpauseTokenTx] = await serviceCouncil.ts_unpause_token(
+  const unpauseTokenTx = await serviceCouncil.ts_unpause_token(
     tsUnpauseToken.id,
     tsUnpauseToken.token_id,
     voters
   );
 
-  await council.wait(unpauseTokenTx);
+  await unpauseTokenTx.wait();
 
   isTokenPaused = (await tokenService.token_status(token_id, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
   if (isTokenPaused) {

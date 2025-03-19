@@ -69,7 +69,9 @@ program vlink_token_service_council_v2.aleo
         max_no_cap: u128,
         token_address: [u8; 20],
         token_service: [u8; 20],
-        chain_id: u128
+        chain_id: u128,
+        fee_of_platform: u16,
+        fee_of_relayer: u128
     }
 
     async transition ts_add_token(
@@ -97,7 +99,9 @@ program vlink_token_service_council_v2.aleo
             max_no_cap,
             token_address,
             token_service,
-            chain_id
+            chain_id,
+            fee_of_platform,
+            fee_of_relayer
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
@@ -594,7 +598,9 @@ program vlink_token_service_council_v2.aleo
         chain_id: u128,
         token_id: field,
         token_service_address: [u8; 20],
-        token_address: [u8; 20]
+        token_address: [u8; 20],
+        fee_of_platform: u16,
+        fee_of_relayer: u128
     }
 
     async transition ts_add_chain_to_existing_token(
@@ -612,7 +618,9 @@ program vlink_token_service_council_v2.aleo
             chain_id,
             token_id, 
             token_service_address,  
-            token_address
+            token_address,
+            fee_of_platform,
+            fee_of_relayer
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
