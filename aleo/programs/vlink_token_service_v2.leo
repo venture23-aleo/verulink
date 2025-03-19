@@ -659,7 +659,7 @@ program vlink_token_service_v2.aleo {
 
         if (!screening_passed.0) {
             actual_receiver = HOLDING_ADDRESS;
-            held_amount = amount;
+            held_amount = amount - fee_relayer;
         }
 
         let minter:TokenOwner = TokenOwner{
@@ -669,7 +669,7 @@ program vlink_token_service_v2.aleo {
 
         let mint: Future = token_registry.aleo/mint_public(token_id, actual_receiver, amount-fee_relayer, authorize_until);
 
-        let hold: Future = vlink_holding_v1.aleo/hold_fund(receiver, token_id, held_amount-fee_relayer);
+        let hold: Future = vlink_holding_v1.aleo/hold_fund(receiver, token_id, held_amount);
 
         // minting in relayer address
         let mint_relayer: Future = token_registry.aleo/mint_public(token_id, self.caller, fee_relayer, authorize_until);
