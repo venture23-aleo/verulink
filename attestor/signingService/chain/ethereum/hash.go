@@ -13,9 +13,9 @@ import (
 
 // HashAndSign returns the hash of screenedPacket and the signature of the attestor on the hash of
 // screenedPacket
-func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
+func HashAndSign(sp *chainService.ScreenedPacket, chainName string ) (hsh, signature string, err error) {
 	hsh = hash(sp)
-	signature, err = sign(hsh)
+	signature, err = sign(hsh, chainName)
 	if err != nil {
 		return "", "", err
 	}

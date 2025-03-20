@@ -42,36 +42,38 @@ func TestValidateKeys(t *testing.T) {
 func TestSetUpPrivateKey(t *testing.T) {
 	t.Run("passing valid key pair should set private key", func(t *testing.T) {
 		t.Cleanup(func() {
-			pKey = nil
+			pkeyMap = nil
 		})
 
 		kp := &config.KeyPair{
 			PrivateKey:    "a0e60c11e94f0aec4a9a363b86fa30945eac1750914ec6f878a8c9be438efb48",
 			WalletAddress: "0x5dc561633f195d44a530cdf0f288a409286797ff",
+			ChainType:     "ethereum",
 		}
 
 		expectedPKey, err := crypto.HexToECDSA(kp.PrivateKey)
 		require.NoError(t, err)
 
-		err = SetUpPrivateKey(kp)
+		err = SetUpPrivateKey(kp, "ethereum")
 		require.NoError(t, err)
 
-		assert.Equal(t, expectedPKey, pKey)
+		assert.Equal(t, expectedPKey, pkeyMap["ethereum"])
 	})
 
 	t.Run("passing invalid key pair should not set private key", func(t *testing.T) {
 		t.Cleanup(func() {
-			pKey = nil
+			pkeyMap = nil
 		})
 
 		kp := &config.KeyPair{
 			PrivateKey:    "a0e60c11e94f0aec4a9a363b86fa30945eac1750914ec6f878a8c9be438efb48",
 			WalletAddress: "0x5dc561633f195d44a530cdf0f288a409286797fe",
+			ChainType:     "ethereum",
 		}
 
-		err := SetUpPrivateKey(kp)
+		err := SetUpPrivateKey(kp, "ethereum")
 		require.Error(t, err)
 
-		require.Nil(t, pKey)
+		require.Nil(t, pkeyMap["ethereum"]) // TODO : do same for base wallet
 	})
 }

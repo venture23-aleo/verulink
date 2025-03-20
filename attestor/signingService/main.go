@@ -66,7 +66,7 @@ func main() {
 		case chain.Aleo:
 			err = aleo.SetUpPrivateKey(cfg)
 		case chain.Ethereum:
-			err = ethereum.SetUpPrivateKey(cfg)
+			err = ethereum.SetUpPrivateKey(cfg, chainName)
 		default:
 			err = fmt.Errorf("unsupported chain %s", chainName)
 		}

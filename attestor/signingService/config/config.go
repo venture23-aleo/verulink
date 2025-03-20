@@ -15,8 +15,9 @@ type Cred struct {
 }
 
 type ChainConfig struct {
-	Name    string   `yaml:"name"`
-	ChainID *big.Int `yaml:"chain_id"`
+	Name      string   `yaml:"name"`
+	ChainType string   `yaml:"chain_type"`
+	ChainID   *big.Int `yaml:"chain_id"`
 }
 
 type config struct {

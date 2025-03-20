@@ -17,6 +17,7 @@ const (
 
 var (
 	chainIDToName = map[string]string{}
+	chainIDToType = map[string]string{}
 )
 
 // HashAndSign returns the hash and signature according to the destination of the packets
@@ -34,16 +35,17 @@ func HashAndSign(data []byte) (hash, signature string, err error) {
 	)
 
 	chainID := sp.Packet.Destination.ChainID.String()
-	chainName, ok := chainIDToName[chainID]
+	chainName := chainIDToName[chainID]
+	chainType, ok := chainIDToType[chainID]
 	if !ok {
 		return "", "", fmt.Errorf("chain-id %s is not supported", chainID)
 	}
 
-	switch chainName {
+	switch chainType {
 	case Aleo:
 		return aleo.HashAndSign(sp)
 	case Ethereum:
-		return ethereum.HashAndSign(sp)
+		return ethereum.HashAndSign(sp, chainName)
 	}
 	return "", "", fmt.Errorf("chain %s is not supported", chainName)
 }
@@ -51,5 +53,6 @@ func HashAndSign(data []byte) (hash, signature string, err error) {
 func SetUpChains() {
 	for _, chain := range config.GetChains() {
 		chainIDToName[chain.ChainID.String()] = chain.Name
+		chainIDToType[chain.ChainID.String()] = chain.ChainType
 	}
 }
