@@ -1,5 +1,5 @@
 import { ExecutionMode } from '@doko-js/core';
-import { Vlink_token_service_v2Contract } from '../artifacts/js/vlink_token_service_v2';
+import { Vlink_token_service_v3Contract } from '../artifacts/js/vlink_token_service_v3';
 import { evm2AleoArr } from './ethAddress';
 
 const address = evm2AleoArr("0xD99e898842c566be038bf898b3e406f028a031E0");

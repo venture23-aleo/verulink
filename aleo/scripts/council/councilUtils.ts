@@ -1,14 +1,14 @@
 import { hashStruct } from "../../utils/hash";
 
-import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
-import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../../utils/constants";
-import { ProposalVote } from "../../artifacts/js/types/vlink_council_v2";
-import { getProposalVoteLeo } from "../../artifacts/js/js2leo/vlink_council_v2";
+import { Vlink_council_v3Contract } from "../../artifacts/js/vlink_council_v3";
+import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../../utils/testdata.data";
+import { ProposalVote } from "../../artifacts/js/types/vlink_council_v3";
+import { getProposalVoteLeo } from "../../artifacts/js/js2leo/vlink_council_v3";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v3Contract({ mode, priorityFee: 10_000 });
 
 export const validateProposer = async (proposer: string) => {
   const isMember = await council.members(proposer, false);
