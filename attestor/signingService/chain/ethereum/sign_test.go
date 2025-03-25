@@ -14,7 +14,7 @@ func TestValidateKeys(t *testing.T) {
 
 	t.Run("valid key should return nil error", func(t *testing.T) {
 		t.Cleanup(func() {
-			pKey = nil
+			pkeyMap = nil
 		})
 		privateKey := "a0e60c11e94f0aec4a9a363b86fa30945eac1750914ec6f878a8c9be438efb48"
 		walletAddr := "0x5dc561633f195d44a530cdf0f288a409286797ff"
@@ -27,7 +27,7 @@ func TestValidateKeys(t *testing.T) {
 
 	t.Run("invalid key should return error", func(t *testing.T) {
 		t.Cleanup(func() {
-			pKey = nil
+			pkeyMap = nil
 		})
 		privateKey := "a0e60c11e94f0aec4a9a363b86fa30945eac1750914ec6f878a8c9be438efb48"
 		walletAddr := "0x5dc561633f195d44a530cdf0f288a409286797fe"

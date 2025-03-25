@@ -1,10 +1,13 @@
 chains:
   - name: aleo
-    chain_id: 6694886634403
+    chain_type: aleo
+    chain_id: 6694886634401
   - name: ethereum
+    chain_type: ethereum
     chain_id: 28556963657430695
-  - name: ethereum
-    chain_id: 84532
+  - name: base
+    chain_type: ethereum
+    chain_id: 443067135441324596
 cred:
   username: "username"
   password: "password"
