@@ -1,9 +1,9 @@
 import { PrivateKey } from "@aleohq/sdk";
 
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_council_v3Contract } from "../artifacts/js/vlink_council_v3";
+import { Vlink_bridge_council_v3Contract } from "../artifacts/js/vlink_bridge_council_v3";
+import { Vlink_token_bridge_v3Contract } from "../artifacts/js/vlink_token_bridge_v3";
+import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
 
 import {
   ALEO_ZERO_ADDRESS,
@@ -18,14 +18,14 @@ import {
 } from "../utils/constants";
 import {
   getProposalVoteLeo
-} from "../artifacts/js/js2leo/vlink_council_v2";
+} from "../artifacts/js/js2leo/vlink_council_v3";
 import {
   ProposalVote,
   ProposalVoterKey
-} from "../artifacts/js/types/vlink_council_v2";
+} from "../artifacts/js/types/vlink_council_v3";
 
 
-import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v3";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
@@ -39,7 +39,7 @@ import {
   TbRemoveService,
   TbUnpause,
   TbTransferOwnership
-} from "../artifacts/js/types/vlink_bridge_council_v2";
+} from "../artifacts/js/types/vlink_bridge_council_v3";
 
 import {
   getTbAddChainLeo,
@@ -51,16 +51,16 @@ import {
   getTbRemoveServiceLeo,
   getTbUnpauseLeo,
   getTbTransferOwnershipLeo
-} from "../artifacts/js/js2leo/vlink_bridge_council_v2";
+} from "../artifacts/js/js2leo/vlink_bridge_council_v3";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Vlink_council_v2Contract({ mode });
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode });
-const bridge = new Vlink_token_bridge_v2Contract({ mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode });
+const council = new Vlink_council_v3Contract({ mode });
+const bridgeCouncil = new Vlink_bridge_council_v3Contract({ mode });
+const bridge = new Vlink_token_bridge_v3Contract({ mode });
+const tokenService = new Vlink_token_service_v3Contract({ mode });
 
 
 const TIMEOUT = 300000_000;

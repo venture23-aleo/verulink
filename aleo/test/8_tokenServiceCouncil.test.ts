@@ -1,6 +1,6 @@
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_council_v3Contract } from "../artifacts/js/vlink_council_v3";
+import { Vlink_token_service_council_v3Contract } from "../artifacts/js/vlink_token_service_council_v3";
+import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
 
@@ -17,7 +17,7 @@ import {
 } from "../utils/constants";
 
 
-import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v3";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
@@ -31,7 +31,7 @@ import {
   TsUpdateWithdrawalLimit,
   TsPauseToken,
   TsUnpauseToken
-} from "../artifacts/js/types/vlink_token_service_council_v2";
+} from "../artifacts/js/types/vlink_token_service_council_v3";
 import {
   getTsAddTokenLeo,
   getTsRemoveTokenLeo,
@@ -40,7 +40,7 @@ import {
   getTsUpdateWithdrawalLimitLeo,
   getTsPauseTokenLeo,
   getTsUnpauseTokenLeo,
-} from "../artifacts/js/js2leo/vlink_token_service_council_v2";
+} from "../artifacts/js/js2leo/vlink_token_service_council_v3";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 
 
@@ -48,9 +48,9 @@ import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Vlink_council_v2Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode });
+const council = new Vlink_council_v3Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v3Contract({ mode });
+const tokenService = new Vlink_token_service_v3Contract({ mode });
 const mtsp = new Token_registryContract({ mode: mode });
 const tokenID = BigInt(1234567891011);
 
@@ -86,6 +86,8 @@ describe("Token Service Council", () => {
     const thresholdNoLimit = BigInt(100)
     const outgoingPercentage = 10_00
     const time = 1
+    const platform_fee = 5;
+    const relayer_fee = BigInt(10000);
 
     beforeEach(async () => {
       council.connect(proposer);
@@ -107,7 +109,9 @@ describe("Token Service Council", () => {
         max_no_cap: thresholdNoLimit,
         token_address: evm2AleoArrWithoutPadding(usdcContractAddr),
         token_service: evm2AleoArrWithoutPadding(ethTsContractAddr),
-        chain_id: ethChainId
+        chain_id: ethChainId,
+        fee_of_platform: platform_fee,
+        fee_of_relayer: relayer_fee
       };
       addTokenProposalHash = hashStruct(getTsAddTokenLeo(tsSupportToken));
       const tx = await council.propose(proposalId, addTokenProposalHash);
@@ -121,9 +125,6 @@ describe("Token Service Council", () => {
 
     test("Execute", async () => {
       const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
-      const platform_fee = 5;
-      const relayer_fee = BigInt(10000);
-
       expect(await council.proposal_executed(addTokenProposalHash, false)).toBe(false);
       const tx = await tokenServiceCouncil.ts_add_token(
         proposalId,
