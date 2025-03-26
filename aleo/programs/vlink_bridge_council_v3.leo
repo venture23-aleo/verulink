@@ -1,7 +1,7 @@
-import vlink_council_v2.aleo;
-import vlink_token_bridge_v2.aleo;
+import vlink_council_v3.aleo;
+import vlink_token_bridge_v3.aleo;
 
-program vlink_bridge_council_v2.aleo
+program vlink_bridge_council_v3.aleo
 {
     ///////////////////////////////////////////
     /////// Bridge: Transfer Ownership ////////
@@ -20,9 +20,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let transfer_ownership_tb: Future = vlink_token_bridge_v2.aleo/transfer_ownership_tb(new_owner);
+        let transfer_ownership_tb: Future = vlink_token_bridge_v3.aleo/transfer_ownership_tb(new_owner);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_transfer_ownership(transfer_ownership_tb, external_execute);
     }
@@ -51,9 +51,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_attestor: Future = vlink_token_bridge_v2.aleo/add_attestor_tb(new_attestor, new_threshold);
+        let add_attestor: Future = vlink_token_bridge_v3.aleo/add_attestor_tb(new_attestor, new_threshold);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_add_attestor(add_attestor, external_execute);
     }
@@ -83,9 +83,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let remove_attestor: Future = vlink_token_bridge_v2.aleo/remove_attestor_tb(existing_attestor, new_threshold);
+        let remove_attestor: Future = vlink_token_bridge_v3.aleo/remove_attestor_tb(existing_attestor, new_threshold);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_remove_attestor(remove_attestor, external_execute);
     }
@@ -112,9 +112,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let update_threshold : Future = vlink_token_bridge_v2.aleo/update_threshold_tb(new_threshold);
+        let update_threshold : Future = vlink_token_bridge_v3.aleo/update_threshold_tb(new_threshold);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_update_threshold(update_threshold, external_execute);
     }
@@ -141,9 +141,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_chain: Future = vlink_token_bridge_v2.aleo/add_chain_tb(chain_id);
+        let add_chain: Future = vlink_token_bridge_v3.aleo/add_chain_tb(chain_id);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
         
         return finalize_tb_add_chain(add_chain, external_execute);
     }
@@ -171,8 +171,8 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let remove_chain: Future = vlink_token_bridge_v2.aleo/remove_chain_tb(chain_id);
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let remove_chain: Future = vlink_token_bridge_v3.aleo/remove_chain_tb(chain_id);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_remove_chain(remove_chain, external_execute);
 
@@ -200,9 +200,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_service: Future = vlink_token_bridge_v2.aleo/add_service_tb(service);
+        let add_service: Future = vlink_token_bridge_v3.aleo/add_service_tb(service);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_add_service(add_service, external_execute);
 
@@ -230,9 +230,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let remove_service: Future =  vlink_token_bridge_v2.aleo/remove_service_tb(service);
+        let remove_service: Future =  vlink_token_bridge_v3.aleo/remove_service_tb(service);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_remove_service(remove_service, external_execute);
     }
@@ -257,9 +257,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let pause: Future = vlink_token_bridge_v2.aleo/pause_tb();
+        let pause: Future = vlink_token_bridge_v3.aleo/pause_tb();
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_pause(pause, external_execute);
     }
@@ -284,9 +284,9 @@ program vlink_bridge_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let unpause: Future = vlink_token_bridge_v2.aleo/unpause_tb();
+        let unpause: Future = vlink_token_bridge_v3.aleo/unpause_tb();
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_tb_unpause(unpause, external_execute);
     }

@@ -1,7 +1,7 @@
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
+import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
+import { Vlink_council_v3Contract } from "../artifacts/js/vlink_council_v3";
+import { Vlink_token_bridge_v3Contract } from "../artifacts/js/vlink_token_bridge_v3";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v3";
 import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import {
@@ -32,9 +32,9 @@ import { ExecutionMode } from "@doko-js/core";
 const mode = ExecutionMode.SnarkExecute;
 
 
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode: mode });
-const council = new Vlink_council_v2Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v3Contract({ mode: mode });
+const tokenService = new Vlink_token_service_v3Contract({ mode: mode });
+const council = new Vlink_council_v3Contract({ mode: mode });
 
 const tokenID = BigInt(123456789);
 
@@ -1207,7 +1207,7 @@ describe.skip("Transition Failing Test cases", () => {
 
   const mode = ExecutionMode.LeoRun;
 
-  const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
+  const bridge = new Vlink_token_bridge_v3Contract({ mode: mode });
   const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
   const aleoUser5 = new PrivateKey().to_address().to_string();
   const admin = aleoUser1

@@ -1,19 +1,19 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { Vlink_council_v3Contract } from "../../../artifacts/js/vlink_council_v3";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v3Contract } from "../../../artifacts/js/vlink_token_service_v3";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken, TsUpdateMinTransfer, TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/vlink_token_service_council_v2";
-import { getTsAddTokenLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { TsAddToken, TsUpdateMinTransfer, TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/vlink_token_service_council_v3";
+import { getTsAddTokenLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v3";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_council_v3Contract } from "../../../artifacts/js/vlink_token_service_council_v3";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v3Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v3Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v3Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////

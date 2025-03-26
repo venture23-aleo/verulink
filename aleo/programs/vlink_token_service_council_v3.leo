@@ -1,7 +1,7 @@
-import vlink_council_v2.aleo;
-import vlink_token_service_v2.aleo;
+import vlink_council_v3.aleo;
+import vlink_token_service_v3.aleo;
 
-program vlink_token_service_council_v2.aleo
+program vlink_token_service_council_v3.aleo
 {
      //////////////////////////////////////////////
     /////// Token Service: Transfer Ownership ////
@@ -39,9 +39,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let transfer_ownership: Future = vlink_token_service_v2.aleo/transfer_ownership_ts(new_owner);
+        let transfer_ownership: Future = vlink_token_service_v3.aleo/transfer_ownership_ts(new_owner);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_transfer_ownership(transfer_ownership, external_execute);
 
@@ -106,9 +106,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_token : Future = vlink_token_service_v2.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id, fee_of_platform, fee_of_relayer);
+        let add_token : Future = vlink_token_service_v3.aleo/add_token_ts(token_id, min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id, fee_of_platform, fee_of_relayer);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_add_token(add_token, external_execute);
     }
@@ -135,9 +135,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let remove_token : Future = vlink_token_service_v2.aleo/remove_token_ts(token_id);
+        let remove_token : Future = vlink_token_service_v3.aleo/remove_token_ts(token_id);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_remove_token(remove_token, external_execute);
     }
@@ -171,9 +171,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let update_min_transfer: Future = vlink_token_service_v2.aleo/update_min_transfer_ts(token_id, min_transfer);
+        let update_min_transfer: Future = vlink_token_service_v3.aleo/update_min_transfer_ts(token_id, min_transfer);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_min_transfer(update_min_transfer, external_execute);
     }
@@ -207,9 +207,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let update_max_transfer: Future = vlink_token_service_v2.aleo/update_max_transfer_ts(token_id, max_transfer);
+        let update_max_transfer: Future = vlink_token_service_v3.aleo/update_max_transfer_ts(token_id, max_transfer);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_max_transfer(update_max_transfer, external_execute);
     }
@@ -240,9 +240,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let pause : Future = vlink_token_service_v2.aleo/pause_token_ts(token_id);
+        let pause : Future = vlink_token_service_v3.aleo/pause_token_ts(token_id);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_pause_token(pause, external_execute);
     }
@@ -273,9 +273,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let unpause : Future = vlink_token_service_v2.aleo/unpause_token_ts(token_id);
+        let unpause : Future = vlink_token_service_v3.aleo/unpause_token_ts(token_id);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_unpause_token(unpause, external_execute);
 
@@ -316,9 +316,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let update_withdrawal_limit: Future = vlink_token_service_v2.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
+        let update_withdrawal_limit: Future = vlink_token_service_v3.aleo/update_withdrawal_limit(token_id, percentage, duration, threshold_no_limit);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_limit(update_withdrawal_limit, external_execute);
     }
@@ -355,9 +355,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let holding_release_cc: Future = vlink_token_service_v2.aleo/holding_release(token_id,receiver,amount);
+        let holding_release_cc: Future = vlink_token_service_v3.aleo/holding_release(token_id,receiver,amount);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_holding_release(holding_release_cc, external_execute);
     }
@@ -387,9 +387,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let holding_ownership_transfer_cc: Future = vlink_token_service_v2.aleo/holding_transfer_ownership(new_owner);
+        let holding_ownership_transfer_cc: Future = vlink_token_service_v3.aleo/holding_transfer_ownership(new_owner);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_holding_OWN_transfer(holding_ownership_transfer_cc, external_execute);
     }
@@ -432,7 +432,7 @@ program vlink_token_service_council_v2.aleo
         
         let register_token: Future = token_registry.aleo/register_token(token_id, token_name, symbol, decimals, max_supply, false, SELF_ADDRESS);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_register_token(register_token, external_execute);
     }
@@ -467,7 +467,7 @@ program vlink_token_service_council_v2.aleo
 
         let token_management: Future = token_registry.aleo/update_token_management(token_id, admin, external_authorization_party);
         
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_update_TK_MD(token_management, external_execute);
     }
@@ -506,7 +506,7 @@ program vlink_token_service_council_v2.aleo
        // Execute the proposal
         let set_role: Future = token_registry.aleo/set_role(token_id, account, role);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_set_role_token(set_role, external_execute);
     }
@@ -542,9 +542,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let update_other_TS : Future = vlink_token_service_v2.aleo/update_other_chain_tokenservice(chain_id, token_id, token_service_address);
+        let update_other_TS : Future = vlink_token_service_v3.aleo/update_other_chain_tokenservice(chain_id, token_id, token_service_address);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_TS(update_other_TS, external_execute);
     }
@@ -577,9 +577,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let update_other_TA: Future = vlink_token_service_v2.aleo/update_other_chain_tokenaddress(chain_id, token_id, token_address);
+        let update_other_TA: Future = vlink_token_service_v3.aleo/update_other_chain_tokenaddress(chain_id, token_id, token_address);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_TA(update_other_TA, external_execute);
     }
@@ -625,9 +625,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let add_chain: Future = vlink_token_service_v2.aleo/add_chain_to_existing_token(chain_id, token_id, token_service_address, token_address, fee_of_platform, fee_of_relayer);
+        let add_chain: Future = vlink_token_service_v3.aleo/add_chain_to_existing_token(chain_id, token_id, token_service_address, token_address, fee_of_platform, fee_of_relayer);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_add_chain(add_chain, external_execute);
     }
@@ -662,9 +662,9 @@ program vlink_token_service_council_v2.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let remove_address: Future = vlink_token_service_v2.aleo/remove_other_chain_addresses(chain_id, token_id);
+        let remove_address: Future = vlink_token_service_v3.aleo/remove_other_chain_addresses(chain_id, token_id);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_remove_OC_addresses(remove_address, external_execute);
     }
@@ -697,9 +697,9 @@ program vlink_token_service_council_v2.aleo
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        let update_relayer_fee: Future = vlink_token_service_v2.aleo/update_relayer_fee(chain_id, token_id, fee);
+        let update_relayer_fee: Future = vlink_token_service_v3.aleo/update_relayer_fee(chain_id, token_id, fee);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_RF(update_relayer_fee, external_execute);
     }
@@ -733,9 +733,9 @@ program vlink_token_service_council_v2.aleo
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        let update_platform_fee: Future = vlink_token_service_v2.aleo/update_platform_fee(chain_id, token_id, fee);
+        let update_platform_fee: Future = vlink_token_service_v3.aleo/update_platform_fee(chain_id, token_id, fee);
 
-        let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
+        let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 
         return finalize_ts_update_PF(update_platform_fee, external_execute);
     }

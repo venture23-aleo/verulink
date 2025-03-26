@@ -29,7 +29,7 @@ export const usdtContractAddr = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 export const ethContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const ethTsContractAddr = "0xde75761d5d9d1c2c782FE414FFe2B3ED24de2FFc"
 export const ethTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
 export const ethTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 

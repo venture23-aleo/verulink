@@ -1,6 +1,6 @@
 import { ExecutionMode, leo2js } from "@doko-js/core";
-import { Vlink_token_service_council_v2Contract } from "../../artifacts/js/vlink_token_service_council_v2";
-import { InPacket } from "../../artifacts/js/types/vlink_token_bridge_v2";
+import { Vlink_token_service_council_v3Contract } from "../../artifacts/js/vlink_token_service_council_v3";
+import { InPacket } from "../../artifacts/js/types/vlink_token_bridge_v3";
 import { createRandomPacket } from "../../utils/bridge_packet";
 import { ALEO_ZERO_ADDRESS, aleoChainId, ethChainId, ethTsContractAddr, ethTsContractAddr3 } from "../../utils/constants";
 import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../../utils/ethAddress";
@@ -9,7 +9,7 @@ import { signPacket } from "../../utils/sign";
 import { TokenOwner } from "../../artifacts/js/types/token_registry";
 import { hashStruct } from "../../utils/hash";
 import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/token_registry";
-import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v3Contract } from "../../artifacts/js/vlink_token_service_v3";
 import { wusdcName } from "../../utils/mainnet.data";
 import { hash } from "aleo-hasher";
 
@@ -20,7 +20,7 @@ let tokenID = leo2js.field(hash('bhp256', wusdcName.toString() + "u128", "field"
 const ethUser = generateRandomEthAddr();
 const receiver = ethUser.toLowerCase();
 console.log("Receiver : ", receiver);
-const tokenService = new Vlink_token_service_v2Contract({ mode });
+const tokenService = new Vlink_token_service_v3Contract({ mode });
 
 // console.log(tokenService.getAccounts());
 

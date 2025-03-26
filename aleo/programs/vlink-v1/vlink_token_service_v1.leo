@@ -1,10 +1,10 @@
 // The 'token_service' program.
 
-import vlink_token_bridge_v2.aleo;
+import vlink_token_bridge_v3.aleo;
 import token_registry.aleo;
-import vlink_holding_v1.aleo;
+import vlink_holding_v3.aleo;
 
-program vlink_token_service_v2.aleo {
+program vlink_token_service_v3.aleo {
 
     struct WithdrawalLimit {
         // Withdrawal limit represented as basis points.
@@ -411,7 +411,7 @@ program vlink_token_service_v2.aleo {
             chain_id: dest_chain_id,
             token_id: token_id
         };
-        vlink_token_bridge_v2.aleo/publish(
+        vlink_token_bridge_v3.aleo/publish(
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
             pad_20_to_32(dest_token_address), 
@@ -490,7 +490,7 @@ program vlink_token_service_v2.aleo {
     ) -> public bool {
 
         // call consume on bridge
-        let screening_passed: bool = vlink_token_bridge_v2.aleo/consume(
+        let screening_passed: bool = vlink_token_bridge_v3.aleo/consume(
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
             token_id, 
@@ -523,7 +523,7 @@ program vlink_token_service_v2.aleo {
         let authorize_until:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
         token_registry.aleo/mint_public(token_id, actual_receiver, amount, authorize_until);
 
-        vlink_holding_v1.aleo/hold_fund(receiver, token_id, held_amount);
+        vlink_holding_v3.aleo/hold_fund(receiver, token_id, held_amount);
 
         return screening_passed then finalize(token_id, amount, held_amount, chain_token_info, source_token_service_address);
     }
@@ -576,7 +576,7 @@ program vlink_token_service_v2.aleo {
     }
 
     transition holding_release(public token_id: field, public receiver: address, public amount: u128) {
-        vlink_holding_v1.aleo/release_fund(receiver, token_id, amount);
+        vlink_holding_v3.aleo/release_fund(receiver, token_id, amount);
         return then finalize(self.caller, token_id, amount);
     }
     finalize holding_release(from:address, token_id: field, amount:u128){
@@ -587,7 +587,7 @@ program vlink_token_service_v2.aleo {
     }
 
     transition holding_transfer_ownership(public new_owner: address) {
-        vlink_holding_v1.aleo/transfer_ownership_holding(new_owner);
+        vlink_holding_v3.aleo/transfer_ownership_holding(new_owner);
         return then finalize(self.caller);
     }
     finalize holding_transfer_ownership(from:address){

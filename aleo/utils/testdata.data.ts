@@ -1,13 +1,13 @@
 // User address on Aleo
-export const attestor1 = "aleo1nzn3ma4q4xzmrvnkfs675slta87pdnyn5ctr9lc7ueuzhrvdlgrq38cj7u";
+export const attestor1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
 export const attestor2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const attestor3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const attestor4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const attestor5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc" // Devnet Wallet
 
 // User address on Aleo
-export const council1 = "aleo1a0rugumrjvf86gw3aqkzqvun4m73xxxhgfpra3gtkmw2p2uw2y9q0dwz3f";
-export const council2 = "aleo1tr9t0ac0h5g6mr8n7xkmmn5264deenjqdxctyce42m9u40hspvxqc27dsu"
+export const council1 = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+export const council2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const council3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const council4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const council5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc" // Devnet Wallet
@@ -18,7 +18,7 @@ export const councilThreshold = 1;
 export const wusdcMinTransfer = BigInt(1_000_000);
 export const wusdcMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wusdcOutgoingPercentage = 10_00 // 10%
-export const wusdcTimeframe = 28_800; // per 28_800 block
+export const wusdcTimeframe = 3_600; // per 28_800 block
 export const wusdcMaxNoCap = BigInt(100_000_000_000);
 export const wusdcName = BigInt('3707987077791');
 export const wusdcSymbol = BigInt("508237661251");
@@ -36,7 +36,7 @@ export const wusdcPlatformFee = 1_00;
 export const wusdtMinTransfer = BigInt(1_000_000);
 export const wusdtMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wusdtOutgoingPercentage = 10_00 // 10%
-export const wusdtTimeframe = 28_800; // per 28_800 block
+export const wusdtTimeframe = 3_600; // per 28_800 block
 export const wusdtMaxNoCap = BigInt(100_000_000_000);
 export const wusdtName = BigInt('3707987077961');
 export const wusdtSymbol = BigInt("508237661268");
@@ -51,15 +51,15 @@ export const wusdtPlatformFee = 1_00;
 // const max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
 
 // veth related data
-export const wethMinTransfer = BigInt(500_000_000_000_000); //0.0005 = 5*10^14
+export const wethMinTransfer = BigInt(1_000_000_000_000_000); //0.0005 = 1*10^15
 export const wethMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wethOutgoingPercentage = 10_00 // 10%
-export const wethTimeframe = 28_800; // per block
+export const wethTimeframe = 3_600; // per block
 export const wethMaxNoCap = BigInt("40000000000000000000"); // 40 eth
 export const wethName = BigInt('14473841361');
 export const wethSymbol = BigInt('1984255048');
 export const wethDecimals = 18;
-export const wethFeeRelayer = BigInt(26_000_000_000_000);
+export const wethFeeRelayer = BigInt(500_000_000_000_000);
 export const wethPlatformFee = 1_00;
 
 
@@ -93,18 +93,28 @@ export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 
 export const OWNER_INDEX = true;
 
-// USDC Contract Address on Ethereum
-export const usdcContractAddr = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-export const usdtContractAddr = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-export const ethContractAddr = "0x0000000000000000000000000000000000000001"
+// Token Address on Ethereum Network
+export const ethUsdcContractAddr = "0x532842De9470816Cf7cc7Cee2d15f19593fBaf64"
+export const ethUsdtContractAddr = "0x26FC611307b28f347eE66D057f1E3F3a903B3630"
+export const ethEthContractAddr = "0x0000000000000000000000000000000000000001"
+
+// Token Address on Base Network
+export const baseUsdcContractAddr = "0x555eC249d1eB0db553AE8df14f4baE287F9CE62a"
+export const baseUsdtContractAddr = "0x22F06bac09F9375E6450F44976a05b7d6d61fcf4"
+export const baseEthContractAddr = "0x0000000000000000000000000000000000000001"
+
+// Token Address on Arbitrum Network
+export const arbitrumUsdcContractAddr = "0x532842De9470816Cf7cc7Cee2d15f19593fBaf64"
+export const arbitrumUsdtContractAddr = "0x26FC611307b28f347eE66D057f1E3F3a903B3630"
+export const arbitrumEthContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
-export const ethTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const ethTsContractAddr = "0x5d2fe549d3b7c35f0ed3f4f8a3870e476622b303"
 export const ethTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
 export const ethTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
 // Token Service Contract Address on Base
-export const baseTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const baseTsContractAddr = "0xBB478fe03c90FfF7770b57bdf00eeb576F4F4F41"
 export const baseTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
 export const baseTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
@@ -119,10 +129,10 @@ export const arbitrumTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48F
 
 // export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
 
-export const ethChainId = BigInt(28556963657430695); //eth: chainid sepolia
-export const aleoChainId = BigInt(6694886634403); // aleo: chainid
-export const baseChainId = BigInt(443067135441324596); //base: chainid 84532n
-export const arbitrumChainId = BigInt(438861435819683566); //arbi: chainid 421614n
+export const ethChainId = BigInt("28556963657430695"); //eth: chainid sepolia
+export const aleoChainId = BigInt("6694886634403"); // aleo: chainid
+export const baseChainId = BigInt("443067135441324596"); //base: chainid 84532n
+export const arbitrumChainId = BigInt("438861435819683566"); //arbi: chainid 421614n
 export const PRIVATE_VERSION = 2;
 export const PUBLIC_VERSION = 1;
 

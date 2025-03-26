@@ -1,6 +1,6 @@
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_bridge_v3Contract } from "../artifacts/js/vlink_token_bridge_v3";
+import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v3";
+import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
 import { aleoArr2Evm, evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
@@ -29,25 +29,25 @@ import {
 } from "../utils/constants";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
-import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v3";
 import { ExecutionMode } from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v2";
-import { Vlink_holding_v1Contract } from "../artifacts/js/vlink_holding_v1";
-import { TokenMetadata } from "../artifacts/js/types/vlink_holding_v1";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v3";
+import { Vlink_holding_v3Contract } from "../artifacts/js/vlink_holding_v3";
+import { TokenMetadata } from "../artifacts/js/types/vlink_holding_v3";
 import { Balance, TokenOwner } from "../artifacts/js/types/token_registry";
 import { hashStruct, hashStructToAddress } from "../utils/hash";
-import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_council_v3Contract } from "../artifacts/js/vlink_token_service_council_v3";
 import { decryptToken } from "../artifacts/js/leo2js/token_registry";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v3Contract({ mode: mode });
+const tokenService = new Vlink_token_service_v3Contract({ mode: mode });
 const mtsp = new Token_registryContract({ mode: mode });
-const holding = new Vlink_holding_v1Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode: mode });
+const holding = new Vlink_holding_v3Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v3Contract({ mode: mode });
 
 let tokenID = BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
 
@@ -337,8 +337,8 @@ describe("Token Service ", () => {
     }, TIMEOUT)
   })
 
-  describe.skip("Token Receive", () => {
-    test("Happy receive token(ethereum chain) public", async () => {
+  describe("Token Receive", () => {
+    test.skip("Happy receive token(ethereum chain) public", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId);
       console.log(packet, "packet data");
 
@@ -489,7 +489,7 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip("Happy receive token private", async () => {
+    test("Happy receive token private", async () => {
 
       const pre_image = BigInt(123);
       const image: Image = {
@@ -582,7 +582,7 @@ describe("Token Service ", () => {
   });
 
 
-  describe("Token Send", () => {
+  describe.skip("Token Send", () => {
     const destChainId = ethChainId;
     const destTsAddr = ethTsContractAddr.toLowerCase();
     const destTsAddr2 = ethTsRandomContractAddress.toLowerCase();
@@ -1228,3 +1228,4 @@ const getUserAuthorizedBalance = async (user: string, tokenId: bigint) => {
 }
 
 
+//{pre_image:123field,receiver:aleo1wfaqpfc57m0wxmr9l6r8a5g95c0cthe54shzmcyu6wf6tqvady9syt27xt}
