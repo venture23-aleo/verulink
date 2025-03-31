@@ -654,6 +654,8 @@ program vlink_token_service_v3.aleo {
             token_id: token_id
         };
 
+        assert(amount >= fee_relayer);
+
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
 
