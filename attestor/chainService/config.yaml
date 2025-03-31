@@ -37,6 +37,7 @@ chains:
         finality_height: 21
         feed_pkt_wait_dur: 1m0s
         start_height: 7892221
+        instant_pkt_wait_dur: 1m
 - name: base
   chain_id: 84532
   chain_type: ethereum
@@ -53,6 +54,7 @@ chains:
         finality_height: 21
         feed_pkt_wait_dur: 1m0s
         start_height: 22962406
+
 
 check_health_service : 1m
 db_dir: /path/to/db/dir

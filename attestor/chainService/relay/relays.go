@@ -237,6 +237,9 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			}
 			return
 		}
+		if pkt.GetInstant(){ // Skip post processing for packets with predicate signature
+			return
+		}
 		RegisteredCompleteChannels[srcChainName] <- pkt
 	}()
 

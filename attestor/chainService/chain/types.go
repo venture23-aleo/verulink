@@ -58,6 +58,9 @@ type Packet struct {
 	Sequence    uint64         `json:"sequence"`
 	Message     Message        `json:"message"`
 	Height      uint64         `json:"height"`
+	// IsInstant specify that this packet is delivered instantly. This flag is set true based on
+	// version of the packet
+	IsInstant bool `json:"isInstant"`
 	// isMissed specify that this packet was somehow missed and db-service administrator has
 	// requested attestors to re-process it
 	isMissed bool
@@ -69,6 +72,14 @@ func (p *Packet) IsMissed() bool {
 
 func (p *Packet) SetMissed(isMissed bool) {
 	p.isMissed = isMissed
+}
+
+func (p *Packet) SetInstant(isInstant bool) {
+	p.IsInstant = isInstant
+}
+
+func (p *Packet) GetInstant() bool {
+	return p.IsInstant
 }
 
 func (p *Packet) GetSha256Hash() string {
