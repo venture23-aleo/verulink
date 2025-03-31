@@ -1,6 +1,7 @@
 package ethereum
 
 import (
+	"crypto/ecdsa"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -41,6 +42,7 @@ func TestValidateKeys(t *testing.T) {
 
 func TestSetUpPrivateKey(t *testing.T) {
 	t.Run("passing valid key pair should set private key", func(t *testing.T) {
+		pkeyMap = make(map[string]*ecdsa.PrivateKey) // reintializing this as previous test made this nil
 		t.Cleanup(func() {
 			pkeyMap = nil
 		})
