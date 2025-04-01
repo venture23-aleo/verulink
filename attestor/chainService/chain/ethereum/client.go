@@ -52,7 +52,7 @@ const (
 	retryPacketNamespacePrefix = "ethereum_rpns"
 )
 
-var predicateVersions = map[uint8]bool{101: true}
+var predicateVersions = map[uint8]bool{3: true, 4: true, 13: true}
 
 type ethClientI interface {
 	GetCurrentBlock(ctx context.Context) (uint64, error)
