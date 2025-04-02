@@ -43,10 +43,18 @@ func NewClient(cfg *common.ChainConfig) *Client {
 
 func (c *Client) TransferUSDC(ctx context.Context) error {
 	fmt.Println("here we are", c.privateKey, c.url)
-	cmd := exec.CommandContext(ctx, "snarkos", "developer", "execute", "wusdc_connector_v0001_1.aleo", "wusdc_send",
-		"[232u8, 173u8, 26u8, 65u8, 73u8, 166u8, 25u8, 249u8, 9u8, 115u8, 238u8, 73u8, 233u8, 16u8, 8u8, 81u8, 150u8, 224u8, 242u8, 37u8]",
-		"101u128", "--private-key", c.privateKey, "--network", "1", "--query", c.url, "--broadcast",
-		c.url+"/testnet/transaction/broadcast",
+	// program_name := "vlink_token_service_v3.aleo"
+	// function_name := "token_send_public"
+	token_id := "5809241989714636308107426316644412871372324308000354747397951595754453895773field"
+	reciever := "[62u8, 96u8, 107u8, 122u8, 106u8, 179u8, 118u8, 99u8, 72u8, 95u8, 192u8, 62u8, 202u8, 221u8, 171u8, 143u8, 13u8, 193u8, 206u8, 214u8]"
+	amount := "100u128"
+	destination_chain_id := "443067135441324596u128"
+	destination_token_service := "[187u8, 71u8, 143u8, 224u8, 60u8, 144u8, 255u8, 247u8, 119u8, 11u8, 87u8, 189u8, 240u8, 14u8, 235u8, 87u8, 111u8, 79u8, 79u8, 65u8]"
+	destination_token_address := "[85u8, 94u8, 194u8, 73u8, 209u8, 235u8, 13u8, 181u8, 83u8, 174u8, 141u8, 241u8, 79u8, 75u8, 174u8, 40u8, 127u8, 156u8, 230u8, 42u8]"
+	fee_platform := "1u128"
+	is_relayer_on := "false"
+	cmd := exec.CommandContext(ctx, "leo", "execute", "token_send_public", "--program", "vlink_token_service_v3.aleo", token_id, reciever,amount,destination_chain_id,destination_token_service,
+	destination_token_address, fee_platform, is_relayer_on, "--private-key", c.privateKey, "--network", "testnet", "--endpoint", c.url, "--broadcast", "-y",
 	)
 	output, err := cmd.Output()
 

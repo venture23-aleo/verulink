@@ -268,6 +268,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		if errors.Is(err, common.AlreadyRelayedPacket{}) {
 			logger.GetLogger().Info("Duplicate packet detected",
 				zap.String("source_chain", pkt.Source.ChainID.String()),
+				zap.String("dest_chain",pkt.Destination.ChainID.String()),
 				zap.Uint64("seq_num", pkt.Sequence))
 			err = nil // non-nil error will put packet in retry namespace
 			return
@@ -278,6 +279,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 
 	logger.GetLogger().Info("Packet successfully sent",
 		zap.String("source_chain", pkt.Source.ChainID.String()),
+		zap.String("dest_chain",pkt.Destination.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence))
 	r.metrics.DeliveredPackets(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String())
 }

@@ -37,15 +37,15 @@ func setupDB(p string) (func(), error) {
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
-		Name:                       "ethereum",
-		ChainID:                    big.NewInt(1),
-		ChainType:                  "ethereum",
-		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:                    "https://rpc.sepolia.org",
-		DestChains:                 map[string]config.DurationConfig{
+		Name:           "ethereum",
+		ChainID:        big.NewInt(1),
+		ChainType:      "ethereum",
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://rpc.sepolia.org",
+		DestChains: map[string]config.PktValidConfig{
 			"2": {
 				PacketValidityWaitDuration: time.Hour * 24,
-				StartHeight: 100,
+				StartHeight:                100,
 			},
 		},
 		StartSeqNum: map[string]uint64{
@@ -77,15 +77,15 @@ func TestNewClientUninitializedDB(t *testing.T) {
 	t.Cleanup(dbRemover)
 	store.CloseDB()
 	cfg := &config.ChainConfig{
-		Name:                       "ethereum",
-		ChainID:                    big.NewInt(1),
-		ChainType:                  "ethereum",
-		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:                    "https://rpc.sepolia.org",
-		DestChains:                 map[string]config.DurationConfig{
+		Name:           "ethereum",
+		ChainID:        big.NewInt(1),
+		ChainType:      "ethereum",
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://rpc.sepolia.org",
+		DestChains: map[string]config.PktValidConfig{
 			"2": {
 				PacketValidityWaitDuration: time.Hour * 24,
-				StartHeight: 100,
+				StartHeight:                100,
 			},
 		},
 		StartSeqNum: map[string]uint64{
@@ -166,12 +166,12 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextHeightMap: map[string]uint64{common.Big2.String(): 9},
-		retryPacketWaitDur:        time.Hour,
+		nextBlockHeightMap:    map[string]uint64{common.Big2.String(): 9},
+		retryPacketWaitDur:    time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
-		feePacketDurationMap: map[string]time.Duration{common.Big2.String(): time.Nanosecond},
-		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
-		metrics:                   newMetrics(),
+		feedPktWaitDurMap:     map[string]time.Duration{common.Big2.String(): time.Nanosecond},
+		destChainsIDMap:       map[string]bool{common.Big2.String(): true},
+		metrics:               newMetrics(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -199,13 +199,13 @@ func TestFeedPacket(t *testing.T) {
 		Height: uint64(55),
 	}
 
-	assert.Equal(t, uint64(9), client.nextHeightMap[common.Big2.String()])
+	assert.Equal(t, uint64(9), client.nextBlockHeightMap[common.Big2.String()])
 
 	pkt := <-pktCh
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(11), client.nextHeightMap[common.Big2.String()])
+	assert.Equal(t, uint64(11), client.nextBlockHeightMap[common.Big2.String()])
 }
 
 func TestRetryFeed(t *testing.T) {
@@ -223,8 +223,8 @@ func TestRetryFeed(t *testing.T) {
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace)
 
 		client := &Client{
-			retryPacketWaitDur:            time.Nanosecond,
-			retryPacketNamespacesOfClient: retryPacketNamespaces,
+			retryPacketWaitDur: time.Nanosecond,
+			retryPktNamespaces: retryPacketNamespaces,
 		}
 
 		// store packet in retry bucket
@@ -283,8 +283,8 @@ func TestRetryFeed(t *testing.T) {
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace, dstSolNameSpace)
 
 		client := &Client{
-			retryPacketWaitDur:            time.Nanosecond,
-			retryPacketNamespacesOfClient: retryPacketNamespaces,
+			retryPacketWaitDur: time.Nanosecond,
+			retryPktNamespaces: retryPacketNamespaces,
 		}
 
 		// store packet in retry bucket
@@ -369,7 +369,7 @@ func TestManagePacket(t *testing.T) {
 		assert.NoError(t, err)
 		client := new(Client)
 		client.SetMetrics(newMetrics())
-		client.retryPacketNamespacesOfClient = retryPacketNamespaces
+		client.retryPktNamespaces = retryPacketNamespaces
 
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
@@ -420,7 +420,7 @@ func TestManagePacket(t *testing.T) {
 
 		client := new(Client)
 		client.SetMetrics(newMetrics())
-		client.baseSeqNamespacesOfClient = baseSeqNamespaces
+		client.baseSeqNamespaces = baseSeqNamespaces
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
 			Version:  uint8(0),
@@ -495,11 +495,11 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 				}, nil
 			},
 		},
-		nextHeightMap: map[string]uint64{common.Big2.String():10},
-		retryPacketWaitDur:        time.Hour,
+		nextBlockHeightMap:    map[string]uint64{common.Big2.String(): 10},
+		retryPacketWaitDur:    time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
-		metrics:                   newMetrics(),
-		baseSeqNamespacesOfClient: baseSeqNamespaces,
+		metrics:               newMetrics(),
+		baseSeqNamespaces:     baseSeqNamespaces,
 	}
 
 	for i := 0; i < 15; i++ {

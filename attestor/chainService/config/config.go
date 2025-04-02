@@ -34,27 +34,22 @@ type FlagArgs struct {
 }
 
 type ChainConfig struct {
-	Name           string   `yaml:"name"`
-	ChainType      string   `yaml:"chain_type"`
-	ChainID        *big.Int `yaml:"chain_id"`
-	BridgeContract string   `yaml:"bridge_contract"`
-	NodeUrl        string   `yaml:"node_url"`
-	// PacketValidityWaitDuration time.Duration             `yaml:"pkt_validity_wait_dur"`
-	// FeedPacketWaitDuration     time.Duration             `yaml:"feed_pkt_wait_dur"`
-	// FinalityHeight             uint64                    `yaml:"finality_height"`
-	WalletPath    string                    `yaml:"wallet_path"`
-	DestChains    map[string]DurationConfig `yaml:"dest_chains"`
-	WalletAddress string                    `yaml:"wallet_address"`
-	StartSeqNum   map[string]uint64         `yaml:"sequence_num_start"` // useful for aleo
-	// StartHeight                uint64                    `yaml:"start_height"`       // useful for ethereum
-	FilterTopic               string        `yaml:"filter_topic"` // useful for ethereum
-	RetryPacketWaitDur        time.Duration `yaml:"retry_packet_wait_dur"`
-	PruneBaseSeqNumberWaitDur time.Duration `yaml:"prune_base_seq_num_wait_dur"`
-	AverageBlockGenDur        time.Duration `yaml:"average_block_gen_dur"` // useful for aleo
-
+	Name                      string                    `yaml:"name"`
+	ChainType                 string                    `yaml:"chain_type"`
+	ChainID                   *big.Int                  `yaml:"chain_id"`
+	BridgeContract            string                    `yaml:"bridge_contract"`
+	NodeUrl                   string                    `yaml:"node_url"`
+	WalletPath                string                    `yaml:"wallet_path"`
+	DestChains                map[string]PktValidConfig `yaml:"dest_chains"`
+	WalletAddress             string                    `yaml:"wallet_address"`
+	StartSeqNum               map[string]uint64         `yaml:"sequence_num_start"` // useful for aleo
+	FilterTopic               string                    `yaml:"filter_topic"`       // useful for ethereum
+	RetryPacketWaitDur        time.Duration             `yaml:"retry_packet_wait_dur"`
+	PruneBaseSeqNumberWaitDur time.Duration             `yaml:"prune_base_seq_num_wait_dur"`
+	AverageBlockGenDur        time.Duration             `yaml:"average_block_gen_dur"` // useful for aleo
 }
 
-type DurationConfig struct {
+type PktValidConfig struct {
 	PacketValidityWaitDuration time.Duration `yaml:"pkt_validity_wait_dur"`
 	FinalityHeight             uint64        `yaml:"finality_height"`
 	FeedPacketWaitDuration     time.Duration `yaml:"feed_pkt_wait_dur"`
@@ -217,26 +212,17 @@ func validateChainConfig(cfg *Config) error {
 	}
 
 	for _, chainCfg := range cfg.ChainConfigs {
-		mDestChains := make(map[string]DurationConfig)
+		mDestChains := make(map[string]PktValidConfig)
 		mStartSeqMap := make(map[string]uint64)
 
-		for name, timeConfig := range chainCfg.DestChains {
+		for name, pktValidCfg := range chainCfg.DestChains {
 			chainID, ok := chainNameToChainID[name]
 			if !ok {
 				return fmt.Errorf("chain-id not available for %s", name)
 			}
-			mDestChains[chainID] = timeConfig
+			mDestChains[chainID] = pktValidCfg
 		}
 		chainCfg.DestChains = mDestChains
-
-		// for _, name := range chainCfg.DestChains {
-		// 	chainID, ok := chainNameToChainID[name]
-		// 	if !ok {
-		// 		return fmt.Errorf("chain-id not available for %s", name)
-		// 	}
-		// 	mDestChains = append(mDestChains, chainID)
-		// }
-		// chainCfg.DestChains = mDestChains
 
 		for name, startSeqNum := range chainCfg.StartSeqNum {
 			chainID, ok := chainNameToChainID[name]

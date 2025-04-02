@@ -43,7 +43,7 @@ func TestNewClient(t *testing.T) {
 		ChainID:        big.NewInt(1),
 		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:        "https://node.url|testnet3",
-		DestChains: map[string]config.DurationConfig{
+		DestChains: map[string]config.PktValidConfig{
 			"1": {
 				PacketValidityWaitDuration: time.Hour * 24,
 				StartHeight:                100,
@@ -85,7 +85,7 @@ func TestNewClientUninitializedDB(t *testing.T) {
 		ChainID:        big.NewInt(2),
 		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
 		NodeUrl:        "https://node.url|testnet3",
-		DestChains: map[string]config.DurationConfig{
+		DestChains: map[string]config.PktValidConfig{
 			"1": {
 				PacketValidityWaitDuration: time.Hour * 24,
 				StartHeight:                100,
