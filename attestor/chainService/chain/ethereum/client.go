@@ -234,13 +234,13 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, destchain)
 			if err != nil {
-				logger.GetLogger().Error("error while getting block height", zap.Error(err))
+				logger.GetLogger().Error("error while getting block height for", zap.String("chain", cl.name), zap.Error(err))
 				break L1
 			}
 
-			if maturedHeight < cl.nextHeightMap[destchain] {
-				diff := cl.nextHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for ", zap.Any("chain",cl.name), zap.Uint64("height", diff)) // TODO: this log might not be required
+			if maturedHeight < cl.nextBlockHeightMap[destchain] {
+				diff := cl.nextBlockHeightMap[destchain] - maturedHeight
+				logger.GetLogger().Info("Sleeping eth client for", zap.String("chain", cl.name), zap.Uint64("height", diff)) // TODO: this log might not be required
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				break L1
 			}
@@ -256,6 +256,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 				if err != nil {
 					logger.GetLogger().Error("Filter packet log error",
 						zap.Error(err),
+						zap.String("chain", cl.name),
 						zap.Uint64("start_height", startHeight),
 						zap.Uint64("end_height", endHeight),
 					)
@@ -263,7 +264,6 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 				}
 
 				for _, pkt := range pkts {
-					logger.GetLogger().Info("getting the pakcet ", zap.Any("packet", pkt))
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
 						cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
 						ch <- pkt
@@ -282,7 +282,6 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 // It parses the logs and if packet has destination chainID that this attestor supports then
 // it will be send to the channel ch.
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
-	fmt.Println("calling once")
 
 	go cl.managePacket(ctx, completedCh, retryCh)
 	go cl.pruneBaseSeqNum(ctx, ch)
@@ -291,11 +290,11 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 	for dest := range cl.destChainsIDMap {
 		var baseHeight uint64 = math.MaxUint64
 		var ns string
-		if cl.name != "ethereum"{
-			ns = baseSeqNumNameSpacePrefix + cl.name+ dest  // ethereum_bsns_base_6694886634403, 3 //ethereum_bsns_ethereum_6694886634403, 200
+		if cl.name != "ethereum" {
+			ns = baseSeqNumNameSpacePrefix + cl.name + dest // ethereum_bsns_base_6694886634403, 3 //ethereum_bsns_ethereum_6694886634403, 200
 		} else {
-			ns = baseSeqNumNameSpacePrefix + dest 
-			
+			ns = baseSeqNumNameSpacePrefix + dest
+
 		}
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
 		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
@@ -322,7 +321,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 			return
 		case <-ticker.C:
 		}
-		logger.GetLogger().Info("retrying feed for ", zap.String("chain", cl.name), zap.String("namespace", cl.retryPacketNamespacesOfClient[index]))
+		logger.GetLogger().Info("retrying feed for ", zap.String("chain", cl.name), zap.String("namespace", cl.retryPktNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this seems to be the efficient approach.
@@ -419,9 +418,9 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
 			var ns string
-			if cl.name != "ethereum"{
-				ns = retryPacketNamespacePrefix + cl.name+pkt.Destination.ChainID.String()
-			}else {
+			if cl.name != "ethereum" {
+				ns = retryPacketNamespacePrefix + cl.name + pkt.Destination.ChainID.String()
+			} else {
 				ns = retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
 			}
 			err := store.StoreRetryPacket(ns, pkt)
@@ -433,9 +432,9 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 			}
 		case pkt := <-completedCh:
 			var ns string
-			if cl.name != "ethereum"{
-				ns = baseSeqNumNameSpacePrefix + cl.name+pkt.Destination.ChainID.String()
-			}else {
+			if cl.name != "ethereum" {
+				ns = baseSeqNumNameSpacePrefix + cl.name + pkt.Destination.ChainID.String()
+			} else {
 				ns = baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
 			}
 			logger.GetLogger().Info("Updating base seq num",
