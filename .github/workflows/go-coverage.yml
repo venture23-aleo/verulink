@@ -41,9 +41,9 @@ jobs:
       # Verify coverage file exists before upload
       - name: Check if coverage file exists
         run: |
-          if [ -f ./coverage.json ]; then
+          if [ -f ./coverage-final.json ]; then
             echo "Using JSON coverage file"
-            echo "COVERAGE_FILE=coverage.json" >> $GITHUB_ENV
+            echo "COVERAGE_FILE=coverage-final.json" >> $GITHUB_ENV
           elif [ ! -f ./coverage.out ]; then
             echo "Coverage file not found! Skipping upload."
             exit 1
