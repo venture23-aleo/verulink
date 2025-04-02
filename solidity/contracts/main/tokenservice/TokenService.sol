@@ -110,7 +110,7 @@ contract TokenService is
         address tokenAddress,
         uint256 amount,
         string memory receiver
-    ) internal view returns (PacketLibrary.OutPacket memory packet) {
+    ) internal view virtual returns (PacketLibrary.OutPacket memory packet) {
         require(
             !blackListService.isBlackListed(msg.sender),
             "TokenService: sender blacklisted"
