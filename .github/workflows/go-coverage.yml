@@ -1,48 +1,55 @@
-name: Test and coverage
+name: Test and Coverage
 
 on:
   push:
     tags:
-    - '**'
+      - '**'
   pull_request:
     branches:
       - main
 
 jobs:
   coverage:
-    name: coverage
+    name: Coverage
     runs-on: ubuntu-latest
     steps:
-      # Install and setup go
+      # Install and setup Go
       - name: Set up Go 1.19
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.19
+          cache: true  # Enable automatic Go module caching
 
-      # setup gopath
-      - name: Set PATH
-        run: |
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-        shell: bash
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # checkout
-      - name: checkout
-        uses: actions/checkout@v2
-
-      # setup cache
-      - uses: actions/cache@v1
+      # Setup cache for Go modules
+      - name: Cache Go modules
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            go-mod-${{ runner.os }}-
 
-      # unit tests
-      - name: run unit tests
+      # Run unit tests with coverage
+      - name: Run unit tests
         run: make test
         continue-on-error: true
+
+      # Verify coverage file exists before upload
+      - name: Check if coverage file exists
+        run: |
+          if [ ! -f ./coverage.out ]; then
+            echo "Coverage file not found! Skipping upload."
+            exit 1
+          fi
+
+      # Upload coverage to Codecov
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.out
+          fail_ci_if_error: true  # Ensures CI fails if upload fails
