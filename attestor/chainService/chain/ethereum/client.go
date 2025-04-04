@@ -149,8 +149,8 @@ type Client struct {
 	retryPktNamespaces        []string
 	baseSeqNamespaces         []string
 	nextBlockHeightMap        map[string]uint64
-	instantPacketDurationMap map[string]time.Duration
-	instantWaitHeightMap     map[string]uint64
+	instantPacketDurationMap  map[string]time.Duration
+	instantWaitHeightMap      map[string]uint64
 }
 
 func (cl *Client) Name() string {
@@ -163,7 +163,7 @@ func (cl *Client) Name() string {
 func (cl *Client) blockHeightPriorWaitDur(ctx context.Context, waitHeight uint64) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
-		logger.GetLogger().Error("error while getting current height", zap.Any(cl.name, "cna"))
+		logger.GetLogger().Error("error while getting current height", zap.Any("chain", cl.name))
 		cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), DOWN)
 		return 0, err
 	}
