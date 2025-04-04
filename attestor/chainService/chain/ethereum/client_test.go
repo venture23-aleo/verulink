@@ -166,12 +166,12 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeightMap:    map[string]uint64{common.Big2.String(): 9},
-		retryPacketWaitDur:    time.Hour,
+		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 9},
+		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
-		feedPktWaitDurMap:     map[string]time.Duration{common.Big2.String(): time.Nanosecond},
-		destChainsIDMap:       map[string]bool{common.Big2.String(): true},
-		metrics:               newMetrics(),
+		feedPktWaitDurMap:         map[string]time.Duration{common.Big2.String(): time.Nanosecond},
+		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
+		metrics:                   newMetrics(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -217,7 +217,7 @@ func TestRetryFeed(t *testing.T) {
 			dbRemover()
 			retryPacketNamespaces = nil
 		})
-		dstAleoNameSpace := retryPacketNamespacePrefix + "2"
+		dstAleoNameSpace := retryPacketNamespacePrefix + "_1_" + "2"
 		err = store.CreateNamespace(dstAleoNameSpace)
 		assert.NoError(t, err)
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace)
@@ -276,8 +276,8 @@ func TestRetryFeed(t *testing.T) {
 			dbRemover()
 			retryPacketNamespaces = nil
 		})
-		dstAleoNameSpace := retryPacketNamespacePrefix + "2"
-		dstSolNameSpace := retryPacketNamespacePrefix + "3"
+		dstAleoNameSpace := retryPacketNamespacePrefix + "_1_" + "2"
+		dstSolNameSpace := retryPacketNamespacePrefix + "_1_" + "3"
 		err = store.CreateNamespaces([]string{dstAleoNameSpace, dstSolNameSpace})
 		assert.NoError(t, err)
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace, dstSolNameSpace)
@@ -361,13 +361,15 @@ func TestManagePacket(t *testing.T) {
 			retryPacketNamespaces = nil
 		})
 
-		retryNs := retryPacketNamespacePrefix + "2"
+		retryNs := retryPacketNamespacePrefix + "_1_" + "2"
 		retryPacketNamespaces = append(retryPacketNamespaces, retryNs)
 
 		namespaces := []string{retryNs}
 		err = store.CreateNamespaces(namespaces)
 		assert.NoError(t, err)
 		client := new(Client)
+		client.chainID = common.Big1
+		client.name = "ethereum"
 		client.SetMetrics(newMetrics())
 		client.retryPktNamespaces = retryPacketNamespaces
 
@@ -411,7 +413,7 @@ func TestManagePacket(t *testing.T) {
 			dbRemover()
 			baseSeqNamespaces = nil
 		})
-		bseqNs := baseSeqNumNameSpacePrefix + "2"
+		bseqNs := baseSeqNumNameSpacePrefix + "_1_" + "2"
 		baseSeqNamespaces = append(baseSeqNamespaces, bseqNs)
 
 		namespaces := []string{bseqNs}
@@ -420,6 +422,8 @@ func TestManagePacket(t *testing.T) {
 
 		client := new(Client)
 		client.SetMetrics(newMetrics())
+		client.chainID = common.Big1
+		client.name = "ethereum"
 		client.baseSeqNamespaces = baseSeqNamespaces
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
@@ -462,7 +466,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 	var baseSeqNamespaces []string
 	var eventLogs []types.Log
 
-	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"_1_"+"2")
 	store.CreateNamespace(baseSeqNamespaces[0])
 
 	client := &Client{
@@ -495,11 +499,13 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeightMap:    map[string]uint64{common.Big2.String(): 10},
-		retryPacketWaitDur:    time.Hour,
+		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 10},
+		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
-		metrics:               newMetrics(),
-		baseSeqNamespaces:     baseSeqNamespaces,
+		metrics:                   newMetrics(),
+		baseSeqNamespaces:         baseSeqNamespaces,
+		chainID:                   common.Big1,
+		name:                      "ethereum",
 	}
 
 	for i := 0; i < 15; i++ {

@@ -236,6 +236,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			goto L1 // TODO: check the commit history 
 		}
 
 	L1:
@@ -275,7 +276,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 						pkt.SetInstant(true)
 					}
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
-						// TODO: add metrics for fast packet counter
+						// TODO: add a different metrics for the fastfeed packet
 						// cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
 						ch <- pkt
 					}
@@ -369,6 +370,8 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 	for dest := range cl.destChainsIDMap {
 		var baseHeight uint64 = math.MaxUint64
 		var ns string
+		// generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), dest)
+		// TODO : remove this after db migration
 		if cl.name != "ethereum" {
 			ns = baseSeqNumNameSpacePrefix + cl.name + dest // ethereum_bsns_base_6694886634403, 3 //ethereum_bsns_ethereum_6694886634403, 200
 		} else {
@@ -443,6 +446,10 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		ns := cl.baseSeqNamespaces[index]
 		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
+		//TODO: add this after db migration 
+		// trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
+		// namespaceParts := strings.Split(trimmmdNamespace, "_")
+		// chainIDStr := namespaceParts[len(namespaceParts)-1]
 		chainID := new(big.Int)
 		chainID.SetString(chainIDStr, 10)
 		// segragate sequence numbers as per target chain
@@ -498,6 +505,8 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
 			var ns string
+			// ns = generateNamespcae(retryPacketNamespacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
+			// TODO: remove this after db migration
 			if cl.name != "ethereum" {
 				ns = retryPacketNamespacePrefix + cl.name + pkt.Destination.ChainID.String()
 			} else {
@@ -512,6 +521,8 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 			}
 		case pkt := <-completedCh:
 			var ns string
+			// ns = generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
+			// TODO: remove this after db migration
 			if cl.name != "ethereum" {
 				ns = baseSeqNumNameSpacePrefix + cl.name + pkt.Destination.ChainID.String()
 			} else {
@@ -561,6 +572,10 @@ func (cl *Client) SetMetrics(metrics *metrics.PrometheusMetrics) {
 	cl.metrics = metrics
 }
 
+func generateNamespcae(prefix, srcchain, destinationChain string) string {
+	return fmt.Sprintf("%s_%s_%s", prefix, srcchain, destinationChain)
+}
+
 // NewClient initializes Client and returns the interface to chain.IClient
 func NewClient(cfg *config.ChainConfig) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
@@ -589,6 +604,9 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 
 	for destChain, duration := range cfg.DestChains {
 		var rns, bns string
+		// rns = generateNamespcae(retryPacketNamespacePrefix, cfg.ChainID.String(), destChain)
+		// bns = generateNamespcae(baseSeqNumNameSpacePrefix, cfg.ChainID.String(), destChain)
+		// TODO: remove this after db migration
 		if cfg.Name != "ethereum" {
 			rns = retryPacketNamespacePrefix + cfg.Name + destChain
 			bns = baseSeqNumNameSpacePrefix + cfg.Name + destChain
@@ -660,8 +678,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		baseSeqNamespaces:         baseSeqNamespace,
 		retryPktNamespaces:        retryPktNamespace,
 		averageBlockGenDur:        avgBlockGenDur,
-		instantPacketDurationMap:      instantPacketDurationMap,
-		instantWaitHeightMap:          instantPacketWaitHeightMap,
-
+		instantPacketDurationMap:  instantPacketDurationMap,
+		instantWaitHeightMap:      instantPacketWaitHeightMap,
 	}
 }

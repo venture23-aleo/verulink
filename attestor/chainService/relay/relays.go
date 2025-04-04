@@ -100,6 +100,7 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 		case Aleo:
 			// aleo client is registered with init() function in aleo package
 			// RegisteredClients[ch.Name] = aleo.NewClient
+			// TODO: do the refractoring on the aleo client 
 		default: // TODO: is default required? this indicates that only ethereum and aleo chain types are supported
 			panic(fmt.Sprintf("unsupported chain type defined %s", ch.ChainType))
 		}
