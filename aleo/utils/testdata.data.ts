@@ -104,9 +104,14 @@ export const baseUsdtContractAddr = "0x22F06bac09F9375E6450F44976a05b7d6d61fcf4"
 export const baseEthContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Address on Arbitrum Network
-export const arbitrumUsdcContractAddr = "0x532842De9470816Cf7cc7Cee2d15f19593fBaf64"
-export const arbitrumUsdtContractAddr = "0x26FC611307b28f347eE66D057f1E3F3a903B3630"
+export const arbitrumUsdcContractAddr = "0x22F06bac09F9375E6450F44976a05b7d6d61fcf4"
+export const arbitrumUsdtContractAddr = "0x555eC249d1eB0db553AE8df14f4baE287F9CE62a"
 export const arbitrumEthContractAddr = "0x0000000000000000000000000000000000000001"
+
+// Token Address on Holesky Network
+export const ethHoleskyUsdcContractAddr = "0x82e349a83D954A5cA049d4256B8dF3a7c8d5AB9b"
+export const ethHoleskyUsdtContractAddr = "0xB675520eB99c86f602a454F2288eb0722c2C520B"
+export const ethHoleskyEthContractAddr = "0x0000000000000000000000000000000000000001"
 
 // Token Service Contract Address on Ethereum
 export const ethTsContractAddr = "0x5d2fe549d3b7c35f0ed3f4f8a3870e476622b303"
@@ -119,9 +124,12 @@ export const baseTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635
 export const baseTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
 // Token Service Contract Address on Arbitrum
-export const arbitrumTsContractAddr = "0xA7d9fD4232b5a5770996832c3edb8198766Add69"
+export const arbitrumTsContractAddr = "0x9cdF17334652a05830F3B6d06e18F13ed49521d5"
 export const arbitrumTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
 export const arbitrumTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
+
+// Token Service Contract Address on Holesky
+export const ethHoleskyTsContractAddr = "0x2862b8900c9c6C6928E9d2B84057d835a4283275"
 
 
 // Token Service Contract Address on Ethereum
@@ -133,6 +141,7 @@ export const ethChainId = BigInt("28556963657430695"); //eth: chainid sepolia
 export const aleoChainId = BigInt("6694886634403"); // aleo: chainid
 export const baseChainId = BigInt("443067135441324596"); //base: chainid 84532n
 export const arbitrumChainId = BigInt("438861435819683566"); //arbi: chainid 421614n
+export const ethHoleskyChainId = BigInt("111550639260264") // eth: chainid 17000
 export const PRIVATE_VERSION = 2;
 export const PUBLIC_VERSION = 1;
 
