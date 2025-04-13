@@ -47,7 +47,7 @@ type relay struct {
 
 // StartRelay setups all the necessary environment for running the relay and starts it.
 func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.PrometheusMetrics) {
-	err := signer.SetupSigner(&cfg.SigningServiceConfig)
+	err := signer.SetupSigner(&cfg.SigningServiceConfig, &cfg.Credentials)
 	if err != nil {
 		panic(err)
 	}

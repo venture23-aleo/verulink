@@ -1,8 +1,16 @@
 package config
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"math/big"
 	"os"
+	"time"
+
+	awscfg "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/aws"
 
 	"gopkg.in/yaml.v3"
 )
@@ -21,10 +29,18 @@ type ChainConfig struct {
 
 type config struct {
 	Chains []ChainConfig `yaml:"chains"`
-	Cred   Cred          `yaml:"cred"`
+}
+
+// Secret denotes the key pair stored in aws secret manager
+type Secret struct {
+	EthereumKey     string `json:"ethereum_private_key"`
+	EthereumAddress string `json:"ethereum_wallet_address"`
+	AleoKey         string `json:"aleo_private_key"`
+	AleoAddress     string `json:"aleo_wallet_address"`
 }
 
 var cfg *config
+var keyCfg *KeyConfig
 
 func LoadConfig(configPath string) error {
 	b, err := os.ReadFile(configPath)
@@ -42,13 +58,16 @@ func GetChains() []ChainConfig {
 }
 
 func GetUsernamePassword() (string, string) {
-	return cfg.Cred.Username, cfg.Cred.Password
+	return keyCfg.Cred.Username, keyCfg.Cred.Password
 }
 
 /***********************************Keys***********************************************/
 
 type KeyConfig struct {
 	ChainKeys map[string]*KeyPair `yaml:"chain"`
+	SecretId  string              `yaml:"secret_id"`
+	Region    string              `yaml:"region"`
+	Cred      Cred                `yaml:"cred"`
 }
 
 type KeyPair struct {
@@ -56,15 +75,61 @@ type KeyPair struct {
 	WalletAddress string `yaml:"wallet_address"`
 }
 
-func LoadKeys(keyPath string) (map[string]*KeyPair, error) {
+func LoadKeys(isSecretId bool, keyPath string) (map[string]*KeyPair, error) {
+
 	b, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
 	}
-	keyCfg := new(KeyConfig)
+	keyCfg = new(KeyConfig)
 	err = yaml.Unmarshal(b, keyCfg)
 	if err != nil {
 		return nil, err
+	}
+
+	if isSecretId {
+		return fetchKeysFromSecretsManager(keyCfg.Region, keyCfg.SecretId)
+	}
+
+	return keyCfg.ChainKeys, nil
+}
+
+func fetchKeysFromSecretsManager(region string, secretId string) (map[string]*KeyPair, error) {
+
+	ctx, cncl := context.WithTimeout(context.Background(), time.Minute*1)
+	defer cncl()
+	awsconfig, err := awscfg.LoadDefaultConfig(ctx, awscfg.WithRegion(region))
+	if err != nil {
+		return nil, fmt.Errorf("unable to load AWS SDK config: %w", err)
+	}
+
+	client := secretsmanager.NewFromConfig(awsconfig)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(secretId),
+	}
+	result, err := client.GetSecretValue(ctx, input)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve secret from AWS: %w", err)
+	}
+
+	var secretData Secret
+	err = json.Unmarshal([]byte(*result.SecretString), &secretData)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse secret: %w", err)
+	}
+
+	keyCfg := new(KeyConfig)
+	keyCfg.ChainKeys = make(map[string]*KeyPair)
+
+	keyCfg.ChainKeys["aleo"] = &KeyPair{
+		PrivateKey:    secretData.AleoKey,
+		WalletAddress: secretData.AleoAddress,
+	}
+
+	keyCfg.ChainKeys["ethereum"] = &KeyPair{
+		PrivateKey:    secretData.EthereumKey,
+		WalletAddress: secretData.EthereumAddress,
 	}
 
 	return keyCfg.ChainKeys, nil

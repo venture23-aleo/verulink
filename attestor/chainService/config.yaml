@@ -46,8 +46,6 @@ signing_service:
   port: 8080
   endpoint: "/sign"
   scheme: "http" # https, http, rpc, etc.
-  username: "username"
-  password: "password"
   health_end_point: "/health"
 collector_service:
   uri : <collector_service_url>

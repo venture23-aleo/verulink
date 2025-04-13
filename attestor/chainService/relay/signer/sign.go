@@ -118,7 +118,7 @@ func (s *signService) CheckSigningServiceHealth(ctx context.Context, cfg *config
 
 // SetupSigner checks if url can be dialed and sets up given parameters for chainservice to
 // communicate with signing service securely.
-func SetupSigner(cfg *config.SigningServiceConfig) error {
+func SetupSigner(cfg *config.SigningServiceConfig, creds *config.Creds) error {
 	logger.GetLogger().Info("Setting up signer",
 		zap.String("scheme", cfg.Scheme),
 		zap.String("endpoint", cfg.Endpoint),
@@ -128,7 +128,7 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Path:   cfg.Endpoint,
 		Scheme: cfg.Scheme,
-		User:   url.UserPassword(cfg.Username, cfg.Password),
+		User:   url.UserPassword(creds.Username, creds.Password),
 	}
 
 	client := &http.Client{

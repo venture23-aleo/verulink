@@ -3,6 +3,4 @@ chains:
     chain_id: 6694886634401
   - name: ethereum
     chain_id: 27234042785
-cred:
-  username: <username_same_as_chainservice>
-  password: <password_same_as_chainservice>
+

@@ -19,4 +19,5 @@ ENTRYPOINT ./chainservice --config=/configs/config.yaml \
                             --log-dir=$LOG_DIR \
                             --log-enc=$LOG_ENC \
                             --mode=$MODE \
-                            --clean=$CLEAN_START
+                            --clean=$CLEAN_START \
+                            --auth-secrets=/configs/auth_secrets.yaml

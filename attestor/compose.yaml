@@ -7,8 +7,11 @@ x-logpath: &l
 services:
   chainservice:
     depends_on:
-      - signingservice
+      signingservice:
+        condition: service_healthy # Wait for the signingservice to be healthy
     build: ./chainService
+    image : verulink/chainservice:8a428f7
+    pull_policy: build # build or always
     volumes:
       - type: volume
         source: db-path
@@ -20,6 +23,7 @@ services:
         source: ./chainService/config.yaml
         target: /configs/config.yaml
       - ./chainService/.mtls:/configs/.mtls
+      - ./chainService/auth_secrets.yaml:/configs/auth_secrets.yaml
     environment:
       DB_PATH: *p
       LOG_PATH: *l
@@ -30,12 +34,21 @@ services:
     build:
       context: .
       dockerfile: ./signingService/Dockerfile
+    image: verulink/signingservice:8a428f7
+    pull_policy: build
     volumes:
       - ./signingService/config.yaml:/configs/config.yaml
-      - ./signingService/secrets.yaml:/configs/keys.yaml
+      - ./signingService/secrets.yaml:/configs/keys.yaml # for loacal key pair setup
     ports:
       - 8080:8080
-      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"] 
+      interval: 20s 
+      timeout: 10s   
+      retries: 3     
+      start_period: 20s
+    environment:
+      AWS_SECRETS_MANAGER: true
 volumes:
   db-path:
   log-path:
