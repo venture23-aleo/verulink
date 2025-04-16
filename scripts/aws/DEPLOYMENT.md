@@ -1,4 +1,6 @@
 ## Attestor Server Deployment Guide
+
+### Installing on AWS
 The attestor service can be deployed using two method
 1. From local device
 > To run from a local device, please make sure the AWS CLI tool and AWS access credentials have been correctly configured. 
@@ -194,6 +196,94 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
+### Installing on Local machine, VM, or baremetal
+> This script has been tested on an Ubuntu 22.04 machine. To use it on other distributions, ensure that `systemd` is available and refer to the respective package manager's documentation for installing required dependencies.
+
+To deploy on a local machine, VM, or bare metal server, follow the guide provided here.
+
+#### Prerequisite
+1. Here’s the corrected and more formal version of your instructions:
+
+---
+
+### Prerequisites
+
+1. Ensure the latest versions of `rust` and `go` are installed.
+2. If you are running the script with `sudo`, make sure the Go binary path (`/usr/local/go/bin`) is included in the `secure_path` of the sudoers configuration.
+3. Install the following packages:
+   - `libssl-dev`  
+   - `pkg-config`
+
+---
+
+### Deployment Steps
+
+1. Clone the GitHub project repository:
+   ```bash
+   git clone https://github.com/venture23-aleo/verulink.git
+   ```
+
+2. Navigate to the project directory:
+   ```bash
+   cd verulink
+   ```
+
+3. Checkout the `main` branch:
+   ```bash
+   git checkout main
+   ```
+
+4. Update the configuration file with the required values and save it. You will need to provide the following information in the template:
+
+   - Attestor Name: `<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>`
+   - Aleo Wallet Address: `<your_aleo_wallet_address>`
+   - Ethereum Wallet Address: `<your_ethereum_wallet_address>`
+   - Database Directory
+   - Log Directory
+   - Collector Service Endpoint: `<collector_service_url>`
+   - MTLS CA Certificate Path
+   - Attestor Certificate Path
+   - Attestor Private Key Path
+   - Prometheus PushGateway Endpoint: `<prometheus_pushgateway_url>`
+
+   ➤ [ChainService Configuration File](https://github.com/venture23-aleo/verulink/blob/main/attestor/chainService/config.yaml)
+
+5. Configure the SigningService credentials by setting the username and password in its configuration file:
+
+   ➤ [SigningService Configuration File](https://github.com/venture23-aleo/verulink/blob/main/attestor/signingService/config.yaml)
+
+6. Create a `secret.yaml` file with the following content:
+
+   ```yaml
+   chain:
+     ethereum:
+       private_key: <eth_private_key>
+       wallet_address: <eth_wallet_address>
+     aleo:
+       private_key: <aleo_private_key>
+       wallet_address: <aleo_wallet_address>
+   ```
+ 
+5. Run the deployment script:
+
+   ```bash
+   bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --keys=/path/to/secret.yaml
+   ```
+6. Check Service Status
+
+	```bash
+	systemctl status attestor-sign.service
+	systemctl status attestor-chain.service
+	```
+
+	> **Note:** If you deployed the services using a 	user-level systemd service, include the `--user` flag in 	the command:
+
+	```bash
+	systemctl --user status attestor-sign.service
+	systemctl --user status attestor-chain.service
+	```
+
+
 
 ## Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:
