@@ -254,6 +254,8 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
     | Ethereum Wallet Address      |     `<your_ethereum_wallet_address>` |
     | Database Directory           |     `<path_to_database_directory>` |
     | Log Directory                |     `<path_to_log_directory>` |
+	| Signingservice username      |     `<path_to_log_directory>` |
+	| Signingservice password      |     `<path_to_log_directory>` |
     | Collector Service Endpoint   |     `<collector_service_url>` |
     | MTLS CA Certificate Path     |     `<path_to_mtls_ca_certificate>` |
     | Attestor Certificate Path    |     `<path_to_attestor_certificate>` |
