@@ -7,6 +7,7 @@ set -e
 export INSTALL_DIR="/opt/attestor"
 export BIN_DIR="$INSTALL_DIR/bin"
 export CONFIG_DIR="$INSTALL_DIR/configs"
+export DB_DIR="$INSTALL_DIR/db"
 export LOG_DIR="/var/log/attestor"
 export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
 
