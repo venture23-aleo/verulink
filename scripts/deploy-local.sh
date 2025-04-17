@@ -212,8 +212,8 @@ sed -i "s|^\s*attestor_certificate:.*|  attestor_certificate: $MTLSKEYS_DIR/$CER
 sed -i "s|^\s*attestor_key:.*|  attestor_key: $MTLSKEYS_DIR/$KEY_FILENAME|" "$CHAIN_CONFIG_PATH"
 
 # Update Signing service host and port in Chainservice config
-sed -i "s|^\(  host:\s*\).*|\1$SIGN_IP|" "$SIGN_CONFIG_PATH"
-sed -i "s|^\(  port:\s*\).*|\1$SIGN_PORT|" "$SIGN_CONFIG_PATH"
+sed -i "s|^\(  host:\s*\).*|\1$SIGN_IP|" "$CHAIN_CONFIG_PATH"
+sed -i "s|^\(  port:\s*\).*|\1$SIGN_PORT|" "$CHAIN_CONFIG_PATH"
 
 echo "✅ config files updated with dynamic values."
 
