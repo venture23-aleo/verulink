@@ -113,7 +113,7 @@ echo "📁 Installation path set to: $INSTALL_DIR"
 
 
 echo "📁 Creating installation directories..."
-sudo mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR"
+sudo mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
 sudo chown -R "$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
 
 # === CHECK DEPENDENCIES ===
