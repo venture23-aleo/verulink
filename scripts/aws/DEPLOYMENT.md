@@ -1,5 +1,18 @@
 ## Attestor Server Deployment Guide
 
+## Table of Contents
+- [Installing on AWS](#installing-on-aws)
+  - [Pre-Deployment steps](#pre-deployment-steps)
+  - [Setup](#setup)
+  - [To Configure AWS access](#to-configure-aws-access)
+  - [Deployment Steps](#deployment-steps)
+- [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
+  - [Prerequisites](#prerequisites)
+  - [Deployment Steps](#deployment-steps-1)
+- [Troubleshooting](#troubleshooting)
+
+---
+
 ### Installing on AWS
 The attestor service can be deployed using two method
 1. From local device
@@ -7,18 +20,18 @@ The attestor service can be deployed using two method
   [Follow steps here.](#to-configure-aws-access) 
 2. Using AWS CloudShell from the AWS Management Console UI(**Recommended**)
 
-## Pre-Deployment steps 
-1. MTLS certiciate/ key and CA certificate \
-   **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
+#### Pre-Deployment steps 
+1. MTLS certificate/ key and CA certificate \
+   **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.** \
    https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready
    
-## Setup
+#### Setup
 
 If using AWS cloudShell, no need to install the dependencies to run the installer script.
 
-### To Configure AWS access
+#### To Configure AWS access
 1. Install [_**AWS CLI Tool**_](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 
 2. Add IAM permission to user  (needed for both local and CloudShell)
@@ -134,7 +147,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     ```
    Reference: [Refer to this AWS documentation for other environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-set)
 
-## Deployment Steps
+#### Deployment Steps
 1. Clone the github project repository
     ```bash
     git clone https://github.com/venture23-aleo/verulink.git
@@ -196,17 +209,14 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
+---
 ### Installing on Local machine, VM, or baremetal
 > This script has been tested on an Ubuntu 22.04 machine. To use it on other distributions, ensure that `systemd` is available and refer to the respective package manager's documentation for installing required dependencies.
 
 To deploy on a local machine, VM, or bare metal server, follow the guide provided here.
 
-#### Prerequisite
-1. Here’s the corrected and more formal version of your instructions:
 
----
-
-### Prerequisites
+#### Prerequisites
 
 1. Ensure the latest versions of `rust` and `go` are installed.
 2. If you are running the script with `sudo`, make sure the Go binary path (`/usr/local/go/bin`) is included in the `secure_path` of the sudoers configuration.
@@ -214,9 +224,9 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    - `libssl-dev`  
    - `pkg-config`
 
----
 
-### Deployment Steps
+
+#### Deployment Steps
 
 1. Clone the GitHub project repository:
    ```bash
@@ -235,18 +245,24 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 4. Update the configuration file with the required values and save it. You will need to provide the following information in the template:
 
-   - Attestor Name: `<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>`
-   - Aleo Wallet Address: `<your_aleo_wallet_address>`
-   - Ethereum Wallet Address: `<your_ethereum_wallet_address>`
-   - Database Directory
-   - Log Directory
-   - Collector Service Endpoint: `<collector_service_url>`
-   - MTLS CA Certificate Path
-   - Attestor Certificate Path
-   - Attestor Private Key Path
-   - Prometheus PushGateway Endpoint: `<prometheus_pushgateway_url>`
+	➤ [ChainService Configuration File](https://github.com/venture23-aleo/verulink/blob/main/attestor/chainService/config.yaml)
 
-   ➤ [ChainService Configuration File](https://github.com/venture23-aleo/verulink/blob/main/attestor/chainService/config.yaml)
+    | Configuration Item                | Value/    Placeholder |
+    |----------------------------------|    -------------------|
+    | Attestor Name                |     `<releaseIdentifier>_attestor_verulink_<yourCompanyIden    tifier>` |
+    | Aleo Wallet Address          |     `<your_aleo_wallet_address>` |
+    | Ethereum Wallet Address      |     `<your_ethereum_wallet_address>` |
+    | Database Directory           |     `<path_to_database_directory>` |
+    | Log Directory                |     `<path_to_log_directory>` |
+    | Collector Service Endpoint   |     `<collector_service_url>` |
+    | MTLS CA Certificate Path     |     `<path_to_mtls_ca_certificate>` |
+    | Attestor Certificate Path    |     `<path_to_attestor_certificate>` |
+    | Attestor Private Key Path    |     `<path_to_attestor_private_key>` |
+    | Prometheus PushGateway Endpoint |     `<prometheus_pushgateway_url>` |
+
+
+
+   
 
 5. Configure the SigningService credentials by setting the username and password in its configuration file:
 
