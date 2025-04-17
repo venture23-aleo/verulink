@@ -263,9 +263,9 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
     | Prometheus PushGateway Endpoint |     `<prometheus_pushgateway_url>` |
 
      ### Notes:
-     - *The default log directory is usually `/var/log/     attestor`.*
-     - *The default database directory is usually `/opt/     attestor/db`.*
-     - *The signing service username and password are      defined in the Signing Service configuration file.*
+     - *The default log directory is usually `/var/log/attestor`.*
+     - *The default database directory is usually `/opt/attestor/db`.*
+     - *The signing service username and password are defined in the Signing Service configuration file.*
 
 
    
