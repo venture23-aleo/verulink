@@ -3,14 +3,6 @@
 set -e
 
 
-# === SETUP PATHS ===
-export INSTALL_DIR="/opt/attestor"
-export BIN_DIR="$INSTALL_DIR/bin"
-export CONFIG_DIR="$INSTALL_DIR/configs"
-export DB_DIR="$INSTALL_DIR/db"
-export LOG_DIR="/var/log/attestor"
-export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
-
 # === Resolve Script Directory ===
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -111,9 +103,15 @@ export INSTALL_DIR="${INSTALL_DIR:-/opt/attestor}"
 
 echo "📁 Installation path set to: $INSTALL_DIR"
 
+# === SETUP PATHS ===
+export BIN_DIR="$INSTALL_DIR/bin"
+export CONFIG_DIR="$INSTALL_DIR/configs"
+export DB_DIR="$INSTALL_DIR/db"
+export LOG_DIR="/var/log/attestor"
+export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
 
 echo "📁 Creating installation directories..."
-sudo mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
+sudo mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
 sudo chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
 
 # === CHECK DEPENDENCIES ===
