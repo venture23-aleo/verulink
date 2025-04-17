@@ -257,11 +257,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
     | Collector Service Endpoint   |     `<collector_service_url>` |
     | Prometheus PushGateway Endpoint |     `<prometheus_pushgateway_url>` |
 
-5. Configure the SigningService credentials by setting the username and password in its configuration file:
-
-   `./attestor/signingService/config.yaml`
-
-6. Create a `secrets.yaml` file with the following content:
+5. Create a `secrets.yaml` file with the following content:
 
    ```yaml
    chain:
@@ -273,12 +269,12 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
        wallet_address: <aleo_wallet_address>
    ```
  
-5. Run the deployment script:
+6. Run the deployment script:
 
    ```bash
    bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --secrets=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key
    ```
-6. Check Service Status
+7. Check Service Status
 
 	```bash
 	systemctl status attestor-sign.service
