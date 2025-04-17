@@ -6,8 +6,10 @@ set -e
 # === SETUP PATHS ===
 export INSTALL_DIR="/opt/attestor"
 export BIN_DIR="$INSTALL_DIR/bin"
-export CONFIG_DIR="$INSTALL_DIR/config"
+export CONFIG_DIR="$INSTALL_DIR/configs"
 export LOG_DIR="/var/log/attestor"
+export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
+export SIGNING_SERVICE_PORT=8080
 
 # === Resolve Script Directory ===
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,8 +30,20 @@ for arg in "$@"; do
       SIGN_CONFIG="${arg#*=}"
       shift
       ;;
-    --keys=*)
-      KEYS_FILE="${arg#*=}"
+    --secrets=*)
+      SECRETS_FILE="${arg#*=}"
+      shift
+      ;;
+    --ca_cert=*)
+      CA_CERT="${arg#*=}"
+      shift
+      ;;
+    --attestor_cert=*)
+      ATTESTOR_CERT="${arg#*=}"
+      shift
+      ;;
+    --attestor_key=*)
+      ATTESTOR_KEY="${arg#*=}"
       shift
       ;;
     *)
@@ -40,30 +54,54 @@ for arg in "$@"; do
 done
 
 # === VALIDATION ===
-if [[ -z "$CHAIN_CONFIG" || -z "$SIGN_CONFIG" || -z "$KEYS_FILE" ]]; then
-  echo "Usage: $0 --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --keys=/path/to/secret.yaml"
+MISSING_ARGS=0
+
+if [[ -z "$CHAIN_CONFIG" || ! -f "$CHAIN_CONFIG" ]]; then
+  echo "❌ Chain config file is missing or not found: $CHAIN_CONFIG"
+  MISSING_ARGS=1
+fi
+
+if [[ -z "$SIGN_CONFIG" || ! -f "$SIGN_CONFIG" ]]; then
+  echo "❌ Signing config file is missing or not found: $SIGN_CONFIG"
+  MISSING_ARGS=1
+fi
+
+if [[ -z "$SECRETS_FILE" || ! -f "$SECRETS_FILE" ]]; then
+  echo "❌ Secrets file is missing or not found: $KEYS_FILE"
+  MISSING_ARGS=1
+fi
+
+if [[ -z "$CA_CERT" || ! -f "$CA_CERT" ]]; then
+  echo "❌ CA certificate file is missing or not found: $CA_CERT"
+  MISSING_ARGS=1
+fi
+
+if [[ -z "$ATTESTOR_CERT" || ! -f "$ATTESTOR_CERT" ]]; then
+  echo "❌ Attestor certificate file is missing or not found: $ATTESTOR_CERT"
+  MISSING_ARGS=1
+fi
+
+if [[ -z "$ATTESTOR_KEY" || ! -f "$ATTESTOR_KEY" ]]; then
+  echo "❌ Attestor key file is missing or not found: $ATTESTOR_KEY"
+  MISSING_ARGS=1
+fi
+
+if [[ "$MISSING_ARGS" -eq 1 ]]; then
+  echo ""
+  echo "📌 Usage:"
+  echo "  $0 --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --keys=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor_key"
   exit 1
 fi
 
-if [[ ! -f "$CHAIN_CONFIG" ]]; then
-  echo "❌ Chain config file not found: $CHAIN_CONFIG"
-  exit 1
-fi
 
-if [[ ! -f "$SIGN_CONFIG" ]]; then
-  echo "❌ Signing config file not found: $SIGN_CONFIG"
-  exit 1
-fi
-
-if [[ ! -f "$KEYS_FILE" ]]; then
-  echo "❌ Keys file not found: $KEYS_FILE"
-  exit 1
-fi
-
-echo "🔍 Please review and update your config files:"
-echo " - Chain config: $CHAIN_CONFIG"
-echo " - Signing config: $SIGN_CONFIG"
-echo " - Keys file: $KEYS_FILE"
+echo ""
+echo "🔍 Please review and confirm your configuration files:"
+echo " - Chain config      : $CHAIN_CONFIG"
+echo " - Signing config    : $SIGN_CONFIG"
+echo " - Secrets file      : $SECRETS_FILE"
+echo " - CA Certificate    : $CA_CERT"
+echo " - Attestor Cert     : $ATTESTOR_CERT"
+echo " - Attestor Key      : $ATTESTOR_KEY"
 read -p "Press ENTER to continue, or Ctrl+C to cancel..."
 
 # === INSTALLATION DIRECTORY PROMPT ===
@@ -75,7 +113,7 @@ echo "📁 Installation path set to: $INSTALL_DIR"
 
 
 echo "📁 Creating installation directories..."
-sudo mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR"
+sudo mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR"
 sudo chown -R "$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
 
 # === CHECK DEPENDENCIES ===
@@ -128,8 +166,11 @@ cp target/release/ahs "$BIN_DIR/"
 echo "📋 Copying configs..."
 cp "$CHAIN_CONFIG" "$CONFIG_DIR/chainservice.yaml"
 cp "$SIGN_CONFIG" "$CONFIG_DIR/signingservice.yaml"
-cp "$KEYS_FILE" "$CONFIG_DIR/keys.yaml"
-chmod 600 "$CONFIG_DIR/keys.yaml"
+cp "$SECRETS_FILE" "$CONFIG_DIR/secrets.yaml"
+cp "$CA_CERT" "$ATTESTOR_CERT" "$ATTESTOR_KEY" -t "$MTLSKEYS_DIR"
+
+
+chmod 600 "$CONFIG_DIR/secrets.yaml"
 
 # === SYSTEMD UNIT FILES ===
 echo "📝 Creating systemd unit files..."
@@ -184,8 +225,8 @@ After=network.target
 
 [Service]
 ExecStart=$BIN_DIR/signingservice --config=$CONFIG_DIR/signingservice.yaml \\
-    --kp=$CONFIG_DIR/keys.yaml \\
-    --port=8082
+    --kp=$CONFIG_DIR/secrets.yaml \\
+    --port=$SIGNING_SERVICE_PORT
 WorkingDirectory=$INSTALL_DIR
 Environment=PATH=$BIN_DIR:/usr/bin:/bin
 Restart=always

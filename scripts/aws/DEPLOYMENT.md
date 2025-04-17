@@ -254,6 +254,8 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
     | Ethereum Wallet Address      |     `<your_ethereum_wallet_address>` |
     | Database Directory*          |     `<path_to_database_directory>` |
     | Log Directory*               |     `<path_to_log_directory>` |
+	| Signingservice host*      |     `hostname or ip address` |
+	| Signingservice port*     |     `port` |
 	| Signingservice username*      |     `<path_to_log_directory>` |
 	| Signingservice password*     |     `<path_to_log_directory>` |
     | Collector Service Endpoint   |     `<collector_service_url>` |
@@ -266,9 +268,12 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
      - *The default log directory is usually `/var/log/attestor`.*
      - *The default database directory is usually `/opt/attestor/db`.*
      - *The signing service username and password are defined in the Signing Service configuration file.*
+	 - *For multi-homed networking, to bind the signing service to a specific IP address, update the systemd service configuration with the following format:
 
-
-   
+		```bash
+		--port=IP:PORT
+		```
+       **Note:** Ensure that the signing service's host and port information is correctly updated in the ChainService configuration. This is required for proper communication between the services.
 
 5. Configure the SigningService credentials by setting the username and password in its configuration file:
 
