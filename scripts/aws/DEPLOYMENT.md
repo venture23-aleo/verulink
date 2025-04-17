@@ -252,16 +252,20 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
     | Attestor Name                |     `<releaseIdentifier>_attestor_verulink_<yourCompanyIden    tifier>` |
     | Aleo Wallet Address          |     `<your_aleo_wallet_address>` |
     | Ethereum Wallet Address      |     `<your_ethereum_wallet_address>` |
-    | Database Directory           |     `<path_to_database_directory>` |
-    | Log Directory                |     `<path_to_log_directory>` |
-	| Signingservice username      |     `<path_to_log_directory>` |
-	| Signingservice password      |     `<path_to_log_directory>` |
+    | Database Directory*          |     `<path_to_database_directory>` |
+    | Log Directory*               |     `<path_to_log_directory>` |
+	| Signingservice username*      |     `<path_to_log_directory>` |
+	| Signingservice password*     |     `<path_to_log_directory>` |
     | Collector Service Endpoint   |     `<collector_service_url>` |
     | MTLS CA Certificate Path     |     `<path_to_mtls_ca_certificate>` |
     | Attestor Certificate Path    |     `<path_to_attestor_certificate>` |
     | Attestor Private Key Path    |     `<path_to_attestor_private_key>` |
     | Prometheus PushGateway Endpoint |     `<prometheus_pushgateway_url>` |
 
+     ### Notes:
+     - *The default log directory is usually `/var/log/     attestor`.*
+     - *The default database directory is usually `/opt/     attestor/db`.*
+     - *The signing service username and password are      defined in the Signing Service configuration file.*
 
 
    
