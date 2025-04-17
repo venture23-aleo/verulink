@@ -3,15 +3,15 @@ name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
 version: 1.0.1
 chains:
 - name: aleo
-  chain_id: 6694886634401
+  chain_id: 6694886634403
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
-  bridge_contract: vlink_token_bridge_v1.aleo
-  node_url: https://api.explorer.provable.com/v1|mainnet
+  bridge_contract: token_bridge_stg_v2.aleo
+  node_url: https://api.explorer.provable.com/v1|testnet
   sequence_num_start:
     ethereum: 1
     # solana: 23 # solana is just for config example
-  pkt_validity_wait_dur: 86400s
-  finality_height: 28800
+  pkt_validity_wait_dur: 60s
+  finality_height: 20
   retry_packet_wait_dur: 10m
   prune_base_seq_num_wait_dur: 30m
   average_block_gen_dur: 3s
@@ -19,15 +19,15 @@ chains:
     - ethereum
 
 - name: ethereum
-  chain_id: 27234042785
+  chain_id: 28556963657430695
   wallet_address: <your_ethereum_wallet_address>
-  bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
-  node_url: https://eth.llamarpc.com
-  start_height: 20740576
-  finality_height: 7050
+  bridge_contract: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
+  node_url: https://eth-sepolia.public.blastapi.io
+  start_height: 8137493
+  finality_height: 5
   filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
-  feed_pkt_wait_dur: 15m
-  pkt_validity_wait_dur: 84600s
+  feed_pkt_wait_dur: 5m
+  pkt_validity_wait_dur: 60s
   retry_packet_wait_dur: 10m
   prune_base_seq_num_wait_dur: 30m
   dest_chains:
@@ -59,4 +59,4 @@ collector_service:
 
 metrics:
   host: <prometheus_pushgateway_url>
-  job_name: prod-push-gateway
+  job_name: dev-push-gateway
