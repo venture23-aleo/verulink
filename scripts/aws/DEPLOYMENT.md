@@ -247,41 +247,21 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 4. Update the configuration file with the required values and save it. You will need to provide the following information in the template:
 
-	➤ [ChainService Configuration File](https://github.com/venture23-aleo/verulink/blob/main/attestor/chainService/config.yaml)
+	`./attestor/chainService/config.yaml`
 
     | Configuration Item                | Value/    Placeholder |
     |----------------------------------|    -------------------|
     | Attestor Name                |     `<releaseIdentifier>_attestor_verulink_<yourCompanyIden    tifier>` |
     | Aleo Wallet Address          |     `<your_aleo_wallet_address>` |
     | Ethereum Wallet Address      |     `<your_ethereum_wallet_address>` |
-    | Database Directory*          |     `<path_to_database_directory>` |
-    | Log Directory*               |     `<path_to_log_directory>` |
-	| Signingservice host*      |     `hostname or ip address` |
-	| Signingservice port*     |     `port` |
-	| Signingservice username*      |     `<path_to_log_directory>` |
-	| Signingservice password*     |     `<path_to_log_directory>` |
     | Collector Service Endpoint   |     `<collector_service_url>` |
-    | MTLS CA Certificate Path     |     `<path_to_mtls_ca_certificate>` |
-    | Attestor Certificate Path    |     `<path_to_attestor_certificate>` |
-    | Attestor Private Key Path    |     `<path_to_attestor_private_key>` |
     | Prometheus PushGateway Endpoint |     `<prometheus_pushgateway_url>` |
-
-     ### Notes:
-     - *The default log directory is usually `/var/log/attestor`.*
-     - *The default database directory is usually `/opt/attestor/db`.*
-     - *The signing service username and password are defined in the Signing Service configuration file.*
-	 - *For multi-homed networking, to bind the signing service to a specific IP address, update the systemd service configuration with the following format:*
-
-		```bash
-		--port=IP:PORT
-		```
-       **Note:** Ensure that the signing service's host and port information is correctly updated in the ChainService configuration. This is required for proper communication between the services.
 
 5. Configure the SigningService credentials by setting the username and password in its configuration file:
 
-   ➤ [SigningService Configuration File](https://github.com/venture23-aleo/verulink/blob/main/attestor/signingService/config.yaml)
+   `./attestor/signingService/config.yaml`
 
-6. Create a `secret.yaml` file with the following content:
+6. Create a `secrets.yaml` file with the following content:
 
    ```yaml
    chain:
