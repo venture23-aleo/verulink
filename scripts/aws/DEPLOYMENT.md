@@ -218,7 +218,16 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 #### Prerequisites
 
-1. Ensure the latest versions of `rust` and `go` are installed.
+1. Ensure that the latest versions of `Go` and `Rust` are installed.
+
+   ```bash
+   # Check Go version
+   go version
+   
+   # Check Rust compiler version
+   rustc --version
+   ```
+   > **Note:** You can install Go by following the instructions [here](https://go.dev/doc/install), and Rust by following the instructions [here](https://www.rust-lang.org/tools/install).
 2. If Go and Rust are installed via the official binary and its path (e.g., `/usr/local/go/bin`, `/home/ubuntu/.cargo/bin`) is not included in the `secure_path` of the sudoers configuration, add it to ensure proper execution when using `sudo`.
 3. Install the following packages:
    ```bash
