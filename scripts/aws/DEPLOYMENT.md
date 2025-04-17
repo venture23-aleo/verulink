@@ -222,7 +222,8 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 2. If Go is installed via the official binary and its path (e.g., `/usr/local/go/bin`) is not included in the `secure_path` of the sudoers configuration, add it to ensure proper execution when using `sudo`.
 3. Install the following packages:
    ```bash
-   sudo apt install libssl-dev pkg-config
+   sudo apt update
+   sudo apt install libssl-dev pkg-config build-essential
    ```  
    
 
@@ -287,6 +288,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 	systemctl --user status attestor-sign.service
 	systemctl --user status attestor-chain.service
 	```
+8. 
 
 
 
