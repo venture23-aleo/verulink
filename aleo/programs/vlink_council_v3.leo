@@ -1,3 +1,5 @@
+import token_registry.aleo;
+
 program vlink_council_v3.aleo {
 
     struct ProposalVote {
@@ -312,6 +314,55 @@ program vlink_council_v3.aleo {
         Mapping::remove(members, existing_member);
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u8);
+    }
+
+    struct Withdrawal {
+        id: u32,
+        token_id: field,
+        receiver: address,
+        amount: u128
+    }
+
+    async transition withdraw_fees(public id: u32, public token_id:field, public receiver: address, public amount: u128, public voters: [address; 5]) -> Future{
+        assert(amount > 0u128);
+        let proposal: Withdrawal = Withdrawal {
+            id,
+            token_id,
+            receiver,
+            amount
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+        let votes: u8 = get_valid_unique_address_count(voters);
+        let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
+
+        let withdraw_fee: Future = token_registry.aleo/transfer_public(
+            token_id,
+            receiver,
+            amount
+        );
+
+        return finalize_withdraw_fees(proposal_hash, amount, voters, vote_keys, votes, withdraw_fee);
+    }
+
+    async function finalize_withdraw_fees(proposal_hash: field, amount: u128, voters: [address; 5], vote_keys: [field; 5], votes: u8, f0: Future) {
+        f0.await();
+        // Ensure that the votes are from valid members
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            assert(Mapping::contains(members, voters[i]));
+            assert(Mapping::get(proposal_votes, vote_keys[i]));
+        }
+
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
     }
 
     ////////////////////////////////////////
