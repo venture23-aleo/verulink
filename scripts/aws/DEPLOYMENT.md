@@ -225,6 +225,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    sudo apt update
    sudo apt install libssl-dev pkg-config build-essential
    ```  
+4. You may need to open the firewall port for the signing service (default: 8080) if it is bound to an IP address other than `localhost` or the loopback address (`127.0.0.1`).
    
 
 
