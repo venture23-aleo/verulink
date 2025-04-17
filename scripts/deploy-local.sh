@@ -280,7 +280,6 @@ ExecStart=$BIN_DIR/chainservice --config=$CONFIG_DIR/chainservice.yaml \\
     --mode=prod \\
     --clean=false
 WorkingDirectory=$INSTALL_DIR
-Restart=always
 
 [Install]
 WantedBy=multi-user.target
@@ -299,7 +298,6 @@ ExecStart=$BIN_DIR/signingservice --config=$CONFIG_DIR/signingservice.yaml \\
     --port=$SIGN_PORT
 WorkingDirectory=$INSTALL_DIR
 Environment=PATH=$BIN_DIR:/usr/bin:/bin
-Restart=always
 
 [Install]
 WantedBy=multi-user.target

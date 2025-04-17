@@ -288,9 +288,27 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 	systemctl --user status attestor-sign.service
 	systemctl --user status attestor-chain.service
 	```
-8. 
-
-
+8. To view logs for the systemd services, use the following commands:
+	```bash
+	journalctl -u attestor-sign.service
+	journalctl -u attestor-chain.service
+	```
+	> **Note:** If you deployed the services using a 	user-level systemd service, include the `--user` flag in 	the command:
+	```bash
+	journalctl --user -u attestor-sign.service
+	journalctl --user -u attestor-chain.service
+	```
+10. To start or stop the services, use the following commands:
+	```bash
+	systemctl stop attestor-sign.service
+	systemctl start attestor-chain.service
+	```
+	> **Note:** If you deployed the services using a 	user-level systemd service, include the `--user` flag in 	the command:
+	```bash
+	systemctl --user stop attestor-sign.service
+	systemctl --user start attestor-chain.service
+	```
+11. To view the application log file, navigate to the installation directory on the Linux machine, then go to the `log` directory. The log file is named `verulink.log`.
 
 ## Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:
