@@ -221,8 +221,8 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 1. Ensure the latest versions of `rust` and `go` are installed.
 2. If Go is installed via the official binary and its path (e.g., `/usr/local/go/bin`) is not included in the `secure_path` of the sudoers configuration, add it to ensure proper execution when using `sudo`.
 3. Install the following packages:
-   - `libssl-dev`  
-   - `pkg-config`
+   - `sudo apt install libssl-dev pkg-config`  
+   
 
 
 
