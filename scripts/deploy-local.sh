@@ -111,8 +111,8 @@ export LOG_DIR="/var/log/attestor"
 export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
 
 echo "📁 Creating installation directories..."
-sudo mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
-sudo chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
+mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
+chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
 
 # === CHECK DEPENDENCIES ===
 echo "🔍 Checking for required dependencies..."
