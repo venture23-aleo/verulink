@@ -268,7 +268,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
      - *The default log directory is usually `/var/log/attestor`.*
      - *The default database directory is usually `/opt/attestor/db`.*
      - *The signing service username and password are defined in the Signing Service configuration file.*
-	 - *For multi-homed networking, to bind the signing service to a specific IP address, update the systemd service configuration with the following format:
+	 - *For multi-homed networking, to bind the signing service to a specific IP address, update the systemd service configuration with the following format:*
 
 		```bash
 		--port=IP:PORT
