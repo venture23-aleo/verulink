@@ -9,7 +9,6 @@ export BIN_DIR="$INSTALL_DIR/bin"
 export CONFIG_DIR="$INSTALL_DIR/configs"
 export LOG_DIR="/var/log/attestor"
 export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
-export SIGNING_SERVICE_PORT=8080
 
 # === Resolve Script Directory ===
 export SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -134,6 +133,22 @@ fi
 echo "✅ Go and Rust are installed, proceeding with the build."
 
 
+# === SIGNING SERVICE BIND ADDRESS ===
+echo ""
+read -p "🔧 Enter Signing Service IP (leave empty for default): " SIGN_IP
+read -p "🔧 Enter Signing Service Port [default: 8080]: " SIGN_PORT
+SIGN_PORT="${SIGN_PORT:-8080}"
+
+# Construct SIGN_BIND_ADDR
+if [[ -n "$SIGN_IP" ]]; then
+  SIGN_BIND_ADDR="$SIGN_IP:$SIGN_PORT"
+else
+  SIGN_BIND_ADDR="$SIGN_PORT"
+fi
+
+echo "🔗 Signing Service will bind to: $SIGN_BIND_ADDR"
+
+
 # === BUILD chainservice ===
 (
     echo "🔨 Building chainservice..."
@@ -226,7 +241,7 @@ After=network.target
 [Service]
 ExecStart=$BIN_DIR/signingservice --config=$CONFIG_DIR/signingservice.yaml \\
     --kp=$CONFIG_DIR/secrets.yaml \\
-    --port=$SIGNING_SERVICE_PORT
+    --port=$SIGN_BIND_ADDR
 WorkingDirectory=$INSTALL_DIR
 Environment=PATH=$BIN_DIR:/usr/bin:/bin
 Restart=always
