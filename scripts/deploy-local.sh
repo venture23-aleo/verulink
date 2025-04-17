@@ -107,7 +107,7 @@ echo "📁 Installation path set to: $INSTALL_DIR"
 export BIN_DIR="$INSTALL_DIR/bin"
 export CONFIG_DIR="$INSTALL_DIR/configs"
 export DB_DIR="$INSTALL_DIR/db"
-export LOG_DIR="/var/log/attestor"
+export LOG_DIR="$INSTALL_DIR/log"
 export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
 
 
