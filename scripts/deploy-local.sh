@@ -185,6 +185,7 @@ cp signingservice "$BIN_DIR/"
 # === BUILD Rust ahs ===
 (
 echo "⚙️ Building ahs..."
+rustup default stable
 cd "$SIGN_DIR"/rust || exit 1
 cargo build --release
 cp target/release/ahs "$BIN_DIR/"
