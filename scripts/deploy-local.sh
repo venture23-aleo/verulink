@@ -272,6 +272,7 @@ cat <<EOF > "$SYSTEMD_DIR/attestor-chain.service"
 [Unit]
 Description=Attestor Chain Service
 After=network.target
+Requires=attestor-sign.service
 
 [Service]
 ExecStart=$BIN_DIR/chainservice --config=$CONFIG_DIR/chainservice.yaml \\
@@ -308,16 +309,16 @@ EOF
 echo "🔁 Reloading and starting systemd units..."
 if [[ "$SYSTEMD_MODE" == "system" ]]; then
   systemctl daemon-reload
-  systemctl enable attestor-chain.service
   systemctl enable attestor-sign.service
-  systemctl start attestor-chain.service
+  systemctl enable attestor-chain.service
   systemctl start attestor-sign.service
+  systemctl start attestor-chain.service
 else
   systemctl --user daemon-reload
-  systemctl --user enable attestor-chain.service
   systemctl --user enable attestor-sign.service
-  systemctl --user start attestor-chain.service
+  systemctl --user enable attestor-chain.service
   systemctl --user start attestor-sign.service
+  systemctl --user start attestor-chain.service
 fi
 
 echo "✅ Deployment complete. Services are running!"
