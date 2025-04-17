@@ -296,7 +296,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 5. Run the deployment script:
 
    ```bash
-   bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --keys=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key
+   bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --secrets=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key
    ```
 6. Check Service Status
 
