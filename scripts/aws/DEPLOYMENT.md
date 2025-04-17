@@ -218,7 +218,17 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 #### Prerequisites
 
-1. Ensure that the latest versions of `Go` and `Rust` are installed.
+1. Attestor Node Name
+   Format: `<env>_attestor_verulink_<your_company_name>`  
+   Example: `mainnet_attestor_verulink_v23`
+
+2. Wallet Keys and Addresses  
+   - Ethereum Private Key  
+   - Ethereum Wallet Address  
+   - Aleo Private Key  
+   - Aleo Wallet Address
+
+3. Ensure that the latest versions of `Go` and `Rust` are installed.
 
    ```bash
    # Check Go version
@@ -228,13 +238,14 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    rustc --version
    ```
    > **Note:** You can install Go by following the instructions [here](https://go.dev/doc/install), and Rust by following the instructions [here](https://www.rust-lang.org/tools/install).
-2. If Go and Rust are installed via the official binary and its path (e.g., `/usr/local/go/bin`, `/home/ubuntu/.cargo/bin`) is not included in the `secure_path` of the sudoers configuration, add it to ensure proper execution when using `sudo`.
-3. Install the following packages:
+4. If Go and Rust are installed via the official binary and its path (e.g., `/usr/local/go/bin`, `/home/ubuntu/.cargo/bin`) is not included in the `secure_path` of the sudoers configuration, add it to ensure proper execution when using `sudo`.
+5. Install the following packages:
    ```bash
    sudo apt update
    sudo apt install libssl-dev pkg-config build-essential
    ```  
-4. You may need to open the firewall port for the signing service (default: 8080) if it is bound to an IP address other than `localhost` or the loopback address (`127.0.0.1`).
+6. You may need to open the firewall port for the signing service (default: 8080) if it is bound to an IP address other than `localhost` or the loopback address (`127.0.0.1`).
+ 
    
 
 
@@ -302,12 +313,12 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    🔍 Checking for required dependencies...
    ✅ Go and Rust are installed, proceeding with the build.
    
-   🔧 Enter Signing Service IP or Hostname (default: 0.0.   0.0): 192.168.1.100
+   🔧 Enter Signing Service IP or Hostname (default: 0.0.0.0): 192.168.1.100
    🔧 Enter Signing Service Port [default: 8080]: 8080
    🔗 Signing Service will bind to:
    🔨 Building chainservice...
    go: downloading go.uber.org/zap v1.26.0
-   go: downloading github.com/ethereum/go-ethereum v1.13.   15
+   go: downloading github.com/ethereum/go-ethereum v1.13.15
    go: downloading github.com/stretchr/testify v1.8.4
    ```
    You will be prompted to install either a user-level or system-level systemd service. Press Enter to select the default, which is the user-level systemd unit.
