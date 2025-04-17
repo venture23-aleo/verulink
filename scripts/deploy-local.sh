@@ -110,9 +110,22 @@ export DB_DIR="$INSTALL_DIR/db"
 export LOG_DIR="/var/log/attestor"
 export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
 
+
 echo "📁 Creating installation directories..."
-mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
-chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
+
+mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR" 2>/dev/null
+chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR" 2>/dev/null
+if [[ $? -ne 0 ]]; then
+  echo "⚠️  Permission denied while creating or setting ownership for directories."
+  read -p "🔐 Would you like to retry with sudo? [y/N]: " use_sudo
+  if [[ "$use_sudo" == "y" || "$use_sudo" == "Y" ]]; then
+    sudo mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
+    sudo chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
+  else
+    echo "❌ Aborting due to insufficient permissions."
+    exit 1
+  fi
+fi
 
 # === CHECK DEPENDENCIES ===
 echo "🔍 Checking for required dependencies..."
