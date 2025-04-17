@@ -221,7 +221,7 @@ After=network.target
 
 [Service]
 ExecStart=$BIN_DIR/chainservice --config=$CONFIG_DIR/chainservice.yaml \\
-    --db-dir=$INSTALL_DIR/db \\
+    --db-dir=$DB_DIR \\
     --log-dir=$LOG_DIR \\
     --log-enc=json \\
     --mode=prod \\
