@@ -89,7 +89,7 @@ fi
 if [[ "$MISSING_ARGS" -eq 1 ]]; then
   echo ""
   echo "📌 Usage:"
-  echo "  $0 --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --keys=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor_key"
+  echo "  $0 --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --keys=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key"
   exit 1
 fi
 
