@@ -98,8 +98,8 @@ read -p "Press ENTER to continue, or Ctrl+C to cancel..."
 
 # === INSTALLATION DIRECTORY PROMPT ===
 echo ""
-read -p "📦 Enter installation directory [default: /opt/attestor]: " INSTALL_DIR
-export INSTALL_DIR="${INSTALL_DIR:-/opt/attestor}"
+read -p "📦 Enter installation directory [default: $HOME/attestor]: " INSTALL_DIR
+INSTALL_DIR="${INSTALL_DIR:-$HOME/attestor}"
 
 echo "📁 Installation path set to: $INSTALL_DIR"
 
