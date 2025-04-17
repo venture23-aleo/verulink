@@ -281,7 +281,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    ```
  
 6. Run the deployment script:
-
+   > You need to provide the paths to the configuration files, as well as the mTLS (mutual TLS) certificate and key files, as shown in the command below.
    ```bash
    bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --secrets=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key
    ```
