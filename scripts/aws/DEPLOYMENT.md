@@ -218,7 +218,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 #### Prerequisites
 
-1. Attestor Node Name
+1. Attestor Node Name  
    Format: `<env>_attestor_verulink_<your_company_name>`  
    Example: `mainnet_attestor_verulink_v23`
 
