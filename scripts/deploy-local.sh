@@ -113,19 +113,26 @@ export MTLSKEYS_DIR="$CONFIG_DIR/.mtls"
 
 echo "📁 Creating installation directories..."
 
-mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR" 2>/dev/null
-chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR" 2>/dev/null
-if [[ $? -ne 0 ]]; then
-  echo "⚠️  Permission denied while creating or setting ownership for directories."
-  read -p "🔐 Would you like to retry with sudo? [y/N]: " use_sudo
-  if [[ "$use_sudo" == "y" || "$use_sudo" == "Y" ]]; then
+parent_dir=$(dirname "$INSTALL_DIR")
+
+if [[ ! -d "$parent_dir" ]]; then
+  echo "📂 Parent directory $parent_dir does not exist. Attempting to create it."
+fi
+if [[ $(stat -c '%U' "$parent_dir") != "$(whoami)" ]]; then
+  echo "⚠️  You do not own $parent_dir"
+  read -p "🔐 Elevated permissions required. Use sudo to create directories? [y/N]: " confirm
+  if [[ "$confirm" =~ ^[Yy]$ ]]; then
     sudo mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
     sudo chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
   else
     echo "❌ Aborting due to insufficient permissions."
     exit 1
   fi
+else
+  mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$MTLSKEYS_DIR" "$DB_DIR"
+  chown -R "$(whoami)":"$(whoami)" "$INSTALL_DIR" "$LOG_DIR"
 fi
+
 
 # === CHECK DEPENDENCIES ===
 echo "🔍 Checking for required dependencies..."
