@@ -136,8 +136,9 @@ echo "✅ Go and Rust are installed, proceeding with the build."
 
 # === SIGNING SERVICE BIND ADDRESS ===
 echo ""
-read -p "🔧 Enter Signing Service IP (leave empty for default): " SIGN_IP
+read -p "🔧 Enter Signing Service IP or Hostname (default: localhost): " SIGN_IP
 read -p "🔧 Enter Signing Service Port [default: 8080]: " SIGN_PORT
+SIGN_IP="${SIGN_IP:-localhost}"
 SIGN_PORT="${SIGN_PORT:-8080}"
 
 # Construct SIGN_BIND_ADDR
@@ -185,8 +186,48 @@ cp "$SIGN_CONFIG" "$CONFIG_DIR/signingservice.yaml"
 cp "$SECRETS_FILE" "$CONFIG_DIR/secrets.yaml"
 cp "$CA_CERT" "$ATTESTOR_CERT" "$ATTESTOR_KEY" -t "$MTLSKEYS_DIR"
 
+# === MODIFY CONFIGS ===
+echo "🔧 Updating config files..."
+
+CHAIN_CONFIG_PATH="$CONFIG_DIR/chainservice.yaml"
+SIGN_CONFIG_PATH="$CONFIG_DIR/signingservice.yaml"
+
+# Generate machine-specific username/password (based on hostname hash + random)
+MACHINE_CODE=$(hostname | sha256sum | head -c 6)
+RAND_SUFFIX=$(od -An -N2 -i /dev/urandom | tr -d ' ')
+USERNAME="user_$MACHINE_CODE$RAND_SUFFIX"
+PASSWORD="pass_$MACHINE_CODE$RAND_SUFFIX"
+
+# Update db_dir and log_dir
+sed -i "s|db_dir:.*|db_dir: $DB_DIR|" "$CHAIN_CONFIG_PATH"
+sed -i "s|output_dir:.*|output_dir: $LOG_DIR|" "$CHAIN_CONFIG_PATH"
+
+# Update username and password in Chainservice config
+sed -i "s|^\s*username:.*|  username: \"$USERNAME\"|" "$CHAIN_CONFIG_PATH"
+sed -i "s|^\s*password:.*|  password: \"$PASSWORD\"|" "$CHAIN_CONFIG_PATH"
+
+# Update username and password in Signingservice config
+sed -i "s|username:.*|username: $USERNAME|" "$SIGN_CONFIG_PATH"
+sed -i "s|password:.*|password: $PASSWORD|" "$SIGN_CONFIG_PATH"
+
+# Replace certificate paths
+CA_FILENAME=$(basename "$CA_CERT")
+CERT_FILENAME=$(basename "$ATTESTOR_CERT")
+KEY_FILENAME=$(basename "$ATTESTOR_KEY")
+
+sed -i "s|^\s*ca_certificate:.*|  ca_certificate: $MTLSKEYS_DIR/$CA_FILENAME|" "$CHAIN_CONFIG_PATH"
+sed -i "s|^\s*attestor_certificate:.*|  attestor_certificate: $MTLSKEYS_DIR/$CERT_FILENAME|" "$CHAIN_CONFIG_PATH"
+sed -i "s|^\s*attestor_key:.*|  attestor_key: $MTLSKEYS_DIR/$KEY_FILENAME|" "$CHAIN_CONFIG_PATH"
+
+# Update Signing service host and port in Chainservice config
+sed -i "s|^\(  host:\s*\).*|\1$SIGN_IP|" "$SIGN_CONFIG_PATH"
+sed -i "s|^\(  port:\s*\).*|\1$SIGN_PORT|" "$SIGN_CONFIG_PATH"
+
+echo "✅ config files updated with dynamic values."
+
 
 chmod 600 "$CONFIG_DIR/secrets.yaml"
+
 
 # === SYSTEMD UNIT FILES ===
 echo "📝 Creating systemd unit files..."
