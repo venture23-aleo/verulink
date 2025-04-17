@@ -280,10 +280,42 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
        wallet_address: <aleo_wallet_address>
    ```
  
-6. Run the deployment script:
+6. Run the script with the required arguments as shown below:
    > You need to provide the paths to the configuration files, as well as the mTLS (mutual TLS) certificate and key files, as shown in the command below.
    ```bash
    bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --secrets=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key
+   ```
+   You will be prompted with the following:
+   ```bash
+   🔍 Please review and confirm your configuration files:
+    - Chain config      : /home/ubuntu/verulink/attestor/   chainService/config.yaml
+    - Signing config    : /home/ubuntu/verulink/attestor/   signingService/config.yaml
+    - Secrets file      : /home/ubuntu/verulink/attestor/   signingService/secrets.yaml
+    - CA Certificate    : /home/ubuntu/ca.cer
+    - Attestor Cert     : /home/ubuntu/attestor.crt
+    - Attestor Key      : /home/ubuntu/attestor.key
+   Press ENTER to continue, or Ctrl+C to cancel...
+   
+   📦 Enter installation directory [default: /home/ubuntu/   attestor]:
+   📁 Installation path set to: /home/ubuntu/attestor
+   📁 Creating installation directories...
+   🔍 Checking for required dependencies...
+   ✅ Go and Rust are installed, proceeding with the build.
+   
+   🔧 Enter Signing Service IP or Hostname (default: 0.0.   0.0): 192.168.1.100
+   🔧 Enter Signing Service Port [default: 8080]: 8080
+   🔗 Signing Service will bind to:
+   🔨 Building chainservice...
+   go: downloading go.uber.org/zap v1.26.0
+   go: downloading github.com/ethereum/go-ethereum v1.13.   15
+   go: downloading github.com/stretchr/testify v1.8.4
+   ```
+   You will be prompted to install either a user-level or system-level systemd service. Press Enter to select the default, which is the user-level systemd unit.
+   ```bash
+   📦 Where do you want to install systemd units?
+   1) System-wide (requires sudo)
+   2) User-level (no sudo)
+   Select [1/2, default 2]:
    ```
 7. Check Service Status
 
