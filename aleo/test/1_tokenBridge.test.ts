@@ -21,7 +21,7 @@ import {
   baseChainId,
   arbitrumChainId,
   usdtContractAddr,
-  PACKET_VERSION_PUBLIC
+  VERSION_PUBLIC_NORELAYER_NOPREDICATE
 } from "../utils/constants";
 
 import { PrivateKey } from "@aleohq/sdk";
@@ -529,7 +529,7 @@ describe("Token Bridge ", () => {
 
       bridge.connect(aleoTsAddr);
       let tx = await bridge.publish(
-        PACKET_VERSION_PUBLIC,
+        VERSION_PUBLIC_NORELAYER_NOPREDICATE,
         destChainId,
         evm2AleoArr(destTsAddr),
         evm2AleoArr(destToken),
@@ -559,7 +559,7 @@ describe("Token Bridge ", () => {
         if (!isSupportedService) {
           bridge.connect(admin);
           const tx = await bridge.publish(
-            PACKET_VERSION_PUBLIC,
+            VERSION_PUBLIC_NORELAYER_NOPREDICATE,
             destChainId,
             evm2AleoArr(ethTsRandomContractAddress.toLowerCase()), // destTsAddr
             evm2AleoArr(destToken),
@@ -580,7 +580,7 @@ describe("Token Bridge ", () => {
         expect(await bridge.supported_chains(destChainId, false)).toBe(false);
         bridge.connect(aleoTsAddr);
         const tx = await bridge.publish(
-          PACKET_VERSION_PUBLIC,
+          VERSION_PUBLIC_NORELAYER_NOPREDICATE,
           destChainId,
           evm2AleoArr(destTsAddr),
           evm2AleoArr(destToken),
@@ -619,7 +619,7 @@ describe("Token Bridge ", () => {
 
         bridge.connect(aleoTsAddr);
         let tx = await bridge.publish(
-          PACKET_VERSION_PUBLIC,
+          VERSION_PUBLIC_NORELAYER_NOPREDICATE,
           ethChainId,
           evm2AleoArr(destTsAddr),
           evm2AleoArr(destToken),
@@ -672,7 +672,7 @@ describe("Token Bridge ", () => {
 
         bridge.connect(aleoTsAddr);
         let tx = await bridge.publish(
-          PACKET_VERSION_PUBLIC,
+          VERSION_PUBLIC_NORELAYER_NOPREDICATE,
           baseChainId,
           evm2AleoArr(destTsAddr),
           evm2AleoArr(destToken),
@@ -725,7 +725,7 @@ describe("Token Bridge ", () => {
 
         bridge.connect(aleoTsAddr);
         let tx = await bridge.publish(
-          PACKET_VERSION_PUBLIC,
+          VERSION_PUBLIC_NORELAYER_NOPREDICATE,
           arbitrumChainId,
           evm2AleoArr(destTsAddr),
           evm2AleoArr(destToken),

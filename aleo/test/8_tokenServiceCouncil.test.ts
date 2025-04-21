@@ -86,8 +86,10 @@ describe("Token Service Council", () => {
     const thresholdNoLimit = BigInt(100)
     const outgoingPercentage = 10_00
     const time = 1
-    const platform_fee = 5;
-    const relayer_fee = BigInt(10000);
+    const public_platform_fee = 5;
+    const private_platform_fee = 10;
+    const public_relayer_fee = BigInt(10000);
+    const private_relayer_fee = BigInt(20000);
 
     beforeEach(async () => {
       council.connect(proposer);
@@ -110,8 +112,10 @@ describe("Token Service Council", () => {
         token_address: evm2AleoArrWithoutPadding(usdcContractAddr),
         token_service: evm2AleoArrWithoutPadding(ethTsContractAddr),
         chain_id: ethChainId,
-        fee_of_platform: platform_fee,
-        fee_of_relayer: relayer_fee
+        pub_platform_fee: public_platform_fee,
+        pri_platform_fee: private_platform_fee,
+        pub_relayer_fee: public_relayer_fee,
+        pri_relayer_fee: private_relayer_fee
       };
       addTokenProposalHash = hashStruct(getTsAddTokenLeo(tsSupportToken));
       const tx = await council.propose(proposalId, addTokenProposalHash);
@@ -138,8 +142,10 @@ describe("Token Service Council", () => {
         evm2AleoArrWithoutPadding(usdcContractAddr),
         evm2AleoArrWithoutPadding(ethTsContractAddr),
         ethChainId,
-        platform_fee,
-        relayer_fee
+        public_platform_fee,
+        private_platform_fee,
+        public_relayer_fee,
+        private_relayer_fee,
       );
       await tx.wait();
 
