@@ -240,3 +240,7 @@ func parseAleoEthAddrToHexString(addr string) (string, error) {
 	return ethCommon.BytesToAddress(addrbt).String(), nil
 
 }
+
+func generateNamespcae(prefix, srcchain, destinationChain string) string {
+	return fmt.Sprintf("%s_%s_%s", prefix, srcchain, destinationChain)
+}
