@@ -738,7 +738,7 @@ program vlink_token_service_v3.aleo {
         receiver: address,
         public version: u8,
         public fee_relayer: u128,
-    ) -> (public bool, token_registry.aleo/Token, Future) {
+    ) -> (public bool, token_registry.aleo/Token, token_registry.aleo/Token, Future) {
         
         assert(version > 10u8 && version < 20u8);
 
@@ -794,10 +794,10 @@ program vlink_token_service_v3.aleo {
         let hold: Future = vlink_holding_v3.aleo/hold_fund(receiver, token_id, held_amount);
 
         // minting in relayer address
-        let mint_relayer: Future = token_registry.aleo/mint_public(token_id, fee_receiver, fee_relayer, authorize_until);
+        let mint_relayer_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, fee_receiver, fee_relayer, false,authorize_until);
 
 
-        return (screening_passed.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_private.1, hold, mint_relayer));
+        return (screening_passed.0, mint_private.0, mint_relayer_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_private.1, hold, mint_relayer_private.1));
     }
 
     async function finalize_token_receive_private(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer: u128, f0: Future, f1: Future, f2: Future, f3: Future) {
