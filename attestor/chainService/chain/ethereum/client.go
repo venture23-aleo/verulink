@@ -445,11 +445,11 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		ns := cl.baseSeqNamespaces[index]
-		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
+		// chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
 		//TODO: add this after db migration
-		// trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
-		// namespaceParts := strings.Split(trimmmdNamespace, "_")
-		// chainIDStr := namespaceParts[len(namespaceParts)-1]
+		trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
+		namespaceParts := strings.Split(trimmmdNamespace, "_")
+		chainIDStr := namespaceParts[len(namespaceParts)-1]
 		chainID := new(big.Int)
 		chainID.SetString(chainIDStr, 10)
 		// segragate sequence numbers as per target chain
