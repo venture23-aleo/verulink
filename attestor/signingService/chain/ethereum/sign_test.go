@@ -76,6 +76,6 @@ func TestSetUpPrivateKey(t *testing.T) {
 		err := SetUpPrivateKey(kp, "ethereum")
 		require.Error(t, err)
 
-		require.Nil(t, pkeyMap["ethereum"]) // TODO : do same for base wallet
+		require.Nil(t, pkeyMap["ethereum"])
 	})
 }

@@ -31,7 +31,7 @@ var (
 	RegisteredRetryChannels = map[string]chan *chain.Packet{}
 	// RegisteredCompleteChannels stores channel for each chain to receive and handle packets that has successfully
 	// been stored in db-service.
-	RegisteredCompleteChannels = map[string]chan *chain.Packet{} // TODO : this was set send only but now need bidirectional
+	RegisteredCompleteChannels = map[string]chan *chain.Packet{}
 )
 
 const (
@@ -99,7 +99,6 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 			var retryCh = make(chan *chain.Packet)
 			RegisteredRetryChannels[ch.Name] = retryCh
 		case Aleo:
-			// aleo client is registered with init() function in aleo package
 			RegisteredClients[ch.Name] = aleo.NewClient
 
 			var completedCh = make(chan *chain.Packet)
@@ -107,8 +106,7 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 
 			var retryCh = make(chan *chain.Packet)
 			RegisteredRetryChannels[ch.Name] = retryCh
-			// TODO: do the refractoring on the aleo client
-		default: // TODO: is default required? this indicates that only ethereum and aleo chain types are supported
+		default:
 			panic(fmt.Sprintf("unsupported chain type defined %s", ch.ChainType))
 		}
 
