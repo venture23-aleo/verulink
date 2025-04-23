@@ -16,8 +16,16 @@ export const BRIDGE_UNPAUSED_VALUE = 1;
 export const TOKEN_PAUSED_VALUE = true;
 export const TOKEN_UNPAUSED_VALUE = false;
 
-export const PACKET_VERSION_PUBLIC = 1;
-export const PACKET_VERSION_PRIVATE = 2;
+export const VERSION_PUBLIC_NORELAYER_NOPREDICATE = 1;
+export const VERSION_PUBLIC_RELAYER_NOPREDICATE = 2;
+export const VERSION_PUBLIC_NORELAYER_PREDICATE = 3;
+export const VERSION_PUBLIC_RELAYER_PREDICATE = 4;
+
+export const VERSION_PRIVATE_NORELAYER_NOPREDICATE = 11;
+export const VERSION_PRIVATE_RELAYER_NOPREDICATE = 12;
+export const VERSION_PRIVATE_NORELAYER_PREDICATE = 13;
+export const VERSION_PRIVATE_RELAYER_PREDICATE = 14;
+
 
 export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";
 

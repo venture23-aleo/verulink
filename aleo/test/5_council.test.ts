@@ -16,14 +16,16 @@ import {
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
-  getProposalVoteLeo
+  getProposalVoteLeo,
+  getWithdrawalLeo
 } from "../artifacts/js/js2leo/vlink_council_v3";
 import {
   AddMember,
   RemoveMember,
   UpdateThreshold,
   ProposalVote,
-  ProposalVoterKey
+  ProposalVoterKey,
+  Withdrawal
 } from "../artifacts/js/types/vlink_council_v3";
 
 import { hashStruct } from "../utils/hash";
@@ -445,7 +447,54 @@ describe("Council", () => {
     }, TIMEOUT)
   })
 
+  describe("Withdraw Fee", () => {
+    const receiver_address = 'aleo1xpzgjyps47vqmlrtqf64dwlwrmrc89xtsfmgwj4af5aqdh6q05psnw3n6p';
+    let proposalHash: bigint
+    let proposalId: number
+    let token_id: bigint = BigInt(1000)
+    let withdraw_amount: bigint = BigInt(100)
 
-  // test.skip("holding and external execute")
+    test("Propose", async () => {
+      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      proposalId = totalProposals + 1;
+
+      const withdrawFeeProposal: Withdrawal = {
+        id: proposalId,
+        token_id: token_id,
+        receiver: receiver_address,
+        amount: withdraw_amount
+      };
+      proposalHash = hashStruct(getWithdrawalLeo(withdrawFeeProposal));
+      council.connect(councilMember1)
+      const tx = await council.propose(proposalId, proposalHash);
+      await tx.wait();
+
+      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      expect(totalProposalsAfter).toBe(totalProposals + 1);
+      expect(await council.proposals(proposalId)).toBe(proposalHash);
+      expect(await council.proposal_vote_counts(proposalHash)).toBe(1)
+
+    }, TIMEOUT)
+
+    test("Vote", async () => {
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember2)
+      const voteTx = await council.vote(proposalHash, true);
+      await voteTx.wait();
+
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes + 1);
+    }, TIMEOUT)
+
+    test("Execute", async () => {
+      const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+
+      expect(await council.proposal_executed(proposalHash, false)).toBe(false);
+      const withdrawFeeExecTx = await council.withdraw_fees(proposalId, token_id, receiver_address, withdraw_amount, signers);
+      await withdrawFeeExecTx.wait();
+
+      expect(await council.proposal_executed(proposalHash)).toBe(true);
+    }, TIMEOUT)
+  })
 });
 
