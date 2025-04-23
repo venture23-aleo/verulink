@@ -13,9 +13,38 @@ type MigrationPair struct {
 	NewNamespace string
 }
 
-// MigrateInternalDatabase copies all key-value pairs from the old namespace to the new namespace
+func MigrateKVStore() error {
+	migrations := []MigrationPair{
+		{
+			OldNamespace: "aleo_rpns27234042785",
+			NewNamespace: "aleo_rpns_6694886634401_27234042785",
+		},
+		{
+			OldNamespace: "ethereum_rpns6694886634401",
+			NewNamespace: "ethereum_rpns_27234042785_6694886634401",
+		},
+		{
+			OldNamespace: "aleo_bsns27234042785",
+			NewNamespace: "aleo_bsns_6694886634401_27234042785",
+		},
+		{
+			OldNamespace: "ethereum_bsns6694886634401",
+			NewNamespace: "ethereum_bsns_27234042785_6694886634401",
+		},
+	}
+	for _, m := range migrations {
+		if err := migrateInternalDatabase(m.OldNamespace, m.NewNamespace); err != nil {
+			logger.GetLogger().Error("Migration failed", zap.Any("oldnamespace", m.OldNamespace), zap.Any("newnamespace", m.NewNamespace))
+			return err
+		}
+	}
+	return nil
+}
+
+// migrateInternalDatabase copies all key-value pairs from the old namespace to the new namespace
 // in the BoltDB store, and deletes the old namespace after the migration is complete.
-func MigrateInternalDatabase(oldNamespace, newNamespace string) error {
+// TODO: create version for migration also include the attestor version
+func migrateInternalDatabase(oldNamespace, newNamespace string) error {
 
 	if !namespaceExists(oldNamespace) {
 		logger.GetLogger().Info("Old namespace does not exist. Skipping migration.",

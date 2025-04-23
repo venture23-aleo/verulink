@@ -76,28 +76,8 @@ func main() {
 	}
 
 	// TODO: currently embaded only for migration. remove for future releases
-	migrations := []store.MigrationPair{
-		{
-			OldNamespace: "aleo_rpns27234042785",
-			NewNamespace: "aleo_rpns_6694886634401_27234042785",
-		},
-		{
-			OldNamespace: "ethereum_rpns6694886634401",
-			NewNamespace: "ethereum_rpns_27234042785_6694886634401",
-		},
-		{
-			OldNamespace: "aleo_bsns27234042785",
-			NewNamespace: "aleo_bsns_6694886634401_27234042785",
-		},
-		{
-			OldNamespace: "ethereum_bsns6694886634401",
-			NewNamespace: "ethereum_bsns_27234042785_6694886634401",
-		},
-	}
-	for _, m := range migrations {
-		if err := store.MigrateInternalDatabase(m.OldNamespace, m.NewNamespace); err != nil {
-			logger.GetLogger().Error("Migration failed", zap.Any("oldnamespace", m.OldNamespace), zap.Any("newnamespace", m.NewNamespace))
-		}
+	if err := store.MigrateKVStore(); err != nil {
+		logger.GetLogger().Error("Migration failed", zap.Error(err))
 	}
 
 	pmetrics := metrics.NewPrometheusMetrics()
