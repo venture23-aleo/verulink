@@ -180,8 +180,8 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 	}
 }
 
-func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compCh chan *chain.Packet, retryCh chan *chain.Packet) {
-	go cl.managePacket(ctx)
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
+	go cl.managePacket(ctx, completedCh, retryCh)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
@@ -299,7 +299,7 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 // in the event of failure while sending packets to db-service or
 // in the baseSequenceNumberNameSpace to the packets received from completedCh channel in the event
 // of successful packet delivery to the db-service
-func (cl *Client) managePacket(ctx context.Context) {
+func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
 	for {
 		select {
 		case <-ctx.Done():

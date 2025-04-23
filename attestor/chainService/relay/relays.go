@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain/aleo"
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum"
 
 	common "github.com/venture23-aleo/verulink/attestor/chainService/common"
@@ -99,8 +100,14 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 			RegisteredRetryChannels[ch.Name] = retryCh
 		case Aleo:
 			// aleo client is registered with init() function in aleo package
-			// RegisteredClients[ch.Name] = aleo.NewClient
-			// TODO: do the refractoring on the aleo client 
+			RegisteredClients[ch.Name] = aleo.NewClient
+
+			var completedCh = make(chan *chain.Packet)
+			RegisteredCompleteChannels[ch.Name] = completedCh
+
+			var retryCh = make(chan *chain.Packet)
+			RegisteredRetryChannels[ch.Name] = retryCh
+			// TODO: do the refractoring on the aleo client
 		default: // TODO: is default required? this indicates that only ethereum and aleo chain types are supported
 			panic(fmt.Sprintf("unsupported chain type defined %s", ch.ChainType))
 		}

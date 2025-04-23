@@ -357,6 +357,9 @@ func TestManagePacket(t *testing.T) {
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
 	}
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
+
 
 	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
 
@@ -382,7 +385,7 @@ func TestManagePacket(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.managePacket(ctx)
+	go client.managePacket(ctx,completedCh,retryCh)
 	retryCh <- modelPacket
 	time.Sleep(time.Millisecond * 10) // wait to fill in the database
 	pkts, err := store.RetrieveAndDeleteNPackets("aleo_rpns1", 1)
@@ -396,6 +399,9 @@ func TestManagePacket2(t *testing.T) {
 	dbRemover, err := setupDB("tmp/db")
 	require.NoError(t, err)
 	t.Cleanup(dbRemover)
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
+
 
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
@@ -429,7 +435,7 @@ func TestManagePacket2(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.managePacket(ctx)
+	go client.managePacket(ctx,completedCh,retryCh)
 
 	completedCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
