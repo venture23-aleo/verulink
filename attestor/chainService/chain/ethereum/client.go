@@ -236,22 +236,17 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			goto L1 // TODO: check the commit history 
-		}
-
-	L1:
-		for {
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.instantWaitHeightMap[destchain])
 			if err != nil {
 				logger.GetLogger().Error("error while getting block height", zap.Error(err))
-				break L1
+				continue
 			}
 
 			if maturedHeight < cl.nextBlockHeightMap[destchain] {
 				diff := cl.nextBlockHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff))
+				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff)) // TODO: remove this 
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
-				break L1
+				continue
 			}
 
 			// startHeight adds 1, because filterLogs returns packets inclusively for startHeight and endHeight.
@@ -268,7 +263,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 						zap.Uint64("start_height", startHeight),
 						zap.Uint64("end_height", endHeight),
 					)
-					break L1
+					break
 				}
 
 				for _, pkt := range pkts {
@@ -281,9 +276,9 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 						ch <- pkt
 					}
 				}
-				cl.nextBlockHeightMap[destchain] = endHeight + 1
-			}
+			cl.nextBlockHeightMap[destchain] = endHeight + 1
 		}
+	}
 
 	}
 }
@@ -320,7 +315,6 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 
 			if maturedHeight < cl.nextBlockHeightMap[destchain] {
 				diff := cl.nextBlockHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for", zap.String("chain", cl.name), zap.Uint64("height", diff)) // TODO: this log might not be required
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				break L1
 			}
