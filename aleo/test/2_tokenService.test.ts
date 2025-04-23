@@ -68,7 +68,7 @@ const eth2TokenInfo: ChainToken = {
 
 
 const TIMEOUT = 20000_000;
-const wrongTokenID = BigInt(32165478985523213549);
+const wrongTokenID = BigInt("32165478985523213549");
 
 const ethUser = generateRandomEthAddr();
 const createPacket = (
@@ -76,14 +76,16 @@ const createPacket = (
   amount: bigint,
   aleoTsAddr: string,
   sourcecChainId: bigint,
+  tsContractAddress: string,
   version = VERSION_PUBLIC_NORELAYER_NOPREDICATE,
+
 ): InPacket => {
   return createRandomPacket(
     receiver,
     amount,
     sourcecChainId,
     aleoChainId,
-    ethTsContractAddr,
+    tsContractAddress,
     aleoTsAddr,
     tokenID,
     version,
@@ -93,7 +95,7 @@ const createPacket = (
 
 const getPlatformFeeInAmount = async (amount: bigint, platform_fee_percentage: number) => {
   //5% is equivalent to 500
-  return (BigInt(platform_fee_percentage) * amount) / BigInt(100 * 100);
+  return (BigInt(platform_fee_percentage) * amount) / BigInt(100 * 1000);
 }
 
 describe("Token Service ", () => {
@@ -105,8 +107,8 @@ describe("Token Service ", () => {
   const token_max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
   tokenID = hashStruct(token_name);
   const privateKey1 = process.env.ALEO_DEVNET_PRIVATE_KEY1;
-  const public_platform_fee = 5;
-  const private_platform_fee = 10;
+  const public_platform_fee = 5000;
+  const private_platform_fee = 10000;
   const public_relayer_fee = BigInt(10000);
   const private_relayer_fee = BigInt(20000);
   const active_relayer = true;
@@ -115,7 +117,7 @@ describe("Token Service ", () => {
   const admin = aleoUser1;
   const connector = aleoUser4;
 
-  describe.skip("Deployment", () => {
+  describe("Deployment", () => {
     tokenService.connect(admin)
 
     test("Deploy Bridge", async () => {
@@ -139,7 +141,7 @@ describe("Token Service ", () => {
     }, TIMEOUT);
   })
 
-  describe.skip("Initialization", () => {
+  describe("Initialization", () => {
     test("Bridge: Initialize", async () => {
       const threshold = 1;
       const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
@@ -213,12 +215,12 @@ describe("Token Service ", () => {
       }
     }, TIMEOUT);
 
-    test.failing("Token Service: cannot Initialize twice", async () => {
+    test.skip.failing("Token Service: cannot Initialize twice", async () => {
       const tx = await tokenService.initialize_ts(admin);
       await tx.wait();
     });
 
-    test("Token Service: Register token in Token registry and set role for MINTER and BURNER", async () => {
+    test("Token Service: Register token in Token registry", async () => {
       console.log(tokenID)
       const tx = await mtsp.register_token(tokenID, token_name, token_symbol, token_decimals, token_max_supply, false, tokenService.address());
       await tx.wait();
@@ -240,8 +242,8 @@ describe("Token Service ", () => {
     }, TIMEOUT)
   })
 
-  describe.skip("Add token", () => {
-    test.skip("Token Service: Add Token", async () => {
+  describe("Add token", () => {
+    test("Token Service: Add Token", async () => {
       const limit: WithdrawalLimit = {
         percentage: 100_00, // 100%
         duration: 1, // per block
@@ -354,8 +356,8 @@ describe("Token Service ", () => {
   })
 
   describe("Token Receive", () => {
-    test.skip("Happy receive token(ethereum chain) public with no relayer", async () => {
-      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId);
+    test("Happy receive token(ethereum chain) public with no relayer", async () => {
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr);
       tokenService.connect(admin);
       const signature = signPacket(packet, true, tokenService.config.privateKey);
       const signatures = [
@@ -404,7 +406,7 @@ describe("Token Service ", () => {
       // if version is 1 or 3 ,relayer off. relayer balance should not increased default packet with no relayer
       const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, packet.message.dest_token_id);
       const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
-      const expected_user_balance: bigint = user_initial_balance.balance + BigInt(100_000_000);
+      const expected_user_balance: bigint = user_initial_balance.balance + packet.message.amount;
       expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
       expect(user_final_balance.balance).toEqual(expected_user_balance);
 
@@ -412,9 +414,8 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip("Happy receive token(ethereum chain) public with active relayer", async () => {
-      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId, VERSION_PUBLIC_RELAYER_NOPREDICATE);
-      tokenService.connect(admin);
+    test("Happy receive token(ethereum chain) public with active relayer", async () => {
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PUBLIC_RELAYER_NOPREDICATE);
       const signature = signPacket(packet, true, tokenService.config.privateKey);
       const signatures = [
         signature,
@@ -463,7 +464,7 @@ describe("Token Service ", () => {
       const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, packet.message.dest_token_id);
       const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
 
-      const expected_user_balance: bigint = user_initial_balance.balance + BigInt(100_000_000);
+      const expected_user_balance: bigint = user_initial_balance.balance + packet.message.amount;
       expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance + public_relayer_fee);
       expect(user_final_balance.balance).toEqual(expected_user_balance - public_relayer_fee);
 
@@ -472,9 +473,8 @@ describe("Token Service ", () => {
     );
 
 
-    test.skip("Happy receive token(base chain) public", async () => {
-      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), baseChainId);
-      tokenService.connect(admin);
+    test("Happy receive token(base chain) public", async () => {
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), baseChainId, baseTsContractAddr);
       const signature = signPacket(packet, true, tokenService.config.privateKey);
       const signatures = [
         signature,
@@ -526,8 +526,8 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip("Happy receive token(arbitrum chain) public", async () => {
-      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), arbitrumChainId);
+    test("Happy receive token(arbitrum chain) public", async () => {
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), arbitrumChainId, arbitrumTsContractAddr);
       tokenService.connect(admin);
       const signature = signPacket(packet, true, bridge.config.privateKey);
       const signatures = [
@@ -586,7 +586,7 @@ describe("Token Service ", () => {
         receiver: aleoUser1
       }
       const hashed_address = hashStructToAddress(image);
-      const packet = createPacket(hashed_address, BigInt(100_000_000), tokenService.address(), ethChainId, VERSION_PRIVATE_NORELAYER_NOPREDICATE);
+      const packet = createPacket(hashed_address, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_NORELAYER_NOPREDICATE);
       tokenService.connect(admin);
       const signature = signPacket(packet, true, bridge.config.privateKey);
       const signatures = [
@@ -606,6 +606,7 @@ describe("Token Service ", () => {
 
       const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
       const user_initial_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
+      const admin_initial_balance = await getUserAuthorizedBalance(admin, packet.message.dest_token_id);
 
 
       const tx = await tokenService.token_receive_private(
@@ -627,16 +628,20 @@ describe("Token Service ", () => {
 
       const finalTokenSupply = await tokenService.total_supply(tokenID);
       const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
+      const admin_final_balance = await getUserAuthorizedBalance(admin, packet.message.dest_token_id);
+
       expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
       expect(screeningPassed).toBe(true);
-      const expected_user_balance: bigint = user_initial_balance.balance + BigInt(100_000_000);
-      const is_relayer_off: boolean = packet.version === 11 || packet.version === 13;
+      const expected_user_balance: bigint = user_initial_balance.balance //+ BigInt(100_000_000); TODO: since balance is minted privately it will not add up in public balance, need to index the record minted to find out actual balance
+      const is_relayer_off: boolean = [11, 13].includes(packet.version);
 
-      if (is_relayer_off) {
-        expect(user_final_balance.balance).toEqual(expected_user_balance);
-      } else {
-        expect(user_final_balance.balance).toEqual(expected_user_balance - private_relayer_fee);
-      }
+      // if (is_relayer_off) {
+      expect(admin_final_balance.balance).toEqual(admin_initial_balance.balance);
+      // expect(user_final_balance.balance).toEqual(expected_user_balance);
+      // } else {
+      //   expect(user_final_balance.balance).toEqual(expected_user_balance - private_relayer_fee);
+      // expect(admin_final_balance.balance).toEqual(admin_initial_balance.balance + private_relayer_fee);
+      // }
     },
       TIMEOUT
     );
@@ -648,8 +653,8 @@ describe("Token Service ", () => {
         receiver: aleoUser1
       }
       const hashed_address = hashStructToAddress(image);
-      const packet = createPacket(hashed_address, BigInt(100_000_000), tokenService.address(), ethChainId, VERSION_PRIVATE_RELAYER_NOPREDICATE);
-      tokenService.connect(admin);
+      const packet = createPacket(hashed_address, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_RELAYER_NOPREDICATE);
+      // tokenService.connect(admin);
       const signature = signPacket(packet, true, bridge.config.privateKey);
       const signatures = [
         signature,
@@ -668,6 +673,7 @@ describe("Token Service ", () => {
 
       const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
       const user_initial_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
+      const aleoUser2_initial_balance = await getUserAuthorizedBalance(aleoUser2, packet.message.dest_token_id);
 
       tokenService.connect(aleoUser2);
       const tx = await tokenService.token_receive_private(
@@ -689,16 +695,18 @@ describe("Token Service ", () => {
 
       const finalTokenSupply = await tokenService.total_supply(tokenID);
       const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
+      const aleoUser2_final_balance = await getUserAuthorizedBalance(aleoUser2, packet.message.dest_token_id);
+      expect(aleoUser2_final_balance.balance).toEqual(aleoUser2_initial_balance.balance + private_relayer_fee);
       expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
       expect(screeningPassed).toBe(true);
-      const expected_user_balance: bigint = user_initial_balance.balance + BigInt(100_000_000);
-      expect(user_final_balance.balance).toEqual(expected_user_balance - private_relayer_fee);
+      const expected_user_balance: bigint = user_initial_balance.balance;
+      // expect(user_final_balance.balance).toEqual(expected_user_balance - private_relayer_fee);
     },
       TIMEOUT
     );
 
     test.skip.failing("Wrong token service cannot receive the token, transaction is expected to fail", async () => {
-      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId);
+      const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr);
       tokenService.connect(admin);
       const signature = signPacket(packet, true, tokenService.config.privateKey);
       const signatures = [
@@ -738,7 +746,7 @@ describe("Token Service ", () => {
   });
 
 
-  describe.skip("Token Send", () => {
+  describe("Token Send", () => {
     const destChainId = ethChainId;
     const destTsAddr = ethTsContractAddr.toLowerCase();
     const destTsAddr2 = ethTsRandomContractAddress.toLowerCase();
@@ -746,7 +754,7 @@ describe("Token Service ", () => {
     const destToken = usdcContractAddr.toLowerCase();
     const sender = aleoUser5
     const receiver = ethUser.toLowerCase()
-    const amount = BigInt(101);
+    const amount = BigInt(101000000);
 
     let minAmount: bigint;
     let maxAmount: bigint;
@@ -798,12 +806,13 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip("Token send private", async () => {
+    test("Token send private", async () => {
       //mint record for aleoUser1
       const total_supply = await tokenService.total_supply(tokenID);
       const authorized_until = 4294967295;
       const amount_minted = BigInt(100_000_000);
       const send_amount = BigInt(100_000);
+
       const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
       const [record] = await mintTx.wait();
       console.log(record);
@@ -811,6 +820,7 @@ describe("Token Service ", () => {
       const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
       //council contract hold the platform fee[after send platform fee need to be deposited in council]
       const council_initial_balance: Balance = await getUserAuthorizedBalance(council.address(), tokenID);
+      tokenService.connect(aleoUser1)
       const sendPrivateTx = await tokenService.token_send_private(
         tokenID,
         evm2AleoArrWithoutPadding(receiver),

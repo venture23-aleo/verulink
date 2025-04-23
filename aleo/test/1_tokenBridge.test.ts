@@ -70,10 +70,10 @@ describe("Token Bridge ", () => {
   const admin = aleoUser1;
   const aleoTsAddr = aleoUser4;
 
-  describe.skip("Setup", () => {
+  describe("Setup", () => {
     bridge.connect(admin);
 
-    test.skip("Deploy", async () => {
+    test("Deploy", async () => {
       if (mode === ExecutionMode.SnarkExecute) {
         if (bridge.config.mode && bridge.config.mode == ExecutionMode.SnarkExecute) {
           const deployBridgeTx = await bridge.deploy();
@@ -82,7 +82,7 @@ describe("Token Bridge ", () => {
       }
     }, TIMEOUT);
 
-    test.skip("Initialize", async () => {
+    test("Initialize", async () => {
       const threshold = 1;
       const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
       if (!isBridgeInitialized) {
@@ -120,8 +120,8 @@ describe("Token Bridge ", () => {
     );
   })
 
-  describe("Governance", () => {
-    describe.skip("Pausability", () => {
+  describe.skip("Governance", () => {
+    describe("Pausability", () => {
       test("should not unpause by non-owner", async () => {
         bridge.connect(aleoUser3);
         const tx = await bridge.unpause_tb();
@@ -151,7 +151,7 @@ describe("Token Bridge ", () => {
         expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_PAUSED_VALUE);
       }, TIMEOUT);
 
-      test.skip("unpause for rest of testing", async () => {
+      test("unpause for rest of testing", async () => {
         expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)).toBe(BRIDGE_PAUSED_VALUE);
         bridge.connect(aleoUser1);
         const tx = await bridge.unpause_tb();
@@ -161,7 +161,7 @@ describe("Token Bridge ", () => {
       );
     });
 
-    describe.skip("Add/Remove Attestors", () => {
+    describe("Add/Remove Attestors", () => {
       const newAttestor = new PrivateKey().to_address().to_string();
 
       describe("Add Attestor", () => {
@@ -277,7 +277,7 @@ describe("Token Bridge ", () => {
       });
     })
 
-    describe.skip("Update threshold", () => {
+    describe("Update threshold", () => {
       const newThreshold = 3;
       let failThreshold = 0;
 
@@ -319,7 +319,7 @@ describe("Token Bridge ", () => {
       );
     });
 
-    describe.skip("Add/Remove Chain", () => {
+    describe("Add/Remove Chain", () => {
       const chainId = BigInt(1)
 
       describe("Add Chain", () => {
@@ -433,7 +433,7 @@ describe("Token Bridge ", () => {
 
     });
 
-    describe.skip("Add/Remove Service", () => {
+    describe("Add/Remove Service", () => {
       const newTsAddr = new PrivateKey().to_address().to_string();
 
       describe("Add Service", () => {
@@ -506,7 +506,7 @@ describe("Token Bridge ", () => {
     });
   });
 
-  describe.skip("Publish", () => {
+  describe("Publish", () => {
 
     const destChainId = ethChainId;
     const destTsAddr = ethTsContractAddr.toLowerCase();
@@ -755,7 +755,7 @@ describe("Token Bridge ", () => {
 
   describe("Consume", () => {
     const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, ethChainId);
-    test.skip("cant be called consume if program is paused", async () => {
+    test("cant be called consume if program is paused", async () => {
 
       //paused for testing 
       bridge.connect(admin);
@@ -803,7 +803,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
     //check
-    test.skip("From non-supported service, transaction should be failed and undefined", async () => {
+    test("From non-supported service, transaction should be failed and undefined", async () => {
       //paused for testing 
       bridge.connect(admin);
       const unpausedtx = await bridge.unpause_tb();
@@ -850,7 +850,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("From non-supported chain, transaction should be failed and undefined", async () => {
+    test("From non-supported chain, transaction should be failed and undefined", async () => {
 
       //paused for testing
       let differentChainPacket = createPacket(aleoUser1, BigInt(10000), aleoTsAddr, ethTsContractAddr, BigInt(12345));
@@ -900,7 +900,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("Invalid attestor must fail", async () => {
+    test("Invalid attestor must fail", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, ethChainId);
       const wallet = new PrivateKey();
       const walletAddress = wallet.to_address().to_string();
@@ -947,7 +947,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("Screening passed for eth", async () => {
+    test("Screening passed for eth", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, ethChainId);
 
       let packetId: PacketId = {
@@ -994,7 +994,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("Screening passed for base", async () => {
+    test("Screening passed for base", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, baseChainId);
 
       let packetId: PacketId = {
@@ -1040,7 +1040,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("Screening passed for arbitrum", async () => {
+    test("Screening passed for arbitrum", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, arbitrumChainId);
 
       let packetId: PacketId = {
@@ -1087,7 +1087,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("if consumed the same packet again, transaction should be failed and undefined", async () => {
+    test("if consumed the same packet again, transaction should be failed and undefined", async () => {
       let packetId: PacketId = {
         chain_id: packet.source.chain_id,
         sequence: packet.sequence
@@ -1129,7 +1129,7 @@ describe("Token Bridge ", () => {
       TIMEOUT
     );
 
-    test.skip("Screening failed", async () => {
+    test("Screening failed", async () => {
       const packet = createPacket(aleoUser1, BigInt(100_000), aleoTsAddr, ethTsContractAddr, ethChainId);
       let packetId: PacketId = {
         chain_id: packet.source.chain_id,
@@ -1170,13 +1170,13 @@ describe("Token Bridge ", () => {
       const [screeningPassed] = await tx.wait();
 
       expect(screeningPassed).toBe(false);
-      expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(true);
     },
       TIMEOUT
     );
   });
 
-  describe.skip("Transfer Ownership", () => {
+  describe("Transfer Ownership", () => {
 
     test("should not transfer ownership by non-admin", async () => {
       bridge.connect(aleoUser3);

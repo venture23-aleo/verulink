@@ -1,6 +1,6 @@
 import { Field } from "@aleohq/sdk";
 import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v3";
-import { PACKET_VERSION_PUBLIC } from "./constants";
+import { PUBLIC_VERSION } from "./constants";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr } from "./ethAddress";
 
 export const createRandomPacket = (
@@ -67,7 +67,7 @@ export const createFailedChainPacket = (
   );
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 
-  let bridgeVersion = version ?? PACKET_VERSION_PUBLIC;
+  let bridgeVersion = version ?? PUBLIC_VERSION;
 
   let senderAddr = sender ?? generateRandomEthAddr();
 

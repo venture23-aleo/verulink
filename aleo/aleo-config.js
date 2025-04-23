@@ -6,8 +6,8 @@ export default {
   mainnet: {},
   networks: {
     testnet: {
-      endpoint: "https://api.explorer.provable.com/v1",
-      accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1,process.env.MINE_PRIVATE_KEY, process.env.ALEO_DEVNET_PRIVATE_KEY2, process.env.ALEO_DEVNET_PRIVATE_KEY3, process.env.ALEO_DEVNET_PRIVATE_KEY4],
+      endpoint: "http://localhost:3030",
+      accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1, process.env.ALEO_DEVNET_PRIVATE_KEY2, process.env.ALEO_DEVNET_PRIVATE_KEY3, process.env.ALEO_DEVNET_PRIVATE_KEY4],
       priorityFee: 0.01,
     },
     mainnet: {
