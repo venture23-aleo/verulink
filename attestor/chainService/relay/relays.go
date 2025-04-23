@@ -34,8 +34,8 @@ var (
 )
 
 const (
-	Ethereum = "ethereum"
-	Aleo = "aleo"
+	Ethereum = "evm"
+	Aleo     = "aleo"
 )
 
 var (

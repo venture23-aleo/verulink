@@ -23,7 +23,7 @@ chains:
         finality_height: 21
 - name: ethereum
   chain_id: 28556963657430695
-  chain_type: ethereum
+  chain_type: evm
   wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
   bridge_contract: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
   node_url: https://eth-sepolia.public.blastapi.io
@@ -40,7 +40,7 @@ chains:
         instant_pkt_wait_dur: 1m
 - name: base
   chain_id: 84532
-  chain_type: ethereum
+  chain_type: evm
   wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
   bridge_contract: 0x5410567256E7187b0a6A3C67E240A85d063C3aF5
   node_url: wss://base-sepolia-rpc.publicnode.com
