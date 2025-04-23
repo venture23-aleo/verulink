@@ -1,3 +1,5 @@
+import { hashStruct } from "./hash";
+
 // User address on Aleo
 export const attestor1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
 export const attestor2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
@@ -25,6 +27,9 @@ export const wusdcSymbol = BigInt("508237661251");
 export const wusdcDecimals = 6;
 export const wusdcFeeRelayer = BigInt(500_000);
 export const wusdcPlatformFee = 1_00;
+
+export const token_name = BigInt('6148332821651876206')
+export const tokenID = hashStruct(token_name);
 
 
 // const token_name = BigInt('6148332821651876206')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646

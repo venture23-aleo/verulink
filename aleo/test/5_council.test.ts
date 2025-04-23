@@ -32,6 +32,7 @@ import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import { Vlink_holding_v3Contract } from "../artifacts/js/vlink_holding_v3";
+import { tokenID } from "../utils/testdata.data";
 
 
 
@@ -451,7 +452,7 @@ describe("Council", () => {
     const receiver_address = 'aleo1xpzgjyps47vqmlrtqf64dwlwrmrc89xtsfmgwj4af5aqdh6q05psnw3n6p';
     let proposalHash: bigint
     let proposalId: number
-    let token_id: bigint = BigInt(1000)
+    let token_id: bigint = tokenID
     let withdraw_amount: bigint = BigInt(100)
 
     test("Propose", async () => {
