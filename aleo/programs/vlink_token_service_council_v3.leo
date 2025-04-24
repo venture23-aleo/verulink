@@ -130,18 +130,20 @@ program vlink_token_service_council_v3.aleo
 
     struct TsRemoveToken {
         id: u32,
+        chain_id: u128,
         token_id: field,
     }
 
-    async transition ts_remove_token(public id: u32, public token_id: field, public voters: [address; 5]) -> Future{
+    async transition ts_remove_token(public id: u32, public chain_id: u128, public token_id: field, public voters: [address; 5]) -> Future{
         let proposal: TsRemoveToken  = TsRemoveToken {
             id,
+            chain_id,
             token_id,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let remove_token : Future = vlink_token_service_v3.aleo/remove_token_ts(token_id);
+        let remove_token : Future = vlink_token_service_v3.aleo/remove_token_ts(chain_id, token_id);
 
         let external_execute: Future = vlink_council_v3.aleo/external_execute(id, proposal_hash, voters);
 

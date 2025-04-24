@@ -19,11 +19,6 @@ program vlink_token_service_v3.aleo {
         threshold_no_limit: u128,
     }
 
-    struct TokenOwner {
-        account: address,
-        token_id: field
-    }
-
     struct ChainToken{
         // Id of one of the supported chains.
         chain_id: u128,
@@ -296,15 +291,20 @@ program vlink_token_service_v3.aleo {
         Mapping::set(private_relayer_fee, chain_token_info, pri_relayer_fee);
     }
 
-    async transition remove_token_ts(public token_id: field) -> Future{
-        return finalize_remove_token_ts(self.caller, token_id);
+    async transition remove_token_ts(public chain_id: u128,public token_id: field) -> Future{
+        return finalize_remove_token_ts(self.caller,chain_id,token_id);
     }
 
-    async function finalize_remove_token_ts(from: address, token_id: field) {
+    async function finalize_remove_token_ts(from: address, chain_id: u128, token_id: field) {
         // Get the owner address
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
+
+        let chain_token_info:ChainToken = ChainToken{
+            chain_id: chain_id, 
+            token_id: token_id
+        };
 
         assert(Mapping::contains(added_tokens, token_id));
         Mapping::remove(added_tokens, token_id);
@@ -312,6 +312,10 @@ program vlink_token_service_v3.aleo {
         Mapping::remove(min_transfers, token_id);
         Mapping::remove(max_transfers, token_id);
         Mapping::remove(token_status, token_id);
+        Mapping::remove(public_platform_fee, chain_token_info);
+        Mapping::remove(private_platform_fee, chain_token_info);
+        Mapping::remove(public_relayer_fee, chain_token_info);
+        Mapping::remove(private_relayer_fee, chain_token_info);
     }
 
     /////////////////////////////////
@@ -776,11 +780,6 @@ program vlink_token_service_v3.aleo {
             actual_receiver = HOLDING_ADDRESS;
             held_amount = amount;
         }
-
-        // let minter: TokenOwner = TokenOwner{
-        //     account: actual_receiver,
-        //     token_id: token_id
-        // };
 
         let fee_receiver: address = self.caller;
 
