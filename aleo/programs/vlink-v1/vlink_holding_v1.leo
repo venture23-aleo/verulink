@@ -1,6 +1,6 @@
 import token_registry.aleo;
 
-program vlink_holding_v3.aleo {
+program vlink_holding_v4.aleo {
 
     struct Holder{
         account : address, 

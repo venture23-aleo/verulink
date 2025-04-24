@@ -1,6 +1,6 @@
-import { Vlink_token_bridge_v3Contract } from "../artifacts/js/vlink_token_bridge_v3";
-import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
-import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr } from "../utils/testdata.data";
+import { Vlink_token_bridge_v4Contract } from "../artifacts/js/vlink_token_bridge_v4";
+import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
+import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate } from "../utils/testdata.data";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
 import { execUnpause, proposeUnpauseBridge } from "./council/bridge/unpause";
@@ -43,20 +43,20 @@ import {
   wethDecimals
 } from "../utils/testdata.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Vlink_bridge_council_v3Contract } from "../artifacts/js/vlink_bridge_council_v3";
+import { Vlink_bridge_council_v4Contract } from "../artifacts/js/vlink_bridge_council_v4";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
 import { deployWusdt } from "./deployment/wusdt";
 import { deployWeth } from "./deployment/weth";
-import { wethFeeRelayer, wethPlatformFee, wusdcFeeRelayer, wusdcPlatformFee, wusdtFeeRelayer, wusdtPlatformFee } from "../utils/testdata.data";
+import { } from "../utils/testdata.data";
 import { execAddChainToToken, proposeAddChainToToken } from "./council/tokenService/addChainToToken";
 import { ethTsContractAddr } from "../utils/constants";
 
-const bridge = new Vlink_token_bridge_v3Contract({ mode: ExecutionMode.SnarkExecute });
-const tokenService = new Vlink_token_service_v3Contract({ mode: ExecutionMode.SnarkExecute });
-const bridgeCouncil = new Vlink_bridge_council_v3Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Vlink_token_service_v3Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Vlink_token_bridge_v4Contract({ mode: ExecutionMode.SnarkExecute });
+const tokenService = new Vlink_token_service_v4Contract({ mode: ExecutionMode.SnarkExecute });
+const bridgeCouncil = new Vlink_bridge_council_v4Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Vlink_token_service_v4Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
   attestor1,
@@ -179,8 +179,10 @@ async function wusdcSetupAndInit() {
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
     ethHoleskyUsdcContractAddr,
-    wusdcPlatformFee,
-    wusdcFeeRelayer
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
   );
   await execAddChainToToken(
     addChainToWUSDCTokenProposalId,
@@ -188,8 +190,10 @@ async function wusdcSetupAndInit() {
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
     ethHoleskyUsdcContractAddr,
-    wusdcPlatformFee,
-    wusdcFeeRelayer
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
   );
 
   // // Token service: Add chain to existing token Base
@@ -279,8 +283,10 @@ async function wusdtSetupandInit() {
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
     ethHoleskyUsdtContractAddr,
-    wusdtPlatformFee,
-    wusdtFeeRelayer
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
   );
   await execAddChainToToken(
     addChainToWUSDTTokenProposalId,
@@ -288,8 +294,10 @@ async function wusdtSetupandInit() {
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
     ethHoleskyUsdtContractAddr,
-    wusdtPlatformFee,
-    wusdtFeeRelayer
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
   );
 
   // // Token service: Add chain to existing token Base
@@ -379,8 +387,10 @@ async function wethSetupandInit() {
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
     ethHoleskyEthContractAddr,
-    wethPlatformFee,
-    wethFeeRelayer
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
   );
 
   await execAddChainToToken(
@@ -389,8 +399,10 @@ async function wethSetupandInit() {
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
     ethHoleskyEthContractAddr,
-    wethPlatformFee,
-    wethFeeRelayer
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
   );
 
   // // Token service: Add chain to existing token Base

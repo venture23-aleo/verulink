@@ -1,6 +1,6 @@
-import { Vlink_council_v3Contract } from "../artifacts/js/vlink_council_v3";
-import { Vlink_token_service_council_v3Contract } from "../artifacts/js/vlink_token_service_council_v3";
-import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
+import { Vlink_council_v4Contract } from "../artifacts/js/vlink_council_v4";
+import { Vlink_token_service_council_v4Contract } from "../artifacts/js/vlink_token_service_council_v4";
+import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
 
@@ -17,7 +17,7 @@ import {
 } from "../utils/constants";
 
 
-import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v3";
+import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v4";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
@@ -31,7 +31,7 @@ import {
   TsUpdateWithdrawalLimit,
   TsPauseToken,
   TsUnpauseToken
-} from "../artifacts/js/types/vlink_token_service_council_v3";
+} from "../artifacts/js/types/vlink_token_service_council_v4";
 import {
   getTsAddTokenLeo,
   getTsRemoveTokenLeo,
@@ -40,7 +40,7 @@ import {
   getTsUpdateWithdrawalLimitLeo,
   getTsPauseTokenLeo,
   getTsUnpauseTokenLeo,
-} from "../artifacts/js/js2leo/vlink_token_service_council_v3";
+} from "../artifacts/js/js2leo/vlink_token_service_council_v4";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 
 
@@ -48,9 +48,9 @@ import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Vlink_council_v3Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v3Contract({ mode });
-const tokenService = new Vlink_token_service_v3Contract({ mode });
+const council = new Vlink_council_v4Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v4Contract({ mode });
+const tokenService = new Vlink_token_service_v4Contract({ mode });
 const mtsp = new Token_registryContract({ mode: mode });
 const tokenID = BigInt(1234567891011);
 

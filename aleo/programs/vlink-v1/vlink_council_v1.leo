@@ -1,4 +1,4 @@
-program vlink_council_v3.aleo {
+program vlink_council_v4.aleo {
 
     struct ProposalVote {
         // Hash of the proposal

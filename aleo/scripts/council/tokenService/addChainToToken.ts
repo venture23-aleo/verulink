@@ -1,35 +1,30 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_council_v3Contract } from "../../../artifacts/js/vlink_council_v3";
+import { Vlink_council_v4Contract } from "../../../artifacts/js/vlink_council_v4";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr } from "../../../utils/testdata.data";
-import { Vlink_token_service_v3Contract } from "../../../artifacts/js/vlink_token_service_v3";
+import { Vlink_token_service_v4Contract } from "../../../artifacts/js/vlink_token_service_v4";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { AddChainExistingToken, TsAddToken } from "../../../artifacts/js/types/vlink_token_service_council_v3";
-import { getAddChainExistingTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v3";
+import { AddChainExistingToken, TsAddToken } from "../../../artifacts/js/types/vlink_token_service_council_v4";
+import { getAddChainExistingTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v4";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Vlink_token_service_council_v3Contract } from "../../../artifacts/js/vlink_token_service_council_v3";
+import { Vlink_token_service_council_v4Contract } from "../../../artifacts/js/vlink_token_service_council_v4";
 import { hash } from "aleo-hasher";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
 import { baseChainId, baseTsContractAddr } from "../../../utils/testdata.data";
-import { getAddChainExistingToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v3";
+import { getAddChainExistingToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v4";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v3Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v4Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v3Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v3Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v4Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v4Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
 export const proposeAddChainToToken = async (
-    tokenId: bigint,
-    chain_id: bigint,
-    token_service_address: string,
-    token_address: string,
-    fee_of_platform: number,
-    fee_of_relayer: bigint,
+    tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform: number, fee_of_relayer: bigint, wusdcPlatformFeePrivate: number, wusdcFeeRelayerPublic: bigint,
 ): Promise<number> => {
 
 
@@ -49,8 +44,10 @@ export const proposeAddChainToToken = async (
         token_id: tokenId,
         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
         token_address: evm2AleoArrWithoutPadding(token_address),
-        fee_of_platform,
-        fee_of_relayer
+        pri_platform_fee: fee_of_platform,
+        pri_relayer_fee: fee_of_relayer,
+        pub_platform_fee: wusdcPlatformFeePrivate,
+        pub_relayer_fee: wusdcFeeRelayerPublic
     };
     const tbAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
@@ -106,13 +103,7 @@ export const voteAddChainToToken = async (
 ///// Execute ////////
 //////////////////////
 export const execAddChainToToken = async (
-    proposalId: number,
-    tokenId: bigint,
-    chain_id: bigint,
-    token_service_address: string,
-    token_address: string,
-    fee_of_platform: number,
-    fee_of_relayer: bigint,
+    proposalId: number, tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform: number, fee_of_relayer: bigint, wusdcPlatformFeePrivate: number, wusdcFeeRelayerPrivate: bigint,
 ) => {
     console.log(`Adding chain ${chain_id} to token ${tokenId}`)
     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);

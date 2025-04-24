@@ -25,8 +25,10 @@ export const wusdcMaxNoCap = BigInt(100_000_000_000);
 export const wusdcName = BigInt('3707987077792');
 export const wusdcSymbol = BigInt("508237661252");
 export const wusdcDecimals = 6;
-export const wusdcFeeRelayer = BigInt(500_000);
-export const wusdcPlatformFee = 1_00;
+export const wusdcFeeRelayerPublic = BigInt(100_000);
+export const wusdcPlatformFeePublic = 1_000;
+export const wusdcFeeRelayerPrivate = BigInt(200_000);
+export const wusdcPlatformFeePrivate = 2_000;
 
 // export const token_name = BigInt('6148332821651876206')
 // export const tokenID = hashStruct(token_name);
@@ -46,8 +48,10 @@ export const wusdtMaxNoCap = BigInt(100_000_000_000);
 export const wusdtName = BigInt('3707987077962');
 export const wusdtSymbol = BigInt("508237661269");
 export const wusdtDecimals = 6;
-export const wusdtFeeRelayer = BigInt(500_000);
-export const wusdtPlatformFee = 1_00;
+export const wusdtFeeRelayerPublic = BigInt(100_000);
+export const wusdtPlatformFeePublic = 1_000;
+export const wusdtFeeRelayerPrivate = BigInt(200_000);
+export const wusdtPlatformFeePrivate = 2_000;
 
 
 // const token_name = BigInt('375093675092')//"WUSDT" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
@@ -64,8 +68,10 @@ export const wethMaxNoCap = BigInt("40000000000000000000"); // 40 eth
 export const wethName = BigInt('14473841362');
 export const wethSymbol = BigInt('1984255049');
 export const wethDecimals = 18;
-export const wethFeeRelayer = BigInt(500_000_000_000_000);
-export const wethPlatformFee = 1_00;
+export const wethFeeRelayerPublic = BigInt(100_000_000_000_000);
+export const wethPlatformFeePublic = 1_000;
+export const wethFeeRelayerPrivate = BigInt(200_000_000_000_000);
+export const wethPlatformFeePrivate = 2_000;
 
 
 // const token_name = BigInt('1464161352')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646

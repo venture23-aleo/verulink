@@ -1,9 +1,9 @@
 import { PrivateKey } from "@aleohq/sdk";
-import { Vlink_council_v3Contract } from "../artifacts/js/vlink_council_v3";
-import { Vlink_bridge_council_v3Contract } from "../artifacts/js/vlink_bridge_council_v3";
-import { Vlink_token_service_council_v3Contract } from "../artifacts/js/vlink_token_service_council_v3";
-import { Vlink_token_bridge_v3Contract } from "../artifacts/js/vlink_token_bridge_v3";
-import { Vlink_token_service_v3Contract } from "../artifacts/js/vlink_token_service_v3";
+import { Vlink_council_v4Contract } from "../artifacts/js/vlink_council_v4";
+import { Vlink_bridge_council_v4Contract } from "../artifacts/js/vlink_bridge_council_v4";
+import { Vlink_token_service_council_v4Contract } from "../artifacts/js/vlink_token_service_council_v4";
+import { Vlink_token_bridge_v4Contract } from "../artifacts/js/vlink_token_bridge_v4";
+import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
 
 
 import {
@@ -18,7 +18,7 @@ import {
   getUpdateThresholdLeo,
   getProposalVoteLeo,
   getWithdrawalLeo
-} from "../artifacts/js/js2leo/vlink_council_v3";
+} from "../artifacts/js/js2leo/vlink_council_v4";
 import {
   AddMember,
   RemoveMember,
@@ -26,12 +26,12 @@ import {
   ProposalVote,
   ProposalVoterKey,
   Withdrawal
-} from "../artifacts/js/types/vlink_council_v3";
+} from "../artifacts/js/types/vlink_council_v4";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
 import { Token_registryContract } from "../artifacts/js/token_registry";
-import { Vlink_holding_v3Contract } from "../artifacts/js/vlink_holding_v3";
+import { Vlink_holding_v4Contract } from "../artifacts/js/vlink_holding_v4";
 import { tokenID } from "../utils/testdata.data";
 
 
@@ -39,12 +39,12 @@ import { tokenID } from "../utils/testdata.data";
 const mode = ExecutionMode.SnarkExecute;
 
 const tokenRegistry = new Token_registryContract({ mode })
-const holding = new Vlink_holding_v3Contract({ mode })
-const council = new Vlink_council_v3Contract({ mode });
-const bridgeCouncil = new Vlink_bridge_council_v3Contract({ mode });
-const tokenService = new Vlink_token_service_v3Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v3Contract({ mode });
-const bridge = new Vlink_token_bridge_v3Contract({ mode });
+const holding = new Vlink_holding_v4Contract({ mode })
+const council = new Vlink_council_v4Contract({ mode });
+const bridgeCouncil = new Vlink_bridge_council_v4Contract({ mode });
+const tokenService = new Vlink_token_service_v4Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v4Contract({ mode });
+const bridge = new Vlink_token_bridge_v4Contract({ mode });
 
 
 const TIMEOUT = 300000_000;

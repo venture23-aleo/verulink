@@ -1,23 +1,23 @@
-import { Vlink_token_bridge_v3Contract } from "../../artifacts/js/vlink_token_bridge_v3";
-import { Vlink_token_service_v3Contract } from "../../artifacts/js/vlink_token_service_v3";
-import { Vlink_council_v3Contract } from "../../artifacts/js/vlink_council_v3";
-import { Vlink_bridge_council_v3Contract } from "../../artifacts/js/vlink_bridge_council_v3";
-import { Vlink_token_service_council_v3Contract } from "../../artifacts/js/vlink_token_service_council_v3";
+import { Vlink_token_bridge_v4Contract } from "../../artifacts/js/vlink_token_bridge_v4";
+import { Vlink_token_service_v4Contract } from "../../artifacts/js/vlink_token_service_v4";
+import { Vlink_council_v4Contract } from "../../artifacts/js/vlink_council_v4";
+import { Vlink_bridge_council_v4Contract } from "../../artifacts/js/vlink_bridge_council_v4";
+import { Vlink_token_service_council_v4Contract } from "../../artifacts/js/vlink_token_service_council_v4";
 import { Token_registryContract } from "../../artifacts/js/token_registry";
-import { Vlink_holding_v3Contract } from "../../artifacts/js/vlink_holding_v3";
+import { Vlink_holding_v4Contract } from "../../artifacts/js/vlink_holding_v4";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
 export const deployMainPrograms = async (initialAttestors: string[], initialCouncilMembers: string[], initialAttestorThreshold: number, initialCouncilThreshold: number) => {
 
-  const bridge = new Vlink_token_bridge_v3Contract({ mode, priorityFee: 10_000 });
-  const tokenService = new Vlink_token_service_v3Contract({ mode, priorityFee: 10_000 });
-  const council = new Vlink_council_v3Contract({ mode, priorityFee: 10_000 });
-  const bridgeCouncil = new Vlink_bridge_council_v3Contract({ mode, priorityFee: 10_000 });
-  const tokenServiceCouncil = new Vlink_token_service_council_v3Contract({ mode, priorityFee: 10_000 });
+  const bridge = new Vlink_token_bridge_v4Contract({ mode, priorityFee: 10_000 });
+  const tokenService = new Vlink_token_service_v4Contract({ mode, priorityFee: 10_000 });
+  const council = new Vlink_council_v4Contract({ mode, priorityFee: 10_000 });
+  const bridgeCouncil = new Vlink_bridge_council_v4Contract({ mode, priorityFee: 10_000 });
+  const tokenServiceCouncil = new Vlink_token_service_council_v4Contract({ mode, priorityFee: 10_000 });
   const mtsp = new Token_registryContract({ mode, priorityFee: 10_000 });
-  const holding = new Vlink_holding_v3Contract({ mode, priorityFee: 10_000 });
+  const holding = new Vlink_holding_v4Contract({ mode, priorityFee: 10_000 });
 
   //Deploy mtsp for local devnet only
   // const mtspDeployTx = await mtsp.deploy();

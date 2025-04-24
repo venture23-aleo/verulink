@@ -1,23 +1,23 @@
-import { TransferOwnershipHolding } from "../../../artifacts/js/types/vlink_token_service_council_v3";
-import { Vlink_token_service_council_v3Contract } from "../../../artifacts/js/vlink_token_service_council_v3";
+import { TransferOwnershipHolding } from "../../../artifacts/js/types/vlink_token_service_council_v4";
+import { Vlink_token_service_council_v4Contract } from "../../../artifacts/js/vlink_token_service_council_v4";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_council_v3Contract } from "../../../artifacts/js/vlink_council_v3";
-import { Vlink_token_service_v3Contract } from "../../../artifacts/js/vlink_token_service_v3";
+import { Vlink_council_v4Contract } from "../../../artifacts/js/vlink_council_v4";
+import { Vlink_token_service_v4Contract } from "../../../artifacts/js/vlink_token_service_v4";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
 import { hashStruct } from "../../../utils/hash";
-import { getTransferOwnershipHolding } from "../../../artifacts/js/leo2js/vlink_token_service_council_v3";
-import { getTransferOwnershipHoldingLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v3";
+import { getTransferOwnershipHolding } from "../../../artifacts/js/leo2js/vlink_token_service_council_v4";
+import { getTransferOwnershipHoldingLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v4";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
-import { Vlink_holding_v3Contract } from "../../../artifacts/js/vlink_holding_v3";
+import { Vlink_holding_v4Contract } from "../../../artifacts/js/vlink_holding_v4";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
-const council = new Vlink_council_v3Contract({ mode, priorityFee: 10_000 });
-const serviceCouncil = new Vlink_token_service_council_v3Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v3Contract({ mode, priorityFee: 10_000 });
-const holding = new Vlink_holding_v3Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v4Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v4Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v4Contract({ mode, priorityFee: 10_000 });
+const holding = new Vlink_holding_v4Contract({ mode, priorityFee: 10_000 });
 
 export const proposeTransferHoldingOnwership = async (new_owner: string): Promise<number> => {
 

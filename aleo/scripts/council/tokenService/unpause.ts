@@ -1,21 +1,21 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_token_service_v3Contract } from "../../../artifacts/js/vlink_token_service_v3";
-import { Vlink_council_v3Contract } from "../../../artifacts/js/vlink_council_v3";
+import { Vlink_token_service_v4Contract } from "../../../artifacts/js/vlink_token_service_v4";
+import { Vlink_council_v4Contract } from "../../../artifacts/js/vlink_council_v4";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_council_v3";
-import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v3";
+import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_council_v4";
+import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v4";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Vlink_token_service_council_v3Contract } from "../../../artifacts/js/vlink_token_service_council_v3";
+import { Vlink_token_service_council_v4Contract } from "../../../artifacts/js/vlink_token_service_council_v4";
 import { hash } from "aleo-hasher";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v3Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v4Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v3Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v3Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v4Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v4Contract({ mode, priorityFee: 10_000 });
 
 
 //////////////////////

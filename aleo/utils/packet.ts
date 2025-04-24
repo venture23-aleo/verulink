@@ -1,5 +1,5 @@
 import { Field } from "@aleohq/sdk";
-import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v3";
+import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v4";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr } from "./ethAddress";
 
 export const createRandomPacket = (

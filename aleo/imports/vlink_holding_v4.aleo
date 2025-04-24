@@ -1,7 +1,7 @@
 import credits.aleo;
 import token_registry.aleo;
 
-program vlink_holding_v3.aleo;
+program vlink_holding_v4.aleo;
 
 struct TokenMetadata:
     token_id as field;
@@ -33,7 +33,7 @@ mapping owner_holding:
 function initialize_holding:
     input r0 as address.public;
     async initialize_holding r0 into r1;
-    output r1 as vlink_holding_v3.aleo/initialize_holding.future;
+    output r1 as vlink_holding_v4.aleo/initialize_holding.future;
 
 finalize initialize_holding:
     input r0 as address.public;
@@ -45,7 +45,7 @@ finalize initialize_holding:
 function transfer_ownership_holding:
     input r0 as address.public;
     async transfer_ownership_holding self.caller r0 into r1;
-    output r1 as vlink_holding_v3.aleo/transfer_ownership_holding.future;
+    output r1 as vlink_holding_v4.aleo/transfer_ownership_holding.future;
 
 finalize transfer_ownership_holding:
     input r0 as address.public;
@@ -60,7 +60,7 @@ function hold_fund:
     input r2 as u128.public;
     cast r0 r1 into r3 as Holder;
     async hold_fund self.caller r3 r2 into r4;
-    output r4 as vlink_holding_v3.aleo/hold_fund.future;
+    output r4 as vlink_holding_v4.aleo/hold_fund.future;
 
 finalize hold_fund:
     input r0 as address.public;
@@ -79,7 +79,7 @@ function release_fund:
     call token_registry.aleo/transfer_public r1 r0 r2 into r3;
     cast r0 r1 into r4 as Holder;
     async release_fund r3 self.caller r4 r2 into r5;
-    output r5 as vlink_holding_v3.aleo/release_fund.future;
+    output r5 as vlink_holding_v4.aleo/release_fund.future;
 
 finalize release_fund:
     input r0 as token_registry.aleo/transfer_public.future;
