@@ -29,10 +29,9 @@ export const proposeAddToken = async (
   timeframe: number,
   maxNoCap: bigint,
   tokenContractAddr: string,
-  fee_of_platform: number,
-  fee_of_relayer: bigint,
   chain_id: bigint,
   tokenServiceAddress: string,
+  fee_of_platform_public: number, fee_of_relayer_public: bigint, fee_of_platform_private: number, fee_of_relayer_private: bigint,
 ): Promise<number> => {
 
 
@@ -57,10 +56,10 @@ export const proposeAddToken = async (
     token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
     token_service: evm2AleoArrWithoutPadding(tokenServiceAddress),
     chain_id,
-    pub_platform_fee: fee_of_platform,
-    pri_platform_fee: fee_of_platform,
-    pub_relayer_fee: fee_of_relayer,
-    pri_relayer_fee: fee_of_relayer
+    pub_platform_fee: fee_of_platform_public,
+    pri_platform_fee: fee_of_platform_private,
+    pub_relayer_fee: fee_of_relayer_public,
+    pri_relayer_fee: fee_of_relayer_private
   };
   const tbAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
@@ -135,10 +134,9 @@ export const execAddToken = async (
   timeframe: number,
   maxNoCap: bigint,
   tokenContractAddr: string,
-  fee_of_platform: number,
-  fee_of_relayer: bigint,
   chain_id: bigint,
-  tokenServiceAddress: string
+  tokenServiceAddress: string,
+  fee_of_platform_public: number, fee_of_relayer_public: bigint, fee_of_platform_private: number, fee_of_relayer_private: bigint
 ) => {
   console.log(`Adding token ${tokenId}`)
   // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -162,10 +160,10 @@ export const execAddToken = async (
     token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
     token_service: evm2AleoArrWithoutPadding(tokenServiceAddress),
     chain_id,
-    pub_platform_fee: fee_of_platform,
-    pri_platform_fee: fee_of_platform,
-    pub_relayer_fee: fee_of_relayer,
-    pri_relayer_fee: fee_of_relayer
+    pub_platform_fee: fee_of_platform_public,
+    pri_platform_fee: fee_of_platform_private,
+    pub_relayer_fee: fee_of_relayer_public,
+    pri_relayer_fee: fee_of_relayer_private
   };
   const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
@@ -184,10 +182,10 @@ export const execAddToken = async (
     evm2AleoArrWithoutPadding(tokenContractAddr),
     evm2AleoArrWithoutPadding(ethTsContractAddr),
     ethChainId,
-    fee_of_platform,
-    fee_of_platform,
-    fee_of_relayer,
-    fee_of_relayer
+    fee_of_platform_public,
+    fee_of_platform_private,
+    fee_of_relayer_public,
+    fee_of_relayer_private
   )
 
   await addChainTx.wait();

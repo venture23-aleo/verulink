@@ -78,27 +78,27 @@ const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString() + "u128", 'fie
 const weth_id = leo2js.field(hash('bhp256', wethName.toString() + "u128", 'field'));
 
 const setup = async () => {
-  await deployMainPrograms(
-    initialAttestors,
-    initialCouncilMembers,
-    councilThreshold,
-    councilThreshold
-  );
+  // await deployMainPrograms(
+  //   initialAttestors,
+  //   initialCouncilMembers,
+  //   councilThreshold,
+  //   councilThreshold
+  // );
   // Bridge: Add ethereum chain
-  const addChainProposalId = await proposeAddChain(ethChainId);
-  await execAddChain(addChainProposalId, ethChainId);
+  // const addChainProposalId = await proposeAddChain(ethChainId);
+  // await execAddChain(addChainProposalId, ethChainId);
 
-  // Bridge: Add base chain
-  const addChainProposalId2 = await proposeAddChain(baseChainId);
-  await execAddChain(addChainProposalId2, baseChainId);
+  // // Bridge: Add base chain
+  // const addChainProposalId2 = await proposeAddChain(baseChainId);
+  // await execAddChain(addChainProposalId2, baseChainId);
 
-  // Bridge: Add arbitrum chain
-  const addChainProposalId3 = await proposeAddChain(arbitrumChainId);
-  await execAddChain(addChainProposalId3, arbitrumChainId);
+  // // Bridge: Add arbitrum chain
+  // const addChainProposalId3 = await proposeAddChain(arbitrumChainId);
+  // await execAddChain(addChainProposalId3, arbitrumChainId);
 
-  // Bridge: Add holesky chain
-  const addChainProposalId4 = await proposeAddChain(ethHoleskyChainId);
-  await execAddChain(addChainProposalId4, ethHoleskyChainId);
+  // // Bridge: Add holesky chain
+  // const addChainProposalId4 = await proposeAddChain(ethHoleskyChainId);
+  // await execAddChain(addChainProposalId4, ethHoleskyChainId);
 
   // Token Bridge: Add Service
   const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
@@ -123,58 +123,66 @@ async function wusdcSetupAndInit() {
   // Registers token in the mtsp through token_service.register_token
   // await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
 
-  // // Token Service: Add wusdc ETH
-  // const addWUSDCTokenProposalId = await proposeAddToken(
-  //   wusdc_id,
-  //   wusdcMinTransfer,
-  //   wusdcMaxTransfer,
-  //   wusdcOutgoingPercentage,
-  //   wusdcTimeframe,
-  //   wusdcMaxNoCap,
-  //   ethUsdcContractAddr,
-  //   wusdcPlatformFee,
-  //   wusdcFeeRelayer,
-  //   ethChainId,
-  //   ethTsContractAddr
-  // );
-  // await execAddToken(
-  //   wusdc_id,
-  //   addWUSDCTokenProposalId,
-  //   wusdcMinTransfer,
-  //   wusdcMaxTransfer,
-  //   wusdcOutgoingPercentage,
-  //   wusdcTimeframe,
-  //   wusdcMaxNoCap,
-  //   ethUsdcContractAddr,
-  //   wusdcPlatformFee,
-  //   wusdcFeeRelayer,
-  //   ethChainId,
-  //   ethTsContractAddr
-  // );
+  // Token Service: Add wusdc ETH
+  const addWUSDCTokenProposalId = await proposeAddToken(
+    wusdc_id,
+    wusdcMinTransfer,
+    wusdcMaxTransfer,
+    wusdcOutgoingPercentage,
+    wusdcTimeframe,
+    wusdcMaxNoCap,
+    ethUsdcContractAddr,
+    ethChainId,
+    ethTsContractAddr,
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
+  );
+  await execAddToken(
+    wusdc_id,
+    addWUSDCTokenProposalId,
+    wusdcMinTransfer,
+    wusdcMaxTransfer,
+    wusdcOutgoingPercentage,
+    wusdcTimeframe,
+    wusdcMaxNoCap,
+    ethUsdcContractAddr,
+    ethChainId,
+    ethTsContractAddr,
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
+  );
 
 
 
   // // Token service: Add chain to existing token Arbitrum
-  // const addChainToWUSDCTokenProposalId = await proposeAddChainToToken(
-  //   wusdc_id,
-  //   arbitrumChainId,
-  //   arbitrumTsContractAddr,
-  //   arbitrumUsdcContractAddr,
-  //   wusdcPlatformFee,
-  //   wusdcFeeRelayer
-  // );
-  // await execAddChainToToken(
-  //   addChainToWUSDCTokenProposalId,
-  //   wusdc_id,
-  //   arbitrumChainId,
-  //   arbitrumTsContractAddr,
-  //   arbitrumUsdcContractAddr,
-  //   wusdcPlatformFee,
-  //   wusdcFeeRelayer
-  // );
+  const addChainToWUSDCTokenProposalId = await proposeAddChainToToken(
+    wusdc_id,
+    arbitrumChainId,
+    arbitrumTsContractAddr,
+    arbitrumUsdcContractAddr,
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
+  );
+  await execAddChainToToken(
+    addChainToWUSDCTokenProposalId,
+    wusdc_id,
+    arbitrumChainId,
+    arbitrumTsContractAddr,
+    arbitrumUsdcContractAddr,
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
+  );
 
   // Token service: Add chain to existing token Holesky
-  const addChainToWUSDCTokenProposalId = await proposeAddChainToToken(
+  const addChainToWUSDCTokenProposalHoleskyId = await proposeAddChainToToken(
     wusdc_id,
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
@@ -185,7 +193,7 @@ async function wusdcSetupAndInit() {
     wusdcFeeRelayerPrivate
   );
   await execAddChainToToken(
-    addChainToWUSDCTokenProposalId,
+    addChainToWUSDCTokenProposalHoleskyId,
     wusdc_id,
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
@@ -196,32 +204,36 @@ async function wusdcSetupAndInit() {
     wusdcFeeRelayerPrivate
   );
 
-  // // Token service: Add chain to existing token Base
-  // const addChainToWUSDCTokenProposalId = await proposeAddChainToToken(
-  //   wusdc_id,
-  //   baseChainId,
-  //   baseTsContractAddr,
-  //   baseUsdcContractAddr,
-  //   wusdcPlatformFee,
-  //   wusdcFeeRelayer
-  // );
-  // await execAddChainToToken(
-  //   addChainToWUSDCTokenProposalId,
-  //   wusdc_id,
-  //   baseChainId,
-  //   baseTsContractAddr,
-  //   baseUsdcContractAddr,
-  //   wusdcPlatformFee,
-  //   wusdcFeeRelayer
-  // );
+  // Token service: Add chain to existing token Base
+  const addChainToWUSDCTokenProposalBaseId = await proposeAddChainToToken(
+    wusdc_id,
+    baseChainId,
+    baseTsContractAddr,
+    baseUsdcContractAddr,
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
+  );
+  await execAddChainToToken(
+    addChainToWUSDCTokenProposalBaseId,
+    wusdc_id,
+    baseChainId,
+    baseTsContractAddr,
+    baseUsdcContractAddr,
+    wusdcPlatformFeePublic,
+    wusdcFeeRelayerPublic,
+    wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPrivate
+  );
 
   // Token service: Give role to the token service.
-  // const WUSDCroleProposalId = await proposeRole(wusdc_id, SUPPLY_MANAGER_ROLE);
-  // await execRole(WUSDCroleProposalId, wusdc_id, SUPPLY_MANAGER_ROLE);
+  const WUSDCroleProposalId = await proposeRole(wusdc_id, SUPPLY_MANAGER_ROLE);
+  await execRole(WUSDCroleProposalId, wusdc_id, SUPPLY_MANAGER_ROLE);
 
-  // // Wusdc Token: Unpause
-  // const WUSDCunpauseTokenProposalId = await proposeUnpauseToken(wusdc_id);
-  // await execUnpauseToken(WUSDCunpauseTokenProposalId, wusdc_id);
+  // Wusdc Token: Unpause
+  const WUSDCunpauseTokenProposalId = await proposeUnpauseToken(wusdc_id);
+  await execUnpauseToken(WUSDCunpauseTokenProposalId, wusdc_id);
 
 }
 
