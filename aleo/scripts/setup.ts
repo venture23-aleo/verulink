@@ -78,44 +78,44 @@ const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString() + "u128", 'fie
 const weth_id = leo2js.field(hash('bhp256', wethName.toString() + "u128", 'field'));
 
 const setup = async () => {
-  // await deployMainPrograms(
-  //   initialAttestors,
-  //   initialCouncilMembers,
-  //   councilThreshold,
-  //   councilThreshold
-  // );
+  await deployMainPrograms(
+    initialAttestors,
+    initialCouncilMembers,
+    councilThreshold,
+    councilThreshold
+  );
   // Bridge: Add ethereum chain
-  // const addChainProposalId = await proposeAddChain(ethChainId);
-  // await execAddChain(addChainProposalId, ethChainId);
+  const addChainProposalId = await proposeAddChain(ethChainId);
+  await execAddChain(addChainProposalId, ethChainId);
 
   // Bridge: Add base chain
-  // const addChainProposalId2 = await proposeAddChain(baseChainId);
-  // await execAddChain(addChainProposalId2, baseChainId);
+  const addChainProposalId2 = await proposeAddChain(baseChainId);
+  await execAddChain(addChainProposalId2, baseChainId);
 
   // Bridge: Add arbitrum chain
-  // const addChainProposalId3 = await proposeAddChain(arbitrumChainId);
-  // await execAddChain(addChainProposalId3, arbitrumChainId);
+  const addChainProposalId3 = await proposeAddChain(arbitrumChainId);
+  await execAddChain(addChainProposalId3, arbitrumChainId);
 
   // Bridge: Add holesky chain
-  // const addChainProposalId4 = await proposeAddChain(ethHoleskyChainId);
-  // await execAddChain(addChainProposalId4, ethHoleskyChainId);
+  const addChainProposalId4 = await proposeAddChain(ethHoleskyChainId);
+  await execAddChain(addChainProposalId4, ethHoleskyChainId);
 
-  // // Token Bridge: Add Service
-  // const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
-  // await execAddService(enableTokenServiceProposalId, tokenService.address());
+  // Token Bridge: Add Service
+  const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
+  await execAddService(enableTokenServiceProposalId, tokenService.address());
 
   // await wusdcSetupAndInit();
-  // await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
-  // await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
-  // await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
+  await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
+  await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
+  await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
 
   // await wusdtSetupandInit();
 
-  await wethSetupandInit();
+  // await wethSetupandInit();
 
-  // // Token Bridge: Unpause
-  // const unpauseBridgeProposalId = await proposeUnpauseBridge();
-  // await execUnpause(unpauseBridgeProposalId);
+  // Token Bridge: Unpause
+  const unpauseBridgeProposalId = await proposeUnpauseBridge();
+  await execUnpause(unpauseBridgeProposalId);
 
 };
 

@@ -22,14 +22,14 @@ export const wusdcMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wusdcOutgoingPercentage = 10_00 // 10%
 export const wusdcTimeframe = 3_600; // per 28_800 block
 export const wusdcMaxNoCap = BigInt(100_000_000_000);
-export const wusdcName = BigInt('3707987077791');
-export const wusdcSymbol = BigInt("508237661251");
+export const wusdcName = BigInt('3707987077792');
+export const wusdcSymbol = BigInt("508237661252");
 export const wusdcDecimals = 6;
 export const wusdcFeeRelayer = BigInt(500_000);
 export const wusdcPlatformFee = 1_00;
 
-export const token_name = BigInt('6148332821651876206')
-export const tokenID = hashStruct(token_name);
+// export const token_name = BigInt('6148332821651876206')
+// export const tokenID = hashStruct(token_name);
 
 
 // const token_name = BigInt('6148332821651876206')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
@@ -43,8 +43,8 @@ export const wusdtMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wusdtOutgoingPercentage = 10_00 // 10%
 export const wusdtTimeframe = 3_600; // per 28_800 block
 export const wusdtMaxNoCap = BigInt(100_000_000_000);
-export const wusdtName = BigInt('3707987077961');
-export const wusdtSymbol = BigInt("508237661268");
+export const wusdtName = BigInt('3707987077962');
+export const wusdtSymbol = BigInt("508237661269");
 export const wusdtDecimals = 6;
 export const wusdtFeeRelayer = BigInt(500_000);
 export const wusdtPlatformFee = 1_00;
@@ -61,8 +61,8 @@ export const wethMaxTransfer = BigInt("3402823669209384634633746074317682114");
 export const wethOutgoingPercentage = 10_00 // 10%
 export const wethTimeframe = 3_600; // per block
 export const wethMaxNoCap = BigInt("40000000000000000000"); // 40 eth
-export const wethName = BigInt('14473841361');
-export const wethSymbol = BigInt('1984255048');
+export const wethName = BigInt('14473841362');
+export const wethSymbol = BigInt('1984255049');
 export const wethDecimals = 18;
 export const wethFeeRelayer = BigInt(500_000_000_000_000);
 export const wethPlatformFee = 1_00;

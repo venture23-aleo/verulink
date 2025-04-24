@@ -36,9 +36,9 @@ export const proposeAddAttestor = async (newAttestor: string, new_threshold: num
   };
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor));
 
-  const [proposeAddAttestorTx] = await council.propose(proposalId, tbAddAttestorProposalHash);
+  const proposeAddAttestorTx = await council.propose(proposalId, tbAddAttestorProposalHash);
 
-  await council.wait(proposeAddAttestorTx);
+  await proposeAddAttestorTx.wait();
 
   getProposalStatus(tbAddAttestorProposalHash);
 
@@ -63,9 +63,9 @@ export const voteAddAttestor = async (proposalId: number, newAttestor: string, n
   const voter = council.getDefaultAccount();
   validateVote(tbAddAttestorProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbAddAttestorProposalHash, true);
+  const voteAddChainTx = await council.vote(tbAddAttestorProposalHash, true);
 
-  await council.wait(voteAddChainTx);
+  await voteAddChainTx.wait();
 
   getProposalStatus(tbAddAttestorProposalHash);
 
@@ -94,14 +94,14 @@ export const execAddAttestor = async (proposalId: number, newAttestor: string, n
   validateExecution(tbAddAttestorProposalHash);
 
   const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddAttestorProposalHash), SUPPORTED_THRESHOLD);
-  const [addAttestorTx] = await bridgeCouncil.tb_add_attestor(
+  const addAttestorTx = await bridgeCouncil.tb_add_attestor(
     tbAddAttestor.id,
     tbAddAttestor.new_attestor,
     tbAddAttestor.new_threshold,
     voters
   )
 
-  await council.wait(addAttestorTx);
+  await addAttestorTx.wait();
 
   isAttestorSupported = await bridge.attestors(newAttestor, false);
   if (!isAttestorSupported) {
