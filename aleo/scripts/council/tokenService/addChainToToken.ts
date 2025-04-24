@@ -24,7 +24,7 @@ const tokenService = new Vlink_token_service_v4Contract({ mode, priorityFee: 10_
 ///// Propose ////////
 //////////////////////
 export const proposeAddChainToToken = async (
-    tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform: number, fee_of_relayer: bigint, wusdcPlatformFeePrivate: number, wusdcFeeRelayerPublic: bigint,
+    tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_relayer_public: bigint, fee_of_platform_private: number, fee_of_relayer_private: bigint,
 ): Promise<number> => {
 
 
@@ -44,10 +44,10 @@ export const proposeAddChainToToken = async (
         token_id: tokenId,
         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
         token_address: evm2AleoArrWithoutPadding(token_address),
-        pri_platform_fee: fee_of_platform,
-        pri_relayer_fee: fee_of_relayer,
-        pub_platform_fee: wusdcPlatformFeePrivate,
-        pub_relayer_fee: wusdcFeeRelayerPublic
+        pri_platform_fee: fee_of_platform_private,
+        pri_relayer_fee: fee_of_relayer_private,
+        pub_platform_fee: fee_of_platform_public,
+        pub_relayer_fee: fee_of_relayer_public
     };
     const tbAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
@@ -68,8 +68,10 @@ export const voteAddChainToToken = async (
     chain_id: bigint,
     token_service_address: string,
     token_address: string,
-    fee_of_platform: number,
-    fee_of_relayer: bigint,
+    fee_of_platform_public: number,
+    fee_of_relayer_public: bigint,
+    fee_of_platform_private: number,
+    fee_of_relayer_private: bigint,
 ) => {
     console.log(`👍 Voting to add chain to ${chain_id} to ${tokenId}`)
     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -84,8 +86,10 @@ export const voteAddChainToToken = async (
         token_id: tokenId,
         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
         token_address: evm2AleoArrWithoutPadding(token_address),
-        fee_of_platform,
-        fee_of_relayer
+        pub_platform_fee: fee_of_platform_public,
+        pub_relayer_fee: fee_of_relayer_public,
+        pri_platform_fee: fee_of_platform_private,
+        pri_relayer_fee: fee_of_relayer_private
     };
     const tsAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
@@ -103,7 +107,7 @@ export const voteAddChainToToken = async (
 ///// Execute ////////
 //////////////////////
 export const execAddChainToToken = async (
-    proposalId: number, tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform: number, fee_of_relayer: bigint, wusdcPlatformFeePrivate: number, wusdcFeeRelayerPrivate: bigint,
+    proposalId: number, tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_relayer_public: bigint, fee_of_platform_private: number, fee_of_relayer_private: bigint,
 ) => {
     console.log(`Adding chain ${chain_id} to token ${tokenId}`)
     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -122,8 +126,10 @@ export const execAddChainToToken = async (
         token_id: tokenId,
         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
         token_address: evm2AleoArrWithoutPadding(token_address),
-        fee_of_platform,
-        fee_of_relayer
+        pub_platform_fee: fee_of_platform_public,
+        pub_relayer_fee: fee_of_relayer_public,
+        pri_platform_fee: fee_of_platform_private,
+        pri_relayer_fee: fee_of_relayer_private,
     };
     const tsAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
@@ -137,8 +143,10 @@ export const execAddChainToToken = async (
         tsAddChainToToken.token_service_address,
         tsAddChainToToken.token_address,
         voters,
-        tsAddChainToToken.fee_of_platform,
-        tsAddChainToToken.fee_of_relayer
+        tsAddChainToToken.pub_platform_fee,
+        tsAddChainToToken.pri_platform_fee,
+        tsAddChainToToken.pub_relayer_fee,
+        tsAddChainToToken.pri_relayer_fee,
     )
 
     await addChainTx.wait();
