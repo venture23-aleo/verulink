@@ -42,7 +42,7 @@ func (m *PrometheusMetrics) AddInPackets(attestorName string, chain string, dest
 }
 
 func (m *PrometheusMetrics) AddInstantPackets(attestorName string, chain string, destinationChain string) {
-	m.InPacketsCounter.WithLabelValues(attestorName, chain, destinationChain).Add(float64(1))
+	m.InstantPacketsCounter.WithLabelValues(attestorName, chain, destinationChain).Add(float64(1))
 }
 
 func (m *PrometheusMetrics) DeliveredPackets(attestorName string, sourceChain string, destinationChain string) {
@@ -184,7 +184,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		ProcessedSequenceNo:          processedSeqInfo,
 		AleoRPCSignal:                aleoRPC,
 		EhtereumRPCSignal:            ethRPC,
-		InstantPacketsCounter:        inPacketsCounter,
+		InstantPacketsCounter:        instantPacketsCounter,
 	}
 }
 
