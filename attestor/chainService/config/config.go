@@ -25,12 +25,13 @@ const (
 )
 
 type FlagArgs struct {
-	ConfigFile string
-	DBDir      string
-	LogDir     string
-	LogEnc     string
-	Mode       string
-	CleanStart bool
+	ConfigFile  string
+	DBDir       string
+	LogDir      string
+	LogEnc      string
+	Mode        string
+	CleanStart  bool
+	Maintenance bool
 }
 
 type ChainConfig struct {
