@@ -271,8 +271,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 						pkt.SetInstant(true)
 					}
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
-						// TODO: add a different metrics for the fastfeed packet
-						// cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
+						cl.metrics.AddInstantPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
 						ch <- pkt
 					}
 				}

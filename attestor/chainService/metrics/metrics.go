@@ -20,6 +20,7 @@ import (
 type PrometheusMetrics struct {
 	Registry                     *prometheus.Registry
 	InPacketsCounter             *prometheus.CounterVec
+	InstantPacketsCounter        *prometheus.CounterVec
 	DeliveredPacketsCounter      *prometheus.CounterVec
 	HashedAndSignedPacketCounter *prometheus.CounterVec
 	AttestorService              *prometheus.GaugeVec
@@ -37,6 +38,10 @@ func (m *PrometheusMetrics) StartVersion(attestorName string, version string) {
 }
 
 func (m *PrometheusMetrics) AddInPackets(attestorName string, chain string, destinationChain string) {
+	m.InPacketsCounter.WithLabelValues(attestorName, chain, destinationChain).Add(float64(1))
+}
+
+func (m *PrometheusMetrics) AddInstantPackets(attestorName string, chain string, destinationChain string) {
 	m.InPacketsCounter.WithLabelValues(attestorName, chain, destinationChain).Add(float64(1))
 }
 
@@ -85,6 +90,12 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		prometheus.CounterOpts{
 			Name: "packet_received",
 			Help: "Total packet received",
+		}, packetLables)
+
+	instantPacketsCounter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "instant_packet_received",
+			Help: "Total instant packet received",
 		}, packetLables)
 
 	outPacktesCounter := prometheus.NewCounterVec(
@@ -148,6 +159,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		}, []string{"attestor_name", "chain_id"})
 
 	registry.MustRegister(inPacketsCounter)
+	registry.MustRegister(instantPacketsCounter)
 	registry.MustRegister(outPacktesCounter)
 	registry.MustRegister(attestorHealth)
 	registry.MustRegister(dbServiceHealth)
@@ -172,6 +184,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		ProcessedSequenceNo:          processedSeqInfo,
 		AleoRPCSignal:                aleoRPC,
 		EhtereumRPCSignal:            ethRPC,
+		InstantPacketsCounter:        inPacketsCounter,
 	}
 }
 
