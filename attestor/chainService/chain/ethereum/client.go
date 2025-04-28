@@ -149,6 +149,7 @@ type Client struct {
 	retryPktNamespaces        []string
 	baseSeqNamespaces         []string
 	nextBlockHeightMap        map[string]uint64
+	instantNextBlockHeightMap map[string]uint64
 	instantPacketDurationMap  map[string]time.Duration
 	instantWaitHeightMap      map[string]uint64
 }
@@ -227,8 +228,8 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 	// by database, then next height is taken from database.
 	// If start height should be greater than already stored in database then start height from
 	// config should be considered.
-	if cl.nextBlockHeightMap[destchain] < baseHeight {
-		cl.nextBlockHeightMap[destchain] = baseHeight
+	if cl.instantNextBlockHeightMap[destchain] < baseHeight {
+		cl.instantNextBlockHeightMap[destchain] = baseHeight
 	}
 
 	for {
@@ -241,17 +242,16 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 				logger.GetLogger().Error("error while getting block height", zap.Error(err))
 				continue
 			}
-
-			if maturedHeight < cl.nextBlockHeightMap[destchain] {
-				diff := cl.nextBlockHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for ", zap.Uint64("height", diff)) // TODO: remove this 
+			if maturedHeight < cl.instantNextBlockHeightMap[destchain] {
+				diff := cl.instantNextBlockHeightMap[destchain] - maturedHeight
+				logger.GetLogger().Info("Sleeping eth client for instant packet", zap.Uint64("height", diff))
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				continue
 			}
 
 			// startHeight adds 1, because filterLogs returns packets inclusively for startHeight and endHeight.
 			// We don't want to re-process already processed packets
-			for startHeight := cl.nextBlockHeightMap[destchain]; startHeight <= maturedHeight; startHeight += defaultHeightDifferenceForFilterLogs + 1 {
+			for startHeight := cl.instantNextBlockHeightMap[destchain]; startHeight <= maturedHeight; startHeight += defaultHeightDifferenceForFilterLogs + 1 {
 				endHeight := startHeight + defaultHeightDifferenceForFilterLogs
 				if endHeight > maturedHeight {
 					endHeight = maturedHeight
@@ -269,15 +269,19 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 				for _, pkt := range pkts {
 					if predicateVersions[pkt.Version] {
 						pkt.SetInstant(true)
+
+						destChainID := pkt.Destination.ChainID.String()
+						if _, ok := cl.destChainsIDMap[destChainID]; ok {
+							cl.metrics.AddInstantPackets(logger.AttestorName, cl.chainID.String(), destChainID)
+							logger.GetLogger().Info("sending packets instant packet", zap.Any("packet ", pkt.Sequence))
+							ch <- pkt
+						}
 					}
-					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
-						cl.metrics.AddInstantPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
-						ch <- pkt
-					}
+
 				}
-			cl.nextBlockHeightMap[destchain] = endHeight + 1
+				cl.instantNextBlockHeightMap[destchain] = endHeight + 1
+			}
 		}
-	}
 
 	}
 }
@@ -584,6 +588,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	var retryPktNamespace []string
 
 	nextBlockHeight := make(map[string]uint64, 0)
+	instantNextBlockHeight := make(map[string]uint64, 0)
 	waitHeights := make(map[string]uint64, 0)
 	feedPktDurMap := make(map[string]time.Duration, 0)
 
@@ -614,6 +619,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		destChainsMap[destChain] = true
 
 		nextBlockHeight[destChain] = duration.StartHeight
+		instantNextBlockHeight[destChain] = duration.StartHeight
 		feedPktDurMap[destChain] = duration.FeedPacketWaitDuration
 
 		validityWaitDur := duration.PacketValidityWaitDuration
@@ -630,7 +636,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 
 		instantPacketDurationMap[destChain] = duration.InstantPktWaitDuration
 
-		iwaitHeight := uint64(duration.InstantPktWaitDuration * avgBlockGenDur)
+		iwaitHeight := uint64(duration.InstantPktWaitDuration / avgBlockGenDur)
 		instantPacketWaitHeightMap[destChain] = iwaitHeight
 
 	}
@@ -673,5 +679,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		averageBlockGenDur:        avgBlockGenDur,
 		instantPacketDurationMap:  instantPacketDurationMap,
 		instantWaitHeightMap:      instantPacketWaitHeightMap,
+		instantNextBlockHeightMap: instantNextBlockHeight,
 	}
 }
