@@ -54,7 +54,7 @@ func migrateInternalBoltDb(oldNamespace, newNamespace string) error {
 		return nil
 	}
 
-	logger.GetLogger().Info("Starting migration",
+	logger.GetLogger().Info("********** Starting migration for **********",
 		zap.String("oldNamespace", oldNamespace),
 		zap.String("newNamespace", newNamespace),
 	)
@@ -98,8 +98,10 @@ func migrateInternalBoltDb(oldNamespace, newNamespace string) error {
 		logger.GetLogger().Error("Could not delete oldnamespace ", zap.Error(err))
 		return err
 	}
-
-	logger.GetLogger().Info("Migration completed",
+	// TODO: Check if the migration is complete or not 
+	// test success or not logs 
+	
+	logger.GetLogger().Info("********** Migration completed **********",
 		zap.String("oldNamespace", oldNamespace),
 		zap.String("newNamespace", newNamespace),
 	)

@@ -80,11 +80,14 @@ func main() {
 	// TODO: currently embaded only for migration. remove for future releases
 	if maintenance {
 		// add maintenance logs
+		logger.GetLogger().Info("*********** Starting attestor in maintenance mode **********")
 		if err := store.MigrateKVStore(); err != nil {
 			logger.GetLogger().Error("Migration failed", zap.Error(err))
 			os.Exit(1)
 		}
-		return
+		logger.GetLogger().Info("********** Maintenance completed. Please turn off the maintenance flag " +
+		"and restart the attestor service. **********")
+		os.Exit(0)
 	}
 
 	pmetrics := metrics.NewPrometheusMetrics()
