@@ -30,11 +30,10 @@ const ALEO_CHAINID = 2;
 
 // Define the test suite
 describe('TokenService', () => {
-    let deployer, proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, TokenServiceImpl, TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken;
+    let deployer, proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, TokenServiceImpl, TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken, proxiedEthVaultService;
     let blackListProxy, PredicateManager, predicateManager;
     let erc20VaultServiceProxy;
-    let EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy, proxiedEthVaultService;
-    let destchainID = 2;
+    let EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy;
     let ERC20TokenServiceImpl;
 
     beforeEach(async () => {
@@ -132,6 +131,7 @@ describe('TokenService', () => {
         await (await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2)).wait();
 
+
         inPacket = [
             1,
             1,
@@ -178,9 +178,9 @@ describe('TokenService', () => {
 
     // // Test for transfer
     it('should transfer USDC with platform fees deducted', async () => {
-        await (await proxiedV1.connect(owner).setPlatformFees(usdcMock.address, 5)).wait();
+        await (await proxiedV1.connect(owner).setPlatformFees(usdcMock.address, 5000)).wait();
 
-        assert.equal(await proxiedV1.platformFees(usdcMock.address), 5);
+        assert.equal(await proxiedV1.platformFees(usdcMock.address), 5000);
 
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
@@ -200,8 +200,8 @@ describe('TokenService', () => {
 
     // // Test for transfer with platform Fees
     it('should transfer eth with platform fees deducted', async () => {
-        await (await proxiedV1.connect(owner).setPlatformFees(ADDRESS_ONE, 5)).wait();
-        assert.equal(await proxiedV1.platformFees(ADDRESS_ONE), 5);
+        await (await proxiedV1.connect(owner).setPlatformFees(ADDRESS_ONE, 5000)).wait();
+        assert.equal(await proxiedV1.platformFees(ADDRESS_ONE), 5000);
 
         await (await proxiedV1.connect(owner)["transfer(string)"]
         ("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 
@@ -218,9 +218,9 @@ describe('TokenService', () => {
 
     // // Test for transfer
     it('should transfer USDC with platform fees deducted', async () => {
-        await (await proxiedV1.connect(owner).setPlatformFees(usdcMock.address, 5)).wait();
+        await (await proxiedV1.connect(owner).setPlatformFees(usdcMock.address, 5000)).wait();
 
-        assert.equal(await proxiedV1.platformFees(usdcMock.address), 5);
+        assert.equal(await proxiedV1.platformFees(usdcMock.address), 5000);
 
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 150)).wait();
@@ -240,7 +240,7 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(95);
     });
 
-    it("should transfer ERC20 tokens for non executer packets", async function () {
+    it("should transfer ERC20 tokens for non executor packets", async function () {
         // Mock packet and signatures
         const packet = [
             100,
@@ -274,11 +274,11 @@ describe('TokenService', () => {
       });
 
 
-  it("should transfer ERC20 tokens deducting the fees to executer wallet", async function () {
-    await (await proxiedV1.connect(owner).setExecuterFees(usdcMock.address, 1)).wait();
+  it("should transfer ERC20 tokens deducting the fees to executor wallet", async function () {
+    await (await proxiedV1.connect(owner).setExecutorFees(usdcMock.address, 1)).wait();
     // Mock packet and signatures
     const packet = [
-        101,
+        2,
         1,
         [ALEO_CHAINID, "aleo.TokenService"],
         [ETH_CHAINID, proxiedV1.address],
@@ -307,9 +307,5 @@ describe('TokenService', () => {
     expect(await usdcMock.balanceOf(signer.address)).to.equal(1);
     expect(await usdcMock.balanceOf(other.address)).to.equal(99);
   });
-
-
-
-    
 
 });
