@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
@@ -59,6 +60,8 @@ func migrateInternalBoltDb(oldNamespace, newNamespace string) error {
 		zap.String("newNamespace", newNamespace),
 	)
 
+	oldCount := countKeysInNamespace(oldNamespace)
+
 	if err := CreateNamespace(newNamespace); err != nil {
 		logger.GetLogger().Error("Failed to create new namespace", zap.Error(err))
 		return err
@@ -93,18 +96,37 @@ func migrateInternalBoltDb(oldNamespace, newNamespace string) error {
 		}
 	}
 
+	newCount := countKeysInNamespace(newNamespace)
+
+	if oldCount != newCount {
+		err := fmt.Errorf(
+			"key-value pair count mismatch: before migration = %d, after migration = %d",
+			oldCount, newCount,
+		)
+		logger.GetLogger().Error("Migration halted due to mismatch", zap.Int("oldCount", oldCount), zap.Int("newCount", newCount))
+		return err
+	}
+
 	// delete the namespace itself
 	if err := DeleteNamespace(oldNamespace); err != nil {
 		logger.GetLogger().Error("Could not delete oldnamespace ", zap.Error(err))
 		return err
 	}
-	// TODO: Check if the migration is complete or not 
-	// test success or not logs 
-	
+
 	logger.GetLogger().Info("********** Migration completed **********",
 		zap.String("oldNamespace", oldNamespace),
 		zap.String("newNamespace", newNamespace),
 	)
 
 	return nil
+}
+
+func countKeysInNamespace(namespace string) int {
+	count := 0
+	ch := retrieveNKeyValuesFromFirst(namespace, 1000000) // Set high limit to cover all
+
+	for range ch {
+		count++
+	}
+	return count
 }
