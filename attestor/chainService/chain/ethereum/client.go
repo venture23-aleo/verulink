@@ -217,9 +217,9 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 	dur := cl.instantPacketDurationMap[destchain]
 	if dur == 0 {
 		// close the routine for instantly processing packet
-		logger.GetLogger().Info("instant packet delivery closing for", zap.String("chain", cl.name))
 		return
 	}
+	logger.GetLogger().Info("instant packet delivery starting for", zap.String("chain", cl.name))
 	ticker := time.NewTicker(dur)
 
 	defer ticker.Stop()
