@@ -438,6 +438,7 @@ program vlink_token_service_v4.aleo {
         let burn: Future = token_registry.aleo/burn_public(token_id, self.caller, amount);
 
         // transferring platform fee to the token service
+        // TODO: transfer instead of mint
         let mint: Future = token_registry.aleo/mint_public(token_id, vlink_council_v4.aleo, fee_platform, authorize_until);
 
         let chain_token_info: ChainToken = ChainToken{
@@ -548,7 +549,9 @@ program vlink_token_service_v4.aleo {
             chain_id: dest_chain_id,
             token_id: token_id
         };
-
+        // TODO: amount should be deducted by fee_platform
+        // TODO: rather use transfer instead of mintint platform fee
+        // TODO: version should be kept in constant
         let version: u8 = is_relayer_on ? 12u8 : 11u8 ;
 
         let publish : Future = vlink_token_bridge_v4.aleo/publish(
@@ -598,7 +601,7 @@ program vlink_token_service_v4.aleo {
 
         let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
         let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
-
+        // TODO: discuss on amount should be deducted by platform_fee for withdrawn amount
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
             let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
             // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
@@ -668,7 +671,9 @@ program vlink_token_service_v4.aleo {
             token_id: token_id
         };
 
-        assert(amount >= fee_relayer);
+        assert(amount >= fee_relayer); // TODO: add in private receive as well
+        // TODO: rename fee_relayer to relayer_fee
+        // TODO: add test cases for private case
 
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
@@ -788,9 +793,9 @@ program vlink_token_service_v4.aleo {
         }
 
 
-        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount, false, authorize_until);
-
-        let hold: Future = vlink_holding_v4.aleo/hold_fund(receiver, token_id, held_amount);
+        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount, false, authorize_until); // TODO: Make capital for constant
+        // TODO: amount should be deducted by relayer fee
+        let hold: Future = vlink_holding_v4.aleo/hold_fund(receiver, token_id, held_amount); // TODO: receiver address is leaked
 
         // minting in relayer address
         let mint_relayer_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, fee_receiver, fee_relayer, false,authorize_until);
