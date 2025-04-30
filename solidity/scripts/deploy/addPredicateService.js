@@ -9,7 +9,7 @@ async function main() {
     );
 
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
-    const ERC20TokenServiceV2 = await ethers.getContractFactory("TokenServiceV3");
+    const ERC20TokenServiceV2 = await ethers.getContractFactory("TokenServiceV2");
     const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
     console.log("deployerSigner= ", deployerSigner.address);
     
