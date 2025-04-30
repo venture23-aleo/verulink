@@ -374,6 +374,54 @@ program vlink_token_service_council_v4.aleo
         f0.await();
         f1.await();
     }
+
+
+
+    //////////////////////////////////////////////////////
+    ////// Holding Program : Private HOlding Release /////
+    //////////////////////////////////////////////////////
+
+    struct HoldingReleasePrivate {
+        id: u32,
+        token_id: field,
+        pre_image: field,
+        receiver: address,
+        amount: u128
+    }
+
+    async transition holding_release_private(
+        public id: u32,
+        public token_id: field,
+        receiver: address,
+        pre_image: field,
+        public amount: u128,
+        public voters: [address; 5],
+        
+    ) -> (token_registry.aleo/Token, Future){
+        let proposal: HoldingReleasePrivate  = HoldingReleasePrivate {
+            id,
+            token_id,
+            pre_image,
+            receiver,
+            amount
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        let holding_release_cc: (token_registry.aleo/Token, Future) = vlink_token_service_v4.aleo/holding_release_private(token_id,receiver,pre_image,amount);
+
+        let external_execute: Future = vlink_council_v4.aleo/external_execute(id, proposal_hash, voters);
+
+        return (holding_release_cc.0, finalize_HLD_release_private(holding_release_cc.1, external_execute));
+    }
+
+    async function finalize_HLD_release_private(f0: Future, f1: Future) {
+        f0.await();
+        f1.await();
+    }
+
+
+    
     //////////////////////////////////////////////////////
     ///////  Holding Program : Transfer Ownership ////////
     //////////////////////////////////////////////////////
