@@ -81,6 +81,7 @@
 # npx hardhat run scripts/deploy/deployPredicateService.js --network holesky
 # npx hardhat run scripts/deploy/grantRole.js --network holesky
 
+# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
 # npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network holesky
 # npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
 # npx hardhat run scripts/deploy/addPredicateService.js --network holesky
