@@ -109,7 +109,7 @@ func (cl *Client) Name() string {
 // If it finds some immature packet then it will wait accordingly for that packet.
 // If there are no more packets then it will wait for given wait duration.
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
-	ns := baseSeqNumNameSpacePrefix + chainID
+	ns := generateNamespcae(baseSeqNumNameSpacePrefix,cl.chainID.String(),chainID)
 	startSeqNum, _ := store.GetStartingSeqNumAndHeight(ns)
 	cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), chainID, float64(startSeqNum))
 
@@ -180,8 +180,8 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 	}
 }
 
-func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compCh chan *chain.Packet, retryCh chan *chain.Packet) {
-	go cl.managePacket(ctx)
+func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
+	go cl.managePacket(ctx, completedCh, retryCh)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
 
@@ -234,8 +234,12 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 			shouldFetch            bool
 		)
 		ns := baseSeqNamespaces[index]
-		chainID := strings.Replace(ns, baseSeqNumNameSpacePrefix, "", 1)
-
+		// chainID := strings.Replace(ns, baseSeqNumNameSpacePrefix, "", 1)
+		trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
+		namespaceParts := strings.Split(trimmmdNamespace, "_")
+		chainIDStr := namespaceParts[len(namespaceParts)-1]
+		chainID := new(big.Int)
+		chainID.SetString(chainIDStr, 10)
 		seqHeightRanges, shouldFetch = store.PruneBaseSeqNum(ns)
 		if !shouldFetch {
 			goto indIncr
@@ -243,10 +247,10 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 		startSeqNum, endSeqNum = seqHeightRanges[0][0], seqHeightRanges[0][1]
 		for i := startSeqNum; i < endSeqNum; i++ {
-			pkt, err := cl.getPktWithSeq(ctx, chainID, i)
+			pkt, err := cl.getPktWithSeq(ctx, chainIDStr, i)
 			if err != nil {
 				logger.GetLogger().Error("error while getting packet.",
-					zap.String("chainId", chainID), zap.Uint64("seq_num", i), zap.Error(err))
+					zap.String("chainId", chainIDStr), zap.Uint64("seq_num", i), zap.Error(err))
 				continue
 			}
 			ch <- pkt
@@ -295,14 +299,14 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 // in the event of failure while sending packets to db-service or
 // in the baseSequenceNumberNameSpace to the packets received from completedCh channel in the event
 // of successful packet delivery to the db-service
-func (cl *Client) managePacket(ctx context.Context) {
+func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding packet to retry namespace", zap.Any("packet", pkt))
-			ns := retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
+			ns := generateNamespcae(retryPacketNamespacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -311,7 +315,7 @@ func (cl *Client) managePacket(ctx context.Context) {
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			ns := baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
+			ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
 				zap.String("source_chain_id", pkt.Source.ChainID.String()),
@@ -373,8 +377,8 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	}
 
 	for destChainId, duration := range cfg.DestChains {
-		rns := retryPacketNamespacePrefix + destChainId
-		bns := baseSeqNumNameSpacePrefix + destChainId
+		rns := generateNamespcae(retryPacketNamespacePrefix, cfg.ChainID.String(), destChainId)
+		bns := generateNamespcae(baseSeqNumNameSpacePrefix, cfg.ChainID.String(), destChainId)
 		namespaces = append(namespaces, rns, bns)
 
 		retryPacketNamespaces = append(retryPacketNamespaces, rns)

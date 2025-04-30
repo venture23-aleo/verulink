@@ -166,12 +166,12 @@ func TestFeedPacket(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeightMap:    map[string]uint64{common.Big2.String(): 9},
-		retryPacketWaitDur:    time.Hour,
+		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 9},
+		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Hour,
-		feedPktWaitDurMap:     map[string]time.Duration{common.Big2.String(): time.Nanosecond},
-		destChainsIDMap:       map[string]bool{common.Big2.String(): true},
-		metrics:               newMetrics(),
+		feedPktWaitDurMap:         map[string]time.Duration{common.Big2.String(): time.Nanosecond},
+		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
+		metrics:                   newMetrics(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -217,7 +217,7 @@ func TestRetryFeed(t *testing.T) {
 			dbRemover()
 			retryPacketNamespaces = nil
 		})
-		dstAleoNameSpace := retryPacketNamespacePrefix + "2"
+		dstAleoNameSpace := retryPacketNamespacePrefix + "_1_" + "2"
 		err = store.CreateNamespace(dstAleoNameSpace)
 		assert.NoError(t, err)
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace)
@@ -276,8 +276,8 @@ func TestRetryFeed(t *testing.T) {
 			dbRemover()
 			retryPacketNamespaces = nil
 		})
-		dstAleoNameSpace := retryPacketNamespacePrefix + "2"
-		dstSolNameSpace := retryPacketNamespacePrefix + "3"
+		dstAleoNameSpace := retryPacketNamespacePrefix + "_1_" + "2"
+		dstSolNameSpace := retryPacketNamespacePrefix + "_1_" + "3"
 		err = store.CreateNamespaces([]string{dstAleoNameSpace, dstSolNameSpace})
 		assert.NoError(t, err)
 		retryPacketNamespaces = append(retryPacketNamespaces, dstAleoNameSpace, dstSolNameSpace)
@@ -361,13 +361,15 @@ func TestManagePacket(t *testing.T) {
 			retryPacketNamespaces = nil
 		})
 
-		retryNs := retryPacketNamespacePrefix + "2"
+		retryNs := retryPacketNamespacePrefix + "_1_" + "2"
 		retryPacketNamespaces = append(retryPacketNamespaces, retryNs)
 
 		namespaces := []string{retryNs}
 		err = store.CreateNamespaces(namespaces)
 		assert.NoError(t, err)
 		client := new(Client)
+		client.chainID = common.Big1
+		client.name = "ethereum"
 		client.SetMetrics(newMetrics())
 		client.retryPktNamespaces = retryPacketNamespaces
 
@@ -411,7 +413,7 @@ func TestManagePacket(t *testing.T) {
 			dbRemover()
 			baseSeqNamespaces = nil
 		})
-		bseqNs := baseSeqNumNameSpacePrefix + "2"
+		bseqNs := baseSeqNumNameSpacePrefix + "_1_" + "2"
 		baseSeqNamespaces = append(baseSeqNamespaces, bseqNs)
 
 		namespaces := []string{bseqNs}
@@ -420,6 +422,8 @@ func TestManagePacket(t *testing.T) {
 
 		client := new(Client)
 		client.SetMetrics(newMetrics())
+		client.chainID = common.Big1
+		client.name = "ethereum"
 		client.baseSeqNamespaces = baseSeqNamespaces
 		// store packet in retry bucket
 		modelPacket := &chain.Packet{
@@ -462,7 +466,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 	var baseSeqNamespaces []string
 	var eventLogs []types.Log
 
-	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"2")
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"_1_"+"2")
 	store.CreateNamespace(baseSeqNamespaces[0])
 
 	client := &Client{
@@ -495,11 +499,13 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 				}, nil
 			},
 		},
-		nextBlockHeightMap:    map[string]uint64{common.Big2.String(): 10},
-		retryPacketWaitDur:    time.Hour,
+		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 10},
+		retryPacketWaitDur:        time.Hour,
 		pruneBaseSeqNumberWaitDur: time.Second,
-		metrics:               newMetrics(),
-		baseSeqNamespaces:     baseSeqNamespaces,
+		metrics:                   newMetrics(),
+		baseSeqNamespaces:         baseSeqNamespaces,
+		chainID:                   common.Big1,
+		name:                      "ethereum",
 	}
 
 	for i := 0; i < 15; i++ {
@@ -524,3 +530,85 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		assert.Equal(t, pkt.Sequence, uint64(i))
 	}
 }
+
+
+
+func TestInstantFeedPacket(t *testing.T) {
+	pktCh := make(chan *chain.Packet)
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
+
+	client := &Client{
+		eth: &mockEthClient{
+			getCurHeight: func() (uint64, error) { return 10, nil },
+			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
+		},
+		bridge: &mockBridgeClient{
+			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
+				return &abi.BridgePacketDispatched{
+					Packet: abi.PacketLibraryOutPacket{
+						Version:  common.Big3,
+						Sequence: common.Big1,
+						SourceTokenService: abi.PacketLibraryInNetworkAddress{
+							ChainId: common.Big1,
+							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+						},
+						DestTokenService: abi.PacketLibraryOutNetworkAddress{
+							ChainId: common.Big2,
+							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Message: abi.PacketLibraryOutTokenMessage{
+							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Amount:           big.NewInt(100),
+							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Height: big.NewInt(55),
+					},
+				}, nil
+			},
+		},
+		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 9},
+		retryPacketWaitDur:        time.Hour,
+		pruneBaseSeqNumberWaitDur: time.Hour,
+		feedPktWaitDurMap:         map[string]time.Duration{common.Big2.String(): time.Nanosecond},
+		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
+		metrics:                   newMetrics(),
+		instantPacketDurationMap: map[string]time.Duration{"2":time.Nanosecond},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go client.FeedPacket(ctx, pktCh, completedCh, retryCh)
+
+	modelPacket := &chain.Packet{
+		Version:  uint8(3),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: common.Big1,
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: common.Big2,
+			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Height: uint64(55),
+		Instant: true,
+	}
+
+	assert.Equal(t, uint64(9), client.nextBlockHeightMap[common.Big2.String()])
+
+	pkt := <-pktCh
+
+	assert.NotNil(t, pkt)
+	assert.Equal(t, modelPacket, pkt)
+	assert.Equal(t, uint64(11), client.nextBlockHeightMap[common.Big2.String()])
+}
+

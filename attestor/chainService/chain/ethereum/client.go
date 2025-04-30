@@ -52,6 +52,8 @@ const (
 	retryPacketNamespacePrefix = "ethereum_rpns"
 )
 
+var predicateVersions = map[uint8]bool{3: true, 4: true, 13: true}
+
 type ethClientI interface {
 	GetCurrentBlock(ctx context.Context) (uint64, error)
 	FilterLogs(
@@ -147,6 +149,9 @@ type Client struct {
 	retryPktNamespaces        []string
 	baseSeqNamespaces         []string
 	nextBlockHeightMap        map[string]uint64
+	instantNextBlockHeightMap map[string]uint64
+	instantPacketDurationMap  map[string]time.Duration
+	instantWaitHeightMap      map[string]uint64
 }
 
 func (cl *Client) Name() string {
@@ -156,16 +161,15 @@ func (cl *Client) Name() string {
 // blockHeightPriorWaitDur returns matured block height from which events logs can be parsed.
 // This height equals (currentHeight - finalityHeight) at max
 // If wait duration is 24 hours then it will be equal to (currentHeight - 7200)
-func (cl *Client) blockHeightPriorWaitDur(ctx context.Context, destchain string) (uint64, error) {
+func (cl *Client) blockHeightPriorWaitDur(ctx context.Context, waitHeight uint64) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
-		logger.GetLogger().Error("error while getting current height")
+		logger.GetLogger().Error("error while getting current height", zap.Any("chain", cl.name))
 		cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), DOWN)
 		return 0, err
 	}
 	cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), UP)
 
-	waitHeight := cl.waitHeightMap[destchain]
 	return curHeight - waitHeight, nil // total number of blocks that has to be passed in the waiting duration
 }
 
@@ -208,6 +212,80 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 	return packets, nil
 }
 
+func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, destchain string, ch chan<- *chain.Packet) {
+
+	dur := cl.instantPacketDurationMap[destchain]
+	if dur == 0 {
+		// close the routine for instantly processing packet
+		logger.GetLogger().Info("instant packet delivery closing for", zap.String("chain", cl.name))
+		return
+	}
+	ticker := time.NewTicker(dur)
+
+	defer ticker.Stop()
+
+	// if start height provided from config is less than already processed packet as stated
+	// by database, then next height is taken from database.
+	// If start height should be greater than already stored in database then start height from
+	// config should be considered.
+	if cl.instantNextBlockHeightMap[destchain] < baseHeight {
+		cl.instantNextBlockHeightMap[destchain] = baseHeight
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.instantWaitHeightMap[destchain])
+			if err != nil {
+				logger.GetLogger().Error("error while getting block height", zap.Error(err))
+				continue
+			}
+			if maturedHeight < cl.instantNextBlockHeightMap[destchain] {
+				diff := cl.instantNextBlockHeightMap[destchain] - maturedHeight
+				logger.GetLogger().Info("Sleeping eth client for instant packet", zap.Uint64("height", diff))
+				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
+				continue
+			}
+
+			// startHeight adds 1, because filterLogs returns packets inclusively for startHeight and endHeight.
+			// We don't want to re-process already processed packets
+			for startHeight := cl.instantNextBlockHeightMap[destchain]; startHeight <= maturedHeight; startHeight += defaultHeightDifferenceForFilterLogs + 1 {
+				endHeight := startHeight + defaultHeightDifferenceForFilterLogs
+				if endHeight > maturedHeight {
+					endHeight = maturedHeight
+				}
+				pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
+				if err != nil {
+					logger.GetLogger().Error("Filter packet log error",
+						zap.Error(err),
+						zap.Uint64("start_height", startHeight),
+						zap.Uint64("end_height", endHeight),
+					)
+					break
+				}
+
+				for _, pkt := range pkts {
+					if predicateVersions[pkt.Version] {
+						pkt.SetInstant(true)
+
+						destChainID := pkt.Destination.ChainID.String()
+						if _, ok := cl.destChainsIDMap[destChainID]; ok {
+							cl.metrics.AddInstantPackets(logger.AttestorName, cl.chainID.String(), destChainID)
+							logger.GetLogger().Info("sending packets instant packet", zap.Any("packet ", pkt.Sequence))
+							ch <- pkt
+						}
+					}
+
+				}
+				cl.instantNextBlockHeightMap[destchain] = endHeight + 1
+			}
+		}
+
+	}
+}
+
 func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain string, ch chan<- *chain.Packet) {
 	dur := cl.feedPktWaitDurMap[destchain]
 	if dur == 0 {
@@ -232,7 +310,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 	L1:
 		for {
 
-			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, destchain)
+			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.waitHeightMap[destchain])
 			if err != nil {
 				logger.GetLogger().Error("error while getting block height for", zap.String("chain", cl.name), zap.Error(err))
 				break L1
@@ -240,7 +318,6 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 
 			if maturedHeight < cl.nextBlockHeightMap[destchain] {
 				diff := cl.nextBlockHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for", zap.String("chain", cl.name), zap.Uint64("height", diff)) // TODO: this log might not be required
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				break L1
 			}
@@ -289,14 +366,10 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 
 	for dest := range cl.destChainsIDMap {
 		var baseHeight uint64 = math.MaxUint64
-		var ns string
-		if cl.name != "ethereum" {
-			ns = baseSeqNumNameSpacePrefix + cl.name + dest // ethereum_bsns_base_6694886634403, 3 //ethereum_bsns_ethereum_6694886634403, 200
-		} else {
-			ns = baseSeqNumNameSpacePrefix + dest
 
-		}
+		ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), dest)
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
+		
 		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
 
 		if startHeight < baseHeight {
@@ -304,6 +377,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 		}
 
 		go cl.feedPacket(ctx, baseHeight, dest, ch)
+		go cl.instantFeedPacket(ctx, baseHeight, dest, ch)
 
 	}
 	<-ctx.Done()
@@ -362,7 +436,9 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		ns := cl.baseSeqNamespaces[index]
-		chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
+		trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
+		namespaceParts := strings.Split(trimmmdNamespace, "_")
+		chainIDStr := namespaceParts[len(namespaceParts)-1]
 		chainID := new(big.Int)
 		chainID.SetString(chainIDStr, 10)
 		// segragate sequence numbers as per target chain
@@ -417,12 +493,7 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
-			var ns string
-			if cl.name != "ethereum" {
-				ns = retryPacketNamespacePrefix + cl.name + pkt.Destination.ChainID.String()
-			} else {
-				ns = retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
-			}
+			ns := generateNamespcae(retryPacketNamespacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -431,12 +502,7 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			var ns string
-			if cl.name != "ethereum" {
-				ns = baseSeqNumNameSpacePrefix + cl.name + pkt.Destination.ChainID.String()
-			} else {
-				ns = baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
-			}
+			ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
 				zap.String("source_chain_id", pkt.Source.ChainID.String()),
@@ -481,6 +547,10 @@ func (cl *Client) SetMetrics(metrics *metrics.PrometheusMetrics) {
 	cl.metrics = metrics
 }
 
+func generateNamespcae(prefix, srcchain, destinationChain string) string {
+	return fmt.Sprintf("%s_%s_%s", prefix, srcchain, destinationChain)
+}
+
 // NewClient initializes Client and returns the interface to chain.IClient
 func NewClient(cfg *config.ChainConfig) chain.IClient {
 	ethclient := NewEthClient(cfg.NodeUrl)
@@ -496,8 +566,12 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	var retryPktNamespace []string
 
 	nextBlockHeight := make(map[string]uint64, 0)
+	instantNextBlockHeight := make(map[string]uint64, 0)
 	waitHeights := make(map[string]uint64, 0)
 	feedPktDurMap := make(map[string]time.Duration, 0)
+
+	instantPacketDurationMap := make(map[string]time.Duration, 0)
+	instantPacketWaitHeightMap := make(map[string]uint64, 0)
 
 	avgBlockGenDur := cfg.AverageBlockGenDur
 	if avgBlockGenDur == 0 {
@@ -506,13 +580,8 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 
 	for destChain, duration := range cfg.DestChains {
 		var rns, bns string
-		if cfg.Name != "ethereum" {
-			rns = retryPacketNamespacePrefix + cfg.Name + destChain
-			bns = baseSeqNumNameSpacePrefix + cfg.Name + destChain
-		} else {
-			rns = retryPacketNamespacePrefix + destChain // TODO : THE KEY BECAME SAME
-			bns = baseSeqNumNameSpacePrefix + destChain
-		}
+		rns = generateNamespcae(retryPacketNamespacePrefix, cfg.ChainID.String(), destChain)
+		bns = generateNamespcae(baseSeqNumNameSpacePrefix, cfg.ChainID.String(), destChain)
 		namespaces = append(namespaces, rns, bns)
 
 		retryPktNamespace = append(retryPktNamespace, rns)
@@ -520,6 +589,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		destChainsMap[destChain] = true
 
 		nextBlockHeight[destChain] = duration.StartHeight
+		instantNextBlockHeight[destChain] = duration.StartHeight
 		feedPktDurMap[destChain] = duration.FeedPacketWaitDuration
 
 		validityWaitDur := duration.PacketValidityWaitDuration
@@ -533,6 +603,11 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		}
 
 		waitHeights[destChain] = waitHeight
+
+		instantPacketDurationMap[destChain] = duration.InstantPktWaitDuration
+
+		iwaitHeight := uint64(duration.InstantPktWaitDuration / avgBlockGenDur)
+		instantPacketWaitHeightMap[destChain] = iwaitHeight
 
 	}
 
@@ -572,5 +647,8 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		baseSeqNamespaces:         baseSeqNamespace,
 		retryPktNamespaces:        retryPktNamespace,
 		averageBlockGenDur:        avgBlockGenDur,
+		instantPacketDurationMap:  instantPacketDurationMap,
+		instantWaitHeightMap:      instantPacketWaitHeightMap,
+		instantNextBlockHeightMap: instantNextBlockHeight,
 	}
 }

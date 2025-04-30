@@ -219,7 +219,7 @@ func TestFeedPacket(t *testing.T) {
 		assert.Equal(t, pkt, expectedPacket)
 	})
 
-	 t.Run("should not feed packet if height is immature", func(t *testing.T) {
+	t.Run("should not feed packet if height is immature", func(t *testing.T) {
 
 		aleoPacket := &aleoPacket{
 			version:  "0u8",
@@ -291,10 +291,11 @@ func TestRetryFeed(t *testing.T) {
 	client := &Client{
 		retryPacketWaitDur:  time.Second,
 		pruneBaseSeqWaitDur: time.Hour,
+		chainID:             big.NewInt(2),
 	}
 
-	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
-	retryPacketNamespaces = append(retryPacketNamespaces, retryPacketNamespacePrefix+"1")
+	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "_1_" + "1", retryPacketNamespacePrefix + "_2_" + "1", baseSeqNumNameSpacePrefix + "_2_" + "1"})
+	retryPacketNamespaces = append(retryPacketNamespaces, retryPacketNamespacePrefix+"_2_"+"1", retryPacketNamespacePrefix+"_1_"+"1")
 
 	// store packet in retry bucket
 	modelPacket := &chain.Packet{
@@ -319,7 +320,7 @@ func TestRetryFeed(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		modelPacket.Sequence = uint64(i + 1)
-		store.StoreRetryPacket("aleo_rpns1", modelPacket)
+		store.StoreRetryPacket(retryPacketNamespacePrefix+"_2_"+"1", modelPacket)
 	}
 
 	packetCh := make(chan *chain.Packet)
@@ -356,9 +357,12 @@ func TestManagePacket(t *testing.T) {
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
+		chainID:             big.NewInt(2),
 	}
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
 
-	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
+	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "_2_" + "1", baseSeqNumNameSpacePrefix + "_2_" + "1"})
 
 	// store packet in retry bucket
 	modelPacket := &chain.Packet{
@@ -382,10 +386,10 @@ func TestManagePacket(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.managePacket(ctx)
+	go client.managePacket(ctx, completedCh, retryCh)
 	retryCh <- modelPacket
 	time.Sleep(time.Millisecond * 10) // wait to fill in the database
-	pkts, err := store.RetrieveAndDeleteNPackets("aleo_rpns1", 1)
+	pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespacePrefix+"_2_"+"1", 1)
 	assert.NoError(t, err)
 	assert.Len(t, pkts, 1)
 	assert.Equal(t, pkts[0], modelPacket)
@@ -396,14 +400,17 @@ func TestManagePacket2(t *testing.T) {
 	dbRemover, err := setupDB("tmp/db")
 	require.NoError(t, err)
 	t.Cleanup(dbRemover)
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
 
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
 		metrics:             newMetrics(),
+		chainID:             big.NewInt(2),
 	}
 
-	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
+	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "_2_" + "1", baseSeqNumNameSpacePrefix + "_2_" + "1"})
 	assert.NoError(t, err)
 
 	// store packet in retry bucket
@@ -429,15 +436,15 @@ func TestManagePacket2(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.managePacket(ctx)
+	go client.managePacket(ctx, completedCh, retryCh)
 
 	completedCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace(
-		baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
+		baseSeqNumNameSpacePrefix+"_2_"+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)
 
-	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
+	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+"_2_"+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
 }
 
@@ -486,7 +493,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		metrics:             newMetrics(),
 	}
 
-	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"1")
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"_2_"+"1")
 	store.CreateNamespace(baseSeqNamespaces[0])
 
 	for i := 0; i < 15; i++ {

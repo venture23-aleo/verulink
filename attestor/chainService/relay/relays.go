@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
+	"github.com/venture23-aleo/verulink/attestor/chainService/chain/aleo"
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum"
 
 	common "github.com/venture23-aleo/verulink/attestor/chainService/common"
@@ -30,7 +31,12 @@ var (
 	RegisteredRetryChannels = map[string]chan *chain.Packet{}
 	// RegisteredCompleteChannels stores channel for each chain to receive and handle packets that has successfully
 	// been stored in db-service.
-	RegisteredCompleteChannels = map[string]chan *chain.Packet{} // TODO : this was set send only but now need bidirectional
+	RegisteredCompleteChannels = map[string]chan *chain.Packet{}
+)
+
+const (
+	Ethereum = "evm"
+	Aleo     = "aleo"
 )
 
 var (
@@ -83,19 +89,24 @@ func StartRelay(ctx context.Context, cfg *config.Config, metrics *metrics.Promet
 	for _, ch := range cfg.ChainConfigs {
 
 		switch ch.ChainType {
-		case "ethereum":
+		case Ethereum:
 
-			RegisteredClients[ch.Name] = ethereum.NewClient // register eth client and save the namespaces as well 
+			RegisteredClients[ch.Name] = ethereum.NewClient
 
 			var completedCh = make(chan *chain.Packet)
 			RegisteredCompleteChannels[ch.Name] = completedCh
 
 			var retryCh = make(chan *chain.Packet)
 			RegisteredRetryChannels[ch.Name] = retryCh
-		case "aleo":
-			// aleo client is registered with init() function in aleo package
-			// RegisteredClients[ch.Name] = aleo.NewClient
-		default: // TODO: is default required? this indicates that only ethereum and aleo chain types are supported
+		case Aleo:
+			RegisteredClients[ch.Name] = aleo.NewClient
+
+			var completedCh = make(chan *chain.Packet)
+			RegisteredCompleteChannels[ch.Name] = completedCh
+
+			var retryCh = make(chan *chain.Packet)
+			RegisteredRetryChannels[ch.Name] = retryCh
+		default:
 			panic(fmt.Sprintf("unsupported chain type defined %s", ch.ChainType))
 		}
 
@@ -237,6 +248,9 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 			}
 			return
 		}
+		if pkt.GetInstant() { // Skip post processing for packets with predicate signature
+			return
+		}
 		RegisteredCompleteChannels[srcChainName] <- pkt
 	}()
 
@@ -254,7 +268,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 
 	logger.GetLogger().Debug("packet hashed and signed",
 		zap.String("source_chain", pkt.Source.ChainID.String()),
-		zap.String("dest_chain",pkt.Destination.ChainID.String()),
+		zap.String("dest_chain", pkt.Destination.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence),
 		zap.String("hash", hash), zap.String("signature", signature))
 
@@ -265,7 +279,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 		if errors.Is(err, common.AlreadyRelayedPacket{}) {
 			logger.GetLogger().Info("Duplicate packet detected",
 				zap.String("source_chain", pkt.Source.ChainID.String()),
-				zap.String("dest_chain",pkt.Destination.ChainID.String()),
+				zap.String("dest_chain", pkt.Destination.ChainID.String()),
 				zap.Uint64("seq_num", pkt.Sequence))
 			err = nil // non-nil error will put packet in retry namespace
 			return
@@ -276,7 +290,7 @@ func (r *relay) processPacket(ctx context.Context, pkt *chain.Packet) {
 
 	logger.GetLogger().Info("Packet successfully sent",
 		zap.String("source_chain", pkt.Source.ChainID.String()),
-		zap.String("dest_chain",pkt.Destination.ChainID.String()),
+		zap.String("dest_chain", pkt.Destination.ChainID.String()),
 		zap.Uint64("seq_num", pkt.Sequence))
 	r.metrics.DeliveredPackets(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String())
 }

@@ -12,7 +12,7 @@ import (
 
 const (
 	Aleo     = "aleo"
-	Ethereum = "ethereum"
+	Ethereum = "evm"
 )
 
 var (

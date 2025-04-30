@@ -25,12 +25,13 @@ const (
 )
 
 type FlagArgs struct {
-	ConfigFile string
-	DBDir      string
-	LogDir     string
-	LogEnc     string
-	Mode       string
-	CleanStart bool
+	ConfigFile  string
+	DBDir       string
+	LogDir      string
+	LogEnc      string
+	Mode        string
+	CleanStart  bool
+	Maintenance bool
 }
 
 type ChainConfig struct {
@@ -47,14 +48,14 @@ type ChainConfig struct {
 	RetryPacketWaitDur        time.Duration             `yaml:"retry_packet_wait_dur"`
 	PruneBaseSeqNumberWaitDur time.Duration             `yaml:"prune_base_seq_num_wait_dur"`
 	AverageBlockGenDur        time.Duration             `yaml:"average_block_gen_dur"` // useful for aleo
-
 }
 
 type PktValidConfig struct {
 	PacketValidityWaitDuration time.Duration `yaml:"pkt_validity_wait_dur"`
 	FinalityHeight             uint64        `yaml:"finality_height"`
 	FeedPacketWaitDuration     time.Duration `yaml:"feed_pkt_wait_dur"`
-	StartHeight                uint64        `yaml:"start_height"` // useful for ethereum
+	StartHeight                uint64        `yaml:"start_height"`         // useful for ethereum
+	InstantPktWaitDuration     time.Duration `yaml:"instant_pkt_wait_dur"` // fetch packets with predicate signatures
 }
 
 type Config struct {
@@ -223,7 +224,7 @@ func validateChainConfig(cfg *Config) error {
 			mDestChains[chainID] = pktValidCfg
 		}
 		chainCfg.DestChains = mDestChains
-		
+
 		for name, startSeqNum := range chainCfg.StartSeqNum {
 			chainID, ok := chainNameToChainID[name]
 			if !ok {

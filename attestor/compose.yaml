@@ -26,6 +26,7 @@ services:
       LOG_ENC: json
       MODE: prod
       CLEAN_START: false
+      MAINTENANCE: false
   signingservice:
     build:
       context: .
