@@ -273,7 +273,6 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 						destChainID := pkt.Destination.ChainID.String()
 						if _, ok := cl.destChainsIDMap[destChainID]; ok {
 							cl.metrics.AddInstantPackets(logger.AttestorName, cl.chainID.String(), destChainID)
-							logger.GetLogger().Info("sending packets instant packet", zap.Any("packet ", pkt.Sequence))
 							ch <- pkt
 						}
 					}

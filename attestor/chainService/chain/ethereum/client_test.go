@@ -208,6 +208,88 @@ func TestFeedPacket(t *testing.T) {
 	assert.Equal(t, uint64(11), client.nextBlockHeightMap[common.Big2.String()])
 }
 
+func TestInstantFeedPacket(t *testing.T) {
+	pktCh := make(chan *chain.Packet)
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
+
+	client := &Client{
+		eth: &mockEthClient{
+			getCurHeight: func() (uint64, error) { return 10, nil },
+			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
+		},
+		bridge: &mockBridgeClient{
+			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
+				return &abi.BridgePacketDispatched{
+					Packet: abi.PacketLibraryOutPacket{
+						Version:  common.Big3,
+						Sequence: common.Big1,
+						SourceTokenService: abi.PacketLibraryInNetworkAddress{
+							ChainId: common.Big1,
+							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+						},
+						DestTokenService: abi.PacketLibraryOutNetworkAddress{
+							ChainId: common.Big2,
+							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Message: abi.PacketLibraryOutTokenMessage{
+							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
+							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+							Amount:           big.NewInt(100),
+							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+						},
+						Height: big.NewInt(55),
+					},
+				}, nil
+			},
+		},
+		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 9},
+		retryPacketWaitDur:        time.Hour,
+		pruneBaseSeqNumberWaitDur: time.Hour,
+		feedPktWaitDurMap:         map[string]time.Duration{common.Big2.String(): time.Nanosecond},
+		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
+		metrics:                   newMetrics(),
+		chainID:                   common.Big1,
+		instantPacketDurationMap:  map[string]time.Duration{common.Big2.String(): time.Nanosecond},
+		instantNextBlockHeightMap: map[string]uint64{common.Big2.String():9},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go client.FeedPacket(ctx, pktCh, completedCh, retryCh)
+
+	modelPacket := &chain.Packet{
+		Version:  uint8(3),
+		Sequence: uint64(1),
+		Source: chain.NetworkAddress{
+			ChainID: common.Big1,
+			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+		},
+		Destination: chain.NetworkAddress{
+			ChainID: common.Big2,
+			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Message: chain.Message{
+			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
+			Amount:           big.NewInt(100),
+			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
+		},
+		Height:  uint64(55),
+		Instant: true,
+	}
+
+	assert.Equal(t, uint64(9), client.instantNextBlockHeightMap[common.Big2.String()])
+
+	pkt := <-pktCh
+
+	assert.NotNil(t, pkt)
+	assert.Equal(t, modelPacket, pkt)
+	assert.Equal(t, uint64(11), client.instantNextBlockHeightMap[common.Big2.String()])
+}
+
+
 func TestRetryFeed(t *testing.T) {
 	t.Run("case: retry packets for dstAleo retry packet name spaces", func(t *testing.T) {
 		dbRemover, err := setupDB("db")
@@ -529,86 +611,5 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		pkt := <-pktCh
 		assert.Equal(t, pkt.Sequence, uint64(i))
 	}
-}
-
-
-
-func TestInstantFeedPacket(t *testing.T) {
-	pktCh := make(chan *chain.Packet)
-	completedCh := make(chan *chain.Packet)
-	retryCh := make(chan *chain.Packet)
-
-	client := &Client{
-		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) { return 10, nil },
-			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
-		},
-		bridge: &mockBridgeClient{
-			getDispatchedPacket: func(log types.Log) (*abi.BridgePacketDispatched, error) {
-				return &abi.BridgePacketDispatched{
-					Packet: abi.PacketLibraryOutPacket{
-						Version:  common.Big3,
-						Sequence: common.Big1,
-						SourceTokenService: abi.PacketLibraryInNetworkAddress{
-							ChainId: common.Big1,
-							Addr:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
-						},
-						DestTokenService: abi.PacketLibraryOutNetworkAddress{
-							ChainId: common.Big2,
-							Addr:    "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-						},
-						Message: abi.PacketLibraryOutTokenMessage{
-							SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758"),
-							DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-							Amount:           big.NewInt(100),
-							ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-						},
-						Height: big.NewInt(55),
-					},
-				}, nil
-			},
-		},
-		nextBlockHeightMap:        map[string]uint64{common.Big2.String(): 9},
-		retryPacketWaitDur:        time.Hour,
-		pruneBaseSeqNumberWaitDur: time.Hour,
-		feedPktWaitDurMap:         map[string]time.Duration{common.Big2.String(): time.Nanosecond},
-		destChainsIDMap:           map[string]bool{common.Big2.String(): true},
-		metrics:                   newMetrics(),
-		instantPacketDurationMap: map[string]time.Duration{"2":time.Nanosecond},
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go client.FeedPacket(ctx, pktCh, completedCh, retryCh)
-
-	modelPacket := &chain.Packet{
-		Version:  uint8(3),
-		Sequence: uint64(1),
-		Source: chain.NetworkAddress{
-			ChainID: common.Big1,
-			Address: common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-		},
-		Destination: chain.NetworkAddress{
-			ChainID: common.Big2,
-			Address: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Message: chain.Message{
-			DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-			SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
-			Amount:           big.NewInt(100),
-			ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-		},
-		Height: uint64(55),
-		Instant: true,
-	}
-
-	assert.Equal(t, uint64(9), client.nextBlockHeightMap[common.Big2.String()])
-
-	pkt := <-pktCh
-
-	assert.NotNil(t, pkt)
-	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(11), client.nextBlockHeightMap[common.Big2.String()])
 }
 
