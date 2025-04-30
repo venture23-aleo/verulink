@@ -366,16 +366,10 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 
 	for dest := range cl.destChainsIDMap {
 		var baseHeight uint64 = math.MaxUint64
-		// var ns string
-		ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), dest)
-		// TODO : remove this after db migration
-		// if cl.name != "ethereum" {
-		// 	ns = baseSeqNumNameSpacePrefix + cl.name + dest // ethereum_bsns_base_6694886634403, 3 //ethereum_bsns_ethereum_6694886634403, 200
-		// } else {
-		// 	ns = baseSeqNumNameSpacePrefix + dest
 
-		// }
+		ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), dest)
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
+		
 		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
 
 		if startHeight < baseHeight {
@@ -442,8 +436,6 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
 
 		ns := cl.baseSeqNamespaces[index]
-		// chainIDStr := strings.ReplaceAll(ns, baseSeqNumNameSpacePrefix, "")
-		//TODO: add this after db migration
 		trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
 		namespaceParts := strings.Split(trimmmdNamespace, "_")
 		chainIDStr := namespaceParts[len(namespaceParts)-1]
@@ -501,14 +493,7 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 			return
 		case pkt := <-retryCh:
 			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
-			// var ns string
 			ns := generateNamespcae(retryPacketNamespacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
-			// TODO: remove this after db migration
-			// if cl.name != "ethereum" {
-			// 	ns = retryPacketNamespacePrefix + cl.name + pkt.Destination.ChainID.String()
-			// } else {
-			// 	ns = retryPacketNamespacePrefix + pkt.Destination.ChainID.String()
-			// }
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
 				logger.GetLogger().Error(
@@ -517,14 +502,7 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
-			// var ns string
 			ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
-			// TODO: remove this after db migration
-			// if cl.name != "ethereum" {
-			// 	ns = baseSeqNumNameSpacePrefix + cl.name + pkt.Destination.ChainID.String()
-			// } else {
-			// 	ns = baseSeqNumNameSpacePrefix + pkt.Destination.ChainID.String()
-			// }
 			logger.GetLogger().Info("Updating base seq num",
 				zap.String("namespace", ns),
 				zap.String("source_chain_id", pkt.Source.ChainID.String()),
@@ -604,14 +582,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		var rns, bns string
 		rns = generateNamespcae(retryPacketNamespacePrefix, cfg.ChainID.String(), destChain)
 		bns = generateNamespcae(baseSeqNumNameSpacePrefix, cfg.ChainID.String(), destChain)
-		// TODO: remove this after db migration
-		// if cfg.Name != "ethereum" {
-		// 	rns = retryPacketNamespacePrefix + cfg.Name + destChain
-		// 	bns = baseSeqNumNameSpacePrefix + cfg.Name + destChain
-		// } else {
-		// rns = retryPacketNamespacePrefix + destChain // TODO : THE KEY BECAME SAME
-		// bns = baseSeqNumNameSpacePrefix + destChain
-		// }
 		namespaces = append(namespaces, rns, bns)
 
 		retryPktNamespace = append(retryPktNamespace, rns)

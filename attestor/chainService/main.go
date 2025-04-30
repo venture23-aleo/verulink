@@ -79,7 +79,6 @@ func main() {
 
 	// TODO: currently embaded only for migration. remove for future releases
 	if maintenance {
-		// add maintenance logs
 		logger.GetLogger().Info("*********** Starting attestor in maintenance mode **********")
 		if err := store.MigrateKVStore(); err != nil {
 			logger.GetLogger().Error("Migration failed", zap.Error(err))

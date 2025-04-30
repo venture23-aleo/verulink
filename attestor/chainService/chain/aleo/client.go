@@ -379,9 +379,6 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 	for destChainId, duration := range cfg.DestChains {
 		rns := generateNamespcae(retryPacketNamespacePrefix, cfg.ChainID.String(), destChainId)
 		bns := generateNamespcae(baseSeqNumNameSpacePrefix, cfg.ChainID.String(), destChainId)
-		// TODO: remove in code cleanup
-		// rns := retryPacketNamespacePrefix + destChainId
-		// bns := baseSeqNumNameSpacePrefix + destChainId
 		namespaces = append(namespaces, rns, bns)
 
 		retryPacketNamespaces = append(retryPacketNamespaces, rns)
