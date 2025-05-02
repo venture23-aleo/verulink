@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 
@@ -92,7 +93,8 @@ func migrateInternalBoltDb(oldNamespace, newNamespace string) error {
 		if isPacket {
 			logger.GetLogger().Debug("Migrated packet", zap.Uint64("seq", pkt.Sequence))
 		} else {
-			logger.GetLogger().Debug("Migrated seq/height ", zap.ByteString("key", key))
+			key:= binary.BigEndian.Uint64(key)
+			logger.GetLogger().Debug("Migrated seq/height ", zap.Uint64("key", key))
 		}
 	}
 
