@@ -686,14 +686,16 @@ program vlink_token_service_v4.aleo {
             fee_receiver = actual_receiver;
         }
 
+        // minting in relayer address
+        let mint_relayer: Future = token_registry.aleo/mint_public(token_id, fee_receiver, fee_relayer, AUTHORIZE_UNTIL);
+
         let mint: Future = token_registry.aleo/mint_public(token_id, actual_receiver, amount-fee_relayer, AUTHORIZE_UNTIL);
 
         let hold: Future = vlink_holding_v4.aleo/hold_fund(receiver, token_id, held_amount);
 
-        // minting in relayer address
-        let mint_relayer: Future = token_registry.aleo/mint_public(token_id, fee_receiver, fee_relayer, AUTHORIZE_UNTIL);
 
-        return (screening_passed.0, finalize_token_receive_public(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint, hold, mint_relayer));
+
+        return (screening_passed.0, finalize_token_receive_public(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer, mint, hold));
     }
 
     async function finalize_token_receive_public(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer:u128, f0: Future, f1: Future, f2: Future, f3: Future) {
@@ -781,7 +783,7 @@ program vlink_token_service_v4.aleo {
 
         if (!screening_passed.0) {
             actual_receiver = HOLDING_ADDRESS;
-            held_amount = amount;
+            held_amount = amount - fee_relayer;
         }
 
         let fee_receiver: address = self.caller;
@@ -790,17 +792,12 @@ program vlink_token_service_v4.aleo {
             fee_receiver = actual_receiver;
         }
 
-
-        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount-fee_relayer, false, AUTHORIZE_UNTIL);
         let mint_relayer_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, fee_receiver, fee_relayer, false,AUTHORIZE_UNTIL);
 
-        let temp_fee: u128 = 0u128;
-        if (screening_passed.0) {
-            temp_fee = fee_relayer;
-        }
+        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount-fee_relayer, false, AUTHORIZE_UNTIL);
 
-        let hold: Future = vlink_holding_v4.aleo/hold_fund(image_address, token_id, held_amount-temp_fee);
-        return (screening_passed.0, mint_private.0, mint_relayer_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_private.1, hold, mint_relayer_private.1));
+        let hold: Future = vlink_holding_v4.aleo/hold_fund(image_address, token_id, held_amount);
+        return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, hold));
     }
 
     async function finalize_token_receive_private(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer: u128, f0: Future, f1: Future, f2: Future, f3: Future) {
