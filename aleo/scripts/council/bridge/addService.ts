@@ -1,20 +1,20 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Vlink_token_bridge_v4Contract } from "../../../artifacts/js/vlink_token_bridge_v4";
-import { Vlink_council_v4Contract } from "../../../artifacts/js/vlink_council_v4";
+import { Vlink_token_bridge_v5Contract } from "../../../artifacts/js/vlink_token_bridge_v5";
+import { Vlink_council_v5Contract } from "../../../artifacts/js/vlink_council_v5";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbAddService } from "../../../artifacts/js/types/vlink_bridge_council_v4";
-import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v4";
+import { TbAddService } from "../../../artifacts/js/types/vlink_bridge_council_v5";
+import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v5";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_bridge_council_v4Contract } from "../../../artifacts/js/vlink_bridge_council_v4";
+import { Vlink_bridge_council_v5Contract } from "../../../artifacts/js/vlink_bridge_council_v5";
 
 const mode = ExecutionMode.SnarkExecute;
 
-const council = new Vlink_council_v4Contract({ mode, priorityFee: 10_000 });
-const bridge = new Vlink_token_bridge_v4Contract({ mode, priorityFee: 10_000 });
-const bridgeCouncil = new Vlink_bridge_council_v4Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v5Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v5Contract({ mode, priorityFee: 10_000 });
+const bridgeCouncil = new Vlink_bridge_council_v5Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////

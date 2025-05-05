@@ -1,5 +1,5 @@
-import { Vlink_token_bridge_v4Contract } from "../artifacts/js/vlink_token_bridge_v4";
-import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
+import { Vlink_token_bridge_v5Contract } from "../artifacts/js/vlink_token_bridge_v5";
+import { Vlink_token_service_v5Contract } from "../artifacts/js/vlink_token_service_v5";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate } from "../utils/testdata.data";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -43,7 +43,7 @@ import {
   wethDecimals
 } from "../utils/testdata.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Vlink_bridge_council_v4Contract } from "../artifacts/js/vlink_bridge_council_v4";
+import { Vlink_bridge_council_v5Contract } from "../artifacts/js/vlink_bridge_council_v5";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
@@ -53,10 +53,10 @@ import { } from "../utils/testdata.data";
 import { execAddChainToToken, proposeAddChainToToken } from "./council/tokenService/addChainToToken";
 import { ethTsContractAddr } from "../utils/constants";
 
-const bridge = new Vlink_token_bridge_v4Contract({ mode: ExecutionMode.SnarkExecute });
-const tokenService = new Vlink_token_service_v4Contract({ mode: ExecutionMode.SnarkExecute });
-const bridgeCouncil = new Vlink_bridge_council_v4Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Vlink_token_service_v4Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Vlink_token_bridge_v5Contract({ mode: ExecutionMode.SnarkExecute });
+const tokenService = new Vlink_token_service_v5Contract({ mode: ExecutionMode.SnarkExecute });
+const bridgeCouncil = new Vlink_bridge_council_v5Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Vlink_token_service_v5Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
   attestor1,
@@ -78,27 +78,27 @@ const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString() + "u128", 'fie
 const weth_id = leo2js.field(hash('bhp256', wethName.toString() + "u128", 'field'));
 
 const setup = async () => {
-  // await deployMainPrograms(
-  //   initialAttestors,
-  //   initialCouncilMembers,
-  //   councilThreshold,
-  //   councilThreshold
-  // );
+  await deployMainPrograms(
+    initialAttestors,
+    initialCouncilMembers,
+    councilThreshold,
+    councilThreshold
+  );
   // Bridge: Add ethereum chain
-  // const addChainProposalId = await proposeAddChain(ethChainId);
-  // await execAddChain(addChainProposalId, ethChainId);
+  const addChainProposalId = await proposeAddChain(ethChainId);
+  await execAddChain(addChainProposalId, ethChainId);
 
-  // // Bridge: Add base chain
-  // const addChainProposalId2 = await proposeAddChain(baseChainId);
-  // await execAddChain(addChainProposalId2, baseChainId);
+  // Bridge: Add base chain
+  const addChainProposalId2 = await proposeAddChain(baseChainId);
+  await execAddChain(addChainProposalId2, baseChainId);
 
-  // // Bridge: Add arbitrum chain
-  // const addChainProposalId3 = await proposeAddChain(arbitrumChainId);
-  // await execAddChain(addChainProposalId3, arbitrumChainId);
+  // Bridge: Add arbitrum chain
+  const addChainProposalId3 = await proposeAddChain(arbitrumChainId);
+  await execAddChain(addChainProposalId3, arbitrumChainId);
 
-  // // Bridge: Add holesky chain
-  // const addChainProposalId4 = await proposeAddChain(ethHoleskyChainId);
-  // await execAddChain(addChainProposalId4, ethHoleskyChainId);
+  // Bridge: Add holesky chain
+  const addChainProposalId4 = await proposeAddChain(ethHoleskyChainId);
+  await execAddChain(addChainProposalId4, ethHoleskyChainId);
 
   // Token Bridge: Add Service
   const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
@@ -109,9 +109,11 @@ const setup = async () => {
   await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
   await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
 
-  // await wusdtSetupandInit();
+  await wusdcSetupAndInit();
 
-  // await wethSetupandInit();
+  await wusdtSetupandInit();
+
+  await wethSetupandInit();
 
   // Token Bridge: Unpause
   const unpauseBridgeProposalId = await proposeUnpauseBridge();
@@ -241,56 +243,64 @@ async function wusdtSetupandInit() {
   // Deploy Wusdt
   // await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
 
-  // // Token Service: Add wusdt ETH
-  // const addWUSDTokenProposalId = await proposeAddToken(
-  //   wusdt_id,
-  //   wusdtMinTransfer,
-  //   wusdtMaxTransfer,
-  //   wusdtOutgoingPercentage,
-  //   wusdtTimeframe,
-  //   wusdtMaxNoCap,
-  //   ethUsdtContractAddr,
-  //   wusdtPlatformFee,
-  //   wusdtFeeRelayer,
-  //   ethChainId,
-  //   ethTsContractAddr
-  // );
-  // await execAddToken(
-  //   wusdt_id,
-  //   addWUSDTokenProposalId,
-  //   wusdtMinTransfer,
-  //   wusdtMaxTransfer,
-  //   wusdtOutgoingPercentage,
-  //   wusdtTimeframe,
-  //   wusdtMaxNoCap,
-  //   ethUsdtContractAddr,
-  //   wusdtPlatformFee,
-  //   wusdtFeeRelayer,
-  //   ethChainId,
-  //   ethTsContractAddr
-  // );
+  // Token Service: Add wusdt ETH
+  const addWUSDTokenProposaETHlId = await proposeAddToken(
+    wusdt_id,
+    wusdtMinTransfer,
+    wusdtMaxTransfer,
+    wusdtOutgoingPercentage,
+    wusdtTimeframe,
+    wusdtMaxNoCap,
+    ethUsdtContractAddr,
+    ethChainId,
+    ethTsContractAddr,
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
+  );
+  await execAddToken(
+    wusdt_id,
+    addWUSDTokenProposaETHlId,
+    wusdtMinTransfer,
+    wusdtMaxTransfer,
+    wusdtOutgoingPercentage,
+    wusdtTimeframe,
+    wusdtMaxNoCap,
+    ethUsdtContractAddr,
+    ethChainId,
+    ethTsContractAddr,
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
+  );
 
-  // // Token service: Add chain to existing token Arbitrum
-  // const addChainToWUSDTTokenProposalId = await proposeAddChainToToken(
-  //   wusdt_id,
-  //   arbitrumChainId,
-  //   arbitrumTsContractAddr,
-  //   arbitrumUsdtContractAddr,
-  //   wusdtPlatformFee,
-  //   wusdtFeeRelayer
-  // );
-  // await execAddChainToToken(
-  //   addChainToWUSDTTokenProposalId,
-  //   wusdt_id,
-  //   arbitrumChainId,
-  //   arbitrumTsContractAddr,
-  //   arbitrumUsdtContractAddr,
-  //   wusdtPlatformFee,
-  //   wusdtFeeRelayer
-  // );
+  // Token service: Add chain to existing token Arbitrum
+  const addChainToWUSDTTokenProposalArbitrumId = await proposeAddChainToToken(
+    wusdt_id,
+    arbitrumChainId,
+    arbitrumTsContractAddr,
+    arbitrumUsdtContractAddr,
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
+  );
+  await execAddChainToToken(
+    addChainToWUSDTTokenProposalArbitrumId,
+    wusdt_id,
+    arbitrumChainId,
+    arbitrumTsContractAddr,
+    arbitrumUsdtContractAddr,
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
+  );
 
   // Token service: Add chain to existing token Holesky
-  const addChainToWUSDTTokenProposalId = await proposeAddChainToToken(
+  const addChainToWUSDTTokenProposalHoleskyId = await proposeAddChainToToken(
     wusdt_id,
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
@@ -301,7 +311,7 @@ async function wusdtSetupandInit() {
     wusdtFeeRelayerPrivate
   );
   await execAddChainToToken(
-    addChainToWUSDTTokenProposalId,
+    addChainToWUSDTTokenProposalHoleskyId,
     wusdt_id,
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
@@ -313,88 +323,100 @@ async function wusdtSetupandInit() {
   );
 
   // // Token service: Add chain to existing token Base
-  // const addChainToWUSDTTokenProposalId = await proposeAddChainToToken(
-  //   wusdt_id,
-  //   baseChainId,
-  //   baseTsContractAddr,
-  //   baseUsdtContractAddr,
-  //   wusdtPlatformFee,
-  //   wusdtFeeRelayer
-  // );
-  // await execAddChainToToken(
-  //   addChainToWUSDTTokenProposalId,
-  //   wusdt_id,
-  //   baseChainId,
-  //   baseTsContractAddr,
-  //   baseUsdtContractAddr,
-  //   wusdtPlatformFee,
-  //   wusdtFeeRelayer
-  // );
+  const addChainToWUSDTTokenProposalBaseId = await proposeAddChainToToken(
+    wusdt_id,
+    baseChainId,
+    baseTsContractAddr,
+    baseUsdtContractAddr,
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
+  );
+  await execAddChainToToken(
+    addChainToWUSDTTokenProposalBaseId,
+    wusdt_id,
+    baseChainId,
+    baseTsContractAddr,
+    baseUsdtContractAddr,
+    wusdtPlatformFeePublic,
+    wusdtFeeRelayerPublic,
+    wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPrivate
+  );
 
-  // // Token service: Give role to the token service.
-  // const WUSDTroleProposalId = await proposeRole(wusdt_id, SUPPLY_MANAGER_ROLE);
-  // await execRole(WUSDTroleProposalId, wusdt_id, SUPPLY_MANAGER_ROLE);
+  // Token service: Give role to the token service.
+  const WUSDTroleProposalId = await proposeRole(wusdt_id, SUPPLY_MANAGER_ROLE);
+  await execRole(WUSDTroleProposalId, wusdt_id, SUPPLY_MANAGER_ROLE);
 
-  // // Wusdt Token: Unpause
-  // const WUSDTunpauseTokenProposalId = await proposeUnpauseToken(wusdt_id);
-  // await execUnpauseToken(WUSDTunpauseTokenProposalId, wusdt_id);
+  // Wusdt Token: Unpause
+  const WUSDTunpauseTokenProposalId = await proposeUnpauseToken(wusdt_id);
+  await execUnpauseToken(WUSDTunpauseTokenProposalId, wusdt_id);
 }
 
 async function wethSetupandInit() {
   // Deploy Weth
   // await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
 
-  // // Token Service: Add weth ETH
-  // const addWETHokenProposalId = await proposeAddToken(
-  //   weth_id,
-  //   wethMinTransfer,
-  //   wethMaxTransfer,
-  //   wethOutgoingPercentage,
-  //   wethTimeframe,
-  //   wethMaxNoCap,
-  //   ethEthContractAddr,
-  //   wethPlatformFee,
-  //   wethFeeRelayer,
-  //   ethChainId,
-  //   ethTsContractAddr
-  // );
-  // await execAddToken(
-  //   weth_id,
-  //   addWETHokenProposalId,
-  //   wethMinTransfer,
-  //   wethMaxTransfer,
-  //   wethOutgoingPercentage,
-  //   wethTimeframe,
-  //   wethMaxNoCap,
-  //   ethEthContractAddr,
-  //   wethPlatformFee,
-  //   wethFeeRelayer,
-  //   ethChainId,
-  //   ethTsContractAddr
-  // );
+  // Token Service: Add weth ETH
+  const addWETHokenProposalethId = await proposeAddToken(
+    weth_id,
+    wethMinTransfer,
+    wethMaxTransfer,
+    wethOutgoingPercentage,
+    wethTimeframe,
+    wethMaxNoCap,
+    ethEthContractAddr,
+    ethChainId,
+    ethTsContractAddr,
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
+  );
+  await execAddToken(
+    weth_id,
+    addWETHokenProposalethId,
+    wethMinTransfer,
+    wethMaxTransfer,
+    wethOutgoingPercentage,
+    wethTimeframe,
+    wethMaxNoCap,
+    ethEthContractAddr,
+    ethChainId,
+    ethTsContractAddr,
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
+  );
 
-  // // Token service: Add chain to existing token Arbitrum
-  // const addChainToWETHTokenProposalId = await proposeAddChainToToken(
-  //   weth_id,
-  //   arbitrumChainId,
-  //   arbitrumTsContractAddr,
-  //   arbitrumEthContractAddr,
-  //   wethPlatformFee,
-  //   wethFeeRelayer
-  // );
+  // Token service: Add chain to existing token Arbitrum
+  const addChainToWETHTokenProposalArbitrumId = await proposeAddChainToToken(
+    weth_id,
+    arbitrumChainId,
+    arbitrumTsContractAddr,
+    arbitrumEthContractAddr,
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
+  );
 
-  // await execAddChainToToken(
-  //   addChainToWETHTokenProposalId,
-  //   weth_id,
-  //   arbitrumChainId,
-  //   arbitrumTsContractAddr,
-  //   arbitrumEthContractAddr,
-  //   wethPlatformFee,
-  //   wethFeeRelayer
-  // );
+  await execAddChainToToken(
+    addChainToWETHTokenProposalArbitrumId,
+    weth_id,
+    arbitrumChainId,
+    arbitrumTsContractAddr,
+    arbitrumEthContractAddr,
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
+  );
 
   // Token service: Add chain to existing token Holesky
-  const addChainToWETHTokenProposalId = await proposeAddChainToToken(
+  const addChainToWETHTokenProposalHoleskyId = await proposeAddChainToToken(
     weth_id,
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
@@ -406,7 +428,7 @@ async function wethSetupandInit() {
   );
 
   await execAddChainToToken(
-    addChainToWETHTokenProposalId,
+    addChainToWETHTokenProposalHoleskyId,
     weth_id,
     ethHoleskyChainId,
     ethHoleskyTsContractAddr,
@@ -417,33 +439,37 @@ async function wethSetupandInit() {
     wethFeeRelayerPrivate
   );
 
-  // // Token service: Add chain to existing token Base
-  // const addChainToWETHTokenProposalId = await proposeAddChainToToken(
-  //   weth_id,
-  //   baseChainId,
-  //   baseTsContractAddr,
-  //   baseEthContractAddr,
-  //   wethPlatformFee,
-  //   wethFeeRelayer
-  // );
+  // Token service: Add chain to existing token Base
+  const addChainToWETHTokenProposalBaseId = await proposeAddChainToToken(
+    weth_id,
+    baseChainId,
+    baseTsContractAddr,
+    baseEthContractAddr,
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
+  );
 
-  // await execAddChainToToken(
-  //   addChainToWETHTokenProposalId,
-  //   weth_id,
-  //   baseChainId,
-  //   baseTsContractAddr,
-  //   baseEthContractAddr,
-  //   wethPlatformFee,
-  //   wethFeeRelayer
-  // );
+  await execAddChainToToken(
+    addChainToWETHTokenProposalBaseId,
+    weth_id,
+    baseChainId,
+    baseTsContractAddr,
+    baseEthContractAddr,
+    wethPlatformFeePublic,
+    wethFeeRelayerPublic,
+    wethPlatformFeePrivate,
+    wethFeeRelayerPrivate
+  );
 
-  // // Token service: Give role to the aleo token service.
-  // const WETHroleProposalId = await proposeRole(weth_id, SUPPLY_MANAGER_ROLE);
-  // await execRole(WETHroleProposalId, weth_id, SUPPLY_MANAGER_ROLE);
+  // Token service: Give role to the aleo token service.
+  const WETHroleProposalId = await proposeRole(weth_id, SUPPLY_MANAGER_ROLE);
+  await execRole(WETHroleProposalId, weth_id, SUPPLY_MANAGER_ROLE);
 
-  // // Weth Token: Unpause
-  // const WETHunpauseTokenProposalId = await proposeUnpauseToken(weth_id);
-  // await execUnpauseToken(WETHunpauseTokenProposalId, weth_id);
+  // Weth Token: Unpause
+  const WETHunpauseTokenProposalId = await proposeUnpauseToken(weth_id);
+  await execUnpauseToken(WETHunpauseTokenProposalId, weth_id);
 }
 
 export const validateSetup = async () => {

@@ -1,5 +1,5 @@
 // The 'bridge' program.
-program vlink_token_bridge_v4.aleo {
+program vlink_token_bridge_v5.aleo {
 
     // Default Aleo Program
     struct AleoProgram {

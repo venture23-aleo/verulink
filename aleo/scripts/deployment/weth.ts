@@ -1,13 +1,13 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_v4Contract } from "../../artifacts/js/vlink_token_service_v4";
-import { Vlink_council_v4Contract } from "../../artifacts/js/vlink_council_v4";
-import { getRegisterToken } from "../../artifacts/js/leo2js/vlink_token_service_council_v4";
+import { Vlink_token_service_v5Contract } from "../../artifacts/js/vlink_token_service_v5";
+import { Vlink_council_v5Contract } from "../../artifacts/js/vlink_council_v5";
+import { getRegisterToken } from "../../artifacts/js/leo2js/vlink_token_service_council_v5";
 import { hashStruct } from "../../utils/hash";
-import { RegisterToken, RegisterTokenLeo } from "../../artifacts/js/types/vlink_token_service_council_v4";
+import { RegisterToken, RegisterTokenLeo } from "../../artifacts/js/types/vlink_token_service_council_v5";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/testdata.data";
-import { Vlink_token_service_council_v4Contract } from "../../artifacts/js/vlink_token_service_council_v4";
+import { Vlink_token_service_council_v5Contract } from "../../artifacts/js/vlink_token_service_council_v5";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
-import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/vlink_token_service_council_v4";
+import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/vlink_token_service_council_v5";
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString() + "field";
@@ -16,9 +16,9 @@ import { getRegisterTokenLeo } from "../../artifacts/js/js2leo/vlink_token_servi
 const mode = ExecutionMode.SnarkExecute;
 export const deployWeth = async (token_name, symbol, decimals, max_supply) => {
 
-  const tokenService = new Vlink_token_service_v4Contract({ mode, priorityFee: 10_000 });
-  const tokenServiceCouncil = new Vlink_token_service_council_v4Contract({ mode, priorityFee: 10_000 })
-  const council = new Vlink_council_v4Contract({ mode, priorityFee: 10_000 });
+  const tokenService = new Vlink_token_service_v5Contract({ mode, priorityFee: 10_000 });
+  const tokenServiceCouncil = new Vlink_token_service_council_v5Contract({ mode, priorityFee: 10_000 })
+  const council = new Vlink_council_v5Contract({ mode, priorityFee: 10_000 });
 
   // Propose wusdc registration
   const proposalId = (parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1);
