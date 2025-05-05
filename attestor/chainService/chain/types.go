@@ -21,7 +21,7 @@ type IClient interface {
 	// Name gives the name of the client
 	Name() string
 	// FeedPacket fetches the packet from the source chain and sends it to the channel `ch`
-	FeedPacket(ctx context.Context, ch chan<- *Packet)
+	FeedPacket(ctx context.Context, ch chan<- *Packet, compCh chan *Packet, retryCh chan *Packet)
 	// GetMissedPacket queries the db-service for information about the packet the attestor
 	// node has to reverify and resign
 	GetMissedPacket(
@@ -58,6 +58,9 @@ type Packet struct {
 	Sequence    uint64         `json:"sequence"`
 	Message     Message        `json:"message"`
 	Height      uint64         `json:"height"`
+	// Instant specify that this packet is delivered instantly. This flag is set true based on
+	// version of the packet
+	Instant bool `json:"instant"`
 	// isMissed specify that this packet was somehow missed and db-service administrator has
 	// requested attestors to re-process it
 	isMissed bool
@@ -69,6 +72,14 @@ func (p *Packet) IsMissed() bool {
 
 func (p *Packet) SetMissed(isMissed bool) {
 	p.isMissed = isMissed
+}
+
+func (p *Packet) SetInstant(isInstant bool) {
+	p.Instant = isInstant
+}
+
+func (p *Packet) GetInstant() bool {
+	return p.Instant
 }
 
 func (p *Packet) GetSha256Hash() string {

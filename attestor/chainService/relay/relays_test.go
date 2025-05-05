@@ -52,7 +52,7 @@ func (f *feeder) SetMetrics(metrics *metrics.PrometheusMetrics) {
 	}
 }
 
-func (f *feeder) FeedPacket(ctx context.Context, pktCh chan<- *chain.Packet) {
+func (f *feeder) FeedPacket(ctx context.Context, pktCh chan<- *chain.Packet, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
 	if f.feed != nil {
 		f.feed()
 	}
@@ -201,7 +201,7 @@ func TestConsumePackets(t *testing.T) {
 		t.Cleanup(func() {
 			cleaner()
 			chainIDToChain = map[string]chain.IClient{}
-			RegisteredCompleteChannels = map[string]chan<- *chain.Packet{}
+			RegisteredCompleteChannels = map[string]chan *chain.Packet{}
 		})
 
 		chainID := big.NewInt(1)
