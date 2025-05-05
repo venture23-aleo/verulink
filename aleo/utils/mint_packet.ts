@@ -1,11 +1,11 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
+import { Vlink_token_service_v5Contract } from "../artifacts/js/vlink_token_service_v5";
 import { evm2AleoArrWithoutPadding } from "./ethAddress";
 import { ALEO_ZERO_ADDRESS, wethFeeRelayer, wethPlatformFee, wusdcFeeRelayer, wusdcPlatformFee } from "./testdata.data";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import { decryptToken } from "../artifacts/js/leo2js/token_registry";
 
-const tokenService = new Vlink_token_service_v4Contract({ mode: ExecutionMode.SnarkExecute });
+const tokenService = new Vlink_token_service_v5Contract({ mode: ExecutionMode.SnarkExecute });
 const tokenRegistry = new Token_registryContract({ mode: ExecutionMode.SnarkExecute });
 
 const getPlatformFeeInAmount = (amount: bigint, platform_fee_percentage: number) => {

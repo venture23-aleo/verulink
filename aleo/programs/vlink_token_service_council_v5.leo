@@ -737,79 +737,125 @@ program vlink_token_service_council_v5.aleo
     }
 
 
-    struct UpdateRelayerFee {
+    // struct UpdateRelayerFee {
+    //     id: u32,
+    //     chain_id: u128,
+    //     token_id: field,
+    //     public_fee: u128,
+    //     private_fee: u128
+    // }
+
+    // async transition ts_update_relayer_fee(
+    //     public id: u32,
+    //     public chain_id: u128,
+    //     public token_id: field,
+    //     public public_fee: u128,
+    //     public private_fee: u128,
+    //     public voters: [address; 5],
+    // ) -> Future {
+    //     let proposal: UpdateRelayerFee = UpdateRelayerFee {
+    //         id,
+    //         chain_id,
+    //         token_id,
+    //         public_fee,
+    //         private_fee
+    //     };
+    //     let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+    //     let update_relayer_fee: Future = vlink_token_service_v5.aleo/update_relayer_fee(chain_id, token_id, public_fee, private_fee);
+
+    //     let external_execute: Future = vlink_council_v5.aleo/external_execute(id, proposal_hash, voters);
+
+    //     return finalize_ts_update_RF(update_relayer_fee, external_execute);
+    // }
+
+    // async function finalize_ts_update_RF(f0: Future, f1: Future) {
+    //     f0.await();
+    //     f1.await();
+    // }
+
+
+
+    // struct UpdatePlatformFee {
+    //     id: u32,
+    //     chain_id: u128,
+    //     token_id: field,
+    //     public_fee: u32,
+    //     private_fee: u32
+    // }
+ 
+    // async transition ts_update_platform_fee(
+    //     public id: u32,
+    //     public chain_id: u128,
+    //     public token_id: field,
+    //     public public_fee: u32,
+    //     public private_fee: u32,
+    //     public voters: [address; 5],
+    // ) -> Future {
+    //     let proposal: UpdatePlatformFee = UpdatePlatformFee {
+    //         id,
+    //         chain_id,
+    //         token_id,
+    //         public_fee,
+    //         private_fee
+    //     };
+    //     let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+    //     let update_platform_fee: Future = vlink_token_service_v5.aleo/update_platform_fee(chain_id, token_id, public_fee, private_fee);
+
+    //     let external_execute: Future = vlink_council_v5.aleo/external_execute(id, proposal_hash, voters);
+
+    //     return finalize_ts_update_PF(update_platform_fee, external_execute);
+    // }
+
+    // async function finalize_ts_update_PF(f0: Future, f1: Future) {
+    //     f0.await();
+    //     f1.await();
+    // }
+
+    struct UpdateFees {
         id: u32,
         chain_id: u128,
         token_id: field,
-        public_fee: u128,
-        private_fee: u128
-    }
-
-    async transition ts_update_relayer_fee(
-        public id: u32,
-        public chain_id: u128,
-        public token_id: field,
-        public public_fee: u128,
-        public private_fee: u128,
-        public voters: [address; 5],
-    ) -> Future {
-        let proposal: UpdateRelayerFee = UpdateRelayerFee {
-            id,
-            chain_id,
-            token_id,
-            public_fee,
-            private_fee
-        };
-        let proposal_hash: field = BHP256::hash_to_field(proposal);
-
-        let update_relayer_fee: Future = vlink_token_service_v5.aleo/update_relayer_fee(chain_id, token_id, public_fee, private_fee);
-
-        let external_execute: Future = vlink_council_v5.aleo/external_execute(id, proposal_hash, voters);
-
-        return finalize_ts_update_RF(update_relayer_fee, external_execute);
-    }
-
-    async function finalize_ts_update_RF(f0: Future, f1: Future) {
-        f0.await();
-        f1.await();
-    }
-
-
-
-    struct UpdatePlatformFee {
-        id: u32,
-        chain_id: u128,
-        token_id: field,
-        public_fee: u32,
-        private_fee: u32
+        public_relayer_fee: u128,
+        private_relayer_fee: u128,
+        public_platform_fee: u32,
+        private_platform_fee: u32
     }
  
-    async transition ts_update_platform_fee(
+    async transition ts_update_fees(
         public id: u32,
         public chain_id: u128,
         public token_id: field,
-        public public_fee: u32,
-        public private_fee: u32,
+        public public_relayer_fee: u128,
+        public private_relayer_fee: u128,
+        public public_platform_fee: u32,
+        public private_platform_fee: u32,
         public voters: [address; 5],
     ) -> Future {
-        let proposal: UpdatePlatformFee = UpdatePlatformFee {
+        let proposal: UpdateFees = UpdateFees {
             id,
             chain_id,
             token_id,
-            public_fee,
-            private_fee
+            public_relayer_fee,
+            private_relayer_fee,
+            public_platform_fee,
+            private_platform_fee  
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        let update_platform_fee: Future = vlink_token_service_v5.aleo/update_platform_fee(chain_id, token_id, public_fee, private_fee);
+        let update_relayer_fee: Future = vlink_token_service_v5.aleo/update_relayer_fee(chain_id, token_id, public_relayer_fee, private_relayer_fee);
+
+        let update_platform_fee: Future = vlink_token_service_v5.aleo/update_platform_fee(chain_id, token_id, public_platform_fee, private_platform_fee);
 
         let external_execute: Future = vlink_council_v5.aleo/external_execute(id, proposal_hash, voters);
 
-        return finalize_ts_update_PF(update_platform_fee, external_execute);
+        return finalize_ts_update_PF(update_relayer_fee, update_platform_fee, external_execute);
     }
 
-    async function finalize_ts_update_PF(f0: Future, f1: Future) {
+    async function finalize_ts_update_PF(f0: Future, f1: Future, f2: Future) {
         f0.await();
         f1.await();
+        f2.await();
     }
 }

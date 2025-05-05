@@ -1,5 +1,5 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_council_v4Contract } from "../artifacts/js/vlink_council_v4";
+import { Vlink_council_v5Contract } from "../artifacts/js/vlink_council_v5";
 import { proposeAddAttestor, execAddAttestor } from "../scripts/council/bridge/addAttestor";
 import { proposeRemoveAttestor, execRemoveAttestor } from "../scripts/council/bridge/removeAttestor";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../utils/constants";
 import { execUpdateWithdrawalLimit, proposeUpdateOutPercentage } from "../scripts/council/tokenService/updateOutPercentage";
 
-const council = new Vlink_council_v4Contract({ mode: ExecutionMode.SnarkExecute });
+const council = new Vlink_council_v5Contract({ mode: ExecutionMode.SnarkExecute });
 
 
 const addAttestor = async () => {
