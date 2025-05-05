@@ -120,7 +120,7 @@ describe("Token Bridge ", () => {
     );
   })
 
-  describe.skip("Governance", () => {
+  describe("Governance", () => {
     describe("Pausability", () => {
       test("should not unpause by non-owner", async () => {
         bridge.connect(aleoUser3);
@@ -1203,7 +1203,7 @@ describe("Token Bridge ", () => {
 });
 
 
-describe.skip("Transition Failing Test cases", () => {
+describe("Transition Failing Test cases", () => {
 
   const mode = ExecutionMode.LeoRun;
 

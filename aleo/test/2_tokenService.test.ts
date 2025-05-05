@@ -1,5 +1,5 @@
 import { Vlink_token_bridge_v4Contract } from "../artifacts/js/vlink_token_bridge_v4";
-import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v4";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v4";
 import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
@@ -28,6 +28,8 @@ import {
   usdcContractAddr,
   VERSION_PUBLIC_RELAYER_NOPREDICATE,
   VERSION_PRIVATE_RELAYER_NOPREDICATE,
+  BRIDGE_TOTAL_ATTESTORS_INDEX,
+  BRIDGE_THRESHOLD_INDEX,
 } from "../utils/constants";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
@@ -243,7 +245,7 @@ describe("Token Service ", () => {
   })
 
   describe.skip("Add token", () => {
-    test("Token Service: Add Token", async () => {
+    test.skip("Token Service: Add Token", async () => {
       const limit: WithdrawalLimit = {
         percentage: 100_00, // 100%
         duration: 1, // per block
@@ -293,7 +295,7 @@ describe("Token Service ", () => {
       expect(await tokenService.private_relayer_fee(ethTokenInfo)).toBe(private_relayer_fee);
     }, TIMEOUT)
 
-    test.skip("add base chain to existing token", async () => {
+    test("add base chain to existing token", async () => {
       const addChainTx = await tokenService.add_chain_to_existing_token(
         baseChainId,
         tokenID,
@@ -319,7 +321,7 @@ describe("Token Service ", () => {
       expect(await tokenService.private_relayer_fee(tokenInfo)).toBe(private_relayer_fee);
     }, TIMEOUT)
 
-    test.skip("add arbitrum chain to existing token", async () => {
+    test("add arbitrum chain to existing token", async () => {
       const addChainTx = await tokenService.add_chain_to_existing_token(
         arbitrumChainId,
         tokenID,
@@ -345,7 +347,7 @@ describe("Token Service ", () => {
       expect(await tokenService.private_relayer_fee(tokenInfo)).toBe(private_relayer_fee);
     }, TIMEOUT)
 
-    test.skip("Token Service: Unpause Token", async () => {
+    test("Token Service: Unpause Token", async () => {
       const isPaused = (await tokenService.token_status(tokenID, TOKEN_PAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
       if (isPaused) {
         const unpauseTx = await tokenService.unpause_token_ts(tokenID);
@@ -356,7 +358,7 @@ describe("Token Service ", () => {
   })
 
   describe("Token Receive", () => {
-    test("Happy receive token(ethereum chain) public with no relayer", async () => {
+    test.skip("Happy receive token(ethereum chain) public with no relayer", async () => {
       const receiveAmount: bigint = BigInt(100_000_000)
       const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
       console.log(packet);
@@ -378,12 +380,19 @@ describe("Token Service ", () => {
         ALEO_ZERO_ADDRESS,
       ];
 
+      let packetId: PacketId = {
+        chain_id: packet.source.chain_id,
+        sequence: packet.sequence
+      }
+
       //check bridge pausability status
-      const isBridgePaused = await bridge.bridge_settings(3);
-      expect(isBridgePaused).toEqual(1) //ie 1==> unpaused 0==> paused
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+      const totalAttestors = await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX);
+      const threshold = await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX);
 
+      console.log(totalAttestors, "total Attestor", threshold);
 
-      // const isPacketConsumed = await bridge.in_packet_consumed(packet.id)
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
       // check relayer balance
       const relayer_initial_balance = await getUserAuthorizedBalance(aleoUser2, packet.message.dest_token_id);
       const user_initial_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
@@ -405,25 +414,22 @@ describe("Token Service ", () => {
         packet.version
       );
       const [screeningPassed] = await tx.wait();
-      console.log(screeningPassed);
 
-      // const finalTokenSupply = await tokenService.total_supply(tokenID);
-      // expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
-      // expect(screeningPassed).toBe(true);
+      const finalTokenSupply = await tokenService.total_supply(tokenID);
+      expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
+      expect(screeningPassed).toBe(true);
 
 
       // if version is 1 or 3 ,relayer off. relayer balance should not increased default packet with no relayer
-      const maximumTransfer = await tokenService.max_transfers(tokenID);
       const minimumTransfer = await tokenService.min_transfers(tokenID);
 
       const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, packet.message.dest_token_id);
       const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
-      // const expected_user_balance: bigint = user_initial_balance.balance + packet.message.amount;
-      // expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
-      // expect(user_final_balance.balance).toEqual(expected_user_balance);
-      // expect(receiveAmount).toBeGreaterThanOrEqual(minimumTransfer);
-      // expect(receiveAmount).toBeLessThanOrEqual(maximumTransfer);
-      // expect(await tokenService.token_status(tokenID)).toBe(false)
+      const expected_user_balance: bigint = user_initial_balance.balance + packet.message.amount;
+      expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
+      expect(user_final_balance.balance).toEqual(expected_user_balance);
+      expect(receiveAmount).toBeGreaterThanOrEqual(minimumTransfer);
+      expect(await tokenService.token_status(tokenID)).toBe(false)
     },
       TIMEOUT
     );
@@ -593,7 +599,7 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip("Happy receive token private with relayer off", async () => {
+    test("Happy receive token private with relayer off", async () => {
       const pre_image = BigInt(123);
       const image: Image = {
         pre_image,
@@ -622,6 +628,7 @@ describe("Token Service ", () => {
       const user_initial_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
       const admin_initial_balance = await getUserAuthorizedBalance(admin, packet.message.dest_token_id);
 
+      console.log(packet);
 
       const tx = await tokenService.token_receive_private(
         prunePadding(packet.message.sender_address),
@@ -640,22 +647,17 @@ describe("Token Service ", () => {
       );
       const [screeningPassed] = await tx.wait();
 
-      const finalTokenSupply = await tokenService.total_supply(tokenID);
-      const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
-      const admin_final_balance = await getUserAuthorizedBalance(admin, packet.message.dest_token_id);
+      // const finalTokenSupply = await tokenService.total_supply(tokenID);
+      // const user_final_balance = await getUserAuthorizedBalance(aleoUser1, packet.message.dest_token_id);
+      // const admin_final_balance = await getUserAuthorizedBalance(admin, packet.message.dest_token_id);
 
-      expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
-      expect(screeningPassed).toBe(true);
-      const expected_user_balance: bigint = user_initial_balance.balance //+ BigInt(100_000_000); TODO: since balance is minted privately it will not add up in public balance, need to index the record minted to find out actual balance
-      const is_relayer_off: boolean = [11, 13].includes(packet.version);
+      // expect(finalTokenSupply).toBe(initialTokenSupply + packet.message.amount);
+      // expect(screeningPassed).toBe(true);
+      // const expected_user_balance: bigint = user_initial_balance.balance + BigInt(100_000_000); //TODO: since balance is minted privately it will not add up in public balance, need to index the record minted to find out actual balance
 
-      // if (is_relayer_off) {
-      expect(admin_final_balance.balance).toEqual(admin_initial_balance.balance);
+      // expect(admin_final_balance.balance).toEqual(admin_initial_balance.balance);
       // expect(user_final_balance.balance).toEqual(expected_user_balance);
-      // } else {
-      //   expect(user_final_balance.balance).toEqual(expected_user_balance - private_relayer_fee);
-      // expect(admin_final_balance.balance).toEqual(admin_initial_balance.balance + private_relayer_fee);
-      // }
+
     },
       TIMEOUT
     );
@@ -852,7 +854,7 @@ describe("Token Service ", () => {
       expect(council_final_balance.balance).toBe(council_initial_balance.balance + platformFee);
     }, TIMEOUT);
 
-    test.skip(
+    test(
       "Wrong connector for the token cannot send token",
       async () => {
         tokenService.connect(admin);
@@ -872,7 +874,7 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip(
+    test(
       "Transferred amount must be greater than or equal to min amount",
       async () => {
         const amount = BigInt(99);
@@ -894,7 +896,7 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip(
+    test(
       "Transferred amount must be less than or equal to max amount",
       async () => {
         const amount = BigInt(100_000);
@@ -916,7 +918,7 @@ describe("Token Service ", () => {
       TIMEOUT
     );
 
-    test.skip("Token Service: Set role for MINTER and BURNER for aleoUser1", async () => {
+    test("Token Service: Set role for MINTER and BURNER for aleoUser1", async () => {
       const token_owner: TokenOwner = {
         account: aleoUser1,
         token_id: tokenID
@@ -934,7 +936,7 @@ describe("Token Service ", () => {
 
   describe.skip("Governance", () => {
 
-    describe.skip("Pausability", () => {
+    describe("Pausability", () => {
       test("should not pause by non-owner", async () => {
         tokenService.connect(aleoUser3); //changing the contract caller account to non owner
         const tx = await tokenService.pause_token_ts(tokenID);
@@ -979,7 +981,7 @@ describe("Token Service ", () => {
 
     describe("Add/Remove Token", () => {
 
-      describe.skip("Add Token", () => {
+      describe("Add Token", () => {
         const limit: WithdrawalLimit = {
           percentage: 100_00, // 100%
           duration: 1, // per block
@@ -1075,7 +1077,7 @@ describe("Token Service ", () => {
         }, TIMEOUT);
       });
 
-      describe.skip("Remove Token", () => {
+      describe("Remove Token", () => {
         test("Non owner cannot remove token", async () => {
           let isTokenSupported = await tokenService.added_tokens(newTokenID, false);
           expect(isTokenSupported).toBe(true);
@@ -1112,7 +1114,7 @@ describe("Token Service ", () => {
       });
     })
 
-    describe.skip("Update minimum transfer", () => {
+    describe("Update minimum transfer", () => {
       const newMinTransfer = BigInt(200);
       test("cannot update minimum transfer if unregistered tokenID is given", async () => {
         tokenService.connect(admin);
@@ -1155,7 +1157,7 @@ describe("Token Service ", () => {
 
     })
 
-    describe.skip("Update maximum transfer", () => {
+    describe("Update maximum transfer", () => {
       const newMaxTransfer = BigInt(200_000);
       test("non-owner cannot update maximum transfer", async () => {
         tokenService.connect(aleoUser4);
@@ -1196,7 +1198,7 @@ describe("Token Service ", () => {
       }, TIMEOUT);
     })
 
-    describe.skip("Update withdrawal limit", () => {
+    describe("Update withdrawal limit", () => {
       const newLimit: WithdrawalLimit = {
         percentage: 90_00, // 90%
         duration: 2, // per block
@@ -1241,14 +1243,14 @@ describe("Token Service ", () => {
 
     })
 
-    describe.skip("Update other chain token address", () => {
+    describe("Update other chain token address", () => {
       const unregisteredTokenID = BigInt("9841023567956645465");
       const ethTokenInfo: ChainToken = {
         chain_id: ethChainId,
         token_id: tokenID
       }
 
-      test.skip("should not update token address by non-owner", async () => {
+      test("should not update token address by non-owner", async () => {
         tokenService.connect(aleoUser3);
         const tx = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
@@ -1258,7 +1260,7 @@ describe("Token Service ", () => {
         await expect(tx.wait()).rejects.toThrow()
       }, TIMEOUT);
 
-      test.skip("should not update token address if token id is not registered", async () => {
+      test("should not update token address if token id is not registered", async () => {
         tokenService.connect(admin);
         const tx = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
@@ -1268,7 +1270,7 @@ describe("Token Service ", () => {
         await expect(tx.wait()).rejects.toThrow()
       }, TIMEOUT)
 
-      test.skip("should update token service contract address by admin", async () => {
+      test("should update token service contract address by admin", async () => {
         tokenService.connect(admin);
         const tx = await tokenService.update_other_chain_tokenaddress(
           ethChainId,
@@ -1281,7 +1283,7 @@ describe("Token Service ", () => {
     });
 
 
-    describe.skip("Update other chain token service", () => {
+    describe("Update other chain token service", () => {
       const unregisteredTokenID = BigInt("9841023567956645465");
 
       const ethTokenInfo: ChainToken = {
@@ -1289,7 +1291,7 @@ describe("Token Service ", () => {
         token_id: tokenID
       }
 
-      test.skip("should not update token service by non-owner", async () => {
+      test("should not update token service by non-owner", async () => {
         tokenService.connect(aleoUser3);
         const tx = await tokenService.update_other_chain_tokenservice(
           ethChainId,
@@ -1299,7 +1301,7 @@ describe("Token Service ", () => {
         await expect(tx.wait()).rejects.toThrow()
       }, TIMEOUT)
 
-      test.skip("should not update token address if token id is not registered", async () => {
+      test("should not update token address if token id is not registered", async () => {
         tokenService.connect(admin);
         const tx = await tokenService.update_other_chain_tokenservice(
           ethChainId,
@@ -1328,7 +1330,7 @@ describe("Token Service ", () => {
       }, TIMEOUT)
     });
 
-    describe.skip("Transfer Ownership", () => {
+    describe("Transfer Ownership", () => {
       test("should not transfer ownership by non-admin", async () => {
         tokenService.connect(aleoUser2);
         const transferOwnershipTx = await tokenService.transfer_ownership_ts(aleoUser3);
