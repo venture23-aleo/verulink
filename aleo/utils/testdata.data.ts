@@ -19,7 +19,7 @@ export const councilThreshold = 1;
 // vusdc related data
 export const wusdcMinTransfer = BigInt(1_000_000);
 export const wusdcMaxTransfer = BigInt("3402823669209384634633746074317682114");
-export const wusdcOutgoingPercentage = 10_00 // 10%
+export const wusdcOutgoingPercentage = 10_000 // 10%
 export const wusdcTimeframe = 3_600; // per 28_800 block
 export const wusdcMaxNoCap = BigInt(100_000_000_000);
 export const wusdcName = BigInt('3707987077795');
@@ -42,7 +42,7 @@ export const wusdcPlatformFeePrivate = 2_000;
 // vusdt related data
 export const wusdtMinTransfer = BigInt(1_000_000);
 export const wusdtMaxTransfer = BigInt("3402823669209384634633746074317682114");
-export const wusdtOutgoingPercentage = 10_00 // 10%
+export const wusdtOutgoingPercentage = 10_000 // 10%
 export const wusdtTimeframe = 3_600; // per 28_800 block
 export const wusdtMaxNoCap = BigInt(100_000_000_000);
 export const wusdtName = BigInt('3707987077965');
@@ -62,7 +62,7 @@ export const wusdtPlatformFeePrivate = 2_000;
 // veth related data
 export const wethMinTransfer = BigInt(1_000_000_000_000_000); //0.0005 = 1*10^15
 export const wethMaxTransfer = BigInt("3402823669209384634633746074317682114");
-export const wethOutgoingPercentage = 10_00 // 10%
+export const wethOutgoingPercentage = 10_000 // 10%
 export const wethTimeframe = 3_600; // per block
 export const wethMaxNoCap = BigInt("40000000000000000000"); // 40 eth
 export const wethName = BigInt('14473841365');
