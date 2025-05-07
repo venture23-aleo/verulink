@@ -1,8 +1,8 @@
-# mTLS Architecture and Implemenation
+# mTLS Architecture and Implementation
 
 This document outlines the implementation of Mutual TLS (mTLS) for secure communication between the attestor and db-service. mTLS is a method of mutual authentication which ensures that the parties at each end of a network connection are who they claim to be by verifying that they both have the correct private key.
 
-In the `attestor` service, mTLS is implemented in the communication between between the `db-service` and the `chain service` inside the attestor. The db-service issues certificates for all attestors and the attestor implements these certificates for `GET` and `POST` requests on the db-service. The mTLS is implemented in Nginx where the db-service will be frontend. The client validation is done by Nginx.
+In the `attestor` service, mTLS is implemented in the communication between between the `db-service` and the `chain service` inside the attestor. The db-service issues certificates for all attestors and the attestor implements these certificates for `GET` and `POST` requests on the db-service. The mTLS is implemented in Nginx where the db-service is kind of proxied or as a backend . The client validation is done by Nginx.
 
 For implementation of mTLS, the attestor service should have the following certificates:
 - Certificate Authority(CA) certificate
@@ -17,8 +17,8 @@ When the client(attestor) needs to communicate a message with the server(db-serv
 
 ## Certificates and Key Generation 
 
-Currently we create and distribute the key and certificate for each attestor client.
-Alternatively, attestor clients can generate their own key and create a csr(signing request) and send it to us. We  will them issue the certificate to them. But to enforce the client key rotation we ourselves are providing all the keys and certificate to all the attestors
+
+Attestor clients can generate their own key and create a csr(signing request) and send it to Venture23 team. The team will them issue the certificate to them.
 
 The general process of certificate generation is(using openssl tool):
 
