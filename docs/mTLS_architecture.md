@@ -2,7 +2,7 @@
 
 This document outlines the implementation of Mutual TLS (mTLS) for secure communication between the attestor and db-service. mTLS is a method of mutual authentication which ensures that the parties at each end of a network connection are who they claim to be by verifying that they both have the correct private key.
 
-In the `attestor` service, mTLS is implemented in the communication between between the `db-service` and the `chain service` inside the attestor. The db-service issues certificates for all attestors and the attestor implements these certificates for `GET` and `POST` requests on the db-service. The mTLS is implemented in Nginx where the db-service is kind of proxied or as a backend . The client validation is done by Nginx.
+In the `attestor` service, mTLS is implemented in the communication between between the `db-service` and the `chain service` inside the attestor. The db-service issues certificates for all attestors and the attestor implements these certificates for `GET` and `POST` requests on the db-service. The mTLS is implemented in Nginx where the db-service is proxied as a backend . The client validation is done by Nginx.
 
 For implementation of mTLS, the attestor service should have the following certificates:
 - Certificate Authority(CA) certificate
