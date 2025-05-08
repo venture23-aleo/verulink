@@ -4,12 +4,9 @@ This document outlines the implementation of Mutual TLS (mTLS) for secure commun
 
 In the `attestor` service, mTLS is implemented in the communication between between the `db-service` and the `chain service` inside the attestor. The db-service issues certificates for all attestors and the attestor implements these certificates for `GET` and `POST` requests on the db-service. The mTLS is implemented in Nginx where the db-service is proxied as a backend . The client validation is done by Nginx.
 
-For implementation of mTLS, the attestor service should have the following certificates:
+For implementation of mTLS, the attestor service should have the following files:
 - Certificate Authority(CA) certificate
-- Attestor public key 
-- Attestor private key
-
-During the initialization of the attestor service, while establishing connection with the db-service,  the Certificate Authority (CA) certificate is utilized. Concurrently, the attestor's public and private keys are loaded to acquire the attestor's certificate. These certificates are configured to be transmitted to the db-service during the mTLS handshake.
+- Attestor Certificate
 
 When the client(attestor) needs to communicate a message with the server(db-service), the mTLS handshake is triggered. In this process, the server presents its certificate to the client and client verifies the certificate. Once the server's certificate is verified, the client sends over its certificate to the server. After successful verification from the server, the mTLS handshake ends and data communication is initiated. The same process shown in the diagram below.
 ![mTLS Architecture](images/mTLSArch.png)
