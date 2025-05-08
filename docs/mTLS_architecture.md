@@ -7,6 +7,7 @@ In the `attestor` service, mTLS is implemented in the communication between betw
 For implementation of mTLS, the attestor service should have the following files:
 - Certificate Authority(CA) certificate
 - Attestor Certificate
+- Attestor private key
 
 When the client(attestor) needs to communicate a message with the server(db-service), the mTLS handshake is triggered. In this process, the server presents its certificate to the client and client verifies the certificate. Once the server's certificate is verified, the client sends over its certificate to the server. After successful verification from the server, the mTLS handshake ends and data communication is initiated. The same process shown in the diagram below.
 ![mTLS Architecture](images/mTLSArch.png)
