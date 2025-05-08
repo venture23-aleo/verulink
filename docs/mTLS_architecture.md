@@ -16,7 +16,7 @@ When the client(attestor) needs to communicate a message with the server(db-serv
 ## Certificates and Key Generation 
 
 
-Attestor clients can generate their own key and create a csr(signing request) and send it to Venture23 team. The team will them issue the certificate to them.
+Attestor clients can generate their own key and create a csr(certificate signing request) and send it to Venture23 team. The team will issue the certificate to them.
 
 The general process of certificate generation is(using openssl tool):
 
