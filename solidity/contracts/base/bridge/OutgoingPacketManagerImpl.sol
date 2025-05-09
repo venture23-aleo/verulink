@@ -22,7 +22,6 @@ abstract contract OutgoingPacketManagerImpl {
     /// @dev Sends an outgoing packet by updating its version, assigning a sequence number, storing its hash, and emitting a PacketDispatched event
     /// @param packet The OutPacket struct containing the outgoing packet information
     function _sendMessage(PacketLibrary.OutPacket memory packet) internal virtual {
-        packet.version = 1;
         packet.sequence = ++sequence;
         outgoingPackets[packet.sequence] = packet.hash();
         emit PacketDispatched(packet);

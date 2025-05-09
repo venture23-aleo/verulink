@@ -73,8 +73,8 @@ library PacketLibrary {
             packet.destTokenService.addr,
             packet.message.senderAddress,
             packet.message.destTokenAddress,
-                packet.message.amount, 
-                packet.message.receiverAddress,
+            packet.message.amount, 
+            packet.message.receiverAddress,
             packet.height)
         );
     }

@@ -8,44 +8,40 @@ on:
 
 jobs:
   build:
-    name: build
+    name: Build
     runs-on: ubuntu-latest
     steps:
-      # Install and setup go
+      # Install and setup Go
       - name: Set up Go 1.19
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.19
+          cache: true  # Enable automatic Go module caching
 
-      # setup gopath
-      - name: Set PATH
-        run: |
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-        shell: bash
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # checkout relayer
-      - name: checkout relayer
-        uses: actions/checkout@v2
-
-      # setup cache
-      - uses: actions/cache@v1
+      # Setup cache for Go modules
+      - name: Cache Go modules
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-
+            go-mod-${{ runner.os }}-
 
-      # unit tests
-      - name: run unit tests
+      # Run unit tests
+      - name: Run unit tests
         run: make test
-        
-      # build binary
-      - name: build binary and move to upload location
+
+      # Build binary
+      - name: Build binary
         run: make build
 
-      # upload resulting binaries
-      - name: upload binaries
-        uses: actions/upload-artifact@v1
+      # Upload resulting binaries
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
         with:
           name: aleo
           path: ./build/aleo

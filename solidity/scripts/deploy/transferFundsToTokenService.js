@@ -4,6 +4,8 @@ const {ethers} = hardhat;
 import * as dotenv from "dotenv";
 import {BigNumber} from 'ethers';
 
+
+
 dotenv.config();
 
 async function main() {
@@ -20,21 +22,29 @@ async function main() {
     const usdtTokenAddress = await ethers.getContractFactory("USDTMock");
     const usdtTokenContract = new ethers.Contract(usdtToken, usdtTokenAddress.interface.format(), deployerSigner);
 
-    const ERC20TokenService = await ethers.getContractFactory("TokenService");
+    const ERC20TokenService = await ethers.getContractFactory("TokenServiceV3");
     const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
     const TokenServiceABI = ERC20TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, TokenServiceABI, deployerSigner);
 
     console.log("Transfering USDC to tokenservice...");
-    const receiver = "aleo1hkjqvh3qn4q3lr2sx5wqkt57c7heq826583duc6nlhfctkheyu8sf2qknh";
-    await usdcTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("900000000000")); // approving 900K USDC to tokenservice
-    await usdtTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("900000000000")); // approving 900K USDT to tokenservice
+    let receiver = "aleo1wfaqpfc57m0wxmr9l6r8a5g95c0cthe54shzmcyu6wf6tqvady9syt27xt";
 
-    await TokenServiceContract["transfer(address,uint256,string)"](usdcToken, BigNumber.from("900000000000"), receiver, {gasLimit: 1000000});
-    await TokenServiceContract["transfer(address,uint256,string)"](usdtToken, BigNumber.from("900000000000"), receiver, {gasLimit: 1000000});
+    await usdcTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("100000000")); // approving USDC to tokenservice
+    await usdtTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("100000000")); // approving USDT to tokenservice
+    
+    await TokenServiceContract["transfer(address,uint256,string)"](usdcToken, BigNumber.from("2000000"), receiver, {gasLimit: 10000000});
+    await TokenServiceContract["transfer(address,uint256,string)"](usdtToken, BigNumber.from("100000"), receiver, {gasLimit: 1000000});
     await TokenServiceContract["transfer(string)"](receiver, { value: ethers.utils.parseEther("0.01"),  gasLimit:1000000 });
 
     console.log("USDC transferred successfully!!!");
+
+    // receiver = "aleo1eansky62w3nex5fyt3u7ppk9uea9ys25v08x6qt6tfa63xtdtgrs5kaz0e";
+    // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdcToken, BigNumber.from("2000000"), receiver, {gasLimit: 1000000});
+    // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdtToken, BigNumber.from("1000000"), receiver, {gasLimit: 1000000});
+    // await TokenServiceContract["privateTransfer(string)"](receiver, { value: ethers.utils.parseEther("0.1"),  gasLimit:1000000 });
+
+    // console.log("USDC transferred privately successfully!!!");
 }
 
 main()
