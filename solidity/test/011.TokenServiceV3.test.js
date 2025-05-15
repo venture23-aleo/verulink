@@ -30,8 +30,8 @@ const ALEO_CHAINID = 2;
 
 // Define the test suite
 describe('TokenService', () => {
-    let deployer, proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, TokenServiceImpl, TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken, proxiedEthVaultService;
-    let blackListProxy, PredicateManager, predicateManager;
+    let deployer, proxiedHolding, wrongPacket, attestor, attestor1, inPacket, Proxied, lib, aleolib, proxy, bridge, proxiedBridge, initializeData, ERC20TokenBridge, erc20TokenBridge, owner, proxiedV1, TokenService, TokenServiceImpl, TokenServiceImplAddr, signer, USDCMock, usdcMock, USDTMock, usdTMock, chainId, other, UnSupportedToken, unsupportedToken, proxiedEthVaultService, feeCollector, feeCollectorImpl;
+    let blackListProxy, PredicateManager, predicateManager, FeeCollector;
     let erc20VaultServiceProxy;
     let EthVaultServiceImpl, ethVaultServiceInstance, EthVaultServiceProxy;
     let ERC20TokenServiceImpl;
@@ -107,7 +107,7 @@ describe('TokenService', () => {
             proxiedEthVaultService = EthVaultServiceImpl.attach(ethVaultServiceProxy.address);
         }
 
-         PredicateManager = await ethers.getContractFactory("PredicateManager");
+        PredicateManager = await ethers.getContractFactory("PredicateManager");
         predicateManager = await PredicateManager.deploy();
         await predicateManager.deployed();
 
@@ -130,6 +130,15 @@ describe('TokenService', () => {
         await (await proxiedBridge.connect(owner).addTokenService(proxiedV1.address)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2)).wait();
+
+        FeeCollector = await ethers.getContractFactory("FeeCollector");
+        feeCollectorImpl = await FeeCollector.deploy();
+        initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize", [proxiedV1.address, owner.address]);
+        proxy = await Proxied.deploy(feeCollectorImpl.address, initializeData);
+        await proxy.deployed();
+        feeCollector = FeeCollector.attach(proxy.address);
+
+        await proxiedV1.connect(owner).setFeeCollector(feeCollector.address);
 
 
         inPacket = [
@@ -159,6 +168,7 @@ describe('TokenService', () => {
     // // Test for transfer
     it('should transfer USDC', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
+        console.log(await usdcMock.balanceOf(other.address));
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
         await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
@@ -176,11 +186,11 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
     });
 
-    // // Test for transfer
+    // Test for transfer
     it('should transfer USDC with platform fees deducted', async () => {
-        await (await proxiedV1.connect(owner).setPlatformFees(usdcMock.address, 5000)).wait();
+        await (await feeCollector.connect(owner).setPlatformFees(usdcMock.address, 5000,6000)).wait();
 
-        assert.equal(await proxiedV1.platformFees(usdcMock.address), 5000);
+        assert.equal(await feeCollector.platformFees(usdcMock.address), 5000);
 
         await (await usdcMock.mint(other.address, 150)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
@@ -188,56 +198,87 @@ describe('TokenService', () => {
         await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
             (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
         
-        expect(await proxiedV1.collectedFees(usdcMock.address)).to.be.equal(5);
-        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
+        expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(5);
+        console.log("feeCollector balance: ", await usdcMock.balanceOf(feeCollector.address));
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(95);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
 
-        await (await proxiedV1.connect(owner).withdrawProtocolFees(usdcMock.address, owner.address)).wait();
+        await (await feeCollector.connect(owner).withdrawProtocolFees(usdcMock.address, owner.address)).wait();
 
-        expect(await proxiedV1.collectedFees(usdcMock.address)).to.be.equal(0);
+        expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(0);
+        expect(await usdcMock.balanceOf(owner.address)).to.be.equal(5);
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(95);
+    });
+
+    // // Test for transfer
+    it('should private transfer USDC with additional private platform fees deducted', async () => {
+        await (await feeCollector.connect(owner).setPlatformFees(usdcMock.address, 5000,6000)).wait();
+
+        assert.equal(await feeCollector.platformFees(usdcMock.address), 5000);
+
+        await (await usdcMock.mint(other.address, 150)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 100)).wait();
+
+        await (await proxiedV1.connect(other)["privateTransfer(address,uint256,string)"]
+            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        
+        expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(6);
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(94);
+        expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+
+        await (await feeCollector.connect(owner).withdrawProtocolFees(usdcMock.address, owner.address)).wait();
+
+        expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(0);
+        expect(await usdcMock.balanceOf(owner.address)).to.be.equal(6);
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(94);
     });
 
     // // Test for transfer with platform Fees
     it('should transfer eth with platform fees deducted', async () => {
-        await (await proxiedV1.connect(owner).setPlatformFees(ADDRESS_ONE, 5000)).wait();
-        assert.equal(await proxiedV1.platformFees(ADDRESS_ONE), 5000);
+        await proxiedV1.connect(owner).addWhitelistAddress(feeCollector.address);
 
-        await (await proxiedV1.connect(owner)["transfer(string)"]
+        expect(await proxiedV1.isWhitelistedSender(feeCollector.address)).to.be.equal(true);
+
+        await (await feeCollector.connect(owner).setPlatformFees(ADDRESS_ONE, 1000, 2000)).wait();
+        assert.equal(await feeCollector.platformFees(ADDRESS_ONE), 1000);
+        assert.equal(await feeCollector.privatePlatformFees(ADDRESS_ONE), 2000);
+
+        await (await proxiedV1.connect(other)["transfer(string)"]
         ("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", 
-            { value: ethers.utils.parseEther("1")})).wait();
-        expect(await proxiedV1.collectedFees(ADDRESS_ONE)).to.be.equal(ethers.utils.parseEther("0.05"));
+            { value: ethers.utils.parseEther("10")})).wait();
+        
+        console.log("feeCollector balance: ", await ethers.provider.getBalance(feeCollector.address));
+        
+        expect(await ethers.provider.getBalance(feeCollector.address)).to.be.equal(ethers.utils.parseEther("0.1"));
+        expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(ethers.utils.parseEther("9.9"));
 
-        expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(ethers.utils.parseEther("1"));
+        await (await feeCollector.connect(owner).withdrawProtocolFees(ADDRESS_ONE, owner.address)).wait();
 
-        await (await proxiedV1.connect(owner).withdrawProtocolFees(ADDRESS_ONE, owner.address)).wait();
-
-        expect(await proxiedV1.collectedFees(ADDRESS_ONE)).to.be.equal(ethers.utils.parseEther("0"));
-        expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(ethers.utils.parseEther("0.95"));
+        expect(await ethers.provider.getBalance(feeCollector.address)).to.be.equal(ethers.utils.parseEther("0"));
+        expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(ethers.utils.parseEther("9.9"));
     });
 
     // // Test for transfer
     it('should transfer USDC with platform fees deducted', async () => {
-        await (await proxiedV1.connect(owner).setPlatformFees(usdcMock.address, 5000)).wait();
+        await (await feeCollector.connect(owner).setPlatformFees(usdcMock.address, 100,175)).wait();
 
-        assert.equal(await proxiedV1.platformFees(usdcMock.address), 5000);
+        assert.equal(await feeCollector.platformFees(usdcMock.address), 100);
 
-        await (await usdcMock.mint(other.address, 150)).wait();
-        await (await usdcMock.connect(other).approve(proxiedV1.address, 150)).wait();
+        await (await usdcMock.mint(other.address, 1500)).wait();
+        await (await usdcMock.connect(other).approve(proxiedV1.address, 1500)).wait();
 
-        let tx = await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
-            (usdcMock.address, 100, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
+        await (await proxiedV1.connect(other)["transfer(address,uint256,string)"]
+            (usdcMock.address, 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27")).wait();
         
-        // console.log("tx = ", tx);
-        
-        expect(await proxiedV1.collectedFees(usdcMock.address)).to.be.equal(5);
-        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(100);
-        expect(await usdcMock.balanceOf(other.address)).to.be.equal(50);
+        expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(1);
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(999);
+        expect(await usdcMock.balanceOf(other.address)).to.be.equal(500);
 
-        await (await proxiedV1.connect(owner).withdrawProtocolFees(usdcMock.address, owner.address)).wait();
+        await (await feeCollector.connect(owner).withdrawProtocolFees(usdcMock.address, owner.address)).wait();
 
-        expect(await proxiedV1.collectedFees(usdcMock.address)).to.be.equal(0);
-        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(95);
+        expect(await usdcMock.balanceOf(owner.address)).to.be.equal(1);
+        expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(0);
+        expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(999);
     });
 
     it("should transfer ERC20 tokens for non executor packets", async function () {
@@ -275,7 +316,7 @@ describe('TokenService', () => {
 
 
   it("should transfer ERC20 tokens deducting the fees to executor wallet", async function () {
-    await (await proxiedV1.connect(owner).setExecutorFees(usdcMock.address, 1)).wait();
+    await (await feeCollector.connect(owner).setRelayerFees(usdcMock.address, 1)).wait();
     // Mock packet and signatures
     const packet = [
         2,
