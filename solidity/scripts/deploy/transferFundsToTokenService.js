@@ -28,19 +28,19 @@ async function main() {
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, TokenServiceABI, deployerSigner);
 
     console.log("Transfering USDC to tokenservice...");
-    let receiver = "aleo1wfaqpfc57m0wxmr9l6r8a5g95c0cthe54shzmcyu6wf6tqvady9syt27xt";
+    let receiver = "aleo19lu7tcg5v3c7ke5gn98h0v7crsn4jcct4uck0u0q9ewuhtc0hc9s0rygds";
 
-    await usdcTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("100000000")); // approving USDC to tokenservice
+    await usdcTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("5000000000")); // approving USDC to tokenservice
     // await usdtTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("100000000")); // approving USDT to tokenservice
     
-    await TokenServiceContract["transfer(address,uint256,string)"](usdcToken, BigNumber.from("2000000"), receiver, {gasLimit: 10000000});
+    await TokenServiceContract["transfer(address,uint256,string)"](usdcToken, BigNumber.from("40000000"), receiver, {gasLimit: 10000000});
     // await TokenServiceContract["transfer(address,uint256,string)"](usdtToken, BigNumber.from("100000"), receiver, {gasLimit: 1000000});
     // await TokenServiceContract["transfer(string)"](receiver, { value: ethers.utils.parseEther("0.01"),  gasLimit:1000000 });
 
-    console.log("USDC transferred successfully!!!");
+    // console.log("USDC transferred successfully!!!");
 
     // receiver = "aleo1eansky62w3nex5fyt3u7ppk9uea9ys25v08x6qt6tfa63xtdtgrs5kaz0e";
-    // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdcToken, BigNumber.from("2000000"), receiver, {gasLimit: 1000000});
+    // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdcToken, BigNumber.from("100000000"), receiver, {gasLimit: 1000000});
     // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdtToken, BigNumber.from("1000000"), receiver, {gasLimit: 1000000});
     // await TokenServiceContract["privateTransfer(string)"](receiver, { value: ethers.utils.parseEther("0.1"),  gasLimit:1000000 });
 

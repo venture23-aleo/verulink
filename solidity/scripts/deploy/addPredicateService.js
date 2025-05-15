@@ -12,6 +12,7 @@ async function main() {
     const ERC20TokenServiceV2 = await ethers.getContractFactory("TokenServiceV2");
     const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
     console.log("deployerSigner= ", deployerSigner.address);
+    console.log("PredicateService= ", process.env.PREDICATE_SERVICE);
     
     console.log("Adding PredicateService to tokenservice...");
     const ERC20TokenServiceABI = ERC20TokenServiceV2.interface.format();
