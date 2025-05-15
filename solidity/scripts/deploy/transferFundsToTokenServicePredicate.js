@@ -22,7 +22,7 @@ async function main() {
     const usdtTokenAddress = await ethers.getContractFactory("USDTMock");
     const usdtTokenContract = new ethers.Contract(usdtToken, usdtTokenAddress.interface.format(), deployerSigner);
 
-    const ERC20TokenService = await ethers.getContractFactory("TokenServiceV2");
+    const ERC20TokenService = await ethers.getContractFactory("TokenServiceV3");
     const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
     const TokenServiceABI = ERC20TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, TokenServiceABI, deployerSigner);
@@ -30,8 +30,8 @@ async function main() {
     const predicateServiceAddress=process.env.PREDICATE_SERVICE;
 
     console.log("Transfering USDC to tokenservice...");
-    const transferAmount = 100000000;
-    const receiver = "aleo1hkjqvh3qn4q3lr2sx5wqkt57c7heq826583duc6nlhfctkheyu8sf2qknh";
+    const transferAmount = 50000000;
+    const receiver = "aleo19lu7tcg5v3c7ke5gn98h0v7crsn4jcct4uck0u0q9ewuhtc0hc9s0rygds";
     const selectedToken = {
         isNative: false, // Set to true if the token is native (ETH), false otherwise
         tokenAddress: usdcToken
