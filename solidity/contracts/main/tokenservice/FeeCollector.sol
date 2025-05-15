@@ -83,6 +83,14 @@ contract FeeCollector is Initializable, AccessControlUpgradeable {
     /// @notice Function that allows the contract to receive ETH
     receive() external payable virtual onlyRole(TOKEN_SERVICE_ROLE) {}
 
+    function collectedFees(address _addr) external view returns (uint256) {
+        if (_addr == address(1)) {
+            return address(this).balance;
+        } else {
+            return IIERC20(_addr).balanceOf(address(this));
+        }
+    }
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
