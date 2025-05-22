@@ -208,12 +208,12 @@ describe("Token Service ", () => {
     }, TIMEOUT)
 
     test("Token Service: Initialize", async () => {
-      const threshold = 1;
       const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
       console.log("is sevice initialized: ", isTokenServiceInitialized);
       if (!isTokenServiceInitialized) {
         const tx = await tokenService.initialize_ts(admin);
         await tx.wait();
+        // TODO: check mapping
       }
     }, TIMEOUT);
 
@@ -1097,6 +1097,7 @@ describe("Token Service ", () => {
 
           isTokenSupported = await tokenService.added_tokens(newTokenID, false);
           expect(isTokenSupported).toBe(false);
+          // todo: check all the mapping
         },
           TIMEOUT
         );
@@ -1205,6 +1206,8 @@ describe("Token Service ", () => {
         threshold_no_limit: BigInt(200)
       };
 
+      // todo: add test cases of cannnot update if token isnt exist
+
       test("should update withdrawal by admin", async () => {
         tokenService.connect(admin);
         const tx = await tokenService.update_withdrawal_limit(
@@ -1281,6 +1284,8 @@ describe("Token Service ", () => {
         expect(await tokenService.other_chain_token_address(ethTokenInfo)).toStrictEqual(evm2AleoArr(ethTsRandomContractAddress2))
       }, TIMEOUT)
     });
+
+    // TODO: does not  have test of remove_other_chain_addresses
 
 
     describe("Update other chain token service", () => {

@@ -78,12 +78,12 @@ const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString() + "u128", 'fie
 const weth_id = leo2js.field(hash('bhp256', wethName.toString() + "u128", 'field'));
 
 const setup = async () => {
-  await deployMainPrograms(
-    initialAttestors,
-    initialCouncilMembers,
-    councilThreshold,
-    councilThreshold
-  );
+  // await deployMainPrograms(
+  //   initialAttestors,
+  //   initialCouncilMembers,
+  //   councilThreshold,
+  //   councilThreshold
+  // );
   // Bridge: Add ethereum chain
   const addChainProposalId = await proposeAddChain(ethChainId);
   await execAddChain(addChainProposalId, ethChainId);
@@ -167,8 +167,8 @@ async function wusdcSetupAndInit() {
     arbitrumTsContractAddr,
     arbitrumUsdcContractAddr,
     wusdcPlatformFeePublic,
-    wusdcFeeRelayerPublic,
     wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPublic,
     wusdcFeeRelayerPrivate
   );
   await execAddChainToToken(
@@ -178,8 +178,8 @@ async function wusdcSetupAndInit() {
     arbitrumTsContractAddr,
     arbitrumUsdcContractAddr,
     wusdcPlatformFeePublic,
-    wusdcFeeRelayerPublic,
     wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPublic,
     wusdcFeeRelayerPrivate
   );
 
@@ -190,8 +190,8 @@ async function wusdcSetupAndInit() {
     ethHoleskyTsContractAddr,
     ethHoleskyUsdcContractAddr,
     wusdcPlatformFeePublic,
-    wusdcFeeRelayerPublic,
     wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPublic,
     wusdcFeeRelayerPrivate
   );
   await execAddChainToToken(
@@ -201,8 +201,8 @@ async function wusdcSetupAndInit() {
     ethHoleskyTsContractAddr,
     ethHoleskyUsdcContractAddr,
     wusdcPlatformFeePublic,
-    wusdcFeeRelayerPublic,
     wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPublic,
     wusdcFeeRelayerPrivate
   );
 
@@ -213,8 +213,8 @@ async function wusdcSetupAndInit() {
     baseTsContractAddr,
     baseUsdcContractAddr,
     wusdcPlatformFeePublic,
-    wusdcFeeRelayerPublic,
     wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPublic,
     wusdcFeeRelayerPrivate
   );
   await execAddChainToToken(
@@ -224,8 +224,8 @@ async function wusdcSetupAndInit() {
     baseTsContractAddr,
     baseUsdcContractAddr,
     wusdcPlatformFeePublic,
-    wusdcFeeRelayerPublic,
     wusdcPlatformFeePrivate,
+    wusdcFeeRelayerPublic,
     wusdcFeeRelayerPrivate
   );
 
@@ -283,8 +283,8 @@ async function wusdtSetupandInit() {
     arbitrumTsContractAddr,
     arbitrumUsdtContractAddr,
     wusdtPlatformFeePublic,
-    wusdtFeeRelayerPublic,
     wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPublic,
     wusdtFeeRelayerPrivate
   );
   await execAddChainToToken(
@@ -294,8 +294,8 @@ async function wusdtSetupandInit() {
     arbitrumTsContractAddr,
     arbitrumUsdtContractAddr,
     wusdtPlatformFeePublic,
-    wusdtFeeRelayerPublic,
     wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPublic,
     wusdtFeeRelayerPrivate
   );
 
@@ -306,8 +306,8 @@ async function wusdtSetupandInit() {
     ethHoleskyTsContractAddr,
     ethHoleskyUsdtContractAddr,
     wusdtPlatformFeePublic,
-    wusdtFeeRelayerPublic,
     wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPublic,
     wusdtFeeRelayerPrivate
   );
   await execAddChainToToken(
@@ -317,8 +317,8 @@ async function wusdtSetupandInit() {
     ethHoleskyTsContractAddr,
     ethHoleskyUsdtContractAddr,
     wusdtPlatformFeePublic,
-    wusdtFeeRelayerPublic,
     wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPublic,
     wusdtFeeRelayerPrivate
   );
 
@@ -329,8 +329,8 @@ async function wusdtSetupandInit() {
     baseTsContractAddr,
     baseUsdtContractAddr,
     wusdtPlatformFeePublic,
-    wusdtFeeRelayerPublic,
     wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPublic,
     wusdtFeeRelayerPrivate
   );
   await execAddChainToToken(
@@ -340,8 +340,8 @@ async function wusdtSetupandInit() {
     baseTsContractAddr,
     baseUsdtContractAddr,
     wusdtPlatformFeePublic,
-    wusdtFeeRelayerPublic,
     wusdtPlatformFeePrivate,
+    wusdtFeeRelayerPublic,
     wusdtFeeRelayerPrivate
   );
 
@@ -398,8 +398,8 @@ async function wethSetupandInit() {
     arbitrumTsContractAddr,
     arbitrumEthContractAddr,
     wethPlatformFeePublic,
-    wethFeeRelayerPublic,
     wethPlatformFeePrivate,
+    wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
 
@@ -410,8 +410,8 @@ async function wethSetupandInit() {
     arbitrumTsContractAddr,
     arbitrumEthContractAddr,
     wethPlatformFeePublic,
-    wethFeeRelayerPublic,
     wethPlatformFeePrivate,
+    wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
 
@@ -422,8 +422,8 @@ async function wethSetupandInit() {
     ethHoleskyTsContractAddr,
     ethHoleskyEthContractAddr,
     wethPlatformFeePublic,
-    wethFeeRelayerPublic,
     wethPlatformFeePrivate,
+    wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
 
@@ -434,8 +434,8 @@ async function wethSetupandInit() {
     ethHoleskyTsContractAddr,
     ethHoleskyEthContractAddr,
     wethPlatformFeePublic,
-    wethFeeRelayerPublic,
     wethPlatformFeePrivate,
+    wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
 
@@ -446,8 +446,8 @@ async function wethSetupandInit() {
     baseTsContractAddr,
     baseEthContractAddr,
     wethPlatformFeePublic,
-    wethFeeRelayerPublic,
     wethPlatformFeePrivate,
+    wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
 
@@ -458,8 +458,8 @@ async function wethSetupandInit() {
     baseTsContractAddr,
     baseEthContractAddr,
     wethPlatformFeePublic,
-    wethFeeRelayerPublic,
     wethPlatformFeePrivate,
+    wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
 

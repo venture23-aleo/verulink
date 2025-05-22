@@ -11,7 +11,7 @@ program vlink_token_service_v5.aleo {
         // For example, 10% is represented as 1000 (10% = 10_00 in basis points).
         percentage: u32,
         // The duration for which the withdrawal limit is applicable, measured in block heights.
-        // Info: 360 blocks per hour (approx)
+        // Info: 360 blocks per hour (approx)   // todo: change blocks 
         // Reference: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/network/src/lib.rs#L115
         duration: u32,
         // The liquidity amount beyond which the withdrawal limit does not apply.
@@ -107,7 +107,7 @@ program vlink_token_service_v5.aleo {
     const PAUSED_VALUE: bool = true;
     const UNPAUSED_VALUE: bool = false;
 
-    const HOLDING_ADDRESS: address = aleo1f4xc78ykumx4pac8hlnle66nxptux3pwm2q24fslvhns3wh4tqgsj8f7yu;
+    const HOLDING_ADDRESS: address = aleo1f4xc78ykumx4pac8hlnle66nxptux3pwm2q24fslvhns3wh4tqgsj8f7yu;  //TODdont use address use name O: 
 
     const AUTHORIZE_UNTIL:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
  
@@ -454,7 +454,7 @@ program vlink_token_service_v5.aleo {
             pad_20_to_32(dest_token_address), 
             self.caller,
             pad_20_to_32(receiver),
-            amount        
+            amount - fee_platform        
         );
 
         return finalize_token_send_public(token_id, amount, chain_token_info, dest_token_address, dest_token_service, fee_platform, burn, mint, publish);
@@ -500,10 +500,10 @@ program vlink_token_service_v5.aleo {
             // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
             Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
             Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
-            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount);
+            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount - fee_platform);
 
         } else {
-            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn+amount);
+            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn + amount - fee_platform);
 
         }
         let snapshot_supply:u128 = Mapping::get(token_snapshot_supply, wrapped_token_id);
@@ -558,7 +558,7 @@ program vlink_token_service_v5.aleo {
             pad_20_to_32(dest_token_address), 
             self.address,
             pad_20_to_32(receiver),
-            amount-fee_platform
+            amount - fee_platform
         );
 
         return (return_record, finalize_token_send_private(token_id, amount, chain_token_info, dest_token_address, dest_token_service, fee_platform, burn_private, mint, publish));
