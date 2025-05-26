@@ -52,6 +52,8 @@ import { deployWeth } from "./deployment/weth";
 import { } from "../utils/testdata.data";
 import { execAddChainToToken, proposeAddChainToToken } from "./council/tokenService/addChainToToken";
 import { ethTsContractAddr } from "../utils/constants";
+import { execTranferAdmin, proposeTransferAdmin } from "./token_admin_transfer";
+import { execRemoveRole, proposeRemoveRole } from "./council/tokenService/removeRole";
 
 const bridge = new Vlink_token_bridge_v5Contract({ mode: ExecutionMode.SnarkExecute });
 const tokenService = new Vlink_token_service_v5Contract({ mode: ExecutionMode.SnarkExecute });
@@ -84,6 +86,31 @@ const setup = async () => {
   //   councilThreshold,
   //   councilThreshold
   // );
+
+  // give old token ownership to newly deployed 
+  const changeOwnerUSDC_proposalID = await proposeTransferAdmin(serviceCouncil.address(), wusdc_id, serviceCouncil.address());
+  await execTranferAdmin(changeOwnerUSDC_proposalID, serviceCouncil.address(), wusdc_id, serviceCouncil.address())
+
+   // give old token ownership to newly deployed 
+  const changeOwnerUSDT_proposalID = await proposeTransferAdmin(serviceCouncil.address(), wusdt_id, serviceCouncil.address());
+  await execTranferAdmin(changeOwnerUSDT_proposalID, serviceCouncil.address(), wusdt_id, serviceCouncil.address())
+
+   // give old token ownership to newly deployed 
+  const changeOwnerETH_proposalID = await proposeTransferAdmin(serviceCouncil.address(), weth_id, serviceCouncil.address());
+  await execTranferAdmin(changeOwnerETH_proposalID, serviceCouncil.address(), weth_id, serviceCouncil.address())
+
+  // removing roles from old tokenService
+  const old_tokenService = "aleo1hkjqvh3qn4q3lr2sx5wqkt57c7heq826583duc6nlhfctkheyu8sf2qknh";
+  const revokeRoleUSDC_proposalID = await proposeRemoveRole(wusdc_id, old_tokenService);
+  await execRemoveRole(revokeRoleUSDC_proposalID, wusdc_id, old_tokenService);
+
+  const revokeRoleUSDT_proposalID = await proposeRemoveRole(wusdt_id, old_tokenService);
+  await execRemoveRole(revokeRoleUSDT_proposalID, wusdt_id, old_tokenService);
+
+  const revokeRoleWETH_proposalID = await proposeRemoveRole(weth_id, old_tokenService);
+  await execRemoveRole(revokeRoleWETH_proposalID, weth_id, old_tokenService);
+
+
   // Bridge: Add ethereum chain
   const addChainProposalId = await proposeAddChain(ethChainId);
   await execAddChain(addChainProposalId, ethChainId);
@@ -105,9 +132,9 @@ const setup = async () => {
   await execAddService(enableTokenServiceProposalId, tokenService.address());
 
   // await wusdcSetupAndInit();
-  await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
-  await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
-  await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
+  // await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
+  // await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
+  // await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
 
   await wusdcSetupAndInit();
 

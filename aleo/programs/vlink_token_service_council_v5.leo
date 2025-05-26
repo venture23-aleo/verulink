@@ -781,4 +781,38 @@ program vlink_token_service_council_v5.aleo
         f1.await();
         f2.await();
     }
+
+
+    struct RemoveRole {
+        id: u32,
+        token_id: field,
+        account: address
+    }
+
+    async transition remove_role(
+        public id: u32,
+        public token_id: field,
+        public account: address,
+        public voters: [address; 5]
+    ) -> Future {
+        let proposal: RemoveRole  = RemoveRole {
+            id,
+            token_id,
+            account
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+
+       // Execute the proposal
+        let remove_role_access: Future = token_registry.aleo/remove_role(token_id,account);
+
+        let external_execute: Future = vlink_council_v5.aleo/external_execute(id, proposal_hash, voters);
+
+        return finalize_remove_role(remove_role_access, external_execute);
+    }
+
+    async function finalize_remove_role(f0: Future, f1: Future) {
+        f0.await();
+        f1.await();
+    }
+
 }
