@@ -110,6 +110,8 @@ contract FeeCollector is Initializable, AccessControlUpgradeable {
         }
     }
 
+    receive() external payable virtual onlyRole(TOKEN_SERVICE_ROLE) {}
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
