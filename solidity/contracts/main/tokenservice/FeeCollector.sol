@@ -15,12 +15,13 @@ contract FeeCollector is Initializable, AccessControlUpgradeable {
     using SafeERC20 for IIERC20;
 
     bytes32 public constant TOKEN_SERVICE_ROLE = keccak256("TOKEN_SERVICE_ROLE");
-    bytes32 public constant DEFAULT = keccak256("TOKEN_SERVICE_ROLE");
     
     // Storage variables
     mapping(address => uint256) public platformFees;
-    mapping(address => uint256) public relayerFees;
     mapping(address => uint256) public privatePlatformFees;
+
+    mapping(address => uint256) public relayerFees;
+    mapping(address => uint256) public privateRelayerFees;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -30,64 +31,82 @@ contract FeeCollector is Initializable, AccessControlUpgradeable {
     /// @notice Initializes the contract (replaces constructor)
     /// @param _tokenService The address of the token service
     /// @param _owner The address of the contract owner
+    /// @param usdcAddress The address of the USDC token
+    /// @param usdtAddress The address of the USDT token
+    /// @param _publicFees The fees for the public transfer in 3decimals number (For 1% = 1000)
+    /// @param _privateFees The fees for the private transfer in 3decimals number (For 1% = 1000)
     function initialize(
         address _tokenService,
-        address _owner
+        address _owner,
+        address usdcAddress,
+        address usdtAddress,
+        uint256 _publicFees,
+        uint256 _privateFees
     ) public initializer {
         __AccessControl_init();
         
         _setupRole(TOKEN_SERVICE_ROLE, _tokenService);
         _setupRole(DEFAULT_ADMIN_ROLE, _owner);
+
+        platformFees[address(1)] = _publicFees;
+        privatePlatformFees[address(1)] = _privateFees;
+
+        platformFees[usdcAddress] = _publicFees;
+        privatePlatformFees[usdcAddress] = _privateFees;
+
+        platformFees[usdtAddress] = _publicFees;
+        privatePlatformFees[usdtAddress] = _privateFees;
     }
 
     /// @notice Sets the fees for the platform
     /// @param _addr The address of the registered token
-    /// @param _platformFee The fees for the platform
-    /// @param _privateFee The fees for the private bridge
-    function setPlatformFees(address _addr, uint256 _platformFee, uint256 _privateFee) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+    /// @param _platformFee The fees for the platform in 3decimals number (For 1% = 1000)
+    function setPlatformFees(address _addr, uint256 _platformFee) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFee <= 100000, "FeeCollector: invalidPlatformFee");
-        require(_privateFee <= 100000, "FeeCollector: invalidPrivatePlatformFee");
-
         require(platformFees[_addr] != _platformFee, "FeeCollector: platformFeeAlreadySet");
-        require(privatePlatformFees[_addr] != _privateFee, "FeeCollector: privatePlatformFeeAlreadySet");
 
         platformFees[_addr] = _platformFee;
-        privatePlatformFees[_addr] = _privateFee;
+    }
+
+    /// @notice Sets the private platform fees for a specific token
+    /// @param _addr The address of the registered token
+    /// @param _privatePlatformFee The private platform fees in 3decimals number (For 1% = 1000)
+    function setPrivatePlatformFees(address _addr, uint256 _privatePlatformFee) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_privatePlatformFee <= 100000, "FeeCollector: invalidPrivatePlatformFee");
+        require(privatePlatformFees[_addr] != _privatePlatformFee, "FeeCollector: privatePlatformFeeAlreadySet");
+        privatePlatformFees[_addr] = _privatePlatformFee;
     }
 
     /// @notice Sets the fees for the relayer
     /// @param _addr The address of the registered token
-    /// @param _relayerFee The fees for the relayer
+    /// @param _relayerFee The flat fees for the relayer
     function setRelayerFees(address _addr, uint256 _relayerFee) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(relayerFees[_addr] != _relayerFee, "FeeCollector: relayerFeeAlreadySet");
+        require(relayerFees[_addr] != _relayerFee, "FeeCollector: publicRelayerFeeAlreadySet");
         relayerFees[_addr] = _relayerFee;
     }
 
-    /// @notice Withdraws the protocol fees collected for a specific token
+    /// @notice Sets the private relayer fees for a specific token
     /// @param _addr The address of the registered token
-    /// @param _to The address to withdraw the fees to
-    function withdrawProtocolFees(address _addr, address _to) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_to != address(0), "FeeCollector: cannotWithdrawToZeroAddress");
-        if (_addr == address(1)) {
-            uint256 amount = address(this).balance;
-            require(amount > 0, "FeeCollector: noETHFeesToWithdraw");
-            (bool sent, ) = payable(_to).call{value: amount}("");
-            require(sent, "FeeCollector: ethWithdrawFailed");
-        } else {
-            uint256 amount = IIERC20(_addr).balanceOf(address(this));
-            require(amount > 0, "FeeCollector: noTokenFeesToWithdraw");
-            IIERC20(_addr).safeTransfer(_to, amount);
-        }
+    /// @param _privateRelayerFee The private flat relayer fees to be set
+    function setPrivateRelayerFees(address _addr, uint256 _privateRelayerFee) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(privateRelayerFees[_addr] != _privateRelayerFee, "FeeCollector: privateRelayerFeeAlreadySet");
+        privateRelayerFees[_addr] = _privateRelayerFee;
     }
 
-    /// @notice Function that allows the contract to receive ETH
-    receive() external payable virtual onlyRole(TOKEN_SERVICE_ROLE) {}
-
-    function collectedFees(address _addr) external view returns (uint256) {
-        if (_addr == address(1)) {
-            return address(this).balance;
+    /// @notice Withdraws the protocol fees collected for a specific token
+    /// @param _tokenAddr The address of the registered token
+    /// @param _receiverAddr The address to withdraw the fees to
+    function withdrawProtocolFees(address _tokenAddr, address _receiverAddr) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_receiverAddr != address(0), "FeeCollector: cannotWithdrawToZeroAddress");
+        if (_tokenAddr == address(1)) {
+            uint256 amount = address(this).balance;
+            require(amount > 0, "FeeCollector: noETHFeesToWithdraw");
+            (bool sent, ) = payable(_receiverAddr).call{value: amount}("");
+            require(sent, "FeeCollector: ethWithdrawFailed");
         } else {
-            return IIERC20(_addr).balanceOf(address(this));
+            uint256 amount = IIERC20(_tokenAddr).balanceOf(address(this));
+            require(amount > 0, "FeeCollector: noTokenFeesToWithdraw");
+            IIERC20(_tokenAddr).safeTransfer(_receiverAddr, amount);
         }
     }
 
