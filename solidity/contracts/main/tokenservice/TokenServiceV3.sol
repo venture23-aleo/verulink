@@ -12,13 +12,13 @@ import {PredicateService} from "../../main/tokenservice/predicate/PredicateServi
 
 import {FeeCollector} from "./FeeCollector.sol";
 
-import "hardhat/console.sol";
-
 
 /// @title TokenServiceV2 Contract
 /// @dev Inherits TokenService and PredicateService for predicate-based authorization
 contract TokenServiceV3 is TokenServiceV2 {
     using SafeERC20 for IIERC20;
+
+    event FeePaid(address indexed tokenAddress, uint256 amount, bool isRelayerFee);
 
     function setFeeCollector(
         FeeCollector _feeCollector
@@ -30,31 +30,40 @@ contract TokenServiceV3 is TokenServiceV2 {
         uint256 version,
         address tokenAddress,
         uint256 amount,
-        string memory receiver
+        string memory receiver,
+        bytes memory _data
     ) internal view virtual returns (PacketLibrary.OutPacket memory packet) {
         packet = _packetify(tokenAddress, amount, receiver);
         packet.version = version;
-        console.log("Versions: %s", version);
+        packet.data = _data;
     }
 
     function privateTransfer(
         address tokenAddress,
         uint256 amount,
-        string calldata receiver
+        string calldata receiver,
+        bool isRelayerOn,
+        bytes calldata data
     ) public virtual whenNotPaused nonReentrant {
-        _transfer(tokenAddress, amount, receiver, PacketLibrary.VERSION_PRIVATE_TRANSFER);
-    }
-
-    function privateTransfer(
-        string memory receiver
-    ) public payable virtual whenNotPaused nonReentrant {
-        _transfer(receiver, PacketLibrary.VERSION_PRIVATE_TRANSFER);
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PRIVATE_TRANSFER_RELAYER : PacketLibrary.VERSION_PRIVATE_TRANSFER;
+        _transfer(tokenAddress, amount, receiver, version, data);
     }
 
     function privateTransfer(
         string memory receiver,
-        PredicateMessage calldata predicateMessage)
-    public payable virtual whenNotPaused nonReentrant {
+        bool isRelayerOn,
+        bytes calldata data
+    ) public payable virtual whenNotPaused nonReentrant {
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PRIVATE_TRANSFER_RELAYER : PacketLibrary.VERSION_PRIVATE_TRANSFER;
+        _transfer(receiver, version, data);
+    }
+
+    function privateTransfer(
+        string memory receiver,
+        PredicateMessage calldata predicateMessage,
+        bool isRelayerOn,
+        bytes calldata data
+    )public payable virtual whenNotPaused nonReentrant {
         require(predicateservice.handleMessage(
             receiver,
             predicateMessage,
@@ -62,14 +71,17 @@ contract TokenServiceV3 is TokenServiceV2 {
             msg.value),
             "TokenService: unauthorizedFromPredicate");
 
-        _transfer(receiver, PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE);
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE_RELAYER : PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE;
+        _transfer(receiver, version, data);
     }
 
     function privateTransfer(
         address tokenAddress,
         uint256 amount,
         string calldata receiver,
-        PredicateMessage calldata predicateMessage
+        PredicateMessage calldata predicateMessage,
+        bool isRelayerOn,
+        bytes calldata data
     ) external virtual whenNotPaused nonReentrant {
         require(predicateservice.handleMessage(
             tokenAddress,
@@ -80,17 +92,19 @@ contract TokenServiceV3 is TokenServiceV2 {
             0
         ), "TokenService: unauthorizedFromPredicate");
 
-        _transfer(tokenAddress, amount, receiver, PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE);
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE_RELAYER : PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE;
+        _transfer(tokenAddress, amount, receiver, version, data);
     }
 
     /// @notice Transfers ETH with predicate authorization
     /// @param receiver The intended receiver of the transferred ETH
     function transfer(
-        string memory receiver
-    ) public payable virtual override whenNotPaused nonReentrant {
-        uint256 version = (feeCollector.relayerFees(ETH_TOKEN) > 0) ? PacketLibrary.VERSION_PUBLIC_TRANSFER_EXECUTOR : PacketLibrary.VERSION_PUBLIC_TRANSFER;
+        string memory receiver,
+        bool isRelayerOn
+    ) public payable virtual whenNotPaused nonReentrant {
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER;
         // Perform ETH transfer
-        _transfer(receiver, version);
+        _transfer(receiver, version, bytes(""));
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization
@@ -100,11 +114,12 @@ contract TokenServiceV3 is TokenServiceV2 {
     function transfer(
         address tokenAddress,
         uint256 amount,
-        string calldata receiver
-    ) public virtual override whenNotPaused nonReentrant {
-        uint256 version = (feeCollector.relayerFees(tokenAddress) > 0) ? PacketLibrary.VERSION_PUBLIC_TRANSFER_EXECUTOR : PacketLibrary.VERSION_PUBLIC_TRANSFER;
+        string calldata receiver,
+        bool isRelayerOn
+    ) public virtual whenNotPaused nonReentrant {
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER;
         // Perform ERC20 token transfer
-        _transfer(tokenAddress, amount, receiver, version);
+        _transfer(tokenAddress, amount, receiver, version, bytes(""));
     }
 
     /// @notice Transfers ETH with predicate authorization
@@ -112,8 +127,9 @@ contract TokenServiceV3 is TokenServiceV2 {
     /// @param predicateMessage Predicate authorization message
     function transfer(
         string calldata receiver,
-        PredicateMessage calldata predicateMessage
-    ) public payable virtual override whenNotPaused nonReentrant {
+        PredicateMessage calldata predicateMessage,
+        bool isRelayerOn
+    ) public payable virtual whenNotPaused nonReentrant {
         require(predicateservice.handleMessage(
             receiver, 
             predicateMessage, 
@@ -121,10 +137,10 @@ contract TokenServiceV3 is TokenServiceV2 {
             msg.value),
             "TokenService: unauthorizedFromPredicate") ;
         
-        uint256 version = (feeCollector.relayerFees(ETH_TOKEN) > 0) ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_EXECUTOR : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
 
         // Perform ETH transfer
-        _transfer(receiver, version);
+        _transfer(receiver, version, bytes(""));
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization
@@ -136,8 +152,9 @@ contract TokenServiceV3 is TokenServiceV2 {
         address tokenAddress,
         uint256 amount,
         string calldata receiver,
-        PredicateMessage calldata predicateMessage
-    ) external virtual override whenNotPaused nonReentrant {
+        PredicateMessage calldata predicateMessage,
+        bool isRelayerOn
+    ) external virtual whenNotPaused nonReentrant {
         require(predicateservice.handleMessage(
             tokenAddress,
             amount,
@@ -147,34 +164,97 @@ contract TokenServiceV3 is TokenServiceV2 {
             0
         ), "TokenService: unauthorizedFromPredicate");
 
-        uint256 version = (feeCollector.relayerFees(tokenAddress) > 0) ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_EXECUTOR : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
+        uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
+
+        //  todo add data as param
 
         // Perform ERC20 token transfer
-        _transfer(tokenAddress, amount, receiver, version);
+        _transfer(tokenAddress, amount, receiver, version, bytes(""));
+    }
+
+    // /// @notice Deprecated function
+    // function transfer(
+    //     string memory
+    // ) public payable virtual override whenNotPaused nonReentrant {
+    //     revert("TokenService: useNewVersion");
+    // }
+
+    // /// @notice Deprecated function
+    // function transfer(
+    //     address,
+    //     uint256,
+    //     string calldata
+    // ) public virtual override whenNotPaused nonReentrant {
+    //     revert("TokenService: useNewVersion");
+    // }
+
+    // /// @notice Deprecated function
+    // function transfer(
+    //     string calldata,
+    //     PredicateMessage calldata 
+    // ) public payable virtual override whenNotPaused nonReentrant {
+    //     revert("TokenService: useNewVersion");
+    // }
+
+    // /// @notice Deprecated function
+    // function transfer(
+    //     address ,
+    //     uint256 ,
+    //     string calldata ,
+    //     PredicateMessage calldata 
+    // ) external virtual override whenNotPaused nonReentrant {
+    //     revert("TokenService: useNewVersion");
+    // }
+
+    /// @notice Internal function to handle fee calculations and transfers
+    /// @param tokenAddress The address of the token
+    /// @param amount The total amount to calculate fees from
+    /// @param version The version number to determine fee type
+    /// @return amountToTransfer The amount remaining after fees
+    function _handleFees(
+        address tokenAddress,
+        uint256 amount,
+        uint256 version
+    ) internal virtual returns (uint256 amountToTransfer) {
+        require(amount > 0, "TokenService: notEnoughAmount");
+        uint256 payingFees = 0;
+        if (version > 10) {
+            payingFees = (feeCollector.privatePlatformFees(tokenAddress) * amount) / 100000;
+        } else {
+            payingFees = (feeCollector.platformFees(tokenAddress) * amount) / 100000;
+        }
+
+        if (payingFees > 0) {
+            if(tokenAddress == ETH_TOKEN){
+                collectedFees[ETH_TOKEN] += payingFees;
+                (bool sent, ) = payable(address(feeCollector)).call{value: payingFees}("");
+                require(sent, "TokenService: feesTransferFailed");
+                emit FeePaid(ETH_TOKEN, payingFees, false);
+            }else{
+            collectedFees[tokenAddress] += payingFees;
+            IIERC20(tokenAddress).safeTransferFrom(
+                msg.sender,
+                address(feeCollector),
+                payingFees
+            );
+                emit FeePaid(tokenAddress, payingFees, false);
+            }
+        }
+
+        amountToTransfer = amount - payingFees;
     }
 
     /// @notice Internal function to handle ETH transfers
     /// @param receiver The intended receiver of the ETH
-    function _transfer(string memory receiver, uint256 version) internal virtual {
+    function _transfer(string memory receiver, uint256 version, bytes memory data) internal virtual {
         require(
             erc20Bridge.validateAleoAddress(receiver),
             "TokenService: InvalidReceiverAddress"
         );
 
-        require(msg.value > 0, "TokenService: TransferAmountMustBeGreaterThanZero");
+        uint256 amountToTransfer = _handleFees(address(1), msg.value, version);
 
-        uint256 payingFees;
-        if (version > 10) {
-            payingFees = (feeCollector.privatePlatformFees(ETH_TOKEN)*msg.value)/100000;
-        } else {
-            payingFees = (feeCollector.platformFees(ETH_TOKEN)*msg.value)/100000;
-        }
-
-        if (payingFees > 0) {
-            (bool sent, ) = payable(address(feeCollector)).call{value: payingFees}("");
-            require(sent, "TokenService: ethFeesTransferFailed");
-        }
-        erc20Bridge.sendMessage(_packetify(version, ETH_TOKEN, msg.value-payingFees, receiver));
+        erc20Bridge.sendMessage(_packetify(version, ETH_TOKEN, amountToTransfer, receiver, data));
     }
 
     /// @notice Internal function to handle ERC20 transfers
@@ -185,37 +265,24 @@ contract TokenServiceV3 is TokenServiceV2 {
         address tokenAddress,
         uint256 amount,
         string calldata receiver,
-        uint256 version
+        uint256 version,
+        bytes memory data
     ) internal virtual {
         require(
             erc20Bridge.validateAleoAddress(receiver),
             "TokenService: InvalidReceiverAddress"
         );
-        require(tokenAddress != ETH_TOKEN, "ETHTransferNotAllowed");
+        require(tokenAddress != ETH_TOKEN, "TokenService: ethNotAllowed");
 
-        require(amount > 0, "TokenService: TransferAmountMustBeGreaterThanZero");
-        uint256 actualFees = 0;
-        if (version > 10) {
-            actualFees = (feeCollector.privatePlatformFees(tokenAddress) * amount) / 100000;
-        } else {
-            actualFees = (feeCollector.platformFees(tokenAddress)*amount) / 100000;
-        }
-
-        if (actualFees > 0) {
-            IIERC20(tokenAddress).safeTransferFrom(
-                msg.sender,
-                address(feeCollector),
-                actualFees
-            );
-        }
+        uint256 amountToTransfer = _handleFees(tokenAddress, amount, version);
 
         IIERC20(tokenAddress).safeTransferFrom(
             msg.sender,
             address(this),
-            amount-actualFees
+            amountToTransfer
         );
 
-        erc20Bridge.sendMessage(_packetify(version, tokenAddress, amount-actualFees, receiver));
+        erc20Bridge.sendMessage(_packetify(version, tokenAddress, amountToTransfer, receiver, data));
     }
 
     /// @notice Transfers ERC20 tokens to the destination chain via the bridge
@@ -224,10 +291,10 @@ contract TokenServiceV3 is TokenServiceV2 {
     function withdraw(
         PacketLibrary.InPacket memory packet,
         bytes memory signatures
-    ) external virtual override nonReentrant whenNotPaused {
+    ) external virtual nonReentrant whenNotPaused {
         require(
             packet.destTokenService.addr == address(this),
-            "TokenService: invalidTokenService"
+            "TokenService: invalidToken"
         );
 
         address receiver = packet.message.receiverAddress;
@@ -236,19 +303,27 @@ contract TokenServiceV3 is TokenServiceV2 {
         
         uint256 amount = packet.message.amount;
         uint256 version = packet.version;
-        uint256 feesDeductedAmount = 0;
+        uint256 feesDeductedAmount = amount;
+        // uint256 relayerFeeAmount = 0;
+        // bool isRelayerPacket = false;
 
-        uint256 executorFeesAmount = feeCollector.relayerFees(tokenAddress);
+        // if (version == PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER || 
+        //     version == PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER) {
+        //     isRelayerPacket = true;
+        //     relayerFeeAmount = feeCollector.relayerFees(tokenAddress);
+        // } else if (version == PacketLibrary.VERSION_PRIVATE_TRANSFER_RELAYER || 
+        // version == PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE_RELAYER) {
+        //     isRelayerPacket = true;
+        //     relayerFeeAmount = feeCollector.privateRelayerFees(tokenAddress);
+        // }
 
-        if ((version == PacketLibrary.VERSION_PRIVATE_TRANSFER_EXECUTOR || 
-        version == PacketLibrary.VERSION_PUBLIC_TRANSFER_EXECUTOR || 
-        version == PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_EXECUTOR ) && executorFeesAmount > 0){
-            require(amount > executorFeesAmount, "TokenService: FeesExceedTransferAmount");
-            feesDeductedAmount = amount - executorFeesAmount;
-        }else{
-            feesDeductedAmount = amount;
-            executorFeesAmount = 0;
-        }
+        // if (isRelayerPacket && relayerFeeAmount > 0) {
+        //     require(amount > relayerFeeAmount, "TokenService: feesNotEnough");
+        //     feesDeductedAmount = amount - relayerFeeAmount;
+        // } else {
+        //     feesDeductedAmount = amount;
+        //     relayerFeeAmount = 0;
+        // }
 
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
@@ -258,32 +333,33 @@ contract TokenServiceV3 is TokenServiceV2 {
         ) {
             if (tokenAddress == ETH_TOKEN) {
                 // eth lock
-                if(executorFeesAmount > 0){
-                    (bool sent, ) = payable(msg.sender).call{value: executorFeesAmount}("");
-                    require(sent, "TokenService: ethFeesWithdrawFailed");
-                }
+                // if(relayerFeeAmount > 0){
+                //     (bool sent, ) = payable(msg.sender).call{value: relayerFeeAmount}("");
+                //     require(sent, "TokenService: feesTransferFailed");
+                //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
+                // }
                 holding.lock{value: feesDeductedAmount}(receiver);
             } else {
-                if(executorFeesAmount > 0){
-                    IIERC20(tokenAddress).safeTransfer(address(holding), executorFeesAmount);
-                }
+                // if(relayerFeeAmount > 0){
+                //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
+                // }
                 IIERC20(tokenAddress).safeTransfer(address(holding), feesDeductedAmount);
                 holding.lock(receiver, tokenAddress, feesDeductedAmount);
             }
         } else if (quorum == PacketLibrary.Vote.YEA) {
             if (tokenAddress == ETH_TOKEN) {
                 bool sent;
-                // eth transfer
-                if(executorFeesAmount > 0){
-                    (sent, ) = payable(msg.sender).call{value: executorFeesAmount}("");
-                    require(sent, "TokenService: ethFeesWithdrawFailed");
-                }
+                // if(relayerFeeAmount > 0){
+                //     (sent, ) = payable(msg.sender).call{value: relayerFeeAmount}("");
+                //     require(sent, "TokenService: feesTransferFailed");
+                //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
+                // }
                 (sent, ) = payable(receiver).call{value: feesDeductedAmount}("");
                 require(sent, "TokenService: ethWithdrawFailed");
             } else {
-                if(executorFeesAmount > 0){
-                    IIERC20(tokenAddress).safeTransfer(msg.sender, executorFeesAmount);
-                }
+                // if(relayerFeeAmount > 0){
+                //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
+                // }
                 IIERC20(tokenAddress).safeTransfer(receiver, feesDeductedAmount);
             }
         } else {
@@ -294,4 +370,6 @@ contract TokenServiceV3 is TokenServiceV2 {
     uint256[49] private __gap;
 
     FeeCollector public feeCollector;
+    mapping(address => uint256) public collectedFees;
+    
 }
