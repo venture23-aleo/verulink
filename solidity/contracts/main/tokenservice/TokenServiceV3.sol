@@ -18,7 +18,7 @@ import {FeeCollector} from "./FeeCollector.sol";
 contract TokenServiceV3 is TokenServiceV2 {
     using SafeERC20 for IIERC20;
 
-    event FeePaid(address indexed tokenAddress, uint256 amount, bool isRelayerFee);
+    event FeePaid(address indexed tokenAddress, uint256 amount);
 
     function setFeeCollector(
         FeeCollector _feeCollector
@@ -100,11 +100,12 @@ contract TokenServiceV3 is TokenServiceV2 {
     /// @param receiver The intended receiver of the transferred ETH
     function transfer(
         string memory receiver,
-        bool isRelayerOn
+        bool isRelayerOn,
+        bytes calldata data
     ) public payable virtual whenNotPaused nonReentrant {
         uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER;
         // Perform ETH transfer
-        _transfer(receiver, version, bytes(""));
+        _transfer(receiver, version, data);
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization
@@ -115,11 +116,12 @@ contract TokenServiceV3 is TokenServiceV2 {
         address tokenAddress,
         uint256 amount,
         string calldata receiver,
-        bool isRelayerOn
+        bool isRelayerOn,
+        bytes calldata data
     ) public virtual whenNotPaused nonReentrant {
         uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER;
         // Perform ERC20 token transfer
-        _transfer(tokenAddress, amount, receiver, version, bytes(""));
+        _transfer(tokenAddress, amount, receiver, version, data);
     }
 
     /// @notice Transfers ETH with predicate authorization
@@ -128,7 +130,8 @@ contract TokenServiceV3 is TokenServiceV2 {
     function transfer(
         string calldata receiver,
         PredicateMessage calldata predicateMessage,
-        bool isRelayerOn
+        bool isRelayerOn,
+        bytes calldata data
     ) public payable virtual whenNotPaused nonReentrant {
         require(predicateservice.handleMessage(
             receiver, 
@@ -140,7 +143,7 @@ contract TokenServiceV3 is TokenServiceV2 {
         uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
 
         // Perform ETH transfer
-        _transfer(receiver, version, bytes(""));
+        _transfer(receiver, version, data);
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization
@@ -153,7 +156,8 @@ contract TokenServiceV3 is TokenServiceV2 {
         uint256 amount,
         string calldata receiver,
         PredicateMessage calldata predicateMessage,
-        bool isRelayerOn
+        bool isRelayerOn,
+        bytes calldata data
     ) external virtual whenNotPaused nonReentrant {
         require(predicateservice.handleMessage(
             tokenAddress,
@@ -166,10 +170,8 @@ contract TokenServiceV3 is TokenServiceV2 {
 
         uint256 version = isRelayerOn ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
 
-        //  todo add data as param
-
         // Perform ERC20 token transfer
-        _transfer(tokenAddress, amount, receiver, version, bytes(""));
+        _transfer(tokenAddress, amount, receiver, version, data);
     }
 
     // /// @notice Deprecated function
@@ -218,6 +220,7 @@ contract TokenServiceV3 is TokenServiceV2 {
     ) internal virtual returns (uint256 amountToTransfer) {
         require(amount > 0, "TokenService: notEnoughAmount");
         uint256 payingFees = 0;
+
         if (version > 10) {
             payingFees = (feeCollector.privatePlatformFees(tokenAddress) * amount) / 100000;
         } else {
@@ -229,7 +232,7 @@ contract TokenServiceV3 is TokenServiceV2 {
                 collectedFees[ETH_TOKEN] += payingFees;
                 (bool sent, ) = payable(address(feeCollector)).call{value: payingFees}("");
                 require(sent, "TokenService: feesTransferFailed");
-                emit FeePaid(ETH_TOKEN, payingFees, false);
+                emit FeePaid(ETH_TOKEN, payingFees);
             }else{
             collectedFees[tokenAddress] += payingFees;
             IIERC20(tokenAddress).safeTransferFrom(
@@ -237,7 +240,7 @@ contract TokenServiceV3 is TokenServiceV2 {
                 address(feeCollector),
                 payingFees
             );
-                emit FeePaid(tokenAddress, payingFees, false);
+                emit FeePaid(tokenAddress, payingFees);
             }
         }
 
