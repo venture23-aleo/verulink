@@ -9,14 +9,14 @@ interface IBridge {
 
     /// @notice Emitted when a packet is dispatched from the Bridge
     /// @param packet The dispatched packet
-    event PacketDispatched(PacketLibrary.OutPacket packet);
+    event PacketDispatched(PacketLibrary.OutPacket packet, bytes data);
 
     /// @notice Emitted when a packet arrives at the Bridge
     /// @param packet The arrived packet
     event PacketArrived(PacketLibrary.InPacket packet);
 
     function isAttestor(address signer) external view returns (bool);
-    function sendMessage(PacketLibrary.OutPacket memory packet) external;
+    function sendMessage(PacketLibrary.OutPacket memory packet, bytes calldata data) external;
 
      /// @notice Consumes an incoming packet and validates the provided signatures
     /// @param packet The incoming packet to be consumed
