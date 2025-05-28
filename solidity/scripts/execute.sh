@@ -82,9 +82,11 @@
 # npx hardhat run scripts/deploy/grantRole.js --network holesky
 
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
-# npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network holesky
-# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
+npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network holesky
+npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
 # npx hardhat run scripts/deploy/addPredicateService.js --network holesky
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network holesky
 
 # npx hardhat run scripts/deploy/addWhitelistAddress.js --network holesky
 # npx hardhat run scripts/deploy/removeWhitelistAddress.js --network holesky
@@ -133,7 +135,7 @@
 # npx hardhat run scripts/deploy/addTokenUSDC.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/addTokenUSDT.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/addAttestor.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/addAttestor.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/removeAttestor.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network arbitrum-sepolia
