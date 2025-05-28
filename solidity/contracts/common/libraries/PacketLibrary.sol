@@ -61,7 +61,6 @@ library PacketLibrary {
         OutNetworkAddress destTokenService;
         OutTokenMessage message;
         uint256 height;
-        bytes data;
     }
 
     /// @notice Struct representing the structure of incoming packets.
