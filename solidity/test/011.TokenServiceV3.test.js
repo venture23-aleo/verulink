@@ -141,16 +141,6 @@ describe('TokenService', () => {
 
         await proxiedV1.connect(owner).setFeeCollector(feeCollector.address);
 
-
-        inPacket = [
-            1,
-            1,
-            [ALEO_CHAINID, "aleo.TokenService"],
-            [ETH_CHAINID, proxiedV1.address],
-            ["aleo.SenderAddress", usdcMock.address, 100, other.address],
-            100
-        ];
-
     });
 
     // Test deployment and initialization
@@ -229,9 +219,37 @@ describe('TokenService', () => {
         await (await usdcMock.mint(other.address, 1500)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 1000)).wait();
 
-        await (await proxiedV1.connect(other)["privateTransfer(address,uint256,string,bool,bytes)"]
-            (usdcMock.address, 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false, "0x")).wait();
+        console.log("tSadress: ", proxiedV1.address);
+        console.log("other address: ", other.address);
+        console.log("usdcMock address: ", usdcMock.address);
+        console.log("Bridge address: ", proxiedBridge.address);
+        console.log("attestor address: ", attestor.address);
+        console.log("owner address: ", owner.address);
+
+        const outPacket = [
+            11,
+            1,
+            [ETH_CHAINID, proxiedV1.address],
+            [ALEO_CHAINID, "aleo.TokenService"],
+            [other.address, "aleo.TokenAddress", 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27"],
+            195
+        ]
+
+        const tx = await proxiedV1.connect(other)["privateTransfer(address,uint256,string,bool,bytes)"]
+            (usdcMock.address, 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false, 
+                "0x1234567890");
+
+        await expect(tx)
+        .to.emit(proxiedV1, "PlatformFeesPaid")
+        .withArgs(usdcMock.address, 2);
         
+        // const receipt = await tx.wait();
+        // console.log("receipt: ", receipt.events);
+
+        // await expect(tx)
+        //     .to.emit(proxiedBridge, "PacketDispatched")
+        //     .withArgs(outPacket, "0x1234567890");
+
         expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(2);
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(998);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(500);

@@ -18,7 +18,7 @@ import {FeeCollector} from "./FeeCollector.sol";
 contract TokenServiceV3 is TokenServiceV2 {
     using SafeERC20 for IIERC20;
 
-    event FeePaid(address indexed tokenAddress, uint256 amount);
+    event PlatformFeesPaid(address indexed tokenAddress, uint256 amount);
 
     function setFeeCollector(
         FeeCollector _feeCollector
@@ -30,12 +30,10 @@ contract TokenServiceV3 is TokenServiceV2 {
         uint256 version,
         address tokenAddress,
         uint256 amount,
-        string memory receiver,
-        bytes memory _data
+        string memory receiver
     ) internal view virtual returns (PacketLibrary.OutPacket memory packet) {
         packet = _packetify(tokenAddress, amount, receiver);
         packet.version = version;
-        packet.data = _data;
     }
 
     function privateTransfer(
@@ -232,7 +230,7 @@ contract TokenServiceV3 is TokenServiceV2 {
                 collectedFees[ETH_TOKEN] += payingFees;
                 (bool sent, ) = payable(address(feeCollector)).call{value: payingFees}("");
                 require(sent, "TokenService: feesTransferFailed");
-                emit FeePaid(ETH_TOKEN, payingFees);
+                emit PlatformFeesPaid(ETH_TOKEN, payingFees);
             }else{
             collectedFees[tokenAddress] += payingFees;
             IIERC20(tokenAddress).safeTransferFrom(
@@ -240,7 +238,7 @@ contract TokenServiceV3 is TokenServiceV2 {
                 address(feeCollector),
                 payingFees
             );
-                emit FeePaid(tokenAddress, payingFees);
+                emit PlatformFeesPaid(tokenAddress, payingFees);
             }
         }
 
@@ -257,7 +255,7 @@ contract TokenServiceV3 is TokenServiceV2 {
 
         uint256 amountToTransfer = _handleFees(address(1), msg.value, version);
 
-        erc20Bridge.sendMessage(_packetify(version, ETH_TOKEN, amountToTransfer, receiver, data));
+        erc20Bridge.sendMessage(_packetify(version, ETH_TOKEN, amountToTransfer, receiver), data);
     }
 
     /// @notice Internal function to handle ERC20 transfers
@@ -285,7 +283,7 @@ contract TokenServiceV3 is TokenServiceV2 {
             amountToTransfer
         );
 
-        erc20Bridge.sendMessage(_packetify(version, tokenAddress, amountToTransfer, receiver, data));
+        erc20Bridge.sendMessage(_packetify(version, tokenAddress, amountToTransfer, receiver), data);
     }
 
     /// @notice Transfers ERC20 tokens to the destination chain via the bridge
@@ -305,8 +303,8 @@ contract TokenServiceV3 is TokenServiceV2 {
         require(isEnabledToken(tokenAddress), "TokenService: invalidToken");
         
         uint256 amount = packet.message.amount;
-        uint256 version = packet.version;
-        uint256 feesDeductedAmount = amount;
+        // uint256 version = packet.version;
+        // uint256 feesDeductedAmount = amount;
         // uint256 relayerFeeAmount = 0;
         // bool isRelayerPacket = false;
 
@@ -341,13 +339,13 @@ contract TokenServiceV3 is TokenServiceV2 {
                 //     require(sent, "TokenService: feesTransferFailed");
                 //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
                 // }
-                holding.lock{value: feesDeductedAmount}(receiver);
+                holding.lock{value: amount}(receiver);
             } else {
                 // if(relayerFeeAmount > 0){
                 //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
                 // }
-                IIERC20(tokenAddress).safeTransfer(address(holding), feesDeductedAmount);
-                holding.lock(receiver, tokenAddress, feesDeductedAmount);
+                IIERC20(tokenAddress).safeTransfer(address(holding), amount);
+                holding.lock(receiver, tokenAddress, amount);
             }
         } else if (quorum == PacketLibrary.Vote.YEA) {
             if (tokenAddress == ETH_TOKEN) {
@@ -357,13 +355,13 @@ contract TokenServiceV3 is TokenServiceV2 {
                 //     require(sent, "TokenService: feesTransferFailed");
                 //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
                 // }
-                (sent, ) = payable(receiver).call{value: feesDeductedAmount}("");
+                (sent, ) = payable(receiver).call{value: amount}("");
                 require(sent, "TokenService: ethWithdrawFailed");
             } else {
                 // if(relayerFeeAmount > 0){
                 //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
                 // }
-                IIERC20(tokenAddress).safeTransfer(receiver, feesDeductedAmount);
+                IIERC20(tokenAddress).safeTransfer(receiver, amount);
             }
         } else {
             revert("TokenService: insufficientQuorum");
