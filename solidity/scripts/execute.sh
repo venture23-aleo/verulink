@@ -82,11 +82,12 @@
 # npx hardhat run scripts/deploy/grantRole.js --network holesky
 
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
-npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network holesky
-npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
+# npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network holesky
+# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
 # npx hardhat run scripts/deploy/addPredicateService.js --network holesky
 
 # npx hardhat run scripts/deploy/deployFeeCollector.js --network holesky
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network holesky
 
 # npx hardhat run scripts/deploy/addWhitelistAddress.js --network holesky
 # npx hardhat run scripts/deploy/removeWhitelistAddress.js --network holesky
@@ -112,10 +113,13 @@ npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network hol
 # npx hardhat run scripts/deploy/addAttestor.js --network base-sepolia
 # npx hardhat run scripts/deploy/removeAttestor.js --network base-sepolia
 
-# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
+# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network base-sepolia
 # npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network base-sepolia
 # npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network base-sepolia
 # npx hardhat run scripts/deploy/addPredicateService.js --network base-sepolia
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network base-sepolia
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network base-sepolia
 
 
 # Arbitrum Sepolia:
@@ -139,9 +143,12 @@ npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network hol
 # npx hardhat run scripts/deploy/removeAttestor.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/addPredicateService.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addPredicateService.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network arbitrum-sepolia
 
 
 # Mainnet:
