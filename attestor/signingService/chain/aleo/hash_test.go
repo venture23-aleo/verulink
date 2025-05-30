@@ -1,7 +1,9 @@
 package aleo
 
 import (
+	"context"
 	"math/big"
+	"os/exec"
 	"testing"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -11,6 +13,8 @@ import (
 )
 
 func TestHash(t *testing.T) {
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
 	commonPacket := &chainService.Packet{
 		Version:  uint8(2),
 		Sequence: big.NewInt(1).Uint64(),
@@ -31,11 +35,17 @@ func TestHash(t *testing.T) {
 		Height: big.NewInt(55).Uint64(),
 	}
 	t.Run("happy path", func(t *testing.T) {
+		execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+			return fakeExecCommand(`8134385399337649647073000871499235737574342280226628558064931418935240910159field`)
+		}
 		finalHash, err := hash(&chainService.ScreenedPacket{Packet: commonPacket, IsWhite: true})
 		require.NoError(t, err)
 		assert.Equal(t, "8134385399337649647073000871499235737574342280226628558064931418935240910159field", finalHash)
 	})
 	t.Run("different hash", func(t *testing.T) {
+		execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+			return fakeExecCommand(`4775736735591454971844675120171086692406647414172751269714317674002348414452field`)
+		}
 		finalHash, err := hash(&chainService.ScreenedPacket{Packet: commonPacket, IsWhite: false})
 		require.NoError(t, err)
 		assert.Equal(t, "4775736735591454971844675120171086692406647414172751269714317674002348414452field", finalHash)

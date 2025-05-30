@@ -215,7 +215,7 @@ func TestInstantFeedPacket(t *testing.T) {
 
 	client := &Client{
 		eth: &mockEthClient{
-			getCurHeight: func() (uint64, error) { return 10, nil },
+			getCurHeight: func() (uint64, error) { return 11, nil },
 			getLogs:      func(uint64) ([]types.Log, error) { return []types.Log{types.Log{}}, nil },
 		},
 		bridge: &mockBridgeClient{
@@ -251,7 +251,8 @@ func TestInstantFeedPacket(t *testing.T) {
 		metrics:                   newMetrics(),
 		chainID:                   common.Big1,
 		instantPacketDurationMap:  map[string]time.Duration{common.Big2.String(): time.Nanosecond},
-		instantNextBlockHeightMap: map[string]uint64{common.Big2.String():9},
+		instantNextBlockHeightMap: map[string]uint64{common.Big2.String(): 9},
+		name:                      "chainA",
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -286,9 +287,8 @@ func TestInstantFeedPacket(t *testing.T) {
 
 	assert.NotNil(t, pkt)
 	assert.Equal(t, modelPacket, pkt)
-	assert.Equal(t, uint64(11), client.instantNextBlockHeightMap[common.Big2.String()])
+	assert.Equal(t, uint64(12), client.instantNextBlockHeightMap[common.Big2.String()])
 }
-
 
 func TestRetryFeed(t *testing.T) {
 	t.Run("case: retry packets for dstAleo retry packet name spaces", func(t *testing.T) {
@@ -323,7 +323,7 @@ func TestRetryFeed(t *testing.T) {
 			},
 			Message: chain.Message{
 				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), 
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
 				Amount:           big.NewInt(100),
 				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 			},
@@ -383,7 +383,7 @@ func TestRetryFeed(t *testing.T) {
 			},
 			Message: chain.Message{
 				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), 
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
 				Amount:           big.NewInt(100),
 				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 			},
@@ -469,7 +469,7 @@ func TestManagePacket(t *testing.T) {
 			},
 			Message: chain.Message{
 				DestTokenAddress: "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
-				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(), 
+				SenderAddress:    common.HexToAddress("0x2Ad6EB85f5Cf1dca10Bc11C31BE923F24adFa758").Hex(),
 				Amount:           big.NewInt(100),
 				ReceiverAddress:  "aleo18z337vpafgfgmpvd4dgevel6la75r8eumcmuyafp6aa4nnkqmvrsht2skn",
 			},
@@ -612,4 +612,3 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		assert.Equal(t, pkt.Sequence, uint64(i))
 	}
 }
-
