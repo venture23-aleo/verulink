@@ -1,6 +1,8 @@
 package aleo
 
 import (
+	"context"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,8 +10,14 @@ import (
 )
 
 func TestValidateAleoPrivateKey(t *testing.T) {
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
 
 	t.Run("valid key pair should work", func(t *testing.T) {
+		execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+			// Create a dummy command that echoes the expected public key
+			return fakeExecCommand(`aleo1trm2ez57pvqkrw9slt5u77l7dr0ql2c4xfkz58qw3gavup5t0gyq8tsgrk`)
+		}
 		t.Cleanup(func() {
 			sKey = ""
 		})
@@ -21,6 +29,9 @@ func TestValidateAleoPrivateKey(t *testing.T) {
 	})
 
 	t.Run("invalid key pair should not work", func(t *testing.T) {
+		execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+			return fakeExecCommand(`aleo1DIFFERENTkey00000000000000000000000000000000000000000`)
+		}
 		t.Cleanup(func() {
 			sKey = ""
 		})
@@ -32,7 +43,12 @@ func TestValidateAleoPrivateKey(t *testing.T) {
 }
 
 func TestSetUpPrivateKey(t *testing.T) {
+	originalExecCommand := execCommand
+	defer func() { execCommand = originalExecCommand }()
 	t.Run("passing valid key pair should set private key", func(t *testing.T) {
+		execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+			return fakeExecCommand(`aleo1trm2ez57pvqkrw9slt5u77l7dr0ql2c4xfkz58qw3gavup5t0gyq8tsgrk`)
+		}
 		t.Cleanup(func() {
 			sKey = ""
 		})
@@ -47,6 +63,9 @@ func TestSetUpPrivateKey(t *testing.T) {
 	})
 
 	t.Run("passing invalid key pair should not set private key", func(t *testing.T) {
+		execCommand = func(ctx context.Context, name string, args ...string) *exec.Cmd {
+			return fakeExecCommand(`aleo1DIFFERENTkey00000000000000000000000000000000000000000`)
+		}
 		t.Cleanup(func() {
 			sKey = ""
 		})
@@ -58,4 +77,8 @@ func TestSetUpPrivateKey(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, "", sKey)
 	})
+}
+
+func fakeExecCommand(mockOutput string) *exec.Cmd {
+	return exec.Command("/bin/sh", "-c", "printf '"+mockOutput+"'")
 }
