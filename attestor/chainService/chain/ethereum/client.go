@@ -52,7 +52,7 @@ const (
 	retryPacketNamespacePrefix = "ethereum_rpns"
 )
 
-var predicateVersions = map[uint8]bool{3: true, 4: true, 13: true}
+var predicateVersions = map[uint8]bool{3: true, 4: true, 13: true, 14: true}
 
 type ethClientI interface {
 	GetCurrentBlock(ctx context.Context) (uint64, error)
@@ -207,7 +207,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 			Height: packetDispatched.Packet.Height.Uint64(),
 		}
 		packets = append(packets, commonPacket)
-		logger.GetLogger().Debug("packet fetched", zap.Uint64("sequence_number", commonPacket.Sequence))
+		logger.GetLogger().Debug("packet fetched", zap.String("chain", cl.name), zap.Uint64("sequence_number", commonPacket.Sequence))
 	}
 	return packets, nil
 }
