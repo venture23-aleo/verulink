@@ -1,18 +1,29 @@
 ---
 chains: 
   - name: ethereum
-    token_service_contract_address: 0x5554f1660e1464a86E9155374ea33b0Ab7b890Bd
-    usdc_contract_address: 0xD99e898842c566be038bf898b3e406f028a031E0
-    bridge_contract_address: 0xB83766b28bE2Cf6Fb28Cd055beFB55fdc68CfC9C
-    node_url: http://localhost:3001
+    token_service_contract_address: 0x40ba26EA0f0dE70780A151EAF3F47501e5Cd522A
+    usdc_contract_address: 0x40ba26EA0f0dE70780A151EAF3F47501e5Cd522A
+    bridge_contract_address: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
+    node_url: https://rpc-sepolia.rockx.com
     wallet_path: /home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121
     wallet_address: 0x2ca02613ce51b3ed6930e89c63c66219f8e41121
+    chain_id: 11155111
   - name: aleo
-    token_service_contract_address: token_service_v0001.aleo
+    token_service_contract_address: token_service_stg_v2.aleo
     usdc_contract_address: wusdc_token_v0001.aleo
-    bridge_contract_address: token_bridge_v0001.aleo
-    node_url: http://localhost|testnet
+    bridge_contract_address: token_bridge_stg_v2.aleo
+    node_url: https://api.explorer.provable.com/v1|testnet
     wallet_path: APrivateKey1zkp4RfjRhZ9apYoF75EsPhEVKJijDoRTxeZRk7Y9C7bWt4B
-    wallet_address: wallet_address
-collector_service_uri: https://aleomtls.ibriz.ai
+    wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za
+    chain_id: 6694886634403
+
+  - name: base
+    token_service_contract_address: 0x0c1F973927B2D1403727977E8b3Da8A42d640AC0
+    usdc_contract_address: 0x555eC249d1eB0db553AE8df14f4baE287F9CE62a
+    bridge_contract_address: 0x5410567256E7187b0a6A3C67E240A85d063C3aF5
+    node_url: wss://base-sepolia-rpc.publicnode.com
+    wallet_path: /home/aanya/.ethereum/keystore/UTC--2024-07-09T05-45-45.482980559Z--2ca02613ce51b3ed6930e89c63c66219f8e41121
+    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
+    chain_id: 84532
+collector_service_uri: https://aleobridge-dbservice-staging.b08qlu4v33brq.us-east-1.cs.amazonlightsail.com/
 write_config_path: ../chainService/config.yaml

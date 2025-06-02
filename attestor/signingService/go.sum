@@ -38,8 +38,8 @@ github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjR
 github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
-github.com/venture23-aleo/verulink/attestor/chainService v1.0.0 h1:GiNulgxmU3ld4ypyzFzvCGHeqsjO191XWjw1/pUwTr0=
-github.com/venture23-aleo/verulink/attestor/chainService v1.0.0/go.mod h1:J1voy9x7jDgL+7E4aKYi2FshRn7xqI2iJy7nnaTgu+M=
+github.com/venture23-aleo/verulink/attestor/chainService v1.0.1 h1:vMqSq8LTGJnuh3x0Jl9RqnPe4mTZgjH20ZWImRtFHmA=
+github.com/venture23-aleo/verulink/attestor/chainService v1.0.1/go.mod h1:J1voy9x7jDgL+7E4aKYi2FshRn7xqI2iJy7nnaTgu+M=
 go.uber.org/goleak v1.2.0 h1:xqgm/S+aQvhWFTtR0XK3Jvg7z8kGV8P4X14IzwN3Eqk=
 go.uber.org/goleak v1.2.0/go.mod h1:XJYK+MuIchqpmGmUSAzotztawfKvYLUIgg7guXrwVUo=
 go.uber.org/multierr v1.10.0 h1:S0h4aNzvfcFsC3dRF1jLoaov7oRaKqRGC/pUEJ2yvPQ=

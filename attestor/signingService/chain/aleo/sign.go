@@ -13,7 +13,10 @@ const (
 	deriveAddr = "derive-addr"
 )
 
-var sKey string
+var (
+	execCommand = exec.CommandContext
+	sKey        string
+)
 
 // sign returns the schnorr signature of the input string by calling a rust executable.
 // The input string must be able to be casted to plaintext type of ALEO. Random string
@@ -21,7 +24,7 @@ var sKey string
 func sign(s string) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	cmd := exec.CommandContext(ctx, command, signCmd, sKey, s)
+	cmd := execCommand(ctx, command, signCmd, sKey, s)
 	signature, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -46,7 +49,7 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 func validateAleoPrivateKey(privateKey, publicKey string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	cmd := exec.CommandContext(ctx, command, deriveAddr, privateKey)
+	cmd := execCommand(ctx, command, deriveAddr, privateKey)
 	addrBt, err := cmd.Output()
 	if err != nil {
 		return err

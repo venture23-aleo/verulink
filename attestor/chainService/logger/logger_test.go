@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// TODO: add tests for promethues metrics push
 
 
 func TestCheckHealthInInterval(t *testing.T) {
