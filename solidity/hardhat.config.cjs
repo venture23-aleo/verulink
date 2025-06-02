@@ -88,10 +88,10 @@ module.exports = {
               }
         ]
     },
-    // contractSizer: {
-    //   alphaSort: true,
-    //   runOnCompile: true
-    // },
+    contractSizer: {
+      alphaSort: true,
+      runOnCompile: true
+    },
     mocha: {
         timeout: 100000000
     },

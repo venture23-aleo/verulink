@@ -338,7 +338,7 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
         await proxy.deployed();
         proxied = ERC20TokenBridgeV1.attach(proxy.address);
 
-        ERC20TokenBridgeV2 = await ethers.getContractFactory("BridgeV2", {
+        ERC20TokenBridgeV2 = await ethers.getContractFactory("BridgeV2Mock", {
             libraries: {
                 PacketLibrary: libInstance.address,
                 AleoAddressLibrary: aleoLibInstance.address,

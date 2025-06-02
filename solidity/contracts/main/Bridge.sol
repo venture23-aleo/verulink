@@ -90,7 +90,7 @@ contract Bridge is
 
     /// @notice Sends a message packet to the specified destination chain
     /// @param packet The outgoing packet to be sent
-    function sendMessage(PacketLibrary.OutPacket memory packet) public whenNotPaused {
+    function sendMessage(PacketLibrary.OutPacket memory packet) public virtual whenNotPaused {
         require(isSupportedChain(packet.destTokenService.chainId), "Bridge: unknown destination chain");
         require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
         _sendMessage(packet);

@@ -5,6 +5,19 @@ pragma solidity ^0.8.19;
 /// @dev A library for handling packet structures and hashing.
 library PacketLibrary {
 
+        /// @notice The version of the contract
+    uint256 constant VERSION_PUBLIC_TRANSFER = 1;
+    uint256 constant VERSION_PUBLIC_TRANSFER_RELAYER = 2;
+    uint256 constant VERSION_PUBLIC_TRANSFER_PREDICATE = 3;
+    uint256 constant VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER = 4;
+
+    uint256 constant VERSION_PRIVATE_TRANSFER = 11;
+    uint256 constant VERSION_PRIVATE_TRANSFER_RELAYER = 12;
+    uint256 constant VERSION_PRIVATE_TRANSFER_PREDICATE = 13;
+    uint256 constant VERSION_PRIVATE_TRANSFER_PREDICATE_RELAYER = 14;
+
+
+
     /// @notice Enum representing vote options in a packet.
     enum Vote {
         NULL,
