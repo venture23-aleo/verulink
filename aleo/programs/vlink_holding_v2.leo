@@ -1,6 +1,6 @@
 import token_registry.aleo;
 
-program vlink_holding_v5.aleo {
+program vlink_holding_v2.aleo {
 
     
     struct Image {

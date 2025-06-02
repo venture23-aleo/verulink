@@ -1,10 +1,10 @@
 // The 'token_service' program.
 
-import vlink_token_bridge_v5.aleo;
+import vlink_token_bridge_v2.aleo;
 import token_registry.aleo;
-import vlink_holding_v5.aleo;
+import vlink_holding_v2.aleo;
 
-program vlink_token_service_v5.aleo {
+program vlink_token_service_v2.aleo {
 
     struct WithdrawalLimit {
         // Withdrawal limit represented as basis points.
@@ -438,7 +438,7 @@ program vlink_token_service_v5.aleo {
         let burn: Future = token_registry.aleo/burn_public(token_id, self.caller, amount);
 
         // transferring platform fee to the token service
-        let mint: Future = token_registry.aleo/mint_public(token_id, vlink_council_v5.aleo, fee_platform, AUTHORIZE_UNTIL);
+        let mint: Future = token_registry.aleo/mint_public(token_id, vlink_council_v2.aleo, fee_platform, AUTHORIZE_UNTIL);
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
@@ -447,7 +447,7 @@ program vlink_token_service_v5.aleo {
 
         let version: u8 = is_relayer_on ? 2u8 : 1u8 ;
 
-        let publish : Future = vlink_token_bridge_v5.aleo/publish(
+        let publish : Future = vlink_token_bridge_v2.aleo/publish(
             version,
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
@@ -542,7 +542,7 @@ program vlink_token_service_v5.aleo {
         let (return_record, burn_private): (token_registry.aleo/Token, Future) = token_registry.aleo/burn_private(token_record, amount);
 
         // minting  platform fee to the token service
-        let mint: Future = token_registry.aleo/mint_public(token_id, vlink_council_v5.aleo, fee_platform, AUTHORIZE_UNTIL);
+        let mint: Future = token_registry.aleo/mint_public(token_id, vlink_council_v2.aleo, fee_platform, AUTHORIZE_UNTIL);
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
@@ -551,7 +551,7 @@ program vlink_token_service_v5.aleo {
         // TODO: version should be kept in constant
         let version: u8 = is_relayer_on ? 12u8 : 11u8 ;
 
-        let publish : Future = vlink_token_bridge_v5.aleo/publish(
+        let publish : Future = vlink_token_bridge_v2.aleo/publish(
             version,
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
@@ -649,7 +649,7 @@ program vlink_token_service_v5.aleo {
         assert(version < 10u8 );
 
         // call consume on bridge
-        let screening_passed: (bool, Future) = vlink_token_bridge_v5.aleo/consume(
+        let screening_passed: (bool, Future) = vlink_token_bridge_v2.aleo/consume(
             version,
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
@@ -691,7 +691,7 @@ program vlink_token_service_v5.aleo {
 
         let mint: Future = token_registry.aleo/mint_public(token_id, actual_receiver, amount-fee_relayer, AUTHORIZE_UNTIL);
 
-        let hold: Future = vlink_holding_v5.aleo/hold_fund(receiver, token_id, held_amount);
+        let hold: Future = vlink_holding_v2.aleo/hold_fund(receiver, token_id, held_amount);
 
 
 
@@ -759,7 +759,7 @@ program vlink_token_service_v5.aleo {
         let image_address: address = BHP256::hash_to_address(image);
         
         // call consume on bridge
-        let screening_passed: (bool, Future) = vlink_token_bridge_v5.aleo/consume(
+        let screening_passed: (bool, Future) = vlink_token_bridge_v2.aleo/consume(
             version,
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
@@ -796,7 +796,7 @@ program vlink_token_service_v5.aleo {
 
         let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount-fee_relayer, false, AUTHORIZE_UNTIL);
 
-        let hold: Future = vlink_holding_v5.aleo/hold_fund(image_address, token_id, held_amount);
+        let hold: Future = vlink_holding_v2.aleo/hold_fund(image_address, token_id, held_amount);
         return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, hold));
     }
 
@@ -858,7 +858,7 @@ program vlink_token_service_v5.aleo {
     }
 
     async transition holding_release(public token_id: field, public receiver: address, public amount: u128) -> Future{
-        let release: Future = vlink_holding_v5.aleo/release_fund(receiver, token_id, amount);
+        let release: Future = vlink_holding_v2.aleo/release_fund(receiver, token_id, amount);
         return finalize_holding_release(self.caller, token_id, amount, release);
     }
     async function finalize_holding_release(from:address, token_id: field, amount:u128, f0: Future){
@@ -871,7 +871,7 @@ program vlink_token_service_v5.aleo {
 
 
     async transition holding_release_private(public token_id: field, receiver: address, pre_image: field, public amount: u128) ->  (token_registry.aleo/Token, Future){
-        let release: (token_registry.aleo/Token, Future) = vlink_holding_v5.aleo/release_fund_private(receiver, pre_image, token_id, amount);
+        let release: (token_registry.aleo/Token, Future) = vlink_holding_v2.aleo/release_fund_private(receiver, pre_image, token_id, amount);
         return (release.0, finalize_HLD_release_private(self.caller, token_id, amount, release.1));
     }
 
@@ -885,7 +885,7 @@ program vlink_token_service_v5.aleo {
 
 
     async transition holding_transfer_ownership(public new_owner: address) -> Future{
-        let transfer_ownership: Future = vlink_holding_v5.aleo/transfer_ownership_holding(new_owner);
+        let transfer_ownership: Future = vlink_holding_v2.aleo/transfer_ownership_holding(new_owner);
         return finalize_holding_TF_OWN(self.caller, transfer_ownership);
     }
     async function finalize_holding_TF_OWN(from:address, f0: Future){

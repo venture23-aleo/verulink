@@ -1,6 +1,6 @@
 import token_registry.aleo;
 
-program vlink_council_v5.aleo {
+program vlink_council_v2.aleo {
 
     struct ProposalVote {
         // Hash of the proposal

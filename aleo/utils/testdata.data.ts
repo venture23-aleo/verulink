@@ -1,7 +1,7 @@
 import { hashStruct } from "./hash";
 
 // User address on Aleo
-export const attestor1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
+export const attestor1 = "aleo1eslxvrgwtev28t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
 export const attestor2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const attestor3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
 export const attestor4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
@@ -25,10 +25,10 @@ export const wusdcMaxNoCap = BigInt(100_000_000_000);
 export const wusdcName = BigInt('3707987077795');
 export const wusdcSymbol = BigInt("508237661255");
 export const wusdcDecimals = 6;
-export const wusdcFeeRelayerPublic = BigInt(100_000);
-export const wusdcPlatformFeePublic = 1_000;
-export const wusdcFeeRelayerPrivate = BigInt(200_000);
-export const wusdcPlatformFeePrivate = 2_000;
+export const wusdcFeeRelayerPublic = BigInt(150_000);
+export const wusdcPlatformFeePublic = 17;
+export const wusdcFeeRelayerPrivate = BigInt(250_000);
+export const wusdcPlatformFeePrivate = 34;
 
 // export const token_name = BigInt('6148332821651876206')
 // export const tokenID = hashStruct(token_name);
@@ -49,9 +49,9 @@ export const wusdtName = BigInt('3707987077965');
 export const wusdtSymbol = BigInt("508237661265");
 export const wusdtDecimals = 6;
 export const wusdtFeeRelayerPublic = BigInt(100_000);
-export const wusdtPlatformFeePublic = 1_000;
+export const wusdtPlatformFeePublic = 17;
 export const wusdtFeeRelayerPrivate = BigInt(200_000);
-export const wusdtPlatformFeePrivate = 2_000;
+export const wusdtPlatformFeePrivate = 34;
 
 
 // const token_name = BigInt('375093675092')//"WUSDT" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
@@ -69,9 +69,9 @@ export const wethName = BigInt('14473841365');
 export const wethSymbol = BigInt('1984255045');
 export const wethDecimals = 18;
 export const wethFeeRelayerPublic = BigInt(100_000_000_000_000);
-export const wethPlatformFeePublic = 1_000;
+export const wethPlatformFeePublic = 17;
 export const wethFeeRelayerPrivate = BigInt(200_000_000_000_000);
-export const wethPlatformFeePrivate = 2_000;
+export const wethPlatformFeePrivate = 34;
 
 
 // const token_name = BigInt('1464161352')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
@@ -130,17 +130,17 @@ export const ethTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F
 export const ethTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
 // Token Service Contract Address on Base
-export const baseTsContractAddr = "0xBB478fe03c90FfF7770b57bdf00eeb576F4F4F41"
+export const baseTsContractAddr = "0x9bDd97D4016b332331290BEb1fc32276Ab09cB75"
 export const baseTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
 export const baseTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
 // Token Service Contract Address on Arbitrum
-export const arbitrumTsContractAddr = "0x9cdF17334652a05830F3B6d06e18F13ed49521d5"
+export const arbitrumTsContractAddr = "0x3394E0dbe35F8b6beAC08e1E4aC5Af31930fa5D4"
 export const arbitrumTsRandomContractAddress = "0x76072f7484BFe15307940dF1DF69cd4635F91E85"
 export const arbitrumTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48Fe57A81a3Fa6"
 
 // Token Service Contract Address on Holesky
-export const ethHoleskyTsContractAddr = "0x2862b8900c9c6C6928E9d2B84057d835a4283275"
+export const ethHoleskyTsContractAddr = "0x08aE9cB3B80a1E45dE62b5a1b299d2058fFa55F7"
 
 
 // Token Service Contract Address on Ethereum

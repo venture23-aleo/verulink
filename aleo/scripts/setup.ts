@@ -1,5 +1,5 @@
-import { Vlink_token_bridge_v5Contract } from "../artifacts/js/vlink_token_bridge_v5";
-import { Vlink_token_service_v5Contract } from "../artifacts/js/vlink_token_service_v5";
+import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate } from "../utils/testdata.data";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -43,7 +43,7 @@ import {
   wethDecimals
 } from "../utils/testdata.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Vlink_bridge_council_v5Contract } from "../artifacts/js/vlink_bridge_council_v5";
+import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
@@ -54,11 +54,14 @@ import { execAddChainToToken, proposeAddChainToToken } from "./council/tokenServ
 import { ethTsContractAddr } from "../utils/constants";
 import { execTranferAdmin, proposeTransferAdmin } from "./token_admin_transfer";
 import { execRemoveRole, proposeRemoveRole } from "./council/tokenService/removeRole";
+import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_v1Contract } from "../artifacts/js/vlink_token_service_v1";
 
-const bridge = new Vlink_token_bridge_v5Contract({ mode: ExecutionMode.SnarkExecute });
-const tokenService = new Vlink_token_service_v5Contract({ mode: ExecutionMode.SnarkExecute });
-const bridgeCouncil = new Vlink_bridge_council_v5Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Vlink_token_service_v5Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Vlink_token_bridge_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const tokenService = new Vlink_token_service_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const old_tokenService = new Vlink_token_service_v1Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
   attestor1,
@@ -80,12 +83,12 @@ const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString() + "u128", 'fie
 const weth_id = leo2js.field(hash('bhp256', wethName.toString() + "u128", 'field'));
 
 const setup = async () => {
-  // await deployMainPrograms(
-  //   initialAttestors,
-  //   initialCouncilMembers,
-  //   councilThreshold,
-  //   councilThreshold
-  // );
+  await deployMainPrograms(
+    initialAttestors,
+    initialCouncilMembers,
+    councilThreshold,
+    councilThreshold
+  );
 
   // give old token ownership to newly deployed 
   const changeOwnerUSDC_proposalID = await proposeTransferAdmin(serviceCouncil.address(), wusdc_id, serviceCouncil.address());
@@ -99,16 +102,15 @@ const setup = async () => {
   const changeOwnerETH_proposalID = await proposeTransferAdmin(serviceCouncil.address(), weth_id, serviceCouncil.address());
   await execTranferAdmin(changeOwnerETH_proposalID, serviceCouncil.address(), weth_id, serviceCouncil.address())
 
-  // removing roles from old tokenService
-  const old_tokenService = "aleo1hkjqvh3qn4q3lr2sx5wqkt57c7heq826583duc6nlhfctkheyu8sf2qknh";
-  const revokeRoleUSDC_proposalID = await proposeRemoveRole(wusdc_id, old_tokenService);
-  await execRemoveRole(revokeRoleUSDC_proposalID, wusdc_id, old_tokenService);
+  // removing roles from old tokenService  
+  const revokeRoleUSDC_proposalID = await proposeRemoveRole(wusdc_id, old_tokenService.address());
+  await execRemoveRole(revokeRoleUSDC_proposalID, wusdc_id, old_tokenService.address());
 
-  const revokeRoleUSDT_proposalID = await proposeRemoveRole(wusdt_id, old_tokenService);
-  await execRemoveRole(revokeRoleUSDT_proposalID, wusdt_id, old_tokenService);
+  const revokeRoleUSDT_proposalID = await proposeRemoveRole(wusdt_id, old_tokenService.address());
+  await execRemoveRole(revokeRoleUSDT_proposalID, wusdt_id, old_tokenService.address());
 
-  const revokeRoleWETH_proposalID = await proposeRemoveRole(weth_id, old_tokenService);
-  await execRemoveRole(revokeRoleWETH_proposalID, weth_id, old_tokenService);
+  const revokeRoleWETH_proposalID = await proposeRemoveRole(weth_id, old_tokenService.address());
+  await execRemoveRole(revokeRoleWETH_proposalID, weth_id, old_tokenService.address());
 
 
   // Bridge: Add ethereum chain
@@ -131,7 +133,7 @@ const setup = async () => {
   const enableTokenServiceProposalId = await proposeAddService(tokenService.address());
   await execAddService(enableTokenServiceProposalId, tokenService.address());
 
-  // await wusdcSetupAndInit();
+  // no need to deploy this tokens are already present in token_registry
   // await deployWusdc(wusdcName, wusdcSymbol, wusdcDecimals, max_supply);
   // await deployWusdt(wusdtName, wusdtSymbol, wusdtDecimals, max_supply);
   // await deployWeth(wethName, wethSymbol, wethDecimals, max_supply);
@@ -186,8 +188,7 @@ async function wusdcSetupAndInit() {
   );
 
 
-
-  // // Token service: Add chain to existing token Arbitrum
+  // Token service: Add chain to existing token Arbitrum
   const addChainToWUSDCTokenProposalId = await proposeAddChainToToken(
     wusdc_id,
     arbitrumChainId,
@@ -210,28 +211,39 @@ async function wusdcSetupAndInit() {
     wusdcFeeRelayerPrivate
   );
 
-  // Token service: Add chain to existing token Holesky
-  const addChainToWUSDCTokenProposalHoleskyId = await proposeAddChainToToken(
-    wusdc_id,
-    ethHoleskyChainId,
-    ethHoleskyTsContractAddr,
-    ethHoleskyUsdcContractAddr,
-    wusdcPlatformFeePublic,
-    wusdcPlatformFeePrivate,
-    wusdcFeeRelayerPublic,
-    wusdcFeeRelayerPrivate
-  );
-  await execAddChainToToken(
-    addChainToWUSDCTokenProposalHoleskyId,
-    wusdc_id,
-    ethHoleskyChainId,
-    ethHoleskyTsContractAddr,
-    ethHoleskyUsdcContractAddr,
-    wusdcPlatformFeePublic,
-    wusdcPlatformFeePrivate,
-    wusdcFeeRelayerPublic,
-    wusdcFeeRelayerPrivate
-  );
+  // // Token service: Add token Holesky
+  // const addChainToWUSDCTokenProposalHoleskyId = await proposeAddToken(
+  //   wusdc_id,
+  //   wusdcMinTransfer,
+  //   wusdcMaxTransfer,
+  //   wusdcOutgoingPercentage,
+  //   wusdcTimeframe,
+  //   wusdcMaxNoCap,
+  //   ethHoleskyUsdcContractAddr,
+  //   ethHoleskyChainId,
+  //   ethHoleskyTsContractAddr,
+  //   wusdcPlatformFeePublic,
+  //   wusdcFeeRelayerPublic,
+  //   wusdcPlatformFeePrivate,
+  //   wusdcFeeRelayerPrivate
+  // );
+  // await execAddToken(
+  //   wusdc_id,
+  //   addChainToWUSDCTokenProposalHoleskyId,
+  //   wusdcMinTransfer,
+  //   wusdcMaxTransfer,
+  //   wusdcOutgoingPercentage,
+  //   wusdcTimeframe,
+  //   wusdcMaxNoCap,
+  //   ethHoleskyUsdcContractAddr,
+  //   ethHoleskyChainId,
+  //   ethHoleskyTsContractAddr,
+  //   wusdcPlatformFeePublic,
+  //   wusdcFeeRelayerPublic,
+  //   wusdcPlatformFeePrivate,
+  //   wusdcFeeRelayerPrivate
+  // );
+
 
   // Token service: Add chain to existing token Base
   const addChainToWUSDCTokenProposalBaseId = await proposeAddChainToToken(
@@ -326,30 +338,41 @@ async function wusdtSetupandInit() {
     wusdtFeeRelayerPrivate
   );
 
-  // Token service: Add chain to existing token Holesky
-  const addChainToWUSDTTokenProposalHoleskyId = await proposeAddChainToToken(
-    wusdt_id,
-    ethHoleskyChainId,
-    ethHoleskyTsContractAddr,
-    ethHoleskyUsdtContractAddr,
-    wusdtPlatformFeePublic,
-    wusdtPlatformFeePrivate,
-    wusdtFeeRelayerPublic,
-    wusdtFeeRelayerPrivate
-  );
-  await execAddChainToToken(
-    addChainToWUSDTTokenProposalHoleskyId,
-    wusdt_id,
-    ethHoleskyChainId,
-    ethHoleskyTsContractAddr,
-    ethHoleskyUsdtContractAddr,
-    wusdtPlatformFeePublic,
-    wusdtPlatformFeePrivate,
-    wusdtFeeRelayerPublic,
-    wusdtFeeRelayerPrivate
-  );
+  // // Token service: Add chain to existing token Holesky
+  // const addChainToWUSDtTokenProposalHoleskyId = await proposeAddToken(
+  //   wusdt_id,
+  //   wusdtMinTransfer,
+  //   wusdtMaxTransfer,
+  //   wusdtOutgoingPercentage,
+  //   wusdtTimeframe,
+  //   wusdtMaxNoCap,
+  //   ethHoleskyUsdtContractAddr,
+  //   ethHoleskyChainId,
+  //   ethHoleskyTsContractAddr,
+  //   wusdcPlatformFeePublic,
+  //   wusdcFeeRelayerPublic,
+  //   wusdcPlatformFeePrivate,
+  //   wusdcFeeRelayerPrivate
+  // );
+  // await execAddToken(
+  //   wusdt_id,
+  //   addChainToWUSDtTokenProposalHoleskyId,
+  //   wusdtMinTransfer,
+  //   wusdtMaxTransfer,
+  //   wusdtOutgoingPercentage,
+  //   wusdtTimeframe,
+  //   wusdtMaxNoCap,
+  //   ethHoleskyUsdtContractAddr,
+  //   ethHoleskyChainId,
+  //   ethHoleskyTsContractAddr,
+  //   wusdcPlatformFeePublic,
+  //   wusdcFeeRelayerPublic,
+  //   wusdcPlatformFeePrivate,
+  //   wusdcFeeRelayerPrivate
+  // );
 
-  // // Token service: Add chain to existing token Base
+
+  // Token service: Add chain to existing token Base
   const addChainToWUSDTTokenProposalBaseId = await proposeAddChainToToken(
     wusdt_id,
     baseChainId,
@@ -399,7 +422,7 @@ async function wethSetupandInit() {
     wethPlatformFeePublic,
     wethFeeRelayerPublic,
     wethPlatformFeePrivate,
-    wethFeeRelayerPrivate
+    wethFeeRelayerPrivate  
   );
   await execAddToken(
     weth_id,
@@ -465,6 +488,38 @@ async function wethSetupandInit() {
     wethFeeRelayerPublic,
     wethFeeRelayerPrivate
   );
+
+  //   const addChainToWETHTokenProposalHoleskyId = await proposeAddToken(
+  //   weth_id,
+  //   wethMinTransfer,
+  //   wethMaxTransfer,
+  //   wethOutgoingPercentage,
+  //   wethTimeframe,
+  //   wethMaxNoCap,
+  //   ethHoleskyEthContractAddr,
+  //   ethHoleskyChainId,
+  //   ethHoleskyTsContractAddr,
+  //   wusdcPlatformFeePublic,
+  //   wusdcFeeRelayerPublic,
+  //   wusdcPlatformFeePrivate,
+  //   wusdcFeeRelayerPrivate
+  // );
+  // await execAddToken(
+  //   weth_id,
+  //   addChainToWETHTokenProposalHoleskyId,
+  //   wethMinTransfer,
+  //   wethMaxTransfer,
+  //   wethOutgoingPercentage,
+  //   wethTimeframe,
+  //   wethMaxNoCap,
+  //   ethHoleskyEthContractAddr,
+  //   ethHoleskyChainId,
+  //   ethHoleskyTsContractAddr,
+  //   wusdcPlatformFeePublic,
+  //   wusdcFeeRelayerPublic,
+  //   wusdcPlatformFeePrivate,
+  //   wusdcFeeRelayerPrivate
+  // );
 
   // Token service: Add chain to existing token Base
   const addChainToWETHTokenProposalBaseId = await proposeAddChainToToken(

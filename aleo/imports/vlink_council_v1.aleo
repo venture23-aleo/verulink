@@ -1,4 +1,4 @@
-program council_stg_v2.aleo;
+program vlink_council_v1.aleo;
 
 struct ProposalVote:
     proposal as field;
@@ -123,7 +123,7 @@ function initialize:
     and r3 r4 into r5;
     assert.eq r5 true ;
     async initialize r0 r1 r2 into r6;
-    output r6 as council_stg_v2.aleo/initialize.future;
+    output r6 as vlink_council_v1.aleo/initialize.future;
 
 finalize initialize:
     input r0 as [address; 5u32].public;
@@ -151,7 +151,7 @@ function propose:
     cast r1 aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc into r4 as ProposalVote;
     hash.bhp256 r4 into r5 as field;
     async propose self.caller r0 r1 r3 r5 into r6;
-    output r6 as council_stg_v2.aleo/propose.future;
+    output r6 as vlink_council_v1.aleo/propose.future;
 
 finalize propose:
     input r0 as address.public;
@@ -181,7 +181,7 @@ function vote:
     cast r0 self.caller into r2 as ProposalVote;
     hash.bhp256 r2 into r3 as field;
     async vote self.caller r0 r3 r1 into r4;
-    output r4 as council_stg_v2.aleo/vote.future;
+    output r4 as vlink_council_v1.aleo/vote.future;
 
 finalize vote:
     input r0 as address.public;
@@ -207,7 +207,7 @@ function update_vote:
     cast r0 self.caller into r2 as ProposalVote;
     hash.bhp256 r2 into r3 as field;
     async update_vote self.caller r0 r3 r1 into r4;
-    output r4 as council_stg_v2.aleo/update_vote.future;
+    output r4 as vlink_council_v1.aleo/update_vote.future;
 
 finalize update_vote:
     input r0 as address.public;
@@ -246,7 +246,7 @@ function add_member:
     call get_valid_unique_address_count r3 into r7;
     call get_proposal_vote_keys r6 r3 into r8;
     async add_member r6 r1 r2 r3 r8 r7 into r9;
-    output r9 as council_stg_v2.aleo/add_member.future;
+    output r9 as vlink_council_v1.aleo/add_member.future;
 
 finalize add_member:
     input r0 as field.public;
@@ -307,7 +307,7 @@ function remove_member:
     call get_valid_unique_address_count r3 into r7;
     call get_proposal_vote_keys r6 r3 into r8;
     async remove_member r6 r1 r2 r3 r8 r7 into r9;
-    output r9 as council_stg_v2.aleo/remove_member.future;
+    output r9 as vlink_council_v1.aleo/remove_member.future;
 
 finalize remove_member:
     input r0 as field.public;
@@ -366,7 +366,7 @@ function update_threshold:
     call get_valid_unique_address_count r2 into r6;
     call get_proposal_vote_keys r5 r2 into r7;
     async update_threshold r5 r1 r2 r7 r6 into r8;
-    output r8 as council_stg_v2.aleo/update_threshold.future;
+    output r8 as vlink_council_v1.aleo/update_threshold.future;
 
 finalize update_threshold:
     input r0 as field.public;
@@ -415,7 +415,7 @@ function external_execute:
     call get_valid_unique_address_count r2 into r5;
     call get_proposal_vote_keys r1 r2 into r6;
     async external_execute r1 r2 r6 r5 into r7;
-    output r7 as council_stg_v2.aleo/external_execute.future;
+    output r7 as vlink_council_v1.aleo/external_execute.future;
 
 finalize external_execute:
     input r0 as field.public;

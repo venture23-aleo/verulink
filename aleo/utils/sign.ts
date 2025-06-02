@@ -3,18 +3,22 @@ import { js2leo as js2leoCommon } from '@doko-js/core';
 import { sign, sign_verify } from "aleo-signer"
 
 import { hashStruct } from "./hash";
-import { InPacket, InPacketWithScreening } from '../artifacts/js/types/vlink_token_bridge_v5';
-import { getInPacketLeo, getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/vlink_token_bridge_v5';
+import { InPacket, InPacketWithScreening } from '../artifacts/js/types/vlink_token_bridge_v2';
+import { getInPacketLeo, getInPacketWithScreeningLeo } from '../artifacts/js/js2leo/vlink_token_bridge_v2';
 
 export const signPacket = (packet: InPacket, screening_passed: boolean, privateKey: string) => {
 
+  console.log("packet", getInPacketLeo(packet));
   const packetHash = hashStruct(getInPacketLeo(packet));
+  console.log("packetHash", packetHash)
   const packetHashWithScreening: InPacketWithScreening = {
     packet_hash: packetHash,
     screening_passed
   };
   const packetHashWithScreeningHash = hashStruct(getInPacketWithScreeningLeo(packetHashWithScreening));
+  console.log("packetHashWithScreeningHash", packetHashWithScreeningHash)
   const signature = sign(privateKey, js2leoCommon.field(packetHashWithScreeningHash))
+  console.log("signature", signature)
   return signature
 }
 

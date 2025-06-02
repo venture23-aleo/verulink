@@ -1,5 +1,5 @@
 import { Field } from "@aleohq/sdk";
-import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v5";
+import { InPacket } from "../artifacts/js/types/vlink_token_bridge_v2";
 import { PUBLIC_VERSION } from "./constants";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr } from "./ethAddress";
 
@@ -17,7 +17,7 @@ export const createRandomPacket = (
   height?: bigint,
 
 ): InPacket => {
-  let incomingSequence = BigInt(10446744073709551615);
+  let incomingSequence = sequence ?? BigInt(10446744073709551630);
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 
   let bridgeVersion = version;

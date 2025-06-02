@@ -1,31 +1,31 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_council_v5Contract } from "../../../artifacts/js/vlink_council_v5";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr, wusdcFeeRelayerPrivate, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcPlatformFeePublic } from "../../../utils/testdata.data";
-import { Vlink_token_service_v5Contract } from "../../../artifacts/js/vlink_token_service_v5";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { AddChainExistingToken, TsAddToken } from "../../../artifacts/js/types/vlink_token_service_council_v5";
-import { getAddChainExistingTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v5";
+import { AddChainExistingToken, TsAddToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
+import { getAddChainExistingTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Vlink_token_service_council_v5Contract } from "../../../artifacts/js/vlink_token_service_council_v5";
+import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { hash } from "aleo-hasher";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
 import { baseChainId, baseTsContractAddr } from "../../../utils/testdata.data";
-import { getAddChainExistingToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v5";
+import { getAddChainExistingToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v2";
 import { arbitrumChainId } from "../../../utils/testdata.data";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v5Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v5Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v5Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
 export const proposeAddChainToToken = async (
-    chain_id: bigint, tokenId: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint,  fee_of_relayer_private: bigint,
+    tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint,  fee_of_relayer_private: bigint,
 ): Promise<number> => {
 
 
@@ -108,7 +108,7 @@ export const voteAddChainToToken = async (
 ///// Execute ////////
 //////////////////////
 export const execAddChainToToken = async (
-    proposalId: number, chain_id: bigint, tokenId: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint,  fee_of_relayer_private: bigint,
+    proposalId: number, tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint,  fee_of_relayer_private: bigint,
 ) => {
     console.log(`Adding chain ${chain_id} to token ${tokenId}`)
     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -178,13 +178,13 @@ const arbitrumToken_addressETH = "0x0000000000000000000000000000000000000001";
 
 
 
-(async () => {
-    // const proposal_ID_USDC = await proposeAddChainToToken(arbitrumChainId, arbitrumToken_addressAleoUSDC, arbitrumTsContractAddr, arbitrumToken_addressUSDC, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
-    // await execAddChainToToken(proposal_ID_USDC, arbitrumChainId, arbitrumToken_addressAleoUSDC, arbitrumTsContractAddr, arbitrumToken_addressUSDC, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
+// (async () => {
+//     // const proposal_ID_USDC = await proposeAddChainToToken(arbitrumChainId, arbitrumToken_addressAleoUSDC, arbitrumTsContractAddr, arbitrumToken_addressUSDC, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
+//     // await execAddChainToToken(proposal_ID_USDC, arbitrumChainId, arbitrumToken_addressAleoUSDC, arbitrumTsContractAddr, arbitrumToken_addressUSDC, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
 
-    // const proposal_ID_USDT = await proposeAddChainToToken(arbitrumChainId, arbitrumToken_addressAleoUSDT, arbitrumTsContractAddr, arbitrumToken_addressUSDT, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
-    // await execAddChainToToken(proposal_ID_USDT, arbitrumChainId, arbitrumToken_addressAleoUSDT, arbitrumTsContractAddr, arbitrumToken_addressUSDT, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
+//     // const proposal_ID_USDT = await proposeAddChainToToken(arbitrumChainId, arbitrumToken_addressAleoUSDT, arbitrumTsContractAddr, arbitrumToken_addressUSDT, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
+//     // await execAddChainToToken(proposal_ID_USDT, arbitrumChainId, arbitrumToken_addressAleoUSDT, arbitrumTsContractAddr, arbitrumToken_addressUSDT, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
 
-    const proposal_ID = await proposeAddChainToToken(arbitrumChainId, arbitrumToken_addressAleoETH, arbitrumTsContractAddr, arbitrumToken_addressETH, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
-    await execAddChainToToken(proposal_ID, arbitrumChainId, arbitrumToken_addressAleoETH, arbitrumTsContractAddr, arbitrumToken_addressETH, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
-})();
+//     const proposal_ID = await proposeAddChainToToken(arbitrumChainId, arbitrumToken_addressAleoETH, arbitrumTsContractAddr, arbitrumToken_addressETH, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
+//     await execAddChainToToken(proposal_ID, arbitrumChainId, arbitrumToken_addressAleoETH, arbitrumTsContractAddr, arbitrumToken_addressETH, 0, 0, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate);
+// })();
