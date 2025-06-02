@@ -8,17 +8,17 @@ async function main() {
         process.env.PROVIDER
     );
 
+    const tokenAddress = process.env.ONE_ADDRESS;
+
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
-    const ERC20TokenServiceV2 = await ethers.getContractFactory("TokenServiceV2");
+    const ERC20TokenService = await ethers.getContractFactory("TokenService");
     const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
-    console.log("deployerSigner= ", deployerSigner.address);
-    console.log("PredicateService= ", process.env.PREDICATE_SERVICE);
     
-    console.log("Adding PredicateService to tokenservice...");
-    const ERC20TokenServiceABI = ERC20TokenServiceV2.interface.format();
+    console.log("Removing ETH from tokenservice...");
+    const ERC20TokenServiceABI = ERC20TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);
-    await TokenServiceContract.setPredicateService(process.env.PREDICATE_SERVICE);
-    console.log("PredicateService added successfully!!!");
+    await TokenServiceContract.removeToken(tokenAddress);
+    console.log("ETH removed successfully!!!");
 }
 main()
     .then(() => process.exit(0))
