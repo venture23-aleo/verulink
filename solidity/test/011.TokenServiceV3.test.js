@@ -49,7 +49,7 @@ describe('TokenService', () => {
         aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
         const aleoLibInstance = await aleolib.deploy();
         await aleoLibInstance.deployed();
-        ERC20TokenBridge = await ethers.getContractFactory("Bridge", {
+        ERC20TokenBridge = await ethers.getContractFactory("BridgeV2", {
             libraries: {
                 PacketLibrary: libInstance.address,
                 AleoAddressLibrary: aleoLibInstance.address,
