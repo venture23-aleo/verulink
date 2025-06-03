@@ -1,14 +1,14 @@
 
-import { Vlink_council_v1Contract } from "../artifacts/js/vlink_council_v1";
+import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
 
-import { getProposalVoteLeo } from "../artifacts/js/js2leo/vlink_council_v1";
-import { ProposalVote, ProposalVoterKey } from "../artifacts/js/types/vlink_council_v1";
-import { ALEO_ZERO_ADDRESS } from "./constants";
+import { getProposalVoteLeo } from "../artifacts/js/js2leo/vlink_council_v2";
+import { ProposalVote, ProposalVoterKey } from "../artifacts/js/types/vlink_council_v2";
+import { ALEO_ZERO_ADDRESS } from "./testdata.data";
 import { hashStruct } from "./hash";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
-const council = new Vlink_council_v1Contract({ mode });
+const council = new Vlink_council_v2Contract({ mode });
 
 const getVoteKeys = (proposalHash: bigint, voters: string[]): bigint[] => {
   const voteKeys = []
@@ -26,7 +26,7 @@ const getVoteKeys = (proposalHash: bigint, voters: string[]): bigint[] => {
 export const getVoters = async (proposalHash: bigint): Promise<[string[], boolean[]]> => {
   const totalVoters = await council.proposal_vote_counts(proposalHash);
   const voters = []
-  for (let i = 0; i<totalVoters; i++) {
+  for (let i = 0; i < totalVoters; i++) {
     const ithVoterKey: ProposalVoterKey = {
       proposal: proposalHash,
       index: i
@@ -46,9 +46,9 @@ export const getVoters = async (proposalHash: bigint): Promise<[string[], boolea
 
 const getVotersWithGivenVote = async (proposalHash: bigint, expectedVote: boolean): Promise<string[]> => {
   const [voters, votes] = await getVoters(proposalHash);
-  
+
   const votersWithGivenVote: string[] = []
-  for (let i=0; i<votes.length; i++) {
+  for (let i = 0; i < votes.length; i++) {
     if (votes[i] == expectedVote) {
       votersWithGivenVote.push(voters[i]);
     }

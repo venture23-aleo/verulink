@@ -1,5 +1,5 @@
 // The 'bridge' program.
-program vlink_token_bridge_v1.aleo {
+program vlink_token_bridge_v2.aleo {
 
     // Default Aleo Program
     struct AleoProgram {
@@ -29,7 +29,7 @@ program vlink_token_bridge_v1.aleo {
         // [00 00 00 00 00 00 00 00 00 00 00 00 d8 da 6b f2 69 64 af 9d 7e ed 9e 03 e5 34 15 d3 7a a9 60 45]
         dest_token_address: [u8; 32],
         // Amount to unlock on origin chain
-        amount: u128
+        amount: u128,
         // Address of the receiver on origin chain
         // Represented as bytes32 zero-left-padded (Similar to Wormhole address)
         // For EVM Chains, 20 bytes is formatted as following:
@@ -47,9 +47,9 @@ program vlink_token_bridge_v1.aleo {
         // Program Address of the wrapped asset on Aleo; Ex: wUSDC
         dest_token_id: field,
         // Amount to mint on Aleo
-        amount: u128
+        amount: u128,
         // Address of the receiver on Aleo
-        receiver_address: address,
+        receiver_address: address
     }
 
 
@@ -138,10 +138,10 @@ program vlink_token_bridge_v1.aleo {
     mapping sequences: u128 => u64;
 
     // The chain id of the Aleo network where this program is deployed
-    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
+    const ALEO_CHAIN_ID: u128 = 6694886634403u128;
 
-    // Version of the packet
-    const VERSION: u8 = 1u8;
+    // // Version of the packet
+    // const VERSION: u8 = 1u8;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
@@ -164,18 +164,18 @@ program vlink_token_bridge_v1.aleo {
     //////////////////////////////
 
     /// Initialize the token bridge program
-    /// Note: This function must be allowed to be called only once.
-    transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) {
+    /// Note: This async function must be allowed to be called only once.
+    async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) -> Future{
 
         let unique_attestors: u8 = get_valid_unique_address_count(initial_attestors);
 
         // Sanity check for threshold
         assert(threshold >= 1u8 && threshold <= unique_attestors );
 
-        return then finalize(initial_attestors, threshold, unique_attestors, owner);
+        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner);
     }
 
-    finalize initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address) {
+    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
@@ -201,11 +201,11 @@ program vlink_token_bridge_v1.aleo {
 
     /// Update the existing owner
     /// Can only be called from owner
-    transition transfer_ownership_tb(public new_owner: address) {
-        return then finalize(self.caller, new_owner);
+    async transition transfer_ownership_tb(public new_owner: address) -> Future{
+        return finalize_transfer_ownership_tb(self.caller, new_owner);
     }
 
-    finalize transfer_ownership_tb(from: address, new_owner: address) {
+    async function finalize_transfer_ownership_tb(from: address, new_owner: address) {
         // Get the owner address
         // If program not initialized, this fails
         let current_owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -222,12 +222,12 @@ program vlink_token_bridge_v1.aleo {
     /// Add a new attestor to the bridge program
     /// Only a valid attestor can `attest` to a packet
     /// Can only be called from owner
-    transition add_attestor_tb(public new_attestor: address, public new_threshold: u8) {
+    async transition add_attestor_tb(public new_attestor: address, public new_threshold: u8) -> Future{
          assert(new_threshold > 0u8); 
-        return then finalize(self.caller, new_attestor, new_threshold);
+        return finalize_add_attestor_tb(self.caller, new_attestor, new_threshold);
     }
 
-    finalize add_attestor_tb(from: address, new_attestor: address, new_threshold: u8) {
+    async function finalize_add_attestor_tb(from: address, new_attestor: address, new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -246,13 +246,13 @@ program vlink_token_bridge_v1.aleo {
 
     /// Remove an existing attestor from the bridge program
     /// Can only be called from owner
-    transition remove_attestor_tb(public attestor: address, public new_threshold: u8) {
+    async transition remove_attestor_tb(public attestor: address, public new_threshold: u8) -> Future{
         assert_neq(attestor, ZERO_ADDRESS);
         assert(new_threshold > 0u8); 
-        return then finalize(self.caller, attestor, new_threshold);
+        return finalize_remove_attestor_tb(self.caller, attestor, new_threshold);
     }
 
-    finalize remove_attestor_tb(from: address, attestor: address, public new_threshold: u8) {
+    async function finalize_remove_attestor_tb(from: address, attestor: address, public new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -275,12 +275,12 @@ program vlink_token_bridge_v1.aleo {
 
     /// Update the existing threshold for a packet to be considered valid
     /// Can only be called from owner
-    transition update_threshold_tb(public new_threshold: u8) {
+    async transition update_threshold_tb(public new_threshold: u8) -> Future{
         assert(new_threshold >= 1u8);
-        return then finalize(self.caller, new_threshold);
+        return finalize_update_threshold_tb(self.caller, new_threshold);
     }
 
-    finalize update_threshold_tb(from: address, public new_threshold: u8) {
+    async function finalize_update_threshold_tb(from: address, public new_threshold: u8) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -298,11 +298,11 @@ program vlink_token_bridge_v1.aleo {
     //////////////////////////////
 
     /// Support a new chain by the bridge
-    transition add_chain_tb(public chain_id: u128) {
-        return then finalize(self.caller, chain_id);
+    async transition add_chain_tb(public chain_id: u128) -> Future{
+        return finalize_add_chain_tb(self.caller, chain_id);
     }
 
-    finalize add_chain_tb(from: address, chain_id: u128) {
+    async function finalize_add_chain_tb(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -312,11 +312,11 @@ program vlink_token_bridge_v1.aleo {
     }
 
     /// Remove chain supported by the bridge
-    transition remove_chain_tb(public chain_id: u128) {
-        return then finalize(self.caller, chain_id);
+    async transition remove_chain_tb(public chain_id: u128) -> Future{
+        return finalize_remove_chain_tb(self.caller, chain_id);
     }
 
-    finalize remove_chain_tb(from: address, chain_id: u128) {
+    async function finalize_remove_chain_tb(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -335,11 +335,11 @@ program vlink_token_bridge_v1.aleo {
     /// Add a new supported service program to the bridge program
     /// Only the supported service program can call publish/consume on bridge program
     /// Can only be called from owner
-    transition add_service_tb(public service: address) {
-        return then finalize(self.caller, service);
+    async transition add_service_tb(public service: address) -> Future{
+        return finalize_add_service_tb(self.caller, service);
     }
 
-    finalize add_service_tb(from: address, service: address) {
+    async function finalize_add_service_tb(from: address, service: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -351,11 +351,11 @@ program vlink_token_bridge_v1.aleo {
     /// Remove an existing service program from the bridge program
     /// Removing the program program prevents it from calling publish/consume on bridge program
     /// Can only be called from owner
-    transition remove_service_tb(public service: address) {
-        return then finalize(self.caller, service);
+    async transition remove_service_tb(public service: address) -> Future{
+        return finalize_remove_service_tb(self.caller, service);
     }
 
-    finalize remove_service_tb(from: address, service: address) {
+    async function finalize_remove_service_tb(from: address, service: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -372,11 +372,11 @@ program vlink_token_bridge_v1.aleo {
 
     /// Pauses the bridge
     /// There can be no transfers when the bridge is paused
-    transition pause_tb() {
-        return then finalize(self.caller);
+    async transition pause_tb() -> Future{
+        return finalize_pause_tb(self.caller);
     }
 
-    finalize pause_tb(from: address) {
+    async function finalize_pause_tb(from: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -387,11 +387,11 @@ program vlink_token_bridge_v1.aleo {
 
     /// Unpauses the bridge
     /// There can be transfers only when the bridge is unpaused
-    transition unpause_tb() {
-        return then finalize(self.caller);
+    async transition unpause_tb() -> Future{
+        return finalize_unpause_tb(self.caller);
     }
 
-    finalize unpause_tb(from: address) {
+    async function finalize_unpause_tb(from: address) {
         // Get the owner address
         // If program not initialized, this fails
         let owner: address = Mapping::get(owner_TB, OWNER_INDEX);
@@ -402,7 +402,7 @@ program vlink_token_bridge_v1.aleo {
 
 
     /// Publishes a message to be picked up by attestors to forward to the destination chain.
-    /// This transition must be called from one of the service supported by the bridge.
+    /// This async transition must be called from one of the service supported by the bridge.
     ///
     /// # Arguments:
     /// * `destination_chain_id`: u128 - ChainId of the chain where the message is intended for
@@ -411,14 +411,15 @@ program vlink_token_bridge_v1.aleo {
     /// * `sender`: address - Sender of the message
     /// * `receiver`: [u8; 32] - Receiver of the message on destination chain
     /// * `amount`: u128 - Amount being sent to the receiver
-    transition publish(
+    async transition publish(
+        public version: u8,
         public destination_chain_id: u128, 
         public destination_service_contract: [u8; 32], 
         public token: [u8; 32], 
         public sender: address, 
         public receiver: [u8; 32], 
-        public amount: u128
-    ) {
+        public amount: u128,
+    ) -> Future{
 
         // Cannot directly pass struct as parameter in cross-contract call.
         // So construct source struct on `finalize` instead
@@ -428,25 +429,27 @@ program vlink_token_bridge_v1.aleo {
         //     addr: self.caller
         // };
 
-        return then finalize (
+        return (finalize_publish (
+            version,
             self.caller, 
             destination_chain_id, 
             destination_service_contract, 
             token, 
             sender, 
             receiver, 
-            amount
-        );
+            amount,
+        ));
     }
 
-    finalize publish(
+    async function finalize_publish(
+        version: u8,
         source_service_program: address, 
         destination_chain_id: u128, 
         destination_service_contract: [u8; 32], 
         dest_token_address: [u8;32], 
         sender_address: address, 
         receiver_address: [u8; 32], 
-        amount: u128
+        amount: u128,
     ) {
         // Assert that the bridge is unpaused
         assert_eq(Mapping::get(bridge_settings, PAUSABILITY_INDEX), UNPAUSED_VALUE);
@@ -478,12 +481,12 @@ program vlink_token_bridge_v1.aleo {
             sender_address,
             dest_token_address,
             amount,
-            receiver_address,
+            receiver_address
         };
 
         // Construct
         let packet: OutPacket = OutPacket {
-            version: VERSION,
+            version: version,
             source,
             destination,
             sequence: target_sequence_no,
@@ -505,7 +508,7 @@ program vlink_token_bridge_v1.aleo {
     }
 
     /// Consumes it
-    /// This transition must be called from one of the service supported by the bridge.
+    /// This async transition must be called from one of the service supported by the bridge.
     ///
     /// # Arguments:
     /// * `source_chain_id`: u32 - Source Chain Id
@@ -518,7 +521,8 @@ program vlink_token_bridge_v1.aleo {
     /// * `height`: u32 - Height of the source chain where the packet originated
     /// * `signers`: [address; 5] - Addresses of the attestors who have signed the packet
     /// * `signs`: [signature; 5] - Signatures of the attestors after signing the packet
-    transition consume(
+    async transition consume(
+        public version: u8,
         public source_chain_id: u128, 
         public source_service_contract: [u8;32], 
         public dest_token_id: field, 
@@ -528,8 +532,8 @@ program vlink_token_bridge_v1.aleo {
         public sequence: u64, 
         public height: u64, 
         public signers: [address; 5], 
-        public signs: [signature; 5]
-    ) -> public bool {
+        public signs: [signature; 5],
+    ) -> (public bool, Future) {
 
         let source: ForeignContract = ForeignContract {
             chain_id: source_chain_id,
@@ -549,7 +553,7 @@ program vlink_token_bridge_v1.aleo {
         };
 
         let in_packet: InPacket = InPacket {
-            version: VERSION,
+            version: version,
             source,
             destination,
             sequence,
@@ -561,17 +565,10 @@ program vlink_token_bridge_v1.aleo {
 
         let (screening_passed, votes): (bool, u8) = get_majority_count(packet_hash, signers , signs);
 
-        return screening_passed then finalize (
-            self.caller, 
-            source_chain_id, 
-            sequence, 
-            signers, 
-            votes,
-            
-        );
+        return (screening_passed, finalize_consume (self.caller, source_chain_id, sequence, signers, votes));
     }
 
-    finalize consume(
+    async function finalize_consume(
         from: address, 
         chain_id: u128, 
         sequence: u64 , 
@@ -612,8 +609,6 @@ program vlink_token_bridge_v1.aleo {
         Mapping::set(in_packet_consumed, packet_id, true);
     }
 
-
-
     // Validates that the addresses are unique except for ZERO_ADDRESS
     // Returns the count of the unique addresses
     inline get_valid_unique_address_count(addresses: [address; 5]) -> u8 {
@@ -650,7 +645,7 @@ program vlink_token_bridge_v1.aleo {
         return unique_addresses;
     }
 
-    function get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (public bool, u8) {
+    inline get_majority_count(packet_hash: field, signers: [address; 5], signs: [signature; 5]) -> (public bool, u8) {
         let unique_signers: u8 = get_valid_unique_address_count(signers);
         let yay_count: u8 = 0u8;
         let nay_count: u8 = 0u8;

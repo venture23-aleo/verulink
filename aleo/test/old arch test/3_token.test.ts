@@ -3,8 +3,8 @@ import { gettoken } from "../artifacts/js/leo2js/wusdc_token_v0003";
 import { Approval, token, tokenLeo } from "../artifacts/js/types/wusdc_token_v0003";
 import { Wusdc_token_v0003Contract } from "../artifacts/js/wusdc_token_v0003"
 import { getApprovalLeo } from "../artifacts/js/js2leo/wusdc_token_v0003";
-import { hashStruct } from "../utils/hash";
-import { ExecutionMode, parseJSONLikeString} from "@doko-js/core";
+import { hashStruct } from "../../utils/hash";
+import { ExecutionMode, parseJSONLikeString } from "@doko-js/core";
 
 
 const mode = ExecutionMode.SnarkExecute;
@@ -18,10 +18,10 @@ describe("Token", () => {
     const admin = aleoUser1
 
     describe("Setup", () => {
-        
+
         test("Deploy", async () => {
-                const tx = await wusdcToken.deploy();
-                await tx.wait();
+            const tx = await wusdcToken.deploy();
+            await tx.wait();
         }, TIMEOUT)
 
         test("Initialize", async () => {
@@ -48,7 +48,7 @@ describe("Token", () => {
             const amount = BigInt(10_000);
             const [tx] = await wusdcToken.mint_public(aleoUser2, amount);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT)
     })
 
@@ -74,7 +74,7 @@ describe("Token", () => {
 
             const [tx] = await wusdcToken.burn_public(aleoUser2, amount);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
 
         }, TIMEOUT)
     })
