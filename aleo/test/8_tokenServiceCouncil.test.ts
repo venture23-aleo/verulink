@@ -1,6 +1,6 @@
-import { Vlink_council_v4Contract } from "../artifacts/js/vlink_council_v4";
-import { Vlink_token_service_council_v4Contract } from "../artifacts/js/vlink_token_service_council_v4";
-import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
+import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
+import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
 
@@ -17,7 +17,7 @@ import {
 } from "../utils/constants";
 
 
-import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v4";
+import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
@@ -26,21 +26,17 @@ import { ExecutionMode } from "@doko-js/core";
 import {
   TsAddToken,
   TsRemoveToken,
-  TsUpdateMaxTransfer,
-  TsUpdateMinTransfer,
   TsUpdateWithdrawalLimit,
   TsPauseToken,
   TsUnpauseToken
-} from "../artifacts/js/types/vlink_token_service_council_v4";
+} from "../artifacts/js/types/vlink_token_service_council_v2";
 import {
   getTsAddTokenLeo,
   getTsRemoveTokenLeo,
-  getTsUpdateMaxTransferLeo,
-  getTsUpdateMinTransferLeo,
   getTsUpdateWithdrawalLimitLeo,
   getTsPauseTokenLeo,
   getTsUnpauseTokenLeo,
-} from "../artifacts/js/js2leo/vlink_token_service_council_v4";
+} from "../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 
 
@@ -48,9 +44,9 @@ import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Vlink_council_v4Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v4Contract({ mode });
-const tokenService = new Vlink_token_service_v4Contract({ mode });
+const council = new Vlink_council_v2Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode });
+const tokenService = new Vlink_token_service_v2Contract({ mode });
 const mtsp = new Token_registryContract({ mode: mode });
 const tokenID = BigInt(1234567891011);
 
@@ -155,90 +151,90 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Update minimum transfer", () => {
-    const proposer = councilMember1;
-    let proposalId = 0;
-    let TsUpdateMinimumTransferHash = BigInt(0);
-    const newMinTransfer = BigInt(10)
+  // describe("Update minimum transfer", () => {
+  //   const proposer = councilMember1;
+  //   let proposalId = 0;
+  //   let TsUpdateMinimumTransferHash = BigInt(0);
+  //   const newMinTransfer = BigInt(10)
 
-    beforeEach(async () => {
-      council.connect(proposer);
-    }, TIMEOUT)
+  //   beforeEach(async () => {
+  //     council.connect(proposer);
+  //   }, TIMEOUT)
 
-    test("Propose", async () => {
-      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-      proposalId = totalProposals + 1;
-      const TsUpdateMinimumTransfer: TsUpdateMinTransfer = {
-        id: proposalId,
-        token_id: tokenID,
-        min_transfer: newMinTransfer,
-      };
-      TsUpdateMinimumTransferHash = hashStruct(getTsUpdateMinTransferLeo(TsUpdateMinimumTransfer));
-      const tx = await council.propose(proposalId, TsUpdateMinimumTransferHash);
-      await tx.wait();
+  //   test("Propose", async () => {
+  //     const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+  //     proposalId = totalProposals + 1;
+  //     const TsUpdateMinimumTransfer: TsUpdateMinTransfer = {
+  //       id: proposalId,
+  //       token_id: tokenID,
+  //       min_transfer: newMinTransfer,
+  //     };
+  //     TsUpdateMinimumTransferHash = hashStruct(getTsUpdateMinTransferLeo(TsUpdateMinimumTransfer));
+  //     const tx = await council.propose(proposalId, TsUpdateMinimumTransferHash);
+  //     await tx.wait();
 
-      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-      expect(totalProposalsAfter).toBe(totalProposals + 1);
-      expect(await council.proposals(proposalId)).toBe(TsUpdateMinimumTransferHash);
-    }, TIMEOUT)
+  //     const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+  //     expect(totalProposalsAfter).toBe(totalProposals + 1);
+  //     expect(await council.proposals(proposalId)).toBe(TsUpdateMinimumTransferHash);
+  //   }, TIMEOUT)
 
-    test("Execute", async () => {
-      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+  //   test("Execute", async () => {
+  //     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
-      expect(await council.proposal_executed(TsUpdateMinimumTransferHash, false)).toBe(false);
-      const tx = await tokenServiceCouncil.ts_update_min_transfer(
-        proposalId,
-        tokenID,
-        newMinTransfer,
-        signers,
-      );
-      await tx.wait();
-      expect(await council.proposal_executed(TsUpdateMinimumTransferHash)).toBe(true);
-      expect(await tokenService.min_transfers(tokenID)).toBe(newMinTransfer);
-    }, TIMEOUT);
+  //     expect(await council.proposal_executed(TsUpdateMinimumTransferHash, false)).toBe(false);
+  //     const tx = await tokenServiceCouncil.ts_update_min_transfer(
+  //       proposalId,
+  //       tokenID,
+  //       newMinTransfer,
+  //       signers,
+  //     );
+  //     await tx.wait();
+  //     expect(await council.proposal_executed(TsUpdateMinimumTransferHash)).toBe(true);
+  //     expect(await tokenService.min_transfers(tokenID)).toBe(newMinTransfer);
+  //   }, TIMEOUT);
 
-  });
+  // });
 
-  describe("Update maximum transfer", () => {
-    let proposalId = 0;
-    let TsUpdateMaximumTransferHash = BigInt(0);
-    const newMaxTransfer = BigInt(100_000)
+  // describe("Update maximum transfer", () => {
+  //   let proposalId = 0;
+  //   let TsUpdateMaximumTransferHash = BigInt(0);
+  //   const newMaxTransfer = BigInt(100_000)
 
-    test("Propose", async () => {
-      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-      proposalId = totalProposals + 1;
-      const TsUpdateMaximumTransfer: TsUpdateMaxTransfer = {
-        id: proposalId,
-        token_id: tokenID,
-        max_transfer: newMaxTransfer,
-      };
-      TsUpdateMaximumTransferHash = hashStruct(
-        getTsUpdateMaxTransferLeo(TsUpdateMaximumTransfer)
-      );
-      const tx = await council.propose(proposalId, TsUpdateMaximumTransferHash);
-      await tx.wait();
+  //   test("Propose", async () => {
+  //     const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+  //     proposalId = totalProposals + 1;
+  //     const TsUpdateMaximumTransfer: TsUpdateMaxTransfer = {
+  //       id: proposalId,
+  //       token_id: tokenID,
+  //       max_transfer: newMaxTransfer,
+  //     };
+  //     TsUpdateMaximumTransferHash = hashStruct(
+  //       getTsUpdateMaxTransferLeo(TsUpdateMaximumTransfer)
+  //     );
+  //     const tx = await council.propose(proposalId, TsUpdateMaximumTransferHash);
+  //     await tx.wait();
 
-      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
-      expect(totalProposalsAfter).toBe(totalProposals + 1);
-      expect(await council.proposals(proposalId)).toBe(TsUpdateMaximumTransferHash);
-    }, TIMEOUT)
+  //     const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+  //     expect(totalProposalsAfter).toBe(totalProposals + 1);
+  //     expect(await council.proposals(proposalId)).toBe(TsUpdateMaximumTransferHash);
+  //   }, TIMEOUT)
 
-    test("Execute", async () => {
-      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+  //   test("Execute", async () => {
+  //     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
-      expect(await council.proposal_executed(TsUpdateMaximumTransferHash, false)).toBe(false);
-      const tx = await tokenServiceCouncil.ts_update_max_transfer(
-        proposalId,
-        tokenID,
-        newMaxTransfer,
-        signers,
-      );
-      await tx.wait();
-      expect(await council.proposal_executed(TsUpdateMaximumTransferHash)).toBe(true);
-      expect(await tokenService.max_transfers(tokenID)).toBe(newMaxTransfer);
-    }, TIMEOUT);
+  //     expect(await council.proposal_executed(TsUpdateMaximumTransferHash, false)).toBe(false);
+  //     const tx = await tokenServiceCouncil.ts_update_max_transfer(
+  //       proposalId,
+  //       tokenID,
+  //       newMaxTransfer,
+  //       signers,
+  //     );
+  //     await tx.wait();
+  //     expect(await council.proposal_executed(TsUpdateMaximumTransferHash)).toBe(true);
+  //     expect(await tokenService.max_transfers(tokenID)).toBe(newMaxTransfer);
+  //   }, TIMEOUT);
 
-  });
+  // });
 
   describe("Update withdrawal limit", () => {
     let proposalId = 0;

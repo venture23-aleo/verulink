@@ -153,8 +153,22 @@ export const aleoChainId = BigInt("6694886634403"); // aleo: chainid
 export const baseChainId = BigInt("443067135441324596"); //base: chainid 84532n
 export const arbitrumChainId = BigInt("438861435819683566"); //arbi: chainid 421614n
 export const ethHoleskyChainId = BigInt("111550639260264") // eth: chainid 17000
+export const ethBNBChainId = BigInt("127828129626721");
 export const PRIVATE_VERSION = 2;
 export const PUBLIC_VERSION = 1;
 
 // max_supply for Tokens, it is the highest u128 value
 export const max_supply = BigInt("340282366920938463463374607431768211455");
+
+
+export const VERSION_PUBLIC_NORELAYER_NOPREDICATE = 1;
+export const VERSION_PUBLIC_RELAYER_NOPREDICATE = 2;
+export const VERSION_PUBLIC_NORELAYER_PREDICATE = 3;
+export const VERSION_PUBLIC_RELAYER_PREDICATE = 4;
+
+export const VERSION_PRIVATE_NORELAYER_NOPREDICATE = 11;
+export const VERSION_PRIVATE_RELAYER_NOPREDICATE = 12;
+export const VERSION_PRIVATE_NORELAYER_PREDICATE = 13;
+export const VERSION_PRIVATE_RELAYER_PREDICATE = 14;
+
+
