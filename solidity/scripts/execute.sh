@@ -130,25 +130,23 @@
 # npx hardhat run scripts/deployLib/deployAleoAddressLib.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/deployBlackListService.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/deployBridge.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/deployTokenService.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/deployBridgeV2.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/deployTokenServiceV3.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/deployHolding.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/addTokenService.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/setHolding.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/addTokenUSDC.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/addTokenUSDT.js --network arbitrum-sepolia
-# npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addTokenUSDC.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addTokenUSDT.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/addAttestor.js --network arbitrum-sepolia
+
 # npx hardhat run scripts/deploy/removeAttestor.js --network arbitrum-sepolia
 
-# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/addPredicateService.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/addPredicateService.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/deployFeeCollector.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network arbitrum-sepolia
 
 
 # Mainnet:
@@ -194,3 +192,8 @@ npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network arbitrum-sepo
 
 # npx hardhat run scripts/deploy/enablePredicateService.js --network mainnet
 # npx hardhat run scripts/deploy/disablePredicateService.js --network mainnet
+
+# npx hardhat run scripts/deploy/upgradeTokenServicev3.js --network mainnet
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network bnb-testnet
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network bnb-testnet
