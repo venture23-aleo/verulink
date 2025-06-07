@@ -8,7 +8,7 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
-   
+    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const TokenService = await ethers.getContractFactory("TokenServiceV3");
 
     console.log("Deploying TokenServiceV3");
@@ -24,6 +24,13 @@ async function main() {
         contract: "contracts/main/tokenservice/TokenServiceV3.sol:TokenServiceV3"
     });
     updateEnvFile("TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address);
+
+    const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
+    console.log("Upgrading TokenService Implementation...");
+    const ERC20TokenServiceABI = TokenService.interface.format();
+    const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);
+    await TokenServiceContract.upgradeTo(tokenServiceImpl.address);
+    console.log("TokenService Proxy upgraded successfully!!!");
 }
 main()
     .then(() => process.exit(0))
