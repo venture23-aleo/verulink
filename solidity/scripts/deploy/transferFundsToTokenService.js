@@ -40,22 +40,22 @@ async function main() {
 
   console.log("Transfering USDC to tokenservice...");
   let receiver =
-    "aleo19lu7tcg5v3c7ke5gn98h0v7crsn4jcct4uck0u0q9ewuhtc0hc9s0rygds";
+    "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
 
-  //   await usdcTokenContract["approve(address,uint256)"](
-  //     tokenServiceProxyAddress,
-  //     BigNumber.from("5000000000")
-  //   ); // approving USDC to tokenservice
+    await usdcTokenContract["approve(address,uint256)"](
+      tokenServiceProxyAddress,
+      BigNumber.from("100000000")
+    ); // approving USDC to tokenservice
   // await usdtTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("100000000")); // approving USDT to tokenservice
 
-  //   await TokenServiceContract["transfer(address,uint256,string,bool,bytes)"](
-  //     usdcToken,
-  //     BigNumber.from("30000000"),
-  //     receiver,
-  //     true,
-  //     "0x",
-  //     { gasLimit: 10000000 }
-  //   );
+    await TokenServiceContract["transfer(address,uint256,string,bool,bytes)"](
+      usdcToken,
+      BigNumber.from("100000000"),
+      receiver,
+      false,
+      "0x",
+      { gasLimit: 10000000 }
+    );
 
   //   await TokenServiceContract["transfer(address,uint256,string,bool,bytes)"](
   //     usdcToken,
@@ -68,19 +68,19 @@ async function main() {
   // await TokenServiceContract["transfer(address,uint256,string)"](usdtToken, BigNumber.from("100000"), receiver, {gasLimit: 1000000});
   // await TokenServiceContract["transfer(string)"](receiver, { value: ethers.utils.parseEther("0.01"),  gasLimit:1000000 });
 
-  // console.log("USDC transferred successfully!!!");
+  console.log("USDC transferred successfully!!!");
 
-  receiver = "aleo1jga9hrn0d5umq2tsqty2tcvtjkvd8n9r0g7cj7fq5vld4y6hesgsq23n3l";
-  await TokenServiceContract[
-    "privateTransfer(address,uint256,string,bool,bytes)"
-  ](
-    usdcToken,
-    BigNumber.from("10000000"),
-    receiver,
-    true,
-    "0x04010b65e222bc6ccb31cef42a8acef4bd9aac060a00112460f03d5701876ab53ca74316808776b70d44badb0abc27aae0bd402f9f8e84fc5c8ca43d36176bbd73b8d880f38990f15ebfab23c5959dea6db4df284db08f726797175474096228d821b988ffa925c8c281beb7f438d5688ab9577a711565f57e9b4e56936654cd3907e1514e227340efc83e304ff7770f8cfc5436db4ee36bbdb0d983f90385ef3916efc2adb8052fbb1df02fa8b85a70d1ccb8d4b20f278fb1ac69d6a9bd5fa4b8108c",
-    { gasLimit: 1000000 }
-  );
+  // receiver = "aleo1jga9hrn0d5umq2tsqty2tcvtjkvd8n9r0g7cj7fq5vld4y6hesgsq23n3l";
+  // await TokenServiceContract[
+  //   "privateTransfer(address,uint256,string,bool,bytes)"
+  // ](
+  //   usdcToken,
+  //   BigNumber.from("10000000"),
+  //   receiver,
+  //   true,
+  //   "0x04010b65e222bc6ccb31cef42a8acef4bd9aac060a00112460f03d5701876ab53ca74316808776b70d44badb0abc27aae0bd402f9f8e84fc5c8ca43d36176bbd73b8d880f38990f15ebfab23c5959dea6db4df284db08f726797175474096228d821b988ffa925c8c281beb7f438d5688ab9577a711565f57e9b4e56936654cd3907e1514e227340efc83e304ff7770f8cfc5436db4ee36bbdb0d983f90385ef3916efc2adb8052fbb1df02fa8b85a70d1ccb8d4b20f278fb1ac69d6a9bd5fa4b8108c",
+  //   { gasLimit: 1000000 }
+  // );
   // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdtToken, BigNumber.from("1000000"), receiver, {gasLimit: 1000000});
   // await TokenServiceContract["privateTransfer(string)"](receiver, { value: ethers.utils.parseEther("0.1"),  gasLimit:1000000 });
 
