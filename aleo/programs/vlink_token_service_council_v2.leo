@@ -7,7 +7,7 @@ program vlink_token_service_council_v2.aleo
     /////// Token Service: Transfer Ownership ////
     //////////////////////////////////////////////
 
-    const SELF_ADDRESS: address = aleo1ywd9h0gql58sqcxlvy6m5vjg2wm9h56umyaudazwmw5cjjv2sygq9yr6he;  // todo: dont use address here
+    const SELF_ADDRESS: address = self.address;  // todo: dont use address here
 
     struct Holder{
         account : address, 

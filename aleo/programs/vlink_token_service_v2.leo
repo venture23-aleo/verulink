@@ -72,15 +72,15 @@ program vlink_token_service_v2.aleo {
     /// Key is the token_id of the token program
     mapping token_snapshot_withdrawal: field => u128;
 
-    mapping token_snapshot_supply: field => u128;
+    mapping token_snapshot_supply: field => u128; 
 
     /// Tracks the height when the last snapshot happened
     /// Key is the token_id of the token program
-    mapping token_snapshot_height: field => u32;
+    mapping token_snapshot_height: field => u32; 
 
     /// Tracks the amount withdrawn between the snapshots
     /// Key is the token_id of the token program
-    mapping token_amount_withdrawn: field => u128;
+    mapping token_amount_withdrawn: field => u128; 
 
     /// Tracks if the token is paused/unpaused
     /// Key is the token_id of the token program
@@ -88,30 +88,36 @@ program vlink_token_service_v2.aleo {
 
     /// Tracks the total amount of a certain token being held
     /// Key is the token_id of the token.
-    mapping token_holding: field => u128;
+    mapping token_holding: field => u128;  // initialize
 
     /// Tracks the token service address of other chains
     /// Key is the combination of chain_id and token_id
-    mapping other_chain_token_service: ChainToken => [u8; 32];
-    mapping other_chain_token_address: ChainToken => [u8; 32];
+    mapping other_chain_token_service: ChainToken => [u8; 32];  // token
+    mapping other_chain_token_address: ChainToken => [u8; 32];     // token
 
     //percentage of the fee that will be taken by the platform
-    mapping public_platform_fee: ChainToken => u32;
-    mapping private_platform_fee: ChainToken => u32;  
+    mapping public_platform_fee: ChainToken => u32; // token
+    mapping private_platform_fee: ChainToken => u32;  // token
 
     // flat fee that will be taken by the relayer
-    mapping public_relayer_fee: ChainToken => u128;
-    mapping private_relayer_fee: ChainToken => u128;
+    mapping public_relayer_fee: ChainToken => u128;  // token
+    mapping private_relayer_fee: ChainToken => u128; // token
 
     const OWNER_INDEX: bool = true;
     const PAUSED_VALUE: bool = true;
     const UNPAUSED_VALUE: bool = false;
 
-    const HOLDING_ADDRESS: address = aleo1f4xc78ykumx4pac8hlnle66nxptux3pwm2q24fslvhns3wh4tqgsj8f7yu;  //TODdont use address use name O: 
+    const HOLDING_ADDRESS: address = vlink_holding_v2.aleo;  //TODdont use address use name O: 
+
+    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
     const AUTHORIZE_UNTIL:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
  
+    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;
 
+    const PUBLIC_PACKET_VERSION_LIMIT: u8 = 10u8; // the maximum version of the public packet that can be processed by this program    
+    
+    const PRIVATE_PACKET_VERSION_LIMIT: u8 = 20u8; // the maximum version of the private packet that can be processed by this program    
 
     //////////////////////////////
     /////// Initialization ///////
@@ -119,18 +125,58 @@ program vlink_token_service_v2.aleo {
 
     /// Initialize the token service program
     /// Note: This function must be allowed to be called only once.
+    // total_supply, 
     async transition initialize_ts(public owner: address) -> Future {
-        return finalize_initialize_ts(owner);
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
+        return finalize_initialize_ts(owner, self.caller);
     }
 
-    async function finalize_initialize_ts(owner: address) {
+    async function finalize_initialize_ts(owner: address, caller: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(owner_TS, OWNER_INDEX));
 
         // Set the owner program
         Mapping::set(owner_TS, OWNER_INDEX, owner);
-
     }
+
+    // migrate the data of previous token service to the new token service
+    async transition migrate_previous_sysData(
+        public token_id: [field;3], 
+        public total_supply_data: [u128;3], 
+        public token_snapshot_supply_data: [u128;3], 
+        public token_amount_withdrawn_data: [u128;3], 
+        public token_holding_data: [u128;3], 
+        public token_snapshot_height_data: [u32;3], 
+        ) -> Future {
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
+        return finalize_migrate_sysData(token_id, total_supply_data, token_snapshot_supply_data, token_amount_withdrawn_data, token_holding_data, token_snapshot_height_data);
+    }
+
+    async function finalize_migrate_sysData(
+        token_id: [field;3], 
+        total_supply_data: [u128;3],
+        token_snapshot_supply_data: [u128;3],
+        token_amount_withdrawn_data: [u128;3],
+        token_holding_data: [u128;3],
+        token_snapshot_height_data: [u32;3]
+    ) {
+        for i:u8 in 0u8..3u8 {
+            if (token_id[i] != 0field) {
+                assert(Mapping::contains(added_tokens, token_id[i]));
+                assert(!Mapping::contains(total_supply, token_id[i]));
+                assert(!Mapping::contains(token_holding, token_id[i]));
+                assert(!Mapping::contains(token_amount_withdrawn, token_id[i]));
+                assert(!Mapping::contains(token_snapshot_supply, token_id[i]));
+
+                Mapping::set(total_supply, token_id[i], total_supply_data[i]);
+                Mapping::set(token_holding, token_id[i], token_holding_data[i]);
+                Mapping::set(token_amount_withdrawn, token_id[i], token_amount_withdrawn_data[i]);
+                Mapping::set(token_snapshot_supply, token_id[i], token_snapshot_supply_data[i]);
+                Mapping::set(token_snapshot_height, token_id[i], token_snapshot_height_data[i]);
+            }
+        }
+    } 
+
 
     ////////////////////////////////
     ///// Transfer Ownership ///////
@@ -139,6 +185,7 @@ program vlink_token_service_v2.aleo {
     /// Update the existing owner
     /// Can only be called by owner
     async transition transfer_ownership_ts(public new_owner: address) -> Future{
+        assert_neq(new_owner, ZERO_ADDRESS);
         return finalize_transfer_ownership_ts(self.caller, new_owner);
     }
 
@@ -158,7 +205,7 @@ program vlink_token_service_v2.aleo {
     async transition update_other_chain_tokenservice(
         public chain_id: u128,
         public token_id: field,
-        token_service_address: [u8; 20]
+        public token_service_address: [u8; 20]
     ) -> Future{
         return finalize_update_other_chain_TS(self.caller, chain_id, token_id, token_service_address);
     }
@@ -179,7 +226,7 @@ program vlink_token_service_v2.aleo {
     async transition update_other_chain_tokenaddress(
         public chain_id: u128,
         public token_id: field,
-        token_address: [u8; 20]
+        public token_address: [u8; 20]
     ) -> Future{
         return finalize_update_other_chain_TA(self.caller, chain_id, token_id, token_address);
     }
@@ -434,7 +481,7 @@ program vlink_token_service_v2.aleo {
         public fee_platform: u128,
         public is_relayer_on: bool
         ) -> Future{
-
+        assert_neq(self.caller, ZERO_ADDRESS);
         let burn: Future = token_registry.aleo/burn_public(token_id, self.caller, amount);
 
         // transferring platform fee to the token service
@@ -538,7 +585,7 @@ program vlink_token_service_v2.aleo {
         fee_platform: u128,
         public is_relayer_on: bool
     ) -> (token_registry.aleo/Token, Future){
-
+        assert_neq(self.caller, ZERO_ADDRESS);
         let (return_record, burn_private): (token_registry.aleo/Token, Future) = token_registry.aleo/burn_private(token_record, amount);
 
         // minting  platform fee to the token service
@@ -645,8 +692,9 @@ program vlink_token_service_v2.aleo {
         public fee_relayer: u128,
         public version: u8
     ) -> (public bool, Future) {
-
-        assert(version < 10u8 );
+        assert_neq(self.caller, ZERO_ADDRESS);
+        assert_neq(receiver, ZERO_ADDRESS);
+        assert(version < PUBLIC_PACKET_VERSION_LIMIT );
 
         // call consume on bridge
         let screening_passed: (bool, Future) = vlink_token_bridge_v2.aleo/consume(
@@ -747,9 +795,10 @@ program vlink_token_service_v2.aleo {
         public version: u8,
         public fee_relayer: u128,
     ) -> (public bool, token_registry.aleo/Token, token_registry.aleo/Token, Future) {
-        
-        assert(version > 10u8 && version < 20u8);
-        assert(amount >= fee_relayer); 
+        assert_neq(self.caller, ZERO_ADDRESS);
+        assert_neq(receiver, ZERO_ADDRESS);
+        assert(version > PUBLIC_PACKET_VERSION_LIMIT && version < PRIVATE_PACKET_VERSION_LIMIT);
+        assert(amount >= fee_relayer);
 
         let image: Image = Image {
           pre_image,
@@ -885,6 +934,7 @@ program vlink_token_service_v2.aleo {
 
 
     async transition holding_transfer_ownership(public new_owner: address) -> Future{
+        assert_neq(new_owner, ZERO_ADDRESS);
         let transfer_ownership: Future = vlink_holding_v2.aleo/transfer_ownership_holding(new_owner);
         return finalize_holding_TF_OWN(self.caller, transfer_ownership);
     }

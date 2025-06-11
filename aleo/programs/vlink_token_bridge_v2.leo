@@ -119,9 +119,6 @@ program vlink_token_bridge_v2.aleo {
     /// Tracks if the given packet is consumed
     mapping in_packet_consumed: PacketId => bool;
 
-    /// Stores the hash of the given packet
-    mapping in_packet_hash: PacketId => field;
-
     /// Stores the outgoing packet
     mapping out_packets: PacketId => OutPacket;
 
@@ -138,13 +135,12 @@ program vlink_token_bridge_v2.aleo {
     mapping sequences: u128 => u64;
 
     // The chain id of the Aleo network where this program is deployed
-    const ALEO_CHAIN_ID: u128 = 6694886634403u128;
+    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
 
-    // // Version of the packet
-    // const VERSION: u8 = 1u8;
-
+    // The zero address for Aleo
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
+    // keys
     const THRESHOLD_INDEX: u8 = 1u8;
     const TOTAL_ATTESTORS_INDEX: u8 = 2u8;
 
@@ -159,6 +155,9 @@ program vlink_token_bridge_v2.aleo {
     /// To support threshold <= 5, we need to set ZERO_ADDRESS as a valid attestor
     const SUPPORTED_THRESHOLD: u8 = 5u8;
 
+
+    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;    
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
@@ -166,7 +165,7 @@ program vlink_token_bridge_v2.aleo {
     /// Initialize the token bridge program
     /// Note: This async function must be allowed to be called only once.
     async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) -> Future{
-
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_attestors: u8 = get_valid_unique_address_count(initial_attestors);
 
         // Sanity check for threshold
@@ -195,6 +194,26 @@ program vlink_token_bridge_v2.aleo {
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
     }
 
+
+
+        //////////////////////////////
+    ///////// Migration //////////
+    //////////////////////////////
+
+    // migrate the data of previous token service to the new token service
+    async transition migrate_TB_sysData(seq_ALEO: u64, ETH_CHAIN_ID:u128, seq_ETH:u64) -> Future {
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
+        return finalize_migrate_TB_sysData(seq_ALEO, ETH_CHAIN_ID, seq_ETH);
+    }
+
+    async function finalize_migrate_TB_sysData(seq_ALEO: u64, ETH_CHAIN_ID:u128, seq_ETH: u64) {
+            assert(!Mapping::contains(sequences, ALEO_CHAIN_ID));
+            assert(!Mapping::contains(sequences, ETH_CHAIN_ID));
+
+            Mapping::set(sequences, ALEO_CHAIN_ID, seq_ALEO);
+            Mapping::set(sequences, ETH_CHAIN_ID, seq_ETH);          
+    } 
+
     ////////////////////////////////
     ///// Transfer Ownership ///////
     ////////////////////////////////
@@ -202,6 +221,7 @@ program vlink_token_bridge_v2.aleo {
     /// Update the existing owner
     /// Can only be called from owner
     async transition transfer_ownership_tb(public new_owner: address) -> Future{
+        assert_neq(new_owner, ZERO_ADDRESS);
         return finalize_transfer_ownership_tb(self.caller, new_owner);
     }
 

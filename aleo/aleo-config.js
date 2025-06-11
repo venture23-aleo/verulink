@@ -17,7 +17,7 @@ export default {
     },
     testnet: {
       endpoint: "https://api.explorer.provable.com/v1",
-      accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1, process.env.ALEO_DEVNET_PRIVATE_KEY2, process.env.ALEO_DEVNET_PRIVATE_KEY3, process.env.ALEO_DEVNET_PRIVATE_KEY4],
+      accounts: [process.env.ALEO_DEVNET_PRIVATE_KEY1],
       priorityFee: 0.01,
     },
   },

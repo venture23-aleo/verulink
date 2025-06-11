@@ -57,6 +57,9 @@ program vlink_council_v2.aleo {
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
+    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;    
+
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
@@ -64,7 +67,7 @@ program vlink_council_v2.aleo {
     /// Initialize the council program
     /// Note: This function must be allowed to be called only once.
     async transition initialize(public initial_members: [address; 5], public threshold: u8) -> Future{
-        
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_members: u8 = get_valid_unique_address_count(initial_members);
 
         // Sanity check for threshold
