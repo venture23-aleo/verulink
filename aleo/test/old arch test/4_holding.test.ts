@@ -1,16 +1,16 @@
 import { MtspContract } from "../artifacts/js/mtsp";
 import { Holding_v0003Contract } from "../artifacts/js/holding_v0003";
-import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
-import { ExecutionMode} from "@doko-js/core";
-import {Holder} from "../artifacts/js/types/holding_v0003"
-import { hashStruct } from "../utils/hash";
+import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../../utils/constants";
+import { ExecutionMode } from "@doko-js/core";
+import { Holder } from "../artifacts/js/types/holding_v0003"
+import { hashStruct } from "../../utils/hash";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
 const Mtsp = new MtspContract({ mode: mode });
 
-const holding = new Holding_v0003Contract({mode: mode });
+const holding = new Holding_v0003Contract({ mode: mode });
 
 const TIMEOUT = 20000_000;
 
@@ -32,7 +32,7 @@ describe("Holding", () => {
     const external_authorization_required = false;
     const external_authorization_party = "";
 
-    describe("Deployment and setup", () => {    
+    describe("Deployment and setup", () => {
         test("Deploy MTSP and registering token", async () => {
             const tx = await Mtsp.deploy();
             await tx.wait();
@@ -52,12 +52,12 @@ describe("Holding", () => {
             await tx.wait();
             expect(await holding.owner_holding(OWNER_INDEX)).toBe(admin);
         }, TIMEOUT);
-        
+
         test("cannot initialize token holding twice", async () => {
             holding.connect(admin);
             const [tx] = await holding.initialize_holding(admin);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined();  
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT);
     });
 
@@ -72,7 +72,7 @@ describe("Holding", () => {
             holding.connect(aleoUser3);
             const [tx] = await holding.hold_fund(user, tokenID, amountToHold);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT);
 
         test("should hold fund", async () => {
@@ -95,14 +95,14 @@ describe("Holding", () => {
         };
 
         const holdingContract = holding.address();
-        const tokenOwner = { 
-                tokenID, 
-                holdingContract
-            };
+        const tokenOwner = {
+            tokenID,
+            holdingContract
+        };
         const holding_balance = hashStruct(tokenOwner);
 
         const alice = {
-            tokenID, 
+            tokenID,
             user
         };
         const alice_balance = hashStruct(alice);
@@ -111,7 +111,7 @@ describe("Holding", () => {
             holding.connect(aleoUser3);
             const [tx] = await holding.hold_fund(user, tokenID, amountToHold);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT);
 
         test("Releasing fund greater than held amount must fail", async () => {
@@ -119,7 +119,7 @@ describe("Holding", () => {
             holding.connect(admin);
             const [tx] = await holding.release_fund(user, tokenID, heldAmount + BigInt(1));
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT);
 
         test("Releasing fund greater than balance must fail", async () => {
@@ -130,7 +130,7 @@ describe("Holding", () => {
             holding.connect(admin);
             const [tx] = await holding.release_fund(user, tokenID, heldAmount);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT);
 
         test("Mint token balance in holding", async () => {
@@ -168,7 +168,7 @@ describe("Holding", () => {
             holding.connect(aleoUser2);
             const [tx] = await holding.transfer_ownership_holding(aleoUser2);
             const result = await tx.wait();
-            expect(result.execution).toBeUndefined(); 
+            expect(result.execution).toBeUndefined();
         }, TIMEOUT);
 
         test("should tranfer_ownership", async () => {
