@@ -59,7 +59,7 @@ export const arbitrumTsRandomContractAddress2 = "0x1ef1fb5555a4F57F3c28805d5e48F
 
 const mainnetChainId = 1
 export const ethChainId = BigInt(27234042785);
-export const aleoChainId = BigInt(6694886634403);
+export const aleoChainId = BigInt(6694886634401);
 export const baseChainId = BigInt(84532);
 export const arbitrumChainId = BigInt(421614);
 

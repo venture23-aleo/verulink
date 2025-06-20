@@ -149,7 +149,7 @@ export const ethHoleskyTsContractAddr = "0x08aE9cB3B80a1E45dE62b5a1b299d2058fFa5
 // export const ethTsContractAddr3 = "0x258A773B19fcC8958E0cE1B1b13c830a50bA7c11"
 
 export const ethChainId = BigInt("28556963657430695"); //eth: chainid sepolia
-export const aleoChainId = BigInt("6694886634403"); // aleo: chainid
+export const aleoChainId = BigInt("6694886634401"); // aleo: chainid
 export const baseChainId = BigInt("443067135441324596"); //base: chainid 84532n
 export const arbitrumChainId = BigInt("438861435819683566"); //arbi: chainid 421614n
 export const ethHoleskyChainId = BigInt("111550639260264") // eth: chainid 17000
@@ -158,3 +158,14 @@ export const PUBLIC_VERSION = 1;
 
 // max_supply for Tokens, it is the highest u128 value
 export const max_supply = BigInt("340282366920938463463374607431768211455");
+
+
+export const VERSION_PUBLIC_NORELAYER_NOPREDICATE = 1;
+export const VERSION_PUBLIC_RELAYER_NOPREDICATE = 2;
+export const VERSION_PUBLIC_NORELAYER_PREDICATE = 3;
+export const VERSION_PUBLIC_RELAYER_PREDICATE = 4;
+
+export const VERSION_PRIVATE_NORELAYER_NOPREDICATE = 11;
+export const VERSION_PRIVATE_RELAYER_NOPREDICATE = 12;
+export const VERSION_PRIVATE_NORELAYER_PREDICATE = 13;
+export const VERSION_PRIVATE_RELAYER_PREDICATE = 14;
