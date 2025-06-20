@@ -22,7 +22,7 @@ program vlink_holding_v2.aleo {
 
     const OWNER_INDEX: bool = true;
 
-    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;    
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
 
 
     //////////////////////////////

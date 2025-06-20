@@ -122,7 +122,7 @@ program vlink_token_bridge_v2.aleo {
     /// Stores the outgoing packet
     mapping out_packets: PacketId => OutPacket;
 
-    /// Tracks the supported chains
+    /// Tracks the supported chains 
     /// Key is chain_id
     mapping supported_chains: u128 => bool;
 
@@ -150,13 +150,12 @@ program vlink_token_bridge_v2.aleo {
 
     const OWNER_INDEX: bool = true;
 
-    /// This is the maximum threshold that this bridge can support
-    /// In case the threshold needs to be more than specified, new contract needs to be deployed
+     /// This is the maximum number of attestors allowed in the bridge program.
+    /// In case more attestors are added, new contract needs to be deployed by updating this value
     /// To support threshold <= 5, we need to set ZERO_ADDRESS as a valid attestor
-    const SUPPORTED_THRESHOLD: u8 = 5u8;
+    const NUM_OF_ALLOWED_ATTESTORS: u8 = 5u8;
 
-
-    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;    
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
 
     //////////////////////////////
     /////// Initialization ///////
@@ -164,17 +163,17 @@ program vlink_token_bridge_v2.aleo {
 
     /// Initialize the token bridge program
     /// Note: This async function must be allowed to be called only once.
-    async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) -> Future{
+    async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address, seq_ALEO: u64, seq_ETH:u64) -> Future{
         assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_attestors: u8 = get_valid_unique_address_count(initial_attestors);
 
         // Sanity check for threshold
         assert(threshold >= 1u8 && threshold <= unique_attestors );
 
-        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner);
+        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner, seq_ALEO, seq_ETH);
     }
 
-    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address) {
+    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address, seq_ALEO: u64, seq_ETH:u64) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
@@ -182,7 +181,7 @@ program vlink_token_bridge_v2.aleo {
         Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, total);
 
         // Set the initial attestors
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_ATTESTORS {
             Mapping::set(attestors, initial_attestors[i], true);
         }
         Mapping::set(attestors, ZERO_ADDRESS, true);
@@ -192,27 +191,12 @@ program vlink_token_bridge_v2.aleo {
 
         // Initialize the bridge as paused
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
+
+        const ETH_CHAIN_ID: u128 = 27234042785u128; // TODO: check before deploying if it is correct 
+        // migrate previous sequences
+        Mapping::set(sequences, ALEO_CHAIN_ID, seq_ALEO);
+        Mapping::set(sequences, ETH_CHAIN_ID, seq_ETH);    
     }
-
-
-
-        //////////////////////////////
-    ///////// Migration //////////
-    //////////////////////////////
-
-    // migrate the data of previous token service to the new token service
-    async transition migrate_TB_sysData(seq_ALEO: u64, ETH_CHAIN_ID:u128, seq_ETH:u64) -> Future {
-        assert_eq(self.caller, INITIALIZER_ADDRESS);
-        return finalize_migrate_TB_sysData(seq_ALEO, ETH_CHAIN_ID, seq_ETH);
-    }
-
-    async function finalize_migrate_TB_sysData(seq_ALEO: u64, ETH_CHAIN_ID:u128, seq_ETH: u64) {
-            assert(!Mapping::contains(sequences, ALEO_CHAIN_ID));
-            assert(!Mapping::contains(sequences, ETH_CHAIN_ID));
-
-            Mapping::set(sequences, ALEO_CHAIN_ID, seq_ALEO);
-            Mapping::set(sequences, ETH_CHAIN_ID, seq_ETH);          
-    } 
 
     ////////////////////////////////
     ///// Transfer Ownership ///////
@@ -254,6 +238,8 @@ program vlink_token_bridge_v2.aleo {
         assert_eq(from, owner);
 
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
+
+        assert(total_attestors+1u8 <= NUM_OF_ALLOWED_ATTESTORS);
         
         // Check if the new threshold is below total attestors
         assert(new_threshold <= total_attestors+1u8);
@@ -604,7 +590,7 @@ program vlink_token_bridge_v2.aleo {
         // Assert that the packet is being consumed from one of the supported services
         assert(Mapping::get(supported_services, from));
 
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_ATTESTORS {
             // Assert that the attestors signing are valid
             assert(Mapping::contains(attestors, signers[i]));
         }
@@ -680,7 +666,7 @@ program vlink_token_bridge_v2.aleo {
             screening_passed: false
         });
 
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_ATTESTORS {
             if (signers[i] != ZERO_ADDRESS) {
                 let yay: bool = signature::verify(signs[i], signers[i], packet_hash_with_yay);
                 let nay: bool = signature::verify(signs[i], signers[i], packet_hash_with_nay);

@@ -70,8 +70,6 @@ program vlink_token_service_v2.aleo {
     
     /// Tracks the maximum amount that can be withdrawn until the next snapshot
     /// Key is the token_id of the token program
-    mapping token_snapshot_withdrawal: field => u128;
-
     mapping token_snapshot_supply: field => u128; 
 
     /// Tracks the height when the last snapshot happened
@@ -113,7 +111,7 @@ program vlink_token_service_v2.aleo {
 
     const AUTHORIZE_UNTIL:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
  
-    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;
 
     const PUBLIC_PACKET_VERSION_LIMIT: u8 = 10u8; // the maximum version of the public packet that can be processed by this program    
     
@@ -162,7 +160,6 @@ program vlink_token_service_v2.aleo {
     ) {
         for i:u8 in 0u8..3u8 {
             if (token_id[i] != 0field) {
-                assert(Mapping::contains(added_tokens, token_id[i]));
                 assert(!Mapping::contains(total_supply, token_id[i]));
                 assert(!Mapping::contains(token_holding, token_id[i]));
                 assert(!Mapping::contains(token_amount_withdrawn, token_id[i]));
@@ -544,7 +541,6 @@ program vlink_token_service_v2.aleo {
 
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
             let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
-            // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
             Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
             Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
             Mapping::set(token_amount_withdrawn, wrapped_token_id, amount - fee_platform);
@@ -557,7 +553,6 @@ program vlink_token_service_v2.aleo {
 
         if (snapshot_supply >= withdrawal_limit.threshold_no_limit) {
             let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, wrapped_token_id);
-            // let withdrawal_allowed:u128 = Mapping::get(token_snapshot_withdrawal, wrapped_token_id);
             let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, snapshot_supply);
             assert(withdraw_amount <= max_withdrawal);
         }
@@ -645,10 +640,8 @@ program vlink_token_service_v2.aleo {
 
         let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
         let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
-        // TODO: discuss on amount should be deducted by platform_fee for withdrawn amount
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
             let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
-            // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
             Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
             Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
             Mapping::set(token_amount_withdrawn, wrapped_token_id, amount-fee_platform);
