@@ -780,7 +780,7 @@ program vlink_token_service_v2.aleo {
         receiver: address
     }
 
-    async transition token_receive_private(
+   async transition token_receive_private(
         public sender: [u8; 20], 
         public token_id: field,
         public amount: u128, 
@@ -795,9 +795,10 @@ program vlink_token_service_v2.aleo {
         public version: u8,
         public fee_relayer: u128,
     ) -> (public bool, token_registry.aleo/Token, token_registry.aleo/Token, Future) {
-        
+        assert_neq(self.caller, ZERO_ADDRESS);
+        assert_neq(receiver, ZERO_ADDRESS);
         assert(version > PUBLIC_PACKET_VERSION_LIMIT && version < PRIVATE_PACKET_VERSION_LIMIT);
-        assert(amount >= fee_relayer); 
+        assert(amount >= fee_relayer);
 
         let image: Image = Image {
           pre_image,
@@ -826,33 +827,48 @@ program vlink_token_service_v2.aleo {
             token_id: token_id
         };
 
-        let actual_receiver: address = receiver;
+        let actual_receiver: address = receiver; 
         let held_amount: u128 = 0u128;
+        let fee_receiver: address = self.caller;
+
+        let temp_fee_relayer: u128 = 0u128;
+        let actual_amount: u128 = amount-fee_relayer;
 
         if (!screening_passed.0) {
             actual_receiver = HOLDING_ADDRESS;
-            held_amount = amount - fee_relayer;
-        }
+            held_amount = amount;
+            fee_receiver = HOLDING_ADDRESS;
 
-        let fee_receiver: address = self.caller;
+            temp_fee_relayer = fee_relayer;
+            fee_relayer = 0u128;
+            actual_amount = 0u128;
+        }
 
         if (version == 11u8 || version == 13u8) {
             fee_receiver = actual_receiver;
         }
 
         let mint_relayer_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, fee_receiver, fee_relayer, false,AUTHORIZE_UNTIL);
-
-        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount-fee_relayer, false, AUTHORIZE_UNTIL);
+        
+        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, actual_amount, false, AUTHORIZE_UNTIL);
+        
+        // since future cannot be called in if else loop,we have to call this line in all condition to insure to get fund while screening is failed
+        let mint_public: Future = token_registry.aleo/mint_public(token_id, actual_receiver, held_amount, AUTHORIZE_UNTIL);
 
         let hold: Future = vlink_holding_v2.aleo/hold_fund(image_address, token_id, held_amount);
-        return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, hold));
+
+        if (actual_receiver == HOLDING_ADDRESS) {
+            fee_relayer = temp_fee_relayer;
+        }
+        return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, mint_public, hold));
     }
 
-    async function finalize_token_receive_private(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer: u128, f0: Future, f1: Future, f2: Future, f3: Future) {
+    async function finalize_token_receive_private(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer: u128, f0: Future, f1: Future, f2: Future, f3: Future, f4: Future) {
         f0.await();
         f1.await();
         f2.await();
         f3.await();
+        f4.await();
         assert_eq(Mapping::get(token_status, token_id), UNPAUSED_VALUE);
 
         // comparing fee
