@@ -144,6 +144,8 @@ program vlink_token_bridge_v2.aleo {
     // const VERSION: u8 = 1u8;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
+
 
     const THRESHOLD_INDEX: u8 = 1u8;
     const TOTAL_ATTESTORS_INDEX: u8 = 2u8;
@@ -165,17 +167,17 @@ program vlink_token_bridge_v2.aleo {
 
     /// Initialize the token bridge program
     /// Note: This async function must be allowed to be called only once.
-    async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) -> Future{
-
+async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address, seq_ALEO: u64, seq_ETH:u64) -> Future{
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_attestors: u8 = get_valid_unique_address_count(initial_attestors);
 
         // Sanity check for threshold
         assert(threshold >= 1u8 && threshold <= unique_attestors );
 
-        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner);
+        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner, seq_ALEO, seq_ETH);
     }
 
-    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address) {
+    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address, seq_ALEO: u64, seq_ETH:u64) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
@@ -193,6 +195,11 @@ program vlink_token_bridge_v2.aleo {
 
         // Initialize the bridge as paused
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
+
+        const ETH_CHAIN_ID: u128 = 27234042785u128; // TODO: check before deploying if it is correct 
+        // migrate previous sequences
+        Mapping::set(sequences, ALEO_CHAIN_ID, seq_ALEO);
+        Mapping::set(sequences, ETH_CHAIN_ID, seq_ETH);    
     }
 
     ////////////////////////////////
