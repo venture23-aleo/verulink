@@ -109,6 +109,8 @@ program vlink_token_service_v2.aleo {
 
     const HOLDING_ADDRESS: address = aleo1f4xc78ykumx4pac8hlnle66nxptux3pwm2q24fslvhns3wh4tqgsj8f7yu;  //TODdont use address use name O: 
 
+    const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
+
     const AUTHORIZE_UNTIL:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
  
 
@@ -538,7 +540,8 @@ program vlink_token_service_v2.aleo {
         fee_platform: u128,
         public is_relayer_on: bool
     ) -> (token_registry.aleo/Token, Future){
-
+        assert_eq(token_id, token_record.token_id);
+        assert_neq(self.caller, ZERO_ADDRESS);
         let (return_record, burn_private): (token_registry.aleo/Token, Future) = token_registry.aleo/burn_private(token_record, amount);
 
         // minting  platform fee to the token service
