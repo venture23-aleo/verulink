@@ -22,12 +22,16 @@ program vlink_holding_v2.aleo {
 
     const OWNER_INDEX: bool = true;
 
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
+
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
     // Initialize can only be called once
     async transition initialize_holding(public owner: address) -> Future{
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
         return (finalize_initialize_holding(owner));
     }
 

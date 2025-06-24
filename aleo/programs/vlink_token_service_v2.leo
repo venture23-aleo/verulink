@@ -112,7 +112,12 @@ program vlink_token_service_v2.aleo {
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
     const AUTHORIZE_UNTIL:u32 = 4294967295u32; //highest u32 value meaning our token will be valid forever
- 
+
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;
+
+    const PUBLIC_PACKET_VERSION_LIMIT: u8 = 10u8; // the maximum version of the public packet that can be processed by this program    
+    
+    const PRIVATE_PACKET_VERSION_LIMIT: u8 = 20u8; // the maximum version of the private packet that can be processed by this program    
 
 
     //////////////////////////////
@@ -122,17 +127,57 @@ program vlink_token_service_v2.aleo {
     /// Initialize the token service program
     /// Note: This function must be allowed to be called only once.
     async transition initialize_ts(public owner: address) -> Future {
-        return finalize_initialize_ts(owner);
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
+        return finalize_initialize_ts(owner, self.caller);
     }
 
-    async function finalize_initialize_ts(owner: address) {
+    async function finalize_initialize_ts(owner: address, caller: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(owner_TS, OWNER_INDEX));
 
         // Set the owner program
         Mapping::set(owner_TS, OWNER_INDEX, owner);
-
     }
+
+    
+
+    // migrate the data of previous token service to the new token service
+    async transition migrate_previous_sysData(
+        public token_id: [field;3], 
+        public total_supply_data: [u128;3], 
+        public token_snapshot_supply_data: [u128;3], 
+        public token_amount_withdrawn_data: [u128;3], 
+        public token_holding_data: [u128;3], 
+        public token_snapshot_height_data: [u32;3], 
+        ) -> Future {
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
+        return finalize_migrate_sysData(token_id, total_supply_data, token_snapshot_supply_data, token_amount_withdrawn_data, token_holding_data, token_snapshot_height_data);
+    }
+
+    async function finalize_migrate_sysData(
+        token_id: [field;3], 
+        total_supply_data: [u128;3],
+        token_snapshot_supply_data: [u128;3],
+        token_amount_withdrawn_data: [u128;3],
+        token_holding_data: [u128;3],
+        token_snapshot_height_data: [u32;3]
+    ) {
+        const NUM_OF_TOKENS_TO_MIGRATE: u8 = 3u8;
+        for i:u8 in 0u8..NUM_OF_TOKENS_TO_MIGRATE {
+            if (token_id[i] != 0field) {
+                assert(!Mapping::contains(total_supply, token_id[i]));
+                assert(!Mapping::contains(token_holding, token_id[i]));
+                assert(!Mapping::contains(token_amount_withdrawn, token_id[i]));
+                assert(!Mapping::contains(token_snapshot_supply, token_id[i]));
+
+                Mapping::set(total_supply, token_id[i], total_supply_data[i]);
+                Mapping::set(token_holding, token_id[i], token_holding_data[i]);
+                Mapping::set(token_amount_withdrawn, token_id[i], token_amount_withdrawn_data[i]);
+                Mapping::set(token_snapshot_supply, token_id[i], token_snapshot_supply_data[i]);
+                Mapping::set(token_snapshot_height, token_id[i], token_snapshot_height_data[i]);
+            }
+        }
+    } 
 
     ////////////////////////////////
     ///// Transfer Ownership ///////
@@ -649,7 +694,7 @@ program vlink_token_service_v2.aleo {
         public version: u8
     ) -> (public bool, Future) {
 
-        assert(version < 10u8 );
+        assert(version < PUBLIC_PACKET_VERSION_LIMIT );
 
         // call consume on bridge
         let screening_passed: (bool, Future) = vlink_token_bridge_v2.aleo/consume(
@@ -751,7 +796,7 @@ program vlink_token_service_v2.aleo {
         public fee_relayer: u128,
     ) -> (public bool, token_registry.aleo/Token, token_registry.aleo/Token, Future) {
         
-        assert(version > 10u8 && version < 20u8);
+        assert(version > PUBLIC_PACKET_VERSION_LIMIT && version < PRIVATE_PACKET_VERSION_LIMIT);
         assert(amount >= fee_relayer); 
 
         let image: Image = Image {
