@@ -214,6 +214,10 @@ program vlink_council_v2.aleo {
     }
 
     async function finalize_add_member(proposal_hash: field, new_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+        // threshold should not be greater than current member count 
+        let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(new_threshold < current_members_count); 
+
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
