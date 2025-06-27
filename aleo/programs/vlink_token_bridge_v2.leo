@@ -306,6 +306,7 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
 
     /// Support a new chain by the bridge
     async transition add_chain_tb(public chain_id: u128) -> Future{
+        assert_neq(chain_id, ALEO_CHAIN_ID);
         return finalize_add_chain_tb(self.caller, chain_id);
     }
 
