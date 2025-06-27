@@ -170,6 +170,9 @@ program vlink_council_v2.aleo {
         // Assert that the member has not signed the same proposal earlier
         assert(!Mapping::contains(proposal_votes, proposal_sign));
 
+        // check if proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
         // Set the voter address in a proper index
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
         let voter_key: ProposalVoterKey = ProposalVoterKey {
@@ -183,32 +186,6 @@ program vlink_council_v2.aleo {
 
         // Increase the votes by 1
         Mapping::set(proposal_vote_counts, proposal_hash, votes + 1u8);
-    }
-
-    ///////////////////////////
-    /////// Update Vote ///////
-    ///////////////////////////
-
-    async transition update_vote(public proposal_hash: field, acceptance: bool) -> Future{
-        let from: address = self.caller;
-        assert_neq(from, ZERO_ADDRESS);
-
-        let proposal_sign: field = BHP256::hash_to_field(
-            ProposalVote {
-                proposal: proposal_hash,
-                member: from
-            }
-        );
-
-        return finalize_update_vote(from, proposal_hash, proposal_sign, acceptance);
-    }
-
-    async function finalize_update_vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
-        // Assert that the member has already voted the proposal earlier
-        assert(Mapping::contains(proposal_votes, proposal_sign));
-
-        // Set that the member has voted the proposal
-        Mapping::set(proposal_votes, proposal_sign, acceptance);
     }
 
     //////////////////////////////////////
