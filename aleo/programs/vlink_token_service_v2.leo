@@ -897,6 +897,8 @@ program vlink_token_service_v2.aleo {
     }
 
     async function finalize_add_chain_to_EX_token(from:address, token_chain_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public pub_platform_fee: u32, public pri_platform_fee: u32, public pub_relayer_fee: u128, public pri_relayer_fee: u128){
+        assert(!Mapping::contains(other_chain_token_service, token_chain_info));
+        assert(!Mapping::contains(other_chain_token_address, token_chain_info));
         // token should have already been registered previously, otherwise use add_token_ts. 
         assert(Mapping::get(added_tokens, token_chain_info.token_id));
         // only council(owner) should be able to call this
