@@ -715,13 +715,13 @@ program vlink_token_service_v2.aleo {
 
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
+        let fee_receiver: address = self.caller;
 
         if (!screening_passed.0) {
             actual_receiver = HOLDING_ADDRESS;
-            held_amount = amount - fee_relayer;
+            held_amount = amount;
+            fee_receiver = actual_receiver;
         }
-
-        let fee_receiver: address = self.caller;
 
         if (version == 1u8 || version == 3u8) {
             fee_receiver = actual_receiver;
@@ -822,13 +822,13 @@ program vlink_token_service_v2.aleo {
 
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
+        let fee_receiver: address = self.caller;
 
         if (!screening_passed.0) {
             actual_receiver = HOLDING_ADDRESS;
-            held_amount = amount - fee_relayer;
-        }
-
-        let fee_receiver: address = self.caller;
+            held_amount = amount;
+            fee_receiver = actual_receiver;
+        } 
 
         if (version == 11u8 || version == 13u8) {
             fee_receiver = actual_receiver;
