@@ -1,0 +1,12 @@
+google-cloud-compute
+google-cloud-secret-manager
+google-auth
+google-api-python-client
+ansible
+pwinput
+google-auth-oauthlib
+google-cloud-resource-manager
+google-cloud-service-usage
+pyyaml
+google-cloud-iam
+

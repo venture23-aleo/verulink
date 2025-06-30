@@ -1,0 +1,296 @@
+---
+- name: Install Attestor on Ubuntu
+  hosts: all
+  remote_user: ubuntu
+  # gather_facts: no
+  become: true
+  become_method: sudo
+  become_user: root
+  vars_files:
+    - secret.json
+  vars:
+    arch_mapping:  # Map ansible architecture {{ ansible_architecture }} names to Docker's architecture names
+      x86_64: amd64
+      aarch64: arm64
+    githubcred: "{{ github_username | urlencode }}:{{ github_token | urlencode }}"
+    GIT_BRANCH: develop
+    USER: ubuntu
+    PROJECT_NAME: verulink
+    SERVICE_NAME: attestor
+    secret_file_path: "./secret.json"
+    artifact_name: ".temp.zip"
+    chainservice_home: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService"
+    signingservice_home: "/home/{{ USER }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService"
+    mtls_key_dir: "{{ chainservice_home }}/.mtls"
+  tasks:
+    - name: Update and upgrade all packages to the latest version
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Start Docker installation in background
+      ansible.builtin.shell: |
+        apt-get update && \
+        apt-get install -y ca-certificates curl gnupg lsb-release && \
+        install -m 0755 -d /etc/apt/keyrings && \
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+        chmod a+r /etc/apt/keyrings/docker.asc && \
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" > /etc/apt/sources.list.d/docker.list && \
+        apt-get update && \
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin unzip && \
+        groupadd -f docker && \
+        usermod -aG docker ubuntu
+      args:
+        executable: /bin/bash
+      async: 1200
+      poll: 0
+      register: docker_install_job
+
+    - name: Get machine ID
+      ansible.builtin.command: "cat /sys/class/dmi/id/product_uuid"
+      register: machine_id_output
+      changed_when: false
+
+    - name: Set machine ID
+      set_fact:
+        machine_id: "{{ machine_id_output.stdout }}"
+
+    - name: Fetch instance ID from GCP metadata service
+      ansible.builtin.uri:
+        url: "http://metadata.google.internal/computeMetadata/v1/instance/id"
+        headers:
+          Metadata-Flavor: Google
+        return_content: yes
+        timeout: 2
+      register: instance_id_response
+      ignore_errors: yes
+
+    - name: Check if instance ID retrieval was successful
+      set_fact:
+        instance_id: "{{ instance_id_response.content if instance_id_response.status == 200 else 'failed' }}"
+
+    - name: Generate random instance ID if metadata service fails
+      set_fact:
+        instance_id: "{{ 'i-' + lookup('password', '/dev/null length=10 chars=ascii_letters+digits') }}"
+      when: instance_id == "failed"
+
+   
+    - name: Read secret data from local JSON file
+      set_fact:
+        secret_data_local: "{{ lookup('file', secret_file_path) | from_json }}"
+      tags:
+        - read_secret
+    
+    - name: Set GCP project from local secret data
+      set_fact:
+        gcp_project: "{{ secret_data_local.gcp_project }}"
+      tags:
+        - set_gcp_project
+        
+    - name: Copy install artifact to remote machine
+      ansible.builtin.copy:
+        src: "/{{ install_artifact }}"
+        dest: "/tmp"
+      register: tar_copy
+
+    - name: Ensure destination directory exists
+      ansible.builtin.file:
+        path: "/home/{{ USER }}/verulink"
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+      become: yes
+      become_user: root
+
+    - name: Unzip install artifact
+      ansible.builtin.unarchive:
+        src: "/tmp/.temp.zip"
+        dest: "/home/ubuntu/verulink"
+        remote_src: yes
+      become: yes
+
+    - name: Change ownership
+      ansible.builtin.file:
+        path: "/home/ubuntu/verulink"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        recurse: yes
+      become: yes
+
+    - name: Wait for Docker installation to finish
+      ansible.builtin.async_status:
+        jid: "{{ docker_install_job.ansible_job_id }}"
+      register: docker_install_status
+      until: docker_install_status.finished
+      retries: 60
+      delay: 10
+
+    - name: Install python3-pip
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+      when: ansible_pkg_mgr == "apt" and not ansible_facts.packages['python3-pip'] is defined
+
+    - name: Install google-cloud-secret-manager using pip
+      ansible.builtin.pip:
+        name: google-cloud-secret-manager
+        state: present
+
+    - name: Enable and start Docker services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - docker.service
+        - containerd.service
+      when: docker_install_status.finished
+
+    - name: Build project in background
+      ansible.builtin.shell: docker compose build
+      args:
+        chdir: "/home/{{ USER }}/verulink/attestor"
+      async: 1200      
+      poll: 0      
+      register: build_job
+
+    - name: Create Python script to fetch secrets from GCP Secret Manager
+      ansible.builtin.copy:
+        content: |
+          #!/usr/bin/env python3
+          import json
+          import sys
+          from google.cloud import secretmanager
+          
+          def get_secret(project_id, secret_id):
+              try:
+                  client = secretmanager.SecretManagerServiceClient()
+                  name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+                  response = client.access_secret_version(request={"name": name})
+                  return response.payload.data.decode("UTF-8")
+              except Exception as e:
+                  print(f"Error accessing secret {secret_id}: {e}", file=sys.stderr)
+                  return None
+          
+          if __name__ == "__main__":
+              if len(sys.argv) != 3:
+                  print("Usage: python3 get_secret.py <project_id> <secret_id>", file=sys.stderr)
+                  sys.exit(1)
+              
+              project_id = sys.argv[1]
+              secret_id = sys.argv[2]
+              
+              secret_data = get_secret(project_id, secret_id)
+              if secret_data:
+                  print(secret_data)
+              else:
+                  sys.exit(1)
+        dest: "/tmp/get_secret.py"
+        mode: '0755'
+      tags:
+        - setup_secret_script
+
+    - name: Fetch signing service secrets from GCP Secret Manager
+      ansible.builtin.shell:
+        cmd: "python3 /tmp/get_secret.py {{ gcp_project }} {{ secret_name }}"
+      register: secret_response
+      tags:
+        - retrieve_secret
+
+    - name: Parse signing service secrets
+      set_fact:
+        secret_data: "{{ secret_response.stdout | from_json }}"
+      when: secret_response.rc == 0
+      tags:
+        - retrieve_secret
+
+    - name: Fetch MTLS secrets from GCP Secret Manager
+      ansible.builtin.shell:
+        cmd: "python3 /tmp/get_secret.py {{ gcp_project }} {{ mtls_secret_name }}"
+      register: mtls_secret_response
+      tags:
+        - retrieve_mtls_secret
+
+    - name: Parse MTLS secrets
+      set_fact:
+        mtls_secret_data: "{{ mtls_secret_response.stdout | from_json }}"
+      when: mtls_secret_response.rc == 0
+      tags:
+        - retrieve_mtls_secret
+
+    - name: Create MTLS keys directory
+      ansible.builtin.file:
+        path: "{{ mtls_key_dir }}"
+        state: directory
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: '0700'
+
+    - name: Create secrets.yaml file
+      ansible.builtin.copy:
+        content: |
+          ethereum:
+            private_key: "{{ secret_data.ethereum_private_key }}"
+            wallet_address: "{{ secret_data.ethereum_wallet_address }}"
+          aleo:
+            private_key: "{{ secret_data.aleo_private_key }}"
+            wallet_address: "{{ secret_data.aleo_wallet_address }}"
+        dest: "{{ signingservice_home }}/secrets.yaml"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: '0600'
+      tags:
+        - create_secrets
+
+    - name: Create MTLS certificate and key files
+      ansible.builtin.copy:
+        content: "{{ item.content }}"
+        dest: "{{ mtls_key_dir }}/{{ item.dest }}"
+        owner: "{{ USER }}"
+        group: "{{ USER }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { content: "{{ mtls_secret_data.ca_certificate }}", dest: "ca.cer", mode: "0644" }
+        - { content: "{{ mtls_secret_data.attestor_certificate }}", dest: "{{ attestor_name }}.crt", mode: "0644" }
+        - { content: "{{ mtls_secret_data.attestor_key }}", dest: "{{ attestor_name }}.key", mode: "0600" }
+      no_log: true
+      tags:
+        - create_mtls_files
+
+
+    - name: Apply replacements in config.yaml files
+      ansible.builtin.replace:
+        path: "{{ item.path }}"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      loop:
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: '^name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>', replace: 'name: {{ attestor_name }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'uri : <collector_service_url>', replace: 'uri : {{ collector_service_url }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'host: <prometheus_pushgateway_url>', replace: 'host: {{ prometheus_pushgateway_url }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'wallet_address: <your_aleo_wallet_address>', replace: 'wallet_address: {{ secret_data.aleo_wallet_address }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'username:.*', replace: 'username: "{{ machine_id }}"' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'password:.*', replace: 'password: "{{ machine_id }}"' }
+        - { path: "{{ signingservice_home }}/config.yaml", regexp: 'username:.*', replace: 'username: "{{ machine_id }}"' }
+        - { path: "{{ signingservice_home }}/config.yaml", regexp: 'password:.*', replace: 'password: "{{ machine_id }}"' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'wallet_address: <your_ethereum_wallet_address>', replace: 'wallet_address: {{ secret_data.ethereum_wallet_address }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'attestor1', replace: '{{ attestor_name }}' }
+      no_log: true
+
+    - name: Wait for build to finish
+      ansible.builtin.async_status:
+        jid: "{{ build_job.ansible_job_id }}"
+      register: build_status
+      until: build_status.finished
+      retries: 100
+      delay: 10
+
+    - name: Start docker containers
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "/home/{{ USER }}/verulink/attestor"
+      when: build_status.finished
+      tags:
+        - deploy_attestor
+ 

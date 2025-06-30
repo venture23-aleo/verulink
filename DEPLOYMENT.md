@@ -6,6 +6,11 @@
   - [Setup](#setup)
   - [To Configure AWS access](#to-configure-aws-access)
   - [Deployment Steps](#deployment-steps)
+- [Installing on GCP](#installing-on-gcp)
+  - [Pre-Deployment steps](#pre-deployment-steps)
+  - [Setup](#setup)
+  - [To Configure GCP access](#to-configure-gcp-access)
+  - [Deployment Steps](#deployment-steps)
 - [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
   - [Prerequisites](#prerequisites)
   - [Deployment Steps](#deployment-steps-1)
@@ -162,7 +167,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     ```
 4. Setup python virtual environment
     ```bash
-    make python-venv
+    make python-venv-aws
     ```
 5. Activate python virtual environment
     ```bash
@@ -209,6 +214,159 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
+
+---
+
+### Installing on GCP
+The attestor service can be deployed using two methods:
+1. From local device
+   > To run from a local device, please make sure the Google Cloud environment variables are correctly configured. 
+   [Follow steps here.](#to-configure-gcp-access) 
+2. Using Google Cloud Shell from the GCP Management Console UI(**Recommended**)
+
+For GCP deployment, the script can either create a new machine on the default network and deploy the attestor service, or if you need to deploy on a non-default network or on an existing machine, you can choose the user-configured machine option during deployment mode.
+
+**Machine specifications**: Higher specifications can provide smoother and faster builds. A minimum of 4 vCPU and 8GB RAM is required during deployment. Once deployed, the machine specifications can be resized down to 2 vCPU and 2GB RAM.
+
+#### Pre-Deployment steps 
+1. MTLS certificate/ key and CA certificate \
+   **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.** \
+   https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
+   **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
+2. Have Ethereum and Aleo wallet address and private keys ready
+   
+#### Setup
+
+If using Google Cloud Shell, no need to install the dependencies to run the installer script.
+
+#### To Configure GCP access
+**Method 1 - gcloud SDK (Recommended):**
+
+1. Install Google Cloud SDK:
+   - Follow the installation guide: https://cloud.google.com/sdk/docs/install
+   - Or use the quick install: `curl https://sdk.cloud.google.com | bash`
+
+2. Authenticate and set project:
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+
+**Method 2 - Service Account Key (Alternative):**
+
+1. Create a Service Account in your GCP project:
+   - Go to [IAM & Admin > Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
+   - Click "Create Service Account"
+   - Give it a name like "attestor-deployment-sa"
+   - Click "Create and continue"
+   - Add the following roles:
+     - Compute Engine Admin (`roles/compute.admin`)
+     - Secret Manager Admin (`roles/secretmanager.admin`)
+     - Service Account Admin (`roles/iam.serviceAccountAdmin`)
+     - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
+
+2. Download the Service Account Key:
+   - Click on the created service account
+   - Go to "Keys" tab
+   - Click "Add Key" > "Create new key"
+   - Choose JSON format
+   - Download the key file to a secure location
+
+3. Set Environment Variables:
+   ```bash
+   export GOOGLE_CLOUD_PROJECT="your-project-id"
+   export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
+   ```
+
+3. Enable required APIs:
+ 
+   Using Google Cloud Console UI:
+   - Go to [APIs & Services](https://console.cloud.google.com/apis)
+   - Click "Enable APIs and services"
+   - Search for each API and enable them:
+      - "Compute"
+      - "Secretmanager"
+      - "IAM"
+      - "cloudresourcemanager"
+   - Click "Enable" for each API
+  
+   ```bash
+   # Using gcloud CLI (optional, can be done via console)
+   gcloud services enable compute.googleapis.com
+   gcloud services enable secretmanager.googleapis.com
+   gcloud services enable iam.googleapis.com
+   gcloud services enable cloudresourcemanager.googleapis.com
+   ```
+
+#### Deployment Steps
+
+1. Clone the GitHub project repository:
+   ```bash
+   git clone https://github.com/venture23-aleo/verulink.git
+   ```
+
+2. Navigate to the project directory:
+   ```bash
+   cd verulink
+   ```
+
+3. Checkout the `main` branch:
+   ```bash
+   git checkout main
+   ```
+
+4. Setup python virtual environment
+    ```bash
+    make python-venv-gcp
+    ```
+5. Activate python virtual environment
+    ```bash
+    source venv/bin/activate
+    ```
+
+6. Run the deployment script
+   ```bash
+   make deploy-to-gcp
+   ```
+7. Select deployment mode: Default network or existing user-created machine
+8. Provide all the inputs as the script asks.
+   * GCP Zone (default: `us-central1-a`)
+   * GCP Machine Type (default: `e2-medium`)
+   * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. mainnet_attestor_verulink_v23)
+   * GCP Secret Manager secret name for signing keys (default: `mainnet/verulink/attestor/signingservice`)
+       - Ethereum private key
+       - Ethereum wallet address
+       - Aleo private key
+       - Aleo wallet address
+   * GCP Secret Manager secret name MTLS secret name (default: `mainnet/verulink/attestor/mtls`)
+       - MTLS ca certificate file
+       - Attestor certificate file
+       - Attestor key file
+9. As Docker build time can take a long time depending on the machine specifications, the following message will be seen in the console:
+```bash
+   TASK [Wait for build to finish] ************************************************
+   FAILED - RETRYING: [x.x.x.x]: Wait for build to finish (100 retries left).
+   FAILED - RETRYING: [x.x.x.x]: Wait for build to finish (99 retries left).
+```
+10. Once successfully deployed, secure and backup the SSH key file of the machine located in your home directory `~/attestor_ssh_key_backup`.
+   > Note: If using CloudShell, download the key by going to **Actions** and selecting **Download file**. _Input the correct full path of the key file_.
+
+11. Access the remote attestor machine via SSH and verify the services (From your deployment machine). The IP address is located in the `inventory.txt` file (in the current directory) and the SSH private key is also available in the same project directory.
+   ```bash
+   ssh -i <private_key_file.pem> ubuntu@IP_ADDRESS
+   ```
+
+10. Verify the services: `chainService` and `signingService`
+   ```bash
+   docker ps
+   ```
+   Verify the logs in services
+   ```bash
+   docker exec -it <attestor-chainservice-id> sh
+   cd ../logs
+   cat verulink.log
+   ```
 ---
 ### Installing on Local machine, VM, or baremetal
 > This script has been tested on an Ubuntu 22.04 machine. To use it on other distributions, ensure that `systemd` is available and refer to the respective package manager's documentation for installing required dependencies.
