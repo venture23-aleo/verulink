@@ -286,6 +286,8 @@ program vlink_token_service_v2.aleo {
     ) -> Future{
         assert(max_transfer >= min_transfer);
         assert(percentage <= HUNDRED_PERCENTAGE);
+        assert(pub_platform_fee <= HUNDRED_PERCENTAGE);
+        assert(pri_platform_fee <= HUNDRED_PERCENTAGE);
         return finalize_add_token_ts(self.caller, token_id, min_transfer, max_transfer, percentage, duration, threshold_no_limit, token_address, token_service, chain_id, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
     }
 
@@ -871,6 +873,8 @@ program vlink_token_service_v2.aleo {
             token_id:token_id,
             chain_id:chain_id
         };
+        assert(pub_platform_fee <= HUNDRED_PERCENTAGE);
+        assert(pri_platform_fee <= HUNDRED_PERCENTAGE);
         return finalize_add_chain_to_EX_token(self.caller, token_chain_info, token_service_address, token_address, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
     }
 
