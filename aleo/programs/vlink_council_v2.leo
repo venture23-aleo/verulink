@@ -46,6 +46,12 @@ program vlink_council_v2.aleo {
     /// Tracks if the proposal is executed or not
     mapping proposal_executed: field => bool;
 
+    // Tracks for the whitelisted address to call external execute function
+    mapping whitelisted_callers: address => bool;
+
+    // Tracks for proposal dealine in block height
+    mapping proposal_deadline: field => u32;
+
     const TOTAL_PROPOSALS_INDEX: u32 = 0u32;
 
     const THRESHOLD_INDEX: bool = true;
@@ -90,6 +96,11 @@ program vlink_council_v2.aleo {
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, total);
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
+
+        // since for now we have only two council that can call external_execute, they are hardcoded here
+        Mapping::set(whitelisted_callers, vlink_token_service_council_v2.aleo, true);
+        Mapping::set(whitelisted_callers, vlink_token_bridge_council_v2.aleo, true);
+
     }
 
     ///////////////////////
@@ -140,6 +151,9 @@ program vlink_council_v2.aleo {
         // Set the vote for the proposal to be 1
         Mapping::set(proposal_vote_counts, proposal_hash, 1u8);
 
+        // set the 7 day proposal dealine, 201600 block is produced in 7 days, assuming 1 block is made in 3 sec
+        Mapping::set(proposal_deadline, proposal_hash, block.height+201600u32);
+
         // Set that the proposer and the zero address has signed
         Mapping::set(proposal_votes, proposal_sign, true);
         Mapping::set(proposal_votes, zero_proposal_sign, true);
@@ -172,6 +186,9 @@ program vlink_council_v2.aleo {
 
         // check if proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
 
         // Set the voter address in a proper index
         let votes: u8 = Mapping::get(proposal_vote_counts, proposal_hash);
@@ -231,6 +248,9 @@ program vlink_council_v2.aleo {
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
 
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
 
@@ -285,6 +305,9 @@ program vlink_council_v2.aleo {
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
 
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
 
@@ -336,6 +359,9 @@ program vlink_council_v2.aleo {
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
 
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -378,6 +404,9 @@ program vlink_council_v2.aleo {
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
 
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -408,21 +437,19 @@ program vlink_council_v2.aleo {
     }
 
     async transition external_execute(public id: u32, public proposal_hash: field, public voters: [address; 5]) -> Future{
-        let external_proposal: ExternalProposal = ExternalProposal {
-            id,
-            external_program: self.caller,
-            proposal_hash,
-        };
-
-        let external_proposal_hash: field = BHP256::hash_to_field(external_proposal);
-
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
 
-        return finalize_external_execute(proposal_hash, voters, vote_keys, votes);
+        return finalize_external_execute(proposal_hash, voters, vote_keys, votes, self.caller);
     }
 
-    async function finalize_external_execute(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+    async function finalize_external_execute(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8, caller: address) {
+        // check if caller is whitelisted
+        assert(Mapping::contains(whitelisted_callers, caller));
+
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
