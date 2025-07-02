@@ -426,6 +426,62 @@ program vlink_council_v2.aleo {
     }
 
 
+
+    ////////////////////////////////////////////////
+    /////// Whitelisted callers: Execute Proposal /////
+    ////////////////////////////////////////////////
+
+    struct WhitelistedCaller {
+        id: u32,
+        caller: address,
+        status: bool
+    }
+
+    async transition update_whitelisted_caller(public id: u32, public caller: address, public status: bool, public voters: [address; 5]) -> Future{
+        let proposal: WhitelistedCaller = WhitelistedCaller {
+            id,
+            caller,
+            status
+        };
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+        let votes: u8 = get_valid_unique_address_count(voters);
+        let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
+
+        return finalize_update_whitelisted(proposal_hash, caller, status, voters, vote_keys, votes);
+    }
+
+    async function finalize_update_whitelisted(proposal_hash: field, caller: address, status: bool, voters: [address;5], vote_keys: [field; 5], votes: u8) {
+        // Ensure that the votes are from valid members
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            assert(Mapping::contains(members, voters[i]));
+            assert(Mapping::get(proposal_votes, vote_keys[i]));
+        }
+
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+
+        // Execute the proposal
+        if (status == false) {
+            Mapping::remove(whitelisted_callers, caller);
+        } else {
+            Mapping::set(whitelisted_callers, caller, true);
+        }   
+    }
+
+
+
+
     ////////////////////////////////////////////////
     /////// External Program: Execute Proposal /////
     ////////////////////////////////////////////////
@@ -466,7 +522,7 @@ program vlink_council_v2.aleo {
 
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
-    }
+    } 
 
     // Validates that the addresses are unique except for ZERO_ADDRESS
     // Returs the count of the unique addresses
