@@ -226,6 +226,8 @@ The attestor service can be deployed using two methods:
 
 For GCP deployment, the script can either create a new machine on the default network and deploy the attestor service, or if you need to deploy on a non-default network or on an existing machine, you can choose the user-configured machine option during deployment mode.
 
+**Note:** Preconfigured VM must be Ubuntu 22.04 VM with SSH key configured for user `ubuntu`.
+
 **Machine specifications**: Higher specifications can provide smoother and faster builds. A minimum of 4 vCPU and 8GB RAM is required during deployment. Once deployed, the machine specifications can be resized down to 2 vCPU and 2GB RAM.
 
 #### Pre-Deployment steps 
