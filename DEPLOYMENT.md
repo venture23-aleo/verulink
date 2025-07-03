@@ -264,6 +264,7 @@ Authentication using `gcloud auth login` will **not work** with the deployment s
      - Service Account Admin (`roles/iam.serviceAccountAdmin`)
      - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
      - Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`
+     - IAM Role Administrator (`roles/iam.roleAdmin`)
 
 2. Download the Service Account Key:
    - Click on the created service account
