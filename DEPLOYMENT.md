@@ -218,17 +218,26 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 ---
 
 ### Installing on GCP
-The attestor service can be deployed using two methods:
-1. From local device
-   > To run from a local device, please make sure the Google Cloud environment variables are correctly configured. 
-   [Follow steps here.](#to-configure-gcp-access) 
-2. Using Google Cloud Shell from the GCP Management Console UI(**Recommended**)
 
-For GCP deployment, the script can either create a new machine on the default network and deploy the attestor service, or if you need to deploy on a non-default network or on an existing machine, you can choose the user-configured machine option during deployment mode.
+### Running the Deployment Script
 
-**Note:** Preconfigured VM must be Ubuntu 22.04 VM with SSH key configured for user `ubuntu`.
+You can run the Attestor deployment script from one of the following environments:
 
-**Machine specifications**: Higher specifications can provide smoother and faster builds. A minimum of 4 vCPU and 8GB RAM is required during deployment. Once deployed, the machine specifications can be resized down to 2 vCPU and 2GB RAM.
+1. **From a local device**
+
+   > Ensure Google Cloud environment variables are correctly configured.
+   > [Follow the setup instructions here.](#to-configure-gcp-access)
+
+2. **Using Google Cloud Shell from the GCP Console UI** (**Recommended**)
+
+   > This option provides a pre-configured environment with access to your GCP resources.
+
+### Choosing the Deployment Target
+
+Once the script starts, you'll be prompted to choose the deployment target:
+
+* **Create a new VM on GCP**
+* **Use an existing VM** (must be Ubuntu 22.04 with `ubuntu` user and SSH key-based access)
 
 #### Pre-Deployment steps 
 1. MTLS certificate/ key and CA certificate \
@@ -237,25 +246,12 @@ For GCP deployment, the script can either create a new machine on the default ne
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready
    
-#### Setup
+### Setup
 
-If using Google Cloud Shell, no need to install the dependencies to run the installer script.
+#### ⚠️ GCP Authentication Notice
 
-#### To Configure GCP access
-**Method 1 - gcloud SDK (Recommended):**
+Authentication using `gcloud auth login` will **not work** with the deployment script.
 
-1. Install Google Cloud SDK:
-   - Follow the installation guide: https://cloud.google.com/sdk/docs/install
-   - Or use the quick install: `curl https://sdk.cloud.google.com | bash`
-
-2. Authenticate and set project:
-   ```bash
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
-   ```
-
-
-**Method 2 - Service Account Key (Alternative):**
 
 1. Create a Service Account in your GCP project:
    - Go to [IAM & Admin > Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
@@ -267,28 +263,6 @@ If using Google Cloud Shell, no need to install the dependencies to run the inst
      - Secret Manager Admin (`roles/secretmanager.admin`)
      - Service Account Admin (`roles/iam.serviceAccountAdmin`)
      - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
-   Using gcloud cli
-   ```bash
-      PROJECT_ID="<project_id>"
-      SA_EMAIL="<service_account_email>"
-
-      gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member="serviceAccount:$SA_EMAIL" \
-        --role="roles/serviceusage.serviceUsageConsumer"
-
-      gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member="serviceAccount:$SA_EMAIL" \
-        --role="roles/secretmanager.admin"
-
-      gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member="serviceAccount:$SA_EMAIL" \
-        --role="roles/compute.instanceAdmin.v1"
-
-      # Optional:
-      gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member="serviceAccount:$SA_EMAIL" \
-        --role="roles/iam.serviceAccountUser"
-   ```
 
 2. Download the Service Account Key:
    - Click on the created service account
@@ -303,7 +277,7 @@ If using Google Cloud Shell, no need to install the dependencies to run the inst
    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
    ```
 
-3. Enable required APIs:
+3. Enable required APIs (if not already enabled)
  
    Using Google Cloud Console UI:
    - Go to [APIs & Services](https://console.cloud.google.com/apis)
@@ -315,14 +289,6 @@ If using Google Cloud Shell, no need to install the dependencies to run the inst
       - "cloudresourcemanager"
    - Click "Enable" for each API
   
-   ```bash
-   # Using gcloud CLI (optional, can be done via console)
-   gcloud services enable compute.googleapis.com
-   gcloud services enable secretmanager.googleapis.com
-   gcloud services enable iam.googleapis.com
-   gcloud services enable cloudresourcemanager.googleapis.com
-   ```
-
 #### Deployment Steps
 
 1. Clone the GitHub project repository:
@@ -353,6 +319,43 @@ If using Google Cloud Shell, no need to install the dependencies to run the inst
    ```bash
    make deploy-to-gcp
    ```
+   > **Note:** While running on Google Cloud Shell, if you encounter permission errors, check the troubleshooting section below.
+
+   <details>
+   <summary><strong>Google Cloud Shell Permission Troubleshooting</strong></summary>
+
+   If you encounter a **permission error** while running the script in **Google Cloud Shell**, it's likely due to missing IAM roles for the service account. You can resolve this by assigning the necessary roles using the following `gcloud` commands:
+
+   ```bash
+   PROJECT_ID="<gcp project id>"
+   SA_EMAIL="service account"
+
+   # Grant access to use GCP services
+   gcloud projects add-iam-policy-binding $PROJECT_ID \
+     --member="serviceAccount:$SA_EMAIL" \
+     --role="roles/serviceusage.serviceUsageConsumer"
+
+   # Grant access to manage secrets
+   gcloud projects add-iam-policy-binding $PROJECT_ID \
+     --member="serviceAccount:$SA_EMAIL" \
+     --role="roles/secretmanager.admin"
+
+   # Grant access to manage Compute Engine resources
+   gcloud projects add-iam-policy-binding $PROJECT_ID \
+     --member="serviceAccount:$SA_EMAIL" \
+     --role="roles/compute.instanceAdmin.v1"
+
+   # (Optional) Allow impersonation of other service accounts
+   gcloud projects add-iam-policy-binding $PROJECT_ID \
+     --member="serviceAccount:$SA_EMAIL" \
+     --role="roles/iam.serviceAccountUser"
+   ```
+
+   > Replace `PROJECT_ID` and `SA_EMAIL` with your actual project ID and service account email if different.
+   > These roles are essential for the deployment script to function correctly on GCP.
+
+   </details>
+
 7. Select deployment mode: Default network or existing user-created machine
 8. Provide all the inputs as the script asks.
    * GCP Zone (default: `us-central1-a`)
