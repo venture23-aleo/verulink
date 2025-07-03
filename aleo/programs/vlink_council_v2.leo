@@ -57,9 +57,9 @@ program vlink_council_v2.aleo {
     const THRESHOLD_INDEX: bool = true;
     const TOTAL_MEMBERS_INDEX: bool = false;
 
-    /// This is the maximum threshold that this council program can support
-    /// In case the threshold needs to be more than specified, new contract needs to be deployed
-    const SUPPORTED_THRESHOLD: u8 = 5u8;
+    /// This is the maximum number of members that can be added in council program
+    /// In case of more than five council, new contract needs to be deployed
+    const NUM_OF_ALLOWED_MEMBERS: u8 = 5u8;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
@@ -87,7 +87,7 @@ program vlink_council_v2.aleo {
         assert(!Mapping::contains(settings, true));
 
         // Set the initial members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             Mapping::set(members, initial_members[i], true);
         }
         Mapping::set(members, ZERO_ADDRESS, true);
@@ -235,7 +235,10 @@ program vlink_council_v2.aleo {
         let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
         assert(new_threshold < current_members_count); 
 
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        // assertion where member count should not be greater than 5
+        assert(current_members_count+1u8 <= NUM_OF_ALLOWED_MEMBERS);
+
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
@@ -292,7 +295,7 @@ program vlink_council_v2.aleo {
 
     async function finalize_remove_member(proposal_hash: field, existing_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
@@ -354,7 +357,7 @@ program vlink_council_v2.aleo {
     async function finalize_withdraw_fees(proposal_hash: field, amount: u128, voters: [address; 5], vote_keys: [field; 5], votes: u8, f0: Future) {
         f0.await();
         // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
@@ -399,7 +402,7 @@ program vlink_council_v2.aleo {
 
     async function finalize_update_threshold(proposal_hash: field, new_threshold: u8, voters: [address;5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
@@ -452,7 +455,7 @@ program vlink_council_v2.aleo {
 
     async function finalize_update_whitelisted(proposal_hash: field, caller: address, status: bool, voters: [address;5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
@@ -507,7 +510,7 @@ program vlink_council_v2.aleo {
         assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
 
         // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
