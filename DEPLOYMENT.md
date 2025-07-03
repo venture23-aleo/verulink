@@ -267,6 +267,28 @@ If using Google Cloud Shell, no need to install the dependencies to run the inst
      - Secret Manager Admin (`roles/secretmanager.admin`)
      - Service Account Admin (`roles/iam.serviceAccountAdmin`)
      - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
+   Using gcloud cli
+   ```bash
+      PROJECT_ID="<project_id>"
+      SA_EMAIL="<service_account_email>"
+
+      gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:$SA_EMAIL" \
+        --role="roles/serviceusage.serviceUsageConsumer"
+
+      gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:$SA_EMAIL" \
+        --role="roles/secretmanager.admin"
+
+      gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:$SA_EMAIL" \
+        --role="roles/compute.instanceAdmin.v1"
+
+      # Optional:
+      gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member="serviceAccount:$SA_EMAIL" \
+        --role="roles/iam.serviceAccountUser"
+   ```
 
 2. Download the Service Account Key:
    - Click on the created service account
