@@ -125,6 +125,106 @@ def get_user_machine_details():
             # Continue the main loop to ask for details again
             continue
 
+def update_ip_address_in_files(new_ip_address, project_id):
+    """Update IP address in secret.json and config.json files"""
+    print(f"\n{BLUE}🔄 Updating IP address to: {new_ip_address}{END_COLOR}")
+    
+    # Update secret.json
+    if os.path.exists(secret_file):
+        try:
+            with open(secret_file, 'r') as f:
+                secret_data = json.load(f)
+            secret_data['public_ip_address'] = new_ip_address
+            with open(secret_file, 'w') as f:
+                json.dump(secret_data, f, indent=2)
+            os.chmod(secret_file, 0o600)
+            print(f"{GREEN}✅ Updated IP address in secret.json{END_COLOR}")
+        except Exception as e:
+            print(f"{RED}❌ Failed to update secret.json: {e}{END_COLOR}")
+    
+    # Update config.json
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r') as f:
+                config_data = json.load(f)
+            config_data['public_ip_address'] = new_ip_address
+            config_data['last_updated'] = time.strftime("%Y-%m-%d %H:%M:%S")
+            with open(config_file, 'w') as f:
+                json.dump(config_data, f, indent=2)
+            print(f"{GREEN}✅ Updated IP address in config.json{END_COLOR}")
+        except Exception as e:
+            print(f"{RED}❌ Failed to update config.json: {e}{END_COLOR}")
+    
+    # Update inventory.txt
+    inventory_file = "inventory.txt"
+    try:
+        with open(inventory_file, "w") as f:
+            f.write("[all]\n")
+            f.write(new_ip_address)
+        print(f"{GREEN}✅ Updated IP address in inventory.txt{END_COLOR}")
+    except Exception as e:
+        print(f"{RED}❌ Failed to update inventory.txt: {e}{END_COLOR}")
+
+def prompt_for_ip_update(current_ip, project_id):
+    """Prompt user to check and update IP address if needed"""
+    print(f"\n{BLUE}🌐 IP Address Check{END_COLOR}")
+    print(f"{BLUE}Current IP in configuration: {current_ip}{END_COLOR}")
+    print(f"{YELLOW}⚠️  If you manually restarted the VM, the IP address may have changed.{END_COLOR}")
+    
+    while True:
+        choice = input(f"\n{BLUE}Do you want to:{END_COLOR}\n"
+                      f"{BLUE}1. Check current IP address in GCP Console{END_COLOR}\n"
+                      f"{BLUE}2. Enter new IP address manually{END_COLOR}\n"
+                      f"{BLUE}3. Continue with current IP address{END_COLOR}\n"
+                      f"{BLUE}Enter your choice (1/2/3): {END_COLOR}").strip()
+        
+        if choice == "1":
+            print(f"\n{BLUE}📋 Steps to check IP address:{END_COLOR}")
+            print(f"{BLUE}1. Go to: https://console.cloud.google.com/compute/instances{END_COLOR}")
+            print(f"{BLUE}2. Find your VM instance{END_COLOR}")
+            print(f"{BLUE}3. Check the 'External IP' column{END_COLOR}")
+            print(f"{BLUE}4. Note the current IP address{END_COLOR}")
+            
+            new_ip = input(f"\n{BLUE}Enter the current IP address from GCP Console: {END_COLOR}").strip()
+            if new_ip:
+                # Basic IP validation
+                try:
+                    socket.inet_aton(new_ip)
+                    if new_ip != current_ip:
+                        update_ip_address_in_files(new_ip, project_id)
+                        return new_ip
+                    else:
+                        print(f"{GREEN}✅ IP address is the same, no update needed{END_COLOR}")
+                        return current_ip
+                except socket.error:
+                    print(f"{RED}❌ Invalid IP address format. Please enter a valid IP address.{END_COLOR}")
+            else:
+                print(f"{RED}❌ IP address cannot be empty.{END_COLOR}")
+        
+        elif choice == "2":
+            new_ip = input(f"{BLUE}Enter the new IP address: {END_COLOR}").strip()
+            if new_ip:
+                # Basic IP validation
+                try:
+                    socket.inet_aton(new_ip)
+                    if new_ip != current_ip:
+                        update_ip_address_in_files(new_ip, project_id)
+                        return new_ip
+                    else:
+                        print(f"{GREEN}✅ IP address is the same, no update needed{END_COLOR}")
+                        return current_ip
+                except socket.error:
+                    print(f"{RED}❌ Invalid IP address format. Please enter a valid IP address.{END_COLOR}")
+            else:
+                print(f"{RED}❌ IP address cannot be empty.{END_COLOR}")
+        
+        elif choice == "3":
+            print(f"{BLUE}Continuing with current IP address: {current_ip}{END_COLOR}")
+            return current_ip
+        
+        else:
+            print(f"{RED}Invalid choice. Please enter 1, 2, or 3.{END_COLOR}")
+
 def get_machine_id():
     return uuid.getnode()
 
@@ -300,6 +400,17 @@ def deploy_to_user_machine(ip_address, ssh_key_path):
                     sys.exit(0)
                 elif choice == '':
                     print(f"{BLUE}Continuing with deployment...{END_COLOR}")
+                    
+                    # After manual service account attachment, check if IP needs updating
+                    print(f"\n{BLUE}🔍 Checking if IP address needs updating after VM restart...{END_COLOR}")
+                    current_ip = ip_address  # This is the original IP from user input
+                    updated_ip = prompt_for_ip_update(current_ip, project_id)
+                    
+                    # Update the ip_address variable for the rest of the deployment
+                    if updated_ip != current_ip:
+                        ip_address = updated_ip
+                        print(f"{GREEN}✅ Using updated IP address: {ip_address}{END_COLOR}")
+                    
                     break
                 else:
                     print(f"{RED}Invalid input. Press Enter to continue or 'q' to quit.{END_COLOR}")
@@ -373,6 +484,17 @@ def deploy_to_user_machine(ip_address, ssh_key_path):
                 sys.exit(0)
             elif choice == '':
                 print(f"{BLUE}Continuing with deployment...{END_COLOR}")
+                
+                # After manual service account attachment, check if IP needs updating
+                print(f"\n{BLUE}🔍 Checking if IP address needs updating after VM restart...{END_COLOR}")
+                current_ip = ip_address  # This is the original IP from user input
+                updated_ip = prompt_for_ip_update(current_ip, project_id)
+                
+                # Update the ip_address variable for the rest of the deployment
+                if updated_ip != current_ip:
+                    ip_address = updated_ip
+                    print(f"{GREEN}✅ Using updated IP address: {ip_address}{END_COLOR}")
+                
                 break
             else:
                 print(f"{RED}Invalid input. Press Enter to continue or 'q' to quit.{END_COLOR}")
