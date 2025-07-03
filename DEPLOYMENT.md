@@ -236,7 +236,7 @@ You can run the Attestor deployment script from one of the following environment
 
 Once the script starts, you'll be prompted to choose the deployment target:
 
-* **Create a new VM on GCP**
+* **Deploy on new VM**
 * **Use an existing VM** (must be Ubuntu 22.04 with `ubuntu` user and SSH key-based access)
 
 #### Pre-Deployment steps 
