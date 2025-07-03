@@ -187,13 +187,26 @@ def deploy_to_user_machine(ip_address, ssh_key_path):
     print(f"{BLUE}Creating service account: {service_account_email}{END_COLOR}")
     create_service_account(project_id, service_account_name, service_account_email)
     
-    # Create custom role for Secret Manager access
-    print(f"{BLUE}Creating custom role for Secret Manager access{END_COLOR}")
-    create_custom_role(project_id, custom_role_id, custom_role_name)
+    # Check if service account already has the required roles
+    has_custom_role, has_builtin_role = check_service_account_roles(
+        project_id, service_account_email, custom_role_name, "roles/secretmanager.secretAccessor"
+    )
     
-    # Bind role to service account
-    print(f"{BLUE}Binding role to service account{END_COLOR}")
-    bind_role_to_service_account(project_id, service_account_email, custom_role_name, custom_role_id)
+    # Only create/bind roles if they don't already exist
+    if not has_custom_role and not has_builtin_role:
+        # Create custom role for Secret Manager access
+        print(f"{BLUE}Creating custom role for Secret Manager access{END_COLOR}")
+        custom_role_created = create_custom_role(project_id, custom_role_id, custom_role_name)
+        if custom_role_created:
+            # Bind role to service account
+            print(f"{BLUE}Binding role to service account{END_COLOR}")
+            bind_role_to_service_account(project_id, service_account_email, custom_role_name, custom_role_id)
+        else:
+            # Use built-in Secret Manager role as fallback
+            print(f"{BLUE}Binding built-in Secret Manager role to service account{END_COLOR}")
+            bind_builtin_role_to_service_account(project_id, service_account_email, "roles/secretmanager.secretAccessor")
+    else:
+        print(f"{GREEN}✅ Service account already has required permissions{END_COLOR}")
     
     # Grant service account user permissions
     print(f"{BLUE}Granting service account user permissions{END_COLOR}")
@@ -202,7 +215,12 @@ def deploy_to_user_machine(ip_address, ssh_key_path):
         from google.auth import default
         creds, project = default()
         caller_identity = creds.service_account_email if hasattr(creds, 'service_account_email') else None
-        grant_service_account_user(project_id, service_account_email, caller_identity, creds)
+        if caller_identity:
+            # Check if service account user permission is already granted
+            if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                grant_service_account_user(project_id, service_account_email, caller_identity, creds)
+            else:
+                print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
     except Exception as e:
         print(f"{YELLOW}⚠️  Warning: Could not grant service account user permissions: {e}{END_COLOR}")
         print(f"{BLUE}   You may need to manually grant permissions to the service account{END_COLOR}")
@@ -1358,9 +1376,7 @@ def create_service_account(project_id, service_account_name, service_account_ema
             print(f"ℹ️ Service account '{service_account_name}' already exists.")
             return True
         elif e.resp.status == 403:
-            print(f"{YELLOW}⚠️ Permission denied: Cannot create service account. This requires 'iam.serviceAccounts.create' permission.{END_COLOR}")
-            print(f"{BLUE}   You can add this permission in GCP Console under IAM & Admin > IAM{END_COLOR}")
-            print(f"{BLUE}   Or run: gcloud projects add-iam-policy-binding {project_id} --member='user:$(gcloud config get-value account)' --role='roles/iam.serviceAccountAdmin'{END_COLOR}")
+            print(f"{YELLOW}⚠️ Permission denied: Cannot create service account. This requires 'iam.serviceAccounts.create' permission.{END_COLOR}")            
             raise Exception("Permission denied: Cannot create service account")
         else:
             print(f"{RED}❌ Error creating service account: {e}{END_COLOR}")
@@ -1368,6 +1384,57 @@ def create_service_account(project_id, service_account_name, service_account_ema
     except Exception as e:
         print(f"{RED}❌ Unexpected error creating service account: {e}{END_COLOR}")
         raise
+
+def check_service_account_roles(project_id, service_account_email, custom_role_name=None, builtin_role_name=None):
+    """Check if service account already has the required roles"""
+    print(f"🔍 Checking existing roles for service account '{service_account_email}'...")
+    try:
+        credentials, _ = default()
+        crm = discovery.build("cloudresourcemanager", "v1", credentials=credentials)
+        policy = crm.projects().getIamPolicy(resource=project_id, body={}).execute()
+        
+        sa_member = f"serviceAccount:{service_account_email}"
+        has_custom_role = False
+        has_builtin_role = False
+        
+        for binding in policy.get("bindings", []):
+            if binding["role"] == custom_role_name and sa_member in binding["members"]:
+                has_custom_role = True
+                print(f"✅ Service account already has custom role: {custom_role_name}")
+            elif binding["role"] == builtin_role_name and sa_member in binding["members"]:
+                has_builtin_role = True
+                print(f"✅ Service account already has built-in role: {builtin_role_name}")
+        
+        return has_custom_role, has_builtin_role
+        
+    except Exception as e:
+        print(f"{YELLOW}⚠️ Could not check existing roles: {e}{END_COLOR}")
+        return False, False
+
+def check_service_account_user_permission(project_id, service_account_email, caller_identity):
+    """Check if caller already has service account user permission"""
+    print(f"🔍 Checking if '{caller_identity}' already has service account user permission...")
+    try:
+        credentials, _ = default()
+        iam = discovery.build("iam", "v1", credentials=credentials)
+        
+        sa_resource = f"projects/{project_id}/serviceAccounts/{service_account_email}"
+        policy = iam.projects().serviceAccounts().getIamPolicy(resource=sa_resource).execute()
+        
+        member = f"serviceAccount:{caller_identity}"
+        has_permission = False
+        
+        for binding in policy.get("bindings", []):
+            if binding["role"] == "roles/iam.serviceAccountUser" and member in binding["members"]:
+                has_permission = True
+                print(f"✅ '{caller_identity}' already has service account user permission")
+                break
+        
+        return has_permission
+        
+    except Exception as e:
+        print(f"{YELLOW}⚠️ Could not check service account user permission: {e}{END_COLOR}")
+        return False
 
 
 def create_custom_role(project_id, custom_role_id, custom_role_name):
@@ -1394,11 +1461,14 @@ def create_custom_role(project_id, custom_role_id, custom_role_name):
     try:
         iam.projects().roles().create(parent=f"projects/{project_id}", body=role_body).execute()
         print(f"✅ Created role: {custom_role_name}")
+        return True
     except HttpError as e:
         if e.resp.status == 409:
             print(f"ℹ️ Role {custom_role_id} already exists.")
+            return True
         elif e.resp.status == 403:
-            print(f"❌ Permission denied: cannot create custom role. Skipping this step.")
+            print(f"{YELLOW}⚠️ Permission denied: cannot create custom role. Will use built-in Secret Manager role instead.{END_COLOR}")
+            return False
         else:
             raise
 
@@ -1426,6 +1496,31 @@ def bind_role_to_service_account(project_id, service_account_email, custom_role_
 
     crm.projects().setIamPolicy(resource=project_id, body={"policy": policy}).execute()
     print(f"✅ Role {custom_role_id} bound to {service_account_email}")
+
+def bind_builtin_role_to_service_account(project_id, service_account_email, role_name):
+    print(f"🔗 Binding built-in role {role_name} to service account...")
+    credentials, _ = default()
+    crm = discovery.build("cloudresourcemanager", "v1", credentials=credentials)
+    policy = crm.projects().getIamPolicy(resource=project_id, body={}).execute()
+
+    sa_member = f"serviceAccount:{service_account_email}"
+    binding_found = False
+
+    for binding in policy.get("bindings", []):
+        if binding["role"] == role_name:
+            if sa_member not in binding["members"]:
+                binding["members"].append(sa_member)
+            binding_found = True
+            break
+
+    if not binding_found:
+        policy["bindings"].append({
+            "role": role_name,
+            "members": [sa_member]
+        })
+
+    crm.projects().setIamPolicy(resource=project_id, body={"policy": policy}).execute()
+    print(f"✅ Built-in role {role_name} bound to {service_account_email}")
 
 def grant_service_account_user(project_id, target_service_account_email, caller_identity, creds):
     from googleapiclient import discovery
@@ -1718,8 +1813,24 @@ try:
                 try:
                     print(f"\n{BLUE}🔧 Setting up service account and permissions for existing instance...{END_COLOR}")
                     create_service_account(project_id, service_account_name, service_account_email)
-                    create_custom_role(project_id, custom_role_id, custom_role_name)
-                    bind_role_to_service_account(project_id, service_account_email, custom_role_name, custom_role_id)
+                    
+                    # Check if service account already has the required roles
+                    has_custom_role, has_builtin_role = check_service_account_roles(
+                        project_id, service_account_email, custom_role_name, "roles/secretmanager.secretAccessor"
+                    )
+                    
+                    # Only create/bind roles if they don't already exist
+                    if not has_custom_role and not has_builtin_role:
+                        # Try to create custom role, fallback to built-in role if permission denied
+                        custom_role_created = create_custom_role(project_id, custom_role_id, custom_role_name)
+                        if custom_role_created:
+                            bind_role_to_service_account(project_id, service_account_email, custom_role_name, custom_role_id)
+                        else:
+                            # Use built-in Secret Manager role as fallback
+                            print(f"{BLUE}🔗 Binding built-in Secret Manager role to service account...{END_COLOR}")
+                            bind_builtin_role_to_service_account(project_id, service_account_email, "roles/secretmanager.secretAccessor")
+                    else:
+                        print(f"{GREEN}✅ Service account already has required permissions{END_COLOR}")
                     
                     # Get credentials and caller identity for grant_service_account_user
                     credentials, _ = default()
@@ -1738,7 +1849,11 @@ try:
                             caller_identity = None
                     
                     if caller_identity:
-                        grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+                        # Check if service account user permission is already granted
+                        if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                            grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+                        else:
+                            print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
                     
                     attach_service_account_to_vm(project_id, zone, instance_name, service_account_email)
                     print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
@@ -1829,6 +1944,70 @@ except Exception as e:
     goto_deployment = False
 
 if not goto_deployment:
+    # Set up service account and custom role BEFORE creating the instance
+    try:
+        print(f"\n{BLUE}🔧 Setting up service account and permissions...{END_COLOR}")
+        create_service_account(project_id, service_account_name, service_account_email)
+        
+        # Check if service account already has the required roles
+        has_custom_role, has_builtin_role = check_service_account_roles(
+            project_id, service_account_email, custom_role_name, "roles/secretmanager.secretAccessor"
+        )
+        
+        # Only create/bind roles if they don't already exist
+        if not has_custom_role and not has_builtin_role:
+            # Try to create custom role, fallback to built-in role if permission denied
+            custom_role_created = create_custom_role(project_id, custom_role_id, custom_role_name)
+            if custom_role_created:
+                bind_role_to_service_account(project_id, service_account_email, custom_role_name, custom_role_id)
+            else:
+                # Use built-in Secret Manager role as fallback
+                print(f"{BLUE}🔗 Binding built-in Secret Manager role to service account...{END_COLOR}")
+                bind_builtin_role_to_service_account(project_id, service_account_email, "roles/secretmanager.secretAccessor")
+        else:
+            print(f"{GREEN}✅ Service account already has required permissions{END_COLOR}")
+        
+        # Get credentials and caller identity for grant_service_account_user
+        credentials, _ = default()
+        caller_identity = credentials.service_account_email if hasattr(credentials, 'service_account_email') else None
+        if not caller_identity:
+            try:
+                if hasattr(credentials, 'signer_email'):
+                    caller_identity = credentials.signer_email
+                elif hasattr(credentials, 'client_id'):
+                    from google.auth.transport.requests import Request
+                    token_info = credentials.token_info(Request())
+                    if 'email' in token_info:
+                        caller_identity = token_info['email']
+            except Exception:
+                print("⚠️ Could not determine caller identity, skipping service account user grant")
+                caller_identity = None
+        
+        if caller_identity:
+            # Check if service account user permission is already granted
+            if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+            else:
+                print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+        
+        print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
+    except Exception as e:
+        error_msg = str(e)
+        if "Permission denied" in error_msg:
+            print(f"{RED}❌ Service account setup failed due to insufficient permissions:{END_COLOR}")
+            print(f"{BLUE}   - The service account needs 'iam.serviceAccounts.create' and 'iam.roles.create' permissions{END_COLOR}")
+            print(f"{BLUE}   - You can add these permissions in GCP Console under IAM & Admin > IAM{END_COLOR}")
+            print(f"{BLUE}   - Or run: gcloud projects add-iam-policy-binding {project_id} --member='user:$(gcloud config get-value account)' --role='roles/iam.serviceAccountAdmin'{END_COLOR}")
+            print(f"{BLUE}   - And: gcloud projects add-iam-policy-binding {project_id} --member='user:$(gcloud config get-value account)' --role='roles/iam.roleAdmin'{END_COLOR}")
+            print(f"{RED}   - The attestor service requires Secret Manager access to function properly{END_COLOR}")
+            print(f"{RED}❌ Deployment cannot continue without proper service account permissions.{END_COLOR}")
+            sys.exit(1)
+        else:
+            print(f"{RED}❌ Service account setup failed: {e}{END_COLOR}")
+            print(f"{RED}❌ The attestor service requires Secret Manager access to function properly.{END_COLOR}")
+            print(f"{RED}❌ Deployment cannot continue without proper service account setup.{END_COLOR}")
+            sys.exit(1)
+    
     # Create the instance
     logging.info("Creating GCP instance...")
     
@@ -2001,51 +2180,6 @@ if not goto_deployment:
         public_ip_address = instance.network_interfaces[0].access_configs[0].nat_i_p
         
         logging.info(f"Instance {instance_name} created successfully with IP {public_ip_address}")
-        
-        # Set up service account and custom role for the instance (before creation)
-        try:
-            print(f"\n{BLUE}🔧 Setting up service account and permissions...{END_COLOR}")
-            create_service_account(project_id, service_account_name, service_account_email)
-            create_custom_role(project_id, custom_role_id, custom_role_name)
-            bind_role_to_service_account(project_id, service_account_email, custom_role_name, custom_role_id)
-            
-            # Get credentials and caller identity for grant_service_account_user
-            credentials, _ = default()
-            caller_identity = credentials.service_account_email if hasattr(credentials, 'service_account_email') else None
-            if not caller_identity:
-                try:
-                    if hasattr(credentials, 'signer_email'):
-                        caller_identity = credentials.signer_email
-                    elif hasattr(credentials, 'client_id'):
-                        from google.auth.transport.requests import Request
-                        token_info = credentials.token_info(Request())
-                        if 'email' in token_info:
-                            caller_identity = token_info['email']
-                except Exception:
-                    print("⚠️ Could not determine caller identity, skipping service account user grant")
-                    caller_identity = None
-            
-            if caller_identity:
-                grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
-            
-            print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
-            print(f"{BLUE}ℹ️ Service account will be attached during VM creation{END_COLOR}")
-        except Exception as e:
-            error_msg = str(e)
-            if "Permission denied" in error_msg:
-                print(f"{RED}❌ Service account setup failed due to insufficient permissions:{END_COLOR}")
-                print(f"{BLUE}   - The service account needs 'iam.serviceAccounts.create' and 'iam.roles.create' permissions{END_COLOR}")
-                print(f"{BLUE}   - You can add these permissions in GCP Console under IAM & Admin > IAM{END_COLOR}")
-                print(f"{BLUE}   - Or run: gcloud projects add-iam-policy-binding {project_id} --member='user:$(gcloud config get-value account)' --role='roles/iam.serviceAccountAdmin'{END_COLOR}")
-                print(f"{BLUE}   - And: gcloud projects add-iam-policy-binding {project_id} --member='user:$(gcloud config get-value account)' --role='roles/iam.roleAdmin'{END_COLOR}")
-                print(f"{RED}   - The attestor service requires Secret Manager access to function properly{END_COLOR}")
-                print(f"{RED}❌ Deployment cannot continue without proper service account permissions.{END_COLOR}")
-                sys.exit(1)
-            else:
-                print(f"{RED}❌ Service account setup failed: {e}{END_COLOR}")
-                print(f"{RED}❌ The attestor service requires Secret Manager access to function properly.{END_COLOR}")
-                print(f"{RED}❌ Deployment cannot continue without proper service account setup.{END_COLOR}")
-                sys.exit(1)
         
     except Exception as e:
         logging.error(f"Failed to get instance details: {e}")
@@ -2249,3 +2383,4 @@ with open("./.temp/config.done", 'w') as file:
 
 print("### ☁️ Attestor node configuration complete ✅")
 deploy_attestor()
+
