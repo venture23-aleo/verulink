@@ -236,7 +236,7 @@ You can run the Attestor deployment script from one of the following environment
 
 Once the script starts, you'll be prompted to choose the deployment target:
 
-* **Create a new VM on GCP**
+* **Deploy on new VM**
 * **Use an existing VM** (must be Ubuntu 22.04 with `ubuntu` user and SSH key-based access)
 
 #### Pre-Deployment steps 
@@ -263,6 +263,8 @@ Authentication using `gcloud auth login` will **not work** with the deployment s
      - Secret Manager Admin (`roles/secretmanager.admin`)
      - Service Account Admin (`roles/iam.serviceAccountAdmin`)
      - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
+     - Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`
+     - IAM Role Administrator (`roles/iam.roleAdmin`)
 
 2. Download the Service Account Key:
    - Click on the created service account
@@ -319,42 +321,6 @@ Authentication using `gcloud auth login` will **not work** with the deployment s
    ```bash
    make deploy-to-gcp
    ```
-   > **Note:** While running on Google Cloud Shell, if you encounter permission errors, check the troubleshooting section below.
-
-   <details>
-   <summary><strong>Google Cloud Shell Permission Troubleshooting</strong></summary>
-
-   If you encounter a **permission error** while running the script in **Google Cloud Shell**, it's likely due to missing IAM roles for the service account. You can resolve this by assigning the necessary roles using the following `gcloud` commands:
-
-   ```bash
-   PROJECT_ID="<gcp project id>"
-   SA_EMAIL="service account"
-
-   # Grant access to use GCP services
-   gcloud projects add-iam-policy-binding $PROJECT_ID \
-     --member="serviceAccount:$SA_EMAIL" \
-     --role="roles/serviceusage.serviceUsageConsumer"
-
-   # Grant access to manage secrets
-   gcloud projects add-iam-policy-binding $PROJECT_ID \
-     --member="serviceAccount:$SA_EMAIL" \
-     --role="roles/secretmanager.admin"
-
-   # Grant access to manage Compute Engine resources
-   gcloud projects add-iam-policy-binding $PROJECT_ID \
-     --member="serviceAccount:$SA_EMAIL" \
-     --role="roles/compute.instanceAdmin.v1"
-
-   # (Optional) Allow impersonation of other service accounts
-   gcloud projects add-iam-policy-binding $PROJECT_ID \
-     --member="serviceAccount:$SA_EMAIL" \
-     --role="roles/iam.serviceAccountUser"
-   ```
-
-   > Replace `PROJECT_ID` and `SA_EMAIL` with your actual project ID and service account email if different.
-   > These roles are essential for the deployment script to function correctly on GCP.
-
-   </details>
 
 7. Select deployment mode: Default network or existing user-created machine
 8. Provide all the inputs as the script asks.
