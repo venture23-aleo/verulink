@@ -62,8 +62,8 @@ help:
 	@echo "  make deploy-to-aws       	- Deploy to AWS using the Python script"
 	@echo "  make deploy-to-gcp       	- Deploy to GCP using the Python script"
 	@echo "  make tar-attestor        	- Create a tar.gz file of the 'attestor' folder"
-	@echo "  make create-venv-aws	     	- Create a virtual environment using venv for AWS"
-	@echo "  make create-venv-gcp     	- Create a virtual environment using venv for GCP"
+	@echo "  make python-venv-aws	     	- Create a virtual environment using venv for AWS"
+	@echo "  make python-venv-gcp     	- Create a virtual environment using venv for GCP"
 	@echo "  make help               	- Display this help message"
 
 # Ensure that 'make' without arguments runs the 'help' target
