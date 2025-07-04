@@ -7,13 +7,27 @@ program vlink_bridge_council_v2.aleo
     /////// Bridge: Transfer Ownership ////////
     ///////////////////////////////////////////
 
+    const TAG_TB_TRANSFER_OWNERSHIP: u8 = 1u8;
+    const TAG_TB_ADD_ATTESTOR: u8 = 2u8;
+    const TAG_TB_REMOVE_ATTESTOR: u8 = 3u8;
+    const TAG_TB_UPDATE_THRESHOLD: u8 = 4u8;
+    const TAG_TB_ADD_CHAIN: u8 = 5u8;
+    const TAG_TB_REMOVE_CHAIN: u8 = 6u8;
+    const TAG_TB_ADD_SERVICE: u8 = 7u8;
+    const TAG_TB_REMOVE_SERVICE: u8 = 8u8;
+    const TAG_TB_PAUSE: u8 = 9u8;
+    const TAG_TB_UNPAUSE: u8 = 10u8;
+
+
     struct TbTransferOwnership {
+        tag: u8,
         id: u32,
         new_owner: address
     }
 
     async transition tb_transfer_ownership(public id: u32, public new_owner: address, public voters: [address; 5]) -> Future{
         let proposal: TbTransferOwnership = TbTransferOwnership {
+            tag: TAG_TB_TRANSFER_OWNERSHIP,
             id,
             new_owner
         };
@@ -37,6 +51,7 @@ program vlink_bridge_council_v2.aleo
     /////////////////////////////////////
 
     struct TbAddAttestor {
+        tag: u8,
         id: u32,
         new_attestor: address,
         new_threshold: u8
@@ -44,6 +59,7 @@ program vlink_bridge_council_v2.aleo
 
     async transition tb_add_attestor(public id: u32, public new_attestor: address, public new_threshold: u8, public voters: [address; 5])  -> Future{
         let proposal: TbAddAttestor = TbAddAttestor {
+            tag: TAG_TB_ADD_ATTESTOR,
             id,
             new_attestor,
             new_threshold
@@ -69,6 +85,7 @@ program vlink_bridge_council_v2.aleo
     ///////////////////////////////////////
 
     struct TbRemoveAttestor {
+        tag: u8,
         id: u32,
         existing_attestor: address,
         new_threshold: u8
@@ -76,6 +93,7 @@ program vlink_bridge_council_v2.aleo
 
     async transition tb_remove_attestor(public id: u32, public existing_attestor: address, public new_threshold: u8, public voters: [address; 5]) -> Future{
         let proposal: TbRemoveAttestor = TbRemoveAttestor {
+            tag: TAG_TB_REMOVE_ATTESTOR,
             id,
             existing_attestor,
             new_threshold
@@ -100,12 +118,14 @@ program vlink_bridge_council_v2.aleo
     /////////////////////////////////////////
 
     struct TbUpdateThreshold {
+        tag: u8,
         id: u32,
         new_threshold: u8
     }
 
     async transition tb_update_threshold(public id: u32, public new_threshold: u8, public voters: [address; 5]) -> Future{
         let proposal: TbUpdateThreshold = TbUpdateThreshold {
+            tag: TAG_TB_UPDATE_THRESHOLD,
             id,
             new_threshold
         };
@@ -129,12 +149,14 @@ program vlink_bridge_council_v2.aleo
     //////////////////////////////////
 
     struct TbAddChain {
+        tag: u8,
         id: u32,
         chain_id: u128
     }
 
     async transition tb_add_chain(public id: u32, public chain_id: u128, public voters: [address; 5]) -> Future{
         let proposal: TbAddChain = TbAddChain {
+            tag: TAG_TB_ADD_CHAIN,
             id,
             chain_id
         };
@@ -159,12 +181,14 @@ program vlink_bridge_council_v2.aleo
     ///////////////////////////////////////
 
     struct TbRemoveChain {
+        tag: u8,
         id: u32,
         chain_id: u128
     }
 
     async transition tb_remove_chain(public id: u32, public chain_id: u128, public voters: [address; 5]) -> Future{
         let proposal: TbRemoveChain = TbRemoveChain {
+            tag: TAG_TB_REMOVE_CHAIN,
             id,
             chain_id
         };
@@ -188,12 +212,14 @@ program vlink_bridge_council_v2.aleo
     ///////////////////////////////////////
 
     struct TbAddService {
+        tag: u8,
         id: u32,
         service: address
     }
 
     async transition tb_add_service(public id: u32, public service: address, public voters: [address; 5]) -> Future{
         let proposal: TbAddService = TbAddService {
+            tag: TAG_TB_ADD_SERVICE,
             id,
             service
         };
@@ -218,12 +244,14 @@ program vlink_bridge_council_v2.aleo
     ///////////////////////////////////////
 
     struct TbRemoveService {
+        tag: u8,
         id: u32,
         service: address
     }
 
     async transition tb_remove_service(public id: u32, public service: address, public voters: [address; 5]) -> Future{
         let proposal: TbRemoveService = TbRemoveService {
+            tag: TAG_TB_REMOVE_SERVICE,
             id,
             service
         };
@@ -247,11 +275,13 @@ program vlink_bridge_council_v2.aleo
     //////////////////////////////
 
     struct TbPause {
+        tag: u8,
         id: u32,
     }
 
     async transition tb_pause(public id: u32, public voters: [address; 5]) -> Future{
         let proposal: TbPause = TbPause {
+            tag: TAG_TB_PAUSE,
             id,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
@@ -274,11 +304,13 @@ program vlink_bridge_council_v2.aleo
     //////////////////////////////
 
     struct TbUnpause {
+        tag: u8,
         id: u32,
     }
 
     async transition tb_unpause(public id: u32, public voters: [address; 5]) -> Future{
         let proposal: TbUnpause = TbUnpause {
+            tag: TAG_TB_UNPAUSE,
             id,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
