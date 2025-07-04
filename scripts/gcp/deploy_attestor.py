@@ -1721,7 +1721,24 @@ def attach_service_account_to_vm(project_id, zone, vm_name, service_account_emai
     start_op = compute.instances().start(project=project_id, zone=zone, instance=vm_name).execute()
     wait_for_operation(compute, project_id, zone, start_op['name'])
 
+    # Get the updated instance details to check if IP address changed
+    print("🔍 Getting updated instance details...")
+    updated_instance = compute.instances().get(project=project_id, zone=zone, instance=vm_name).execute()
+    
+    # Extract the new IP address
+    new_ip_address = None
+    if updated_instance.get('networkInterfaces'):
+        for network_interface in updated_instance['networkInterfaces']:
+            if network_interface.get('accessConfigs'):
+                for access_config in network_interface['accessConfigs']:
+                    if access_config.get('natIP'):
+                        new_ip_address = access_config['natIP']
+                        break
+                if new_ip_address:
+                    break
+    
     print("✅ Service account attached and VM restarted.")
+    return new_ip_address
 
 
 ######################################
@@ -2039,7 +2056,12 @@ try:
                         print(f"{YELLOW}⚠️ Failed to grant deployer permissions: {e}{END_COLOR}")
                         print(f"{BLUE}   This may cause instance creation to fail{END_COLOR}")
                     
-                    attach_service_account_to_vm(project_id, zone, instance_name, service_account_email)
+                    new_ip_address = attach_service_account_to_vm(project_id, zone, instance_name, service_account_email)
+                    if new_ip_address and new_ip_address != public_ip_address:
+                        print(f"{BLUE}📋 IP address changed after VM restart: {public_ip_address} → {new_ip_address}{END_COLOR}")
+                        public_ip_address = new_ip_address
+                        # Update the IP address in secret.json and config files
+                        update_ip_address_in_files(new_ip_address, project_id)
                     print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
                 except Exception as e:
                     error_msg = str(e)
@@ -2440,6 +2462,28 @@ if not goto_deployment:
         except Exception as list_error:
             logging.error(f"Failed to list instances: {list_error}")
             raise Exception(f"Instance creation may have failed: {e}")
+
+# Get the current IP address before testing Ansible connection (in case it changed after service account attachment)
+try:
+    print(f"{BLUE}🔍 Getting current instance IP address...{END_COLOR}")
+    current_instance = compute_client.get(
+        request={
+            "project": project_id,
+            "zone": zone,
+            "instance": attestor_name
+        }
+    )
+    current_ip = current_instance.network_interfaces[0].access_configs[0].nat_i_p
+    if current_ip != public_ip_address:
+        print(f"{BLUE}📋 IP address changed: {public_ip_address} → {current_ip}{END_COLOR}")
+        public_ip_address = current_ip
+        # Update the IP address in secret.json and config files
+        update_ip_address_in_files(current_ip, project_id)
+    else:
+        print(f"{BLUE}📋 IP address unchanged: {public_ip_address}{END_COLOR}")
+except Exception as e:
+    print(f"{YELLOW}⚠️ Could not get current IP address: {e}{END_COLOR}")
+    print(f"{BLUE}   Continuing with existing IP: {public_ip_address}{END_COLOR}")
 
 # Test Ansible connection
 logging.info("Checking Ansible connection to the newly created GCP instance...")
