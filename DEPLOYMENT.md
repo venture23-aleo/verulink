@@ -255,15 +255,7 @@ The deployment script supports two authentication methods:
 ##### Method 1: gcloud CLI Authentication (Recommended for development/testing)
 
 1. Install Google Cloud SDK if not already installed:
-   ```bash
-   # For Ubuntu/Debian
-   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-   echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-   sudo apt-get update && sudo apt-get install google-cloud-cli
-   
-   # For macOS
-   brew install google-cloud-sdk
-   ```
+   https://cloud.google.com/sdk/docs/install-sdk
 
 2. Authenticate with gcloud:
    ```bash
