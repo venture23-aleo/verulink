@@ -2009,15 +2009,35 @@ try:
                         print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
                     else:
                         print(f"{BLUE}📋 Determined caller identity: {caller_identity}{END_COLOR}")
-                        try:
-                            # Check if service account user permission is already granted
-                            if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
-                                grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
-                            else:
-                                print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
-                        except Exception as e:
-                            print(f"{YELLOW}⚠️ Service account user grant failed: {e}{END_COLOR}")
-                            print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
+                        
+                        # Skip service account user grant if the caller is a service account
+                        if caller_identity.endswith('.iam.gserviceaccount.com'):
+                            print(f"{BLUE}📋 Caller is a service account, skipping service account user grant{END_COLOR}")
+                            print(f"{BLUE}   Service account user grant is only needed for user accounts{END_COLOR}")
+                        else:
+                            try:
+                                # Check if service account user permission is already granted
+                                if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                                    grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+                                else:
+                                    print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+                            except Exception as e:
+                                print(f"{YELLOW}⚠️ Service account user grant failed: {e}{END_COLOR}")
+                                print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
+                    
+                    # Grant the deployer service account permission to use the attestor service account
+                    try:
+                        print(f"{BLUE}🔐 Granting deployer service account permission to use attestor service account...{END_COLOR}")
+                        deployer_identity = credentials.service_account_email if hasattr(credentials, 'service_account_email') else None
+                        if deployer_identity and deployer_identity.endswith('.iam.gserviceaccount.com'):
+                            # Grant the deployer service account permission to use the attestor service account
+                            grant_service_account_user(project_id, service_account_email, deployer_identity, credentials)
+                            print(f"{GREEN}✅ Deployer service account can now use attestor service account{END_COLOR}")
+                        else:
+                            print(f"{BLUE}📋 Deployer is not a service account, skipping deployer permissions{END_COLOR}")
+                    except Exception as e:
+                        print(f"{YELLOW}⚠️ Failed to grant deployer permissions: {e}{END_COLOR}")
+                        print(f"{BLUE}   This may cause instance creation to fail{END_COLOR}")
                     
                     attach_service_account_to_vm(project_id, zone, instance_name, service_account_email)
                     print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
@@ -2176,17 +2196,38 @@ if not goto_deployment:
             print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
         else:
             print(f"{BLUE}📋 Determined caller identity: {caller_identity}{END_COLOR}")
-            try:
-                # Check if service account user permission is already granted
-                if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
-                    grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
-                else:
-                    print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
-            except Exception as e:
-                print(f"{YELLOW}⚠️ Service account user grant failed: {e}{END_COLOR}")
-                print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
+            
+            # Skip service account user grant if the caller is a service account
+            if caller_identity.endswith('.iam.gserviceaccount.com'):
+                print(f"{BLUE}📋 Caller is a service account, skipping service account user grant{END_COLOR}")
+                print(f"{BLUE}   Service account user grant is only needed for user accounts{END_COLOR}")
+            else:
+                try:
+                    # Check if service account user permission is already granted
+                    if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                        grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+                    else:
+                        print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+                except Exception as e:
+                    print(f"{YELLOW}⚠️ Service account user grant failed: {e}{END_COLOR}")
+                    print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
         
         print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
+        
+        # Grant the deployer service account permission to use the attestor service account
+        try:
+            print(f"{BLUE}🔐 Granting deployer service account permission to use attestor service account...{END_COLOR}")
+            deployer_identity = credentials.service_account_email if hasattr(credentials, 'service_account_email') else None
+            if deployer_identity and deployer_identity.endswith('.iam.gserviceaccount.com'):
+                # Grant the deployer service account permission to use the attestor service account
+                grant_service_account_user(project_id, service_account_email, deployer_identity, credentials)
+                print(f"{GREEN}✅ Deployer service account can now use attestor service account{END_COLOR}")
+            else:
+                print(f"{BLUE}📋 Deployer is not a service account, skipping deployer permissions{END_COLOR}")
+        except Exception as e:
+            print(f"{YELLOW}⚠️ Failed to grant deployer permissions: {e}{END_COLOR}")
+            print(f"{BLUE}   This may cause instance creation to fail{END_COLOR}")
+        
     except Exception as e:
         error_msg = str(e)
         if "Permission denied" in error_msg:
