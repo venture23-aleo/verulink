@@ -270,9 +270,9 @@
         - { path: "{{ chainservice_home }}/config.yaml", regexp: 'uri : <collector_service_url>', replace: 'uri : {{ collector_service_url }}' }
         - { path: "{{ chainservice_home }}/config.yaml", regexp: 'host: <prometheus_pushgateway_url>', replace: 'host: {{ prometheus_pushgateway_url }}' }
         - { path: "{{ chainservice_home }}/config.yaml", regexp: 'wallet_address: <your_aleo_wallet_address>', replace: 'wallet_address: {{ secret_data.aleo_wallet_address }}' }
-        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'username:.*', replace: 'username: "{{ machine_id }}"' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'username:.*', replace: 'username: "{{ instance_id }}"' }
         - { path: "{{ chainservice_home }}/config.yaml", regexp: 'password:.*', replace: 'password: "{{ machine_id }}"' }
-        - { path: "{{ signingservice_home }}/config.yaml", regexp: 'username:.*', replace: 'username: "{{ machine_id }}"' }
+        - { path: "{{ signingservice_home }}/config.yaml", regexp: 'username:.*', replace: 'username: "{{ instance_id }}"' }
         - { path: "{{ signingservice_home }}/config.yaml", regexp: 'password:.*', replace: 'password: "{{ machine_id }}"' }
         - { path: "{{ chainservice_home }}/config.yaml", regexp: 'wallet_address: <your_ethereum_wallet_address>', replace: 'wallet_address: {{ secret_data.ethereum_wallet_address }}' }
         - { path: "{{ chainservice_home }}/config.yaml", regexp: 'attestor1', replace: '{{ attestor_name }}' }
