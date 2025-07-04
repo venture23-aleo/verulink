@@ -257,8 +257,8 @@ def deploy_to_user_machine(ip_address, ssh_key_path):
     ]
     
     # Get input for the secret name
-    secret_name = get_input_with_default("Enter secret name", "devnet-verulink-attestor-signingservice", "secret_name", saved_config)
-    secret_path, secret_data = create_secret(secret_manager_client, project_id, secret_name, "devnet-verulink-attestor-signingservice", key_value_pairs)
+    secret_name = get_input_with_default("Enter secret name", "mainnet-verulink-attestor-signingservice", "secret_name", saved_config)
+    secret_path, secret_data = create_secret(secret_manager_client, project_id, secret_name, "mainnet-verulink-attestor-signingservice", key_value_pairs)
     
     # Store Attestor MTLS Certificate and Keys on GCP Secret Manager
     key_value_pairs = [
@@ -267,8 +267,8 @@ def deploy_to_user_machine(ip_address, ssh_key_path):
         ("attestor_key", "Enter attestor key file")
     ]
     print("Configuring MTLS...")
-    mtls_secret_name = get_input_with_default("Enter MTLS secret name", "devnet-verulink-attestor-mtls", "mtls_secret_name", saved_config)
-    mtls_secret_path, mtls_secret_data = create_secret(secret_manager_client, project_id, mtls_secret_name, "devnet-verulink-attestor-mtls", key_value_pairs, file=True)
+    mtls_secret_name = get_input_with_default("Enter MTLS secret name", "mainnet-verulink-attestor-mtls", "mtls_secret_name", saved_config)
+    mtls_secret_path, mtls_secret_data = create_secret(secret_manager_client, project_id, mtls_secret_name, "mainnet-verulink-attestor-mtls", key_value_pairs, file=True)
     
     print("Configuring DB Service and Prometheus Connection..")
     collector_service_url = get_input_with_default("Enter collector service url", "", "collector_service_url", saved_config)
@@ -1871,8 +1871,8 @@ key_value_pairs = [
 ]
 
 # Get input for the secret name
-secret_name = get_input_with_default("Enter secret name", "devnet-verulink-attestor-signingservice", "secret_name", saved_config)
-secret_path, secret_data = create_secret(secret_manager_client, project_id, secret_name, "devnet-verulink-attestor-signingservice", key_value_pairs)
+secret_name = get_input_with_default("Enter secret name", "mainnet-verulink-attestor-signingservice", "secret_name", saved_config)
+secret_path, secret_data = create_secret(secret_manager_client, project_id, secret_name, "mainnet-verulink-attestor-signingservice", key_value_pairs)
 
 # Store Attestor MTLS Certificate and Keys on GCP Secret Manager
 key_value_pairs = [
@@ -1881,8 +1881,8 @@ key_value_pairs = [
     ("attestor_key", "Enter attestor key file")
 ]
 print("Configuring MTLS...")
-mtls_secret_name = get_input_with_default("Enter MTLS secret name", "devnet-verulink-attestor-mtls", "mtls_secret_name", saved_config)
-mtls_secret_path, mtls_secret_data = create_secret(secret_manager_client, project_id, mtls_secret_name, "devnet-verulink-attestor-mtls", key_value_pairs, file=True)
+mtls_secret_name = get_input_with_default("Enter MTLS secret name", "mainnet-verulink-attestor-mtls", "mtls_secret_name", saved_config)
+mtls_secret_path, mtls_secret_data = create_secret(secret_manager_client, project_id, mtls_secret_name, "mainnet-verulink-attestor-mtls", key_value_pairs, file=True)
 
 print("Configuring DB Service and Prometheus Connection..")
 collector_service_url = get_input_with_default("Enter collector service url", "", "collector_service_url", saved_config)
