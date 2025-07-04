@@ -1543,7 +1543,12 @@ def check_service_account_user_permission(project_id, service_account_email, cal
         sa_resource = f"projects/{project_id}/serviceAccounts/{service_account_email}"
         policy = iam.projects().serviceAccounts().getIamPolicy(resource=sa_resource).execute()
         
-        member = f"serviceAccount:{caller_identity}"
+        # Determine the correct member type based on the caller identity
+        if caller_identity.endswith('.iam.gserviceaccount.com'):
+            member = f"serviceAccount:{caller_identity}"
+        else:
+            member = f"user:{caller_identity}"
+        
         has_permission = False
         
         for binding in policy.get("bindings", []):
@@ -1658,7 +1663,12 @@ def grant_service_account_user(project_id, target_service_account_email, caller_
     if "bindings" not in policy:
         policy["bindings"] = []
 
-    member = f"serviceAccount:{caller_identity}"
+    # Determine the correct member type based on the caller identity
+    if caller_identity.endswith('.iam.gserviceaccount.com'):
+        member = f"serviceAccount:{caller_identity}"
+    else:
+        member = f"user:{caller_identity}"
+    
     binding_found = False
 
     for binding in policy["bindings"]:
@@ -1956,26 +1966,58 @@ try:
                     
                     # Get credentials and caller identity for grant_service_account_user
                     credentials, _ = default()
-                    caller_identity = credentials.service_account_email if hasattr(credentials, 'service_account_email') else None
+                    caller_identity = None
+                    
+                    # Try to get caller identity from gcloud CLI first (most reliable for user accounts)
+                    try:
+                        print(f"{BLUE}🔍 Trying to get caller identity from gcloud CLI...{END_COLOR}")
+                        account_result = subprocess.run(['gcloud', 'auth', 'list', '--filter=status:ACTIVE', '--format=value(account)'],
+                                                      capture_output=True, text=True, check=True)
+                        caller_identity = account_result.stdout.strip()
+                        print(f"{BLUE}🔍 gcloud CLI returned: '{caller_identity}'{END_COLOR}")
+                        if caller_identity and caller_identity != "default":
+                            print(f"{BLUE}📋 Using caller identity from gcloud CLI: {caller_identity}{END_COLOR}")
+                        else:
+                            print(f"{BLUE}🔍 gcloud CLI returned invalid value, trying credentials...{END_COLOR}")
+                            caller_identity = None
+                    except Exception as e:
+                        print(f"{BLUE}🔍 gcloud CLI call failed: {e}{END_COLOR}")
+                        caller_identity = None
+                    
+                    # If gcloud CLI didn't work, try credentials
                     if not caller_identity:
-                        try:
-                            if hasattr(credentials, 'signer_email'):
-                                caller_identity = credentials.signer_email
-                            elif hasattr(credentials, 'client_id'):
+                        if hasattr(credentials, 'service_account_email') and credentials.service_account_email:
+                            caller_identity = credentials.service_account_email
+                            print(f"{BLUE}📋 Using caller identity from service account: {caller_identity}{END_COLOR}")
+                        elif hasattr(credentials, 'signer_email') and credentials.signer_email:
+                            caller_identity = credentials.signer_email
+                            print(f"{BLUE}📋 Using caller identity from signer email: {caller_identity}{END_COLOR}")
+                        else:
+                            # Try to get it from token info
+                            try:
                                 from google.auth.transport.requests import Request
                                 token_info = credentials.token_info(Request())
                                 if 'email' in token_info:
                                     caller_identity = token_info['email']
-                        except Exception:
-                            print("⚠️ Could not determine caller identity, skipping service account user grant")
-                            caller_identity = None
+                                    print(f"{BLUE}📋 Using caller identity from token info: {caller_identity}{END_COLOR}")
+                            except Exception as e:
+                                print(f"{BLUE}🔍 Token info call failed: {e}{END_COLOR}")
+                                pass
                     
-                    if caller_identity:
-                        # Check if service account user permission is already granted
-                        if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
-                            grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
-                        else:
-                            print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+                    if not caller_identity:
+                        print("⚠️ Could not determine caller identity, skipping service account user grant")
+                        print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
+                    else:
+                        print(f"{BLUE}📋 Determined caller identity: {caller_identity}{END_COLOR}")
+                        try:
+                            # Check if service account user permission is already granted
+                            if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                                grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+                            else:
+                                print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+                        except Exception as e:
+                            print(f"{YELLOW}⚠️ Service account user grant failed: {e}{END_COLOR}")
+                            print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
                     
                     attach_service_account_to_vm(project_id, zone, instance_name, service_account_email)
                     print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
@@ -2091,26 +2133,58 @@ if not goto_deployment:
         
         # Get credentials and caller identity for grant_service_account_user
         credentials, _ = default()
-        caller_identity = credentials.service_account_email if hasattr(credentials, 'service_account_email') else None
+        caller_identity = None
+        
+        # Try to get caller identity from gcloud CLI first (most reliable for user accounts)
+        try:
+            print(f"{BLUE}🔍 Trying to get caller identity from gcloud CLI...{END_COLOR}")
+            account_result = subprocess.run(['gcloud', 'auth', 'list', '--filter=status:ACTIVE', '--format=value(account)'],
+                                          capture_output=True, text=True, check=True)
+            caller_identity = account_result.stdout.strip()
+            print(f"{BLUE}🔍 gcloud CLI returned: '{caller_identity}'{END_COLOR}")
+            if caller_identity and caller_identity != "default":
+                print(f"{BLUE}📋 Using caller identity from gcloud CLI: {caller_identity}{END_COLOR}")
+            else:
+                print(f"{BLUE}🔍 gcloud CLI returned invalid value, trying credentials...{END_COLOR}")
+                caller_identity = None
+        except Exception as e:
+            print(f"{BLUE}🔍 gcloud CLI call failed: {e}{END_COLOR}")
+            caller_identity = None
+        
+        # If gcloud CLI didn't work, try credentials
         if not caller_identity:
-            try:
-                if hasattr(credentials, 'signer_email'):
-                    caller_identity = credentials.signer_email
-                elif hasattr(credentials, 'client_id'):
+            if hasattr(credentials, 'service_account_email') and credentials.service_account_email:
+                caller_identity = credentials.service_account_email
+                print(f"{BLUE}📋 Using caller identity from service account: {caller_identity}{END_COLOR}")
+            elif hasattr(credentials, 'signer_email') and credentials.signer_email:
+                caller_identity = credentials.signer_email
+                print(f"{BLUE}📋 Using caller identity from signer email: {caller_identity}{END_COLOR}")
+            else:
+                # Try to get it from token info
+                try:
                     from google.auth.transport.requests import Request
                     token_info = credentials.token_info(Request())
                     if 'email' in token_info:
                         caller_identity = token_info['email']
-            except Exception:
-                print("⚠️ Could not determine caller identity, skipping service account user grant")
-                caller_identity = None
+                        print(f"{BLUE}📋 Using caller identity from token info: {caller_identity}{END_COLOR}")
+                except Exception as e:
+                    print(f"{BLUE}🔍 Token info call failed: {e}{END_COLOR}")
+                    pass
         
-        if caller_identity:
-            # Check if service account user permission is already granted
-            if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
-                grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
-            else:
-                print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+        if not caller_identity:
+            print("⚠️ Could not determine caller identity, skipping service account user grant")
+            print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
+        else:
+            print(f"{BLUE}📋 Determined caller identity: {caller_identity}{END_COLOR}")
+            try:
+                # Check if service account user permission is already granted
+                if not check_service_account_user_permission(project_id, service_account_email, caller_identity):
+                    grant_service_account_user(project_id, service_account_email, caller_identity, credentials)
+                else:
+                    print(f"{GREEN}✅ Service account user permission already granted{END_COLOR}")
+            except Exception as e:
+                print(f"{YELLOW}⚠️ Service account user grant failed: {e}{END_COLOR}")
+                print(f"{BLUE}   This is optional and the deployment can continue without it{END_COLOR}")
         
         print(f"{GREEN}✅ Service account setup completed{END_COLOR}")
     except Exception as e:
