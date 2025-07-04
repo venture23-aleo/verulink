@@ -252,7 +252,9 @@ Once the script starts, you'll be prompted to choose the deployment target:
 
 The deployment script supports two authentication methods:
 
-##### Method 1: gcloud CLI Authentication (Recommended for development/testing)
+##### Method 1: gcloud CLI Authentication
+
+⚠️ Authentication Warning: Running from a local device may not work due to missing or misconfigured Application Default Credentials (ADC).
 
 1. Install Google Cloud SDK if not already installed:
    https://cloud.google.com/sdk/docs/install-sdk
