@@ -248,17 +248,70 @@ Once the script starts, you'll be prompted to choose the deployment target:
    
 ### Setup
 
-#### ⚠️ GCP Authentication Notice
+#### GCP Authentication Methods
 
-Authentication using `gcloud auth login` will **not work** with the deployment script.
+The deployment script supports two authentication methods:
 
+##### Method 1: gcloud CLI Authentication (Recommended for development/testing)
+
+1. Install Google Cloud SDK if not already installed:
+   ```bash
+   # For Ubuntu/Debian
+   curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+   echo "deb https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+   sudo apt-get update && sudo apt-get install google-cloud-cli
+   
+   # For macOS
+   brew install google-cloud-sdk
+   ```
+
+2. Authenticate with gcloud:
+   ```bash
+   gcloud auth login
+   ```
+
+3. Set your project:
+   ```bash
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+4. Verify authentication:
+   ```bash
+   gcloud auth list
+   gcloud config get-value project
+   ```
+
+5. Ensure your user account has the required permissions:
+   - Compute Engine Admin (`roles/compute.admin`)
+   - Secret Manager Admin (`roles/secretmanager.admin`)
+   - Service Account Admin (`roles/iam.serviceAccountAdmin`)
+   - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
+   - Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`)
+   - IAM Role Administrator (`roles/iam.roleAdmin`)
+
+   You can add these roles in the GCP Console under IAM & Admin > IAM, or use gcloud commands:
+   <details>
+   <summary>Add IAM roles using gcloud commands</summary>
+
+   ```bash
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/compute.admin"
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/secretmanager.admin"
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/iam.serviceAccountAdmin"
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/resourcemanager.projectIamAdmin"
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/serviceusage.serviceUsageConsumer"
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/iam.roleAdmin"
+   ```
+   </details>
+   ```
+
+##### Method 2: Service Account Key Authentication
 
 1. Create a Service Account in your GCP project:
    - Go to [IAM & Admin > Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
    - Click "Create Service Account"
    - Give it a name like "attestor-deployment-sa"
    - Click "Create and continue"
-   - Add the following roles:
+   - Add the following roles (same as required for user accounts):
      - Compute Engine Admin (`roles/compute.admin`)
      - Secret Manager Admin (`roles/secretmanager.admin`)
      - Service Account Admin (`roles/iam.serviceAccountAdmin`)
@@ -273,7 +326,7 @@ Authentication using `gcloud auth login` will **not work** with the deployment s
    - Choose JSON format
    - Download the key file to a secure location
 
-3. Set Environment Variables:
+3. Set Environment Variables (only needed for service account authentication):
    ```bash
    export GOOGLE_CLOUD_PROJECT="your-project-id"
    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
