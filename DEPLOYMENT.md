@@ -250,55 +250,8 @@ Once the script starts, you'll be prompted to choose the deployment target:
 
 #### GCP Authentication Methods
 
-The deployment script supports two authentication methods:
+The deployment script supports Service Account Authentication only:
 
-##### Method 1: gcloud CLI Authentication
-
-⚠️ Authentication Warning: Running from a local device may not work due to missing or misconfigured Application Default Credentials (ADC).
-
-1. Install Google Cloud SDK if not already installed:
-   https://cloud.google.com/sdk/docs/install-sdk
-
-2. Authenticate with gcloud:
-   ```bash
-   gcloud auth login
-   ```
-
-3. Set your project:
-   ```bash
-   gcloud config set project YOUR_PROJECT_ID
-   ```
-
-4. Verify authentication:
-   ```bash
-   gcloud auth list
-   gcloud config get-value project
-   ```
-
-5. Ensure your user account has the required permissions:
-   - Compute Engine Admin (`roles/compute.admin`)
-   - Secret Manager Admin (`roles/secretmanager.admin`)
-   - Service Account Admin (`roles/iam.serviceAccountAdmin`)
-   - Resource Manager Project IAM Admin (`roles/resourcemanager.projectIamAdmin`)
-   - Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`)
-   - IAM Role Administrator (`roles/iam.roleAdmin`)
-
-   You can add these roles in the GCP Console under IAM & Admin > IAM, or use gcloud commands:
-   <details>
-   <summary>Add IAM roles using gcloud commands</summary>
-
-   ```bash
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/compute.admin"
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/secretmanager.admin"
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/iam.serviceAccountAdmin"
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/resourcemanager.projectIamAdmin"
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/serviceusage.serviceUsageConsumer"
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member="user:$(gcloud config get-value account)" --role="roles/iam.roleAdmin"
-   ```
-   </details>
-   ```
-
-##### Method 2: Service Account Key Authentication
 
 1. Create a Service Account in your GCP project:
    - Go to [IAM & Admin > Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
