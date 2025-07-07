@@ -99,11 +99,6 @@ program vlink_council_v2.aleo {
         Mapping::set(settings, THRESHOLD_INDEX, threshold);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, total);
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, 0field);
-
-        // since for now we have only two council that can call external_execute, they are hardcoded here
-        Mapping::set(whitelisted_callers, vlink_token_service_council_v2.aleo, true);
-        Mapping::set(whitelisted_callers, vlink_token_bridge_council_v2.aleo, true);
-
     }
 
     ///////////////////////
