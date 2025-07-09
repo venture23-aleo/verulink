@@ -822,25 +822,39 @@ program vlink_token_service_v2.aleo {
             token_id: token_id
         };
 
-        let actual_receiver: address = receiver;
+        let actual_receiver: address = receiver; 
         let held_amount: u128 = 0u128;
         let fee_receiver: address = self.caller;
+
+        let temp_fee_relayer: u128 = 0u128;
+        let actual_amount: u128 = amount-fee_relayer;
 
         if (!screening_passed.0) {
             actual_receiver = HOLDING_ADDRESS;
             held_amount = amount;
-            fee_receiver = actual_receiver;
-        } 
+            fee_receiver = HOLDING_ADDRESS;
+
+            temp_fee_relayer = fee_relayer;
+            fee_relayer = 0u128;
+            actual_amount = 0u128;
+        }
 
         if (version == 11u8 || version == 13u8) {
             fee_receiver = actual_receiver;
         }
 
         let mint_relayer_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, fee_receiver, fee_relayer, false,AUTHORIZE_UNTIL);
-
-        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, amount-fee_relayer, false, AUTHORIZE_UNTIL);
+        
+        let mint_private: (token_registry.aleo/Token, Future) = token_registry.aleo/mint_private(token_id, actual_receiver, actual_amount, false, AUTHORIZE_UNTIL);
+        
+        // since future cannot be called in if else loop,we have to call this line in all condition to insure to get fund while screening is failed
+        let mint_public: Future = token_registry.aleo/mint_public(token_id, actual_receiver, held_amount, AUTHORIZE_UNTIL);
 
         let hold: Future = vlink_holding_v2.aleo/hold_fund(image_address, token_id, held_amount);
+
+        if (actual_receiver == HOLDING_ADDRESS) {
+            fee_relayer = temp_fee_relayer;
+        }
         return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, hold));
     }
 

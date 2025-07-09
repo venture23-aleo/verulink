@@ -65,8 +65,7 @@ program vlink_council_v2.aleo {
     const TAG_ADD_MEMBER: u8 = 1u8;
     const TAG_REMOVE_MEMBER: u8 = 2u8;
     const TAG_WITHDRAW_FEES: u8 = 3u8;
-    const TAG_UPDATE_THRESHOLD: u8 = 4u8;
-    const TAG_UPDATE_WHITELISTED_CALLER: u8 = 5u8;     
+    const TAG_UPDATE_THRESHOLD: u8 = 4u8;   
 
 
     //////////////////////////////
@@ -456,7 +455,7 @@ program vlink_council_v2.aleo {
         let external_proposal_hash: field = BHP256::hash_to_field(external_proposal);
 
         let votes: u8 = get_valid_unique_address_count(voters);
-        let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
+        let vote_keys: [field; 5] = get_proposal_vote_keys(external_proposal_hash, voters);
 
         return finalize_external_execute(external_proposal_hash, voters, vote_keys, votes, self.caller);
     }
