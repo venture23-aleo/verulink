@@ -855,14 +855,15 @@ program vlink_token_service_v2.aleo {
         if (actual_receiver == HOLDING_ADDRESS) {
             fee_relayer = temp_fee_relayer;
         }
-        return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, hold));
+        return (screening_passed.0, mint_relayer_private.0, mint_private.0, finalize_token_receive_private(token_id, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer_private.1, mint_private.1, mint_public, hold));
     }
 
-    async function finalize_token_receive_private(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer: u128, f0: Future, f1: Future, f2: Future, f3: Future) {
+    async function finalize_token_receive_private(token_id: field, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer: u128, f0: Future, f1: Future, f2: Future, f3: Future, f4: Future) {
         f0.await();
         f1.await();
         f2.await();
         f3.await();
+        f4.await();
         assert_eq(Mapping::get(token_status, token_id), UNPAUSED_VALUE);
 
         // comparing fee
