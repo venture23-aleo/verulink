@@ -437,14 +437,18 @@ program vlink_council_v2.aleo {
         let external_proposal_hash: field = BHP256::hash_to_field(external_proposal);
 
         let votes: u8 = get_valid_unique_address_count(voters);
-        let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
+        let vote_keys: [field; 5] = get_proposal_vote_keys(external_proposal_hash, voters);
 
-        return finalize_external_execute(proposal_hash, voters, vote_keys, votes);
+        return finalize_external_execute(external_proposal_hash, voters, vote_keys, votes, self.caller);
     }
 
-    async function finalize_external_execute(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+    async function finalize_external_execute(external_proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8, caller: address) {
+
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, external_proposal_hash));
+
         // Ensure that the votes are from valid members
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
@@ -455,10 +459,10 @@ program vlink_council_v2.aleo {
         assert(votes >= threshold);
 
         // Ensure that the proposal has not been executed
-        assert(!Mapping::contains(proposal_executed, proposal_hash));
+        assert(!Mapping::contains(proposal_executed, external_proposal_hash));
 
         // Mark the proposal as executed
-        Mapping::set(proposal_executed, proposal_hash, true);
+        Mapping::set(proposal_executed, external_proposal_hash, true);
     }
 
     // Validates that the addresses are unique except for ZERO_ADDRESS
