@@ -60,7 +60,12 @@ program vlink_council_v2.aleo {
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
-    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;
+
+    const TAG_ADD_MEMBER: u8 = 1u8;
+    const TAG_REMOVE_MEMBER: u8 = 2u8;
+    const TAG_WITHDRAW_FEES: u8 = 3u8;
+    const TAG_UPDATE_THRESHOLD: u8 = 4u8;       
 
 
     //////////////////////////////
@@ -199,6 +204,7 @@ program vlink_council_v2.aleo {
     //////////////////////////////////////
 
     struct AddMember {
+        tag: u8,
         id: u32,
         new_member: address,
         new_threshold: u8
@@ -207,6 +213,7 @@ program vlink_council_v2.aleo {
     async transition add_member(public id: u32, public new_member: address, public new_threshold: u8, public voters: [address; 5]) -> Future{
         assert(new_threshold > 0u8);
         let proposal: AddMember = AddMember {
+            tag: TAG_ADD_MEMBER,
             id,
             new_member,
             new_threshold
@@ -255,6 +262,7 @@ program vlink_council_v2.aleo {
     //////////////////////////////////////////
     
     struct RemoveMember {
+        tag: u8,
         id: u32,
         existing_member: address,
         new_threshold: u8
@@ -264,6 +272,7 @@ program vlink_council_v2.aleo {
         assert_neq(existing_member, ZERO_ADDRESS);
         assert(new_threshold > 0u8);
         let proposal: RemoveMember = RemoveMember {
+            tag: TAG_REMOVE_MEMBER,
             id,
             existing_member,
             new_threshold
@@ -309,6 +318,7 @@ program vlink_council_v2.aleo {
     }
 
     struct Withdrawal {
+        tag: u8,
         id: u32,
         token_id: field,
         receiver: address,
@@ -318,6 +328,7 @@ program vlink_council_v2.aleo {
     async transition withdraw_fees(public id: u32, public token_id:field, public receiver: address, public amount: u128, public voters: [address; 5]) -> Future{
         assert(amount > 0u128);
         let proposal: Withdrawal = Withdrawal {
+            tag: TAG_WITHDRAW_FEES,
             id,
             token_id,
             receiver,
@@ -365,6 +376,7 @@ program vlink_council_v2.aleo {
     ////////////////////////////////////////
 
     struct UpdateThreshold {
+        tag: u8,
         id: u32,
         new_threshold: u8
     }
@@ -373,6 +385,7 @@ program vlink_council_v2.aleo {
         assert(new_threshold > 0u8);
 
         let proposal: UpdateThreshold = UpdateThreshold {
+            tag: TAG_UPDATE_THRESHOLD,
             id,
             new_threshold
         };
