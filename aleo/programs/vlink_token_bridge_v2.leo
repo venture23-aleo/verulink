@@ -159,7 +159,7 @@ program vlink_token_bridge_v2.aleo {
     /// This is the maximum threshold that this bridge can support
     /// In case the threshold needs to be more than specified, new contract needs to be deployed
     /// To support threshold <= 5, we need to set ZERO_ADDRESS as a valid attestor
-    const SUPPORTED_THRESHOLD: u8 = 5u8;
+    const NUM_OF_ALLOWED_ATTESTORS: u8 = 5u8;
 
     //////////////////////////////
     /////// Initialization ///////
@@ -185,7 +185,7 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
         Mapping::set(bridge_settings, TOTAL_ATTESTORS_INDEX, total);
 
         // Set the initial attestors
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_ATTESTORS {
             Mapping::set(attestors, initial_attestors[i], true);
         }
         Mapping::set(attestors, ZERO_ADDRESS, true);
@@ -594,7 +594,7 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
         // Assert that the packet is being consumed from one of the supported services
         assert(Mapping::get(supported_services, from));
 
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_ATTESTORS {
             // Assert that the attestors signing are valid
             assert(Mapping::contains(attestors, signers[i]));
         }
@@ -670,7 +670,7 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
             screening_passed: false
         });
 
-        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+        for i: u8 in 0u8..NUM_OF_ALLOWED_ATTESTORS {
             if (signers[i] != ZERO_ADDRESS) {
                 let yay: bool = signature::verify(signs[i], signers[i], packet_hash_with_yay);
                 let nay: bool = signature::verify(signs[i], signers[i], packet_hash_with_nay);
