@@ -242,6 +242,8 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
 
         let total_attestors: u8 = Mapping::get(bridge_settings, TOTAL_ATTESTORS_INDEX);
         
+        assert(total_attestors+1u8 <= NUM_OF_ALLOWED_ATTESTORS);
+
         // Check if the new threshold is below total attestors
         assert(new_threshold <= total_attestors+1u8);
 
