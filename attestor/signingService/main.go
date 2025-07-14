@@ -31,7 +31,7 @@ func main() {
 	var err error
 	defer func() {
 		if err != nil {
-			fmt.Fprint(os.Stdin, err.Error())
+			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	}()

@@ -68,7 +68,7 @@ func getEthBoolByte(b bool) []byte {
 		yay := big.NewInt(1)
 		yay.FillBytes(boolByte)
 	} else {
-		nay := big.NewInt(0)
+		nay := big.NewInt(2)
 		nay.FillBytes(boolByte)
 	}
 	return boolByte
