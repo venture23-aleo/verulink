@@ -134,7 +134,6 @@ program vlink_council_v2.aleo {
         let expected_proposal_id: u32 = (total_proposals + 1field ) as u32;
         assert_eq(expected_proposal_id, proposal_id);
         Mapping::set(proposals, TOTAL_PROPOSALS_INDEX, total_proposals + 1field);
-
         // Store the proposal hash
         Mapping::set(proposals, proposal_id, proposal_hash);
 
@@ -144,6 +143,9 @@ program vlink_council_v2.aleo {
             index: 0u8
         };
         Mapping::set(proposal_voters, first_proposal_voter_key, from);
+
+        // Assert that the proposal has not been proposed before
+        assert(!Mapping::contains(proposal_vote_counts, proposal_hash));
 
         // Set the vote for the proposal to be 1
         Mapping::set(proposal_vote_counts, proposal_hash, 1u8);
