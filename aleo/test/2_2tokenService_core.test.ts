@@ -41,6 +41,7 @@ import { getSignerPackets } from "../utils/getRecords";
 import { Transition } from "@doko-js/core/dist/outputs/types/transaction";
 import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
 import { log } from "console";
+import { Holder } from "../artifacts/js/types/vlink_holding_v2";
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
@@ -386,8 +387,69 @@ describe("Token Service Core", () => {
                 );
                 await tx.wait();
                 await sleepTimer(5000);
-
             })
+
+            test(" All Fund should go back to the holding account if screening fails", async () => {
+                const receiveAmount: bigint = BigInt(100_000_000)
+                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PUBLIC_RELAYER_NOPREDICATE);
+
+                tokenService.connect(admin);
+                const signature = signPacket(packet, false, tokenService.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+
+                const holder: Holder = {
+                    account: aleoUser1,
+                    token_id: tokenID
+                }
+                const initialHoldingBalance = await holding.holdings(holder, BigInt(0));
+                const relayer_initial_balance = await getUserAuthorizedBalance(aleoUser2, tokenID);
+
+                tokenService.connect(aleoUser2);
+                const tx = await tokenService.token_receive_public(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.dest_token_id,
+                    packet.message.receiver_address,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(packet.source.addr),
+                    public_relayer_fee,
+                    packet.version
+                );
+                const [screeningPassed] = await tx.wait();
+                expect(screeningPassed).toBe(false);
+
+                // check holding balance
+                const finalHoldingBalance = await holding.holdings(holder, BigInt(0))
+                const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, tokenID);
+                expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
+                expect(finalHoldingBalance).toBe(initialHoldingBalance + receiveAmount);
+            }, TIMEOUT)
 
             test("Happy receive token(ethereum chain) public with no relayer", async () => {
                 await sleepTimer(5000);
@@ -816,6 +878,74 @@ describe("Token Service Core", () => {
                 );
                 await tx.wait();
             })
+
+            test(" All Fund should go back to the holding account if screening fails", async () => {
+                const receiveAmount: bigint = BigInt(1000_000)
+                const pre_image = BigInt(123);
+                const image: Image = {
+                    pre_image,
+                    receiver: aleoUser1
+                }
+                const hashed_address = hashStructToAddress(image);
+                const packet = createPacket(hashed_address, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_RELAYER_NOPREDICATE);
+                tokenService.connect(admin);
+                const signature = signPacket(packet, false, tokenService.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+
+                const holder: Holder = {
+                    account: hashed_address,
+                    token_id: tokenID
+                }
+                const initialHoldingBalance = await holding.holdings(holder, BigInt(0));
+                const relayer_initial_balance = await getUserAuthorizedBalance(aleoUser2, tokenID);
+
+                tokenService.connect(aleoUser2);
+                const tx = await tokenService.token_receive_private(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.dest_token_id,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(packet.source.addr),
+                    pre_image,
+                    aleoUser1,
+                    packet.version,
+                    private_relayer_fee
+                );
+                const [screeningPassed] = await tx.wait();
+                expect(screeningPassed).toBe(false);
+
+                // check holding balance
+                const finalHoldingBalance = await holding.holdings(holder, BigInt(0))
+                const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, tokenID);
+                expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
+                expect(finalHoldingBalance).toBe(initialHoldingBalance + receiveAmount);
+            }, TIMEOUT)
 
             test("Happy receive token(ethereum chain) private with no relayer", async () => {
                 const pre_image = BigInt(123);

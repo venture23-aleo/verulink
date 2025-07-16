@@ -25,7 +25,8 @@ import {
   UpdateThreshold,
   ProposalVote,
   ProposalVoterKey,
-  Withdrawal
+  Withdrawal,
+  ExternalProposal
 } from "../artifacts/js/types/vlink_council_v2";
 
 import { hashStruct } from "../utils/hash";
@@ -48,10 +49,10 @@ const tokenService = new Vlink_token_service_v2Contract({ mode });
 const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode });
 const bridge = new Vlink_token_bridge_v2Contract({ mode });
 
- const TAG_ADD_MEMBER = 1;
- const TAG_REMOVE_MEMBER = 2;
- const TAG_WITHDRAW_FEES = 3;
- const TAG_UPDATE_THRESHOLD = 4;
+const TAG_ADD_MEMBER = 1;
+const TAG_REMOVE_MEMBER = 2;
+const TAG_WITHDRAW_FEES = 3;
+const TAG_UPDATE_THRESHOLD = 4;
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString() + "field";
@@ -187,7 +188,7 @@ describe("Council", () => {
         [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS], initialThreshold
       );
       expect(await initializeTx.wait()).toStrictEqual([]); // this means failed
-    },TIMEOUT)
+    }, TIMEOUT)
 
     test("Holding: Initialize", async () => {
       const tx = await holding.initialize_holding(tokenService.address());
@@ -214,7 +215,7 @@ describe("Council", () => {
 
         council.connect(councilMember1)
         const proposeTx = await council.propose(1000, proposalHash);
-        expect(await proposeTx.wait()).toStrictEqual([]);  
+        expect(await proposeTx.wait()).toStrictEqual([]);
       }, TIMEOUT)
 
       test("should not Propose from non-council member", async () => {
@@ -229,7 +230,7 @@ describe("Council", () => {
 
         council.connect(newMember);
         const proposeTx = await council.propose(proposalId, proposalHash);
-        expect(await proposeTx.wait()).toStrictEqual([]);  
+        expect(await proposeTx.wait()).toStrictEqual([]);
       }, TIMEOUT)
 
       test("Propose from council member", async () => {
@@ -241,6 +242,7 @@ describe("Council", () => {
           new_threshold: newThreshold
         };
         proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
+
         council.connect(councilMember1);
         const proposeTx = await council.propose(proposalId, proposalHash);
         await proposeTx.wait();
@@ -258,13 +260,13 @@ describe("Council", () => {
       test("Vote from non council member fails", async () => {
         council.connect(aleoUser4)
         const voteTx = await council.vote(proposalHash, true);
-        expect(await voteTx.wait()).toStrictEqual([]);  
+        expect(await voteTx.wait()).toStrictEqual([]);
       }, TIMEOUT)
 
       test("Vote from council member1(proposer) fails, since vote counts when proposed", async () => {
         council.connect(councilMember1)
         const voteTx = await council.vote(proposalHash, true);
-        expect(await voteTx.wait()).toStrictEqual([]);  
+        expect(await voteTx.wait()).toStrictEqual([]);
       }, TIMEOUT)
 
       test("Vote NO from council member2", async () => {
@@ -285,7 +287,7 @@ describe("Council", () => {
         const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
-        expect(await updateThresholExecTx.wait()).toStrictEqual([]);  
+        expect(await updateThresholExecTx.wait()).toStrictEqual([]);
       }, TIMEOUT);
 
       test("Vote YES from council member 3", async () => {
@@ -315,14 +317,13 @@ describe("Council", () => {
         const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, aleoUser4];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
-        expect(await updateThresholExecTx.wait()).toStrictEqual([]);  
+        expect(await updateThresholExecTx.wait()).toStrictEqual([]);
       }, TIMEOUT);
 
       test("Execute with all votes", async () => {
         const initialThresholdValue = await council.settings(COUNCIL_THRESHOLD_INDEX)
         const totalMember = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
-        console.log(initialThresholdValue, totalMember, "execute logs");
-        const signers = [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+        const signers = [councilMember1, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         council.connect(councilMember1);
         const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
@@ -386,7 +387,7 @@ describe("Council", () => {
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         council.connect(councilMember1);
         const updateThresholExecTx = await council.update_threshold(proposalId, invalidThreshold, signers);
-        expect(await updateThresholExecTx.wait()).toStrictEqual([]);  
+        expect(await updateThresholExecTx.wait()).toStrictEqual([]);
       }, TIMEOUT)
     })
   })
@@ -443,6 +444,12 @@ describe("Council", () => {
       expect(await council.members(newMember, false)).toBe(true);
       expect(await council.settings(COUNCIL_THRESHOLD_INDEX)).toBe(updatedThreshold);
       expect(finalTotalAttestors).toBe(initialTotalAttestors + 1);
+    }, TIMEOUT)
+
+    test("Should not allow voting after proposal execution", async () => {
+      council.connect(councilMember3)
+      const voteTx = await council.vote(proposalHash, true);
+      expect(await voteTx.wait()).toStrictEqual([]); // this means failed
     }, TIMEOUT)
   })
 
@@ -568,8 +575,8 @@ describe("Council", () => {
 
     //send fee to contract
     test("Send fee to council contract for withdraw", async () => {
-      // const registertxn = tokenRegistry.register_token(tokenID, token_name, token_symbol, token_decimals, token_max_supply, false, councilMember1);
-      // await (await registertxn).wait()
+      const registertxn = tokenRegistry.register_token(tokenID, token_name, token_symbol, token_decimals, token_max_supply, false, councilMember1);
+      await (await registertxn).wait()
       const minttxn = await tokenRegistry.mint_public(tokenID, council.address(), BigInt(10000), 4294967295);
       await minttxn.wait();
       const getbalance = await getUserAuthorizedBalance(council.address(), tokenID)

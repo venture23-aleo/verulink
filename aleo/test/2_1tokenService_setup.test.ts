@@ -937,5 +937,21 @@ describe('Transition Failing Test cases', () => {
         })
     })
 
-
+    test.failing("Adding the token with platform fee greater than 100 should fail", async () => {
+        await tokenService.add_token_ts(
+            newTokenID,
+            BigInt(100),
+            BigInt(100_000),
+            0,
+            0,
+            BigInt(0),
+            evm2AleoArr(usdcContractAddr),
+            evm2AleoArr(ethTsContractAddr),
+            ethChainId,
+            100000, // public platform fee greater than 100
+            100000, // private platform fee greater than 100
+            public_relayer_fee,
+            private_relayer_fee,
+        );
+    });
 });
