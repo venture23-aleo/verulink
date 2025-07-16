@@ -64,8 +64,8 @@ describe("Token Service setup and governace ", () => {
     const token_decimals = 6
     const token_max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
     tokenID = hashStruct(token_name);
-    const public_platform_fee = 5000;
-    const private_platform_fee = 10000;
+    const public_platform_fee = 5000; // equivalent to 5% in basis points
+    const private_platform_fee = 10000; // equivalent to 10% in basis points
     const public_relayer_fee = BigInt(10000);
     const private_relayer_fee = BigInt(20000);
     const ALEO_SEQ_NUM = BigInt(1);
@@ -154,13 +154,20 @@ describe("Token Service setup and governace ", () => {
             await tx.wait();
         }, TIMEOUT)
 
+
+        test.failing("Token Service: cannot Initialize by non-initializer address", async () => {
+            tokenService.connect(aleoUser3);
+            const tx = await tokenService.initialize_ts(admin);
+            await tx.wait();
+        })
+
         test("Token Service: Initialize", async () => {
+            tokenService.connect(admin);
             const precheck_isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
             console.log("is sevice initialized: ", precheck_isTokenServiceInitialized);
             if (!precheck_isTokenServiceInitialized) {
                 const tx = await tokenService.initialize_ts(admin);
                 await tx.wait();
-                // TODO: check mapping
                 const postcheck_isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
                 expect(postcheck_isTokenServiceInitialized).toEqual(true);
             }
@@ -680,7 +687,8 @@ describe("Token Service setup and governace ", () => {
                 threshold_no_limit: BigInt(200)
             };
 
-            test.failing("token should exist to update withdrawal limit", async () => {
+
+            test("token should exist to update withdrawal limit", async () => {
                 const diff_tokenId = hashStruct(BigInt('61483328216518762067'));
                 tokenService.connect(admin);
                 const tx = await tokenService.update_withdrawal_limit(
@@ -689,7 +697,7 @@ describe("Token Service setup and governace ", () => {
                     newLimit.duration,
                     newLimit.threshold_no_limit
                 );
-                await tx.wait();
+                await expect(tx.wait()).rejects.toThrow()
             }, TIMEOUT);
 
             test("should update withdrawal by admin", async () => {

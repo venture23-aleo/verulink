@@ -3,7 +3,7 @@ import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2"
 import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
-import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
+import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 
 import {
@@ -42,6 +42,7 @@ import { Transition } from "@doko-js/core/dist/outputs/types/transaction";
 import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
 import { log } from "console";
 import { Holder } from "../artifacts/js/types/vlink_holding_v2";
+import { ethTsRandomContractAddress2, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
@@ -340,7 +341,151 @@ describe("Token Service Core", () => {
                 await tx.wait();
             })
 
-            test.failing("should fail if user send fee and fee set in mapping are different", async () => {
+            test.failing("zero addresss should not be able to receive token", async () => {
+                const receiveAmount: bigint = BigInt(100_000_000)
+                const packet = createPacket(ALEO_ZERO_ADDRESS, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
+
+                tokenService.connect(admin);
+                const signature = signPacket(packet, true, tokenService.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+
+                tokenService.connect(aleoUser1);
+                const tx = await tokenService.token_receive_public(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.dest_token_id,
+                    packet.message.receiver_address,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(packet.source.addr),
+                    public_relayer_fee,
+                    packet.version
+                );
+                await tx.wait();
+            })
+
+            test("should failed if tokeninfo not included in other_chain_token_service mapping", async () => {
+                const receiveAmount: bigint = BigInt(100_000_000)
+                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), BigInt("285563657430695784"), ethTsRandomContractAddress);
+
+                tokenService.connect(admin);
+                const signature = signPacket(packet, true, tokenService.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+
+                tokenService.connect(aleoUser1);
+                const tx = await tokenService.token_receive_public(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.dest_token_id,
+                    packet.message.receiver_address,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(packet.source.addr),
+                    public_relayer_fee,
+                    packet.version
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT)
+
+            test.failing("Should fail the transaction if stored token service address is not same as the one in mapping", async () => {
+                const receiveAmount: bigint = BigInt(100_000_000)
+                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), BigInt("285563657430695784"), ethTsRandomContractAddress);
+
+                tokenService.connect(admin);
+                const signature = signPacket(packet, true, tokenService.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+
+                tokenService.connect(aleoUser1);
+                const tx = await tokenService.token_receive_public(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.dest_token_id,
+                    packet.message.receiver_address,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(evm2AleoArr(ethTsRandomContractAddress2)),
+                    public_relayer_fee,
+                    packet.version
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT)
+
+            test("should fail if user send fee and fee set in mapping are different", async () => {
                 const receiveAmount: bigint = BigInt(100_000_000)
                 const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
 
@@ -382,17 +527,21 @@ describe("Token Service Core", () => {
                     signatures,
                     packet.source.chain_id,
                     prunePadding(packet.source.addr),
-                    BigInt(5000), //fee diferent here
+                    BigInt(50000), //fee diferent here
                     packet.version
                 );
-                await tx.wait();
+                tx.wait().then(() => {
+                    throw new Error("Expected failure, but got success");
+                }).catch((err) => {
+                    expect(err.message).toMatch(/transitions|execution|undefined/);
+                });
                 await sleepTimer(5000);
-            })
+            }, TIMEOUT)
 
             test(" All Fund should go back to the holding account if screening fails", async () => {
                 const receiveAmount: bigint = BigInt(100_000_000)
                 const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PUBLIC_RELAYER_NOPREDICATE);
-
+                const initialHoldingBalanceInRegistery = await getUserAuthorizedBalance(holding.address(), tokenID);
                 tokenService.connect(admin);
                 const signature = signPacket(packet, false, tokenService.config.privateKey);
                 const signatures = [
@@ -448,7 +597,9 @@ describe("Token Service Core", () => {
                 const finalHoldingBalance = await holding.holdings(holder, BigInt(0))
                 const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, tokenID);
                 expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
+                const finalHoldingBalanceInRegistery = await getUserAuthorizedBalance(holding.address(), tokenID);
                 expect(finalHoldingBalance).toBe(initialHoldingBalance + receiveAmount);
+                expect(finalHoldingBalanceInRegistery.balance).toBe(initialHoldingBalanceInRegistery.balance + receiveAmount);
             }, TIMEOUT)
 
             test("Happy receive token(ethereum chain) public with no relayer", async () => {
@@ -836,7 +987,7 @@ describe("Token Service Core", () => {
                 await tx.wait();
             })
 
-            test.failing("should fail if user send fee and fee set in mapping are different", async () => {
+            test("should fail if user send fee and fee set in mapping are different", async () => {
                 const pre_image = BigInt(123);
                 const image: Image = {
                     pre_image,
@@ -874,13 +1025,18 @@ describe("Token Service Core", () => {
                     pre_image,
                     aleoUser1,
                     packet.version,
-                    BigInt(200) //Fee different
+                    BigInt(3000) //Fee different
                 );
-                await tx.wait();
-            })
+                tx.wait().then(() => {
+                    throw new Error("Expected failure, but got success");
+                }).catch((err) => {
+                    expect(err.message).toMatch(/transitions|execution|undefined/);
+                });
+            }, TIMEOUT)
 
-            test(" All Fund should go back to the holding account if screening fails", async () => {
+            test("If screening failed, All Funds minted in holding account publicly ", async () => {
                 const receiveAmount: bigint = BigInt(1000_000)
+                const initialHoldingBalanceInRegistery = await getUserAuthorizedBalance(holding.address(), tokenID);
                 const pre_image = BigInt(123);
                 const image: Image = {
                     pre_image,
@@ -941,10 +1097,12 @@ describe("Token Service Core", () => {
                 expect(screeningPassed).toBe(false);
 
                 // check holding balance
+                const finalHoldingBalanceInRegistery = await getUserAuthorizedBalance(holding.address(), tokenID);
                 const finalHoldingBalance = await holding.holdings(holder, BigInt(0))
                 const relayer_final_balance = await getUserAuthorizedBalance(aleoUser2, tokenID);
                 expect(relayer_final_balance.balance).toEqual(relayer_initial_balance.balance);
                 expect(finalHoldingBalance).toBe(initialHoldingBalance + receiveAmount);
+                expect(finalHoldingBalanceInRegistery.balance).toBe(initialHoldingBalanceInRegistery.balance + receiveAmount);
             }, TIMEOUT)
 
             test("Happy receive token(ethereum chain) private with no relayer", async () => {
@@ -1300,7 +1458,7 @@ describe("Token Service Core", () => {
         );
 
         describe("Token Send Public", () => {
-            test.failing("Cannot send if user has insufficient fund", async () => {
+            test("Cannot send if user has insufficient fund", async () => {
                 const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
 
                 expect(await tokenService.min_transfers(tokenID)).toBeLessThanOrEqual(amount)
@@ -1327,11 +1485,11 @@ describe("Token Service Core", () => {
                         platformFee,
                         non_active_relayer
                     );
-                    await tx.wait();
+                    expect(tx.wait()).rejects.toThrow();
                 }
-            })
+            }, TIMEOUT);
 
-            test.failing("Should failed if platform fee is mismatched", async () => {
+            test("Should failed if platform fee is mismatched", async () => {
                 const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
                 expect(await tokenService.min_transfers(tokenID)).toBeLessThanOrEqual(amount)
                 expect(await tokenService.max_transfers(tokenID)).toBeGreaterThanOrEqual(amount)
@@ -1356,9 +1514,9 @@ describe("Token Service Core", () => {
                         BigInt(1),
                         non_active_relayer
                     );
-                    await tx.wait();
+                    expect(tx.wait()).rejects.toThrow();
                 }
-            })
+            }, TIMEOUT);
 
             test("happy token send in public version with non active relayer",
                 async () => {
@@ -1480,6 +1638,65 @@ describe("Token Service Core", () => {
                 },
                 TIMEOUT
             );
+
+            test("Cannot send if token status is paused", async () => {
+                // Pause the token
+                tokenService.connect(admin);
+                const pauseTx = await tokenService.pause_token_ts(tokenID);
+                await pauseTx.wait();
+                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_PAUSED_VALUE);
+                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
+                const tx = await tokenService.token_send_public(
+                    tokenID,
+                    evm2AleoArrWithoutPadding(receiver),
+                    amount,
+                    destChainId,
+                    evm2AleoArrWithoutPadding(destTsAddr),
+                    evm2AleoArrWithoutPadding(destToken),
+                    platformFee,
+                    active_relayer
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT)
+
+            test("Unpause the token for rest of the transaction", async () => {
+                tokenService.connect(admin);
+                const unpauseTx = await tokenService.unpause_token_ts(tokenID);
+                await unpauseTx.wait();
+                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_UNPAUSED_VALUE);
+            }, TIMEOUT)
+
+            test("Cannot send if other_chain_token_address is wrong data", async () => {
+                tokenService.connect(admin);
+                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
+                const tx = await tokenService.token_send_public(
+                    hashStruct(BigInt('6148332741585187462067')), //wrong tokenId so it gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(receiver),
+                    amount,
+                    BigInt("28556963456465430695"), // wrong chain id so it  gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(destTsAddr),
+                    evm2AleoArrWithoutPadding(destToken),
+                    platformFee,
+                    active_relayer
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT)
+
+            test("Cannot send if other_chain_token_service is wrong data", async () => {
+                tokenService.connect(admin);
+                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
+                const tx = await tokenService.token_send_public(
+                    hashStruct(BigInt('6148332741585187462067')), //wrong tokenId so it gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(receiver),
+                    amount,
+                    destChainId,
+                    evm2AleoArrWithoutPadding(destTsAddr2), //wrong ts address so it gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(destToken),
+                    platformFee,
+                    active_relayer
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT)
         })
 
         describe("Token Send Private", () => {
