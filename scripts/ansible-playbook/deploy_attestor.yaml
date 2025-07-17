@@ -224,12 +224,13 @@
     - name: Create secrets.yaml
       copy:
         content: |
-          ethereum:
-            private_key: "{{ ethereum_private_key | b64decode | trim }}"
-            wallet_address: "{{ ethereum_wallet_address | b64decode | trim }}"
-          aleo:
-            private_key: "{{ aleo_private_key | b64decode | trim }}"
-            wallet_address: "{{ aleo_wallet_address | b64decode | trim }}"
+          chain:
+            ethereum:
+              private_key: "{{ ethereum_private_key | b64decode | trim }}"
+              wallet_address: "{{ ethereum_wallet_address | b64decode | trim }}"
+            aleo:
+              private_key: "{{ aleo_private_key | b64decode | trim }}"
+              wallet_address: "{{ aleo_wallet_address | b64decode | trim }}"
         dest: "{{ signingservice_home }}/secrets.yaml"
         owner: "{{ remote_user }}"
         group: "{{ remote_user }}"
