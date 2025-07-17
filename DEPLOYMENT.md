@@ -14,6 +14,12 @@
 - [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
   - [Prerequisites](#prerequisites)
   - [Deployment Steps](#deployment-steps-1)
+- [Manual Deployment with Ansible Playbook](#manual-deployment-with-ansible-playbook)
+  - [Prerequisites](#prerequisites-1)
+  - [Deployment Steps](#deployment-steps-2)
+  - [Advanced Configuration Options](#advanced-configuration-options)
+  - [Verification](#verification)
+  - [Troubleshooting Ansible Deployment](#troubleshooting-ansible-deployment)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -513,6 +519,155 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 	systemctl --user start attestor-chain.service
 	```
 11. To view the application log file, navigate to the installation directory on the Linux machine, then go to the `log` directory. The log file is named `verulink.log`.
+
+---
+
+### Manual Deployment with Ansible Playbook
+
+#### Prerequisites
+
+1. Make sure ansible is installed on the machine
+
+2. **Target Machine Requirements**
+   - Linux distribution (Ubuntu 22.04+)
+   - At least 8GB RAM and 4 vCPUs
+   - SSH access with key-based authentication
+   >Note: for password based authentication install `sshpass` on the system
+   - User with sudo privileges
+
+3. **Required Files**
+   - MTLS certificates (CA certificate, attestor certificate, attestor key)
+   - Ethereum and Aleo wallet addresses and private keys
+   - Collector service URL
+   - Prometheus PushGateway URL
+
+#### Deployment Steps
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/venture23-aleo/verulink.git
+   cd verulink
+   ```
+
+2. **Navigate to Ansible Directory**
+   ```bash
+   cd scripts/ansible-playbook
+   ```
+
+3. **Create Variables File**
+   Copy the sample variables file and configure it:
+   ```bash
+   cp vars.yaml.sample vars.yaml
+   ```
+
+4. **Configure Variables**
+   Edit `vars.yaml` with your specific values:
+   ```yaml
+   # Attestor Configuration
+   attestor_name: mainnet_attestor_verulink_yourcompany
+   signer_username: signer
+   signer_password: your_secure_password
+   
+   # Service Endpoints
+   collector_service_url: 
+   prometheus_pushgateway_url: 
+   
+   # Wallet Information (Base64 encoded)
+   aleo_wallet_address: <base64-encoded-aleo-address>
+   ethereum_wallet_address: <base64-encoded-eth-address>
+   ethereum_private_key: <base64-encoded-eth-key>
+   aleo_private_key: <base64-encoded-aleo-key>
+   
+   # MTLS Certificates (Base64 encoded)
+   ca_certificate: <base64-encoded-ca-cert>
+   attestor_certificate: <base64-encoded-attestor-cert>
+   attestor_key: <base64-encoded-attestor-key>
+   
+   # Git Branch to Deploy
+   verulink_branch: <branch to deploy>
+   ```
+   
+5. **Run the Ansible Playbook**
+  
+   Using username/password:
+     ```bash
+     ansible-playbook deploy_attestor.yaml \
+     -i "<ip_address>," \
+     -u <remote_user> \
+     --ask-pass \
+     --ask-become-pass
+   ```
+   Using username + SSH private key:
+   ```bash
+   ansible-playbook deploy_attestor.yaml \
+   -i "13.222.206.36," \
+   -u cloud_user \
+   --private-key ~/.ssh/mykey.pem \
+   --ask-become-pass"
+   ```
+#### Verification
+
+After deployment, verify the services are running:
+
+1. **Check Docker Containers**
+   ```bash
+   ssh -i /path/to/private_key.pem remote_user@your-server-ip
+   docker ps
+   ```
+
+2. **Check Service Logs**
+   ```bash
+   docker logs attestor-chainservice
+   docker logs attestor-signingservice
+   ```
+
+3. **Check Application Logs**
+   ```bash
+   docker exec -it attestor-chainservice cat /app/logs/verulink.log
+   ```
+
+#### Troubleshooting Ansible Deployment
+
+**Common Issues and Solutions**
+
+1. **SSH Connection Issues**
+   ```bash
+   # Test SSH connection
+   ansible -i <ip_address>, all -m ping
+   
+   # With verbose output
+   ansible -i <ip_address>, all -m ping -vvv
+   ```
+
+2. **Permission Issues**
+   ```bash
+   # Run with become
+   ansible-playbook -i <ip_address>, deploy_attestor.yaml --become --ask-become-pass
+   ```
+
+3. **Variable Validation Errors**
+   ```bash
+   # Check variable syntax
+   ansible-playbook -i <ip_address>, deploy_attestor.yaml --check
+   ```
+
+4. **Base64 Encoding Issues**
+   ```bash
+   # Encode files to base64
+   cat your_certificate.crt | base64 -w 0
+   cat your_private_key.key | base64 -w 0
+   ```
+
+**Debug Mode**
+```bash
+# Run with maximum verbosity
+ansible-playbook -i <ip_address>, deploy_attestor.yaml -vvvv
+
+# Run specific task with debug
+ansible-playbook -i <ip_address>, deploy_attestor.yaml --tags debug
+```
+
+---
 
 ## Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:

@@ -1,0 +1,286 @@
+---
+- name: Install Attestor on Linux Distributions
+  hosts: all
+  gather_facts: yes
+  become: true
+  become_method: sudo
+  become_user: root
+
+  vars_files:
+    - vars.yaml
+
+  vars:
+    arch_mapping:
+      x86_64: amd64
+      aarch64: arm64
+    PROJECT_NAME: verulink
+    SERVICE_NAME: attestor
+    
+
+  pre_tasks:
+    - name: Determine remote user
+      set_fact:
+        remote_user: "{{ ansible_ssh_user | default(ansible_user) | default('ubuntu') }}"
+
+    - name: Get remote user's home directory
+      command: "echo $HOME"
+      register: home_path
+      changed_when: false
+      become: false
+
+    - name: Set user-specific variables with correct home dir
+      set_fact:
+        remote_user_home: "{{ home_path.stdout }}"
+        chainservice_home: "{{ home_path.stdout }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService"
+        signingservice_home: "{{ home_path.stdout }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService"
+        mtls_key_dir: "{{ home_path.stdout }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService/.mtls"
+
+    - name: Debug SSH user and home path
+      debug:
+        msg:
+          - "Connected user: {{ remote_user }}"
+          - "User home dir: {{ remote_user_home }}"
+
+    - name: Print ansible_user_dir
+      debug:
+        var: ansible_user_dir
+
+    - name: Set user-specific variables
+      set_fact:
+        USER: "{{ remote_user }}"
+        chainservice_home: "{{ remote_user_home }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService"
+        signingservice_home: "{{ remote_user_home }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/signingService"
+        mtls_key_dir: "{{ remote_user_home }}/{{ PROJECT_NAME }}/{{ SERVICE_NAME }}/chainService/.mtls"
+
+    - name: Validate required variables
+      assert:
+        that:
+          - attestor_name is defined and attestor_name | string | length > 0
+          - signer_username is defined and signer_username | string | length > 0
+          - signer_password is defined and signer_password | string | length > 0
+          - collector_service_url is defined and collector_service_url | string | length > 0
+          - prometheus_pushgateway_url is defined and prometheus_pushgateway_url | string | length > 0
+          - aleo_wallet_address is defined and aleo_wallet_address | string | length > 0
+          - ethereum_wallet_address is defined and ethereum_wallet_address | string | length > 0
+          - ethereum_private_key is defined and ethereum_private_key | string | length > 0
+          - aleo_private_key is defined and aleo_private_key | string | length > 0
+          - ca_certificate is defined and ca_certificate | string | length > 0
+          - attestor_certificate is defined and attestor_certificate | string | length > 0
+          - attestor_key is defined and attestor_key | string | length > 0
+          - verulink_branch is defined and verulink_branch | string | length > 0
+        fail_msg: "Required variable is not defined or empty"
+        success_msg: "All required variables are properly defined"
+
+    - name: Validate base64 encoded certificates
+      assert:
+        that:
+          - ca_certificate | b64decode is string
+          - attestor_certificate | b64decode is string
+          - attestor_key | b64decode is string
+        fail_msg: "Certificate or key is not valid base64"
+        success_msg: "All certificates and keys are properly base64 encoded"
+
+
+    - name: Validate base64 encoded private keys & wallet addresses
+      assert:
+        that:
+          - aleo_private_key | b64decode is string
+          - ethereum_private_key | b64decode is string
+          - aleo_wallet_address | b64decode is string
+          - ethereum_wallet_address | b64decode is string
+        fail_msg: "Aleo or Ethereum private key or wallet address is not valid base64"
+        success_msg: "Both Aleo and Ethereum private keys and wallet addresses are properly base64 encoded"
+
+    - name: Gather hardware facts
+      setup:
+        gather_subset:
+          - hardware
+
+    - name: Validate minimum hardware requirements (8GB RAM, 4 vCPUs)
+      assert:
+        that:
+          - ansible_memtotal_mb is defined
+          - ansible_memtotal_mb >= 8192
+          - ansible_processor_vcpus is defined
+          - ansible_processor_vcpus >= 4
+        fail_msg: "❌ The remote machine must have at least 8GB RAM and 4 vCPUs."
+        success_msg: "✅ Hardware requirements met: at least 8GB RAM and 4 vCPUs."
+  tasks:
+    - name: Update package cache (Debian)
+      apt:
+        update_cache: yes
+        cache_valid_time: 360
+      when: ansible_os_family == "Debian"
+
+    - name: Update package cache (RedHat)
+      yum:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Install required packages (Debian/Ubuntu)
+      package:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - unzip
+          - git
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install required packages (RHEL/CentOS/Fedora)
+      package:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg2
+          - redhat-lsb-core
+          - unzip
+          - git
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Add Docker GPG key (Debian)
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker repository (Debian)
+      apt_repository:
+        repo: "deb [arch={{ arch_mapping[ansible_architecture] }}] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release | lower }} stable"
+        state: present
+        filename: docker
+      when: ansible_os_family == "Debian"
+
+    - name: Wait for dpkg lock to be released
+      shell: |
+        while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+          echo "Waiting for dpkg lock to be released..."
+          sleep 5
+        done
+      changed_when: false
+
+
+    - name: Install Docker (both OS families)
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Create docker group
+      group:
+        name: docker
+        state: present
+
+    - name: Add user to docker group
+      user:
+        name: "{{ remote_user }}"
+        groups: docker
+        append: yes
+
+    - name: Clone Verulink repo
+      git:
+        repo: "https://github.com/venture23-aleo/verulink.git"
+        dest: "{{ remote_user_home }}/verulink"
+        version: "{{ verulink_branch }}"
+        force: yes
+        update: yes
+        accept_hostkey: yes
+      become: true
+      become_user: "{{ remote_user }}"
+      tags: [clone_repo]
+
+    - name: Enable and start Docker
+      systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop:
+        - docker
+        - containerd
+
+    - name: Build docker project in background
+      shell: docker compose build
+      args:
+        chdir: "{{ remote_user_home }}/verulink/attestor"
+      async: 1200
+      poll: 0
+      register: build_job
+
+    - name: Create MTLS keys directory
+      file:
+        path: "{{ mtls_key_dir }}"
+        state: directory
+        owner: "{{ remote_user }}"
+        group: "{{ remote_user }}"
+        mode: '0700'
+
+    - name: Create secrets.yaml
+      copy:
+        content: |
+          ethereum:
+            private_key: "{{ ethereum_private_key | b64decode | trim }}"
+            wallet_address: "{{ ethereum_wallet_address | b64decode | trim }}"
+          aleo:
+            private_key: "{{ aleo_private_key | b64decode | trim }}"
+            wallet_address: "{{ aleo_wallet_address | b64decode | trim }}"
+        dest: "{{ signingservice_home }}/secrets.yaml"
+        owner: "{{ remote_user }}"
+        group: "{{ remote_user }}"
+        mode: '0600'
+      tags: [create_secrets]
+
+    - name: Decode and write MTLS certificate and key files
+      copy:
+        content: "{{ item.content | b64decode }}"
+        dest: "{{ mtls_key_dir }}/{{ item.dest }}"
+        owner: "{{ remote_user }}"
+        group: "{{ remote_user }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { content: "{{ ca_certificate }}", dest: "ca.cer", mode: "0644" }
+        - { content: "{{ attestor_certificate }}", dest: "{{ attestor_name }}.crt", mode: "0644" }
+        - { content: "{{ attestor_key }}", dest: "{{ attestor_name }}.key", mode: "0600" }
+      no_log: true
+      tags: [create_mtls_files]
+
+
+
+    - name: Apply config replacements
+      replace:
+        path: "{{ item.path }}"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      loop:
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: '^name:.*', replace: "name: {{ attestor_name }}" }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'uri : <collector_service_url>', replace: 'uri : {{ collector_service_url }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'host: <prometheus_pushgateway_url>', replace: 'host: {{ prometheus_pushgateway_url }}' }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'wallet_address:.*aleo.*', replace: "wallet_address: {{ aleo_wallet_address | b64decode | trim }}" }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'wallet_address:.*ethereum.*', replace: "wallet_address: {{ ethereum_wallet_address | b64decode | trim }}" }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'username:.*', replace: "username: {{ signer_username }}" }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'password:.*', replace: "password: {{ signer_password }}" }
+        - { path: "{{ signingservice_home }}/config.yaml", regexp: 'username:.*', replace: "username: {{ signer_username }}" }
+        - { path: "{{ signingservice_home }}/config.yaml", regexp: 'password:.*', replace: "password: {{ signer_password }}" }
+        - { path: "{{ chainservice_home }}/config.yaml", regexp: 'attestor1', replace: "{{ attestor_name }}" }
+      no_log: true
+
+    - name: Wait for build to finish
+      async_status:
+        jid: "{{ build_job.ansible_job_id }}"
+      register: build_status
+      until: build_status.finished
+      retries: 100
+      delay: 10
+
+    - name: Start docker containers
+      command: docker compose up -d
+      args:
+        chdir: "{{ remote_user_home }}/verulink/attestor"
+      when: build_status.finished
+      tags: [deploy_attestor]
