@@ -548,19 +548,22 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    git clone https://github.com/venture23-aleo/verulink.git
    cd verulink
    ```
-
-2. **Navigate to Ansible Directory**
+2. **Check out to branch**
+   ```bash
+   git checkout <branch>
+   ```
+3. **Navigate to Ansible Directory**
    ```bash
    cd scripts/ansible-playbook
    ```
 
-3. **Create Variables File**
+4. **Create Variables File**
    Copy the sample variables file and configure it:
    ```bash
    cp vars.yaml.sample vars.yaml
    ```
 
-4. **Configure Variables**
+5. **Configure Variables**
    Edit `vars.yaml` with your specific values:
    ```yaml
    # Attestor Configuration
@@ -587,7 +590,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    verulink_branch: <branch to deploy>
    ```
    
-5. **Run the Ansible Playbook**
+6. **Run the Ansible Playbook**
   
    Using username/password:
      ```bash
@@ -617,8 +620,7 @@ After deployment, verify the services are running:
 
 2. **Check Service Logs**
    ```bash
-   docker logs attestor-chainservice
-   docker logs attestor-signingservice
+   docker logs <container_id>
    ```
 
 3. **Check Application Logs**
