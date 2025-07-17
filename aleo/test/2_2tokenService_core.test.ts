@@ -43,6 +43,7 @@ import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
 import { log } from "console";
 import { Holder } from "../artifacts/js/types/vlink_holding_v2";
 import { ethTsRandomContractAddress2, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
+import exp from "constants";
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
@@ -1702,21 +1703,17 @@ describe("Token Service Core", () => {
         describe("Token Send Private", () => {
             test.failing("Cannot send if user has insufficient fund", async () => {
                 const authorized_until = 4294967295;
-                const amount_minted = BigInt(100_000_000);
-                const send_amount = BigInt(100_000);
+                const amount_minted = BigInt(100_000);
 
                 const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
                 const [record] = await mintTx.wait();
-                console.log(record);
                 const decryptedRecord = decryptToken(record, privateKey1)
-                const platformFee = await getPlatformFeeInAmount(send_amount, private_platform_fee);
-                //council contract hold the platform fee[after send platform fee need to be deposited in council]
-                // const council_initial_balance: Balance = await getUserAuthorizedBalance(council.address(), tokenID);
+                const platformFee = await getPlatformFeeInAmount(amount_minted + BigInt(100), private_platform_fee);
                 tokenService.connect(aleoUser1)
                 const sendPrivateTx = await tokenService.token_send_private(
                     tokenID,
                     evm2AleoArrWithoutPadding(receiver),
-                    BigInt(1000_000_000),
+                    amount_minted + BigInt(100),
                     destChainId,
                     evm2AleoArrWithoutPadding(destTsAddr),
                     evm2AleoArrWithoutPadding(destToken),
@@ -1724,35 +1721,32 @@ describe("Token Service Core", () => {
                     platformFee,
                     non_active_relayer
                 )
-                await sendPrivateTx.wait();
-            })
+                expect(sendPrivateTx.wait()).rejects.toThrow();
+            }, TIMEOUT);
 
-            test.failing("Should failed if platform fee is mismatched", async () => {
+            test("Should failed if platform fee is mismatched", async () => {
                 const authorized_until = 4294967295;
-                const amount_minted = BigInt(100_000_000);
-                const send_amount = BigInt(100_000);
+                const amount_minted = BigInt(1000_000);
 
                 const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
                 const [record] = await mintTx.wait();
                 console.log(record);
                 const decryptedRecord = decryptToken(record, privateKey1)
-                const platformFee = await getPlatformFeeInAmount(send_amount, private_platform_fee);
-                //council contract hold the platform fee[after send platform fee need to be deposited in council]
-                // const council_initial_balance: Balance = await getUserAuthorizedBalance(council.address(), tokenID);
+                const platformFee = await getPlatformFeeInAmount(amount_minted, private_platform_fee);
                 tokenService.connect(aleoUser1)
                 const sendPrivateTx = await tokenService.token_send_private(
                     tokenID,
                     evm2AleoArrWithoutPadding(receiver),
-                    BigInt(1000_000_000),
+                    amount_minted,
                     destChainId,
                     evm2AleoArrWithoutPadding(destTsAddr),
                     evm2AleoArrWithoutPadding(destToken),
                     decryptedRecord,
-                    BigInt(10),
+                    platformFee + BigInt(10),
                     non_active_relayer
                 )
-                await sendPrivateTx.wait();
-            })
+                expect(sendPrivateTx.wait()).rejects.toThrow();
+            }, TIMEOUT)
 
             test("Token send private with non active relayer", async () => {
                 //mint record for aleoUser1
@@ -1824,6 +1818,87 @@ describe("Token Service Core", () => {
                 expect(finalTokenSupply).toBe(total_supply - send_amount + BigInt(private_platform_fee));
                 expect(council_final_balance.balance).toBe(BigInt(private_platform_fee) + beforeCouncilBalance.balance);
             }, TIMEOUT);
+
+            test("Cannot send if token status is paused", async () => {
+                // Pause the token
+                tokenService.connect(admin);
+                const pauseTx = await tokenService.pause_token_ts(tokenID);
+                await pauseTx.wait();
+
+                const authorized_until = 4294967295;
+                const amount_minted = BigInt(100_000_000);
+                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
+                const [record] = await mintTx.wait();
+                const decryptedRecord = decryptToken(record, privateKey1)
+
+                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_PAUSED_VALUE);
+                const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
+                const tx = await tokenService.token_send_private(
+                    tokenID,
+                    evm2AleoArrWithoutPadding(receiver),
+                    amount,
+                    destChainId,
+                    evm2AleoArrWithoutPadding(destTsAddr),
+                    evm2AleoArrWithoutPadding(destToken),
+                    decryptedRecord,
+                    platformFee,
+                    active_relayer
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT);
+
+            test("Unpause the token for rest of the transaction", async () => {
+                tokenService.connect(admin);
+                const unpauseTx = await tokenService.unpause_token_ts(tokenID);
+                await unpauseTx.wait();
+                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_UNPAUSED_VALUE);
+            }, TIMEOUT);
+
+            test("Cannot send if other_chain_token_address is wrong data", async () => {
+                const authorized_until = 4294967295;
+                const amount_minted = BigInt(100_000_000);
+                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
+                const [record] = await mintTx.wait();
+                const decryptedRecord = decryptToken(record, privateKey1)
+
+                tokenService.connect(aleoUser1)
+                const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
+                const tx = await tokenService.token_send_private(
+                    hashStruct(BigInt('61483327841585187462067')), //wrong tokenId so it gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(receiver),
+                    amount,
+                    BigInt("285569634564654430695"), // wrong chain id so it  gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(destTsAddr),
+                    evm2AleoArrWithoutPadding(destToken),
+                    decryptedRecord,
+                    platformFee,
+                    active_relayer
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT);
+
+            test("Cannot send if other_chain_token_service is wrong data", async () => {
+                const authorized_until = 4294967295;
+                const amount_minted = BigInt(100_000_000);
+                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
+                const [record] = await mintTx.wait();
+                const decryptedRecord = decryptToken(record, privateKey1)
+
+                tokenService.connect(aleoUser1)
+                const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
+                const tx = await tokenService.token_send_private(
+                    hashStruct(BigInt('614327841585187462067')), //wrong tokenId so it gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(receiver),
+                    amount,
+                    destChainId,
+                    evm2AleoArrWithoutPadding(destTsAddr2), //wrong ts address so it gives wrong chain_token_info
+                    evm2AleoArrWithoutPadding(destToken),
+                    decryptedRecord,
+                    platformFee,
+                    active_relayer
+                );
+                await expect(tx.wait()).rejects.toThrow();
+            }, TIMEOUT);
         })
     });
 
@@ -1848,6 +1923,3 @@ const getUserAuthorizedBalance = async (user: string, tokenId: bigint) => {
     return balance;
 }
 
-
-
-//{pre_image:123field,receiver:aleo1wfaqpfc57m0wxmr9l6r8a5g95c0cthe54shzmcyu6wf6tqvady9syt27xt}

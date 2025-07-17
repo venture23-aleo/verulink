@@ -67,6 +67,12 @@ describe("Holding", () => {
             await minttx.wait();
         }, TIMEOUT)
 
+        test.failing("Should not initialized from non initializer", async () => {
+            holding.connect(aleoUser3);
+            const tx = await holding.initialize_holding(admin);
+            await tx.wait();
+        }, TIMEOUT);
+
         test("Initialize token holding", async () => {
             const isHoldingInitialized = (await holding.owner_holding(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
             expect(isHoldingInitialized).toBe(false)
