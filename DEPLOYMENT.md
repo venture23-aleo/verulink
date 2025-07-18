@@ -592,14 +592,15 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    
 6. **Run the Ansible Playbook**
   The script will prompt for the sudo (BECOME) password. Enter your sudo password, or press Enter if it is the same as your SSH login password.
-  ```bash
+  
+   ```bash
    % ansible-playbook deploy_attestor.yaml -i "192.168.1.100," -u cloud_user --ask-pass --ask-become-pass
    SSH password:
    BECOME password[defaults to SSH password]:
    ```
    
    Using username/password:
-     ```bash
+   ```bash
      ansible-playbook deploy_attestor.yaml \
      -i "<ip_address>," \
      -u <remote_user> \
