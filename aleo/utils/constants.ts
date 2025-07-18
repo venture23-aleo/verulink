@@ -62,9 +62,60 @@ export const ethChainId = BigInt(27234042785);
 export const aleoChainId = BigInt(6694886634401);
 export const baseChainId = BigInt(84532);
 export const arbitrumChainId = BigInt(421614);
+export const testnetBNB = BigInt(97);
 
 export const PRIVATE_VERSION = 2;
 export const PUBLIC_VERSION = 1;
 
 // max_supply for Tokens, it is the highest u128 value
 export const max_supply = BigInt("340282366920938463463374607431768211455");
+
+
+export const TAG_TB_TRANSFER_OWNERSHIP = 1;
+export const TAG_TB_ADD_ATTESTOR = 2;
+export const TAG_TB_REMOVE_ATTESTOR = 3;
+export const TAG_TB_UPDATE_THRESHOLD = 4;
+export const TAG_TB_ADD_CHAIN = 5;
+export const TAG_TB_REMOVE_CHAIN = 6;
+export const TAG_TB_ADD_SERVICE = 7;
+export const TAG_TB_REMOVE_SERVICE = 8;
+export const TAG_TB_PAUSE = 9;
+export const TAG_TB_UNPAUSE = 10;
+
+export const TAG_TS_TRANSFER_OWNERSHIP = 1;
+export const TAG_TS_ADD_TOKEN = 2;
+export const TAG_TS_REMOVE_TOKEN = 3;
+export const TAG_TS_UPDATE_MAX_MIN_TRANSFER = 4;
+export const TAG_TS_PAUSE_TOKEN = 5;
+export const TAG_TS_UNPAUSE_TOKEN = 6
+export const TAG_TS_UP_OUTGOING_PERCENT = 7;
+export const TAG_HOLDING_RELEASE = 8;
+export const TAG_HOLDING_RELEASE_PRIVATE = 9;
+export const TAG_HOLDING_OWNERSHIP_TRANSFER = 10;
+export const TAG_TS_REGISTER_TOKEN = 11;
+export const TAG_UPDATE_TOKEN_METADATA = 12;
+export const TAG_SET_ROLE_TOKEN = 13;
+export const TAG_TS_UP_TS_SETTING = 14;
+export const TAG_TS_ADD_CHAIN_TO_ET = 15;
+export const TAG_TS_REMOVE_OTHER_CHAIN_ADD = 16;
+export const TAG_TS_UPDATE_FEES = 17;
+export const TAG_REMOVE_ROLE = 18;
+
+export const TAG_ADD_MEMBER = 1;
+export const TAG_REMOVE_MEMBER = 2;
+export const TAG_WITHDRAW_FEES = 3;
+export const TAG_UPDATE_THRESHOLD = 4;
+
+
+export const TAG_TS2_TRANSFER_OWNERSHIP = 1;
+export const TAG_TS2_ADD_TOKEN= 2;
+export const TAG_TS2_UPDATE_MAX_MIN_TRANSFER = 3;
+export const TAG_TS2_PAUSE_TOKEN = 4;
+export const TAG_TS2_UNPAUSE_TOKEN = 5; 
+export const TAG_HOLDING2_RELEASE= 6;
+export const TAG_HOLDING2_OWNERSHIP_TRANSFER = 7;
+export const TAG_TS2_REGISTER_TOKEN = 8;
+export const TAG_TS2_UP_TS_SETTING = 9;
+export const TAG_TS2_ADD_CHAIN_TO_ET = 10;
+export const TAG_TS2_REMOVE_OTHER_CHAIN_ADD = 11;
+export const TAG_TS2_UPDATE_FEES = 12;

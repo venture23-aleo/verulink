@@ -16,6 +16,9 @@ export const council5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 
 export const councilThreshold = 1;
 
+export const aleoSeq = BigInt(1);
+export const ethSeq = BigInt(1);
+
 // vusdc related data
 export const wusdcMinTransfer = BigInt(1_000_000);
 export const wusdcMaxTransfer = BigInt("3402823669209384634633746074317682114");
