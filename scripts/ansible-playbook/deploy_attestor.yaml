@@ -5,7 +5,6 @@
   become: true
   become_method: sudo
   become_user: root
-
   vars_files:
     - vars.yaml
 
@@ -198,8 +197,7 @@
         owner: root
         group: root
         mode: '0644'
-      notify: Restart Docker
-      tags: [docker_log_rotation]
+     
 
     - name: Clone Verulink repo
       git:
@@ -296,20 +294,15 @@
       retries: 100
       delay: 10
 
-    - name: Restart docker containers
-      command: bash -c "docker compose down && docker compose up -d"
+    - name: Stop docker containers
+      command: bash -c "docker compose down"
       args:
         chdir: "{{ remote_user_home }}/verulink/attestor"
-      when: build_status.finished
-      tags: [deploy_attestor]
+   
     
-    - name: Cleanup Docker unused images and build cache
-      shell: docker system prune -af --volumes
-      tags: [docker_cleanup]
-
-  handlers:
-    - name: Restart Docker
-      systemd:
-        name: docker
-        state: restarted
+    - name: Restart docker containers
+      command: bash -c "docker compose up -d"
+      args:
+        chdir: "{{ remote_user_home }}/verulink/attestor"
+   
 

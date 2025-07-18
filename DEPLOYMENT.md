@@ -597,6 +597,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    SSH password:
    BECOME password[defaults to SSH password]:
    ```
+   
    Using username/password:
      ```bash
      ansible-playbook deploy_attestor.yaml \
@@ -612,6 +613,16 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    -u cloud_user \
    --private-key ~/.ssh/mykey.pem \
    --ask-become-pass"
+   ```
+   If you are connecting to the server for the first time or the host key is not saved, you may see a host key verification error. Manually SSH into the server to accept the key, or disable host key checking.
+   
+   ```bash
+   TASK [Gathering Facts] **************************************************************************************************************************************************************
+   fatal: [192.168.1.100]: FAILED! => {"msg": "Using a SSH password instead of a key is not possible because Host Key checking is enabled and sshpass does not support this.  Please add this host's fingerprint to your known_hosts file to manage this host."}
+   ``` 
+   To disable SSH host key verification (not recommended for production environments), set the `ANSIBLE_HOST_KEY_CHECKING` environment variable to `False` when running the playbook:
+   ```bash
+   ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy_attestor.yaml -i "3.139.69.158," -u cloud_user --ask-pass --ask-become-pass
    ```
 #### Verification
 
