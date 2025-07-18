@@ -361,4 +361,24 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(other.address)).to.equal(100);
       });
 
+      describe("Receive Function", () => {
+        it('should allow owner to receive ETH', async () => {
+            await expect(
+                owner.sendTransaction({
+                    to: proxiedV1.address,
+                    value: ethers.utils.parseEther("1")
+                })
+            ).to.not.be.reverted;
+        });
+
+        it('should reject ETH from non-owner', async () => {
+            await expect(
+                other.sendTransaction({
+                    to: proxiedV1.address,
+                    value: ethers.utils.parseEther("1")
+                })
+            ).to.be.reverted;
+        });
+    });
+
 });
