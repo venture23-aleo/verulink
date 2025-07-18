@@ -184,6 +184,23 @@
         groups: docker
         append: yes
 
+    - name: Configure Docker log rotation via daemon.json
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            }
+          }
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart Docker
+      tags: [docker_log_rotation]
+
     - name: Clone Verulink repo
       git:
         repo: "https://github.com/venture23-aleo/verulink.git"
@@ -279,9 +296,20 @@
       retries: 100
       delay: 10
 
-    - name: Start docker containers
-      command: docker compose up -d
+    - name: Restart docker containers
+      command: bash -c "docker compose down && docker compose up -d"
       args:
         chdir: "{{ remote_user_home }}/verulink/attestor"
       when: build_status.finished
       tags: [deploy_attestor]
+    
+    - name: Cleanup Docker unused images and build cache
+      shell: docker system prune -af --volumes
+      tags: [docker_cleanup]
+
+  handlers:
+    - name: Restart Docker
+      systemd:
+        name: docker
+        state: restarted
+

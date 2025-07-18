@@ -529,7 +529,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 1. Make sure ansible is installed on the machine
 
 2. **Target Machine Requirements**
-   - Linux distribution (Ubuntu 22.04+)
+   - Linux distribution (Ubuntu 22.04 LTS)
    - At least 8GB RAM and 4 vCPUs
    - SSH access with key-based authentication
    >Note: for password based authentication install `sshpass` on the system
@@ -591,7 +591,12 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    ```
    
 6. **Run the Ansible Playbook**
-  
+  The script will prompt for the sudo (BECOME) password. Enter your sudo password, or press Enter if it is the same as your SSH login password.
+  ```bash
+   % ansible-playbook deploy_attestor.yaml -i "192.168.1.100," -u cloud_user --ask-pass --ask-become-pass
+   SSH password:
+   BECOME password[defaults to SSH password]:
+   ```
    Using username/password:
      ```bash
      ansible-playbook deploy_attestor.yaml \
