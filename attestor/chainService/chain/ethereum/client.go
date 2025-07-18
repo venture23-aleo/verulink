@@ -92,8 +92,8 @@ func (eth *ethClient) FilterLogs(
 	contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error) {
 
 	logs, err := eth.eth.FilterLogs(ctx, ether.FilterQuery{
-		FromBlock: big.NewInt(int64(fromHeight)),
-		ToBlock:   big.NewInt(int64(toHeight)),
+		FromBlock: new(big.Int).SetUint64(fromHeight),
+		ToBlock:   new(big.Int).SetUint64(toHeight),
 		Addresses: []ethCommon.Address{contractAddress},
 		Topics:    [][]ethCommon.Hash{{topics}},
 	})
