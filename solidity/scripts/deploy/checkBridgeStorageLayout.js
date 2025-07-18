@@ -112,7 +112,7 @@ async function main() {
     console.log("- Bridge Proxy:", bridgeProxy.address);
 
     console.log("✅ Updating Attestor Count to 2");
-    await bridgeV2.setAttestorCount(2);
+    await bridgeV2.setAttestorCount(1);
     
     console.log("✅ Updating Max Attestor Count to 5");
     await bridgeV2.updateMaxAttestorCount(5);
