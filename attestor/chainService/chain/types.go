@@ -72,7 +72,7 @@ func (p *Packet) SetMissed(isMissed bool) {
 }
 
 func (p *Packet) GetSha256Hash() string {
-	s := fmt.Sprint(p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
+	s:= fmt.Sprintf("%d-%s-%s-%d-%s-%d", p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
 	h := sha256.New()
 	h.Write([]byte(s))
 	b := h.Sum(nil)
