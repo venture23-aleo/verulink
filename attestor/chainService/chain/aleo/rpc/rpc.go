@@ -44,7 +44,7 @@ func getHttpsResponse(ctx context.Context, method, requestURL string) (*http.Res
 				MinVersion: tls.VersionTLS13,
 			},
 		},
-		Timeout: time.Second * 30,
+		Timeout: time.Second * 2,
 	}
 
 	response, err := client.Do(req)
