@@ -29,22 +29,22 @@ const ALEO_CHAINID = 2;
 
 describe('TokenServiceWrapped', () => {
     let deployer, owner, signer, other, attestor, attestor1;
-    let proxiedV1, TokenServiceWrapped, tokenServiceImpl;
+    let proxiedV1, TokenServiceWrapped, tokenServiceImpl, holding;
     let usdcMock, usdtMock, unsupportedToken;
-    let proxiedBridge, blackListProxy, mockHolding;
+    let proxiedBridge, blackListProxy;
     let lib, aleolib, ERC20TokenBridge, erc20TokenBridge;
-    let initializeData, Proxied, proxy;
+    let initializeData, Proxied, proxy, Holding, holdingInstance, HoldingProxy;
 
     beforeEach(async () => {
         [owner, signer, other, attestor, attestor1, deployer] = await ethers.getSigners();
 
         console.log("keccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
-        
+
         // Deploy libraries
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
         const libInstance = await lib.deploy();
         await libInstance.deployed();
-        
+
         aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
         const aleoLibInstance = await aleolib.deploy();
         await aleoLibInstance.deployed();
@@ -94,13 +94,6 @@ describe('TokenServiceWrapped', () => {
             blackListProxy = BlackListService.attach(blackListProxy.address);
         }
 
-        // Deploy Holding contract
-        {
-            const MockHolding = await ethers.getContractFactory("HoldingMock");
-            mockHolding = await MockHolding.deploy();
-            await mockHolding.deployed();
-        }
-
         // Deploy TokenServiceWrapped
         TokenServiceWrapped = await ethers.getContractFactory("TokenServiceWrapped");
         tokenServiceImpl = await TokenServiceWrapped.deploy();
@@ -119,8 +112,18 @@ describe('TokenServiceWrapped', () => {
         await proxy.deployed();
         proxiedV1 = TokenServiceWrapped.attach(proxy.address);
 
+        Holding = await ethers.getContractFactory('Holding');
+        holdingInstance = await Holding.deploy();
+        await holdingInstance.deployed();
+        HoldingProxy = await ethers.getContractFactory('ProxyContract');
+
+        initializeData = new ethers.utils.Interface(Holding.interface.format()).encodeFunctionData("Holding_init", [proxiedV1.address, owner.address]);
+        const holdingProxy = await HoldingProxy.deploy(holdingInstance.address, initializeData);
+        await holdingProxy.deployed();
+        holding = Holding.attach(holdingProxy.address);
+
         // Set holding contract
-        await proxiedV1.connect(owner).setHolding(mockHolding.address);
+        await proxiedV1.connect(owner).setHolding(holding.address);
 
         await proxiedV1.connect(owner).addToken(usdcMock.address, ALEO_CHAINID, ADDRESS_ZERO, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
         await proxiedV1.connect(owner).addToken(usdtMock.address, ALEO_CHAINID, ADDRESS_ZERO, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
@@ -128,8 +131,8 @@ describe('TokenServiceWrapped', () => {
 
         // Setup bridge
         await proxiedBridge.connect(owner).addTokenService(proxiedV1.address);
-        await proxiedBridge.connect(owner).addAttestor(attestor.address, 1);
-        await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2);
+        await proxiedBridge.connect(owner).addAttestor(attestor1.address, 1);
+        await proxiedBridge.connect(owner).addAttestor(attestor.address, 2);
 
     });
 
@@ -212,7 +215,7 @@ describe('TokenServiceWrapped', () => {
 
             await proxiedV1.connect(owner).updateVault(usdcMock.address, other.address);
             const initialVaultBalance = await usdcMock.balanceOf(other.address);
-            
+
             await expect(
                 proxiedV1.connect(owner).transferToVault(usdcMock.address, amount)
             ).to.not.be.reverted;
@@ -325,72 +328,71 @@ describe('TokenServiceWrapped', () => {
     });
 
     describe("Token Receive", () => {
-        // it("should transfer ERC20 tokens for valid packets with YEA vote", async function () {
-        //     // Mock packet and signatures
-        // const packet = [
-        //     100,
-        //     1,
-        //     [ALEO_CHAINID, "aleo.TokenService"],
-        //     [ETH_CHAINID, proxiedV1.address],
-        //     ["aleo.SenderAddress", usdcMock.address, 100, other.address],
-        //     100
-        // ];
-    
-        // const packetHash = inPacketHash(packet);
-        // let message = ethers.utils.solidityKeccak256(
-        //         ['bytes32', 'uint8'],
-        //         [packetHash, 1]
-        //     );
-    
-        // const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
-        // const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
-        // const signatures = signature1 + signature2.slice(2);
-        
-        //     // Transfer tokens to the contract
-        //     await usdcMock.mint(proxiedV1.address, 100);
-          
-        //     await expect(proxiedV1.connect(signer).tokenReceive(packet, signatures))
-        //       .to.emit(proxiedBridge, "Consumed")
-        //       .withArgs(ALEO_CHAINID, packet[1], packetHash, 1);
-        
-        //     // Check balances
-        //     expect(await usdcMock.balanceOf(signer.address)).to.equal(0);
-        //     expect(await usdcMock.balanceOf(other.address)).to.equal(100);
-        //   });
+        it("should transfer ERC20 tokens for valid packets with YEA vote", async function () {
+            // Mock packet and signatures
+            const packet = [
+                1,
+                1,
+                [ALEO_CHAINID, "aleo.TokenService"],
+                [ETH_CHAINID, proxiedV1.address],
+                ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+                100
+            ];
 
-        // it("should lock tokens for blacklisted receivers", async function () {
-        //     const amount = 1000;
+            const packetHash = inPacketHash(packet);
+            let message = ethers.utils.solidityKeccak256(
+                ['bytes32', 'uint8'],
+                [packetHash, 1]
+            );
 
-        //     // Add receiver to blacklist
-        //     await blackListProxy.connect(owner).addToBlackList(other.address);
+            const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
+            const signature2 = await attestor.signMessage(ethers.utils.arrayify(message));
+            const signatures = signature1 + signature2.slice(2);
 
-        //     const packet = [
-        //         1,
-        //         1,
-        //         [ALEO_CHAINID, "aleo.TokenService"],
-        //         [ETH_CHAINID, proxiedV1.address],
-        //         ["aleo.SenderAddress", usdcMock.address, amount, other.address],
-        //         100
-        //     ];
+            // Transfer tokens to the contract
+            await usdcMock.mint(proxiedV1.address, 100);
 
-        //     const packetHash = inPacketHash(packet);
-        //     let message = ethers.utils.solidityKeccak256(
-        //         ['bytes32', 'uint8'],
-        //         [packetHash, 1]
-        //     );
+            await expect(proxiedV1.connect(signer).tokenReceive(packet, signatures))
+                .to.emit(proxiedBridge, "Consumed")
+                .withArgs(ALEO_CHAINID, packet[1], packetHash, 1);
 
-        //     const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
-        //     const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
-        //     const signatures = signature1 + signature2.slice(2);
+            // Check balances
+            expect(await usdcMock.balanceOf(signer.address)).to.equal(0);
+            expect(await usdcMock.balanceOf(other.address)).to.equal(100);
+        });
 
-        //     await usdcMock.mint(proxiedV1.address, amount);
+        it("should lock tokens for blacklisted receivers", async function () {
+            const amount = 1000;
 
-        //     await proxiedV1.connect(signer).tokenReceive(packet, signatures);
+            // Add receiver to blacklist
+            await blackListProxy.connect(owner).addToBlackList(other.address);
 
-        //     // Check that tokens were sent to holding contract
-        //     expect(await usdcMock.balanceOf(mockHolding.address)).to.equal(amount);
-        //     expect(await mockHolding.getLockedAmount(other.address, usdcMock.address)).to.equal(amount);
-        // });
+            const packet = [
+                1,
+                1,
+                [ALEO_CHAINID, "aleo.TokenService"],
+                [ETH_CHAINID, proxiedV1.address],
+                ["aleo.SenderAddress", usdcMock.address, amount, other.address],
+                100
+            ];
+
+            const packetHash = inPacketHash(packet);
+            let message = ethers.utils.solidityKeccak256(
+                ['bytes32', 'uint8'],
+                [packetHash, 1]
+            );
+
+            const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
+            const signature2 = await attestor.signMessage(ethers.utils.arrayify(message));
+            const signatures = signature1 + signature2.slice(2);
+
+            await usdcMock.mint(proxiedV1.address, amount);
+
+            await proxiedV1.connect(signer).tokenReceive(packet, signatures);
+
+            // Check that tokens were sent to holding contract
+            expect(await usdcMock.balanceOf(holding.address)).to.equal(amount);
+        });
 
         it("should reject packets with invalid destination", async function () {
             const packet = [
@@ -467,7 +469,7 @@ describe('TokenServiceWrapped', () => {
         });
     });
 
-    
+
 
     describe("Token Support Functions", () => {
         it('should report if token is enabled', async () => {
