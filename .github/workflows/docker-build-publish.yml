@@ -34,9 +34,9 @@ jobs:
 
           # Map matrix.service to actual build directory
           if [[ "${{ matrix.service }}" == "verulink-attestor-sign" ]]; then
-            echo "BUILD_CONTEXT=attestor/signingService" >> $GITHUB_ENV
+            echo "BUILD_CONTEXT=signingService" >> $GITHUB_ENV
           elif [[ "${{ matrix.service }}" == "verulink-attestor-chain" ]]; then
-            echo "BUILD_CONTEXT=attestor/chainService" >> $GITHUB_ENV
+            echo "BUILD_CONTEXT=chainService" >> $GITHUB_ENV
           else
             echo "❌ Unknown service: ${{ matrix.service }}"
             exit 1
@@ -50,13 +50,13 @@ jobs:
         working-directory: attestor
         run: |
           docker build \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${SHORT_SHA} \
-            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${TAG_NAME}" ) \
-            ./${{ matrix.service }}
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${SHORT_SHA} \
+            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${TAG_NAME}" ) \
+            ./$BUILD_CONTEXT
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${SHORT_SHA}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${SHORT_SHA}
           if [ "$IS_TAG" = "true" ]; then
-            docker push ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${TAG_NAME}
+            docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${TAG_NAME}
           fi
