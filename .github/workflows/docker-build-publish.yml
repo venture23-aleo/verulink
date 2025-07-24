@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set image tags and context path
+            - name: Set image tags and context path
         run: |
           echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
           
@@ -47,11 +47,12 @@ jobs:
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Build Docker image
+        working-directory: attestor
         run: |
           docker build \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${SHORT_SHA} \
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${TAG_NAME}" ) \
-            $BUILD_CONTEXT
+            ./${{ matrix.service }}
 
       - name: Push Docker image
         run: |
