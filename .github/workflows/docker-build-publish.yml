@@ -57,7 +57,7 @@ jobs:
             -f ./chainService/Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA} \
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}" ) \
-            .
+            ./chainService
 
       - name: Push chainService image
         run: |
