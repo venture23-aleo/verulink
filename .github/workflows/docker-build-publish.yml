@@ -20,13 +20,29 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set image tags
+        run: |
+          echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "IS_TAG=true" >> $GITHUB_ENV
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            echo "IS_TAG=false" >> $GITHUB_ENV
+          fi
+
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${SHORT_SHA} ./attestor/${{ matrix.service }}
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${SHORT_SHA} \
+            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${TAG_NAME}" ) \
+            ./attestor/${{ matrix.service }}
 
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${SHORT_SHA}
+          if [ "$IS_TAG" = "true" ]; then
+            docker push ${{ secrets.DOCKERHUB_USERNAME }}/venture23-${{ matrix.service }}:${TAG_NAME}
+          fi
