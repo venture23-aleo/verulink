@@ -36,9 +36,10 @@ jobs:
         working-directory: attestor
         run: |
           docker build \
+            -f ./signingService/Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA} \
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}" ) \
-            ./signingService
+            .
 
       - name: Push signingService image
         run: |
@@ -51,14 +52,12 @@ jobs:
       - name: Build chainService
         working-directory: attestor
         run: |
-          # If needed, copy or move the built signingService binary here before building chainService
-          # For example:
-          # cp ./signingService/bin/sign-binary ./chainService/bin/
-
+          
           docker build \
+            -f ./chainService/Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA} \
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}" ) \
-            ./chainService
+            .
 
       - name: Push chainService image
         run: |
