@@ -52,11 +52,24 @@ jobs:
           COSIGN_YES: "true"
           IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${{ github.sha }}
         run: |
-          # Push the image and capture the digest
-          DIGEST=$(docker push $IMAGE | tee /dev/stderr | grep digest | awk '{print $3}')
+          set -e
+
+          echo "Pushing image: $IMAGE"
+          docker push $IMAGE
+
+          # Retrieve the digest using docker CLI
+          DIGEST=$(docker image inspect $IMAGE --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')
+
+          if [ -z "$DIGEST" ]; then
+            echo "❌ Digest not found. Image may not have been pushed correctly."
+            exit 1
+          fi
+
+          echo "Digest: $DIGEST"
 
           # Sign the image using the digest
           cosign sign "${IMAGE%@*}@${DIGEST}"
+
 
 
       - name: Build chainService
@@ -68,14 +81,25 @@ jobs:
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}" ) \
             ./chainService
 
-      - name: Push and sign verulink-chain image
+      - name: Push and sign verulink-attestor-chain image
         env:
           COSIGN_YES: "true"
-          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-chain:${{ github.sha }}
+          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${{ github.sha }}
         run: |
-          # Push the image and capture the digest
-          DIGEST=$(docker push $IMAGE | tee /dev/stderr | grep digest | awk '{print $3}')
-          
+          set -e
+      
+          echo "Pushing image: $IMAGE"
+          docker push $IMAGE
+      
+          # Retrieve the digest using docker CLI
+          DIGEST=$(docker image inspect $IMAGE --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')
+      
+          if [ -z "$DIGEST" ]; then
+            echo "❌ Digest not found. Image may not have been pushed correctly."
+            exit 1
+          fi
+      
+          echo "Digest: $DIGEST"
+      
           # Sign the image using the digest
           cosign sign "${IMAGE%@*}@${DIGEST}"
-
