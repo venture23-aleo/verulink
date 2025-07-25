@@ -10,6 +10,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  id-token: write     # 🔐 Required for Cosign OIDC signing
+  contents: read
+
 jobs:
   build-push:
     runs-on: ubuntu-latest
@@ -31,6 +35,9 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.9.2
+
       # Step 1: Build signingService Docker image
       - name: Build signingService
         working-directory: attestor
@@ -48,11 +55,17 @@ jobs:
             docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}
           fi
 
-      # Step 2: Build chainService Docker image (depends on signingService binary)
+      - name: Sign signingService image
+        run: |
+          cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
+          if [ "$IS_TAG" = "true" ]; then
+            cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}
+          fi
+
+      # Step 2: Build chainService Docker image
       - name: Build chainService
         working-directory: attestor
         run: |
-          
           docker build \
             -f ./chainService/Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA} \
@@ -64,4 +77,11 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
           if [ "$IS_TAG" = "true" ]; then
             docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}
+          fi
+
+      - name: Sign chainService image
+        run: |
+          cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
+          if [ "$IS_TAG" = "true" ]; then
+            cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}
           fi
