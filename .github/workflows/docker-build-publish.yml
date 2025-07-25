@@ -11,7 +11,7 @@ on:
       - 'v*'
 
 permissions:
-  id-token: write     # 🔐 Required for Cosign OIDC signing
+  id-token: write 
   contents: read
 
 jobs:
@@ -38,7 +38,6 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.9.2
 
-      # Step 1: Build signingService Docker image
       - name: Build signingService
         working-directory: attestor
         run: |
@@ -48,21 +47,18 @@ jobs:
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}" ) \
             .
 
-      - name: Push signingService image
+      - name: Push and sign verulink-attestor-sign image
+        env:
+          COSIGN_YES: "true"
+          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${{ github.sha }}
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
-          if [ "$IS_TAG" = "true" ]; then
-            docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}
-          fi
+          # Push the image and capture the digest
+          DIGEST=$(docker push $IMAGE | tee /dev/stderr | grep digest | awk '{print $3}')
 
-      - name: Sign signingService image
-        run: |
-          cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
-          if [ "$IS_TAG" = "true" ]; then
-            cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}
-          fi
+          # Sign the image using the digest
+          cosign sign "${IMAGE%@*}@${DIGEST}"
 
-      # Step 2: Build chainService Docker image
+
       - name: Build chainService
         working-directory: attestor
         run: |
@@ -72,16 +68,14 @@ jobs:
             $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}" ) \
             ./chainService
 
-      - name: Push chainService image
+      - name: Push and sign verulink-chain image
+        env:
+          COSIGN_YES: "true"
+          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-chain:${{ github.sha }}
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
-          if [ "$IS_TAG" = "true" ]; then
-            docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}
-          fi
+          # Push the image and capture the digest
+          DIGEST=$(docker push $IMAGE | tee /dev/stderr | grep digest | awk '{print $3}')
+          
+          # Sign the image using the digest
+          cosign sign "${IMAGE%@*}@${DIGEST}"
 
-      - name: Sign chainService image
-        run: |
-          cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
-          if [ "$IS_TAG" = "true" ]; then
-            cosign sign ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}
-          fi
