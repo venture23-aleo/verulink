@@ -55,10 +55,10 @@ jobs:
           set -e
 
           echo "Pushing image: $IMAGE"
-          docker push $IMAGE
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
 
           # Retrieve the digest using docker CLI
-          DIGEST=$(docker image inspect $IMAGE --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')
+          DIGEST=$(docker image inspect docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA} --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')
 
           if [ -z "$DIGEST" ]; then
             echo "❌ Digest not found. Image may not have been pushed correctly."
@@ -68,7 +68,7 @@ jobs:
           echo "Digest: $DIGEST"
 
           # Sign the image using the digest
-          cosign sign "${IMAGE%@*}@${DIGEST}"
+          cosign sign "docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign@${DIGEST}"
 
 
 
