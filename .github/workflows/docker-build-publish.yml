@@ -103,3 +103,30 @@ jobs:
       
           # Sign the image using the digest
           cosign sign "${IMAGE%@*}@${DIGEST}"
+
+  verify-sig:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Construct and Display cosign verify command
+        run: |
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"              # verulink
+          REPO_OWNER="${GITHUB_REPOSITORY%/*}"             # venture23-aleo
+          BRANCH_REF="${GITHUB_REF}"                       # refs/heads/ci/add-docker-image-build-workflow
+          WORKFLOW_FILE=".github/workflows/docker-build-publish.yml"
+
+          CERT_IDENTITY="https://github.com/${REPO_OWNER}/${REPO_NAME}/${WORKFLOW_FILE}@${BRANCH_REF}"
+          IMAGE="venture23/verulink-attestor-sign:${IMAGE_TAG}"
+
+          echo "🔐 Cosign verify command:"
+          echo ""
+          echo "cosign verify \\"
+          echo "  --certificate-identity \"${CERT_IDENTITY}\" \\"
+          echo "  --certificate-oidc-issuer \"https://token.actions.githubusercontent.com\" \\"
+          echo "  ${IMAGE}"
