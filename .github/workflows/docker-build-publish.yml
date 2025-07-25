@@ -50,7 +50,7 @@ jobs:
       - name: Push and sign verulink-attestor-sign image
         env:
           COSIGN_YES: "true"
-          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${{ github.sha }}
+          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
         run: |
           set -e
 
@@ -84,7 +84,7 @@ jobs:
       - name: Push and sign verulink-attestor-chain image
         env:
           COSIGN_YES: "true"
-          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${{ github.sha }}
+          IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
         run: |
           set -e
       
