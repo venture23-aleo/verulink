@@ -334,11 +334,14 @@ The deployment script supports Service Account Authentication only:
    * GCP Machine Type (default: `e2-medium`)
    * Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. mainnet_attestor_verulink_v23)
    * GCP Secret Manager secret name for signing keys (default: `mainnet/verulink/attestor/signingservice`)
+     > The script creates the secret in GCP Secret Manager. Users may provide a custom name, but it's recommended to follow the default naming convention. For example, a devnet deployment can use: `devnet/verulink/attestor/signingservice`. 
+     > Since GCP Secret Manager does not support `/` in secret names, the actual name created will be `devnet_verulink_attestor_signingservice`. This naming convention is consistent across both AWS and GCP for now.
        - Ethereum private key
        - Ethereum wallet address
        - Aleo private key
        - Aleo wallet address
    * GCP Secret Manager secret name MTLS secret name (default: `mainnet/verulink/attestor/mtls`)
+     > This will create the secret in GCP Secret Manager.
        - MTLS ca certificate file
        - Attestor certificate file
        - Attestor key file
