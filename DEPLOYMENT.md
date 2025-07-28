@@ -2,28 +2,10 @@
 
 ## Table of Contents
 - [Installing on AWS](#installing-on-aws)
-  - [Pre-Deployment steps](#pre-deployment-steps)
-  - [Setup](#setup)
-  - [To Configure AWS access](#to-configure-aws-access)
-  - [Deployment Steps](#deployment-steps)
 - [Installing on GCP](#installing-on-gcp)
-  - [Pre-Deployment steps](#pre-deployment-steps-1)
-  - [Setup](#setup-2)
-  - [To Configure GCP access](#to-configure-gcp-access-3)
-  - [Deployment Steps](#deployment-steps-4)
 - [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
-  - [Prerequisites](#prerequisites)
-  - [Deployment Steps](#deployment-steps-1)
 - [Manual Deployment with Ansible Playbook](#manual-deployment-with-ansible-playbook)
-  - [Prerequisites](#prerequisites-1)
-  - [Deployment Steps](#deployment-steps-2)
-  - [Advanced Configuration Options](#advanced-configuration-options)
-  - [Verification](#verification)
-  - [Troubleshooting Ansible Deployment](#troubleshooting-ansible-deployment)
 - [Manual Deployment and Upgrade Process](#manual-deployment-and-upgrade-process)
-  - [Prerequisites](#prerequisites-1)
-  - [Deployment Steps](#deployment-steps-2)
-  - [Verification](#verification)
 - [Troubleshooting](#troubleshooting)
 
 ---
