@@ -21,7 +21,7 @@ The attestor service can be deployed using two method
 
 2.  Using AWS CloudShell from the AWS Management Console UI(**Recommended**)
 
-#### AWS Pre-Deployment steps
+#### Pre-Deployment steps
 
 1.  MTLS certificate/ key and CA certificate  
     **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.**  
@@ -29,7 +29,7 @@ The attestor service can be deployed using two method
     **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](https://www.google.com/search?q=%23mtls-key-and-csr-creation).**
 2.  Have Ethereum and Aleo wallet address and private keys ready
 
-#### AWS Setup
+#### Setup
 
 If using AWS cloudShell, no need to install the dependencies to run the installer script.
 
@@ -153,7 +153,7 @@ If using AWS cloudShell, no need to install the dependencies to run the installe
 
     Reference: [Refer to this AWS documentation for other environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-set)
 
-#### AWS Deployment Steps
+#### Deployment Steps
 
 1.  Clone the github project repository
 
@@ -263,7 +263,7 @@ Once the script starts, you'll be prompted to choose the deployment target:
   * **Deploy on new VM**
   * **Use an existing VM** (must be Ubuntu 22.04 with `ubuntu` user and SSH key-based access)
 
-#### GCP Pre-Deployment steps
+#### Pre-Deployment steps
 
 1.  MTLS certificate/ key and CA certificate  
     **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.**  
@@ -271,7 +271,7 @@ Once the script starts, you'll be prompted to choose the deployment target:
     **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](https://www.google.com/search?q=%23mtls-key-and-csr-creation).**
 2.  Have Ethereum and Aleo wallet address and private keys ready
 
-#### GCP Setup
+#### Setup
 
 #### GCP Authentication Methods
 
@@ -319,7 +319,7 @@ The deployment script supports Service Account Authentication only:
           - "cloudresourcemanager"
       - Click "Enable" for each API
 
-#### GCP Deployment Steps
+#### Deployment Steps
 
 1.  Clone the GitHub project repository:
 
@@ -432,7 +432,7 @@ cat verulink.log
 
 To deploy on a local machine, VM, or bare metal server, follow the guide provided here.
 
-#### Local Prerequisites
+#### Prerequisites
 
 1.  Attestor Node Name  
     Format: `<env>_attestor_verulink_<your_company_name>`  
@@ -468,7 +468,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 6.  You may need to open the firewall port for the signing service (default: 8080) if it is bound to an IP address other than `localhost` or the loopback address (`127.0.0.1`).
 
-#### Local Deployment Steps
+#### Deployment Steps
 
 1.  Clone the GitHub project repository:
 
@@ -604,7 +604,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
 ### Manual Deployment with Ansible Playbook
 
-#### Ansible Prerequisites
+#### Prerequisites
 
 1.  Make sure ansible is installed on the machine
 
@@ -625,7 +625,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
       - Collector service URL
       - Prometheus PushGateway URL
 
-#### Ansible Deployment Steps
+#### Deployment Steps
 
 1.  **Clone the Repository**
 
@@ -723,7 +723,7 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
     ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy_attestor.yaml -i "3.139.69.158," -u cloud_user --ask-pass --ask-become-pass
     ```
 
-#### Ansible Verification
+#### Verification
 
 After deployment, verify the services are running:
 
@@ -750,7 +750,7 @@ After deployment, verify the services are running:
 
 ### Manual Deployment and Upgrade Process
 
-#### Manual Prerequisites
+#### Prerequisites
 
 **Recommended Minimum VM Specs**
 
@@ -761,7 +761,14 @@ After deployment, verify the services are running:
   - **Network:** Open port 22 open for SSH
   - **Docker:** Latest
 
-#### Manual Deployment Steps
+ **Required Files**
+
+  - MTLS certificates (CA certificate, attestor certificate, attestor key)
+  - Ethereum and Aleo wallet addresses and private keys
+  - Collector service URL
+  - Prometheus PushGateway URL
+
+#### Deployment Steps
 You can either clone the project repository or manually create the installation directory.
 To clone the project, run:
 ```bash
@@ -855,8 +862,14 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
     ```
 
      Ensure filenames match what is in `verulink/attestor/chainService/config.yaml`.
-
-4.  Update Docker Compose
+4. Secure mtls key directory `verulink/attestor/chainService/.mtls/` and key
+   ```
+   chmod 750 verulink/attestor/chainService/.mtls
+   ```
+   ```
+   chmod 600 verulink/attestor/chainService/.mtls/<attestor_name>.key
+   ```
+5.  Update Docker Compose
     Download Docker compose file.
     ```bash
     curl -o verulink/attestor/compose.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/ci/attestor-gcp-deployment/attestor/compose.yaml
@@ -873,7 +886,7 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
 
     Replace `<tag>` with the required image version (e.g. `be42ce6`, `latest`, `v1.0.0` etc.)
 
-5.  Verify Docker Images (Optional for Security)
+6.  Verify Docker Images (Optional for Security)
 
     Install [cosign](https://docs.sigstore.dev/cosign/system_config/installation/) on Ubuntu:
 
@@ -894,7 +907,7 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
 
     Replace `<branch_name>` with `main` for **mainnet releases**
 
-6.  Start the Services
+7.  Start the Services
 
     Navigate to your working directory:
 
@@ -918,7 +931,7 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
     docker compose up -d
     ```
 
-#### Manual Verification
+#### Verification
 
 After deployment, verify the services are running:
 
