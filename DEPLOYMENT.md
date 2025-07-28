@@ -900,7 +900,7 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
 
     ```bash
     cosign verify \
-       --certificate-identity "https://github.com/venture23-aleo/verulink/.github/workflows/docker-build-publish.yml@refs/heads/<branch_name>" \
+       --certificate-identity "https://github.com/venture23-aleo/verulink/.github/workflows/docker-build-publish.yaml@refs/heads/<branch_name>" \
        --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
        venture23/verulink-attestor-sign:<tag>
     ```
