@@ -770,7 +770,7 @@ After deployment, verify the services are running:
 
 
 #### Deployment Steps
-1. Run below script 
+1. Run below script   
     i. To deploy on devnet
     ```bash
     curl -o install.sh https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/devnet/scripts/install-attestor.sh
