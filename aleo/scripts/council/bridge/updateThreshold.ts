@@ -1,20 +1,23 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
-import { CouncilContract } from "../../../artifacts/js/council";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_TB_UPDATE_THRESHOLD } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbUpdateThresholdLeo } from "../../../artifacts/js/js2leo/bridge_council";
-import { TbUpdateThreshold } from "../../../artifacts/js/types/bridge_council";
+
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Bridge_councilContract } from "../../../artifacts/js/bridge_council";
+import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { Vlink_token_bridge_v2Contract } from "../../../artifacts/js/vlink_token_bridge_v2";
+import { TbUpdateThreshold } from "../../../artifacts/js/types/vlink_bridge_council_v2";
+import { getTbUpdateThresholdLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const bridgeCouncil = new Bridge_councilContract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new CouncilContract({mode, priorityFee: 10_000});
-const bridge = new Token_bridge_v0003Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
 
 export const proposeupdateThreshold = async (new_threshold: number): Promise<number> => {
 
@@ -24,17 +27,27 @@ export const proposeupdateThreshold = async (new_threshold: number): Promise<num
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // generating hash
   const tbUpdateThreshold: TbUpdateThreshold = {
+    tag: TAG_TB_UPDATE_THRESHOLD,
     id: proposalId,
     new_threshold: new_threshold
   };
-  const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold)); 
+  const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold));
 
-  const [proposeUpdateThresholdTx] = await council.propose(proposalId, tbUpdateThresholdProposalHash);
-  
-  await council.wait(proposeUpdateThresholdTx);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbUpdateThresholdProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  getProposalStatus(tbUpdateThresholdProposalHash);
+  // proposing
+  const proposeUpdateThresholdTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeUpdateThresholdTx.wait();
+
+  getProposalStatus(ExternalProposalHash);
   
   return proposalId
 };
@@ -43,20 +56,29 @@ export const voteUpdateThredhold = async (proposalId: number, new_threshold: num
 
   console.log(`👍 Voting to update threshold: ${new_threshold}`)
 
+  // generating hash
   const tbUpdateThreshold: TbUpdateThreshold = {
+    tag: TAG_TB_UPDATE_THRESHOLD,
     id: proposalId,
     new_threshold: new_threshold
   };
-  const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold)); 
+  const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold));
+
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbUpdateThresholdProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   const voter = council.getAccounts()[0];
-  validateVote(tbUpdateThresholdProposalHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const [voteUpdateThresholdTx] = await council.vote(tbUpdateThresholdProposalHash, true);
-  
-  await council.wait(voteUpdateThresholdTx);
+  // voting
+  const voteUpdateThresholdTx = await council.vote(ExternalProposalHash, true);
+  await voteUpdateThresholdTx.wait();
 
-  getProposalStatus(tbUpdateThresholdProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -69,22 +91,32 @@ export const execUpdateThreshold = async (proposalId: number, new_threshold: num
     throw Error("Council is not the owner of bridge program");
   }
 
+  // generating hash
   const tbUpdateThreshold: TbUpdateThreshold = {
+    tag: TAG_TB_UPDATE_THRESHOLD,
     id: proposalId,
     new_threshold: new_threshold
   };
-  const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold)); 
+  const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold));
 
-  validateExecution(tbUpdateThresholdProposalHash);
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbUpdateThresholdProposalHash), SUPPORTED_THRESHOLD);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbUpdateThresholdProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const [updateThresholdTx] = await bridgeCouncil.tb_update_threshold(
+  validateExecution(ExternalProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+  // execute
+  const updateThresholdTx = await bridgeCouncil.tb_update_threshold(
     tbUpdateThreshold.id,
     tbUpdateThreshold.new_threshold,
     voters
   )
 
-  await council.wait(updateThresholdTx);
+  await updateThresholdTx.wait();
 
   const THRESHOLD_INDEX = 1;
   const updatedThreshold = await bridge.bridge_settings(THRESHOLD_INDEX);

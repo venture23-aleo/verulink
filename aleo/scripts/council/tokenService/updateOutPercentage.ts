@@ -1,13 +1,15 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_TS_UP_OUTGOING_PERCENT } from "../../../utils/constants";
 import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken, TsUpdateMinTransfer, TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/vlink_token_service_council_v2";
-import { getTsAddTokenLeo, getTsUpdateMinTransferLeo, getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/vlink_token_service_council_v2";
+import { getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
@@ -31,7 +33,10 @@ export const proposeUpdateOutPercentage = async (
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // GENERATE HASH
   const tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimit = {
+    tag: TAG_TS_UP_OUTGOING_PERCENT,
     id: proposalId,
     token_id: tokenId,
     percentage: percentage,
@@ -40,11 +45,18 @@ export const proposeUpdateOutPercentage = async (
   };
   const tsUpdateWithdrawalLimitHash = hashStruct(getTsUpdateWithdrawalLimitLeo(tsUpdateWithdrawalLimit));
 
-  const [proposeUpdateOutPercentageTx] = await council.propose(proposalId, tsUpdateWithdrawalLimitHash);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateWithdrawalLimitHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  await council.wait(proposeUpdateOutPercentageTx);
+  // PROPOSE
+  const proposeUpdateOutPercentageTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeUpdateOutPercentageTx.wait();
 
-  getProposalStatus(tsUpdateWithdrawalLimitHash);
+  getProposalStatus(ExternalProposalHash);
   return proposalId
 };
 
@@ -62,7 +74,9 @@ export const voteUpdateOutPercentage = async (
 
   const voter = council.getAccounts()[0];
 
+  // GENERATE HASH
   const tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimit = {
+    tag: TAG_TS_UP_OUTGOING_PERCENT,
     id: proposalId,
     token_id: tokenId,
     percentage: percentage,
@@ -71,13 +85,20 @@ export const voteUpdateOutPercentage = async (
   };
   const tsUpdateWithdrawalLimitHash = hashStruct(getTsUpdateWithdrawalLimitLeo(tsUpdateWithdrawalLimit));
 
-  validateVote(tsUpdateWithdrawalLimitHash, voter);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateWithdrawalLimitHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const [voteUpdateWithdrawalLimitTx] = await council.vote(tsUpdateWithdrawalLimitHash, true);
+  // VOTE
+  validateVote(ExternalProposalHash, voter);
 
-  await council.wait(voteUpdateWithdrawalLimitTx);
+  const voteUpdateWithdrawalLimitTx = await council.vote(ExternalProposalHash, true);
+  await voteUpdateWithdrawalLimitTx.wait();
 
-  getProposalStatus(tsUpdateWithdrawalLimitHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -98,7 +119,9 @@ export const execUpdateWithdrawalLimit = async (
     throw Error("Council is not the owner of tokenService program");
   }
 
+  // GENERATE HASH
   const tsUpdateWithdrawalLimit: TsUpdateWithdrawalLimit = {
+    tag: TAG_TS_UP_OUTGOING_PERCENT,
     id: proposalId,
     token_id: tokenId,
     percentage: percentage,
@@ -107,11 +130,19 @@ export const execUpdateWithdrawalLimit = async (
   };
   const tsUpdateWithdrawalLimitHash = hashStruct(getTsUpdateWithdrawalLimitLeo(tsUpdateWithdrawalLimit));
 
-  validateExecution(tsUpdateWithdrawalLimitHash);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateWithdrawalLimitHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateWithdrawalLimitHash), SUPPORTED_THRESHOLD);
+  validateExecution(ExternalProposalHash);
 
-  const [updateWithdrawalLimitTx] = await serviceCouncil.ts_update_outgoing_percentage(
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+  // EXECUTE
+  const updateWithdrawalLimitTx = await serviceCouncil.ts_update_outgoing_percentage(
     tsUpdateWithdrawalLimit.id,
     tsUpdateWithdrawalLimit.token_id,
     tsUpdateWithdrawalLimit.percentage,
@@ -120,7 +151,7 @@ export const execUpdateWithdrawalLimit = async (
     voters
   )
 
-  await council.wait(updateWithdrawalLimitTx);
+  await updateWithdrawalLimitTx.wait();
 
   const new_outgoing_percentage = {
     percentage: percentage,

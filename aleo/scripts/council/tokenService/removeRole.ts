@@ -1,6 +1,6 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD} from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_REMOVE_ROLE} from "../../../utils/constants";
 import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { RemoveRole, SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
@@ -9,6 +9,8 @@ import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters
 import { ExecutionMode } from "@doko-js/core";
 
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 
 const mode = ExecutionMode.SnarkExecute;
@@ -32,17 +34,25 @@ export const proposeRemoveRole = async (
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsRemoveRole: RemoveRole = {
+    tag: TAG_REMOVE_ROLE,
     id: proposalId,
     token_id: tokenId,
     account: account
   };
   const tsRemoveRoleProposalHash = hashStruct(getRemoveRoleLeo(tsRemoveRole));
 
-  const proposeRemoveRoleTx = await council.propose(proposalId, tsRemoveRoleProposalHash);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: serviceCouncil.address(),
+          proposal_hash: tsRemoveRoleProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+  // propose
+  const proposeRemoveRoleTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeRemoveRoleTx.wait();
 
-  getProposalStatus(tsRemoveRoleProposalHash);
+  getProposalStatus(ExternalProposalHash);
   return proposalId
 };
 
@@ -58,19 +68,27 @@ export const voteRemoveRole = async (
 
   const voter = council.getAccounts()[0];
   const tsRemoveRole: RemoveRole = {
+    tag: TAG_REMOVE_ROLE,
     id: proposalId,
     token_id: tokenId,
     account: account
   };
   const tsRemoveRoleProposalHash = hashStruct(getRemoveRoleLeo(tsRemoveRole));
 
-  validateVote(tsRemoveRoleProposalHash, voter);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: serviceCouncil.address(),
+          proposal_hash: tsRemoveRoleProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const voteRemoveRoleTx = await council.vote(tsRemoveRoleProposalHash, true);
 
+  validateVote(ExternalProposalHash, voter);
+  // vote
+  const voteRemoveRoleTx = await council.vote(ExternalProposalHash, true);
   await voteRemoveRoleTx.wait();
 
-  getProposalStatus(tsRemoveRoleProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -91,16 +109,25 @@ export const execRemoveRole = async (
   }
 
   const tsRemoveRole: RemoveRole = {
+    tag: TAG_REMOVE_ROLE,
     id: proposalId,
     token_id: tokenId,
     account: account
   };
   const tsRemoveRoleProposalHash = hashStruct(getRemoveRoleLeo(tsRemoveRole));
 
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: serviceCouncil.address(),
+          proposal_hash: tsRemoveRoleProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  validateExecution(tsRemoveRoleProposalHash);
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsRemoveRoleProposalHash), SUPPORTED_THRESHOLD);
+  validateExecution(ExternalProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+  // execute
   const removeRoleTx = await serviceCouncil.remove_role(
     proposalId,
     tokenId,

@@ -1,21 +1,26 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Token_bridge_v0003Contract } from "../../../artifacts/js/token_bridge_v0003";
-import { CouncilContract } from "../../../artifacts/js/council";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
+
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_TB_REMOVE_SERVICE } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbRemoveService } from "../../../artifacts/js/types/bridge_council";
-import { getTbRemoveServiceLeo } from "../../../artifacts/js/js2leo/bridge_council";
+
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
+import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { Vlink_token_bridge_v2Contract } from "../../../artifacts/js/vlink_token_bridge_v2";
+import { TbRemoveService } from "../../../artifacts/js/types/vlink_bridge_council_v2";
+import { getTbRemoveServiceLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
-import { Bridge_councilContract } from "../../../artifacts/js/bridge_council";
 
 const mode = ExecutionMode.SnarkExecute;
-const bridgeCouncil = new Bridge_councilContract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({mode, priorityFee: 10_000});
 
-const council = new CouncilContract({mode, priorityFee: 10_000});
-const bridge = new Token_bridge_v0003Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({mode, priorityFee: 10_000});
+const bridge = new Vlink_token_bridge_v2Contract({mode, priorityFee: 10_000});
+
 
 //////////////////////
 ///// Propose ////////
@@ -32,17 +37,27 @@ export const proposeRemoveService = async (tokenService: string): Promise<number
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // generating hash
   const tbRemoveService: TbRemoveService = {
+    tag: TAG_TB_REMOVE_SERVICE,
     id: proposalId,
     service: tokenService
   };
-  const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService)); 
+  const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService));
 
-  const [proposeRemoveTokenServiceTx] = await council.propose(proposalId, tbRemoveTokenServiceProposalHash);
-  
-  await council.wait(proposeRemoveTokenServiceTx);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbRemoveTokenServiceProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  getProposalStatus(tbRemoveTokenServiceProposalHash);
+  // proposing
+  const proposeRemoveTokenServiceTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeRemoveTokenServiceTx.wait();
+
+  getProposalStatus(ExternalProposalHash);
 
   return proposalId
 };
@@ -59,21 +74,30 @@ export const voteRemoveService = async (proposalId: number, tokenService: string
   }
 
 
+  // generating hash
   const tbRemoveService: TbRemoveService = {
+    tag: TAG_TB_REMOVE_SERVICE,
     id: proposalId,
     service: tokenService
   };
-  const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService)); 
+  const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService));
+
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbRemoveTokenServiceProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   const voter = council.getAccounts()[0];
 
-  validateVote(tbRemoveTokenServiceProposalHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const [voteRemoveChainTx] = await council.vote(tbRemoveTokenServiceProposalHash, true); 
-  
+  // vote
+  const  voteRemoveChainTx = await council.vote(ExternalProposalHash, true); 
   await council.wait(voteRemoveChainTx);
 
-  getProposalStatus(tbRemoveTokenServiceProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -94,22 +118,31 @@ export const execRemoveService = async (proposalId: number, tokenService: string
     throw Error("Council is not the owner of bridge program");
   }
 
+  // generating hash
   const tbRemoveService: TbRemoveService = {
+    tag: TAG_TB_REMOVE_SERVICE,
     id: proposalId,
     service: tokenService
   };
-  const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService)); 
+  const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService));
 
-  validateExecution(tbRemoveTokenServiceProposalHash);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbRemoveTokenServiceProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbRemoveTokenServiceProposalHash), SUPPORTED_THRESHOLD);
-  const [removeServiceTx] = await bridgeCouncil.tb_remove_service(
+  validateExecution(ExternalProposalHash);
+
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+  const removeServiceTx = await bridgeCouncil.tb_remove_service(
     tbRemoveService.id,
     tbRemoveService.service,
     voters
   );
 
-  await council.wait(removeServiceTx);
+  await removeServiceTx.wait();
 
   isTokenServiceSupported = await bridge.supported_services(tokenService, false);
   if (isTokenServiceSupported) {

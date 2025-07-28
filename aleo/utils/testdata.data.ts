@@ -169,3 +169,7 @@ export const VERSION_PRIVATE_NORELAYER_NOPREDICATE = 11;
 export const VERSION_PRIVATE_RELAYER_NOPREDICATE = 12;
 export const VERSION_PRIVATE_NORELAYER_PREDICATE = 13;
 export const VERSION_PRIVATE_RELAYER_PREDICATE = 14;
+
+
+export const aleoSeq = BigInt(1);
+export const ethSeq = BigInt(1);

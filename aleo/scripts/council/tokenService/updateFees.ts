@@ -11,7 +11,10 @@ import { ExecutionMode } from "@doko-js/core";
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { hash } from "aleo-hasher";
 import { Vlink_token_service_council_v2Ts_update_feesTransition } from "../../../artifacts/js/transitions/vlink_token_service_council_v2";
-import { getUpdateFeesLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v5";
+import { getUpdateFeesLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { TAG_TS_UPDATE_FEES } from "../../../utils/constants";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
@@ -33,7 +36,10 @@ export const proposeUpdateFees = async (
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // GENERATE HASH
   const tsUpdateFee: UpdateFees = {
+    tag: TAG_TS_UPDATE_FEES,
     id: proposalId,
     chain_id: chain_id,
     token_id: token_id,
@@ -44,10 +50,18 @@ export const proposeUpdateFees = async (
   };
   const tsUpdateFeeHash = hashStruct(getUpdateFeesLeo(tsUpdateFee));
 
-  const proposeUpdateFeeTx = await council.propose(proposalId, tsUpdateFeeHash);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateFeeHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
+  // PROPOSE
+  const proposeUpdateFeeTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeUpdateFeeTx.wait();
 
-  getProposalStatus(tsUpdateFeeHash);
+  getProposalStatus(ExternalProposalHash);
 
   return proposalId
 };
@@ -55,32 +69,41 @@ export const proposeUpdateFees = async (
 ///////////////////
 ///// Vote ////////
 ///////////////////
-// export const voteUpdateFees = async (
-//     proposalId: number, chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number) => {
+export const voteUpdateFees = async (
+    proposalId: number, chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number) => {
 
-//   console.log(`👍 Voting to update fees: ${token_id}`)
+  console.log(`👍 Voting to update fees: ${token_id}`)
 
-//   const tsUpdateFee: UpdateFees = {
-//     id: proposalId,
-//     chain_id: chain_id,
-//     token_id: token_id,
-//     public_relayer_fee: public_relayer_fee,
-//     private_relayer_fee: private_relayer_fee,
-//     public_platform_fee: public_platform_fee,
-//     private_platform_fee: private_platform_fee
-//   };
-//   const tsUpdateFeeHash = hashStruct(getTsUnpauseTokenLeo(tsUpdateFee));
+  // GENERATE HASH
+  const tsUpdateFee: UpdateFees = {
+    tag: TAG_TS_UPDATE_FEES,
+    id: proposalId,
+    chain_id: chain_id,
+    token_id: token_id,
+    public_relayer_fee: public_relayer_fee,
+    private_relayer_fee: private_relayer_fee,
+    public_platform_fee: public_platform_fee,
+    private_platform_fee: private_platform_fee
+  };
+  const tsUpdateFeeHash = hashStruct(getUpdateFeesLeo(tsUpdateFee));
 
-//   const voter = council.getAccounts()[0];
-//   validateVote(tsUpdateFeeHash, voter);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateFeeHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-//   const voteUpdateFees = await council.vote(tsUpdateFeeHash, true);
+  const voter = council.getAccounts()[0];
+  validateVote(ExternalProposalHash, voter);
 
-//   await voteUpdateFees.wait();
+  // VOTE
+  const voteUpdateFees = await council.vote(ExternalProposalHash, true);
+  await voteUpdateFees.wait();
 
-//   getProposalStatus(tsUpdateFeeHash);
+  getProposalStatus(ExternalProposalHash);
 
-// }
+}
 
 //////////////////////
 ///// Execute ////////
@@ -95,7 +118,9 @@ export const execUpdateFees = async (
     throw Error("Council is not the owner of bridge program");
   }
 
+  // GENERATE HASH
   const tsUpdateFee: UpdateFees = {
+    tag: TAG_TS_UPDATE_FEES,
     id: proposalId,
     chain_id: chain_id,
     token_id: token_id,
@@ -106,9 +131,17 @@ export const execUpdateFees = async (
   };
   const tsUpdateFeeHash = hashStruct(getUpdateFeesLeo(tsUpdateFee));
 
-  validateExecution(tsUpdateFeeHash);
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateFeeHash), 5);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateFeeHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+  validateExecution(ExternalProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), 5);
+
+  // EXECUTE
   const unUpdateFeesTx = await serviceCouncil.ts_update_fees(
     tsUpdateFee.id,
     tsUpdateFee.chain_id,
@@ -122,7 +155,8 @@ export const execUpdateFees = async (
 
   await unUpdateFeesTx.wait();
   // TODO CHECK IF THE FEES WERE UPDATED
-  
+  getProposalStatus(ExternalProposalHash);
+
   console.log(` ✅ Token Updated successfully.`)
 
 }
@@ -137,5 +171,5 @@ const proposal_id = await proposeUpdateFees(arbitrumChainId, usdc, wusdcFeeRelay
 execUpdateFees(proposal_id, arbitrumChainId, usdc, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate, public_platform_fee, private_platform_fee)
 }
 
-update();
+// update();
 

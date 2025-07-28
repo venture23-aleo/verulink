@@ -3,8 +3,8 @@ import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr, wethName, wusdcName, wusdtName } from "../../../utils/testdata.data";
 import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { AddChainExistingToken, TsAddToken, UpdateTokenServiceAddress } from "../../../artifacts/js/types/vlink_token_service_council_v2";
-import { getAddChainExistingTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { AddChainExistingToken, TsAddToken, UpdateTokenServiceSetting } from "../../../artifacts/js/types/vlink_token_service_council_v2";
+import { getAddChainExistingTokenLeo, getTsAddTokenLeo, getUpdateTokenServiceSettingLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 
@@ -13,8 +13,9 @@ import { hash } from "aleo-hasher";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
 import { baseChainId, baseTsContractAddr } from "../../../utils/testdata.data";
 import { getAddChainExistingToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v2";
-import { getUpdateTokenServiceAddress } from "../../../artifacts/js/leo2js/vlink_token_service_council_v2";
-import { getUpdateTokenServiceAddressLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { TAG_TS_UP_TS_SETTING } from "../../../utils/constants";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
@@ -25,10 +26,11 @@ const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_
 //////////////////////
 ///// Propose ////////
 //////////////////////
-export const proposeUpdateTokenService = async (
+export const proposeUpdateTokenServiceSetting = async (
     tokenId: bigint,
     chain_id: bigint,
-    token_service_address: string
+    token_service_address: string,
+    token_address: string
 ): Promise<number> => {
 
 
@@ -42,61 +44,72 @@ export const proposeUpdateTokenService = async (
     validateProposer(proposer);
 
     const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-    const tsUpdateTokenService: UpdateTokenServiceAddress = {
+    const tsUpdateTokenService: UpdateTokenServiceSetting = {
+        tag: TAG_TS_UP_TS_SETTING,
         id: proposalId,
         chain_id,
         token_id: tokenId,
         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
+        token_address: evm2AleoArrWithoutPadding(token_address),
     };
-    const tsUpdateTokenServiceProposalHash = hashStruct(getUpdateTokenServiceAddressLeo(tsUpdateTokenService));
+    const tsUpdateTokenServiceProposalHash = hashStruct(getUpdateTokenServiceSettingLeo(tsUpdateTokenService));
 
-    const proposeUpdateTokenServiceTx = await council.propose(proposalId, tsUpdateTokenServiceProposalHash);
+    const externalProposal: ExternalProposal = {
+        id: proposalId,
+        external_program: serviceCouncil.address(),
+        proposal_hash: tsUpdateTokenServiceProposalHash
+    }
+    const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+    // PROPOSE
+    const proposeUpdateTokenServiceTx = await council.propose(proposalId, ExternalProposalHash);
     await proposeUpdateTokenServiceTx.wait();
 
-    getProposalStatus(tsUpdateTokenServiceProposalHash);
+    getProposalStatus(ExternalProposalHash);
     return proposalId
 };
 
 ///////////////////
 ///// Vote ////////
 ///////////////////
-// export const voteAddChainToToken = async (
-//     proposalId: number,
-//     tokenId: bigint,
-//     chain_id: bigint,
-//     token_service_address: string,
-//     token_address: string,
-//     fee_of_platform: number,
-//     fee_of_relayer: bigint,
-// ) => {
-//     console.log(`👍 Voting to add chain to ${chain_id} to ${tokenId}`)
-//     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-//     // if (storedTokenConnector != ALEO_ZERO_ADDRESS) {
-//     //   throw Error(`Token ${tokenAddress} is already supported with ${tokenConnector} as connector`);
-//     // }
+export const voteUpdateTokenServiceSetting = async (
+    proposalId: number,
+    tokenId: bigint,
+    chain_id: bigint,
+    token_service_address: string,
+    token_address: string,
+) => {
+    console.log(`👍 Voting to add chain to ${chain_id} to ${tokenId}`)
 
-//     const voter = council.getAccounts()[0];
-//     const tsAddChainToToken: AddChainExistingToken = {
-//         id: proposalId,
-//         chain_id,
-//         token_id: tokenId,
-//         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
-//         token_address: evm2AleoArrWithoutPadding(token_address),
-//         fee_of_platform,
-//         fee_of_relayer
-//     };
-//     const tsAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
+    const voter = council.getAccounts()[0];
 
-//     validateVote(tsAddChainToTokenProposalHash, voter);
+    // GENERATE HASH
+    const tsUpdateTokenService: UpdateTokenServiceSetting = {
+        tag: TAG_TS_UP_TS_SETTING,
+        id: proposalId,
+        chain_id,
+        token_id: tokenId,
+        token_service_address: evm2AleoArrWithoutPadding(token_service_address),
+        token_address: evm2AleoArrWithoutPadding(token_address),
+    };
+    const tsUpdateTokenServiceProposalHash = hashStruct(getUpdateTokenServiceSettingLeo(tsUpdateTokenService));
 
-//     const voteAddChainToTokenTx = await council.vote(tsAddChainToTokenProposalHash, true);
+    const externalProposal: ExternalProposal = {
+        id: proposalId,
+        external_program: serviceCouncil.address(),
+        proposal_hash: tsUpdateTokenServiceProposalHash
+    }
+    const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-//     await voteAddChainToTokenTx.wait();
+    // VOTE
+    validateVote(ExternalProposalHash, voter);
 
-//     getProposalStatus(tsAddChainToTokenProposalHash);
+    const voteAddChainToTokenTx = await council.vote(ExternalProposalHash, true);
+    await voteAddChainToTokenTx.wait();
 
-// }
+    getProposalStatus(ExternalProposalHash);
+
+}
 
 //////////////////////
 ///// Execute ////////
@@ -106,6 +119,7 @@ export const execUpdateTokenService = async (
     tokenId: bigint,
     chain_id: bigint,
     token_service_address: string,
+    token_address: string
 ) => {
     console.log(`Updating token service ${token_service_address} to token ${tokenId}`)
     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -118,22 +132,35 @@ export const execUpdateTokenService = async (
         throw Error("Council is not the owner of tokenService program");
     }
 
-    const tsUpdateTokenService: UpdateTokenServiceAddress = {
+    // GENERATE HASH
+    const tsUpdateTokenService: UpdateTokenServiceSetting = {
+        tag: TAG_TS_UP_TS_SETTING,
         id: proposalId,
         chain_id,
         token_id: tokenId,
         token_service_address: evm2AleoArrWithoutPadding(token_service_address),
+        token_address: evm2AleoArrWithoutPadding(token_address),
     };
-    const tsUpdateTokenServiceProposal = hashStruct(getUpdateTokenServiceAddressLeo(tsUpdateTokenService));
+    const tsUpdateTokenServiceProposalHash = hashStruct(getUpdateTokenServiceSettingLeo(tsUpdateTokenService));
 
-    validateExecution(tsUpdateTokenServiceProposal);
+    const externalProposal: ExternalProposal = {
+        id: proposalId,
+        external_program: serviceCouncil.address(),
+        proposal_hash: tsUpdateTokenServiceProposalHash
+    }
+    const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-    const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateTokenServiceProposal), SUPPORTED_THRESHOLD);
-    const updateTokenServiceTx = await serviceCouncil.ts_update_token_service_address(
+    validateExecution(ExternalProposalHash);
+
+    const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+    // EXECUTE
+    const updateTokenServiceTx = await serviceCouncil.ts_update_token_service_setting(
         tsUpdateTokenService.id,
         tsUpdateTokenService.chain_id,
         tsUpdateTokenService.token_id,
         tsUpdateTokenService.token_service_address,
+        tsUpdateTokenService.token_address,
         voters
     )
 
@@ -142,45 +169,5 @@ export const execUpdateTokenService = async (
     console.log(` ✅ Token:Updated ${token_service_address}  to ${tokenId} successfully.`)
 
 }
-const wusdc_id = leo2js.field(hash('bhp256', wusdcName.toString() + "u128", "field"));
-const wusdt_id = leo2js.field(hash('bhp256', wusdtName.toString() + "u128", 'field'));
-const weth_id = leo2js.field(hash('bhp256', wethName.toString() + "u128", 'field'));
 
 
-async function main() {
-    const proposalId = await proposeUpdateTokenService(
-        BigInt(weth_id),
-        BigInt(ethChainId),
-        ethTsContractAddr
-    );
-    await execUpdateTokenService(
-        proposalId,
-        BigInt(weth_id),
-        BigInt(ethChainId),
-        ethTsContractAddr
-    );
-    const proposalId2 = await proposeUpdateTokenService(
-        BigInt(wusdc_id),
-        BigInt(ethChainId),
-        ethTsContractAddr
-    );
-    await execUpdateTokenService(
-        proposalId2,
-        BigInt(wusdc_id),
-        BigInt(ethChainId),
-        ethTsContractAddr
-    );
-    const proposalId3 = await proposeUpdateTokenService(
-        BigInt(wusdt_id),
-        BigInt(ethChainId),
-        ethTsContractAddr
-    );
-    await execUpdateTokenService(
-        proposalId3,
-        BigInt(wusdt_id),
-        BigInt(ethChainId),
-        ethTsContractAddr
-    );
-}
-
-main()
