@@ -119,14 +119,21 @@ jobs:
           REPO_NAME="${GITHUB_REPOSITORY#*/}"              # verulink
           REPO_OWNER="${GITHUB_REPOSITORY%/*}"             # venture23-aleo
           BRANCH_REF="${GITHUB_REF}"                       # refs/heads/ci/add-docker-image-build-workflow
-          WORKFLOW_FILE=".github/workflows/docker-build-publish.yml"
+          WORKFLOW_FILE=".github/workflows/docker-build-publish.yaml"
 
           CERT_IDENTITY="https://github.com/${REPO_OWNER}/${REPO_NAME}/${WORKFLOW_FILE}@${BRANCH_REF}"
-          IMAGE="venture23/verulink-attestor-sign:${IMAGE_TAG}"
 
-          echo "🔐 Cosign verify command:"
+          echo "🔐 Cosign verify command for Signing service image:"
           echo ""
           echo "cosign verify \\"
           echo "  --certificate-identity \"${CERT_IDENTITY}\" \\"
           echo "  --certificate-oidc-issuer \"https://token.actions.githubusercontent.com\" \\"
-          echo "  ${IMAGE}"
+          echo "  venture23/verulink-attestor-sign:${IMAGE_TAG}"
+
+          echo "🔐 Cosign verify command for Chain service image:"
+          echo ""
+          echo "cosign verify \\"
+          echo "  --certificate-identity \"${CERT_IDENTITY}\" \\"
+          echo "  --certificate-oidc-issuer \"https://token.actions.githubusercontent.com\" \\"
+          echo "  venture23/verulink-attestor-chain:${IMAGE_TAG}"
+

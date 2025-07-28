@@ -767,8 +767,14 @@ After deployment, verify the services are running:
   - **RAM:** 2 GB
   - **Disk:** 50 GB SSD
   - **Network:** Open port 22 open for SSH
+  - **Docker:** Latest
 
 #### Manual Deployment Steps
+You can either clone the project repository or manually create the installation directory.
+To clone the project, run:
+```bash
+git clone https://github.com/venture23-aleo/verulink.git
+```
 
 1.  Creating Installation Directory
 
@@ -855,9 +861,13 @@ After deployment, verify the services are running:
     - <attestor_name>.key
     ```
 
-     Ensure filenames match what is in `config.yaml`.
+     Ensure filenames match what is in `verulink/attestor/chainService/config.yaml`.
 
 4.  Update Docker Compose
+    Download Docker compose file.
+    ```bash
+    curl -o verulink/attestor/compose.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/ci/attestor-gcp-deployment/attestor/compose.yaml
+    ```
 
     Path: `verulink/attestor/compose.yaml`
 
