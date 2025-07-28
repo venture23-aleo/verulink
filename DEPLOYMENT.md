@@ -767,6 +767,7 @@ To clone the project, run:
 ```bash
 git clone https://github.com/venture23-aleo/verulink.git
 ```
+Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/).#install-using-the-repository)
 
 1.  Creating Installation Directory
 
