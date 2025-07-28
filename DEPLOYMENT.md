@@ -847,9 +847,7 @@ After deployment, verify the services are running:
 
     iii. **Copy mTLS Files:**
 
-    ```
-     Place the following into `verulink/attestor/chainService/.mtls/`:
-    ```
+    Place the following into `verulink/attestor/chainService/.mtls/`:
 
     ```
     - ca.crt
