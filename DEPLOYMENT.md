@@ -817,7 +817,7 @@ After deployment, verify the services are running:
      curl -o verulink/attestor/chainService/config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/chainService/config.yaml
     ```
 
-    ii. Update `config.yaml`:
+    ii. Update `verulink/attestor/chainService/config.yaml`:
 
      ```yaml
      attestor_name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>  # e.g.,     devnet_attestor_verulink_abc
