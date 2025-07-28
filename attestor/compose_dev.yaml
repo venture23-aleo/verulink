@@ -8,7 +8,7 @@ services:
   chainservice:
     depends_on:
       - signingservice
-    image: venture23/verulink-attestor-chain:<tag>
+    build: ./chainService
     volumes:
       - type: volume
         source: db-path
@@ -26,9 +26,10 @@ services:
       LOG_ENC: json
       MODE: prod
       CLEAN_START: false
-      MAINTENANCE: false
   signingservice:
-    image: venture23/verulink-attestor-sign:<tag>
+    build:
+      context: .
+      dockerfile: ./signingService/Dockerfile
     volumes:
       - ./signingService/config.yaml:/configs/config.yaml
       - ./signingService/secrets.yaml:/configs/keys.yaml

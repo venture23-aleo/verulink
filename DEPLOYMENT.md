@@ -20,6 +20,10 @@
   - [Advanced Configuration Options](#advanced-configuration-options)
   - [Verification](#verification)
   - [Troubleshooting Ansible Deployment](#troubleshooting-ansible-deployment)
+- [Manual Deployment and Upgrade Process](#manual-deployment-and-upgrade-process)
+  - [Prerequisites](#prerequisites-1)
+  - [Deployment Steps](#deployment-steps-2)
+  - [Verification](#verification)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -628,6 +632,186 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
    To disable SSH host key verification (not recommended for production environments), set the `ANSIBLE_HOST_KEY_CHECKING` environment variable to `False` when running the playbook:
    ```bash
    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook deploy_attestor.yaml -i "3.139.69.158," -u cloud_user --ask-pass --ask-become-pass
+   ```
+#### Verification
+
+After deployment, verify the services are running:
+
+1. **Check Docker Containers**
+   ```bash
+   ssh -i /path/to/private_key.pem remote_user@your-server-ip
+   docker ps
+   ```
+
+2. **Check Service Logs**
+   ```bash
+   docker logs <container_id>
+   ```
+
+3. **Check Application Logs**
+   ```bash
+   docker exec -it attestor-chainservice cat /app/logs/verulink.log
+   ```
+---
+
+### Manual Deployment and Upgrade Process
+#### Prerequisites
+**Recommended Minimum VM Specs**
+
+- **OS:** Ubuntu 22.04 LTS (64-bit)
+- **CPU:** 1 vCPU
+- **RAM:** 2 GB
+- **Disk:** 50 GB SSD
+- **Network:** Open port 22 open for SSH
+
+#### Deployment Steps
+1. Creating Installation Directory
+
+   ```bash
+   mkdir -p verulink/attestor/{chainService,signingService}
+   mkdir -p verulink/attestor/chainService/.mtls
+   ```
+
+2. Signing Service Configuration
+
+   i. **Create Wallet Secrets File:**
+
+      Create `verulink/attestor/signingService/secrets.yaml` with the following format:
+
+      ```yaml
+      chain:
+        ethereum:
+          private_key: <ethereum_private_key>
+          wallet_address: <ethereum_wallet_address>
+        aleo:
+          private_key: <aleo_private_key>
+          wallet_address: <aleo_wallet_address>
+      ```
+
+   ii. **Secure Secrets File:**
+
+   ```bash
+   chmod 600 verulink/attestor/signingService/secrets.yaml
+   ```
+
+   iii. **Download Signing Service Config:**
+
+   ```bash
+   curl -o verulink/attestor/signingService/config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/signingService/config.yaml
+   ```
+
+   iv. **Edit config.yaml:**
+
+   * Configure **username** and **password** for access control.
+
+
+3.  Chain Service Configuration
+
+      i. **Download Chain Service Config:**
+
+         ```bash
+         curl -o verulink/attestor/chainService/config.yaml https://raw.      githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/    chainService/config.yaml
+         ```
+
+      ii. Update `config.yaml`:
+
+         ```yaml
+         attestor_name:       <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>  # e.g.,     devnet_attestor_verulink_abc
+
+         aleo:
+            wallet_address: <aleo_wallet_address>
+
+         ethereum:
+            wallet_address: <ethereum_wallet_address>
+
+         signing_service:
+            username: <configured_username>
+            password: <configured_password>
+
+         collector_service:
+            uri: <collector_service_uri>  # Provided by Venture23
+
+         mtls:
+            ca_certificate: ca.crt
+            attestor_certificate: <attestor_name>.crt
+            attestor_key: <attestor_name>.key
+
+         metrics:
+            host: <pushgateway_url>  # Provided by Venture23
+         ```
+
+      iii. **Copy mTLS Files:**
+
+         Place the following into `verulink/attestor/chainService/.mtls/`:
+
+      ```
+      - ca.crt
+      - <attestor_name>.crt
+      - <attestor_name>.key
+      ```
+
+         Ensure filenames match what is in `config.yaml`.
+
+
+
+4. Update Docker Compose
+
+   Path: `verulink/attestor/compose.yaml`
+
+   ### Example:
+
+   ```yaml
+   image: venture23/verulink-attestor-chain:<tag>
+   image: venture23/verulink-attestor-sign:<tag>
+   ```
+
+   Replace `<tag>` with the required image version (e.g. `be42ce6`, `latest`, `v1.0.0` etc.)
+
+
+
+5. Verify Docker Images (Optional for Security)
+
+   Install [cosign](https://docs.sigstore.dev/cosign/system_config/installation/) on Ubuntu:
+
+   ```bash
+   LATEST_VERSION=$(curl -s https://api.github.com/repos/sigstore/cosign/releases/latest | grep tag_name | cut -d : -f2 | tr -d "v\", ")
+   curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign_${LATEST_VERSION}_amd64.deb"
+   sudo dpkg -i cosign_${LATEST_VERSION}_amd64.deb
+   ```
+
+   Verify Image Signature:
+
+   ```bash
+   cosign verify \
+      --certificate-identity "https://github.com/venture23-aleo/verulink/.github/workflows/docker-build-publish.yml@refs/heads/<branch_name>" \
+      --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+      venture23/verulink-attestor-sign:<tag>
+   ```
+
+   Replace `<branch_name>` with `main` for **mainnet releases**
+
+6. Start the Services
+
+   Navigate to your working directory:
+
+   ```bash
+   cd verulink/attestor
+   docker compose up -d
+   ```
+
+### Upgrade Process
+
+1. Update image tag in `compose.yaml`:
+
+   ```yaml
+   image: venture23/verulink-attestor-<service>:<new_tag>
+   ```
+
+2. Restart the service:
+
+   ```bash
+   docker compose pull
+   docker compose up -d
    ```
 #### Verification
 

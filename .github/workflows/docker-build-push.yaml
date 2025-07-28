@@ -1,0 +1,132 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+      - ci/attestor-gcp-deployment
+    tags:
+      - 'v*'
+
+permissions:
+  id-token: write 
+  contents: read
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Set image tags and other variables
+        run: |
+          echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "IS_TAG=true" >> $GITHUB_ENV
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            echo "IS_TAG=false" >> $GITHUB_ENV
+          fi
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.9.2
+
+      - name: Build signingService
+        working-directory: attestor
+        run: |
+          docker build \
+            -f ./signingService/Dockerfile \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA} \
+            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}" ) \
+            .
+
+      - name: Push and sign verulink-attestor-sign image
+        env:
+          COSIGN_YES: "true"
+        run: |
+          set -e
+          IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
+
+          echo "Pushing image: $IMAGE"
+          docker push $IMAGE
+
+          # Retrieve the digest using docker CLI
+          DIGEST=$(docker image inspect $IMAGE --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')
+
+          if [ -z "$DIGEST" ]; then
+            echo "❌ Digest not found. Image may not have been pushed correctly."
+            exit 1
+          fi
+
+          echo "Digest: $DIGEST"
+
+          # Sign the image using the digest
+          cosign sign "${IMAGE%@*}@${DIGEST}"
+
+
+
+      - name: Build chainService
+        working-directory: attestor
+        run: |
+          docker build \
+            -f ./chainService/Dockerfile \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA} \
+            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}" ) \
+            ./chainService
+
+      - name: Push and sign verulink-attestor-chain image
+        env:
+          COSIGN_YES: "true"
+        run: |
+          set -e
+          IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
+
+          echo "Pushing image: $IMAGE"
+          docker push $IMAGE
+      
+          # Retrieve the digest using docker CLI
+          DIGEST=$(docker image inspect $IMAGE --format '{{index .RepoDigests 0}}' | awk -F@ '{print $2}')
+      
+          if [ -z "$DIGEST" ]; then
+            echo "❌ Digest not found. Image may not have been pushed correctly."
+            exit 1
+          fi
+      
+          echo "Digest: $DIGEST"
+      
+          # Sign the image using the digest
+          cosign sign "${IMAGE%@*}@${DIGEST}"
+
+  verify-sig:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Construct and Display cosign verify command
+        run: |
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"              # verulink
+          REPO_OWNER="${GITHUB_REPOSITORY%/*}"             # venture23-aleo
+          BRANCH_REF="${GITHUB_REF}"                       # refs/heads/ci/add-docker-image-build-workflow
+          WORKFLOW_FILE=".github/workflows/docker-build-publish.yml"
+
+          CERT_IDENTITY="https://github.com/${REPO_OWNER}/${REPO_NAME}/${WORKFLOW_FILE}@${BRANCH_REF}"
+          IMAGE="venture23/verulink-attestor-sign:${IMAGE_TAG}"
+
+          echo "🔐 Cosign verify command:"
+          echo ""
+          echo "cosign verify \\"
+          echo "  --certificate-identity \"${CERT_IDENTITY}\" \\"
+          echo "  --certificate-oidc-issuer \"https://token.actions.githubusercontent.com\" \\"
+          echo "  ${IMAGE}"
