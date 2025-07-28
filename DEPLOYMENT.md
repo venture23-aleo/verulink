@@ -768,7 +768,11 @@ After deployment, verify the services are running:
   - Collector service URL
   - Prometheus PushGateway URL
 
+
 #### Deployment Steps
+1. Run below script
+```bash
+
 You can either clone the project repository or manually create the installation directory.
 To clone the project, run:
 ```bash
