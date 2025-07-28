@@ -1,11 +1,3 @@
-You are right, my apologies. Relying on auto-generated anchors for duplicate headings can be unreliable.
-
-The most robust solution is to make the headings unique. I have now updated the document by renaming the duplicate subheadings (like "Deployment Steps" and "Prerequisites") to be specific to their parent section. This ensures each link in the Table of Contents has a unique, predictable destination.
-
-Here is the corrected guide. All navigation links now work as intended.
-
------
-
 ## Attestor Server Deployment Guide
 
 ## Table of Contents
