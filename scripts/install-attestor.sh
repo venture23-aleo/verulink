@@ -14,10 +14,10 @@ prompt_input() {
     
     while true; do
         read -p "$prompt [$default_value]: " user_input
-        if [[ -z "$user_input" && -n "$default_value" ]]; then
+        if [ -z "$user_input" && -n "$default_value" ]; then
             user_input="$default_value"
         fi
-        if [[ -z "$user_input" ]]; then
+        if [ -z "$user_input" ]; then
             echo -e "${RED}Input cannot be empty. Please try again.${NC}"
         else
             eval "$var_name=\"$user_input\""
@@ -37,7 +37,7 @@ prompt_password_input() {
         echo
 
         # Validate non-empty password
-        if [[ -z "$user_input" ]]; then
+        if [ -z "$user_input" ]; then
             echo -e "${RED}Input cannot be empty. Please try again.${NC}"
         else
             eval "$var_name=\"$user_input\""
@@ -49,7 +49,7 @@ prompt_password_input() {
 # Function to validate if a file exists
 validate_file_exists() {
     local file_path="$1"
-    if [[ ! -f "$file_path" ]]; then
+    if [ ! -f "$file_path" ]; then
         echo -e "${RED}File not found: $file_path. Please make sure the file exists and try again.${NC}"
         return 1
     fi
