@@ -4,6 +4,7 @@ set -e
 # Colors for output
 GREEN="\033[0;32m"
 RED="\033[0;31m"
+YELLOW="\033[1;33m"
 NC="\033[0m"  # No color
 
 # Function to prompt user for input with default values and validate non-empty input
@@ -32,10 +33,14 @@ prompt_password_input() {
     local var_name="$2"
 
     while true; do
-        # Use stty to hide input (more portable than read -s)
-        stty -echo
-        read -p "$prompt: " user_input
-        stty echo
+        # Try to use stty to hide input, fall back to regular input if it fails
+        if stty -echo 2>/dev/null; then
+            read -p "$prompt: " user_input
+            stty echo 2>/dev/null
+        else
+            # Fall back to regular input for non-interactive environments
+            read -p "$prompt (input will be visible): " user_input
+        fi
         echo
 
         # Validate non-empty password
