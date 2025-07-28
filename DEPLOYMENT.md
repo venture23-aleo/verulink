@@ -814,13 +814,13 @@ After deployment, verify the services are running:
     i. **Download Chain Service Config:**
 
     ```bash
-     curl -o verulink/attestor/chainService/config.yaml https://raw.      githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/    chainService/config.yaml
+     curl -o verulink/attestor/chainService/config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/chainService/config.yaml
     ```
 
     ii. Update `config.yaml`:
 
      ```yaml
-     attestor_name:       <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>  # e.g.,     devnet_attestor_verulink_abc
+     attestor_name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>  # e.g.,     devnet_attestor_verulink_abc
 
      aleo:
         wallet_address: <aleo_wallet_address>
