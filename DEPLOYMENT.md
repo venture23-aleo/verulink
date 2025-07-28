@@ -910,12 +910,16 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
 7.  Start the Services
 
     Navigate to your working directory:
+    > Run with sudo if the current user is not in the docker group, or add the user to the docker group.
 
     ```bash
     cd verulink/attestor
     docker compose up -d
     ```
-
+    Run with sudo if the current user is not in the docker group, or add the user to the docker group.
+    ```
+    sudo docker compose up -d  
+    ```
 ### Upgrade Process
 
 1.  Update image tag in `compose.yaml`:
