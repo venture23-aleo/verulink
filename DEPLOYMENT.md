@@ -855,9 +855,7 @@ After deployment, verify the services are running:
     - <attestor_name>.key
     ```
 
-    ```
      Ensure filenames match what is in `config.yaml`.
-    ```
 
 4.  Update Docker Compose
 
