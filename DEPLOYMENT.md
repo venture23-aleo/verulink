@@ -9,40 +9,12 @@ Here is the corrected guide. All navigation links now work as intended.
 ## Attestor Server Deployment Guide
 
 ## Table of Contents
-<<<<<<< HEAD
-=======
-- [Installing on AWS](#installing-on-aws)
-- [Installing on GCP](#installing-on-gcp)
-- [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
-- [Manual Deployment with Ansible Playbook](#manual-deployment-with-ansible-playbook)
-- [Manual Deployment and Upgrade Process](#manual-deployment-and-upgrade-process)
-- [Troubleshooting](#troubleshooting)
->>>>>>> 1d8c929ab5382eaeae6d1fcb7e90cfe501bc6e0c
-
-  - [Installing on AWS](https://www.google.com/search?q=%23installing-on-aws)
-      - [AWS Pre-Deployment steps](https://www.google.com/search?q=%23aws-pre-deployment-steps)
-      - [AWS Setup](https://www.google.com/search?q=%23aws-setup)
-      - [To Configure AWS access](https://www.google.com/search?q=%23to-configure-aws-access)
-      - [AWS Deployment Steps](https://www.google.com/search?q=%23aws-deployment-steps)
-  - [Installing on GCP](https://www.google.com/search?q=%23installing-on-gcp)
-      - [GCP Pre-Deployment steps](https://www.google.com/search?q=%23gcp-pre-deployment-steps)
-      - [GCP Setup](https://www.google.com/search?q=%23gcp-setup)
-      - [GCP Authentication Methods](https://www.google.com/search?q=%23gcp-authentication-methods)
-      - [GCP Deployment Steps](https://www.google.com/search?q=%23gcp-deployment-steps)
-  - [Installing on Local machine, VM, or baremetal](https://www.google.com/search?q=%23installing-on-local-machine-vm-or-baremetal)
-      - [Local Prerequisites](https://www.google.com/search?q=%23local-prerequisites)
-      - [Local Deployment Steps](https://www.google.com/search?q=%23local-deployment-steps)
-  - [Manual Deployment with Ansible Playbook](https://www.google.com/search?q=%23manual-deployment-with-ansible-playbook)
-      - [Ansible Prerequisites](https://www.google.com/search?q=%23ansible-prerequisites)
-      - [Ansible Deployment Steps](https://www.google.com/search?q=%23ansible-deployment-steps)
-      - [Ansible Verification](https://www.google.com/search?q=%23ansible-verification)
-      - [Troubleshooting Ansible Deployment](https://www.google.com/search?q=%23troubleshooting-ansible-deployment)
-  - [Manual Deployment and Upgrade Process](https://www.google.com/search?q=%23manual-deployment-and-upgrade-process)
-      - [Manual Prerequisites](https://www.google.com/search?q=%23manual-prerequisites)
-      - [Manual Deployment Steps](https://www.google.com/search?q=%23manual-deployment-steps)
-      - [Manual Verification](https://www.google.com/search?q=%23manual-verification)
-  - [Troubleshooting](https://www.google.com/search?q=%23troubleshooting)
-  - [mTLS Key and CSR Creation](https://www.google.com/search?q=%23mtls-key-and-csr-creation)
+  - [Installing on AWS](#installing-on-aws)
+  - [Installing on GCP](#installing-on-gcp)
+  - [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
+  - [Manual Deployment with Ansible Playbook](#manual-deployment-with-ansible-playbook)
+  - [Manual Deployment and Upgrade Process](#manual-deployment-and-upgrade-process)
+  - [Troubleshooting](#troubleshooting)
 
 -----
 
