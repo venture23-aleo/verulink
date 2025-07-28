@@ -4,7 +4,6 @@ set -e
 # Colors for output
 GREEN="\033[0;32m"
 RED="\033[0;31m"
-YELLOW="\033[1;33m"
 NC="\033[0m"  # No color
 
 # Function to prompt user for input with default values and validate non-empty input
@@ -15,10 +14,10 @@ prompt_input() {
     
     while true; do
         read -p "$prompt [$default_value]: " user_input
-        if [ -z "$user_input" ] && [ -n "$default_value" ]; then
+        if [[ -z "$user_input" && -n "$default_value" ]]; then
             user_input="$default_value"
         fi
-        if [ -z "$user_input" ]; then
+        if [[ -z "$user_input" ]]; then
             echo -e "${RED}Input cannot be empty. Please try again.${NC}"
         else
             eval "$var_name=\"$user_input\""
@@ -33,18 +32,12 @@ prompt_password_input() {
     local var_name="$2"
 
     while true; do
-        # Try to use stty to hide input, fall back to regular input if it fails
-        if stty -echo 2>/dev/null; then
-            read -p "$prompt: " user_input
-            stty echo 2>/dev/null
-        else
-            # Fall back to regular input for non-interactive environments
-            read -p "$prompt (input will be visible): " user_input
-        fi
+        # Mask input using 'read -s' to hide password
+        read -s -p "$prompt: " user_input
         echo
 
         # Validate non-empty password
-        if [ -z "$user_input" ]; then
+        if [[ -z "$user_input" ]]; then
             echo -e "${RED}Input cannot be empty. Please try again.${NC}"
         else
             eval "$var_name=\"$user_input\""
@@ -56,7 +49,7 @@ prompt_password_input() {
 # Function to validate if a file exists
 validate_file_exists() {
     local file_path="$1"
-    if [ ! -f "$file_path" ]; then
+    if [[ ! -f "$file_path" ]]; then
         echo -e "${RED}File not found: $file_path. Please make sure the file exists and try again.${NC}"
         return 1
     fi
@@ -106,9 +99,13 @@ prompt_valid_file "Enter the path to the Attestor key" ATTESTOR_KEY_PATH
 # Prompt user for docker image tag
 prompt_input "Enter the Docker Image Tag" DOCKER_IMAGE_TAG "latest"
 
+
+
 # Create the directory structure
 echo -e "${GREEN}Creating directory structure...${NC}"
 mkdir -p verulink_attestor/{chainService,signingService,.mtls}
+
+
 
 # Create secrets.yaml with user input
 echo -e "${GREEN}Creating secrets.yaml...${NC}"
@@ -123,6 +120,7 @@ chain:
 EOF
 chmod 600 verulink_attestor/secrets.yaml
 
+
 # Create sign_config.yaml with user input
 echo -e "${GREEN}Creating sign_config.yaml...${NC}"
 cat > verulink_attestor/sign_config.yaml <<EOF
@@ -136,7 +134,6 @@ cred:
   password: "$SIGN_PASS"
 EOF
 
-# Define configuration file paths
 CHAIN_CONFIG_FILE=./chain_config.yaml
 SIGN_CONFIG_FILE=./sign_config.yaml
 SIGN_SECRETS_FILE=./secrets.yaml
@@ -194,7 +191,7 @@ signing_service:
 collector_service:
   uri: "$COLLECTOR_URL"
   collector_wait_dur: 1h
-  ca_certificate: /configs/.mtls/$(basename "$CA_CERT_PATH")
+  ca_certificate: /configs/.mtls/$CA_CERT
   attestor_certificate: /configs/.mtls/$ATTESTOR_NAME.cer
   attestor_key: /configs/.mtls/$ATTESTOR_NAME.key
 metrics:
@@ -204,14 +201,14 @@ EOF
 
 # Copy mTLS certificates into the .mtls directory
 echo -e "${GREEN}Copying certificates to .mtls/ directory...${NC}"
-cp "$CA_CERT_PATH" verulink_attestor/.mtls/$(basename "$CA_CERT_PATH")
+cp "$CA_CERT_PATH" verulink_attestor/.mtls/${CA_CERT_PATH##*/}
 cp "$ATTESTOR_CERT_PATH" verulink_attestor/.mtls/"$ATTESTOR_NAME.cer"
 cp "$ATTESTOR_KEY_PATH" verulink_attestor/.mtls/"$ATTESTOR_NAME.key"
 
 # Secure the .mtls directory
 echo -e "${GREEN}Securing .mtls directory...${NC}"
 chmod 750 verulink_attestor/.mtls
-chmod 600 verulink_attestor/.mtls/"$ATTESTOR_NAME.key"
+chmod 600 verulink_attestor/.mtls/$ATTESTOR_KEY
 
 # Create docker-compose.yaml
 echo -e "${GREEN}Creating compose.yaml...${NC}"
