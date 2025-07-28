@@ -770,127 +770,17 @@ After deployment, verify the services are running:
 
 
 #### Deployment Steps
-1. Run below script
-```bash
-
-You can either clone the project repository or manually create the installation directory.
-To clone the project, run:
-```bash
-git clone https://github.com/venture23-aleo/verulink.git
-```
-Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/).#install-using-the-repository)
-
-1.  Creating Installation Directory
-
+1. Run below script 
+    i. To deploy on devnet
     ```bash
-    mkdir -p verulink/attestor/{chainService,signingService}
-    mkdir -p verulink/attestor/chainService/.mtls
+    curl --proto '=https' --tlsv1.2 -sSf "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/   heads/$(read -p 'Enter the branch name (default: ci): ' BRANCH; echo ${BRANCH:-ci})/devnet/scripts/    install-attestor.sh" | sh
     ```
-
-2.  Signing Service Configuration
-
-    i. **Create Wallet Secrets File:**
-
-    Create `verulink/attestor/signingService/secrets.yaml` with the following format:
-
-    ```yaml
-    chain:
-      ethereum:
-        private_key: <ethereum_private_key>
-        wallet_address: <ethereum_wallet_address>
-      aleo:
-        private_key: <aleo_private_key>
-        wallet_address: <aleo_wallet_address>
-    ```
-
-    ii. **Secure Secrets File:**
-
+    ii. To deploy on mainnet
     ```bash
-    chmod 600 verulink/attestor/signingService/secrets.yaml
+    curl --proto '=https' --tlsv1.2 -sSf "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/   heads/$(read -p 'Enter the branch name (default: ci): ' BRANCH; echo ${BRANCH:-ci})/mainnet/scripts/   install-attestor.sh" | sh
     ```
 
-    iii. **Download Signing Service Config:**
-
-    ```bash
-    curl -o verulink/attestor/signingService/config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/signingService/config.yaml
-    ```
-
-    iv. **Edit config.yaml:**
-
-      * Configure **username** and **password** for access control.
-
-3.  Chain Service Configuration
-
-    i. **Download Chain Service Config:**
-
-    ```bash
-     curl -o verulink/attestor/chainService/config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/attestor/chainService/config.yaml
-    ```
-
-    ii. Update `verulink/attestor/chainService/config.yaml`:
-
-     ```yaml
-     attestor_name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>  # e.g.,     devnet_attestor_verulink_abc
-
-     aleo:
-        wallet_address: <aleo_wallet_address>
-
-     ethereum:
-        wallet_address: <ethereum_wallet_address>
-
-     signing_service:
-        username: <configured_username>
-        password: <configured_password>
-
-     collector_service:
-        uri: <collector_service_uri>  # Provided by Venture23
-
-     mtls:
-        ca_certificate: ca.crt
-        attestor_certificate: <attestor_name>.crt
-        attestor_key: <attestor_name>.key
-
-     metrics:
-        host: <pushgateway_url>  # Provided by Venture23
-     ```
-    
-
-    iii. **Copy mTLS Files:**
-
-    Place the following into `verulink/attestor/chainService/.mtls/`:
-
-    ```
-    - ca.crt
-    - <attestor_name>.crt
-    - <attestor_name>.key
-    ```
-
-     Ensure filenames match what is in `verulink/attestor/chainService/config.yaml`.
-4. Secure mtls key directory `verulink/attestor/chainService/.mtls/` and key
-   ```
-   chmod 750 verulink/attestor/chainService/.mtls
-   ```
-   ```
-   chmod 600 verulink/attestor/chainService/.mtls/<attestor_name>.key
-   ```
-5.  Update Docker Compose
-    Download Docker compose file.
-    ```bash
-    curl -o verulink/attestor/compose.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/ci/attestor-gcp-deployment/attestor/compose.yaml
-    ```
-
-    Path: `verulink/attestor/compose.yaml`
-
-    ### Example:
-
-    ```yaml
-    image: venture23/verulink-attestor-chain:<tag>
-    image: venture23/verulink-attestor-sign:<tag>
-    ```
-
-    Replace `<tag>` with the required image version (e.g. `be42ce6`, `latest`, `v1.0.0` etc.)
-
-6.  Verify Docker Images (Optional for Security)
+2.  Verify Docker Images (Optional for Security)
 
     Install [cosign](https://docs.sigstore.dev/cosign/system_config/installation/) on Ubuntu:
 
@@ -911,7 +801,7 @@ Docker installation guide [here](https://docs.docker.com/engine/install/ubuntu/)
 
     Replace `<branch_name>` with `main` for **mainnet releases**
 
-7.  Start the Services
+3.  Start the Services
 
     Navigate to your working directory:
     > Run with sudo if the current user is not in the docker group, or add the user to the docker group.
