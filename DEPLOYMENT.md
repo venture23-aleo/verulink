@@ -773,11 +773,11 @@ After deployment, verify the services are running:
 1. Run below script 
     i. To deploy on devnet
     ```bash
-    curl --proto '=https' --tlsv1.2 -sSf "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/   heads/$(read -p 'Enter the branch name (default: ci): ' BRANCH; echo ${BRANCH:-ci})/devnet/scripts/    install-attestor.sh" | sh
+    curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/devnet/scripts/install-attestor.sh | sh
     ```
     ii. To deploy on mainnet
     ```bash
-    curl --proto '=https' --tlsv1.2 -sSf "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/   heads/$(read -p 'Enter the branch name (default: ci): ' BRANCH; echo ${BRANCH:-ci})/mainnet/scripts/   install-attestor.sh" | sh
+    curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/scripts/install-attestor.sh | sh
     ```
 
 2.  Verify Docker Images (Optional for Security)
