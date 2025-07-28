@@ -14,7 +14,7 @@ prompt_input() {
     
     while true; do
         read -p "$prompt [$default_value]: " user_input
-        if [ -z "$user_input" && -n "$default_value" ]; then
+        if [ -z "$user_input" ] && [ -n "$default_value" ]; then
             user_input="$default_value"
         fi
         if [ -z "$user_input" ]; then
@@ -32,8 +32,10 @@ prompt_password_input() {
     local var_name="$2"
 
     while true; do
-        # Mask input using 'read -s' to hide password
-        read -s -p "$prompt: " user_input
+        # Use stty to hide input (more portable than read -s)
+        stty -echo
+        read -p "$prompt: " user_input
+        stty echo
         echo
 
         # Validate non-empty password
@@ -99,13 +101,9 @@ prompt_valid_file "Enter the path to the Attestor key" ATTESTOR_KEY_PATH
 # Prompt user for docker image tag
 prompt_input "Enter the Docker Image Tag" DOCKER_IMAGE_TAG "latest"
 
-
-
 # Create the directory structure
 echo -e "${GREEN}Creating directory structure...${NC}"
 mkdir -p verulink_attestor/{chainService,signingService,.mtls}
-
-
 
 # Create secrets.yaml with user input
 echo -e "${GREEN}Creating secrets.yaml...${NC}"
@@ -120,7 +118,6 @@ chain:
 EOF
 chmod 600 verulink_attestor/secrets.yaml
 
-
 # Create sign_config.yaml with user input
 echo -e "${GREEN}Creating sign_config.yaml...${NC}"
 cat > verulink_attestor/sign_config.yaml <<EOF
@@ -134,6 +131,7 @@ cred:
   password: "$SIGN_PASS"
 EOF
 
+# Define configuration file paths
 CHAIN_CONFIG_FILE=./chain_config.yaml
 SIGN_CONFIG_FILE=./sign_config.yaml
 SIGN_SECRETS_FILE=./secrets.yaml
@@ -191,7 +189,7 @@ signing_service:
 collector_service:
   uri: "$COLLECTOR_URL"
   collector_wait_dur: 1h
-  ca_certificate: /configs/.mtls/$CA_CERT
+  ca_certificate: /configs/.mtls/$(basename "$CA_CERT_PATH")
   attestor_certificate: /configs/.mtls/$ATTESTOR_NAME.cer
   attestor_key: /configs/.mtls/$ATTESTOR_NAME.key
 metrics:
@@ -201,14 +199,14 @@ EOF
 
 # Copy mTLS certificates into the .mtls directory
 echo -e "${GREEN}Copying certificates to .mtls/ directory...${NC}"
-cp "$CA_CERT_PATH" verulink_attestor/.mtls/${CA_CERT_PATH##*/}
+cp "$CA_CERT_PATH" verulink_attestor/.mtls/$(basename "$CA_CERT_PATH")
 cp "$ATTESTOR_CERT_PATH" verulink_attestor/.mtls/"$ATTESTOR_NAME.cer"
 cp "$ATTESTOR_KEY_PATH" verulink_attestor/.mtls/"$ATTESTOR_NAME.key"
 
 # Secure the .mtls directory
 echo -e "${GREEN}Securing .mtls directory...${NC}"
 chmod 750 verulink_attestor/.mtls
-chmod 600 verulink_attestor/.mtls/$ATTESTOR_KEY
+chmod 600 verulink_attestor/.mtls/"$ATTESTOR_NAME.key"
 
 # Create docker-compose.yaml
 echo -e "${GREEN}Creating compose.yaml...${NC}"
