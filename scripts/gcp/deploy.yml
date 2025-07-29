@@ -103,6 +103,14 @@
       become: yes
       become_user: root
 
+    - name: Wait for Docker installation to finish
+      ansible.builtin.async_status:
+        jid: "{{ docker_install_job.ansible_job_id }}"
+      register: docker_install_status
+      until: docker_install_status.finished
+      retries: 60
+      delay: 10
+    
     - name: Unzip install artifact
       ansible.builtin.unarchive:
         src: "/tmp/.temp.zip"
@@ -117,14 +125,6 @@
         group: "{{ USER }}"
         recurse: yes
       become: yes
-
-    - name: Wait for Docker installation to finish
-      ansible.builtin.async_status:
-        jid: "{{ docker_install_job.ansible_job_id }}"
-      register: docker_install_status
-      until: docker_install_status.finished
-      retries: 60
-      delay: 10
 
     - name: Install python3-pip
       ansible.builtin.apt:

@@ -4,6 +4,7 @@ set -e
 # Colors for output
 GREEN="\033[0;32m"
 RED="\033[0;31m"
+YELLOW="\033[1;33m"
 NC="\033[0m"  # No color
 
 # Function to prompt user for input with default values and validate non-empty input
@@ -14,10 +15,10 @@ prompt_input() {
     
     while true; do
         read -p "$prompt [$default_value]: " user_input
-        if [[ -z "$user_input" && -n "$default_value" ]]; then
+        if [ -z "$user_input" ] && [ -n "$default_value" ]; then
             user_input="$default_value"
         fi
-        if [[ -z "$user_input" ]]; then
+        if [ -z "$user_input" ]; then
             echo -e "${RED}Input cannot be empty. Please try again.${NC}"
         else
             eval "$var_name=\"$user_input\""
@@ -32,12 +33,18 @@ prompt_password_input() {
     local var_name="$2"
 
     while true; do
-        # Mask input using 'read -s' to hide password
-        read -s -p "$prompt: " user_input
+        # Try to use stty to hide input, fall back to regular input if it fails
+        if stty -echo 2>/dev/null; then
+            read -p "$prompt: " user_input
+            stty echo 2>/dev/null
+        else
+            # Fall back to regular input for non-interactive environments
+            read -p "$prompt (input will be visible): " user_input
+        fi
         echo
 
         # Validate non-empty password
-        if [[ -z "$user_input" ]]; then
+        if [ -z "$user_input" ]; then
             echo -e "${RED}Input cannot be empty. Please try again.${NC}"
         else
             eval "$var_name=\"$user_input\""
@@ -49,7 +56,7 @@ prompt_password_input() {
 # Function to validate if a file exists
 validate_file_exists() {
     local file_path="$1"
-    if [[ ! -f "$file_path" ]]; then
+    if [ ! -f "$file_path" ]; then
         echo -e "${RED}File not found: $file_path. Please make sure the file exists and try again.${NC}"
         return 1
     fi
@@ -99,13 +106,73 @@ prompt_valid_file "Enter the path to the Attestor key" ATTESTOR_KEY_PATH
 # Prompt user for docker image tag
 prompt_input "Enter the Docker Image Tag" DOCKER_IMAGE_TAG "latest"
 
-
+# Prompt user for branch
+prompt_input "Enter the Branch" BRANCH "develop"
 
 # Create the directory structure
 echo -e "${GREEN}Creating directory structure...${NC}"
-mkdir -p verulink_attestor/{chainService,signingService,.mtls}
+mkdir -p verulink_attestor/.mtls
 
 
+# Define configuration file paths
+CHAIN_CONFIG_FILE=./chain_config.yaml
+SIGN_CONFIG_FILE=./sign_config.yaml
+SIGN_SECRETS_FILE=./secrets.yaml
+CHAIN_MTLS_DIR=./.mtls
+CHAIN_CONFIG_FILE=verulink_attestor/chain_config.yaml
+SIGN_CONFIG_FILE=verulink_attestor/sign_config.yaml
+SIGN_SECRETS_FILE=verulink_attestor/secrets.yaml
+CHAIN_MTLS_DIR=verulink_attestor/.mtls
+
+# Create config.yaml by including a template and user input
+echo -e "${GREEN}Creating config files...${NC}"
+# Download the config files from the Verulink Attestor repository
+curl -o verulink_attestor/chain_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/$BRANCH/attestor/chainService/config.yaml
+curl -o verulink_attestor/sign_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/$BRANCH/attestor/signingService/config.yaml
+curl -o verulink_attestor/compose.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/$BRANCH/attestor/compose.yaml
+
+# Update the chain_config.yaml with the user input using sed
+echo -e "${GREEN}Updating configuration with user input...${NC}"
+echo "Updating chain_config.yaml"
+sed -i "s/<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>/$ATTESTOR_NAME/g" $CHAIN_CONFIG_FILE
+sed -i "s/<your_aleo_wallet_address>/$WALLET_ADDRESS/g" $CHAIN_CONFIG_FILE
+sed -i "s/<your_ethereum_wallet_address>/$ETH_ADDRESS/g" $CHAIN_CONFIG_FILE
+sed -i "s/username: \"username\"/username: \"$SIGN_USER\"/g" $CHAIN_CONFIG_FILE
+sed -i "s/password: \"password\"/password: \"$SIGN_PASS\"/g" $CHAIN_CONFIG_FILE
+sed -i "s|<collector_service_url>|$COLLECTOR_URL|g" $CHAIN_CONFIG_FILE
+sed -i "s|<prometheus_pushgateway_url>|$PROMETHEUS_PUSHGW|g" $CHAIN_CONFIG_FILE
+
+echo "Updating sign_config.yaml"
+sed -i "s/<username_same_as_chainservice>/$SIGN_USER/g" $SIGN_CONFIG_FILE
+sed -i "s/<password_same_as_chainservice>/$SIGN_PASS/g" $SIGN_CONFIG_FILE
+
+echo "Updating compose.yaml"
+sed -i "s/<tag>/$DOCKER_IMAGE_TAG/g" verulink_attestor/compose.yaml
+sed -i "s|./chainService/config.yaml|./chain_config.yaml|g" verulink_attestor/compose.yaml
+sed -i "s|./chainService/.mtls|./.mtls|g" verulink_attestor/compose.yaml
+sed -i "s|./signingService/config.yaml|./sign_config.yaml|g" verulink_attestor/compose.yaml
+sed -i "s|./signingService/secrets.yaml|./secrets.yaml|g" verulink_attestor/compose.yaml
+
+# Add healthcheck to signing service
+echo "Adding healthcheck to signing service..."
+sed -i '/ports:/a\
+    healthcheck:\
+      test: ["CMD", "curl", "-f", "http://localhost:8080/sign"]\
+      interval: 5s\
+      timeout: 3s\
+      retries: 10\
+      start_period: 5s' verulink_attestor/compose.yaml
+
+# Update depends_on condition for chainservice
+echo "Updating service dependencies..."
+sed -i 's/depends_on:/depends_on:\
+      signingservice:\
+        condition: service_healthy/' verulink_attestor/compose.yaml
+
+# Update certificate paths
+sed -i "s|/configs/.mtls/ca.cer|/configs/.mtls/$(basename "$CA_CERT_PATH")|g" $CHAIN_CONFIG_FILE
+sed -i "s|/configs/.mtls/attestor1.crt|/configs/.mtls/$ATTESTOR_NAME.cer|g" $CHAIN_CONFIG_FILE
+sed -i "s|/configs/.mtls/attestor1.key|/configs/.mtls/$ATTESTOR_NAME.key|g" $CHAIN_CONFIG_FILE
 
 # Create secrets.yaml with user input
 echo -e "${GREEN}Creating secrets.yaml...${NC}"
@@ -120,142 +187,21 @@ chain:
 EOF
 chmod 600 verulink_attestor/secrets.yaml
 
-
-# Create sign_config.yaml with user input
-echo -e "${GREEN}Creating sign_config.yaml...${NC}"
-cat > verulink_attestor/sign_config.yaml <<EOF
-chains:
-  - name: aleo
-    chain_id: 6694886634403
-  - name: ethereum
-    chain_id: 28556963657430695
-cred:
-  username: "$SIGN_USER"
-  password: "$SIGN_PASS"
-EOF
-
-CHAIN_CONFIG_FILE=./chain_config.yaml
-SIGN_CONFIG_FILE=./sign_config.yaml
-SIGN_SECRETS_FILE=./secrets.yaml
-CHAIN_MTLS_DIR=./.mtls
-
-# Create config.yaml by including a template and user input
-echo -e "${GREEN}Creating chain_config.yaml...${NC}"
-cat > verulink_attestor/chain_config.yaml <<EOF
-name: "$ATTESTOR_NAME"
-version: 1.0.1
-chains:
-  - name: aleo
-    chain_id: 6694886634403
-    wallet_address: "$WALLET_ADDRESS"
-    bridge_contract: token_bridge_stg_v2.aleo
-    node_url: https://api.explorer.provable.com/v1|testnet
-    sequence_num_start:
-      ethereum: 1
-    pkt_validity_wait_dur: 10s
-    finality_height: 2
-    retry_packet_wait_dur: 1m
-    prune_base_seq_num_wait_dur: 30m
-    average_block_gen_dur: 3s
-    dest_chains:
-      - ethereum
-  - name: ethereum
-    chain_id: 28556963657430695
-    wallet_address: "$ETH_ADDRESS"
-    bridge_contract: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
-    node_url: https://eth-sepolia.g.alchemy.com/v2/JYz9kRR9YnUUteIGY04655ndMf-vCCN4
-    start_height: 8717400
-    finality_height: 1
-    filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
-    feed_pkt_wait_dur: 30s
-    pkt_validity_wait_dur: 12s
-    retry_packet_wait_dur: 1m
-    prune_base_seq_num_wait_dur: 30m
-    dest_chains:
-      - aleo
-check_health_service: 1m
-db_dir: /path/to/db/dir
-consume_packet_workers: 10
-log:
-  encoding: console
-  output_dir: /path/to/log/dir
-mode: prod
-signing_service:
-  host: signingservice
-  port: 8080
-  endpoint: "/sign"
-  scheme: "http"
-  username: "$SIGN_USER"
-  password: "$SIGN_PASS"
-  health_end_point: "/health"
-collector_service:
-  uri: "$COLLECTOR_URL"
-  collector_wait_dur: 1h
-  ca_certificate: /configs/.mtls/$CA_CERT
-  attestor_certificate: /configs/.mtls/$ATTESTOR_NAME.cer
-  attestor_key: /configs/.mtls/$ATTESTOR_NAME.key
-metrics:
-  host: "$PROMETHEUS_PUSHGW"
-  job_name: prod-push-gateway
-EOF
-
 # Copy mTLS certificates into the .mtls directory
 echo -e "${GREEN}Copying certificates to .mtls/ directory...${NC}"
-cp "$CA_CERT_PATH" verulink_attestor/.mtls/${CA_CERT_PATH##*/}
+cp "$CA_CERT_PATH" verulink_attestor/.mtls/$(basename "$CA_CERT_PATH")
 cp "$ATTESTOR_CERT_PATH" verulink_attestor/.mtls/"$ATTESTOR_NAME.cer"
 cp "$ATTESTOR_KEY_PATH" verulink_attestor/.mtls/"$ATTESTOR_NAME.key"
 
 # Secure the .mtls directory
 echo -e "${GREEN}Securing .mtls directory...${NC}"
 chmod 750 verulink_attestor/.mtls
-chmod 600 verulink_attestor/.mtls/$ATTESTOR_KEY
+chmod 600 verulink_attestor/.mtls/"$ATTESTOR_NAME.key"
+
 
 # Create docker-compose.yaml
 echo -e "${GREEN}Creating compose.yaml...${NC}"
-cat > verulink_attestor/compose.yaml <<EOF
 
-x-dbpath: &p # server as value holder for compose file
-  /db
-
-x-logpath: &l
-  /log
-
-services:
-  chainservice:
-    depends_on:
-      - signingservice
-    image: venture23/verulink-attestor-chain:$DOCKER_IMAGE_TAG
-    volumes:
-      - type: volume
-        source: db-path
-        target: *p
-      - type: volume
-        source: log-path
-        target: *l      
-      - type: bind
-        source: $CHAIN_CONFIG_FILE
-        target: /configs/config.yaml
-      - $CHAIN_MTLS_DIR:/configs/.mtls
-    environment:
-      DB_PATH: *p
-      LOG_PATH: *l
-      LOG_ENC: json
-      MODE: prod
-      CLEAN_START: false
-      MAINTENANCE: false
-  signingservice:
-    image: venture23/verulink-attestor-sign:$DOCKER_IMAGE_TAG
-    volumes:
-      - $SIGN_CONFIG_FILE:/configs/config.yaml
-      - $SIGN_SECRETS_FILE:/configs/keys.yaml
-    ports:
-      - 8080:8080
-      
-volumes:
-  db-path:
-  log-path:
-
-EOF
 
 echo -e "${GREEN}Checking prerequisites...${NC}"
 if ! command -v docker &> /dev/null; then
@@ -290,6 +236,25 @@ EOF
 sudo chown root:root /etc/docker/daemon.json
 sudo chmod 0644 /etc/docker/daemon.json
 
+# Install cosign
+if ! command -v cosign &> /dev/null; then
+    echo -e "${GREEN}Installing cosign...${NC}"
+    LATEST_VERSION=$(curl https://api.github.com/repos/sigstore/cosign/releases/latest | grep tag_name | cut -d : -f2 | tr -d "v\", ")
+    curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign_${LATEST_VERSION}_amd64.deb"
+    sudo dpkg -i cosign_${LATEST_VERSION}_amd64.deb || true
+fi
+
+# Verify docker image is signed
+echo -e "${GREEN}Verifying signing service image is signed...${NC}"
+cosign verify \
+  --certificate-identity "https://github.com/venture23-aleo/verulink/.github/workflows/docker-build-publish.yaml@refs/heads/$BRANCH" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  venture23/verulink-attestor-sign:$DOCKER_IMAGE_TAG
+echo -e "${GREEN}Verifying chain service image is signed...${NC}"
+cosign verify \
+  --certificate-identity "https://github.com/venture23-aleo/verulink/.github/workflows/docker-build-publish.yaml@refs/heads/$BRANCH" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  venture23/verulink-attestor-chain:$DOCKER_IMAGE_TAG
 # Provide final instructions
 echo -e "${GREEN}Installation complete!${NC}"
 echo ""

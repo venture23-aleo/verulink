@@ -334,6 +334,10 @@ The deployment script supports Service Account Authentication only:
     ```
 
 3.  Checkout the `main` branch:
+    > **Branch to Deployment Mapping**
+    > - `main` → **mainnet**
+    > - `develop`, `staging` → **devnet**, **testnet**, and **staging** deployments  
+
 
     ```bash
     git checkout main
