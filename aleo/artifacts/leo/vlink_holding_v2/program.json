@@ -1,0 +1,14 @@
+{
+  "program": "vlink_holding_v2.aleo",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "token_registry.aleo",
+      "location": "local",
+      "path": "../../../imports/token_registry.aleo"
+    }
+  ],
+  "dev_dependencies": null
+}

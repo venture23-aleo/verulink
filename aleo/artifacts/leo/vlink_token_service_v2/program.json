@@ -1,0 +1,24 @@
+{
+  "program": "vlink_token_service_v2.aleo",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vlink_holding_v2.aleo",
+      "location": "network",
+      "path": null
+    },
+    {
+      "name": "vlink_token_bridge_v2.aleo",
+      "location": "network",
+      "path": null
+    },
+    {
+      "name": "token_registry.aleo",
+      "location": "local",
+      "path": "../../../imports/token_registry.aleo"
+    }
+  ],
+  "dev_dependencies": null
+}

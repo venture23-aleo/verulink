@@ -1,0 +1,1 @@
+{"program":"vlink_token_service_council_v2.aleo","version":"0.1.0","description":"","license":"MIT","dependencies":[{"name":"vlink_council_v2.aleo","location":"network","endpoint":"http://localhost:3030","network":"testnet"},{"name":"vlink_token_service_v2.aleo","location":"network","endpoint":"http://localhost:3030","network":"testnet"}],"dev_dependencies":null}
