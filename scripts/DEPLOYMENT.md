@@ -11,7 +11,8 @@
 #### Pre-Deployment steps 
 1. MTLS certiciate/ key and CA certificate \
    **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
-   https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
+   [ mTLS Implementation
+   ](https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit)  
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready
 
@@ -79,10 +80,15 @@ mkdir -p verulink_attestor/.mtls
 	- Change only the filenames, not the entire file paths, since these paths are referenced inside the container environment.
 For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown below.
 	  ```yaml
-	  ca_certificate: /configs/.mtls/ca.cer
-  	  attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
-  	  attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
-	  ```
+	  # --- Remaining parts ---
+	  collector_service:
+        uri : https://staging-aleomtls.venture23.xyz
+  		# Within collector_wait_dur, collector-service will try to collect all unconfirmed packetsiteratively
+  		collector_wait_dur: 1h
+		ca_certificate: /configs/.mtls/ca.cer
+  		attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
+  		attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
+	```
 	- Prometheus gateway url: `<prometheus_pushgateway_url>`
 4. Update file permission
 First, go to the installation root directory `verulink_attestor`.
@@ -93,16 +99,11 @@ First, go to the installation root directory `verulink_attestor`.
    ```
 5. Update the Docker image tag in `verulink_attestor/compose.yaml`
 
-	| Environment | Image Version Convention |
+	| Environment | Docker Image tag.        |
 	|-------------|--------------------------|
 	| devnet      | devnet-vx.x.x            |
 	| staging     | staging-vx.x.x           |
 	| mainnet     | vx.x.x                   |
-
-	| Service        | Image Repository                          |
-	|----------------|-------------------------------------------|
-	| signingService | venture23/verulink-attestor-sign          |
-	| chainService   | venture23/verulink-attestor-chain         |
 
 6. Run the service.
    ```bash
