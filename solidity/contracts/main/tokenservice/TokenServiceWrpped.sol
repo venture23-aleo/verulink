@@ -130,6 +130,7 @@ contract TokenServiceWrapped is
             isEnabledToken(tokenAddress),
             "TokenService: token not supported"
         );
+        require(self.addr == address(this), "TokenService: selfAddressMismatch");
         require(
             isAmountInRange(tokenAddress, amount),
             "TokenService: amount out of range"
