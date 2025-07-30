@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Installation on VM](#installing-on-vm-manual)
 - [Installing on AWS](#installing-on-aws)
+- [Verulink Attestor Migration Guide ](#verulink-attestor-migration-guide)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -314,6 +315,87 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
+
+Got it ✅ — I’ll update the migration guide assuming the **older installation is in `~/verulink`**, and explicitly note at the beginning that the installation is under the current user’s home directory.
+
+Here’s the revised version:
+
+---
+
+# Verulink Attestor Migration Guide 
+
+**Note:** Installation is located in the current user’s home directory (`~/`). If your installation path differs, update the commands accordingly.
+Older installation is assumed to be at:
+
+```
+~/verulink
+```
+
+New installation will be set up at:
+
+```
+~/verulink_attestor
+```
+
+---
+
+## 1. Create Installation Directory
+
+```bash
+mkdir -p ~/verulink_attestor/.mtls
+```
+
+## 2. Copy Existing Configurations
+
+```bash
+cp -a ~/verulink/attestor/chainService/config.yaml ~/verulink_attestor/chain_config.yaml
+cp -a ~/verulink/attestor/signService/config.yaml ~/verulink_attestor/sign_config.yaml
+cp -a ~/verulink/attestor/signService/secrets.yaml ~/verulink_attestor/secrets.yaml
+```
+
+## 3. Copy mTLS Keys
+
+```bash
+cp -a -r ~/verulink/attestor/chainService/.mtls ~/verulink_attestor
+```
+
+## 4. Download Docker Compose File
+
+Select the branch matching your deployment environment:
+
+| Branch  | Deployment Environment |
+| ------- | ---------------------- |
+| develop | devnet                 |
+| staging | staging/testnet        |
+| main    | mainnet                |
+
+```bash
+curl -o ~/verulink_attestor/compose.yaml \
+https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/compose.yaml
+```
+
+## 5. Update Docker Image Tags
+
+Edit `~/verulink_attestor/compose.yaml` and set the image tags:
+
+| Environment | Image Tag Format |
+| ----------- | ---------------- |
+| devnet      | devnet-vx.x.x    |
+| staging     | staging-vx.x.x   |
+| mainnet     | vx.x.x           |
+
+**Services & Repositories**
+
+* `signingService` → `venture23/verulink-attestor-sign:<tag>`
+* `chainService` → `venture23/verulink-attestor-chain:<tag>`
+
+## 6. Run Services
+
+```bash
+cd ~/verulink_attestor
+docker compose up -d
+```
+
 
 ## Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:
