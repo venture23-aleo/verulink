@@ -1,7 +1,7 @@
 ## Attestor Server Deployment Guide
 
 ## Table of Contents
-- [Installation on VM](#manual-installation)
+- [Installation on VM](#installing-on-vm-manual)
 - [Installing on AWS](#installing-on-aws)
 - [Troubleshooting](#troubleshooting)
 
