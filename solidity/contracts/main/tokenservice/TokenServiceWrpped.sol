@@ -51,11 +51,11 @@ contract TokenServiceWrapped is
         uint256 _destChainId,
         address _blackListService
     ) public initializer {
-        require(_bridge != address(0), "TokenService: bridge zero address");
-        require(_owner != address(0), "TokenService: owner zero address");
-        require(_blackListService != address(0), "TokenService: blacklist zero address");
-        require(_chainId != 0, "TokenService: invalid chain id");
-        require(_destChainId != 0, "TokenService: invalid dest chain id");
+        require(_bridge != address(0), "TokenService: zeroAddress");
+        require(_owner != address(0), "TokenService: adminZeroAddress");
+        require(_blackListService != address(0), "TokenService: blacklistZeroAddress");
+        require(_chainId != 0, "TokenService: chainIdZero");
+        require(_destChainId != 0, "TokenService: destChainIdZero");
 
         __Ownable_init_unchained(_owner);
         __ReentrancyGuard_init();
@@ -111,18 +111,18 @@ contract TokenServiceWrapped is
     ) internal view virtual returns (PacketLibrary.OutPacket memory packet) {
         require(
             !blackListService.isBlackListed(msg.sender),
-            "TokenService: sender blacklisted"
+            "TokenService: senderBlacklisted"
         );
         require(
             isEnabledToken(tokenAddress),
-            "TokenService: token not supported"
+            "TokenService: tokenNotSupported"
         );
         require(self.addr == address(this), "TokenService: selfAddressMismatch");
         require(
             isAmountInRange(tokenAddress, amount),
-            "TokenService: amount out of range"
+            "TokenService: amountOutOfRange"
         );
-        require(bytes(receiver).length > 0, "TokenService: empty receiver");
+        require(bytes(receiver).length > 0, "TokenService: emptyReceiver");
 
         packet.sourceTokenService = self;
         packet.destTokenService = PacketLibrary.OutNetworkAddress(
@@ -148,7 +148,7 @@ contract TokenServiceWrapped is
     ) external virtual nonReentrant whenNotPaused {
         require(
             packet.destTokenService.addr == address(this),
-            "TokenService: invalid dest token service"
+            "TokenService: invalidDestTokenService"
         );
 
         require(destChainId == packet.sourceTokenService.chainId, "TokenService: invalidSourceChainId");
@@ -156,13 +156,14 @@ contract TokenServiceWrapped is
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
         uint256 amount = packet.message.amount;
+        require(amount > 0, "TokenService: invalidAmount");
+        require(isEnabledToken(tokenAddress), "TokenService: tokenDisabled");
 
-        require(isEnabledToken(tokenAddress), "TokenService: invalid token");
         require(
-            keccak256(bytes(packet.sourceTokenService.addr)) == keccak256(bytes(supportedTokens[tokenAddress].destTokenService)),
-            "TokenService: invalid source token service"
-        );
-        require(amount > 0, "TokenService: invalid amount");
+            keccak256(abi.encodePacked(packet.sourceTokenService.addr)) == 
+            keccak256(abi.encodePacked(supportedTokens[tokenAddress].destTokenService)),
+            "TokenService: invalidSourceTokenService"
+        );        
 
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
@@ -191,11 +192,11 @@ contract TokenServiceWrapped is
         uint256 amount,
         string memory receiver
     ) external virtual nonReentrant whenNotPaused {
-        require(amount > 0, "TokenService: invalid amount");
-        require(bytes(receiver).length > 0, "TokenService: empty receiver");
+        require(amount > 0, "TokenService: invalidAmount");
+        require(bytes(receiver).length > 0, "TokenService: emptyReceiver");
         require(
             erc20Bridge.validateAleoAddress(receiver),
-            "TokenService: invalid receiver address"
+            "TokenService: invalidReceiverAddress"
         );
 
         IIERC20(tokenAddress).safeTransferFrom(
