@@ -68,9 +68,9 @@ contract TokenServiceWrapped is
     }
 
     /// @notice Returns the type of token managed by the TokenService
-    /// @return string representation of the token type ("ERC20")
+    /// @return string representation of the token type ("BRC20")
     function tokenType() public pure virtual returns (string memory) {
-        return "ERC20";
+        return "BRC20";
     }
 
     /// @notice Sets the Holding contract for token locking, callable by owner only
@@ -113,9 +113,9 @@ contract TokenServiceWrapped is
 
     /// @dev Creates an OutPacket representation of the transaction details
     /// @param version Protocol version
-    /// @param tokenAddress Address of the ERC20 token (or address(0) for ETH)
-    /// @param amount Amount of tokens or ETH to be transferred
-    /// @param receiver The intended receiver of the transferred tokens or ETH
+    /// @param tokenAddress Address of the ERC20/BRC20 token (or address(0) for ETH/BSC)
+    /// @param amount Amount of tokens or ETH/BSC to be transferred
+    /// @param receiver The intended receiver of the transferred tokens or ETH/BSC
     /// @return packet representation of the transaction
     function _packetify(
         uint256 version,
