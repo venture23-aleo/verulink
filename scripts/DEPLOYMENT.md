@@ -79,7 +79,7 @@ mkdir -p verulink_attestor/.mtls
 	- Collector service url: `<collector_service_url>`
 	- Change only the filenames, not the entire file paths, since these paths are referenced inside the container environment.
 For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown below.
-	  ```yaml
+	```yaml
 	  # --- Remaining parts ---
 	  collector_service:
         uri : https://staging-aleomtls.venture23.xyz
@@ -88,7 +88,8 @@ For example, if the key and certificate filenames are `ca.cer`, `mainnet_attesto
 		ca_certificate: /configs/.mtls/ca.cer
   		attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
   		attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
-	```
+	```  
+
 	- Prometheus gateway url: `<prometheus_pushgateway_url>`
 4. Update file permission
 First, go to the installation root directory `verulink_attestor`.
