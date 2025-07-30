@@ -191,13 +191,13 @@ contract TokenServiceWrapped is
             PacketLibrary.Vote.NAY == quorum ||
             blackListService.isBlackListed(receiver)
         ) {
-            require(address(holding) != address(0), "TokenService: holding not set");
-            IIERC20(tokenAddress).safeTransfer(address(holding), amount);
+            require(address(holding) != address(0), "TokenService: holdingNotSet");
+            IIERC20(tokenAddress).mint(address(holding), amount);
             holding.lock(receiver, tokenAddress, amount);
         } else if (quorum == PacketLibrary.Vote.YEA) {
-            IIERC20(tokenAddress).safeTransfer(receiver, amount);
+            IIERC20(tokenAddress).mint(receiver, amount);
         } else {
-            revert("TokenService: insufficient quorum");
+            revert("TokenService: insufficientQuorum");
         }
     }
 
