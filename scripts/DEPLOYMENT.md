@@ -10,7 +10,7 @@
 ### Installing on VM (Manual)
 #### Pre-Deployment steps 
 1. MTLS certiciate/ key and CA certificate \
-   **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
+   **For testnet/staging/demo deployment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
    [ mTLS Implementation
    ](https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit)  
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
@@ -55,8 +55,8 @@ mkdir -p verulink_attestor/.mtls
 
 3. Update mTLS key, certificates, configuration  
    i. Copy mTLS certificates, and key to `verulink_attestor/.mtls`
-   > Name the attestor certificate and key files with the attestor name as a prefix. For example, if the attestor name is `devnet_attestor_xyz`, the files should    > be named `devnet_attestor_xyz.crt` and `devnet_attestor_xyz.key`.
-
+   > Name the attestor certificate and key files with the attestor name as a prefix. For example, if the attestor name is `devnet_attestor_xyz`, the files should be named `devnet_attestor_xyz.crt` and `devnet_attestor_xyz.key`.
+   
    ii. **verulink_attestor/sign_config.yaml**  
    - Update the signing service **default** `username` & `password`    
    
@@ -88,6 +88,7 @@ For example, if the key and certificate filenames are `ca.cer`, `mainnet_attesto
 		ca_certificate: /configs/.mtls/ca.cer
   		attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
   		attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
+	  # -- Remaining parts ---
 	```  
 
 	- Prometheus gateway url: `<prometheus_pushgateway_url>`
@@ -98,9 +99,14 @@ First, go to the installation root directory `verulink_attestor`.
    chmod 750 .mtls
    chmod 600 secrets.yaml
    ```
-5. Update the Docker image tag in `verulink_attestor/compose.yaml`
+5. Create a `.env` file inside the `verulink_attestor` directory and add the Docker image tags as shown below:
 
-	| Environment | Docker Image tag.        |
+   ```bash
+   DOCKER_IMAGE_TAG_SIGN=<signing service image tag>
+   DOCKER_IMAGE_TAG_CHAIN=<chain service image tag>
+   ```
+
+	| Environment | Docker Image tag         |
 	|-------------|--------------------------|
 	| devnet      | devnet-vx.x.x            |
 	| staging     | staging-vx.x.x           |
@@ -129,8 +135,8 @@ The attestor service can be deployed using two method
 2. Using AWS CloudShell from the AWS Management Console UI(**Recommended**)
 
 ## Pre-Deployment steps 
-1. MTLS certiciate/ key and CA certificate \
-   **For testnet/staging/demo depolyment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
+1. MTLS certificate/ key and CA certificate \
+   **For testnet/staging/demo deployment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
    https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready

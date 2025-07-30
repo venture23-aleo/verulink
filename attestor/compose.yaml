@@ -9,7 +9,7 @@ services:
     depends_on:
       - signingservice
     container_name: verulink-chain
-    image: venture23/verulink-attestor-chain:latest
+    image: venture23/verulink-attestor-chain:${DOCKER_IMAGE_TAG_CHAIN}
     volumes:
       - type: volume
         source: db-path
@@ -30,7 +30,7 @@ services:
       MAINTENANCE: false
   signingservice:
     container_name: verulink-sign
-    image: venture23/verulink-attestor-sign:latest
+    image: venture23/verulink-attestor-sign:${DOCKER_IMAGE_TAG_SIGN}
     volumes:
       - ./sign_config.yaml:/configs/config.yaml
       - ./secrets.yaml:/configs/keys.yaml
