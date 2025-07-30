@@ -12,6 +12,9 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {FeeCollector} from "./FeeCollector.sol";
+
+
 /// @title TokenServiceWrapped Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, TokenSupport, ReentrancyGuardUpgradeable, and Upgradeable contracts.
 contract TokenServiceWrapped is
@@ -33,6 +36,15 @@ contract TokenServiceWrapped is
 
     /// @dev Information about the token service's network address
     PacketLibrary.InNetworkAddress public self;
+
+    /// @dev Address of the FeeCollector contract
+    FeeCollector public feeCollector;
+
+    /// @dev Mapping to keep track of collected fees for each token address
+    mapping(address => uint256) public collectedFees;
+
+    /// @dev Emitted when platform fees are paid
+    event PlatformFeesPaid(address indexed tokenAddress, uint256 amount);
 
     constructor() {
         _disableInitializers();
