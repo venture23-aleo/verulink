@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -31,31 +30,14 @@ contract FeeCollector is Initializable, AccessControlUpgradeable {
     /// @notice Initializes the contract (replaces constructor)
     /// @param _tokenService The address of the token service
     /// @param _owner The address of the contract owner
-    /// @param usdcAddress The address of the USDC token
-    /// @param usdtAddress The address of the USDT token
-    /// @param _publicFees The fees for the public transfer in 3decimals number (For 1% = 1000)
-    /// @param _privateFees The fees for the private transfer in 3decimals number (For 1% = 1000)
     function initialize(
         address _tokenService,
-        address _owner,
-        address usdcAddress,
-        address usdtAddress,
-        uint256 _publicFees,
-        uint256 _privateFees
+        address _owner
     ) public initializer {
         __AccessControl_init();
         
-        _setupRole(TOKEN_SERVICE_ROLE, _tokenService);
-        _setupRole(DEFAULT_ADMIN_ROLE, _owner);
-
-        platformFees[address(1)] = _publicFees;
-        privatePlatformFees[address(1)] = _privateFees;
-
-        platformFees[usdcAddress] = _publicFees;
-        privatePlatformFees[usdcAddress] = _privateFees;
-
-        platformFees[usdtAddress] = _publicFees;
-        privatePlatformFees[usdtAddress] = _privateFees;
+        _grantRole(TOKEN_SERVICE_ROLE, _tokenService);
+        _grantRole(DEFAULT_ADMIN_ROLE, _owner);
     }
 
     /// @notice Sets the fees for the platform
