@@ -97,20 +97,6 @@ contract TokenServiceWrapped is
         blackListService = IBlackListService(_blackListService);
     }
 
-    /// @notice Transfers tokens to the vault
-    /// @param token Address of the ERC20 token
-    /// @param amount Amount of tokens to be transferred
-    function transferToVault(
-        address token,
-        uint256 amount
-    ) external virtual onlyOwner nonReentrant {
-        require(isEnabledToken(token), "TokenService: token not supported");
-        address vault = supportedTokens[token].vault;
-        require(vault != address(0), "TokenService: vault zero address");
-        require(amount > 0, "TokenService: invalid amount");
-        IIERC20(token).safeTransfer(vault, amount);
-    }
-
     /// @dev Creates an OutPacket representation of the transaction details
     /// @param version Protocol version
     /// @param tokenAddress Address of the ERC20/BRC20 token (or address(0) for ETH/BSC)
