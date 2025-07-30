@@ -9,7 +9,7 @@ import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -54,7 +54,7 @@ contract TokenService is
         uint256 _destChainId,
         address _blackListService
     ) public virtual initializer {
-        __Ownable_init_unchained();
+        __Ownable_init_unchained(_owner);
         __TokenSupport_init_unchained(_destChainId);
         __Pausable_init_unchained();
         __ReentrancyGuard_init_unchained();
@@ -137,73 +137,6 @@ contract TokenService is
         );
         packet.height = block.number;
     }
-
-    /// @notice Transfers ETH to the destination chain via the bridge
-    /// @param receiver The intended receiver of the transferred ETH
-    // function transfer(
-    //     string memory receiver
-    // ) external payable virtual whenNotPaused nonReentrant {
-    //     require(erc20Bridge.validateAleoAddress(receiver));
-    //     erc20Bridge.sendMessage(_packetify(ETH_TOKEN, msg.value, receiver));
-    // }
-
-    // function transfer(
-    //     address tokenAddress,
-    //     uint256 amount,
-    //     string memory receiver
-    // ) external virtual whenNotPaused nonReentrant {
-    //     require(erc20Bridge.validateAleoAddress(receiver));
-    //     require(tokenAddress != ETH_TOKEN, "TokenService: only erc20 tokens");
-    //     IIERC20(tokenAddress).safeTransferFrom(
-    //         msg.sender,
-    //         address(this),
-    //         amount
-    //     );
-    //     erc20Bridge.sendMessage(_packetify(tokenAddress, amount, receiver));
-    // }
-
-    // /// @notice Transfers ERC20 tokens to the destination chain via the bridge
-    // /// @param packet incoming packet containing information to withdraw
-    // /// @param signatures arrays of signature of attestor
-    // function withdraw(
-    //     PacketLibrary.InPacket memory packet,
-    //     bytes memory signatures
-    // ) external virtual nonReentrant whenNotPaused {
-    //     require(
-    //         packet.destTokenService.addr == address(this),
-    //         "TokenService: invalid token service"
-    //     );
-
-    //     address receiver = packet.message.receiverAddress;
-    //     address tokenAddress = packet.message.destTokenAddress;
-    //     uint256 amount = packet.message.amount;
-
-    //     require(isEnabledToken(tokenAddress), "TokenService: invalid token");
-    //     PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
-
-    //     if (
-    //         PacketLibrary.Vote.NAY == quorum ||
-    //         blackListService.isBlackListed(receiver)
-    //     ) {
-    //         if (tokenAddress == ETH_TOKEN) {
-    //             // eth lock
-    //             holding.lock{value: amount}(receiver);
-    //         } else {
-    //             IIERC20(tokenAddress).safeTransfer(address(holding), amount);
-    //             holding.lock(receiver, tokenAddress, amount);
-    //         }
-    //     } else if (quorum == PacketLibrary.Vote.YEA) {
-    //         if (tokenAddress == ETH_TOKEN) {
-    //             // eth transfer
-    //             (bool sent, ) = payable(receiver).call{value: amount}("");
-    //             require(sent, "TokenService: eth withdraw failed");
-    //         } else {
-    //             IIERC20(tokenAddress).safeTransfer(receiver, amount);
-    //         }
-    //     } else {
-    //         revert("TokenService: insufficient quorum");
-    //     }
-    // }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
