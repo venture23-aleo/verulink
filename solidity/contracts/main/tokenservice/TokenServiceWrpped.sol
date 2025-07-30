@@ -97,6 +97,14 @@ contract TokenServiceWrapped is
         blackListService = IBlackListService(_blackListService);
     }
 
+    /// @notice Sets the FeeCollector contract address
+    /// @param _feeCollector Address of the FeeCollector contract
+    function setFeeCollector(FeeCollector _feeCollector) external onlyOwner {
+        require(address(_feeCollector) != address(0), "TokenService: feeCollectorZeroAddress");
+        require(address(feeCollector) != address(_feeCollector), "TokenService: SameAsCurrentFeeCollectorAddress");
+        feeCollector = _feeCollector;
+    }
+
     /// @dev Creates an OutPacket representation of the transaction details
     /// @param version Protocol version
     /// @param tokenAddress Address of the ERC20/BRC20 token (or address(0) for ETH/BSC)
