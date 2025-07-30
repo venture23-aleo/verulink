@@ -115,8 +115,8 @@ describe('TokenSupport', () => {
         // Add token
         await (await proxiedContract.connect(owner).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         await expect(proxiedContract.connect(otherAccount).updateVault(tokenAddress, ADDRESS_ONE))
-            .to.be.revertedWith("Ownable: caller is not the owner")
-        
+            .to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
+
     })
 
     it('should revert on adding a token if target chain is mismatched', async () => {
@@ -218,7 +218,7 @@ describe('TokenSupport', () => {
         const max = 100;
 
         // Try to add token with another account and expect it to revert
-        await expect(proxiedContract.connect(otherAccount).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedContract.connect(otherAccount).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
     });
 
     // Test onlyOwner modifier for removeToken function
@@ -249,7 +249,7 @@ describe('TokenSupport', () => {
         // Try to remove token with another account and expect it to revert
         await expect(
             proxiedContract.connect(otherAccount).removeToken(tokenAddress)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
     });
 
     // Test enable function
@@ -257,7 +257,7 @@ describe('TokenSupport', () => {
         const tokenAddress = usdcMock.address;
 
         // Add token
-        await expect(proxiedContract.connect(otherAccount).enable(tokenAddress)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedContract.connect(otherAccount).enable(tokenAddress)).to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
         // Check if the token is enabled
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
         expect(isEnabled).to.be.false;
@@ -292,7 +292,7 @@ describe('TokenSupport', () => {
 
         // Try to Add token
         await expect(proxiedContract.connect(otherAccount).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max))
-            .to.be.revertedWith("Ownable: caller is not the owner");
+            .to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
         // Check if the token is enabled
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
         expect(isEnabled).to.be.false;
@@ -310,7 +310,7 @@ describe('TokenSupport', () => {
         await (await proxiedContract.connect(owner).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         // Disable the token
         await expect(proxiedContract.connect(otherAccount).disable(tokenAddress))
-            .to.be.revertedWith("Ownable: caller is not the owner");
+            .to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
         const isEnabled = await proxiedContract.isEnabledToken(tokenAddress);
 
         // Check if the token is not disabled
@@ -351,7 +351,7 @@ describe('TokenSupport', () => {
         // Add token
         await (await proxiedContract.connect(owner).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, destTokenAddress, destTokenService, min, max)).wait();
         // Disable the token
-        await expect(proxiedContract.connect(otherAccount).disable(tokenAddress)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedContract.connect(otherAccount).disable(tokenAddress)).to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
     });
 
     // Test TokenRemoved event
@@ -427,7 +427,7 @@ describe('TokenSupport', () => {
         await(await proxiedContract.connect(owner).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27', 'destTokenService', minValue, 100)).wait();
 
         // Call the updateMinValue function
-        await expect(proxiedContract.connect(otherAccount).updateMinValue(tokenAddress, 20)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedContract.connect(otherAccount).updateMinValue(tokenAddress, 20)).to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
     });
 
     it('should owner update max value', async () => {
@@ -437,7 +437,7 @@ describe('TokenSupport', () => {
         await(await proxiedContract.connect(owner).addToken(tokenAddress, ALEO_CHAINID, erc20VaultServiceProxy.address, 'aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27', 'destTokenService', 100, maxValue)).wait();
 
         // Call the updateMinValue function
-        await expect(proxiedContract.connect(otherAccount).updateMaxValue(tokenAddress, 200)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedContract.connect(otherAccount).updateMaxValue(tokenAddress, 200)).to.be.revertedWithCustomError(proxiedContract, "OwnableUnauthorizedAccount");
     });
 
     it('should revert when updating min value for unsupported token', async () => {

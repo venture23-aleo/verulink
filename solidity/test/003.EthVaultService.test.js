@@ -36,12 +36,12 @@ describe('EthVaultService', () => {
     // Test for second time initialize and revert
     it('reverts if the contract is already initialized', async function () {
         await expect(proxiedEthVaultService["EthVaultService_init(string,address)"]("ETH Vault 1.5", owner.address))
-            .to.be.revertedWith('Initializable: contract is already initialized');
+            .to.be.revertedWithCustomError(proxiedEthVaultService, 'InvalidInitialization');
     });
 
     it('should not transfer if caller is not admin', async() => {
         await expect(proxiedEthVaultService.connect(other).transfer(1000))
-            .to.be.revertedWith('Ownable: caller is not the owner');
+            .to.be.revertedWithCustomError(proxiedEthVaultService, 'OwnableUnauthorizedAccount');
     });
 
     it('should not transfer if balance is less than send amount', async() => {
@@ -112,7 +112,7 @@ describe("Erc20VaultService Upgradeability", () => {
     });
 
     it('reverts if the contract is initialized twice', async function () {
-        await expect(Erc20VaultServiceProxy.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(Erc20VaultServiceProxy.initializev2(100)).to.be.revertedWithCustomError(Erc20VaultServiceProxy, 'InvalidInitialization');
     });
 
 
