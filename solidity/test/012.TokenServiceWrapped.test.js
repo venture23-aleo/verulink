@@ -33,12 +33,12 @@ describe('TokenServiceWrapped', () => {
     let usdcMock, usdtMock, unsupportedToken;
     let proxiedBridge, blackListProxy;
     let lib, aleolib, ERC20TokenBridge, erc20TokenBridge;
-    let initializeData, Proxied, proxy, Holding, holdingInstance, HoldingProxy;
+    let initializeData, Proxied, proxy, Holding, holdingInstance, HoldingProxy, FeeCollector, feeCollectorImpl, feeCollector;
 
     beforeEach(async () => {
         [owner, signer, other, attestor, attestor1, deployer] = await ethers.getSigners();
 
-        console.log("keccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
+        // console.log("keccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
 
         // Deploy libraries
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
@@ -126,13 +126,21 @@ describe('TokenServiceWrapped', () => {
         await proxiedV1.connect(owner).setHolding(holding.address);
 
         await proxiedV1.connect(owner).addToken(usdcMock.address, ALEO_CHAINID, ADDRESS_ZERO, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
-        await proxiedV1.connect(owner).addToken(usdtMock.address, ALEO_CHAINID, ADDRESS_ZERO, "aleo.TokenAddress", "aleo.TokenService", 1, 100000000000);
 
 
         // Setup bridge
         await proxiedBridge.connect(owner).addTokenService(proxiedV1.address);
         await proxiedBridge.connect(owner).addAttestor(attestor1.address, 1);
         await proxiedBridge.connect(owner).addAttestor(attestor.address, 2);
+
+        FeeCollector = await ethers.getContractFactory("FeeCollector");
+        feeCollectorImpl = await FeeCollector.deploy();
+        initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize", [proxiedV1.address, owner.address]);
+        proxy = await Proxied.deploy(feeCollectorImpl.address, initializeData);
+        await proxy.deployed();
+        feeCollector = FeeCollector.attach(proxy.address);
+
+        await proxiedV1.connect(owner).setFeeCollector(feeCollector.address);
 
     });
 
@@ -148,7 +156,7 @@ describe('TokenServiceWrapped', () => {
         });
 
         it('should return correct token type', async () => {
-            expect(await proxiedV1.tokenType()).to.equal("ERC20");
+            expect(await proxiedV1.tokenType()).to.equal("BRC20");
         });
 
         it('should not allow re-initialization', async () => {
@@ -160,7 +168,7 @@ describe('TokenServiceWrapped', () => {
                     ALEO_CHAINID,
                     blackListProxy.address
                 )
-            ).to.be.revertedWith("Initializable: contract is already initialized");
+            ).to.be.revertedWithCustomError(proxiedV1, "InvalidInitialization");
         });
     });
 
@@ -183,7 +191,7 @@ describe('TokenServiceWrapped', () => {
 
             await expect(
                 proxiedV1.connect(other).setHolding(newHolding.address)
-            ).to.be.revertedWith("Ownable: caller is not the owner");
+            ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
         });
 
         it('should allow owner to update bridge', async () => {
@@ -208,41 +216,6 @@ describe('TokenServiceWrapped', () => {
         });
     });
 
-    describe("Transfer to Vault", () => {
-        it('should allow owner to transfer tokens to vault', async () => {
-            const amount = 1000;
-            await usdcMock.mint(proxiedV1.address, amount);
-
-            await proxiedV1.connect(owner).updateVault(usdcMock.address, other.address);
-            const initialVaultBalance = await usdcMock.balanceOf(other.address);
-
-            await expect(
-                proxiedV1.connect(owner).transferToVault(usdcMock.address, amount)
-            ).to.not.be.reverted;
-
-            expect(await usdcMock.balanceOf(other.address))
-                .to.equal(initialVaultBalance.add(amount));
-        });
-
-        it('should not allow transfer of unsupported tokens', async () => {
-            const amount = 1000;
-            await unsupportedToken.mint(proxiedV1.address, amount);
-
-            await expect(
-                proxiedV1.connect(owner).transferToVault(unsupportedToken.address, amount)
-            ).to.be.revertedWith("TokenService: token not supported");
-        });
-
-        it('should not allow non-owner to transfer to vault', async () => {
-            const amount = 1000;
-            await usdcMock.mint(proxiedV1.address, amount);
-
-            await expect(
-                proxiedV1.connect(other).transferToVault(usdcMock.address, amount)
-            ).to.be.revertedWith("Ownable: caller is not the owner");
-        });
-    });
-
     describe("Token Send", () => {
         it('should allow users to send tokens to another chain', async () => {
             const amount = 1000;
@@ -251,15 +224,13 @@ describe('TokenServiceWrapped', () => {
             await usdcMock.mint(other.address, amount * 2);
             await usdcMock.connect(other).approve(proxiedV1.address, amount);
 
-            const tx = await proxiedV1.connect(other).tokenSend(
-                1, // version
+            await proxiedV1.connect(other).publicTokenSend(
                 usdcMock.address,
                 amount,
                 receiver
             );
 
             // Check that tokens were transferred to the contract
-            expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.gte(amount - 1000); // Account for fees
             expect(await usdcMock.balanceOf(other.address)).to.be.lte(amount);
         });
 
@@ -271,7 +242,7 @@ describe('TokenServiceWrapped', () => {
             await usdcMock.connect(other).approve(proxiedV1.address, amount);
 
             await expect(
-                proxiedV1.connect(other).tokenSend(1, usdcMock.address, amount, invalidReceiver)
+                proxiedV1.connect(other).publicTokenSend(usdcMock.address, amount, invalidReceiver)
             ).to.be.reverted; // Bridge will reject invalid addresses
         });
 
@@ -286,8 +257,8 @@ describe('TokenServiceWrapped', () => {
             await usdcMock.connect(other).approve(proxiedV1.address, amount);
 
             await expect(
-                proxiedV1.connect(other).tokenSend(1, usdcMock.address, amount, receiver)
-            ).to.be.revertedWith("TokenService: sender blacklisted");
+                proxiedV1.connect(other).publicTokenSend(usdcMock.address, amount, receiver)
+            ).to.be.revertedWith("TokenService: senderBlacklisted");
         });
 
         it('should reject unsupported tokens', async () => {
@@ -298,8 +269,8 @@ describe('TokenServiceWrapped', () => {
             await unsupportedToken.connect(other).approve(proxiedV1.address, amount);
 
             await expect(
-                proxiedV1.connect(other).tokenSend(1, unsupportedToken.address, amount, receiver)
-            ).to.be.revertedWith("TokenService: token not supported");
+                proxiedV1.connect(other).publicTokenSend(unsupportedToken.address, amount, receiver)
+            ).to.be.revertedWith("TokenService: tokenDisabled");
         });
 
         it('should reject amounts outside the supported range', async () => {
@@ -307,8 +278,8 @@ describe('TokenServiceWrapped', () => {
             const receiver = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
 
             await expect(
-                proxiedV1.connect(other).tokenSend(1, usdcMock.address, tooSmallAmount, receiver)
-            ).to.be.revertedWith("TokenService: invalid amount");
+                proxiedV1.connect(other).publicTokenSend(usdcMock.address, tooSmallAmount, receiver)
+            ).to.be.revertedWith("TokenService: invalidAmount");
         });
 
         it('should reject when contract is paused', async () => {
@@ -322,8 +293,27 @@ describe('TokenServiceWrapped', () => {
             await proxiedV1.connect(owner).pause();
 
             await expect(
-                proxiedV1.connect(other).tokenSend(1, usdcMock.address, amount, receiver)
-            ).to.be.revertedWith("Pausable: paused");
+                proxiedV1.connect(other).publicTokenSend(usdcMock.address, amount, receiver)
+            ).to.be.revertedWithCustomError(proxiedV1, "EnforcedPause");
+        });
+
+        it('should cut the fees when fees are set', async () => {
+            await (await feeCollector.connect(owner).setPlatformFees(usdcMock.address, 5000)).wait();
+            expect(await feeCollector.platformFees(usdcMock.address)).to.be.equal(5000);
+            
+            const amount = 1000;
+            const receiver = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+
+            await usdcMock.mint(other.address, amount);
+            await usdcMock.connect(other).approve(proxiedV1.address, amount);
+
+            await expect(
+                proxiedV1.connect(other).publicTokenSend(usdcMock.address, amount, receiver)
+            ).to.emit(proxiedV1, "PlatformFeesPaid").withArgs(usdcMock.address, amount*5000/100000);
+
+            assert.equal(await proxiedV1.collectedFees(usdcMock.address), amount * 5000 / 100000);
+
+            
         });
     });
 
@@ -348,9 +338,6 @@ describe('TokenServiceWrapped', () => {
             const signature1 = await attestor1.signMessage(ethers.utils.arrayify(message));
             const signature2 = await attestor.signMessage(ethers.utils.arrayify(message));
             const signatures = signature1 + signature2.slice(2);
-
-            // Transfer tokens to the contract
-            await usdcMock.mint(proxiedV1.address, 100);
 
             await expect(proxiedV1.connect(signer).tokenReceive(packet, signatures))
                 .to.emit(proxiedBridge, "Consumed")
@@ -406,7 +393,7 @@ describe('TokenServiceWrapped', () => {
 
             await expect(
                 proxiedV1.connect(signer).tokenReceive(packet, "0x")
-            ).to.be.revertedWith("TokenService: invalid dest token service");
+            ).to.be.revertedWith("TokenService: invalidDestTokenService");
         });
 
         it("should reject packets for unsupported tokens", async function () {
@@ -431,7 +418,7 @@ describe('TokenServiceWrapped', () => {
 
             await expect(
                 proxiedV1.connect(signer).tokenReceive(packet, signatures)
-            ).to.be.revertedWith("TokenService: invalid token");
+            ).to.be.revertedWith("TokenService: tokenDisabled");
         });
 
         it("should reject when contract is paused", async function () {
@@ -449,7 +436,7 @@ describe('TokenServiceWrapped', () => {
 
             await expect(
                 proxiedV1.connect(signer).tokenReceive(packet, "0x")
-            ).to.be.revertedWith("Pausable: paused");
+            ).to.be.revertedWithCustomError(proxiedV1, "EnforcedPause");
         });
     });
 
@@ -465,7 +452,7 @@ describe('TokenServiceWrapped', () => {
         it('should not allow non-owner to pause', async () => {
             await expect(
                 proxiedV1.connect(other).pause()
-            ).to.be.revertedWith("Ownable: caller is not the owner");
+            ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
         });
     });
 
