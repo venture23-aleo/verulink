@@ -32,12 +32,13 @@
 ```bash
 mkdir -p verulink_attestor/.mtls
 ```
-2. Select the respective branch based on your deployment environment:
+2. Select the respective **branch** based on your deployment environment:
     | Branch   | Deployment Environment |
     |----------|------------------------|
     | develop  | devnet                 |
     | staging  | staging/testnet        |
     | main     | mainnet                |
+
    Run the following commands, replacing `<branch>` with the appropriate branch name from the table above:
 	```bash
 	# Download chain config
@@ -69,7 +70,7 @@ mkdir -p verulink_attestor/.mtls
   	   wallet_address: "<aleo_wallet_address>"
    ```
    iii. Update the following placeholders in **verulink_attestor/chain_config.yaml** with the correct values.
-    - Update the attestor node name in the format <env>_attestor_verulink_\<yourcompanyname> For example: mainnet_attestor_verulink_v23
+    - Update the attestor node name in the format `<env>_attestor_verulink_\<yourcompanyname>`. For example: `mainnet_attestor_verulink_v23`
 	- Aleo wallet address: `<your_aleo_wallet_address>`
 	- Ethereum wallet address: `<your_ethereum_wallet_address>`
 	- Signing service `username` and `password` configured in `verulink_attestor/sign_config.yaml`
@@ -85,10 +86,10 @@ For example, if the key and certificate filenames are `ca.cer`, `mainnet_attesto
 4. Update file permission
 First, go to the installation root directory `verulink_attestor`.
 
-```bash
-chmod 750 .mtls
-chmod 600 secrets.yaml
-```
+   ```bash
+   chmod 750 .mtls
+   chmod 600 secrets.yaml
+   ```
 5. Update the Docker image tag in `verulink_attestor/compose.yaml`
 
 	| Environment | Image Version Convention |
@@ -103,13 +104,13 @@ chmod 600 secrets.yaml
 	| chainService   | venture23/verulink-attestor-chain         |
 
 6. Run the service.
-```bash
-docker compose up -d
-```
-7 Verify the services: `chainService` and `signingService`
-	```bash
-	docker ps
-	```
+   ```bash
+   docker compose up -d
+   ```
+7. Verify the services: `chainService` and `signingService`
+   ```bash
+   docker ps
+   ```
 	Verify the logs in services
 	```bash
 	docker exec -it <attestor-chainservice-id> sh
