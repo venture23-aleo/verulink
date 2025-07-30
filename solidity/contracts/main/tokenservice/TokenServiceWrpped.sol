@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import {IBridge} from "../../common/interface/bridge/IBridge.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
@@ -9,7 +9,7 @@ import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title TokenServiceWrapped Contract
@@ -57,7 +57,7 @@ contract TokenServiceWrapped is
         require(_chainId != 0, "TokenService: invalid chain id");
         require(_destChainId != 0, "TokenService: invalid dest chain id");
 
-        __Ownable_init();
+        __Ownable_init_unchained(_owner);
         __ReentrancyGuard_init();
         
         erc20Bridge = IBridge(_bridge);
