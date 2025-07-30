@@ -263,5 +263,5 @@ contract TokenServiceWrapped is
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[45] private __gap; // Reduced to account for new state variables
+    uint256[50] private __gap; // Reduced to account for new state variables
 }
