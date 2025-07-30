@@ -76,23 +76,24 @@ contract TokenServiceWrapped is
     /// @notice Sets the Holding contract for token locking, callable by owner only
     /// @param _holding Address of the Holding contract
     function setHolding(Holding _holding) external virtual onlyOwner {
-        require(address(_holding) != address(0), "TokenService: holding zero address");
-        address oldHolding = address(holding);
+        require(address(_holding) != address(0), "TokenService: holdingZeroAddress");
+        require(address(holding) != address(_holding), "TokenService: SameAsCurrentHoldingAddress");
         holding = _holding;
     }
 
     /// @notice Updates the bridge contract address
     /// @param _bridge New bridge contract address
     function setBridge(address _bridge) external onlyOwner {
-        require(_bridge != address(0), "TokenService: bridge zero address");
-        address oldBridge = address(erc20Bridge);
+        require(_bridge != address(0), "TokenService: bridgeZeroAddress");
+        require(address(erc20Bridge) != address(_bridge), "TokenService: SameAsCurrentBridgeAddress");
         erc20Bridge = IBridge(_bridge);
     }
 
     /// @notice Updates the blacklist service address
     /// @param _blackListService New blacklist service address
     function setBlackListService(address _blackListService) external onlyOwner {
-        require(_blackListService != address(0), "TokenService: blacklist zero address");
+        require(_blackListService != address(0), "TokenService: blacklistZeroAddress");
+        require(address(blackListService) != address(_blackListService), "TokenService: SameAsCurrentBlacklistAddress");
         blackListService = IBlackListService(_blackListService);
     }
 
