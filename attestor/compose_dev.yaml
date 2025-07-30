@@ -8,8 +8,7 @@ services:
   chainservice:
     depends_on:
       - signingservice
-    container_name: verulink-chain
-    image: venture23/verulink-attestor-chain:latest
+    build: ./chainService
     volumes:
       - type: volume
         source: db-path
@@ -18,9 +17,9 @@ services:
         source: log-path
         target: *l      
       - type: bind
-        source: ./chain_config.yaml
+        source: ./chainService/config.yaml
         target: /configs/config.yaml
-      - ./.mtls:/configs/.mtls
+      - ./chainService/.mtls:/configs/.mtls
     environment:
       DB_PATH: *p
       LOG_PATH: *l
@@ -29,13 +28,14 @@ services:
       CLEAN_START: false
       MAINTENANCE: false
   signingservice:
-    container_name: verulink-sign
-    image: venture23/verulink-attestor-sign:latest
+    build:
+      context: .
+      dockerfile: ./signingService/Dockerfile
     volumes:
-      - ./sign_config.yaml:/configs/config.yaml
-      - ./secrets.yaml:/configs/keys.yaml
-    expose:
-      - "8080"
+      - ./signingService/config.yaml:/configs/config.yaml
+      - ./signingService/secrets.yaml:/configs/keys.yaml
+    ports:
+      - 8080:8080
       
 volumes:
   db-path:
