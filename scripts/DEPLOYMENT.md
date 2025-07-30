@@ -32,13 +32,13 @@
 ```bash
 mkdir -p verulink_attestor/.mtls
 ```
-2. Download Config files. Select respective branch
-	| Branch   | Deployment Environment |
+2. Select the respective branch based on your deployment environment:
+    | Branch   | Deployment Environment |
     |----------|------------------------|
     | develop  | devnet                 |
     | staging  | staging/testnet        |
     | main     | mainnet                |
-
+   Run the following commands, replacing `<branch>` with the appropriate branch name from the table above:
 	```bash
 	# Download chain config
 	curl -o verulink_attestor/chain_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/chainService/config.yaml
@@ -52,13 +52,13 @@ mkdir -p verulink_attestor/.mtls
 
 3. Update mTLS key, certificates, configuration  
    i. Copy mTLS certificates, and key to `verulink_attestor/.mtls`
-   > Name attestor certifcate and keys prefixed with attestor name. e.g. if devnet_attestor_xyz then files should be as
-   `devnet_attestor_xyz.crt`, `devnet_attestor_xyz.key`     
-   
+   > Name the attestor certificate and key files with the attestor name as a prefix. For example, if the attestor name is `devnet_attestor_xyz`, the files should    > be named `devnet_attestor_xyz.crt` and `devnet_attestor_xyz.key`.
+
    ii. **verulink_attestor/sign_config.yaml**  
-   - Update Signing service **default** `username` & `password`    
+   - Update the signing service **default** `username` & `password`    
    
-   iii. **verulink_attestor/secrets.yaml**
+   iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
+   
    ```yaml
    chain:
   	 ethereum:
@@ -68,27 +68,28 @@ mkdir -p verulink_attestor/.mtls
   	   private_key: "<aleo_private_key>"
   	   wallet_address: "<aleo_wallet_address>"
    ```
-   iii. **verulink_attestor/chain_config.yaml**
-    - Update Attestor node name (\<env>\_attestor_verulink_\<yourcompanyname> Eg. mainnet_attestor_verulink_v23)
+   iii. Update the following placeholders in **verulink_attestor/chain_config.yaml** with the correct values.
+    - Update the attestor node name in the format <env>_attestor_verulink_\<yourcompanyname> For example: mainnet_attestor_verulink_v23
 	- Aleo wallet address: `<your_aleo_wallet_address>`
 	- Ethereum wallet address: `<your_ethereum_wallet_address>`
 	- Signing service `username` and `password` configured in `verulink_attestor/sign_config.yaml`
 	- Collector service url: `<collector_service_url>`
-	- mTLS key, certificate names (Change only the name of the file not the whole path of the file as this path is referenced from inside the container environment). e.g. if the filename of key and certificates copied is the name `ca.cer`, `mainnet_attestor_verulink_v23.crt` , and `mainnet_attestor_verulink_v23.key`, the update as below
+	- Change only the filenames, not the entire file paths, since these paths are referenced inside the container environment.
+For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown below.
 	  ```yaml
-	  ca_certificate: /configs/.mtls/**ca.cer**
-  	  attestor_certificate: /configs/.mtls/**mainnet_attestor_verulink_v23.crt**
-  	  attestor_key: /configs/.mtls/**mainnet_attestor_verulink_v23.key**
+	  ca_certificate: /configs/.mtls/ca.cer
+  	  attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
+  	  attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
 	  ```
 	- Prometheus gateway url: `<prometheus_pushgateway_url>`
 4. Update file permission
-First go to Installation root `verulink_attestor`
+First, go to the installation root directory `verulink_attestor`.
 
 ```bash
 chmod 750 .mtls
 chmod 600 secrets.yaml
 ```
-5. Update docker image tag in `verulink_attestor/compose.yaml`
+5. Update the Docker image tag in `verulink_attestor/compose.yaml`
 
 	| Environment | Image Version Convention |
 	|-------------|--------------------------|
@@ -105,6 +106,16 @@ chmod 600 secrets.yaml
 ```bash
 docker compose up -d
 ```
+7 Verify the services: `chainService` and `signingService`
+	```bash
+	docker ps
+	```
+	Verify the logs in services
+	```bash
+	docker exec -it <attestor-chainservice-id> sh
+	cd ../logs
+	cat verulink.log
+	```
 ### Installing on AWS
 
 The attestor service can be deployed using two method
