@@ -202,12 +202,10 @@ contract TokenServiceWrapped is
     }
 
     /// @notice Sends tokens to another chain
-    /// @param version Protocol version
     /// @param tokenAddress Address of the token to send
     /// @param amount Amount of tokens to send
     /// @param receiver Receiver address on the destination chain
-    function tokenSend(
-        uint256 version,
+    function publicTokenSend(
         address tokenAddress,
         uint256 amount,
         string memory receiver
@@ -219,16 +217,16 @@ contract TokenServiceWrapped is
             "TokenService: invalidReceiverAddress"
         );
 
-        IIERC20(tokenAddress).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amount
-        );
+        require(isEnabledToken(tokenAddress), "TokenService: tokenDisabled");
+
+        uint256 amountToTransfer = _handleFees(tokenAddress, amount);
+        
+        IIERC20(tokenAddress).burnFrom(msg.sender, amountToTransfer);
 
         PacketLibrary.OutPacket memory packet = _packetify(
-            version,
+            1,
             tokenAddress,
-            amount,
+            amountToTransfer,
             receiver
         );
 
