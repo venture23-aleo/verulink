@@ -165,6 +165,8 @@ contract TokenServiceWrapped is
             "TokenService: invalid dest token service"
         );
 
+        require(destChainId == packet.sourceTokenService.chainId, "TokenService: invalidSourceChainId");
+
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
         uint256 amount = packet.message.amount;
