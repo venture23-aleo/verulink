@@ -228,6 +228,29 @@ contract TokenServiceWrapped is
         erc20Bridge.sendMessage(packet, "");
     }
 
+    /// @notice Internal function to handle fee calculations and transfers
+    /// @param tokenAddress The address of the token
+    /// @param amount The total amount to calculate fees from
+    /// @return amountToTransfer The amount remaining after fees
+    function _handleFees(
+        address tokenAddress,
+        uint256 amount
+    ) internal virtual returns (uint256 amountToTransfer) {
+        require(amount > 0, "TokenService: notEnoughAmount");
+        uint256 payingFees = (feeCollector.platformFees(tokenAddress) * amount) / 100000;
+
+        if (payingFees > 0) {
+            collectedFees[tokenAddress] += payingFees;
+            IIERC20(tokenAddress).safeTransferFrom(
+                msg.sender,
+                address(feeCollector),
+                payingFees
+            );
+                emit PlatformFeesPaid(tokenAddress, payingFees);
+            }
+        amountToTransfer = amount - payingFees;
+    }
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
