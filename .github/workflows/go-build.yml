@@ -26,13 +26,21 @@ jobs:
         with:
           go-version: 1.23
 
+      # Generate go.sum files BEFORE caching
+      - name: Tidy Go modules
+        run: |
+          cd attestor/chainService && go mod tidy
+          cd ../signingService && go mod tidy
+        
       # Cache Go modules
-      - uses: actions/cache@v4
+      - name: Cache Go modules
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          # Use a more specific path for hashing
+          key: ${{ runner.os }}-go-${{ hashFiles('attestor/**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
