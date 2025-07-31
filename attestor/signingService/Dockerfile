@@ -8,7 +8,7 @@ RUN go mod tidy
 
 RUN go build -o signingservice .
 
-FROM rust:1.80.0 as aleo
+FROM rust:1.88.0 as aleo
 WORKDIR /app
 COPY ./signingService/rust .
 RUN cargo install --path .

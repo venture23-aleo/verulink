@@ -1,0 +1,12 @@
+attestor_name: attestor1
+signer_username: signer
+signer_password: secret123
+collector_service_url: http://collector:8080
+prometheus_pushgateway_url: http://pushgateway:9091
+aleo_wallet_address: base64-encoded-aleo-address
+ethereum_wallet_address: base64-encoded-eth-address
+ethereum_private_key: base64-encoded-eth-key
+aleo_private_key: base64-encoded-aleo-key
+ca_certificate: base64-encoded-ca-cert
+attestor_certificate: base64-encoded-attestor-cert
+attestor_key: base64-encoded-attestor-key
