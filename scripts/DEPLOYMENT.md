@@ -10,7 +10,7 @@
 ### Installing on VM (Manual)
 #### Pre-Deployment steps 
 1. MTLS certiciate/ key and CA certificate \
-   **For testnet/staging/demo deployment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
+   **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.** \
    [ mTLS Implementation
    ](https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit)  
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
@@ -27,13 +27,14 @@
 	- Docker Network: Signing Service (Port 8080)
 3. Packages:
 	- Docker: latest
+	- Docker compose
 	- Cosign (Optional, required to verify the image) 
 
 ## Deployment Steps
 1. Create Installation Directory
-```bash
-mkdir -p verulink_attestor/.mtls
-```
+	```bash
+	mkdir -p verulink_attestor/.mtls
+	```
 2. Select the respective **branch** based on your deployment environment:
     | Branch   | Deployment Environment |
     |----------|------------------------|
