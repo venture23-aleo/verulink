@@ -28,7 +28,6 @@
 3. Packages:
 	- Docker: latest
 	- Docker compose
-	- Cosign (Optional, required to verify the image) 
 
 ## Deployment Steps
 1. Create Installation Directory
