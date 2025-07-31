@@ -67,9 +67,7 @@ program vlink_token_service_cd_v2.aleo {
  
     const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;
 
-    const PUBLIC_PACKET_VERSION_LIMIT: u8 = 10u8; // the maximum version of the public packet that can be processed by this program    
-    
-    const PRIVATE_PACKET_VERSION_LIMIT: u8 = 20u8; // the maximum version of the private packet that can be processed by this program  
+    const VERSION: u8 = 1u8;
 
     const HUNDRED_PERCENTAGE: u32 = 100_000u32;  
 
@@ -326,7 +324,7 @@ program vlink_token_service_cd_v2.aleo {
             native_token_id: NATIVE_TOKEN_ID
         };
 
-        let version: u8 = is_relayer_on ? 2u8 : 1u8 ;
+        let version: u8 = VERSION;
 
         let publish : Future = vlink_token_bridge_v2.aleo/publish(
             version,
@@ -352,8 +350,6 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(fee_in_amount, fee_platform);
 
         assert_eq(Mapping::get(status, STATUS_INDEX), UNPAUSED_VALUE);
-
-        assert(Mapping::contains(other_chain_token_service, chain_token_info));
 
         let min_amount: u64 = Mapping::get(min_transfers, NATIVE_TOKEN_ID);
         assert(amount - fee_platform >= min_amount);
@@ -474,7 +470,7 @@ program vlink_token_service_cd_v2.aleo {
 
     async function finalize_add_chain_to_EX_token(from:address, token_chain_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public fee_platform: u32, public fee_relayer: u64){
         // only council(owner) should be able to call this
-        assert_eq(from, Mapping::get(owner_TS, true));
+        assert_eq(from, Mapping::get(owner_TS, OWNER_INDEX));
         //set these mappings with addresses.
         Mapping::set(other_chain_token_service, token_chain_info, pad_20_to_32(token_service_address));
         Mapping::set(other_chain_token_address, token_chain_info, pad_20_to_32(token_address));
