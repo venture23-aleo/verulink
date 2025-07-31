@@ -195,6 +195,7 @@ program vlink_token_service_cd_v2.aleo {
         public fee_relayer: u64,
     ) -> Future{
         assert(max_transfer >= min_transfer);
+        assert(fee_platform <= HUNDRED_PERCENTAGE);
         return finalize_add_token_info(self.caller, min_transfer, max_transfer, token_address, token_service, chain_id, fee_platform, fee_relayer);
     }
 
@@ -515,6 +516,7 @@ program vlink_token_service_cd_v2.aleo {
     }
 
     async transition update_fees(public chain_id: u128, public fee_relayer: u64, public fee_platform: u32) -> Future{
+        assert(fee_platform <= HUNDRED_PERCENTAGE);
         return finalize_update_fees(self.caller, chain_id, fee_relayer, fee_platform);
     }
 
