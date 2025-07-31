@@ -1,12 +1,14 @@
 name: Run Go Unit Tests
 
 on:
-  pull_request:
   push:
     branches:
       - main
-  paths:
-    - "attestor/**"
+    paths:
+      - "attestor/**"
+  pull_request:
+    paths:
+      - "attestor/**"
 
 jobs:
   build:
@@ -24,15 +26,24 @@ jobs:
         with:
           go-version: 1.23
 
+      # Generate go.sum files BEFORE caching
+      - name: Tidy Go modules
+        run: |
+          cd attestor/chainService && go mod tidy
+          cd ../signingService && go mod tidy
+        
       # Cache Go modules
-      - uses: actions/cache@v3
+      - name: Cache Go modules
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          # Use a more specific path for hashing
+          key: ${{ runner.os }}-go-${{ hashFiles('attestor/**/go.sum') }}
           restore-keys: |
-            go-mod-${{ runner.os }}-
+            ${{ runner.os }}-go-
+
 
       # chainService module
       - name: Download dependencies - chainService
