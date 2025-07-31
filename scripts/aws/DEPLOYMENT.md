@@ -60,10 +60,10 @@
    i. Copy mTLS certificates, and key to `verulink_attestor/.mtls`
    > Name the attestor certificate and key files with the attestor name as a prefix. For example, if the attestor name is `devnet_attestor_xyz`, the files should be named `devnet_attestor_xyz.crt` and `devnet_attestor_xyz.key`.
    
-   ii. **verulink_attestor/sign_config.yaml**  
-   - Update the signing service **default** `username` & `password`    
+   ii. Set the signing service username and strong password in `verulink_attestor/sign_config.yaml` 
+
    
-   iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
+   iii. Create a YAML file named `verulink_attestor/secrets.yaml` with the following format and content:
    
    ```yaml
    chain:
@@ -74,14 +74,14 @@
   	   private_key: "<aleo_private_key>"
   	   wallet_address: "<aleo_wallet_address>"
    ```
-   iii. Update the following placeholders in **verulink_attestor/chain_config.yaml** with the correct values.
+   iv. Update the following placeholders in chain service config file `verulink_attestor/chain_config.yaml` with the correct values.
     - Update the attestor node name in the format `<env>_attestor_verulink_\<yourcompanyname>`. For example: `mainnet_attestor_verulink_v23`
 	- Aleo wallet address: `<your_aleo_wallet_address>`
 	- Ethereum wallet address: `<your_ethereum_wallet_address>`
-	- Signing service `username` and `password` configured in `verulink_attestor/sign_config.yaml`
+	- Signing service `username` and `password` configured in `verulink_attestor/sign_config.yaml` in previous step 3. ii
 	- Collector service url: `<collector_service_url>`
 	- Change only the filenames, not the entire file paths, since these paths are referenced inside the container environment.
-For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown below.
+For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown in the snippet below.
 	```yaml
 	  # --- Remaining parts ---
 	  collector_service:
