@@ -129,6 +129,23 @@ First, go to the installation root directory `verulink_attestor`.
 	cd ../logs
 	cat verulink.log
 	```
+	Once the service is up and running, the **chain service** should be able to connect to the collector and signing services, as shown in the log below.
+	```bash
+	{"level":"info","ts":,"msg":"Attestor started"}
+	{"level":"info","ts":,"msg":"Initilizing metrics"}
+	{"level":"info","ts":,"msg":"Setting up signer","scheme":"http","endpoint":"/sign",	"host":"signingservice"}
+	{"level":"info","ts":,"msg":"Getting packet","seqnum":1}
+	{"level":"info","ts":,"msg":"Sleeping aleo client for","duration":86400}
+	{"level":"info","ts":,"msg":"Lively connection to collector service"}
+	{"level":"info","ts":,"msg":"Connection to signing service established"}
+	{"level":"info","ts":,"msg":"Lively connection to collector service"}
+	{"level":"info","ts":,"msg":"Connection to signing service established"}
+	```
+	The **signing service** log should indicate that the service has started successfully without any error messages.
+	```bash
+	docker logs <signing service container id>
+	starting to serve
+	```
 ### Installing on AWS
 
 The attestor service can be deployed using two method
