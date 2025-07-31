@@ -3,8 +3,8 @@ name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
 version: 1.0.1
 chains:
 - name: aleo
-  chain_id: 6694886634401
-  wallet_address: <your_aleo_wallet_address> # wallet indentifier
+  chain_id: 6694886634403
+  wallet_address: <your_aleo_wallet_address>
   bridge_contract: vlink_token_bridge_v1.aleo
   node_url: https://api.explorer.provable.com/v1|mainnet
   sequence_num_start:
@@ -19,7 +19,7 @@ chains:
     - ethereum
 
 - name: ethereum
-  chain_id: 27234042785
+  chain_id: 28556963657430695
   wallet_address: <your_ethereum_wallet_address>
   bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
   node_url: https://eth.llamarpc.com
