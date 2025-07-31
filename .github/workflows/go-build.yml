@@ -32,7 +32,7 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('attestor/**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/attestor/**/go.sum') }}
           restore-keys: |
             go-mod-${{ runner.os }}-
 
