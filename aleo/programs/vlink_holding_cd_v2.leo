@@ -56,7 +56,7 @@ program vlink_holding_cd_v2.aleo {
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        // If attestor does not exist, this is expected to fail
+        // set the owner of the program
         Mapping::set(owner_holding, OWNER_INDEX, new_owner);
     }
 

@@ -292,7 +292,7 @@ program vlink_token_service_cd_v2.aleo {
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
-        // Assert new min transfer is less than max_transfer
+        // Assert new max transfer is greater than min_transfer
         let min_transfer: u64= Mapping::get(min_transfers, NATIVE_TOKEN_ID);
         assert(max_transfer>=min_transfer);
 
