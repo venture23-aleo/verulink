@@ -27,14 +27,14 @@ jobs:
           go-version: 1.23
 
       # Cache Go modules
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/attestor/**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            go-mod-${{ runner.os }}-
+            ${{ runner.os }}-go-
 
 
       # chainService module
