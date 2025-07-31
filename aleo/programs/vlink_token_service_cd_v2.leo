@@ -1,6 +1,5 @@
 // The 'token_service' program.
 import vlink_token_bridge_v2.aleo;
-import credits.aleo;
 import vlink_holding_cd_v2.aleo;
 
 program vlink_token_service_cd_v2.aleo {
@@ -333,7 +332,7 @@ program vlink_token_service_cd_v2.aleo {
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
             pad_20_to_32(dest_token_address), 
-            self.caller,
+            self.signer,
             pad_20_to_32(receiver),
             (amount - fee_platform) as u128
         );
