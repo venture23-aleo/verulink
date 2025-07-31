@@ -8,7 +8,7 @@ program vlink_token_service_cd_v2.aleo {
         // Id of one of the supported chains.
         chain_id: u128,
         // Token_id of the aleo token.
-        native_token_id: field
+        token_id: field
     }
 
     /// Stores the owner of this program
@@ -49,7 +49,7 @@ program vlink_token_service_cd_v2.aleo {
     //percentage of the fee that will be taken by the platform
     mapping platform_fee: ChainToken => u32;
 
-    const NATIVE_TOKEN_ID: field = 3443843282313283355522573239085696902919850365217539366784739393210722344986field; // The native token address of the Aleo network
+    const ALEO_CREDITS_TOKEN_ID: field = 3443843282313283355522573239085696902919850365217539366784739393210722344986field; // The native token address of the Aleo network
 
     const OWNER_INDEX: bool = true;
     const STATUS_INDEX: bool = true;
@@ -122,7 +122,7 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(from, owner);
         let chaintokeninfo:ChainToken = ChainToken{
             chain_id: chain_id,
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
         assert(Mapping::contains(other_chain_token_service, chaintokeninfo));
         Mapping::set(other_chain_token_service, chaintokeninfo, pad_20_to_32(token_service_address));
@@ -142,7 +142,7 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(from, owner);
         let chaintokeninfo:ChainToken = ChainToken{
             chain_id: chain_id,
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
         assert(Mapping::contains(other_chain_token_address, chaintokeninfo));
         Mapping::set(other_chain_token_address, chaintokeninfo, pad_20_to_32(token_address));
@@ -161,7 +161,7 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(from, owner);
         let chaintokeninfo:ChainToken = ChainToken{
             chain_id: chain_id,
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
 
         // check if other chain token service exists in the mapping and remove it.
@@ -209,13 +209,13 @@ program vlink_token_service_cd_v2.aleo {
 
         let chain_token_info:ChainToken = ChainToken{
             chain_id: chain_id, 
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
 
         Mapping::set(other_chain_token_address, chain_token_info, pad_20_to_32(token_address));
         Mapping::set(other_chain_token_service, chain_token_info, pad_20_to_32(token_service));
-        Mapping::set(min_transfers, NATIVE_TOKEN_ID, min_transfer);
-        Mapping::set(max_transfers, NATIVE_TOKEN_ID, max_transfer);
+        Mapping::set(min_transfers, ALEO_CREDITS_TOKEN_ID, min_transfer);
+        Mapping::set(max_transfers, ALEO_CREDITS_TOKEN_ID, max_transfer);
         Mapping::set(status, STATUS_INDEX, PAUSED_VALUE);
         Mapping::set(platform_fee, chain_token_info, fee_platform);
         Mapping::set(relayer_fee, chain_token_info, fee_relayer);
@@ -264,11 +264,11 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(from, owner);
 
         // Assert new min transfer is less than max_transfer
-        let max_transfer: u64 = Mapping::get(max_transfers, NATIVE_TOKEN_ID);
+        let max_transfer: u64 = Mapping::get(max_transfers, ALEO_CREDITS_TOKEN_ID);
         assert(min_transfer <= max_transfer);
 
-        assert(Mapping::contains(min_transfers, NATIVE_TOKEN_ID));
-        Mapping::set(min_transfers, NATIVE_TOKEN_ID, min_transfer);
+        assert(Mapping::contains(min_transfers, ALEO_CREDITS_TOKEN_ID));
+        Mapping::set(min_transfers, ALEO_CREDITS_TOKEN_ID, min_transfer);
     }
 
     /////////////////////////////////////
@@ -286,11 +286,11 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(from, owner);
 
         // Assert new max transfer is greater than min_transfer
-        let min_transfer: u64= Mapping::get(min_transfers, NATIVE_TOKEN_ID);
+        let min_transfer: u64= Mapping::get(min_transfers, ALEO_CREDITS_TOKEN_ID);
         assert(max_transfer>=min_transfer);
 
-        assert(Mapping::contains(max_transfers, NATIVE_TOKEN_ID));
-        Mapping::set(max_transfers, NATIVE_TOKEN_ID, max_transfer);
+        assert(Mapping::contains(max_transfers, ALEO_CREDITS_TOKEN_ID));
+        Mapping::set(max_transfers, ALEO_CREDITS_TOKEN_ID, max_transfer);
     }
 
 
@@ -316,7 +316,7 @@ program vlink_token_service_cd_v2.aleo {
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
 
         let version: u8 = VERSION;
@@ -346,10 +346,10 @@ program vlink_token_service_cd_v2.aleo {
 
         assert_eq(Mapping::get(status, STATUS_INDEX), UNPAUSED_VALUE);
 
-        let min_amount: u64 = Mapping::get(min_transfers, NATIVE_TOKEN_ID);
+        let min_amount: u64 = Mapping::get(min_transfers, ALEO_CREDITS_TOKEN_ID);
         assert(amount - fee_platform >= min_amount);
 
-        let max_amount: u64 = Mapping::get(max_transfers, NATIVE_TOKEN_ID);
+        let max_amount: u64 = Mapping::get(max_transfers, ALEO_CREDITS_TOKEN_ID);
         assert(amount - fee_platform <= max_amount);
 
         let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
@@ -359,8 +359,8 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(stored_token_address, pad_20_to_32(dest_token_address));
 
         // Increase the total supply
-        let current_supply: u64 = Mapping::get_or_use(total_supply, NATIVE_TOKEN_ID, 0u64);
-        Mapping::set(total_supply, NATIVE_TOKEN_ID, current_supply + amount - fee_platform);
+        let current_supply: u64 = Mapping::get_or_use(total_supply, ALEO_CREDITS_TOKEN_ID, 0u64);
+        Mapping::set(total_supply, ALEO_CREDITS_TOKEN_ID, current_supply + amount - fee_platform);
     }
 
 
@@ -386,7 +386,7 @@ program vlink_token_service_cd_v2.aleo {
             version,
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
-            NATIVE_TOKEN_ID, 
+            ALEO_CREDITS_TOKEN_ID, 
             pad_20_to_32(sender), 
             receiver, 
             amount as u128, 
@@ -398,7 +398,7 @@ program vlink_token_service_cd_v2.aleo {
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: source_chain_id,
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
 
         assert(amount >= fee_relayer); 
@@ -443,19 +443,19 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(stored_token_service, pad_20_to_32(source_token_service_address));
 
         // Increase the total supply
-        let current_supply: u64 = Mapping::get_or_use(total_supply, NATIVE_TOKEN_ID, 0u64);
-        Mapping::set(total_supply, NATIVE_TOKEN_ID, current_supply - amount);
+        let current_supply: u64 = Mapping::get_or_use(total_supply, ALEO_CREDITS_TOKEN_ID, 0u64);
+        Mapping::set(total_supply, ALEO_CREDITS_TOKEN_ID, current_supply - amount);
 
         // Increase the held amount
-        let previously_held_amount:u64 = Mapping::get_or_use(token_holding, NATIVE_TOKEN_ID, 0u64);
-        Mapping::set(token_holding, NATIVE_TOKEN_ID, previously_held_amount+held_amount);
+        let previously_held_amount:u64 = Mapping::get_or_use(token_holding, ALEO_CREDITS_TOKEN_ID, 0u64);
+        Mapping::set(token_holding, ALEO_CREDITS_TOKEN_ID, previously_held_amount+held_amount);
     }
 
 
     async transition add_chain_to_existing_token(public chain_id: u128, public token_service_address:[u8;20], public token_address:[u8;20], public fee_platform: u32, public fee_relayer: u64) -> Future{
         let token_chain_info:ChainToken = ChainToken{
             chain_id:chain_id,
-            native_token_id:NATIVE_TOKEN_ID
+            token_id:ALEO_CREDITS_TOKEN_ID
         };
 
         assert(fee_platform <= HUNDRED_PERCENTAGE);
@@ -492,8 +492,8 @@ program vlink_token_service_cd_v2.aleo {
         f0.await();
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(owner, from);
-        let held_amount:u64 = Mapping::get(token_holding, NATIVE_TOKEN_ID);
-        Mapping::set(token_holding, NATIVE_TOKEN_ID, held_amount-amount);
+        let held_amount:u64 = Mapping::get(token_holding, ALEO_CREDITS_TOKEN_ID);
+        Mapping::set(token_holding, ALEO_CREDITS_TOKEN_ID, held_amount-amount);
     }
 
 
@@ -516,7 +516,7 @@ program vlink_token_service_cd_v2.aleo {
     async function finalize_update_fees(from:address, public chain_id: u128, public fee_relayer: u64, public fee_platform: u32){
         let chain_token_info: ChainToken = ChainToken{
             chain_id: chain_id,
-            native_token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(owner, from);
