@@ -464,6 +464,8 @@ program vlink_token_service_cd_v2.aleo {
     }
 
     async function finalize_add_chain_to_EX_token(from:address, token_chain_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public fee_platform: u32, public fee_relayer: u64){
+        assert(!Mapping::contains(other_chain_token_service, token_chain_info));
+        assert(!Mapping::contains(other_chain_token_address, token_chain_info));
         // only council(owner) should be able to call this
         assert_eq(from, Mapping::get(owner_TS, OWNER_INDEX));
         //set these mappings with addresses.
