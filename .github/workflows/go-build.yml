@@ -1,12 +1,14 @@
 name: Run Go Unit Tests
 
 on:
-  pull_request:
   push:
     branches:
       - main
-  paths:
-    - "attestor/**"
+    paths:
+      - "attestor/**"
+  pull_request:
+    paths:
+      - "attestor/**"
 
 jobs:
   build:
