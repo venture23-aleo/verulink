@@ -172,6 +172,7 @@ contract TokenServiceWrapped is
         );
 
         require(destChainId == packet.sourceTokenService.chainId, "TokenService: invalidSourceChainId");
+        require(self.chainId == packet.destTokenService.chainId, "TokenService: invalidDestChainId");
 
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
