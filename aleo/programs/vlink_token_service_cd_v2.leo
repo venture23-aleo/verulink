@@ -357,6 +357,9 @@ program vlink_token_service_cd_v2.aleo {
         let min_amount: u64 = Mapping::get(min_transfers, NATIVE_TOKEN_ID);
         assert(amount - fee_platform >= min_amount);
 
+        let max_amount: u64 = Mapping::get(max_transfers, NATIVE_TOKEN_ID);
+        assert(amount - fee_platform <= max_amount);
+
         let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
         assert_eq(stored_token_service, pad_20_to_32(dest_token_service));
 
