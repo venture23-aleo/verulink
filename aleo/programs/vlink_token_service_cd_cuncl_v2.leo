@@ -1,14 +1,11 @@
 import vlink_council_v2.aleo;
 import vlink_token_service_cd_v2.aleo;
-import credits.aleo;
 
 program vlink_token_service_cd_cuncl_v2.aleo
 {
      //////////////////////////////////////////////
     /////// Token Service: Transfer Ownership ////
     //////////////////////////////////////////////
-
-    const SELF_ADDRESS: address = self.address;  // todo: dont use address here
 
     const TAG_TS2_TRANSFER_OWNERSHIP: u8 = 1u8;
     const TAG_TS2_ADD_TOKEN: u8 = 2u8;

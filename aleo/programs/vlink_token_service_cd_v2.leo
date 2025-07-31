@@ -11,11 +11,6 @@ program vlink_token_service_cd_v2.aleo {
         native_token_id: field
     }
 
-    // struct Holder{
-    //     account : address, 
-    //     native_token_id : address 
-    // }
-
     /// Stores the owner of this program
     /// The owner can be another program or wallet
     /// key = true: returns the address of the owner
