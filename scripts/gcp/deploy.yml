@@ -288,7 +288,7 @@
 
     - name: Start docker containers
       ansible.builtin.command:
-        cmd: docker compose up -d
+        cmd: docker compose -f compose_dev.yaml up -d
         chdir: "/home/{{ USER }}/verulink/attestor"
       when: build_status.finished
       tags:
