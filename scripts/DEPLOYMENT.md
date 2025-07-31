@@ -43,14 +43,17 @@
     | main     | mainnet                |
 
    Run the following commands, replacing `<branch>` with the appropriate branch name from the table above:
+    Download chain config
 	```bash
-	# Download chain config
+	
 	curl -o verulink_attestor/chain_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/chainService/config.yaml
-
-	# Download sign config
+    ```
+	Download sign config
+	```bash
 	curl -o verulink_attestor/sign_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/signingService/config.yaml
-
-	# Download compose 
+    ```
+	Download compose file
+	```bash
 	curl -o verulink_attestor/compose.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/compose.yaml
 	```
 
