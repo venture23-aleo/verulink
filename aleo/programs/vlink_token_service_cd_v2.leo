@@ -355,7 +355,7 @@ program vlink_token_service_cd_v2.aleo {
         assert(Mapping::contains(other_chain_token_service, chain_token_info));
 
         let min_amount: u64 = Mapping::get(min_transfers, NATIVE_TOKEN_ID);
-        assert(amount >= min_amount);
+        assert(amount - fee_platform >= min_amount);
 
         let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
         assert_eq(stored_token_service, pad_20_to_32(dest_token_service));
@@ -365,7 +365,7 @@ program vlink_token_service_cd_v2.aleo {
 
         // Increase the total supply
         let current_supply: u64 = Mapping::get_or_use(total_supply, NATIVE_TOKEN_ID, 0u64);
-        Mapping::set(total_supply, NATIVE_TOKEN_ID, current_supply + amount);
+        Mapping::set(total_supply, NATIVE_TOKEN_ID, current_supply + amount - fee_platform);
     }
 
 
