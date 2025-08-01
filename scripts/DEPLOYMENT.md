@@ -14,7 +14,7 @@
    [ mTLS Implementation
    ](https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit)  
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
-2. Have Ethereum and Aleo wallet address and private keys ready
+2. Have Ethereum(s) and Aleo wallet address and private keys ready
 
 ## Machine Configuration
 1. VM Specification
