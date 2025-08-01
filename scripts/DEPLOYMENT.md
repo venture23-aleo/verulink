@@ -70,11 +70,11 @@
    chain:
   	 ethereum:
 	   chain_type: evm
-  	   private_key: "<eth_private_key"
+  	   private_key: "<eth_private_key>"
   	   wallet_address: "<eth_wallet_address>"
 	 base:
 	   chain_type: evm
-  	   private_key: "<base_private_key"
+  	   private_key: "<base_private_key>"
   	   wallet_address: "<base_wallet_address>"
   	 aleo:
 	   chain_type: aleo
