@@ -65,13 +65,19 @@
    - Update the signing service **default** `username` & `password`    
    
    iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
-   
+   > You can put same wallet key and address for **base** chain too.
    ```yaml
    chain:
   	 ethereum:
+	   chain_type: evm
   	   private_key: "<eth_private_key"
   	   wallet_address: "<eth_wallet_address>"
+	 base:
+	   chain_type: evm
+  	   private_key: "<base_private_key"
+  	   wallet_address: "<base_wallet_address>"
   	 aleo:
+	   chain_type: aleo
   	   private_key: "<aleo_private_key>"
   	   wallet_address: "<aleo_wallet_address>"
    ```
