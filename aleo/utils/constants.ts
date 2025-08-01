@@ -62,6 +62,7 @@ export const ethChainId = BigInt(27234042785);
 export const aleoChainId = BigInt(6694886634401);
 export const baseChainId = BigInt(84532);
 export const arbitrumChainId = BigInt(421614);
+export const testnetBNB = BigInt(97);
 
 export const PRIVATE_VERSION = 2;
 export const PUBLIC_VERSION = 1;

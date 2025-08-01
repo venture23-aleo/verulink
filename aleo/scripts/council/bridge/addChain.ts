@@ -10,7 +10,7 @@ import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters
 import { ExecutionMode } from "@doko-js/core";
 import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
 import { TAG_TB_ADD_CHAIN } from "../../../utils/constants";
-import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v1";
 import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
@@ -30,13 +30,14 @@ export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  //generating hash
   const tbAddChain: TbAddChain = {
     tag: TAG_TB_ADD_CHAIN,
     id: proposalId,
     chain_id: newChainId
   };
   const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
-
 
   const externalProposal: ExternalProposal = {
           id: proposalId,
@@ -45,7 +46,7 @@ export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  // propose
+  // proposing
   const proposeAddChainTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeAddChainTx.wait();
 
@@ -62,13 +63,13 @@ export const voteAddChain = async (proposalId: number, newChainId: bigint) => {
     throw Error(`ChainId ${newChainId} is already supported!`);
   }
 
+  //generating hash
   const tbAddChain: TbAddChain = {
     tag: TAG_TB_ADD_CHAIN,
     id: proposalId,
     chain_id: newChainId
   };
   const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
-
 
   const externalProposal: ExternalProposal = {
           id: proposalId,
@@ -101,6 +102,7 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
     throw Error("Council is not the owner of bridge program");
   }
 
+  //generating hash
   const tbAddChain: TbAddChain = {
     tag: TAG_TB_ADD_CHAIN,
     id: proposalId,
@@ -108,19 +110,10 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
   };
   const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
 
+  validateExecution(tbAddChainProposalHash);
 
-  const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddChainProposalHash
-  }
-  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
-
-  validateExecution(ExternalProposalHash);
-
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
-  
-  // execute
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddChainProposalHash), SUPPORTED_THRESHOLD);
+  console.log(voters)
   const addChainTx = await bridgeCouncil.tb_add_chain(
     tbAddChain.id,
     tbAddChain.chain_id,
