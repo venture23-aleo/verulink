@@ -889,27 +889,27 @@ program vlink_token_service_v2.aleo {
     }
 
     async transition add_chain_to_existing_token(public chain_id: u128, public token_id: field, public token_service_address:[u8;20], public token_address:[u8;20], public pub_platform_fee: u32, public pri_platform_fee: u32, public pub_relayer_fee: u128, public pri_relayer_fee: u128) -> Future{
-        let token_chain_info:ChainToken = ChainToken{
+        let chain_token_info:ChainToken = ChainToken{
             token_id:token_id,
             chain_id:chain_id
         };
-        return finalize_add_chain_to_EX_token(self.caller, token_chain_info, token_service_address, token_address, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
+        return finalize_add_chain_to_EX_token(self.caller, chain_token_info, token_service_address, token_address, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
     }
 
-    async function finalize_add_chain_to_EX_token(from:address, token_chain_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public pub_platform_fee: u32, public pri_platform_fee: u32, public pub_relayer_fee: u128, public pri_relayer_fee: u128){
-        assert(!Mapping::contains(other_chain_token_service, token_chain_info));
-        assert(!Mapping::contains(other_chain_token_address, token_chain_info));
+    async function finalize_add_chain_to_EX_token(from:address, chain_token_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public pub_platform_fee: u32, public pri_platform_fee: u32, public pub_relayer_fee: u128, public pri_relayer_fee: u128){
+        assert(!Mapping::contains(other_chain_token_service, chain_token_info));
+        assert(!Mapping::contains(other_chain_token_address, chain_token_info));
         // token should have already been registered previously, otherwise use add_token_ts. 
-        assert(Mapping::get(added_tokens, token_chain_info.token_id));
+        assert(Mapping::get(added_tokens, chain_token_info.token_id));
         // only council(owner) should be able to call this
-        assert_eq(from, Mapping::get(owner_TS, true));
+        assert_eq(from, Mapping::get(owner_TS, OWNER_INDEX));
         //set these mappings with addresses.
-        Mapping::set(other_chain_token_service, token_chain_info, pad_20_to_32(token_service_address));
-        Mapping::set(other_chain_token_address, token_chain_info, pad_20_to_32(token_address));
-        Mapping::set(public_platform_fee, token_chain_info, pub_platform_fee);
-        Mapping::set(private_platform_fee, token_chain_info, pri_platform_fee);
-        Mapping::set(public_relayer_fee, token_chain_info, pub_relayer_fee);
-        Mapping::set(private_relayer_fee, token_chain_info, pri_relayer_fee);
+        Mapping::set(other_chain_token_service, chain_token_info, pad_20_to_32(token_service_address));
+        Mapping::set(other_chain_token_address, chain_token_info, pad_20_to_32(token_address));
+        Mapping::set(public_platform_fee, chain_token_info, pub_platform_fee);
+        Mapping::set(private_platform_fee, chain_token_info, pri_platform_fee);
+        Mapping::set(public_relayer_fee, chain_token_info, pub_relayer_fee);
+        Mapping::set(private_relayer_fee, chain_token_info, pri_relayer_fee);
     }
 
 

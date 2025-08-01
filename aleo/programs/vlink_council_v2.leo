@@ -86,7 +86,7 @@ program vlink_council_v2.aleo {
 
     async function finalize_initialize(initial_members: [address; 5], threshold: u8, total: u8) {
         // Assert council has not been initialized before
-        assert(!Mapping::contains(settings, true));
+        assert(!Mapping::contains(settings, THRESHOLD_INDEX));
 
         // Set the initial members
         for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
