@@ -54,8 +54,8 @@ program vlink_council_v2.aleo {
     const THRESHOLD_INDEX: bool = true;
     const TOTAL_MEMBERS_INDEX: bool = false;
 
-    /// This is the maximum threshold that this council program can support
-    /// In case the threshold needs to be more than specified, new contract needs to be deployed
+    /// This is the maximum number of members that can be added in council program
+    /// In case of more than five council, new contract needs to be deployed
     const NUM_OF_ALLOWED_MEMBERS: u8 = 5u8;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
@@ -65,7 +65,7 @@ program vlink_council_v2.aleo {
     const TAG_ADD_MEMBER: u8 = 1u8;
     const TAG_REMOVE_MEMBER: u8 = 2u8;
     const TAG_WITHDRAW_FEES: u8 = 3u8;
-    const TAG_UPDATE_THRESHOLD: u8 = 4u8;       
+    const TAG_UPDATE_THRESHOLD: u8 = 4u8;   
 
 
     //////////////////////////////
@@ -75,7 +75,7 @@ program vlink_council_v2.aleo {
     /// Initialize the council program
     /// Note: This function must be allowed to be called only once.
     async transition initialize(public initial_members: [address; 5], public threshold: u8) -> Future{
-        assert_eq(self.caller, INITIALIZER_ADDRESS); 
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_members: u8 = get_valid_unique_address_count(initial_members);
 
         // Sanity check for threshold
@@ -183,6 +183,9 @@ program vlink_council_v2.aleo {
         // Assert that the member has not signed the same proposal earlier
         assert(!Mapping::contains(proposal_votes, proposal_sign));
 
+        // check if proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
         // check if deadline has not been crossed 
         assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
 
@@ -229,6 +232,13 @@ program vlink_council_v2.aleo {
     }
 
     async function finalize_add_member(proposal_hash: field, new_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+        // threshold should not be greater than current member count 
+        let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(new_threshold < current_members_count); 
+
+        // assertion where member count should not be greater than 5
+        assert(current_members_count+1u8 <= NUM_OF_ALLOWED_MEMBERS);
+
         for i: u8 in 0u8..NUM_OF_ALLOWED_MEMBERS {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -254,9 +264,7 @@ program vlink_council_v2.aleo {
         Mapping::set(settings, THRESHOLD_INDEX, new_threshold);
 
         // Update total members
-        let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
         assert(current_members_count+1u8 <= NUM_OF_ALLOWED_MEMBERS);
-        assert(new_threshold <= current_members_count + 1u8);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u8);
     }
 
@@ -305,6 +313,9 @@ program vlink_council_v2.aleo {
 
         // Ensure that the proposal has not been executed
         assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
 
         // Mark the proposal as executed
         Mapping::set(proposal_executed, proposal_hash, true);
@@ -359,6 +370,9 @@ program vlink_council_v2.aleo {
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
 
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -406,6 +420,9 @@ program vlink_council_v2.aleo {
             assert(Mapping::get(proposal_votes, vote_keys[i]));
         }
 
+        // check if deadline has not been crossed 
+        assert(block.height < Mapping::get(proposal_deadline, proposal_hash));
+
         // Get the threshold
         let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
 
@@ -439,6 +456,7 @@ program vlink_council_v2.aleo {
     }
 
     async transition external_execute(public id: u32, public proposal_hash: field, public voters: [address; 5]) -> Future{
+
         let external_proposal: ExternalProposal = ExternalProposal {
             id,
             external_program: self.caller,

@@ -3,6 +3,9 @@ import vlink_token_bridge_v2.aleo;
 
 program vlink_bridge_council_v2.aleo
 {   
+    ///////////////////////////////////////////
+    /////// Bridge: Transfer Ownership ////////
+    ///////////////////////////////////////////
 
     const TAG_TB_TRANSFER_OWNERSHIP: u8 = 1u8;
     const TAG_TB_ADD_ATTESTOR: u8 = 2u8;
@@ -15,9 +18,6 @@ program vlink_bridge_council_v2.aleo
     const TAG_TB_PAUSE: u8 = 9u8;
     const TAG_TB_UNPAUSE: u8 = 10u8;
 
-    ///////////////////////////////////////////
-    /////// Bridge: Transfer Ownership ////////
-    ///////////////////////////////////////////
 
     struct TbTransferOwnership {
         tag: u8,

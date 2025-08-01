@@ -119,13 +119,10 @@ program vlink_token_bridge_v2.aleo {
     /// Tracks if the given packet is consumed
     mapping in_packet_consumed: PacketId => bool;
 
-    /// Stores the hash of the given packet
-    mapping in_packet_hash: PacketId => field;
-
     /// Stores the outgoing packet
     mapping out_packets: PacketId => OutPacket;
 
-    /// Tracks the supported chains
+    /// Tracks the supported chains 
     /// Key is chain_id
     mapping supported_chains: u128 => bool;
 
@@ -138,15 +135,14 @@ program vlink_token_bridge_v2.aleo {
     mapping sequences: u128 => u64;
 
     // The chain id of the Aleo network where this program is deployed
-    const ALEO_CHAIN_ID: u128 = 6694886634403u128;
+    const ALEO_CHAIN_ID: u128 = 6694886634401u128;
 
-    // // Version of the packet
-    // const VERSION: u8 = 1u8;
-
+    // The zero address for Aleo
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
     const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
 
 
+    // keys
     const THRESHOLD_INDEX: u8 = 1u8;
     const TOTAL_ATTESTORS_INDEX: u8 = 2u8;
 
@@ -156,8 +152,8 @@ program vlink_token_bridge_v2.aleo {
 
     const OWNER_INDEX: bool = true;
 
-    /// This is the maximum threshold that this bridge can support
-    /// In case the threshold needs to be more than specified, new contract needs to be deployed
+     /// This is the maximum number of attestors allowed in the bridge program.
+    /// In case more attestors are added, new contract needs to be deployed by updating this value
     /// To support threshold <= 5, we need to set ZERO_ADDRESS as a valid attestor
     const NUM_OF_ALLOWED_ATTESTORS: u8 = 5u8;
 
@@ -209,6 +205,7 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
     /// Update the existing owner
     /// Can only be called from owner
     async transition transfer_ownership_tb(public new_owner: address) -> Future{
+        assert_neq(new_owner, ZERO_ADDRESS);
         return finalize_transfer_ownership_tb(self.caller, new_owner);
     }
 
