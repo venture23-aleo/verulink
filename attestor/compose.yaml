@@ -25,7 +25,7 @@ services:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
-      MODE: prod
+      MODE: dev
       CLEAN_START: false
       MAINTENANCE: false
   signingservice:
