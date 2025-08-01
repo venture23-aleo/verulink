@@ -11,7 +11,7 @@ program vlink_token_service_v2.aleo {
         // For example, 10% is represented as 1000 (10% = 10_00 in basis points).
         percentage: u32,
         // The duration for which the withdrawal limit is applicable, measured in block heights.
-        // Info: 360 blocks per hour (approx)   // todo: change blocks 
+        // Info: 360 blocks per hour (approx) 
         // Reference: https://github.com/AleoHQ/snarkVM/blob/testnet3/console/network/src/lib.rs#L115
         duration: u32,
         // The liquidity amount beyond which the withdrawal limit does not apply.
@@ -646,7 +646,6 @@ program vlink_token_service_v2.aleo {
 
         let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
         let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
-        // TODO: discuss on amount should be deducted by platform_fee for withdrawn amount
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
             let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
             // Mapping::set(token_snapshot_withdrawal, wrapped_token_id, max_withdrawal);
@@ -717,8 +716,6 @@ program vlink_token_service_v2.aleo {
         };
 
         assert(amount >= fee_relayer); 
-        // TODO: rename fee_relayer to relayer_fee
-        // TODO: add test cases for private case
 
         let actual_receiver: address = receiver;
         let held_amount: u128 = 0u128;
