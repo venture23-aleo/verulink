@@ -5,6 +5,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenServiceV2} from "../../main/tokenservice/TokenServiceV2.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
@@ -24,6 +25,14 @@ contract TokenServiceV3 is TokenServiceV2 {
         FeeCollector _feeCollector
     ) external virtual onlyOwner {
         feeCollector = _feeCollector;
+    }
+
+    function setBlackListService(
+        IBlackListService _blackListService
+    ) external virtual onlyOwner {
+        require(address(_blackListService) != address(0), "TokenService: BlackListServiceCannotBeZero");
+        require(address(blackListService) != address(_blackListService), "TokenService: BlackListServiceCannotBeSameAsCurrent");
+        blackListService = _blackListService;
     }
 
     function _packetify(
