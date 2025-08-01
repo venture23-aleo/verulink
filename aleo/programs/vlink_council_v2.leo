@@ -255,6 +255,7 @@ program vlink_council_v2.aleo {
 
         // Update total members
         let current_members_count: u8 = Mapping::get(settings, TOTAL_MEMBERS_INDEX);
+        assert(current_members_count+1u8 <= NUM_OF_ALLOWED_MEMBERS);
         assert(new_threshold <= current_members_count + 1u8);
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count + 1u8);
     }
