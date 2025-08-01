@@ -334,10 +334,6 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cat verulink.log
 	```
 
-Got it ✅ — I’ll update the migration guide assuming the **older installation is in `~/verulink`**, and explicitly note at the beginning that the installation is under the current user’s home directory.
-
-Here’s the revised version:
-
 ---
 
 # Verulink Attestor Migration Guide 
