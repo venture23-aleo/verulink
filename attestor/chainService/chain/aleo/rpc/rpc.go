@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net/http"
 	"strconv"
@@ -29,14 +30,24 @@ func NewRPC(RpcEndPoint, Network string) (IAleoRPC, error) {
 	return client, nil
 }
 
-func getHttpResponse(ctx context.Context, method, requestURL string) (*http.Response, error) {
+func getHttpsResponse(ctx context.Context, method, requestURL string) (*http.Response, error) {
 	req, err := http.NewRequest(method, requestURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	req = req.WithContext(ctx)
-	response, err := http.DefaultClient.Do(req)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				MinVersion: tls.VersionTLS13,
+			},
+		},
+		Timeout: time.Second * 2,
+	}
+
+	response, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +58,7 @@ func (c *Client) GetLatestHeight(ctx context.Context) (int64, error) {
 	latestHeight := "/latest/height"
 	requestUrl := c.url + latestHeight
 
-	response, err := getHttpResponse(ctx, GET, requestUrl)
+	response, err := getHttpsResponse(ctx, GET, requestUrl)
 	if err != nil {
 		return 0, err
 	}
@@ -70,7 +81,7 @@ func (c *Client) GetMappingValue(ctx context.Context, programId, mappingName, ma
 	rpcEndpoint := "/program/" + programId + "/mapping/" + mappingName + "/" + mappingKey
 	requestUrl := c.url + rpcEndpoint
 
-	response, err := getHttpResponse(ctx, GET, requestUrl)
+	response, err := getHttpsResponse(ctx, GET, requestUrl)
 	if err != nil {
 		return nil, err
 	}

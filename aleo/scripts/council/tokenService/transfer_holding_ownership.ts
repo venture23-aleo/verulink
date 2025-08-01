@@ -4,12 +4,14 @@ import { ExecutionMode } from "@doko-js/core";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_HOLDING_OWNERSHIP_TRANSFER } from "../../../utils/constants";
 import { hashStruct } from "../../../utils/hash";
 import { getTransferOwnershipHolding } from "../../../artifacts/js/leo2js/vlink_token_service_council_v2";
 import { getTransferOwnershipHoldingLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { Vlink_holding_v2Contract } from "../../../artifacts/js/vlink_holding_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 
 const mode = ExecutionMode.SnarkExecute;
@@ -24,69 +26,84 @@ export const proposeTransferHoldingOnwership = async (new_owner: string): Promis
   console.log(`👍 Proposing to transfer ownership of the holding program:`)
 
   const proposer = council.getAccounts()[0];
-  //   validateProposer(proposer);
+  validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const transferHolding: TransferOwnershipHolding = {
+    tag: TAG_HOLDING_OWNERSHIP_TRANSFER,
     id: proposalId,
     new_owner: new_owner
   };
   const tbRemoveAttestorProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: serviceCouncil.address(),
+          proposal_hash: tbRemoveAttestorProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const [proposeRemoveAttestorTx] = await council.propose(proposalId, tbRemoveAttestorProposalHash);
+  
+  const proposeRemoveAttestorTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeRemoveAttestorTx.wait();
 
-  await council.wait(proposeRemoveAttestorTx);
-
-  getProposalStatus(tbRemoveAttestorProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
   return proposalId
 };
 
-export const voteTransferHoldingOwnership = async (proposalId: number, owner: string) => {
+export const voteTransferHoldingOwnership = async (proposalId: number, new_owner: string) => {
 
   console.log(`👍 Voting to add transfer ownership of the holding program`)
 
   const transferHolding: TransferOwnershipHolding = {
+    tag: TAG_HOLDING_OWNERSHIP_TRANSFER,
     id: proposalId,
-    new_owner: owner
+    new_owner: new_owner
   };
-  const transferHoldingProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
+  const tbRemoveAttestorProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: serviceCouncil.address(),
+          proposal_hash: tbRemoveAttestorProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   const voter = council.getAccounts()[0];
-  validateVote(transferHoldingProposalHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const [transferHoldingProposalHashTx] = await council.vote(transferHoldingProposalHash, true);
+  const transferHoldingProposalHashTx = await council.vote(ExternalProposalHash, true);
+  await transferHoldingProposalHashTx.wait();
 
-  await council.wait(transferHoldingProposalHashTx);
-
-  getProposalStatus(transferHoldingProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
-export const execTransferHoldingOwnership = async (proposalId: number, owner: string) => {
+export const execTransferHoldingOwnership = async (proposalId: number, new_owner: string) => {
 
 
   const transferHolding: TransferOwnershipHolding = {
+    tag: TAG_HOLDING_OWNERSHIP_TRANSFER,
     id: proposalId,
-    new_owner: owner
+    new_owner: new_owner
   };
-  const transferHoldingProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
+  const tbRemoveAttestorProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: serviceCouncil.address(),
+          proposal_hash: tbRemoveAttestorProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  validateExecution(transferHoldingProposalHash);
+  validateExecution(ExternalProposalHash);
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(transferHoldingProposalHash), SUPPORTED_THRESHOLD);
-  const [removeAttestorTx] = await serviceCouncil.holding_ownership_transfer(
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+  const removeAttestorTx = await serviceCouncil.holding_ownership_transfer(
     transferHolding.id,
     transferHolding.new_owner,
     voters
   );
+  await removeAttestorTx.wait();
 
-  await council.wait(removeAttestorTx);
-
-  const new_owner = await holding.owner_holding(true);
-  if (new_owner != "aleo1rgak647n3t7ryn9ua5dcetg44c0u9yx8peg4vd37zwrw0rvvtq9szvf50w") {
-    throw Error('Something went wrong!');
-  }
 
   console.log(` ✅ Onwership of the holding program changed completely.`)
 

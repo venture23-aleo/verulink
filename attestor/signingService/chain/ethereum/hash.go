@@ -58,7 +58,7 @@ func hash(sp *chainService.ScreenedPacket) string {
 
 	hashOfPktHashAndVote := crypto.Keccak256Hash(pktHash.Bytes(), getEthBoolByte(sp.IsWhite))
 
-	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(pktHash))), hashOfPktHashAndVote.Bytes())
+	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(hashOfPktHashAndVote))), hashOfPktHashAndVote.Bytes())
 	return finalHash.Hex()
 }
 

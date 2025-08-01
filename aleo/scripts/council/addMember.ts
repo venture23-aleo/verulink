@@ -1,7 +1,7 @@
 import { hashStruct } from "../../utils/hash";
 
 import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_ADD_MEMBER } from "../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "./councilUtils";
 import { AddMember } from "../../artifacts/js/types/vlink_council_v2";
 import { getAddMemberLeo } from "../../artifacts/js/js2leo/vlink_council_v2";
@@ -29,6 +29,7 @@ export const proposeAddMember = async (member: string, new_threshold: number): P
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const addMemeberProposal: AddMember = {
+    tag: TAG_ADD_MEMBER,
     id: proposalId,
     new_member: member,
     new_threshold: new_threshold,
@@ -55,6 +56,7 @@ export const voteAddMember = async (proposalId: number, member: string, new_thre
   const voter = council.getAccounts()[0];
 
   const addMemeberProposal: AddMember = {
+    tag: TAG_ADD_MEMBER,
     id: proposalId,
     new_member: member,
     new_threshold: new_threshold,
@@ -83,6 +85,7 @@ export const execAddMember = async (proposalId: number, member: string, new_thre
   }
 
   const addMemeberProposal: AddMember = {
+    tag: TAG_ADD_MEMBER,
     id: proposalId,
     new_member: member,
     new_threshold: new_threshold,

@@ -10,6 +10,9 @@ import { ExecutionMode } from "@doko-js/core";
 
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { hash } from "aleo-hasher";
+import { TAG_TS_UNPAUSE_TOKEN } from "../../../utils/constants";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
@@ -33,16 +36,27 @@ export const proposeUnpauseToken = async (token_id: bigint): Promise<number> => 
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // GENERATE HASH
   const tsUnpauseToken: TsUnpauseToken = {
+    tag: TAG_TS_UNPAUSE_TOKEN,
     id: proposalId,
     token_id
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
-  const proposeUnpauseTokenTx = await council.propose(proposalId, tsUnpauseTokenHash);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUnpauseTokenHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
+  // PROPOSE
+  const proposeUnpauseTokenTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeUnpauseTokenTx.wait();
 
-  getProposalStatus(tsUnpauseTokenHash);
+  getProposalStatus(ExternalProposalHash);
 
   return proposalId
 };
@@ -57,20 +71,30 @@ export const voteUnpauseToken = async (proposalId: number, token_id: bigint) => 
   if (!isTokenPaused) {
     throw Error(`Token is already paused!`);
   }
+
+  // GENERATE HASH
   const tsUnpauseToken: TsUnpauseToken = {
+    tag: TAG_TS_UNPAUSE_TOKEN,
     id: proposalId,
     token_id
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUnpauseTokenHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
   const voter = council.getAccounts()[0];
-  validateVote(tsUnpauseTokenHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const voteUnpauseTx = await council.vote(tsUnpauseTokenHash, true);
-
+  // VOTE
+  const voteUnpauseTx = await council.vote(ExternalProposalHash, true);
   await voteUnpauseTx.wait();
 
-  getProposalStatus(tsUnpauseTokenHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -90,21 +114,30 @@ export const execUnpauseToken = async (proposalId: number, token_id: bigint) => 
     throw Error("Council is not the owner of bridge program");
   }
 
+  // GENERATE HASH
   const tsUnpauseToken: TsUnpauseToken = {
+    tag: TAG_TS_UNPAUSE_TOKEN,
     id: proposalId,
     token_id
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
-  validateExecution(tsUnpauseTokenHash);
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUnpauseTokenHash), 5);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUnpauseTokenHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+  validateExecution(ExternalProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), 5);
+
+  // EXECUTE
   const unpauseTokenTx = await serviceCouncil.ts_unpause_token(
     tsUnpauseToken.id,
     tsUnpauseToken.token_id,
     voters
   );
-
   await unpauseTokenTx.wait();
 
   isTokenPaused = (await tokenService.token_status(token_id, TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;

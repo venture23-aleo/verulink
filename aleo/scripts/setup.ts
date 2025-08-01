@@ -1,6 +1,6 @@
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
 import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
-import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate } from "../utils/testdata.data";
+import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate, aleoSeq, ethSeq } from "../utils/testdata.data";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
 import { execUnpause, proposeUnpauseBridge } from "./council/bridge/unpause";
@@ -87,7 +87,9 @@ const setup = async () => {
     initialAttestors,
     initialCouncilMembers,
     councilThreshold,
-    councilThreshold
+    councilThreshold, 
+    aleoSeq,
+    ethSeq
   );
 
   // give old token ownership to newly deployed 

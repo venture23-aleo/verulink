@@ -1,51 +1,61 @@
 import { hashStruct } from "../../../utils/hash";
-import { CouncilContract } from "../../../artifacts/js/council";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
-import { Token_service_v0003Contract } from "../../../artifacts/js/token_service_v0003";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_TS_UPDATE_MAX_MIN_TRANSFER } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TsAddToken, TsUpdateMaxTransfer, TsUpdateMinTransfer } from "../../../artifacts/js/types/token_service_council";
-import { getTsAddTokenLeo, getTsUpdateMaxTransferLeo, getTsUpdateMinTransferLeo } from "../../../artifacts/js/js2leo/token_service_council";
+
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Token_service_councilContract } from "../../../artifacts/js/token_service_council";
+import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { TsUpdateMaxMinTransfer } from "../../../artifacts/js/types/vlink_token_service_council_v2";
+import { getTsUpdateMaxMinTransferLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Token_service_councilContract({mode, priorityFee: 10_000});
+const serviceCouncil = new Vlink_token_service_council_v2Contract({mode, priorityFee: 10_000});
 
-const council = new CouncilContract({mode, priorityFee: 10_000});
-const tokenService = new Token_service_v0003Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({mode, priorityFee: 10_000});
+const tokenService = new Vlink_token_service_v2Contract({mode, priorityFee: 10_000});
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
 export const proposeUpdateMaxTransfer = async (
-    tokenAddress: string,
+    tokenId: bigint,
     maxTransfer: bigint,
+    minTransfer: bigint,
 ): Promise<number> => {
 
-  console.log(`👍 Proposing to update maximum transfer value of : ${tokenAddress}`)
-  const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-  if (storedTokenConnector == ALEO_ZERO_ADDRESS) {
-    throw Error(`Token ${tokenAddress} is not found`);
-  }
+  console.log(`👍 Proposing to update maximum, minimum transfer value of token: ${tokenId}`)
 
   const proposer = council.getAccounts()[0];
   validateProposer(proposer);
 
+  // GENERATE HASH
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
-  const tsUpdateMaxTransfer: TsUpdateMaxTransfer = {
+  const tsUpdateMaxTransfer: TsUpdateMaxMinTransfer = {
+    tag: TAG_TS_UPDATE_MAX_MIN_TRANSFER,
     id: proposalId,
-    token_address: tokenAddress,
-    max_transfer: maxTransfer
+    token_id: tokenId,
+    max_transfer: maxTransfer,
+    min_transfer: minTransfer,
   };
-  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer)); 
 
-  const [proposeUpdateMaxTransferTx] = await council.propose(proposalId, tsUpdateMaxTransferHash);
-  
-  await council.wait(proposeUpdateMaxTransferTx);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateMaxTransferHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  getProposalStatus(tsUpdateMaxTransferHash);
+  // PROPOSE
+  const proposeUpdateMaxTransferTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeUpdateMaxTransferTx.wait();
+
+  getProposalStatus(ExternalProposalHash);
   return proposalId
 };
 
@@ -54,31 +64,38 @@ export const proposeUpdateMaxTransfer = async (
 ///////////////////
 export const voteUpdateMaxTransfer = async (
     proposalId: number, 
-    tokenAddress: string,
+    tokenId: bigint,
     maxTransfer: bigint,
+    minTransfer: bigint,
 ) => {
-  console.log(`👍 Voting to update maximum transfer value of: ${tokenAddress}`)
-  const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-  if (storedTokenConnector == ALEO_ZERO_ADDRESS) {
-    throw Error(`Token ${tokenAddress} is not found`);
-  }
+  console.log(`👍 Voting to update maximum, minimum transfer value of token: ${tokenId}`)
 
   const voter = council.getAccounts()[0];
 
-  const tsUpdateMaxTransfer: TsUpdateMaxTransfer = {
+  // GENERATE HASH
+  const tsUpdateMaxTransfer: TsUpdateMaxMinTransfer = {
+    tag: TAG_TS_UPDATE_MAX_MIN_TRANSFER,
     id: proposalId,
-    token_address: tokenAddress,
-    max_transfer: maxTransfer
+    token_id: tokenId,
+    max_transfer: maxTransfer,
+    min_transfer: minTransfer,
   };
-  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer)); 
 
-  validateVote(tsUpdateMaxTransferHash, voter);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateMaxTransferHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const [voteUpdateMaxTransferTx] = await council.vote(tsUpdateMaxTransferHash, true);
-  
-  await council.wait(voteUpdateMaxTransferTx);
+  // VOTE
+  validateVote(ExternalProposalHash, voter);
 
-  getProposalStatus(tsUpdateMaxTransferHash);
+  const voteUpdateMaxTransferTx = await council.vote(ExternalProposalHash, true);
+  await voteUpdateMaxTransferTx.wait();
+
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -87,45 +104,50 @@ export const voteUpdateMaxTransfer = async (
 //////////////////////
 export const execUpdateMinTransfer = async (
     proposalId: number, 
-    tokenAddress: string,
+    tokenId: bigint,
     maxTransfer: bigint,
+    minTransfer: bigint,
 ) => {
-  console.log(`Updating maximum transfer for ${tokenAddress}`)
-  const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
-  if (storedTokenConnector == ALEO_ZERO_ADDRESS) {
-    throw Error(`Token ${tokenAddress} is not found`);
-  }
+  console.log(`Updating maximum, minimum transfer value of token: ${tokenId}`)
+
 
   const tokenServiceOwner = await tokenService.owner_TS(true);
   if (tokenServiceOwner != council.address()) {
     throw Error("Council is not the owner of tokenService program");
   }
 
-  const tsUpdateMaxTransfer: TsUpdateMaxTransfer = {
+  // GENERATE HASH
+  const tsUpdateMaxTransfer: TsUpdateMaxMinTransfer = {
+    tag: TAG_TS_UPDATE_MAX_MIN_TRANSFER,
     id: proposalId,
-    token_address: tokenAddress,
-    max_transfer: maxTransfer
+    token_id: tokenId,
+    max_transfer: maxTransfer,
+    min_transfer: minTransfer,
   };
-  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer)); 
 
-  validateExecution(tsUpdateMaxTransferHash);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsUpdateMaxTransferHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsUpdateMaxTransferHash), SUPPORTED_THRESHOLD);
+  validateExecution(ExternalProposalHash);
 
-  const [updateMaxTransferTx] = await serviceCouncil.ts_update_max_transfer(
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+  // EXECUTE
+  const updateMaxTransferTx = await serviceCouncil.ts_update_max_min_transfer(
     tsUpdateMaxTransfer.id,
-    tsUpdateMaxTransfer.token_address,
+    tsUpdateMaxTransfer.token_id,
     tsUpdateMaxTransfer.max_transfer,
+    tsUpdateMaxTransfer.min_transfer,
     voters
   ) 
 
-  await council.wait(updateMaxTransferTx);
+  await updateMaxTransferTx.wait();
 
-  const updatedMaximumTransfer = await tokenService.max_transfers(tokenAddress);
-  if (maxTransfer != updatedMaximumTransfer) {
-    throw Error(`❌ Unknown error.`);
-  }
-
-  console.log(` ✅ Token: ${tokenAddress} maximum transfer value updated successfully.`)
+  console.log(` ✅ Token: ${tokenId} maximum, minimum transfer value updated successfully.`)
 
 }

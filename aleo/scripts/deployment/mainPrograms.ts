@@ -9,7 +9,7 @@ import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
-export const deployMainPrograms = async (initialAttestors: string[], initialCouncilMembers: string[], initialAttestorThreshold: number, initialCouncilThreshold: number) => {
+export const deployMainPrograms = async (initialAttestors: string[], initialCouncilMembers: string[], initialAttestorThreshold: number, initialCouncilThreshold: number, aleoSeq: bigint, ethSeq: bigint) => {
 
   const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
   const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
@@ -51,7 +51,7 @@ export const deployMainPrograms = async (initialAttestors: string[], initialCoun
   await initializeCouncilTx.wait();
 
   //Initialize bridge
-  const initializeBridgeTx = await bridge.initialize_tb(initialAttestors, initialAttestorThreshold, bridgeCouncil.address());
+  const initializeBridgeTx = await bridge.initialize_tb(initialAttestors, initialAttestorThreshold, bridgeCouncil.address(), aleoSeq, ethSeq);
   await initializeBridgeTx.wait()
 
   // Initialize token service

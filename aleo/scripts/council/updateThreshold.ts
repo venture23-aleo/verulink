@@ -1,7 +1,7 @@
 import { hashStruct } from "../../utils/hash";
 
 import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
-import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
+import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_UPDATE_THRESHOLD } from "../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer } from "./councilUtils";
 import { UpdateThreshold } from "../../artifacts/js/types/vlink_council_v2";
 import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/vlink_council_v2";
@@ -29,12 +29,13 @@ export const proposeUpdateThreshold = async (newThreshold: number): Promise<numb
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const updateThresholdProposal: UpdateThreshold = {
+    tag: TAG_UPDATE_THRESHOLD,
     id: proposalId,
     new_threshold: newThreshold,
   };
   const updateThresholdProposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
-  const [updateThresholdTx] = await council.propose(proposalId, updateThresholdProposalHash);
-  await council.wait(updateThresholdTx);
+  const updateThresholdTx = await council.propose(proposalId, updateThresholdProposalHash);
+  await updateThresholdTx.wait();
 
   return proposalId
 };
@@ -55,13 +56,14 @@ export const voteUpdateThreshold = async (proposalId: number, newThreshold: numb
   // validateProposer(voter);
 
   const updateThresholdProposal: UpdateThreshold = {
+    tag: TAG_UPDATE_THRESHOLD,
     id: proposalId,
     new_threshold: newThreshold,
   };
   const updateThresholdProposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
-  const [updateThresholdTx] = await council.vote(updateThresholdProposalHash, true);
-  await council.wait(updateThresholdTx);
+  const updateThresholdTx = await council.vote(updateThresholdProposalHash, true);
+  await updateThresholdTx.wait();
 
   getProposalStatus(updateThresholdProposalHash);
 
@@ -84,8 +86,8 @@ export const execUpdateThreshold = async (proposalId: number, newThreshold: numb
   validateExecution(updateThresholdProposalHash);
 
   const voters = padWithZeroAddress(await getVotersWithYesVotes(updateThresholdProposalHash), SUPPORTED_THRESHOLD);
-  const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, voters);
-  await council.wait(updateThresholExecTx);
+  const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, voters);
+  await updateThresholExecTx.wait();
 
   const isNewThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
   if (isNewThreshold != newThreshold || newThreshold == 0) {

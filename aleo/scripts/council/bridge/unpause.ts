@@ -9,6 +9,9 @@ import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters
 import { ExecutionMode } from "@doko-js/core";
 
 import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
+import { TAG_TB_UNPAUSE } from "../../../utils/constants";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
@@ -31,16 +34,26 @@ export const proposeUnpauseBridge = async (): Promise<number> => {
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // proposing
   const tbUnpause: TbUnpause = {
+    tag: TAG_TB_UNPAUSE,
     id: proposalId,
   };
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause));
 
-  const proposeUnpauseBridgeTx = await council.propose(proposalId, tbUnpauseProposalHash);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbUnpauseProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+  // proposing
+  const proposeUnpauseBridgeTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeUnpauseBridgeTx.wait();
 
-  getProposalStatus(tbUnpauseProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
   return proposalId
 };
@@ -56,19 +69,28 @@ export const voteUnpauseBridge = async (proposalId: number) => {
     throw Error(`Bridge is already unpaused!`);
   }
 
+  // proposing
   const tbUnpause: TbUnpause = {
+    tag: TAG_TB_UNPAUSE,
     id: proposalId,
   };
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause));
 
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbUnpauseProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
   const voter = council.getAccounts()[0];
-  validateVote(tbUnpauseProposalHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const voteAddChainTx = await council.vote(tbUnpauseProposalHash, true);
-
+  // vote
+  const voteAddChainTx = await council.vote(ExternalProposalHash, true);
   await voteAddChainTx.wait();
 
-  getProposalStatus(tbUnpauseProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -88,19 +110,28 @@ export const execUnpause = async (proposalId: number) => {
     throw Error("Council is not the owner of bridge program");
   }
 
+  // proposing
   const tbUnpause: TbUnpause = {
+    tag: TAG_TB_UNPAUSE,
     id: proposalId,
   };
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause));
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbUnpauseProposalHash), SUPPORTED_THRESHOLD);
-  validateExecution(tbUnpauseProposalHash);
+  const externalProposal: ExternalProposal = {
+          id: proposalId,
+          external_program: bridgeCouncil.address(),
+          proposal_hash: tbUnpauseProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+  validateExecution(ExternalProposalHash);
+
+  // execute
   const unpauseBridgeTx = await bridgeCouncil.tb_unpause(
     tbUnpause.id,
     voters
   );
-
   await unpauseBridgeTx.wait();
 
   isBridgeUnpaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_UNPAUSED_VALUE;
