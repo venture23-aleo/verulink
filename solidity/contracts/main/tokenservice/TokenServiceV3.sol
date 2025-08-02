@@ -2,15 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenServiceV2} from "../../main/tokenservice/TokenServiceV2.sol";
 import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
-
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {PredicateService} from "../../main/tokenservice/predicate/PredicateService.sol";
-
 import {FeeCollector} from "./FeeCollector.sol";
 
 
@@ -103,7 +100,7 @@ contract TokenServiceV3 is TokenServiceV2 {
         _transfer(tokenAddress, amount, receiver, version, data);
     }
 
-    /// @notice Transfers ETH with predicate authorization
+    /// @notice Transfers ETH without predicate authorization
     /// @param receiver The intended receiver of the transferred ETH
     function transfer(
         string memory receiver,
@@ -115,7 +112,7 @@ contract TokenServiceV3 is TokenServiceV2 {
         _transfer(receiver, version, data);
     }
 
-    /// @notice Transfers ERC20 tokens with predicate authorization
+    /// @notice Transfers ERC20 tokens without predicate authorization
     /// @param tokenAddress The address of the ERC20 token
     /// @param amount Amount of tokens to be transferred
     /// @param receiver The intended receiver of the transferred tokens
@@ -303,10 +300,12 @@ contract TokenServiceV3 is TokenServiceV2 {
             revert("TokenService: insufficientQuorum");
         }
     }
- 
-    uint256[49] private __gap;
+
 
     FeeCollector public feeCollector;
     mapping(address => uint256) public collectedFees;
+ 
+    uint256[49] private __gap;
+
     
 }

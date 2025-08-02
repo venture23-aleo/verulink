@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {AleoAddressLibrary} from "../common/libraries/AleoAddressLibrary.sol";
 import {PacketLibrary} from "../common/libraries/PacketLibrary.sol";
 import {Pausable} from "../common/Pausable.sol";
-import {AttestorManager} from "../base/bridge/AttestorManager.sol";
+import {AttestorManagerV2} from "../base/bridge/AttestorManagerV2.sol";
 import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImplV2} from "../base/bridge/OutgoingPacketmanagerImplV2.sol";
@@ -17,7 +17,7 @@ import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 contract BridgeV2 is 
     OwnableUpgradeable,
     Pausable,
-    AttestorManager,
+    AttestorManagerV2,
     BridgeTokenServiceManager,
     ConsumedPacketManagerImpl,
     OutgoingPacketManagerImplV2,
@@ -31,18 +31,11 @@ contract BridgeV2 is
     event ChainUpdated(uint256 oldDestinationChainId, uint256 newDestinationChainId);
 
     /// @notice The destination chain ID for packet routing
-    uint256 public destinationChainId;
-
-    /// @dev Initializes the Bridge contract
-    /// @param _destChainId The initial destination chain ID
-    function Bridge_init(
-        uint256 _destChainId,
-        address _owner
-    ) public initializer {
-        __Ownable_init_unchained(_owner);
-        __Pausable_init_unchained();
-        destinationChainId = _destChainId;
-        _transferOwnership(_owner);      
+    uint256 public destinationChainId;  
+        
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
     function _authorizeUpgrade(address) internal virtual view override {
