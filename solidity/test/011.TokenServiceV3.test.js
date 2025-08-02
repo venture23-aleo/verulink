@@ -40,7 +40,7 @@ describe('TokenService', () => {
         [owner, signer, bridge, other, attestor, attestor1, deployer] = await ethers.getSigners();
         // this.ADMIN_ROLE = ethers.keccak256(Buffer.from('ADMIN_ROLE'));
         // let predicateservice = await ethers.getContractFactory("PredicateService");
-        console.log("kekeccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
+        // console.log("kekeccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
         // 0xd8a7a79547af723ee3e12b59a480111268d8969c634e1a34a144d2c8b91d635b
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
@@ -156,7 +156,7 @@ describe('TokenService', () => {
 
         FeeCollector = await ethers.getContractFactory("FeeCollector");
         feeCollectorImpl = await FeeCollector.deploy();
-        initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize", [proxiedV1.address, owner.address, usdcMock.address, usdTMock.address, 0, 0]);
+        initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize", [proxiedV1.address, owner.address]);
         proxy = await Proxied.deploy(feeCollectorImpl.address, initializeData);
         await proxy.deployed();
         feeCollector = FeeCollector.attach(proxy.address);
@@ -382,5 +382,25 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(signer.address)).to.equal(0);
         expect(await usdcMock.balanceOf(other.address)).to.equal(100);
       });
+
+      describe("Receive Function", () => {
+        it('should allow owner to receive ETH', async () => {
+            await expect(
+                owner.sendTransaction({
+                    to: proxiedV1.address,
+                    value: ethers.utils.parseEther("1")
+                })
+            ).to.not.be.reverted;
+        });
+
+        it('should reject ETH from non-owner', async () => {
+            await expect(
+                other.sendTransaction({
+                    to: proxiedV1.address,
+                    value: ethers.utils.parseEther("1")
+                })
+            ).to.be.reverted;
+        });
+    });
 
 });

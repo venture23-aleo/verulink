@@ -31,8 +31,8 @@ contract BridgeV2 is
     event ChainUpdated(uint256 oldDestinationChainId, uint256 newDestinationChainId);
 
     /// @notice The destination chain ID for packet routing
-    uint256 public destinationChainId;
-
+    uint256 public destinationChainId;  
+        
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();

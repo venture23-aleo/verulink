@@ -8,8 +8,8 @@ import {Pausable} from "../../common/Pausable.sol";
  * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
 contract PausableMock is Pausable {
-  function Pausable_init() public initializer {
-    __Ownable_init_unchained();
+  function Pausable_init(address _owner) public initializer {
+    __Ownable_init_unchained(_owner);
     __Pausable_init_unchained();
   }
 }

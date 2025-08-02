@@ -17,7 +17,7 @@ contract PredicateService is PredicateClient, AccessControl {
     /// @notice Constructor sets the deployer as the DEFAULT_ADMIN_ROLE and assigns SERVICE_ROLE
     constructor(address _serviceManagerAddress, string memory _policyID) {
         _initPredicateClient(_serviceManagerAddress, _policyID);
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     /// @notice Verifies predicate for a transaction with receiver and predicate for ETH message.

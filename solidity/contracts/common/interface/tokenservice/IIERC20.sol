@@ -42,4 +42,16 @@ interface IIERC20 is IERC20 {
     /// @param _maker The address to be checked.
     /// @return True if the account is blacklisted, false otherwise.
     function getBlackListStatus(address _maker) external view returns (bool);
+
+   /// @notice Mints new tokens and assigns them to the specified address.
+   /// @param to The address to receive the minted tokens.
+   /// @param amount The number of tokens to mint.
+   /// @dev Ensure the contract supports this function before calling it.
+   function mint(address to, uint256 amount) external;
+
+   /// @notice Burns tokens from the specified address, reducing the total supply.
+   /// @param from The address from which tokens will be burned.
+   /// @param amount The number of tokens to burn.
+   /// @dev Ensure the contract supports this function before calling it.
+    function burnFrom(address from, uint256 amount) external;
 }

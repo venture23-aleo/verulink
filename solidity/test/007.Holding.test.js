@@ -37,7 +37,7 @@ describe('Holding', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedV1["Holding_init(address,address)"](tokenService.address,owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedV1["Holding_init(address,address)"](tokenService.address,owner.address)).to.be.revertedWithCustomError(proxiedV1, 'InvalidInitialization');
     });
 
     // Test that only the owner can update the token service
@@ -51,7 +51,7 @@ describe('Holding', () => {
         // Try to update token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).addTokenService(newTokenService)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         // Try to update existed token service and expect it to revert
         await expect(
@@ -74,7 +74,7 @@ describe('Holding', () => {
         // Try to update token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).addTokenService(newTokenService)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         // Try to update existed token service and expect it to revert
         // await expect(
@@ -97,7 +97,7 @@ describe('Holding', () => {
         // Try to update token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).removeTokenService(newTokenService)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         const tx = await proxiedV1.connect(owner).removeTokenService(newTokenService);
         await tx.wait();
@@ -124,7 +124,7 @@ describe('Holding', () => {
         // Try to update token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).removeTokenService(newTokenService)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         // const tx = await proxiedV1.removeTokenService(newTokenService);
         // await tx.wait();
@@ -230,7 +230,7 @@ describe('Holding', () => {
         // Try to unlock tokens with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).unlock(user, token, amount)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
     });
 
     // Test the unlock function and the require statement for "Insufficient amount"
@@ -329,7 +329,7 @@ describe('Holding', () => {
         // contract is paued here
         const tx = await proxiedV1.connect(owner).pause();
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("Pausable: paused");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWithCustomError(proxiedV1, "EnforcedPause");
     });
 
     // Test for holding contract is blacklisted before releasing
@@ -348,7 +348,7 @@ describe('Holding', () => {
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(proxiedV1.address);
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWithCustomError(proxiedV1, "SafeERC20FailedOperation");
     });
 
     it('should not release if release to user is blacklisted', async () => {
@@ -366,7 +366,7 @@ describe('Holding', () => {
         // contract is blackListed here to make it fail on token transfer
         const tx = await usdcMock.addBlackList(user);
         // Release tokens with the owner, should revert back
-        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWith("SafeERC20: ERC20 operation did not succeed");
+        await expect(proxiedV1["release(address,address)"](user, token)).to.be.revertedWithCustomError(proxiedV1, "SafeERC20FailedOperation");
     });
 
     // Test for holding contract is blacklisted before releasing
@@ -630,6 +630,6 @@ describe('Upgradeabilty: HoldingV2', () => {
     });
 
     it('reverts if the contract is initialized twice', async function () {
-        await expect(proxied.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxied.initializev2(100)).to.be.revertedWithCustomError(proxied, 'InvalidInitialization');
     });
 })
