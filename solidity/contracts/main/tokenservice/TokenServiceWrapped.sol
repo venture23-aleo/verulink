@@ -71,12 +71,12 @@ contract TokenServiceWrapped is
 
         __Ownable_init_unchained(_owner);
         __ReentrancyGuard_init();
+        __Pausable_init();
         
         erc20Bridge = IBridge(_bridge);
         self = PacketLibrary.InNetworkAddress(_chainId, address(this));
         destChainId = _destChainId;
         blackListService = IBlackListService(_blackListService);
-        _transferOwnership(_owner);
     }
 
     /// @notice Returns the type of token managed by the TokenService
