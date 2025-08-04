@@ -44,7 +44,6 @@ import { RegisterToken, RemoveOtherChainAddresses, SetRoleForToken, TsTransferOw
 import { getRegisterTokenLeo, getRemoveOtherChainAddressesLeo, getSetRoleForTokenLeo, getUpdateTokenMetadataLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getTsTransferOwnershipLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { ExternalProposal} from "../artifacts/js/types/vlink_council_v2";
-import { getExternalProposal } from "../artifacts/js/leo2js/vlink_council_v2";
 import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v2";
 
 
@@ -104,13 +103,6 @@ describe("Token Service Council", () => {
 
 
   describe("deployment", () => {
-    test("Deploy Token registery",
-      async () => {
-        const deployTx = await tokenRegistry.deploy();
-        await deployTx.wait()
-      },
-      TIMEOUT
-    );
     test("Deploy Holding",
       async () => {
         const deployTx = await holding.deploy();
@@ -499,7 +491,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Register token", () => { //ts_register_token
+  describe("Register token", () => {
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
 
@@ -553,7 +545,7 @@ describe("Token Service Council", () => {
     }, TIMEOUT);
   });
 
-  describe("Update token metadata", () => { //update_token_metadata
+  describe("Update token metadata", () => {
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -602,7 +594,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Set Token role", () => { //set_role_token
+  describe("Set Token role", () => {
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -652,7 +644,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Add chain to existing token", () => { //ts_add_chain_to_existing_token
+  describe("Add chain to existing token", () => {
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -731,7 +723,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Remove  chain to existing token", () => { //ts_remove_chain_to_existing_token
+  describe("Remove  chain to existing token", () => { 
 
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -785,7 +777,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Update fees", () => { //ts_update_fees
+  describe("Update fees", () => { 
 
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);

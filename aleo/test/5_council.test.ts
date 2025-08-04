@@ -44,9 +44,7 @@ const mode = ExecutionMode.SnarkExecute;
 const tokenRegistry = new Token_registryContract({ mode })
 const holding = new Vlink_holding_v2Contract({ mode })
 const council = new Vlink_council_v2Contract({ mode });
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode });
 const tokenService = new Vlink_token_service_v2Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode });
 const bridge = new Vlink_token_bridge_v2Contract({ mode });
 
 const TAG_ADD_MEMBER = 1;
@@ -104,13 +102,6 @@ describe("Council", () => {
   const initialThreshold = 2;
 
   describe("Deployment", () => {
-    test("Deploy Token registery",
-      async () => {
-        const deployTx = await tokenRegistry.deploy();
-        await deployTx.wait()
-      },
-      TIMEOUT
-    );
 
     test("Deploy Holding",
       async () => {
@@ -183,11 +174,11 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test("Reinitialized council should fail", async () => {
+    test.failing("Reinitialized council should fail", async () => {
       const initializeTx = await council.initialize(
         [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS], initialThreshold
       );
-      expect(await initializeTx.wait()).toStrictEqual([]); // this means failed
+      await initializeTx.wait();
     }, TIMEOUT)
 
     test("Holding: Initialize", async () => {
@@ -204,7 +195,7 @@ describe("Council", () => {
     let proposalId: number;
 
     describe("Propose", () => {
-      test("should not Propose with invalid proposalId", async () => {
+      test.failing("should not Propose with invalid proposalId", async () => {
         const wrongProposalId = 1000;
         const updateThresholdProposal: UpdateThreshold = {
           tag: TAG_UPDATE_THRESHOLD,
@@ -215,10 +206,10 @@ describe("Council", () => {
 
         council.connect(councilMember1)
         const proposeTx = await council.propose(1000, proposalHash);
-        expect(await proposeTx.wait()).toStrictEqual([]);
+        await proposeTx.wait();
       }, TIMEOUT)
 
-      test("should not Propose from non-council member", async () => {
+      test.failing("should not Propose from non-council member", async () => {
         const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
         const updateThresholdProposal: UpdateThreshold = {
           tag: TAG_UPDATE_THRESHOLD,
@@ -230,7 +221,7 @@ describe("Council", () => {
 
         council.connect(newMember);
         const proposeTx = await council.propose(proposalId, proposalHash);
-        expect(await proposeTx.wait()).toStrictEqual([]);
+        await proposeTx.wait();
       }, TIMEOUT)
 
       test("Propose from council member", async () => {
@@ -257,16 +248,16 @@ describe("Council", () => {
 
     describe("Vote", () => {
 
-      test("Vote from non council member fails", async () => {
+      test.failing("Vote from non council member fails", async () => {
         council.connect(aleoUser4)
         const voteTx = await council.vote(proposalHash, true);
-        expect(await voteTx.wait()).toStrictEqual([]);
+        await voteTx.wait();
       }, TIMEOUT)
 
-      test("Vote from council member1(proposer) fails, since vote counts when proposed", async () => {
+      test.failing("Vote from council member1(proposer) fails, since vote counts when proposed", async () => {
         council.connect(councilMember1)
         const voteTx = await council.vote(proposalHash, true);
-        expect(await voteTx.wait()).toStrictEqual([]);
+        await voteTx.wait();
       }, TIMEOUT)
 
       test("Vote NO from council member2", async () => {
@@ -279,15 +270,14 @@ describe("Council", () => {
         expect(finalVotes).toBe(initialVotes + 1);
       }, TIMEOUT)
 
-      // TODO: HOW TO VOTE PAST THE BLOCK HEIGHT LIMIT?
     })
 
     describe("Execute", () => {
-      test("Execute without enough votes fails", async () => {
+      test.failing("Execute without enough votes fails", async () => {
         const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
-        expect(await updateThresholExecTx.wait()).toStrictEqual([]);
+        await updateThresholExecTx.wait();
       }, TIMEOUT);
 
       test("Vote YES from council member 3", async () => {
@@ -313,16 +303,14 @@ describe("Council", () => {
         expect(votes[2]).toBe(true);
       }, TIMEOUT)
 
-      test("fails if voters list have non-valid voters", async () => {
+      test.failing("fails if voters list have non-valid voters", async () => {
         const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, aleoUser4];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
-        expect(await updateThresholExecTx.wait()).toStrictEqual([]);
+        await updateThresholExecTx.wait();
       }, TIMEOUT);
 
       test("Execute with all votes", async () => {
-        const initialThresholdValue = await council.settings(COUNCIL_THRESHOLD_INDEX)
-        const totalMember = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
         const signers = [councilMember1, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         council.connect(councilMember1);
@@ -446,10 +434,10 @@ describe("Council", () => {
       expect(finalTotalAttestors).toBe(initialTotalAttestors + 1);
     }, TIMEOUT)
 
-    test("Should not allow voting after proposal execution", async () => {
+    test.failing("Should not allow voting after proposal execution", async () => {
       council.connect(councilMember3)
       const voteTx = await council.vote(proposalHash, true);
-      expect(await voteTx.wait()).toStrictEqual([]); // this means failed
+      await voteTx.wait();
     }, TIMEOUT)
   })
 

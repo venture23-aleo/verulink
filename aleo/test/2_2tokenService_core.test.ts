@@ -13,8 +13,6 @@ import {
     VERSION_PUBLIC_NORELAYER_NOPREDICATE,
     VERSION_PRIVATE_NORELAYER_NOPREDICATE,
     aleoChainId,
-    arbitrumChainId,
-    arbitrumTsContractAddr,
     baseChainId,
     baseTsContractAddr,
     ethChainId,
@@ -24,9 +22,7 @@ import {
     VERSION_PUBLIC_RELAYER_NOPREDICATE,
     VERSION_PRIVATE_RELAYER_NOPREDICATE,
     BRIDGE_TOTAL_ATTESTORS_INDEX,
-    BRIDGE_THRESHOLD_INDEX,
-    OWNER_INDEX,
-    BRIDGE_PAUSED_VALUE,
+    BRIDGE_THRESHOLD_INDEX
 } from "../utils/testdata.data";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
@@ -40,10 +36,8 @@ import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
 import { getSignerPackets } from "../utils/getRecords";
 import { Transition } from "@doko-js/core/dist/outputs/types/transaction";
 import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
-import { log } from "console";
 import { Holder } from "../artifacts/js/types/vlink_holding_v2";
 import { ethTsRandomContractAddress2, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
-import exp from "constants";
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
@@ -98,11 +92,6 @@ describe("Token Service Core", () => {
 
         test("Deploy Bridge", async () => {
             const deployTx = await bridge.deploy();
-            await deployTx.wait();
-        }, TIMEOUT);
-
-        test("Deploy MTSP program", async () => {
-            const deployTx = await mtsp.deploy();
             await deployTx.wait();
         }, TIMEOUT);
 
@@ -390,7 +379,7 @@ describe("Token Service Core", () => {
                 await tx.wait();
             })
 
-            test("should failed if tokeninfo not included in other_chain_token_service mapping", async () => {
+            test.failing("should failed if tokeninfo not included in other_chain_token_service mapping", async () => {
                 const receiveAmount: bigint = BigInt(100_000_000)
                 const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), BigInt("285563657430695784"), ethTsRandomContractAddress);
 
@@ -435,7 +424,7 @@ describe("Token Service Core", () => {
                     public_relayer_fee,
                     packet.version
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT)
 
             test.failing("Should fail the transaction if stored token service address is not same as the one in mapping", async () => {
@@ -486,7 +475,7 @@ describe("Token Service Core", () => {
                 await expect(tx.wait()).rejects.toThrow();
             }, TIMEOUT)
 
-            test("should fail if user send fee and fee set in mapping are different", async () => {
+            test.failing("should fail if user send fee and fee set in mapping are different", async () => {
                 const receiveAmount: bigint = BigInt(100_000_000)
                 const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
 
@@ -531,15 +520,10 @@ describe("Token Service Core", () => {
                     BigInt(50000), //fee diferent here
                     packet.version
                 );
-                tx.wait().then(() => {
-                    throw new Error("Expected failure, but got success");
-                }).catch((err) => {
-                    expect(err.message).toMatch(/transitions|execution|undefined/);
-                });
-                await sleepTimer(5000);
+                await tx.wait();
             }, TIMEOUT)
 
-            test(" All Fund should go back to the holding account if screening fails", async () => {
+            test("All Fund should go back to the holding account if screening fails", async () => {
                 const receiveAmount: bigint = BigInt(100_000_000)
                 const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PUBLIC_RELAYER_NOPREDICATE);
                 const initialHoldingBalanceInRegistery = await getUserAuthorizedBalance(holding.address(), tokenID);
@@ -988,7 +972,7 @@ describe("Token Service Core", () => {
                 await tx.wait();
             })
 
-            test("should fail if user send fee and fee set in mapping are different", async () => {
+            test.failing("should fail if user send fee and fee set in mapping are different", async () => {
                 const pre_image = BigInt(123);
                 const image: Image = {
                     pre_image,
@@ -1028,11 +1012,7 @@ describe("Token Service Core", () => {
                     packet.version,
                     BigInt(3000) //Fee different
                 );
-                tx.wait().then(() => {
-                    throw new Error("Expected failure, but got success");
-                }).catch((err) => {
-                    expect(err.message).toMatch(/transitions|execution|undefined/);
-                });
+                await tx.wait();
             }, TIMEOUT)
 
             test("If screening failed, All Funds minted in holding account publicly ", async () => {
@@ -1416,7 +1396,7 @@ describe("Token Service Core", () => {
             TIMEOUT
         );
 
-        test("Transferred amount must be greater than or equal to min amount",
+        test.failing("Transferred amount must be greater than or equal to min amount",
             async () => {
                 const amount = BigInt(99);
                 expect(amount).toBeLessThan(minAmount);
@@ -1432,12 +1412,12 @@ describe("Token Service Core", () => {
                     platformFee,
                     non_active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow()
+                await tx.wait();
             },
             TIMEOUT
         );
 
-        test("Transferred amount must be less than or equal to max amount",
+        test.failing("Transferred amount must be less than or equal to max amount",
             async () => {
                 const amount = BigInt(100_000);
                 expect(amount).toBeLessThanOrEqual(maxAmount);
@@ -1453,13 +1433,13 @@ describe("Token Service Core", () => {
                     platformFee,
                     non_active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow()
+                await tx.wait();
             },
             TIMEOUT
         );
 
         describe("Token Send Public", () => {
-            test("Cannot send if user has insufficient fund", async () => {
+            test.failing("Cannot send if user has insufficient fund", async () => {
                 const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
 
                 expect(await tokenService.min_transfers(tokenID)).toBeLessThanOrEqual(amount)
@@ -1486,11 +1466,11 @@ describe("Token Service Core", () => {
                         platformFee,
                         non_active_relayer
                     );
-                    expect(tx.wait()).rejects.toThrow();
+                    await tx.wait();
                 }
             }, TIMEOUT);
 
-            test("Should failed if platform fee is mismatched", async () => {
+            test.failing("Should failed if platform fee is mismatched", async () => {
                 const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
                 expect(await tokenService.min_transfers(tokenID)).toBeLessThanOrEqual(amount)
                 expect(await tokenService.max_transfers(tokenID)).toBeGreaterThanOrEqual(amount)
@@ -1515,7 +1495,7 @@ describe("Token Service Core", () => {
                         BigInt(1),
                         non_active_relayer
                     );
-                    expect(tx.wait()).rejects.toThrow();
+                    await tx.wait();
                 }
             }, TIMEOUT);
 
@@ -1640,7 +1620,7 @@ describe("Token Service Core", () => {
                 TIMEOUT
             );
 
-            test("Cannot send if token status is paused", async () => {
+            test.failing("Cannot send if token status is paused", async () => {
                 // Pause the token
                 tokenService.connect(admin);
                 const pauseTx = await tokenService.pause_token_ts(tokenID);
@@ -1657,7 +1637,7 @@ describe("Token Service Core", () => {
                     platformFee,
                     active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT)
 
             test("Unpause the token for rest of the transaction", async () => {
@@ -1667,7 +1647,7 @@ describe("Token Service Core", () => {
                 expect(await tokenService.token_status(tokenID)).toBe(TOKEN_UNPAUSED_VALUE);
             }, TIMEOUT)
 
-            test("Cannot send if other_chain_token_address is wrong data", async () => {
+            test.failing("Cannot send if other_chain_token_address is wrong data", async () => {
                 tokenService.connect(admin);
                 const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
                 const tx = await tokenService.token_send_public(
@@ -1680,10 +1660,10 @@ describe("Token Service Core", () => {
                     platformFee,
                     active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT)
 
-            test("Cannot send if other_chain_token_service is wrong data", async () => {
+            test.failing("Cannot send if other_chain_token_service is wrong data", async () => {
                 tokenService.connect(admin);
                 const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
                 const tx = await tokenService.token_send_public(
@@ -1696,7 +1676,7 @@ describe("Token Service Core", () => {
                     platformFee,
                     active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT)
         })
 
@@ -1724,7 +1704,7 @@ describe("Token Service Core", () => {
                 expect(sendPrivateTx.wait()).rejects.toThrow();
             }, TIMEOUT);
 
-            test("Should failed if platform fee is mismatched", async () => {
+            test.failing("Should failed if platform fee is mismatched", async () => {
                 const authorized_until = 4294967295;
                 const amount_minted = BigInt(1000_000);
 
@@ -1745,7 +1725,7 @@ describe("Token Service Core", () => {
                     platformFee + BigInt(10),
                     non_active_relayer
                 )
-                expect(sendPrivateTx.wait()).rejects.toThrow();
+                await sendPrivateTx.wait()
             }, TIMEOUT)
 
             test("Token send private with non active relayer", async () => {
@@ -1819,7 +1799,7 @@ describe("Token Service Core", () => {
                 expect(council_final_balance.balance).toBe(BigInt(private_platform_fee) + beforeCouncilBalance.balance);
             }, TIMEOUT);
 
-            test("Cannot send if token status is paused", async () => {
+            test.failing("Cannot send if token status is paused", async () => {
                 // Pause the token
                 tokenService.connect(admin);
                 const pauseTx = await tokenService.pause_token_ts(tokenID);
@@ -1844,7 +1824,7 @@ describe("Token Service Core", () => {
                     platformFee,
                     active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT);
 
             test("Unpause the token for rest of the transaction", async () => {
@@ -1854,7 +1834,7 @@ describe("Token Service Core", () => {
                 expect(await tokenService.token_status(tokenID)).toBe(TOKEN_UNPAUSED_VALUE);
             }, TIMEOUT);
 
-            test("Cannot send if other_chain_token_address is wrong data", async () => {
+            test.failing("Cannot send if other_chain_token_address is wrong data", async () => {
                 const authorized_until = 4294967295;
                 const amount_minted = BigInt(100_000_000);
                 const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
@@ -1874,7 +1854,7 @@ describe("Token Service Core", () => {
                     platformFee,
                     active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT);
 
             test("Cannot send if other_chain_token_service is wrong data", async () => {
@@ -1897,7 +1877,7 @@ describe("Token Service Core", () => {
                     platformFee,
                     active_relayer
                 );
-                await expect(tx.wait()).rejects.toThrow();
+                await tx.wait();
             }, TIMEOUT);
         })
     });

@@ -57,7 +57,6 @@ import {
 import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import { TbUpdateThreshold } from "../artifacts/js/types/vlink_bridge_council_v2";
-import { getTbUpdateThreshold } from "../artifacts/js/leo2js/vlink_bridge_council_v2";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../utils/testdata.data";
 import { getTbUpdateThresholdLeo } from "../artifacts/js/js2leo/vlink_bridge_council_v2";
 
@@ -67,7 +66,6 @@ const mode = ExecutionMode.SnarkExecute;
 
 const council = new Vlink_council_v2Contract({ mode });
 const holding = new Vlink_holding_v2Contract({ mode })
-const tokenRegistry = new Token_registryContract({ mode })
 const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode });
 const bridge = new Vlink_token_bridge_v2Contract({ mode });
 const tokenService = new Vlink_token_service_v2Contract({ mode });
@@ -86,19 +84,6 @@ const TAG_TB_UNPAUSE = 10;
 
 const TIMEOUT = 300000_000;
 
-const getVoteKeys = (proposalHash: bigint, voters: string[]): bigint[] => {
-  const voteKeys = []
-  for (let voter of voters) {
-    const proposalVote: ProposalVote = {
-      proposal: proposalHash,
-      member: voter
-    }
-    const voteKey = hashStruct(getProposalVoteLeo(proposalVote))
-    voteKeys.push(voteKey);
-  }
-  return voteKeys
-}
-
 const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
 const aleoUser5 = new PrivateKey().to_address().to_string()
 const admin = bridgeCouncil.address();
@@ -110,14 +95,7 @@ describe("Bridge", () => {
   let eth_sequence = BigInt(750);
 
   describe("deployment", () => {
-    test(
-      "Deploy Token registery",
-      async () => {
-        const deployTx = await tokenRegistry.deploy();
-        await deployTx.wait()
-      },
-      TIMEOUT
-    );
+
     test(
       "Deploy Holding",
       async () => {

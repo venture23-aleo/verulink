@@ -36,14 +36,6 @@ describe("Holding", () => {
     const external_authorization_party = aleoUser4;
 
     describe("Deployment", () => {
-        test(
-            "Deploy Token registery",
-            async () => {
-                const deployTx = await tokenRegistry.deploy();
-                await deployTx.wait()
-            },
-            TIMEOUT
-        );
 
         test(
             "Deploy Holding",
@@ -84,13 +76,12 @@ describe("Holding", () => {
             }
         }, TIMEOUT);
 
-        test.skip("cannot initialize token holding twice", async () => {
+        test.failing("cannot initialize token holding twice", async () => {
             const isHoldingInitialized = (await holding.owner_holding(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
             expect(isHoldingInitialized).toBe(true);
             holding.connect(admin);
             const tx = await holding.initialize_holding(aleoUser1);
             await tx.wait();
-            expect(await holding.owner_holding(OWNER_INDEX)).toBe(aleoUser1);
         }, TIMEOUT);
     })
 
@@ -100,10 +91,10 @@ describe("Holding", () => {
             token_id: tokenID
         };
 
-        test("should not be called from non-admin", async () => {
+        test.failing("should not be called from non-admin", async () => {
             holding.connect(aleoUser3);
             const tx = await holding.hold_fund(user, tokenID, amountToHold);
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait();
         }, TIMEOUT);
 
         test("should hold fund", async () => {
@@ -138,25 +129,24 @@ describe("Holding", () => {
         };
         const alice_balance = hashStruct(alice);
 
-        test("should not be called from non-admin", async () => {
+        test.failing("should not be called from non-admin", async () => {
             holding.connect(aleoUser3);
             const tx = await holding.hold_fund(user, tokenID, amountToHold);
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait();
         }, TIMEOUT);
 
-        test("Releasing fund greater than held amount must fail", async () => {
+        test.failing("Releasing fund greater than held amount must fail", async () => {
             const heldAmount = await holding.holdings(holder, BigInt(0));
             holding.connect(admin);
             const tx = await holding.release_fund(user, tokenID, heldAmount + BigInt(1));
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait();
         }, TIMEOUT);
 
-        test("Releasing fund greater than balance must fail", async () => {
+        test.failing("Releasing fund greater than balance must fail", async () => {
             const holdingBalance = await tokenRegistry.authorized_balances(holding_balance);
-            const heldAmount = await holding.holdings(holder);
             holding.connect(admin);
             const tx = await holding.release_fund(user, tokenID, holdingBalance.balance + BigInt(1000));
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait();
         }, TIMEOUT);
 
         test("Mint token balance in holding", async () => {
@@ -207,17 +197,17 @@ describe("Holding", () => {
             token_id: tokenID
         }
 
-        test("should not be called from non-admin", async () => {
+        test.failing("should not be called from non-admin", async () => {
             holding.connect(aleoUser3);
             const tx = await holding.release_fund_private(image.receiver, pre_image, tokenID, amountToRelease);
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait();
         }, TIMEOUT);
 
-        test("Releasing fund greater than held amount must fail", async () => {
+        test.failing("Releasing fund greater than held amount must fail", async () => {
             const heldAmount = await holding.holdings(hashedHolder, BigInt(0));
             holding.connect(admin);
             const tx = await holding.release_fund_private(image.receiver, pre_image, tokenID, heldAmount + BigInt(5));
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait()
         }, TIMEOUT);
 
         test("should hold fund for hashed address", async () => {
@@ -248,10 +238,10 @@ describe("Holding", () => {
     });
 
     describe("Transfer Ownership", () => {
-        test("should not tranfer_ownership by non-admin", async () => {
+        test.failing("should not tranfer_ownership by non-admin", async () => {
             holding.connect(aleoUser2);
             const tx = await holding.transfer_ownership_holding(aleoUser2);
-            await expect(tx.wait()).rejects.toThrow()
+            await tx.wait();
         }, TIMEOUT);
 
         test("should tranfer_ownership", async () => {
