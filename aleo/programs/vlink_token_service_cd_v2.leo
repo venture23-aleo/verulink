@@ -169,6 +169,9 @@ program vlink_token_service_cd_v2.aleo {
         // check if other chain token address exists in the mapping and remove it.
         assert(Mapping::contains(other_chain_token_address, chaintokeninfo));
         Mapping::remove(other_chain_token_address, chaintokeninfo);
+
+        Mapping::remove(platform_fee, chaintokeninfo);
+        Mapping::remove(relayer_fee, chaintokeninfo);
     }
 
 
