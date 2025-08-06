@@ -63,8 +63,7 @@ program vlink_token_service_cd_cuncl_v2.aleo
         token_address: [u8; 20],
         token_service: [u8; 20],
         chain_id: u128,
-        fee_platform: u32,
-        fee_relayer: u64,
+        fee_platform: u32
     }
 
     async transition ts_add_token_info(
@@ -75,8 +74,7 @@ program vlink_token_service_cd_cuncl_v2.aleo
         public token_address: [u8; 20],
         public token_service: [u8; 20],
         public chain_id: u128,
-        public fee_platform: u32,
-        public fee_relayer: u64,
+        public fee_platform: u32
     ) -> Future{
         let proposal: TsAddTokenInfo  = TsAddTokenInfo {
             tag: TAG_TS2_ADD_TOKEN,
@@ -87,12 +85,11 @@ program vlink_token_service_cd_cuncl_v2.aleo
             token_service,
             chain_id,
             fee_platform, 
-            fee_relayer
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_token : Future = vlink_token_service_cd_v2.aleo/add_token_info(min_transfer, max_transfer, token_address, token_service, chain_id, fee_platform, fee_relayer);
+        let add_token : Future = vlink_token_service_cd_v2.aleo/add_token_info(min_transfer, max_transfer, token_address, token_service, chain_id, fee_platform);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
@@ -349,8 +346,7 @@ program vlink_token_service_cd_cuncl_v2.aleo
         chain_id: u128,
         token_service_address: [u8; 20],
         token_address: [u8; 20],
-        fee_platform: u32, 
-        fee_relayer: u64
+        fee_platform: u32
     }
 
     async transition ts_add_chain_to_existing_token(
@@ -359,7 +355,6 @@ program vlink_token_service_cd_cuncl_v2.aleo
         public token_service_address: [u8; 20],
         public token_address: [u8; 20],
         public fee_platform: u32, 
-        public fee_relayer: u64,
         public voters: [address; 5]
     ) -> Future{
         let proposal: AddChainExistingToken  = AddChainExistingToken {
@@ -368,13 +363,12 @@ program vlink_token_service_cd_cuncl_v2.aleo
             chain_id,
             token_service_address,  
             token_address,
-            fee_platform, 
-            fee_relayer
+            fee_platform
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let add_chain: Future = vlink_token_service_cd_v2.aleo/add_chain_to_existing_token(chain_id, token_service_address, token_address, fee_platform, fee_relayer);
+        let add_chain: Future = vlink_token_service_cd_v2.aleo/add_chain_to_existing_token(chain_id, token_service_address, token_address, fee_platform);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
@@ -432,14 +426,12 @@ program vlink_token_service_cd_cuncl_v2.aleo
         tag: u8,
         id: u32,
         chain_id: u128,
-        fee_relayer: u64,
         fee_platform: u32,
     }
  
     async transition ts_update_fees(
         public id: u32,
         public chain_id: u128,
-        public fee_relayer: u64,
         public fee_platform: u32,
         public voters: [address; 5],
     ) -> Future {
@@ -447,12 +439,11 @@ program vlink_token_service_cd_cuncl_v2.aleo
             tag: TAG_TS2_UPDATE_FEES,
             id,
             chain_id,
-            fee_relayer,
             fee_platform, 
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        let update_fees: Future = vlink_token_service_cd_v2.aleo/update_fees(chain_id, fee_relayer, fee_platform);
+        let update_fees: Future = vlink_token_service_cd_v2.aleo/update_fees(chain_id, fee_platform);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
