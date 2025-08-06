@@ -19,7 +19,7 @@ program vlink_token_service_cd_v2.aleo {
 
     /// Stores the total supply of the token
     /// Key is the token_id of the token program
-    mapping total_supply: field => u64;
+    mapping total_supply: ChainToken => u64;
 
 
     /// Stores the minimum amount that can be transferred via Token Service
@@ -359,8 +359,8 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(stored_token_address, pad_20_to_32(dest_token_address));
 
         // Increase the total supply
-        let current_supply: u64 = Mapping::get_or_use(total_supply, ALEO_CREDITS_TOKEN_ID, 0u64);
-        Mapping::set(total_supply, ALEO_CREDITS_TOKEN_ID, current_supply + amount - fee_platform);
+        let current_supply: u64 = Mapping::get_or_use(total_supply, chain_token_info, 0u64);
+        Mapping::set(total_supply, chain_token_info, current_supply + amount - fee_platform);
     }
 
 
@@ -443,8 +443,8 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(stored_token_service, pad_20_to_32(source_token_service_address));
 
         // Increase the total supply
-        let current_supply: u64 = Mapping::get_or_use(total_supply, ALEO_CREDITS_TOKEN_ID, 0u64);
-        Mapping::set(total_supply, ALEO_CREDITS_TOKEN_ID, current_supply - amount);
+        let current_supply: u64 = Mapping::get_or_use(total_supply, chain_token_info, 0u64);
+        Mapping::set(total_supply, chain_token_info, current_supply - amount);
 
         // Increase the held amount
         let previously_held_amount:u64 = Mapping::get_or_use(token_holding, ALEO_CREDITS_TOKEN_ID, 0u64);
