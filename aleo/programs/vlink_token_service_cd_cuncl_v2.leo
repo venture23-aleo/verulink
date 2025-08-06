@@ -154,22 +154,25 @@ program vlink_token_service_cd_cuncl_v2.aleo
 
     struct TsPauseToken {
         tag: u8,
-        id: u32
+        id: u32,
+        chain_id: u128
     }
 
     async transition ts_pause_token(
         public id: u32, 
+        public chain_id: u128,
         public voters: [address; 5],
         
     ) -> Future{
         let proposal: TsPauseToken  = TsPauseToken {
             tag: TAG_TS2_PAUSE_TOKEN,
-            id
+            id,
+            chain_id
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let pause : Future = vlink_token_service_cd_v2.aleo/pause_token_ts();
+        let pause : Future = vlink_token_service_cd_v2.aleo/pause_token_ts(chain_id);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
@@ -186,22 +189,25 @@ program vlink_token_service_cd_cuncl_v2.aleo
 
     struct TsUnpauseToken {
         tag: u8,
-        id: u32
+        id: u32,
+        chain_id: u128
     }
 
     async transition ts_unpause_token(
         public id: u32, 
+        public chain_id: u128,
         public voters: [address; 5],
         
     ) -> Future{
         let proposal: TsUnpauseToken  = TsUnpauseToken {
             tag: TAG_TS2_UNPAUSE_TOKEN,
-            id
+            id,
+            chain_id
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let unpause : Future = vlink_token_service_cd_v2.aleo/unpause_token_ts();
+        let unpause : Future = vlink_token_service_cd_v2.aleo/unpause_token_ts(chain_id);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 

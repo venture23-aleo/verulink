@@ -32,7 +32,7 @@ program vlink_token_service_cd_v2.aleo {
 
     /// Tracks if the token is paused/unpaused
     /// Key is the token_id of the token program
-    mapping status: bool => bool;
+    mapping status: ChainToken => bool;
 
     /// Tracks the total amount of a certain token being held
     /// Key is the token_id of the token.
@@ -52,7 +52,6 @@ program vlink_token_service_cd_v2.aleo {
     const ALEO_CREDITS_TOKEN_ID: field = 3443843282313283355522573239085696902919850365217539366784739393210722344986field; // The native token address of the Aleo network
 
     const OWNER_INDEX: bool = true;
-    const STATUS_INDEX: bool = true;
     const PAUSED_VALUE: bool = true;
     const UNPAUSED_VALUE: bool = false;
 
@@ -216,7 +215,7 @@ program vlink_token_service_cd_v2.aleo {
         Mapping::set(other_chain_token_service, chain_token_info, pad_20_to_32(token_service));
         Mapping::set(min_transfers, chain_token_info, min_transfer);
         Mapping::set(max_transfers, chain_token_info, max_transfer);
-        Mapping::set(status, STATUS_INDEX, PAUSED_VALUE);
+        Mapping::set(status, chain_token_info, PAUSED_VALUE);
         Mapping::set(platform_fee, chain_token_info, fee_platform);
         Mapping::set(relayer_fee, chain_token_info, fee_relayer);
     }
@@ -225,28 +224,38 @@ program vlink_token_service_cd_v2.aleo {
     ///// Pause/Unpause Token ///////
     /////////////////////////////////
 
-    async transition pause_token_ts() -> Future{
-        return finalize_pause_token_ts(self.caller);
+    async transition pause_token_ts(public chain_id: u128) -> Future{
+        return finalize_pause_token_ts(self.caller, chain_id);
     }
 
-    async function finalize_pause_token_ts(from: address) {
+    async function finalize_pause_token_ts(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
-        Mapping::set(status, STATUS_INDEX, PAUSED_VALUE);
+
+        let chain_token_info:ChainToken = ChainToken{
+            chain_id: chain_id, 
+            token_id: ALEO_CREDITS_TOKEN_ID
+        };
+        Mapping::set(status, chain_token_info, PAUSED_VALUE);
     }
 
-    async transition unpause_token_ts() -> Future{
-        return finalize_unpause_token_ts(self.caller);
+    async transition unpause_token_ts(public chain_id: u128) -> Future{
+        return finalize_unpause_token_ts(self.caller, chain_id);
     }
 
-    async function finalize_unpause_token_ts(from: address) {
+    async function finalize_unpause_token_ts(from: address, chain_id: u128) {
         // Get the owner address
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
-        Mapping::set(status, STATUS_INDEX, UNPAUSED_VALUE);
+
+        let chain_token_info:ChainToken = ChainToken{
+            chain_id: chain_id, 
+            token_id: ALEO_CREDITS_TOKEN_ID
+        };
+        Mapping::set(status, chain_token_info, UNPAUSED_VALUE);
     }
 
     /////////////////////////////////////
@@ -354,7 +363,7 @@ program vlink_token_service_cd_v2.aleo {
         let fee_in_amount: u64 = get_x_percent_of_y(fee_in_percentage, amount);
         assert_eq(fee_in_amount, fee_platform);
 
-        assert_eq(Mapping::get(status, STATUS_INDEX), UNPAUSED_VALUE);
+        assert_eq(Mapping::get(status, chain_token_info), UNPAUSED_VALUE);
 
         let min_amount: u64 = Mapping::get(min_transfers, chain_token_info);
         assert(amount - fee_platform >= min_amount);
@@ -442,7 +451,7 @@ program vlink_token_service_cd_v2.aleo {
         f1.await();
         f2.await();
         f3.await();
-        assert_eq(Mapping::get(status, STATUS_INDEX), UNPAUSED_VALUE);
+        assert_eq(Mapping::get(status, chain_token_info), UNPAUSED_VALUE);
 
         assert(Mapping::contains(other_chain_token_service, chain_token_info));
 
