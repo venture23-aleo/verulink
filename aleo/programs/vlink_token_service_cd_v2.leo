@@ -78,7 +78,7 @@ program vlink_token_service_cd_v2.aleo {
     }
 
     async function finalize_initialize_ts(owner: address, caller: address) {
-        // Assert bridge has not been initialized before
+        // Assert token service has not been initialized before
         assert(!Mapping::contains(owner_TS, OWNER_INDEX));
 
         // Set the owner program
@@ -148,7 +148,7 @@ program vlink_token_service_cd_v2.aleo {
     }
 
     /////////////////////////////////////////////////
-    ///// REmove token_service of other chain ///////
+    ///// Remove token_service of other chain ///////
     /////////////////////////////////////////////////
     async transition remove_other_chain_addresses(
         public chain_id: u128
@@ -446,7 +446,7 @@ program vlink_token_service_cd_v2.aleo {
         let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );
         assert_eq(stored_token_service, pad_20_to_32(source_token_service_address));
 
-        // Increase the total supply
+        // decrease the total supply
         let current_supply: u64 = Mapping::get_or_use(total_supply, chain_token_info, 0u64);
         Mapping::set(total_supply, chain_token_info, current_supply - amount);
 
@@ -493,7 +493,7 @@ program vlink_token_service_cd_v2.aleo {
     }
     async function finalize_holding_release(from:address, amount:u64, f0: Future){
         f0.await();
-        let owner: address = Mapping::get(owner_TS, true);
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(owner, from);
         let held_amount:u64 = Mapping::get(token_holding, ALEO_CREDITS_TOKEN_ID);
         Mapping::set(token_holding, ALEO_CREDITS_TOKEN_ID, held_amount-amount);
@@ -507,7 +507,7 @@ program vlink_token_service_cd_v2.aleo {
     }
     async function finalize_holding_TF_OWN(from:address, f0: Future){
         f0.await();
-        let owner: address = Mapping::get(owner_TS, true);
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(owner, from);
     }
 
@@ -521,7 +521,7 @@ program vlink_token_service_cd_v2.aleo {
             chain_id: chain_id,
             token_id: ALEO_CREDITS_TOKEN_ID
         };
-        let owner: address = Mapping::get(owner_TS, true);
+        let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(owner, from);
         assert(Mapping::contains(platform_fee, chain_token_info));
         Mapping::set(platform_fee, chain_token_info, fee_platform);
