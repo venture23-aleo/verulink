@@ -24,11 +24,11 @@ program vlink_token_service_cd_v2.aleo {
 
     /// Stores the minimum amount that can be transferred via Token Service
     /// Key is token_id of the token program
-    mapping min_transfers: field => u64;
+    mapping min_transfers: ChainToken => u64;
 
     /// Stores the maximum amount that can be transferred via Token Service
     /// Key is token_id of the token program
-    mapping max_transfers: field => u64;
+    mapping max_transfers: ChainToken => u64;
 
     /// Tracks if the token is paused/unpaused
     /// Key is the token_id of the token program
@@ -214,8 +214,8 @@ program vlink_token_service_cd_v2.aleo {
 
         Mapping::set(other_chain_token_address, chain_token_info, pad_20_to_32(token_address));
         Mapping::set(other_chain_token_service, chain_token_info, pad_20_to_32(token_service));
-        Mapping::set(min_transfers, ALEO_CREDITS_TOKEN_ID, min_transfer);
-        Mapping::set(max_transfers, ALEO_CREDITS_TOKEN_ID, max_transfer);
+        Mapping::set(min_transfers, chain_token_info, min_transfer);
+        Mapping::set(max_transfers, chain_token_info, max_transfer);
         Mapping::set(status, STATUS_INDEX, PAUSED_VALUE);
         Mapping::set(platform_fee, chain_token_info, fee_platform);
         Mapping::set(relayer_fee, chain_token_info, fee_relayer);
@@ -253,44 +253,54 @@ program vlink_token_service_cd_v2.aleo {
     ///// Update Minimum Transfer ///////
     ////////////////////////////////////
 
-    async transition update_min_transfer_ts(public min_transfer: u64) -> Future{
-        return finalize_update_min_transfer_ts(self.caller, min_transfer);
+    async transition update_min_transfer_ts(public chain_id: u128, public min_transfer: u64) -> Future{
+        return finalize_update_min_transfer_ts(self.caller, chain_id, min_transfer);
     }
 
-    async function finalize_update_min_transfer_ts(from: address, min_transfer: u64) {
+    async function finalize_update_min_transfer_ts(from: address, chain_id: u128, min_transfer: u64) {
         // Get the owner address
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
+        let chain_token_info:ChainToken = ChainToken{
+            chain_id: chain_id, 
+            token_id: ALEO_CREDITS_TOKEN_ID
+        };
+
         // Assert new min transfer is less than max_transfer
-        let max_transfer: u64 = Mapping::get(max_transfers, ALEO_CREDITS_TOKEN_ID);
+        let max_transfer: u64 = Mapping::get(max_transfers, chain_token_info);
         assert(min_transfer <= max_transfer);
 
-        assert(Mapping::contains(min_transfers, ALEO_CREDITS_TOKEN_ID));
-        Mapping::set(min_transfers, ALEO_CREDITS_TOKEN_ID, min_transfer);
+        assert(Mapping::contains(min_transfers, chain_token_info));
+        Mapping::set(min_transfers, chain_token_info, min_transfer);
     }
 
     /////////////////////////////////////
     ///// Update Maximum Transfer ///////
     ////////////////////////////////////
 
-    async transition update_max_transfer_ts(public max_transfer: u64) -> Future{
-        return finalize_update_max_transfer_ts(self.caller, max_transfer);
+    async transition update_max_transfer_ts(public chain_id: u128, public max_transfer: u64) -> Future{
+        return finalize_update_max_transfer_ts(self.caller, chain_id, max_transfer);
     }
 
-    async function finalize_update_max_transfer_ts(from: address, max_transfer: u64) {
+    async function finalize_update_max_transfer_ts(from: address, chain_id: u128, max_transfer: u64) {
         // Get the owner address
         // If program not initialized, this must fail
         let owner: address = Mapping::get(owner_TS, OWNER_INDEX);
         assert_eq(from, owner);
 
+        let chain_token_info:ChainToken = ChainToken{
+            chain_id: chain_id, 
+            token_id: ALEO_CREDITS_TOKEN_ID
+        };
+
         // Assert new max transfer is greater than min_transfer
-        let min_transfer: u64= Mapping::get(min_transfers, ALEO_CREDITS_TOKEN_ID);
+        let min_transfer: u64= Mapping::get(min_transfers, chain_token_info);
         assert(max_transfer>=min_transfer);
 
-        assert(Mapping::contains(max_transfers, ALEO_CREDITS_TOKEN_ID));
-        Mapping::set(max_transfers, ALEO_CREDITS_TOKEN_ID, max_transfer);
+        assert(Mapping::contains(max_transfers, chain_token_info));
+        Mapping::set(max_transfers, chain_token_info, max_transfer);
     }
 
 
@@ -346,10 +356,10 @@ program vlink_token_service_cd_v2.aleo {
 
         assert_eq(Mapping::get(status, STATUS_INDEX), UNPAUSED_VALUE);
 
-        let min_amount: u64 = Mapping::get(min_transfers, ALEO_CREDITS_TOKEN_ID);
+        let min_amount: u64 = Mapping::get(min_transfers, chain_token_info);
         assert(amount - fee_platform >= min_amount);
 
-        let max_amount: u64 = Mapping::get(max_transfers, ALEO_CREDITS_TOKEN_ID);
+        let max_amount: u64 = Mapping::get(max_transfers, chain_token_info);
         assert(amount - fee_platform <= max_amount);
 
         let stored_token_service:[u8;32] = Mapping::get(other_chain_token_service, chain_token_info );

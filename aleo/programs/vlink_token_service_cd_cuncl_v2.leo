@@ -111,12 +111,14 @@ program vlink_token_service_cd_cuncl_v2.aleo
     struct TsUpdateMaxMinTransfer {
         tag: u8,
         id: u32,
+        chain_id: u128,
         max_transfer: u64,
         min_transfer: u64,
     }
 
     async transition ts_update_max_min_transfer(
         public id: u32, 
+        public chain_id: u128,
         public min_transfer: u64, 
         public max_transfer: u64, 
         public voters: [address; 5],      
@@ -124,15 +126,16 @@ program vlink_token_service_cd_cuncl_v2.aleo
         let proposal: TsUpdateMaxMinTransfer  = TsUpdateMaxMinTransfer {
             tag: TAG_TS2_UPDATE_MAX_MIN_TRANSFER,
             id,
+            chain_id,
             max_transfer,
             min_transfer,
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let update_min_transfer: Future = vlink_token_service_cd_v2.aleo/update_min_transfer_ts(min_transfer);
+        let update_min_transfer: Future = vlink_token_service_cd_v2.aleo/update_min_transfer_ts(chain_id, min_transfer);
 
-        let update_max_transfer: Future = vlink_token_service_cd_v2.aleo/update_max_transfer_ts(max_transfer);
+        let update_max_transfer: Future = vlink_token_service_cd_v2.aleo/update_max_transfer_ts(chain_id, max_transfer);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
