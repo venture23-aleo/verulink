@@ -18,7 +18,7 @@ program vlink_holding_cd_v2.aleo {
 
     const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px; 
 
-    const NATIVE_TOKEN_ID: field = 3443843282313283355522573239085696902919850365217539366784739393210722344986field; // The native token address of the Aleo network
+    const ALEO_CREDITS_TOKEN_ID: field = 3443843282313283355522573239085696902919850365217539366784739393210722344986field; // The native token address of the Aleo network
    
 
 
@@ -56,7 +56,7 @@ program vlink_holding_cd_v2.aleo {
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        // If attestor does not exist, this is expected to fail
+        // set the owner of the program
         Mapping::set(owner_holding, OWNER_INDEX, new_owner);
     }
 
@@ -64,7 +64,7 @@ program vlink_holding_cd_v2.aleo {
     async transition hold_fund(public user: address, public amount: u64) -> Future{
         let token_holder: Holder = Holder{
             account: user,
-            token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
         return(finalize_hold_fund(self.caller, token_holder, amount));
     }
@@ -85,7 +85,7 @@ program vlink_holding_cd_v2.aleo {
 
         let token_holder: Holder = Holder{
             account: user,
-            token_id: NATIVE_TOKEN_ID
+            token_id: ALEO_CREDITS_TOKEN_ID
         };
 
         return (finalize_release_fund(self.caller, token_holder, amount, transfer));

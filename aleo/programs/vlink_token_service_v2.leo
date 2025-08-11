@@ -1,7 +1,6 @@
 // The 'token_service' program.
 
 import vlink_token_bridge_v2.aleo;
-import token_registry.aleo;
 import vlink_holding_v2.aleo;
 
 program vlink_token_service_v2.aleo {
