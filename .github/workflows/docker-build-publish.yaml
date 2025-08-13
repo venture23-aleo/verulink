@@ -6,7 +6,6 @@ on:
       - main
       - staging
       - develop
-      - ci/fix-docker-build-on-tag
     tags:
       - '*'
 
