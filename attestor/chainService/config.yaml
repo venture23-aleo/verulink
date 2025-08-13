@@ -3,6 +3,7 @@ name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
 version: 1.0.1
 chains:
   - name: aleo
+    disabled: false
     chain_id: 6694886634403
     chain_type: aleo
     wallet_address: <your_aleo_wallet_address> # wallet indentifier
@@ -26,8 +27,11 @@ chains:
       bsc:
         pkt_validity_wait_dur: 1m0s
         finality_height: 2
+      arb:
+        pkt_validity_wait_dur: 1m0s
+        finality_height: 500ms
   - name: ethereum
-    enabled: false
+    disabled: true
     chain_id: 111550639260264
     chain_type: evm
     wallet_address: <your_ethereum_wallet_address>
@@ -45,10 +49,10 @@ chains:
         start_height: 0
         instant_pkt_wait_dur: 1m
   - name: base
-    enabled: false
+    disabled: true
     chain_id: 443067135441324596
     chain_type: evm
-    wallet_address: <your_base_wallet_address> # can be same as ethereum address
+    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
     bridge_contract: 0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b
     node_url: wss://base-sepolia-rpc.publicnode.com
     filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
@@ -63,12 +67,12 @@ chains:
         start_height: 0
 
   - name: bsc
-    enabled: true
+    disabled: false
     chain_id: 422842677857
     chain_type: evm
-    wallet_address: <your_base_wallet_address> # can be same as ethereum address
+    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
     bridge_contract: 0xF3DdFCB8F3e493d0d597d203fB04Ff6aFCC73Da2
-    node_url: wss://bsc-testnet-rpc.publicnode.com
+    node_url: https://bnb-testnet.g.alchemy.com/v2/1lzNLfJzMrsbrW1LcGMoi
     filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
     retry_packet_wait_dur: 1m0s
     prune_base_seq_num_wait_dur: 1m0s
@@ -81,10 +85,10 @@ chains:
         start_height: 0
 
   - name: arb
-    enabled: false
+    disabled: true
     chain_id: 438861435819683566
     chain_type: evm
-    wallet_address: <your_base_wallet_address> # can be same as ethereum address
+    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
     bridge_contract: 0xeC265daaf32e91b9cE1386E25378D671c7A8b0b8
     node_url: wss://arbitrum-sepolia-rpc.publicnode.com
     filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0

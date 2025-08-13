@@ -21,7 +21,7 @@ type Config struct {
 	Encoding string `yaml:"encoding"`
 	// OutputPaths is a list of destinations for logs.
 	// Can be "stdout", "stderr", or a file path.
-	OutputPaths []string `yaml:"outputPaths"`
+	OutputPaths []string `yaml:"output_paths"`
 	// Rotation holds the configuration for log file rotation.
 	// It is only used if one of the output paths is a file.
 	Rotation *RotationConfig `yaml:"rotation"`

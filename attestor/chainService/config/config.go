@@ -49,6 +49,7 @@ type ChainConfig struct {
 	RetryPacketWaitDur        time.Duration             `yaml:"retry_packet_wait_dur"`
 	PruneBaseSeqNumberWaitDur time.Duration             `yaml:"prune_base_seq_num_wait_dur"`
 	AverageBlockGenDur        time.Duration             `yaml:"average_block_gen_dur"` // useful for aleo
+	Disabled                  bool                      `yaml:"disabled"`              // whether to enable chain
 }
 
 type PktValidConfig struct {
@@ -121,6 +122,17 @@ func InitConfig(flagArgs *FlagArgs) error {
 	if err != nil {
 		return err
 	}
+
+	var chains []*ChainConfig
+
+	for _, chain := range config.ChainConfigs {
+		if chain.Disabled {
+			continue
+		}
+		chains = append(chains, chain)
+	}
+
+	config.ChainConfigs = chains
 
 	if config.SigningServiceConfig.Scheme != "https" &&
 		config.SigningServiceConfig.Scheme != "http" {
