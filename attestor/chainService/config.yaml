@@ -27,6 +27,7 @@ chains:
         pkt_validity_wait_dur: 1m0s
         finality_height: 2
   - name: ethereum
+    enabled: false
     chain_id: 111550639260264
     chain_type: evm
     wallet_address: <your_ethereum_wallet_address>
