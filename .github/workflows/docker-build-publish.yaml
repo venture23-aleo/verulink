@@ -28,9 +28,11 @@ jobs:
           echo ${GITHUB_REF}
           echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "Using git tag..."
             echo "IS_TAG=true" >> $GITHUB_ENV
             echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           else
+            echo "Using short commit hash..."
             echo "IS_TAG=false" >> $GITHUB_ENV
           fi
           echo $IS_TAG
