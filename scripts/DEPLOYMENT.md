@@ -14,7 +14,7 @@
    [ mTLS Implementation
    ](https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit)  
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
-2. Have Ethereum and Aleo wallet address and private keys ready
+2. Have Ethereum(s) and Aleo wallet address and private keys ready
 
 ## Machine Configuration
 1. VM Specification
@@ -65,13 +65,19 @@
    - Update the signing service **default** `username` & `password`    
    
    iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
-   
+   > You can put same wallet key and address for **base** chain too.
    ```yaml
    chain:
   	 ethereum:
-  	   private_key: "<eth_private_key"
+	   chain_type: evm
+  	   private_key: "<eth_private_key>"
   	   wallet_address: "<eth_wallet_address>"
+	 base:
+	   chain_type: evm
+  	   private_key: "<base_private_key>"
+  	   wallet_address: "<base_wallet_address>"
   	 aleo:
+	   chain_type: aleo
   	   private_key: "<aleo_private_key>"
   	   wallet_address: "<aleo_wallet_address>"
    ```
@@ -327,10 +333,6 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
-
-Got it ✅ — I’ll update the migration guide assuming the **older installation is in `~/verulink`**, and explicitly note at the beginning that the installation is under the current user’s home directory.
-
-Here’s the revised version:
 
 ---
 

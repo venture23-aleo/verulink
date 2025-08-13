@@ -1,59 +1,60 @@
 ---
-name: e2eAttestor
+name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
 version: 1.0.1
 chains:
-  - name: aleo
-    chain_id: 6694886634403
-    chain_type: aleo
-    wallet_address: aleo1jelsappz5y0cy54cdqukc6xyvz45f35t99mgmlmu3uu7pndvayyqmnx5za # wallet indentifier
-    bridge_contract: token_bridge_stg_v2.aleo
-    node_url: https://api.explorer.provable.com/v1|testnet
-    sequence_num_start:
-      ethereum: 200
-      base: 1
-    retry_packet_wait_dur: 2m0s
-    prune_base_seq_num_wait_dur: 5m0s
-    average_block_gen_dur: 3s
-    dest_chains:
-      base:
+- name: aleo
+  chain_id: 6694886634403
+  chain_type: aleo
+  wallet_address: <your_aleo_wallet_address> # wallet indentifier
+  bridge_contract: vlink_token_bridge_v6.aleo
+  node_url: https://api.explorer.provable.com/v1|testnet
+  sequence_num_start:
+    ethereum: 1
+    base: 1
+  retry_packet_wait_dur: 2m0s
+  prune_base_seq_num_wait_dur: 5m0s
+  average_block_gen_dur: 3s
+  dest_chains:
+    base:
         pkt_validity_wait_dur: 2m0s
         finality_height: 23
       ethereum:
         pkt_validity_wait_dur: 1m0s
         finality_height: 21
-  - name: ethereum
-    chain_id: 28556963657430695
-    chain_type: evm
-    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
-    bridge_contract: 0x302f22Ce7bAb6bf5aEFe6FFBa285E844c7F38EA6
-    node_url: https://eth-sepolia.public.blastapi.io
-    filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
-    retry_packet_wait_dur: 1m0s
-    prune_base_seq_num_wait_dur: 1m0s
-    average_block_gen_dur: 12s
-    dest_chains:
-      aleo:
+- name: ethereum
+  chain_id: 111550639260264
+  chain_type: evm
+  wallet_address: <your_ethereum_wallet_address>
+  bridge_contract: 0x52985628b263481360437715e701517B7DB7aE1a
+  node_url: https://1rpc.io/holesky
+  filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
+  retry_packet_wait_dur: 1m0s
+  prune_base_seq_num_wait_dur: 1m0s
+  average_block_gen_dur: 12s
+  dest_chains:
+    aleo:
         pkt_validity_wait_dur: 1m0s
         finality_height: 21
         feed_pkt_wait_dur: 1m0s
         start_height: 7892221
         instant_pkt_wait_dur: 1m
-  - name: base
-    chain_id: 84532
-    chain_type: evm
-    wallet_address: 0x832894550007B560BD35d28Ce564c2CCD690318F
-    bridge_contract: 0x5410567256E7187b0a6A3C67E240A85d063C3aF5
-    node_url: wss://base-sepolia-rpc.publicnode.com
-    filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
-    retry_packet_wait_dur: 1m0s
-    prune_base_seq_num_wait_dur: 1m0s
-    average_block_gen_dur: 2s
-    dest_chains:
-      aleo:
+- name: base
+  enabled: false
+  chain_id: 443067135441324596
+  chain_type: evm
+  wallet_address: <your_base_wallet_address> # can be same as ethereum address
+  bridge_contract: 0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b
+  node_url: wss://base-sepolia-rpc.publicnode.com
+  filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
+  retry_packet_wait_dur: 1m0s
+  prune_base_seq_num_wait_dur: 1m0s
+  average_block_gen_dur: 2s
+  dest_chains:
+    aleo:
         pkt_validity_wait_dur: 1m0s
         finality_height: 21
         feed_pkt_wait_dur: 1m0s
-        start_height: 22962406
+        start_height: 0
 
 check_health_service: 1m
 db_dir: /path/to/db/dir
@@ -75,11 +76,11 @@ signing_service:
   port: 8080
   endpoint: "/sign"
   scheme: "http" # https, http, rpc, etc.
-  username: "username"
-  password: "password"
+  username: ""
+  password: ""
   health_end_point: "/health"
 collector_service:
-  uri: https://staging-aleomtls.venture23.xyz
+  uri : <collector_service_url>
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/.mtls/ca.cer
@@ -87,5 +88,5 @@ collector_service:
   attestor_key: /configs/.mtls/attestor1.key
 
 metrics:
-  host: 172.17.0.1:9091
-  job_name: e2etest-push-gateway
+  host: <prometheus_pushgateway_url>
+  job_name: dev-push-gateway
