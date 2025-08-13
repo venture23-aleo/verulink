@@ -86,11 +86,11 @@ func (eth *ethClient) GetCurrentBlock(ctx context.Context) (uint64, error) {
 
 func (eth *ethClient) FilterLogs(
 	ctx context.Context, fromHeight uint64, toHeight uint64,
-	contractAddress ethCommon.Address, topics ethCommon.Hash) ([]types.Log, error) {
-
+	contractAddress ethCommon.Address, topics ethCommon.Hash,
+) ([]types.Log, error) {
 	logs, err := eth.eth.FilterLogs(ctx, ether.FilterQuery{
-		FromBlock: big.NewInt(int64(fromHeight)),
-		ToBlock:   big.NewInt(int64(toHeight)),
+		FromBlock: new(big.Int).SetUint64(fromHeight),
+		ToBlock:   new(big.Int).SetUint64(toHeight),
 		Addresses: []ethCommon.Address{contractAddress},
 		Topics:    [][]ethCommon.Hash{{topics}},
 	})
@@ -213,7 +213,6 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 }
 
 func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, destchain string, ch chan<- *chain.Packet) {
-
 	dur := cl.instantPacketDurationMap[destchain]
 	if dur == 0 {
 		// close the routine for instantly processing packet
@@ -276,12 +275,10 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 							ch <- pkt
 						}
 					}
-
 				}
 				cl.instantNextBlockHeightMap[destchain] = endHeight + 1
 			}
 		}
-
 	}
 }
 
@@ -349,7 +346,6 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 			}
 		}
 	}
-
 }
 
 // FeedPacket spawsn few goroutines and starts to poll ethereum on regular interval.
@@ -358,7 +354,6 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 // It parses the logs and if packet has destination chainID that this attestor supports then
 // it will be send to the channel ch.
 func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, completedCh chan *chain.Packet, retryCh chan *chain.Packet) {
-
 	go cl.managePacket(ctx, completedCh, retryCh)
 	go cl.pruneBaseSeqNum(ctx, ch)
 	go cl.retryFeed(ctx, ch)
@@ -368,7 +363,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 
 		ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), dest)
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
-		
+
 		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
 
 		if startHeight < baseHeight {
@@ -524,15 +519,14 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 // GetMissedPacket retrieves packet from source chain and returns it.
 func (cl *Client) GetMissedPacket(
 	ctx context.Context, missedPkt *chain.MissedPacket) (
-	*chain.Packet, error) {
-
+	*chain.Packet, error,
+) {
 	pkts, err := cl.filterPacketLogs(ctx, missedPkt.Height, missedPkt.Height)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, pkt := range pkts {
-
 		if pkt.Sequence == missedPkt.SeqNum &&
 			pkt.Destination.ChainID.Cmp(missedPkt.TargetChainID) == 0 {
 

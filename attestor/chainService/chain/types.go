@@ -10,12 +10,14 @@ import (
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
-	"go.uber.org/zap"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	"go.uber.org/zap"
 )
 
-type ClientFunc func(cfg *config.ChainConfig) IClient
-type HashFunc func(sp *ScreenedPacket) string
+type (
+	ClientFunc func(cfg *config.ChainConfig) IClient
+	HashFunc   func(sp *ScreenedPacket) string
+)
 
 type IClient interface {
 	// Name gives the name of the client
@@ -83,7 +85,7 @@ func (p *Packet) GetInstant() bool {
 }
 
 func (p *Packet) GetSha256Hash() string {
-	s := fmt.Sprint(p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
+	s := fmt.Sprintf("%d-%s-%s-%d-%s-%d", p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
 	h := sha256.New()
 	h.Write([]byte(s))
 	b := h.Sum(nil)
@@ -115,7 +117,6 @@ type MissedPacketDetails struct {
 
 // Custom unmarshal function to convert a JSON string into a *big.Int
 func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
-
 	mPKt := &struct {
 		TargetChainID string `json:"destChainId"`
 		SourceChainID string `json:"sourceChainId"`
