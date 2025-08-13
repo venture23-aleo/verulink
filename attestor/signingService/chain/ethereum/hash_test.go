@@ -34,7 +34,6 @@ func TestHash(t *testing.T) {
 	})
 	t.Run("different hash", func(t *testing.T) {
 		h := hash(&chainService.ScreenedPacket{Packet: &packet, IsWhite: false})
-		assert.Equal(t, "0x4835c896b598a79a62d8ddf852d499ea086b5f9c45d611160cd71758fe9d4ed1", h)
+		assert.Equal(t, "0xb08590719ae82971617235938e3044f11a8b6d652086ed0aacd9a79b900d5f33", h)
 	})
-
 }

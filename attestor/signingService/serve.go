@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -28,7 +29,8 @@ func registerHandlers() {
 		username, password, _ := r.BasicAuth()
 		cfgUser, cfgPass := config.GetUsernamePassword()
 
-		if username != cfgUser || password != cfgPass {
+		if subtle.ConstantTimeCompare([]byte(username), []byte(cfgUser)) != 1 ||
+			subtle.ConstantTimeCompare([]byte(password), []byte(cfgPass)) != 1 {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}

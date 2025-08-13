@@ -36,7 +36,7 @@ func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err er
 
 // hash returns the bhp256-hash of screenedPacket by calling a rust binary
 func hash(sp *chainService.ScreenedPacket) (hash string, err error) {
-	aleoPacket := constructAleoPacket(sp.Packet)
+	aleoPacket, err := constructAleoPacket(sp.Packet)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*5)
 	defer cancel()
