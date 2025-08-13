@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 
 	"go.uber.org/zap"
 )
@@ -189,7 +188,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 }
 
 func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig) (*push.Pusher, error) {
-	logger.GetLogger().Info("Initilizing metrics")
+	zap.L().Info("Initilizing metrics")
 
 	caCert, err := os.ReadFile(cfg.CaCertificate)
 	if err != nil {
@@ -212,7 +211,7 @@ func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig
 
 	httpClient := &http.Client{
 		Transport: transport,
-		Timeout: time.Second * 30,
+		Timeout:   time.Second * 30,
 	}
 
 	host := config.GetConfig().MetricConfig.Host
@@ -225,21 +224,18 @@ func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig
 }
 
 func PushMetrics(ctx context.Context, pusher *push.Pusher, pmetrics *PrometheusMetrics) {
-
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	pusher.Gatherer(pmetrics.Registry)
 	for {
-
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
 			if err := pusher.Push(); err != nil {
-				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
+				zap.L().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
 			}
 		}
 	}
-
 }

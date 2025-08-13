@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"go.uber.org/zap"
 )
 
@@ -147,7 +146,7 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 		go func(key []byte) {
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
-				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
+				zap.L().Error("Error while batch deleting", zap.Error(err))
 			}
 		}(key)
 	}

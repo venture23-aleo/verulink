@@ -18,7 +18,7 @@ import (
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
 	"github.com/venture23-aleo/verulink/attestor/chainService/common"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
+	"go.uber.org/zap"
 )
 
 const (
@@ -75,7 +75,6 @@ type collector struct {
 }
 
 func (c *collector) CheckCollectorHealth(ctx context.Context) error {
-
 	ctx, cncl := context.WithTimeout(ctx, time.Minute)
 	defer cncl()
 
@@ -86,7 +85,7 @@ func (c *collector) CheckCollectorHealth(ctx context.Context) error {
 
 	resp, err := c.collectorClient.Do(req)
 	if err != nil {
-		logger.GetLogger().Error(err.Error())
+		zap.L().Error(err.Error())
 		return err
 	}
 
@@ -166,7 +165,6 @@ func (c *collector) SendToCollector(ctx context.Context, sp *chain.ScreenedPacke
 // The wallet-address in the request parameter belongs to the source chain i.e. db-service will return packets
 // of which attestor's wallet-address is registered in source chain.
 func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *chain.MissedPacket) {
-
 	if len(c.chainIDToAddress) == 0 {
 		return
 	}
@@ -236,7 +234,7 @@ func (c *collector) ReceivePktsFromCollector(ctx context.Context, ch chan<- *cha
 			resp.Body.Close()
 		}
 		if err != nil { // for non nil error it should wait on ticker
-			logger.GetLogger().Error(err.Error())
+			zap.L().Error(err.Error())
 			continue
 		}
 
@@ -274,7 +272,7 @@ func SetupCollector(cfg config.CollecterServiceConfig, chainIDToAddress map[stri
 		},
 	}
 	collc = collector{
-		uri:              cfg.Uri,
+		uri:              cfg.URI,
 		collectorWaitDur: waitTime,
 		chainIDToAddress: make(map[string]string),
 		collectorClient:  client,

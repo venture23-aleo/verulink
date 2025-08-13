@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"gopkg.in/yaml.v3"
 )
 
@@ -62,7 +63,7 @@ type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
 	Name                   string                 `yaml:"name"`
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
-	LogConfig              *LoggerConfig          `yaml:"log"`
+	LogConfig              logger.Config          `yaml:"log"`
 	DBDir                  string                 `yaml:"db_dir"`
 	DBPath                 string                 `yaml:"-"` // Calculate based on DBDir
 	ConsumePacketWorker    int                    `yaml:"consume_packet_workers"`
@@ -96,7 +97,7 @@ type SigningServiceConfig struct {
 }
 
 type CollecterServiceConfig struct {
-	Uri                 string        `yaml:"uri"`
+	URI                 string        `yaml:"uri"`
 	CollectorWaitDur    time.Duration `yaml:"collector_wait_dur"`
 	CaCertificate       string        `yaml:"ca_certificate"`
 	AttestorCertificate string        `yaml:"attestor_certificate"`
@@ -104,10 +105,6 @@ type CollecterServiceConfig struct {
 }
 
 var config *Config
-
-func GetConfig() *Config {
-	return config
-}
 
 func InitConfig(flagArgs *FlagArgs) error {
 	b, err := os.ReadFile(flagArgs.ConfigFile)
@@ -134,37 +131,58 @@ func InitConfig(flagArgs *FlagArgs) error {
 		config.ConsumePacketWorker = 10
 	}
 
-	dbFilePath, err := getPath(flagArgs.DBDir, config.DBDir, dbFileName)
+	dbPath, err := getPath(flagArgs.DBDir, config.DBDir, dbFileName)
 	if err != nil {
 		return err
 	}
-	logFilePath, err := getPath(flagArgs.LogDir, config.LogConfig.OutputDir, logFileName)
-	if err != nil {
-		return err
-	}
+	config.DBPath = dbPath
 
 	if flagArgs.CleanStart {
-		err := os.Remove(dbFilePath)
-		if err != nil && !os.IsNotExist(err) {
+		err = os.RemoveAll(dbPath)
+		if err != nil {
 			return err
 		}
 	}
 
-	config.DBPath = dbFilePath
-	config.LogConfig.OutputPath = logFilePath
+	// If a log directory is provided via flags, we add a default log file path
+	// to the list of output paths. This allows overriding/adding file logging
+	// via command line.
+	if flagArgs.LogDir != "" {
+		// Create the directory if it doesn't exist
+		if err := os.MkdirAll(flagArgs.LogDir, perm); err != nil {
+			return fmt.Errorf("failed to create log directory: %w", err)
+		}
+		logFilePath := filepath.Join(flagArgs.LogDir, logFileName)
+		// Avoid duplicating the path if it's already in the config
+		found := false
+		for _, path := range config.LogConfig.OutputPaths {
+			if path == logFilePath {
+				found = true
+				break
+			}
+		}
+		if !found {
+			config.LogConfig.OutputPaths = append(config.LogConfig.OutputPaths, logFilePath)
+		}
+	}
 
 	if flagArgs.LogEnc != "" {
 		config.LogConfig.Encoding = flagArgs.LogEnc
 	}
 
-	if flagArgs.Mode == Production {
+	if flagArgs.Mode != "" {
 		config.Mode = flagArgs.Mode
-	} else if flagArgs.Mode == Stage {
-		config.Mode = flagArgs.Mode
-	} else {
+	}
+
+	if config.Mode != Production && config.Mode != Stage {
 		config.Mode = Development
 	}
+
 	return nil
+}
+
+func GetConfig() *Config {
+	return config
 }
 
 func getPath(pathFrmFlag, pathFrmYaml, fileName string) (string, error) {

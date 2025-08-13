@@ -40,16 +40,18 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-
 func TestSetupCollector(t *testing.T) {
 	uri := "http://collector.url"
 	chainIdToAddress := map[string]string{
 		"2": "aleoaddr",
-		"1": "ethAddr"}
-	err := SetupCollector(config.CollecterServiceConfig{Uri: uri,
+		"1": "ethAddr",
+	}
+	err := SetupCollector(config.CollecterServiceConfig{
+		URI:                 uri,
 		CaCertificate:       caPath,
 		AttestorCertificate: attestorCertPath,
-		AttestorKey:         attestorKeyPath}, chainIdToAddress, time.Second)
+		AttestorKey:         attestorKeyPath,
+	}, chainIdToAddress, time.Second)
 	assert.NoError(t, err)
 	assert.NotNil(t, GetCollector())
 	assert.Equal(t, uri, collc.uri)
@@ -57,7 +59,6 @@ func TestSetupCollector(t *testing.T) {
 }
 
 func TestSendToCollector(t *testing.T) {
-
 	t.Run("case: happy request ", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
@@ -95,7 +96,8 @@ func TestSendToCollector(t *testing.T) {
 			Packet: &chain.Packet{
 				Source:      chain.NetworkAddress{ChainID: big.NewInt(1)},
 				Destination: chain.NetworkAddress{ChainID: big.NewInt(2)},
-				Sequence:    uint64(1)},
+				Sequence:    uint64(1),
+			},
 			IsWhite: true,
 		}
 		err := collec.SendToCollector(context.Background(), sp, "packet_hash", "sign")
@@ -103,7 +105,6 @@ func TestSendToCollector(t *testing.T) {
 	})
 
 	t.Run("case: error while requesting bad url", func(t *testing.T) {
-
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusCreated)
 		}))
@@ -189,7 +190,8 @@ func TestSendToCollector(t *testing.T) {
 			Packet: &chain.Packet{
 				Source:      chain.NetworkAddress{ChainID: big.NewInt(1)},
 				Destination: chain.NetworkAddress{ChainID: big.NewInt(2)},
-				Sequence:    uint64(1)},
+				Sequence:    uint64(1),
+			},
 			IsWhite: true,
 		}
 
@@ -204,7 +206,6 @@ func TestSendToCollector(t *testing.T) {
 }
 
 func TestGetPktsFromCollector(t *testing.T) {
-
 	// setting json response form server
 	mPktString := &struct {
 		TargetChainID string `json:"destChainId"`
@@ -241,7 +242,6 @@ func TestGetPktsFromCollector(t *testing.T) {
 	}
 
 	t.Run("case: happy path", func(t *testing.T) {
-
 		// expected response
 		mPkt := &chain.MissedPacket{
 			TargetChainID: big.NewInt(1),
@@ -350,7 +350,6 @@ func TestGetPktsFromCollector(t *testing.T) {
 
 // helper function to create keys
 func generateDummyCertFiles() (caCertPath, attestorCertPath, attestorKeyPath string) {
-
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Fatalf("error generating key")

@@ -11,7 +11,7 @@ var db *bbolt.DB
 
 func initDB(path string) error {
 	var err error
-	db, err = bbolt.Open(path, 0655, nil)
+	db, err = bbolt.Open(path, 0o655, nil)
 	if err != nil {
 		return err
 	}
