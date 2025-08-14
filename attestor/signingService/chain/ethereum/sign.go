@@ -15,13 +15,12 @@ var pkeyMap = make(map[string]*ecdsa.PrivateKey)
 // sign returns the ecdsa signature of the attestors on the input hash string
 func sign(hashString string, chainName string) (string, error) {
 	hash := common.HexToHash(hashString)
-
 	ppKey := pkeyMap[chainName]
 	b, err := crypto.Sign(hash.Bytes(), ppKey)
 	if err != nil {
 		return "", err
 	}
-
+	b[64] += 27
 	return "0x" + common.Bytes2Hex(b), nil
 }
 
