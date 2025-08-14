@@ -23,12 +23,12 @@ jobs:
 
       - name: Set image tags and other variables
         run: |
-          echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "IS_TAG=true" >> $GITHUB_ENV
+            echo "Using git tag ${GITHUB_REF#refs/tags/}..."
             echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           else
-            echo "IS_TAG=false" >> $GITHUB_ENV
+            echo "Using short commit hash $(echo $GITHUB_SHA | cut -c1-7)..."
+            echo "TAG_NAME=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
           fi
 
       - name: Log in to Docker Hub
@@ -42,8 +42,7 @@ jobs:
         run: |
           docker build \
             -f ./signingService/Dockerfile \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA} \
-            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}" ) \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME} \
             .
 
       - name: Push and sign verulink-attestor-sign image
@@ -51,7 +50,7 @@ jobs:
           COSIGN_YES: "true"
         run: |
           set -e
-          IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${SHORT_SHA}
+          IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-sign:${TAG_NAME}
 
           echo "Pushing image: $IMAGE"
           docker push $IMAGE
@@ -76,8 +75,7 @@ jobs:
         run: |
           docker build \
             -f ./chainService/Dockerfile \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA} \
-            $( [ "$IS_TAG" = "true" ] && echo "-t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}" ) \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME} \
             ./chainService
 
       - name: Push and sign verulink-attestor-chain image
@@ -85,7 +83,7 @@ jobs:
           COSIGN_YES: "true"
         run: |
           set -e
-          IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${SHORT_SHA}
+          IMAGE=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/verulink-attestor-chain:${TAG_NAME}
 
           echo "Pushing image: $IMAGE"
           docker push $IMAGE
