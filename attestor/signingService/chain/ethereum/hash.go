@@ -56,10 +56,14 @@ func hash(sp *chainService.ScreenedPacket) string {
 		heightBytes,
 	)
 
+	fmt.Println("hello", pktHash.String())
+
 	hashOfPktHashAndVote := crypto.Keccak256Hash(pktHash.Bytes(), getEthBoolByte(sp.IsWhite))
 
-	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(hashOfPktHashAndVote))), hashOfPktHashAndVote.Bytes())
-	return finalHash.Hex()
+	fmt.Println(hashOfPktHashAndVote.String())
+
+	// finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(hashOfPktHashAndVote))), hashOfPktHashAndVote.Bytes())
+	return hashOfPktHashAndVote.Hex()
 }
 
 func getEthBoolByte(b bool) []byte {
