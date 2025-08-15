@@ -8,7 +8,7 @@ jobs:
       - uses: deepakputhraya/action-branch-name@v1.0.0
         with:
           regex: '([a-z])+\/([a-zA-Z0-9_-])+'
-          allowed_prefixes: 'feature,stable,fix,test,ci,bugfix,feat'
+          allowed_prefixes: 'feature,stable,fix,test,ci,bugfix,feat,aleo,evm'
           ignore: master,develop,release
           min_length: 5
           max_length: 50

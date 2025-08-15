@@ -1,8 +1,13 @@
 chains:
   - name: aleo
-    chain_id: 6694886634401
+    chain_type: aleo
+    chain_id: 6694886634403
   - name: ethereum
-    chain_id: 27234042785
+    chain_type: evm
+    chain_id: 111550639260264
+  - name: base
+    chain_type: evm
+    chain_id: 443067135441324596
 cred:
-  username: <username_same_as_chainservice>
-  password: <password_same_as_chainservice>
+  username: ""
+  password: ""

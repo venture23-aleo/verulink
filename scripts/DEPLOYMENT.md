@@ -1,37 +1,161 @@
 ## Attestor Server Deployment Guide
 
 ## Table of Contents
+- [Installation on VM](#installing-on-vm-manual)
 - [Installing on AWS](#installing-on-aws)
-  - [Pre-Deployment steps](#pre-deployment-steps)
-  - [Setup](#setup)
-  - [To Configure AWS access](#to-configure-aws-access)
-  - [Deployment Steps](#deployment-steps)
-- [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
-  - [Prerequisites](#prerequisites)
-  - [Deployment Steps](#deployment-steps-1)
+- [Verulink Attestor Migration Guide ](#verulink-attestor-migration-guide)
 - [Troubleshooting](#troubleshooting)
 
 ---
+### Installing on VM (Manual)
+#### Pre-Deployment steps 
+1. MTLS certiciate/ key and CA certificate \
+   **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.** \
+   [ mTLS Implementation
+   ](https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit)  
+   **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
+2. Have Ethereum(s) and Aleo wallet address and private keys ready
 
+## Machine Configuration
+1. VM Specification
+	- OS: Ubuntu 22.04 LTS
+	- vCPU: 1
+	- Memory: 2 GB
+	- Storage: 50 GB
+2. Networking
+	- Host Firewall: SSH Access (Port 22)
+	- Docker Network: Signing Service (Port 8080)
+3. Packages:
+	- Docker: latest
+	- Docker compose
+	- Cosign (Optional, required to verify the image) 
+
+## Deployment Steps
+1. Create Installation Directory
+	```bash
+	mkdir -p verulink_attestor/.mtls
+	```
+2. Select the respective **branch** based on your deployment environment:
+    | Branch   | Deployment Environment |
+    |----------|------------------------|
+    | develop  | devnet                 |
+    | staging  | staging/testnet        |
+    | main     | mainnet                |
+
+   Run the following commands, replacing `<branch>` with the appropriate branch name from the table above:
+    Download chain config
+	```bash
+	
+	curl -o verulink_attestor/chain_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/chainService/config.yaml
+    ```
+	Download sign config
+	```bash
+	curl -o verulink_attestor/sign_config.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/signingService/config.yaml
+    ```
+	Download compose file
+	```bash
+	curl -o verulink_attestor/compose.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/compose.yaml
+	```
+
+3. Update mTLS key, certificates, configuration  
+   i. Copy mTLS certificates, and key to `verulink_attestor/.mtls`
+   > Name the attestor certificate and key files with the attestor name as a prefix. For example, if the attestor name is `devnet_attestor_xyz`, the files should be named `devnet_attestor_xyz.crt` and `devnet_attestor_xyz.key`.
+   
+   ii. **verulink_attestor/sign_config.yaml**  
+   - Update the signing service **default** `username` & `password`    
+   
+   iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
+   > You can put same wallet key and address for **base** chain too.
+   ```yaml
+   chain:
+  	 ethereum:
+	   chain_type: evm
+  	   private_key: "<eth_private_key>"
+  	   wallet_address: "<eth_wallet_address>"
+	 base:
+	   chain_type: evm
+  	   private_key: "<base_private_key>"
+  	   wallet_address: "<base_wallet_address>"
+  	 aleo:
+	   chain_type: aleo
+  	   private_key: "<aleo_private_key>"
+  	   wallet_address: "<aleo_wallet_address>"
+   ```
+   iii. Update the following placeholders in **verulink_attestor/chain_config.yaml** with the correct values.
+    - Update the attestor node name in the format `<env>_attestor_verulink_\<yourcompanyname>`. For example: `mainnet_attestor_verulink_v23`
+	- Aleo wallet address: `<your_aleo_wallet_address>`
+	- Ethereum wallet address: `<your_ethereum_wallet_address>`
+	- Signing service `username` and `password` configured in `verulink_attestor/sign_config.yaml`
+	- Collector service url: `<collector_service_url>`
+	- Change only the filenames, not the entire file paths, since these paths are referenced inside the container environment.
+For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown below.
+	```yaml
+	  # --- Remaining parts ---
+	  collector_service:
+        uri : https://staging-aleomtls.venture23.xyz
+  		# Within collector_wait_dur, collector-service will try to collect all unconfirmed packetsiteratively
+  		collector_wait_dur: 1h
+		ca_certificate: /configs/.mtls/ca.cer
+  		attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
+  		attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
+	  # -- Remaining parts ---
+	```  
+
+	- Prometheus gateway url: `<prometheus_pushgateway_url>`
+4. Update file permission
+First, go to the installation root directory `verulink_attestor`.
+
+   ```bash
+   chmod 750 .mtls
+   chmod 600 secrets.yaml
+   ```
+5. Create a `.env` file inside the `verulink_attestor` directory and add the Docker image tags as shown below:
+
+   ```bash
+   DOCKER_IMAGE_TAG_SIGN=<signing service image tag>
+   DOCKER_IMAGE_TAG_CHAIN=<chain service image tag>
+   ```
+
+	| Environment | Docker Image tag         |
+	|-------------|--------------------------|
+	| devnet      | devnet-vx.x.x            |
+	| staging     | staging-vx.x.x           |
+	| mainnet     | vx.x.x                   |
+
+6. Run the service.
+   ```bash
+   docker compose up -d
+   ```
+7. Verify the services: `chainService` and `signingService`
+   ```bash
+   docker ps
+   ```
+	Verify the logs in services
+	```bash
+	docker exec -it <attestor-chainservice-id> sh
+	cd ../logs
+	cat verulink.log
+	```
 ### Installing on AWS
+
 The attestor service can be deployed using two method
 1. From local device
 > To run from a local device, please make sure the AWS CLI tool and AWS access credentials have been correctly configured. 
   [Follow steps here.](#to-configure-aws-access) 
 2. Using AWS CloudShell from the AWS Management Console UI(**Recommended**)
 
-#### Pre-Deployment steps 
+## Pre-Deployment steps 
 1. MTLS certificate/ key and CA certificate \
-   **For testnet/staging/demo deployment Venture23 will provide MTLS CA certificate, attestor certificate and attestor key.** \
+   **For testnet/staging/demo deployment Venture23 will proivde MTLS CA certificate, attestor certificate and attestor key.** \
    https://docs.google.com/document/d/1K8-PXsaJHolj4TuOVRPLqLTRoD2-PHnh0lSE3vfpsQc/edit
    **For Mainnet, use the openssl tool or any other method to generate the keys and a CSR, and submit CSR to Venture23. The signed certificate will be provided back. Example steps can be found [here](#mtls-key-and-csr-creation).**
 2. Have Ethereum and Aleo wallet address and private keys ready
    
-#### Setup
+## Setup
 
 If using AWS cloudShell, no need to install the dependencies to run the installer script.
 
-#### To Configure AWS access
+### To Configure AWS access
 1. Install [_**AWS CLI Tool**_](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 
 2. Add IAM permission to user  (needed for both local and CloudShell)
@@ -147,7 +271,7 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
     ```
    Reference: [Refer to this AWS documentation for other environment](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-set)
 
-#### Deployment Steps
+## Deployment Steps
 1. Clone the github project repository
     ```bash
     git clone https://github.com/venture23-aleo/verulink.git
@@ -209,159 +333,83 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
+
 ---
-### Installing on Local machine, VM, or baremetal
-> This script has been tested on an Ubuntu 22.04 machine. To use it on other distributions, ensure that `systemd` is available and refer to the respective package manager's documentation for installing required dependencies.
 
-To deploy on a local machine, VM, or bare metal server, follow the guide provided here.
+# Verulink Attestor Migration Guide 
 
+**Note:** Installation is located in the current user’s home directory (`~/`). If your installation path differs, update the commands accordingly.
+Older installation is assumed to be at:
 
-#### Prerequisites
+```
+~/verulink
+```
 
-1. Attestor Node Name  
-   Format: `<env>_attestor_verulink_<your_company_name>`  
-   Example: `mainnet_attestor_verulink_v23`
+New installation will be set up at:
 
-2. Wallet Keys and Addresses  
-   - Ethereum Private Key  
-   - Ethereum Wallet Address  
-   - Aleo Private Key  
-   - Aleo Wallet Address
+```
+~/verulink_attestor
+```
 
-3. Ensure that the latest versions of `Go` and `Rust` are installed.
+---
 
-   ```bash
-   # Check Go version
-   go version
-   
-   # Check Rust compiler version
-   rustc --version
-   ```
-   > **Note:** You can install Go by following the instructions [here](https://go.dev/doc/install), and Rust by following the instructions [here](https://www.rust-lang.org/tools/install).
-4. If Go and Rust are installed via the official binary and its path (e.g., `/usr/local/go/bin`, `/home/ubuntu/.cargo/bin`) is not included in the `secure_path` of the sudoers configuration, add it to ensure proper execution when using `sudo`.
-5. Install the following packages:
-   ```bash
-   sudo apt update
-   sudo apt install libssl-dev pkg-config build-essential
-   ```  
-6. You may need to open the firewall port for the signing service (default: 8080) if it is bound to an IP address other than `localhost` or the loopback address (`127.0.0.1`).
- 
-   
+## 1. Create Installation Directory
 
+```bash
+mkdir -p ~/verulink_attestor/.mtls
+```
 
+## 2. Copy Existing Configurations
 
-#### Deployment Steps
+```bash
+cp -a ~/verulink/attestor/chainService/config.yaml ~/verulink_attestor/chain_config.yaml
+cp -a ~/verulink/attestor/signService/config.yaml ~/verulink_attestor/sign_config.yaml
+cp -a ~/verulink/attestor/signService/secrets.yaml ~/verulink_attestor/secrets.yaml
+```
 
-1. Clone the GitHub project repository:
-   ```bash
-   git clone https://github.com/venture23-aleo/verulink.git
-   ```
+## 3. Copy mTLS Keys
 
-2. Navigate to the project directory:
-   ```bash
-   cd verulink
-   ```
+```bash
+cp -a -r ~/verulink/attestor/chainService/.mtls ~/verulink_attestor
+```
 
-3. Checkout the `main` branch:
-   ```bash
-   git checkout main
-   ```
+## 4. Download Docker Compose File
 
-4. Update the configuration file with the required values and save it. You will need to provide the following information in the template:
+Select the branch matching your deployment environment:
 
-	`./attestor/chainService/config.yaml`
+| Branch  | Deployment Environment |
+| ------- | ---------------------- |
+| develop | devnet                 |
+| staging | staging/testnet        |
+| main    | mainnet                |
 
-    | Configuration Item                | Value/    Placeholder |
-    |----------------------------------|    -------------------|
-    | Attestor Name                |     `<releaseIdentifier>_attestor_verulink_<yourCompanyIden    tifier>` |
-    | Aleo Wallet Address          |     `<your_aleo_wallet_address>` |
-    | Ethereum Wallet Address      |     `<your_ethereum_wallet_address>` |
-    | Collector Service Endpoint   |     `<collector_service_url>` |
-    | Prometheus PushGateway Endpoint |     `<prometheus_pushgateway_url>` |
+```bash
+curl -o ~/verulink_attestor/compose.yaml \
+https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/<branch>/attestor/compose.yaml
+```
 
-5. Create a `secrets.yaml` file with the following content:
+## 5. Update Docker Image Tags
 
-   ```yaml
-   chain:
-     ethereum:
-       private_key: <eth_private_key>
-       wallet_address: <eth_wallet_address>
-     aleo:
-       private_key: <aleo_private_key>
-       wallet_address: <aleo_wallet_address>
-   ```
- 
-6. Run the script with the required arguments as shown below:
-   > You need to provide the paths to the configuration files, as well as the mTLS (mutual TLS) certificate and key files, as shown in the command below.
-   ```bash
-   bash scripts/deploy-local.sh --chain-config=/path/to/chainservice.yaml --sign-config=/path/to/signingservice.yaml --secrets=/path/to/secret.yaml --ca_cert=/path/to/ca.cert --attestor_cert=/path/to/attestor.cert --attestor_key=/path/to/attestor.key
-   ```
-   You will be prompted with the following:
-   ```bash
-   🔍 Please review and confirm your configuration files:
-    - Chain config      : /home/ubuntu/verulink/attestor/   chainService/config.yaml
-    - Signing config    : /home/ubuntu/verulink/attestor/   signingService/config.yaml
-    - Secrets file      : /home/ubuntu/verulink/attestor/   signingService/secrets.yaml
-    - CA Certificate    : /home/ubuntu/ca.cer
-    - Attestor Cert     : /home/ubuntu/attestor.crt
-    - Attestor Key      : /home/ubuntu/attestor.key
-   Press ENTER to continue, or Ctrl+C to cancel...
-   
-   📦 Enter installation directory [default: /home/ubuntu/   attestor]:
-   📁 Installation path set to: /home/ubuntu/attestor
-   📁 Creating installation directories...
-   🔍 Checking for required dependencies...
-   ✅ Go and Rust are installed, proceeding with the build.
-   
-   🔧 Enter Signing Service IP or Hostname (default: 0.0.0.0): 192.168.1.100
-   🔧 Enter Signing Service Port [default: 8080]: 8080
-   🔗 Signing Service will bind to:
-   🔨 Building chainservice...
-   go: downloading go.uber.org/zap v1.26.0
-   go: downloading github.com/ethereum/go-ethereum v1.13.15
-   go: downloading github.com/stretchr/testify v1.8.4
-   ```
-   You will be prompted to install either a user-level or system-level systemd service. Press Enter to select the default, which is the user-level systemd unit.
-   ```bash
-   📦 Where do you want to install systemd units?
-   1) System-wide (requires sudo)
-   2) User-level (no sudo)
-   Select [1/2, default 2]:
-   ```
-7. Check Service Status
+Edit `~/verulink_attestor/compose.yaml` and set the image tags:
 
-	```bash
-	systemctl status attestor-sign.service
-	systemctl status attestor-chain.service
-	```
+| Environment | Image Tag Format |
+| ----------- | ---------------- |
+| devnet      | devnet-vx.x.x    |
+| staging     | staging-vx.x.x   |
+| mainnet     | vx.x.x           |
 
-	> **Note:** If you deployed the services using a 	user-level systemd service, include the `--user` flag in 	the command:
+**Services & Repositories**
 
-	```bash
-	systemctl --user status attestor-sign.service
-	systemctl --user status attestor-chain.service
-	```
-8. To view logs for the systemd services, use the following commands:
-	```bash
-	journalctl -u attestor-sign.service
-	journalctl -u attestor-chain.service
-	```
-	> **Note:** If you deployed the services using a 	user-level systemd service, include the `--user` flag in 	the command:
-	```bash
-	journalctl --user -u attestor-sign.service
-	journalctl --user -u attestor-chain.service
-	```
-10. To start or stop the services, use the following commands:
-	```bash
-	systemctl stop attestor-sign.service
-	systemctl start attestor-chain.service
-	```
-	> **Note:** If you deployed the services using a 	user-level systemd service, include the `--user` flag in 	the command:
-	```bash
-	systemctl --user stop attestor-sign.service
-	systemctl --user start attestor-chain.service
-	```
-11. To view the application log file, navigate to the installation directory on the Linux machine, then go to the `log` directory. The log file is named `verulink.log`.
+* `signingService` → `venture23/verulink-attestor-sign:<tag>`
+* `chainService` → `venture23/verulink-attestor-chain:<tag>`
+
+## 6. Run Services
+
+```bash
+cd ~/verulink_attestor
+docker compose up -d
+```
+
 
 ## Troubleshooting
 At times, keys may not be retrievable during installation. In such cases, we can manually attempt to fetch the keys by executing the following command:

@@ -31,7 +31,7 @@ func main() {
 	var err error
 	defer func() {
 		if err != nil {
-			fmt.Fprint(os.Stdin, err.Error())
+			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	}()
@@ -61,11 +61,12 @@ func main() {
 	}
 
 	for chainName, cfg := range m {
-		switch chainName {
+		switch cfg.ChainType {
+
 		case chain.Aleo:
 			err = aleo.SetUpPrivateKey(cfg)
 		case chain.Ethereum:
-			err = ethereum.SetUpPrivateKey(cfg)
+			err = ethereum.SetUpPrivateKey(cfg, chainName)
 		default:
 			err = fmt.Errorf("unsupported chain %s", chainName)
 		}

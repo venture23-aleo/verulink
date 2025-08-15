@@ -19,7 +19,7 @@ import (
 
 const (
 	TokenReceiverAddress = "aleo1v7nr80exf6p2709py6xf692v9f69l5cm230w23tz2p9fhx954qpq7cm7p4"
-	FinalityHeight       = 1
+	FinalityHeight       = 3
 	EthChainID           = "28556963657430695"
 	AleoChainID          = "6694886634403"
 )
@@ -47,18 +47,20 @@ func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, d
 	value, ok := value.SetString("100000000000000000000", 10)
 	assert.True(e.t, ok)
 
-	err = ethClient.MintUSDC(ctx, ethCommon.HexToAddress(cfg.WalletAddress), value)
+	fmt.Println("minting usdc ", value)
+	err = ethClient.MintUSDC(ctx, ethCommon.HexToAddress(cfg.WalletAddress), value, cfg.ChainID)
 	fmt.Println(err)
 	assert.NoError(e.t, err)
 
 	// approve USDC to token Service
 	transferValue := value.Div(value, big.NewInt(10)) // 10 percent of the total balance is approved
-	err = ethClient.ApproveUSDC(ctx, transferValue)
+	fmt.Println("approving USDC for transfer", transferValue)
+	err = ethClient.ApproveUSDC(ctx, transferValue, cfg.ChainID)
 	fmt.Println(err)
 	assert.NoError(e.t, err)
 
 	// cross chain transfer of USDC
-	err = ethClient.TransferUSDC(ctx, transferValue, TokenReceiverAddress)
+	err = ethClient.TransferUSDC(ctx, transferValue, TokenReceiverAddress, cfg.ChainID)
 	fmt.Println(err)
 	assert.NoError(e.t, err)
 
@@ -67,10 +69,11 @@ func (e *E2ETest) ExecuteETHFlow(ctx context.Context, cfg *common.ChainConfig, d
 	averageBlockProducingTime := time.Second * 14
 	waitTime := averageBlockProducingTime * (FinalityHeight + 2) // 2 as a buffer to ensure the packet arrives in the db service
 
-	time.Sleep(waitTime)
+	fmt.Println("sleeping for time ", waitTime)
+	time.Sleep(waitTime * 4)
 
 	// query the db
-
+	fmt.Println("querying database for the packet for sequence ", seqNumber + 1)
 	dbService := dbservice.NewDataBase(dbServiceURI)
 
 	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(int(seqNumber)+1), EthChainID, AleoChainID)
@@ -99,9 +102,9 @@ func (e *E2ETest) ExecuteALEOFlow(ctx context.Context, cfg *common.ChainConfig, 
 
 	dbService := dbservice.NewDataBase(dbServiceURI)
 
-	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(int(sequenceNumber) + 1), AleoChainID, EthChainID) // check according to the next seq number
+	pktInfo, err := dbService.GetPacketInfo(ctx, strconv.Itoa(int(sequenceNumber)+1), AleoChainID, EthChainID) // check according to the next seq number
 	assert.NoError(e.t, err)
-	assert.Equal(e.t, sequenceNumber + 1, pktInfo.Sequence)
+	assert.Equal(e.t, sequenceNumber+1, pktInfo.Sequence)
 	fmt.Println("✅ ALEO flow test passed")
 }
 

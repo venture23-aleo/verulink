@@ -31,6 +31,10 @@ func CreateNamespace(ns string) error {
 	return createBucket(ns)
 }
 
+func DeleteNamespace(namespace string) error {
+	return deleteBucket(namespace)
+}
+
 /*****************************************************************************************************/
 
 func StoreBaseSeqNum(namespace string, k, v uint64) error {

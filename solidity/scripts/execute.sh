@@ -33,9 +33,10 @@
 # npx hardhat run scripts/deploy/deployPredicateService.js --network sepolia
 # npx hardhat run scripts/deploy/grantRole.js --network sepolia
 
-#npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network sepolia
-#npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network sepolia
-#npx hardhat run scripts/deploy/addPredicateService.js --network sepolia
+# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network sepolia
+# npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network sepolia
+# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network sepolia
+# npx hardhat run scripts/deploy/addPredicateService.js --network sepolia
 
 # npx hardhat run scripts/deploy/addWhitelistAddress.js --network sepolia
 # npx hardhat run scripts/deploy/removeWhitelistAddress.js --network sepolia
@@ -81,14 +82,72 @@
 # npx hardhat run scripts/deploy/grantRole.js --network holesky
 
 # npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network holesky
+# npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network holesky
 # npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network holesky
 # npx hardhat run scripts/deploy/addPredicateService.js --network holesky
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network holesky
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network holesky
 
 # npx hardhat run scripts/deploy/addWhitelistAddress.js --network holesky
 # npx hardhat run scripts/deploy/removeWhitelistAddress.js --network holesky
 
 # npx hardhat run scripts/deploy/enablePredicateService.js --network holesky
 # npx hardhat run scripts/deploy/disablePredicateService.js --network holesky
+
+
+# Base Sepolia:
+# npx hardhat run scripts/deployLib/deployLib.js --network base-sepolia
+# npx hardhat run scripts/deployLib/deployAleoAddressLib.js --network base-sepolia
+
+# npx hardhat run scripts/deploy/deployBlackListService.js --network base-sepolia
+# npx hardhat run scripts/deploy/deployBridge.js --network base-sepolia
+# npx hardhat run scripts/deploy/deployTokenService.js --network base-sepolia
+# npx hardhat run scripts/deploy/deployHolding.js --network base-sepolia
+
+# npx hardhat run scripts/deploy/addTokenService.js --network base-sepolia
+# npx hardhat run scripts/deploy/setHolding.js --network base-sepolia
+# npx hardhat run scripts/deploy/addTokenUSDC.js --network base-sepolia
+# npx hardhat run scripts/deploy/addTokenUSDT.js --network base-sepolia
+# npx hardhat run scripts/deploy/addTokenETH.js --network base-sepolia
+# npx hardhat run scripts/deploy/addAttestor.js --network base-sepolia
+# npx hardhat run scripts/deploy/removeAttestor.js --network base-sepolia
+
+# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network base-sepolia
+# npx hardhat run scripts/deploy/deployTokenServiceV3Impl.js --network base-sepolia
+# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network base-sepolia
+# npx hardhat run scripts/deploy/addPredicateService.js --network base-sepolia
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network base-sepolia
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network base-sepolia
+
+
+# Arbitrum Sepolia:
+# npx hardhat run scripts/deploy/deployMockUSDC.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/deployMockUSDT.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deployLib/deployLib.js --network arbitrum-sepolia
+# npx hardhat run scripts/deployLib/deployAleoAddressLib.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deploy/deployBlackListService.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/deployBridgeV2.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/deployTokenServiceV3.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/deployHolding.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deploy/addTokenService.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/setHolding.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addTokenUSDC.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addTokenUSDT.js --network arbitrum-sepolia
+npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/addAttestor.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deploy/removeAttestor.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deploy/addPredicateService.js --network arbitrum-sepolia
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network arbitrum-sepolia
+
 
 # Mainnet:
 # Deployment, Setup and transferOwnerShip to Multisig using single owner:
@@ -116,20 +175,25 @@
 # npx hardhat run scripts/deploy/transferOwnerShipETHVaultService.js  --network mainnet
 # npx hardhat run scripts/deploy/addAttestorBatch.js --network mainnet
 
-npx hardhat run scripts/deploy/updateVaultAddress.js --network mainnet
-npx hardhat run scripts/deploy/transferEthToVault.js --network mainnet
-npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network mainnet
-npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network mainnet
+# npx hardhat run scripts/deploy/updateVaultAddress.js --network mainnet
+# npx hardhat run scripts/deploy/transferEthToVault.js --network mainnet
+# npx hardhat run scripts/deploy/transferUSDCFundsToVault.js --network mainnet
+# npx hardhat run scripts/deploy/transferUSDTFundsToVault.js --network mainnet
 
-npx hardhat run scripts/deploy/deployPredicateService.js --network mainnet
-npx hardhat run scripts/deploy/grantRole.js --network mainnet
+# npx hardhat run scripts/deploy/deployPredicateService.js --network mainnet
+# npx hardhat run scripts/deploy/grantRole.js --network mainnet
 
-npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network mainnet
-npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network mainnet
-npx hardhat run scripts/deploy/addPredicateService.js --network mainnet
+# npx hardhat run scripts/deploy/deployTokenServiceV2Impl.js --network mainnet
+# npx hardhat run scripts/deploy/upgradeTokenServiceWithPredicate.js --network mainnet
+# npx hardhat run scripts/deploy/addPredicateService.js --network mainnet
 
-npx hardhat run scripts/deploy/addWhitelistAddress.js --network mainnet
-npx hardhat run scripts/deploy/removeWhitelistAddress.js --network mainnet
+# npx hardhat run scripts/deploy/addWhitelistAddress.js --network mainnet
+# npx hardhat run scripts/deploy/removeWhitelistAddress.js --network mainnet
 
-npx hardhat run scripts/deploy/enablePredicateService.js --network mainnet
-npx hardhat run scripts/deploy/disablePredicateService.js --network mainnet
+# npx hardhat run scripts/deploy/enablePredicateService.js --network mainnet
+# npx hardhat run scripts/deploy/disablePredicateService.js --network mainnet
+
+# npx hardhat run scripts/deploy/upgradeTokenServicev3.js --network mainnet
+
+# npx hardhat run scripts/deploy/deployFeeCollector.js --network bnb-testnet
+# npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network bnb-testnet

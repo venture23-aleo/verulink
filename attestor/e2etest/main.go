@@ -23,6 +23,7 @@ import (
 const (
 	ethereum = "ethereum"
 	aleo     = "aleo"
+	base     = "base"
 )
 
 var (
@@ -49,13 +50,16 @@ func main() {
 	defer cancel()
 
 	var aleoEndpoint string
-	var ethEndpoint string
+	var ethEndpoint, baseEndpoint string
 	for _, v := range config.Chains {
 		if v.Name == ethereum {
 			ethEndpoint = v.NodeUrl
 		}
 		if v.Name == aleo {
 			aleoEndpoint = v.NodeUrl
+		}
+		if v.Name == base {
+			baseEndpoint = v.NodeUrl
 		}
 	}
 
@@ -64,7 +68,7 @@ func main() {
 	fmt.Println(aleoUrls[0])
 
 	cmdAleo := exec.Command("../proxy/proxy", "--remoteUrl", aleoUrls[0], "--port", "3002", "--benchMark", strconv.FormatBool(benchMarkRelayer), "&!")
-	
+
 	proxyServerLog, err := os.OpenFile("server.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -73,14 +77,12 @@ func main() {
 
 	cmdAleo.Stdout = proxyServerLog
 	cmdAleo.Stderr = proxyServerLog
-	
+
 	err = cmdAleo.Start()
 	if err != nil {
 		panic(err)
 	}
 	defer cmdAleo.Process.Kill()
-
-	
 
 	// cmdEthereum := exec.Command("../proxy/proxy", "--remoteUrl", ethEndpoint, "--port", "3001", "&!")
 	// err = cmdEthereum.Start()
@@ -93,7 +95,8 @@ func main() {
 
 	fmt.Println(benchMarkRelayer)
 
-	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, aleoEndpoint, 6694886634403, 1, benchMarkRelayer)
+	attestor.WriteE2EConifg(config.WriteConfigPath, ethEndpoint, baseEndpoint,
+		aleoEndpoint, 7892221, 22962406, 1, benchMarkRelayer)
 
 	// / setting up signal handling
 	sigCh := make(chan os.Signal, 1)
@@ -109,7 +112,7 @@ func main() {
 	if benchMarkRelayer {
 		fmt.Println("The benchmark test is running")
 
-		signingServiceCmd := exec.CommandContext(context.Background(), "../signingService/signingService", "--kp", "../signingService/keys.yaml", "--config", "../signingService/config.yaml", "--address", "0.0.0.0", "--port", "8080")
+		signingServiceCmd := exec.CommandContext(context.Background(), "../signingService/signingService", "--kp", "../signingService/secrets.yaml", "--config", "../signingService/config.yaml", "--address", "0.0.0.0", "--port", "8080")
 
 		signingLogFile, err := os.OpenFile("signingService.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err != nil {
@@ -121,7 +124,7 @@ func main() {
 		signingServiceCmd.Stderr = signingLogFile
 
 		// Start the chain service
-		chainServiceCmd := exec.CommandContext(context.Background(), "../chainService/chainService", "--config", "../chainService/config.yaml", "--clean", "true")
+		chainServiceCmd := exec.CommandContext(context.Background(), "../chainService/chainService", "--config", "../chainService/config.yaml", "--clean", "false")
 
 		chainLogFile, err := os.OpenFile("chainService.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		if err != nil {
@@ -146,16 +149,20 @@ func main() {
 
 		<-ctx.Done()
 	} else {
-		fmt.Println("dont call on this ")
+		fmt.Println("E2E test is starting ")
 		for i := 0; i < testCycle; i++ {
 			attestor.RunRelayImage("../compose.yaml")
 			for _, v := range config.Chains {
 				switch v.Name {
 				case ethereum:
 					testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
+				case base:
+					fmt.Println(config.CollectorServiceURI)
+					testSuite.ExecuteETHFlow(ctx, v, config.CollectorServiceURI)
 				case aleo:
 					testSuite.ExecuteALEOFlow(ctx, v, config.CollectorServiceURI)
 				}
+
 			}
 			attestor.StopRelayImage("../compose.yaml")
 		}
