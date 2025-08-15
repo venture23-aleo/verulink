@@ -2,6 +2,7 @@ require("@nomicfoundation/hardhat-toolbox");
 require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-etherscan");
 require("hardhat-contract-sizer");
+require("@nomicfoundation/hardhat-foundry");
 require('solidity-coverage')
 require("dotenv").config()
 

@@ -3,6 +3,7 @@
   "type": "module",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
+    "@nomicfoundation/hardhat-foundry": "^1.2.0",
     "@nomicfoundation/hardhat-toolbox": "2.0.2",
     "@nomicfoundation/hardhat-verify": "^2.0.9",
     "@nomiclabs/hardhat-etherscan": "^3.1.8",
