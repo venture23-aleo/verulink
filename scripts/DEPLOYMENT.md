@@ -67,14 +67,14 @@
    iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
    ```yaml
    chain:
-	 bsc:
-	   chain_type: evm
-  	   private_key: "<bsc_private_key>"
-  	   wallet_address: "<bsc_wallet_address>"
-  	 aleo:
-	   chain_type: aleo
-  	   private_key: "<aleo_private_key>"
-  	   wallet_address: "<aleo_wallet_address>"
+	bsc:
+	  chain_type: evm
+  	  private_key: "<bsc_private_key>"
+  	  wallet_address: "<bsc_wallet_address>"
+  	aleo:
+	  chain_type: aleo
+  	  private_key: "<aleo_private_key>"
+  	  wallet_address: "<aleo_wallet_address>"
    ```
    iii. Update the following placeholders in **verulink_attestor/chain_config.yaml** with the correct values.
     - Update the attestor node name in the format `<env>_attestor_verulink_\<yourcompanyname>`. For example: `stg_attestor_verulink_v23`
