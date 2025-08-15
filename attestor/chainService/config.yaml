@@ -23,7 +23,7 @@ chains:
   - name: bsc
     chain_id: 422842677857
     chain_type: evm
-    wallet_address: <your_base_wallet_address> # can be same as ethereum address
+    wallet_address: <your_evm_wallet_address> # can be same as ethereum address
     bridge_contract: 0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b
     node_url: wss://base-sepolia-rpc.publicnode.com
     filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
