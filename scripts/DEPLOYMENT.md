@@ -65,39 +65,34 @@
    - Update the signing service **default** `username` & `password`    
    
    iii. Create a YAML file named **verulink_attestor/secrets.yaml** with the following format and content:
-   > You can put same wallet key and address for **base** chain too.
    ```yaml
    chain:
-  	 ethereum:
-	   chain_type: evm
-  	   private_key: "<eth_private_key>"
-  	   wallet_address: "<eth_wallet_address>"
-	 base:
-	   chain_type: evm
-  	   private_key: "<base_private_key>"
-  	   wallet_address: "<base_wallet_address>"
-  	 aleo:
-	   chain_type: aleo
-  	   private_key: "<aleo_private_key>"
-  	   wallet_address: "<aleo_wallet_address>"
+	bsc:
+	  chain_type: evm
+  	  private_key: "<bsc_private_key>"
+  	  wallet_address: "<bsc_wallet_address>"
+  	aleo:
+	  chain_type: aleo
+  	  private_key: "<aleo_private_key>"
+  	  wallet_address: "<aleo_wallet_address>"
    ```
    iii. Update the following placeholders in **verulink_attestor/chain_config.yaml** with the correct values.
-    - Update the attestor node name in the format `<env>_attestor_verulink_\<yourcompanyname>`. For example: `mainnet_attestor_verulink_v23`
+    - Update the attestor node name in the format `<env>_attestor_verulink_\<yourcompanyname>`. For example: `stg_attestor_verulink_v23`
 	- Aleo wallet address: `<your_aleo_wallet_address>`
-	- Ethereum wallet address: `<your_ethereum_wallet_address>`
+	- Ethereum wallet address: `<your_evm_wallet_address>`
 	- Signing service `username` and `password` configured in `verulink_attestor/sign_config.yaml`
 	- Collector service url: `<collector_service_url>`
 	- Change only the filenames, not the entire file paths, since these paths are referenced inside the container environment.
-For example, if the key and certificate filenames are `ca.cer`, `mainnet_attestor_verulink_v23.crt`, and `mainnet_attestor_verulink_v23.key`, update them as shown below.
+For example, if the key and certificate filenames are `ca.cer`, `stg_attestor_verulink_v23.crt`, and `stg_attestor_verulink_v23.key`, update them as shown below.
 	```yaml
 	  # --- Remaining parts ---
 	  collector_service:
-        uri : https://staging-aleomtls.venture23.xyz
+        uri : <collector_service_url>
   		# Within collector_wait_dur, collector-service will try to collect all unconfirmed packetsiteratively
   		collector_wait_dur: 1h
 		ca_certificate: /configs/.mtls/ca.cer
-  		attestor_certificate: /configs/.mtls/mainnet_attestor_verulink_v23.crt
-  		attestor_key: /configs/.mtls/mainnet_attestor_verulink_v23.key
+  		attestor_certificate: /configs/.mtls/stg_attestor_verulink_v23.crt
+  		attestor_key: /configs/.mtls/stg_attestor_verulink_v23.key
 	  # -- Remaining parts ---
 	```  
 
