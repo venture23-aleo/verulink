@@ -14,6 +14,13 @@ Verulink is a trusted bridge platform that is designed to help move assets betwe
 | Bridge | [0x7440176A6F367D3Fad1754519bD8033EAF173133](https://etherscan.io/address/0x7440176A6F367D3Fad1754519bD8033EAF173133) | [vlink_token_bridge_v1.aleo](https://aleoscan.io/program?id=vlink_token_bridge_v1.aleo)
 | TokenService | [0x28E761500e7Fd17b5B0A21a1eAD29a8E22D73170](https://etherscan.io/address/0x28E761500e7Fd17b5B0A21a1eAD29a8E22D73170) | [vlink_token_service_v1.aleo](https://aleoscan.io/program?id=vlink_token_service_v1.aleo)
 
+## Aleo Supported Token
+| Symbol | TokenId |
+|---|---|
+|vUSDC | 6088188135219746443092391282916151282477828391085949070550825603498725268775field |
+|vUSDT | 7311977476241952331367670434347097026669181172395481678807963832961201831695field |
+| vETH | 1381601714105276218895759962490543360839827276760458984912661726715051428034field|
+
 ## Attestor
 [Attestor Architecture Overview](./docs/attestor_architecture_overview.md)
 

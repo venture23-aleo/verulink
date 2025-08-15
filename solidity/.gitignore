@@ -15,3 +15,7 @@ node_modules
 
 #backups
 /backups
+
+# foundry output directory
+/out
+/cache_forge
