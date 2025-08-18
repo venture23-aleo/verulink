@@ -6,7 +6,7 @@ chains:
     chain_id: 6694886634403
     chain_type: aleo
     wallet_address: <your_aleo_wallet_address> # wallet indentifier
-    bridge_contract: vlink_token_bridge_v6.aleo
+    bridge_contract: vlink_token_bridge_v8.aleo
     node_url: https://api.explorer.provable.com/v1|testnet
     sequence_num_start:
       bsc: 1
