@@ -190,9 +190,7 @@ describe("Token Service Council Waleo", () => {
         let tx = await bridge.initialize_tb(
           [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, councilMember3, ALEO_ZERO_ADDRESS],
           threshold,
-          councilMember1,
-          BigInt(0),
-          BigInt(0)
+          councilMember1
         );
         await tx.wait();
       }
@@ -684,8 +682,7 @@ describe("Token Service Council Waleo", () => {
           ethChainId,
           evm2AleoArrWithoutPadding(destTsAddr),
           evm2AleoArrWithoutPadding(destToken),
-          platformFee,
-          false
+          platformFee
         );
         await tx.wait();
       },

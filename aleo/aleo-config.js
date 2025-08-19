@@ -4,6 +4,7 @@ dotenv.config();
 export default {
   mode: "execute",
   mainnet: {},
+  devnet: true,
   networks: {
     testnet: {
       endpoint: "http://localhost:3030",

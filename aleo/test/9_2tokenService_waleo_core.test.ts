@@ -99,8 +99,8 @@ describe("Deployment Token Service For ALeo", () => {
         }, TIMEOUT);
 
         test("Bridge: Add BSc Chain", async () => {
-                const addEthChainTx = await bridge.add_chain_tb(BSC_TESTNET);
-                await addEthChainTx.wait();
+            const addEthChainTx = await bridge.add_chain_tb(BSC_TESTNET);
+            await addEthChainTx.wait();
         }, TIMEOUT)
 
         test("Bridge: Add Service", async () => {
@@ -109,8 +109,8 @@ describe("Deployment Token Service For ALeo", () => {
         }, TIMEOUT)
 
         test("Bridge: Unpause", async () => {
-                const unpauseTx = await bridge.unpause_tb();
-                await unpauseTx.wait();
+            const unpauseTx = await bridge.unpause_tb();
+            await unpauseTx.wait();
         }, TIMEOUT)
 
         test("Holding: Initialize", async () => {
@@ -234,41 +234,41 @@ describe("Deployment Token Service For ALeo", () => {
         );
 
         test.failing("Cannot send if user has insufficient fund", async () => {
-                expect(await tokenServiceWAleo.min_transfers(ethChainTokenInfo)).toBeLessThanOrEqual(amount)
-                expect(await tokenServiceWAleo.max_transfers(ethChainTokenInfo)).toBeGreaterThanOrEqual(amount)
-                tokenServiceWAleo.connect(admin);
-                tokenRegistry.connect(admin);
-                const balance = await credits.account(aleoUser1)
-                const platformFee = await getPlatformFeeInAmount(amount, platform_fee);
+            expect(await tokenServiceWAleo.min_transfers(ethChainTokenInfo)).toBeLessThanOrEqual(amount)
+            expect(await tokenServiceWAleo.max_transfers(ethChainTokenInfo)).toBeGreaterThanOrEqual(amount)
+            tokenServiceWAleo.connect(admin);
+            tokenRegistry.connect(admin);
+            const balance = await credits.account(aleoUser1)
+            const platformFee = await getPlatformFeeInAmount(amount, platform_fee);
 
-                const tx = await tokenServiceWAleo.token_send_public(
-                    evm2AleoArrWithoutPadding(receiver),
-                    balance + BigInt(10000000000000),
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee
-                );
-                await tx.wait();
+            const tx = await tokenServiceWAleo.token_send_public(
+                evm2AleoArrWithoutPadding(receiver),
+                balance + BigInt(10000000000000),
+                destChainId,
+                evm2AleoArrWithoutPadding(destTsAddr),
+                evm2AleoArrWithoutPadding(destToken),
+                platformFee
+            );
+            await tx.wait();
         }, TIMEOUT)
 
         test.failing("Should failed if platform fee is mismatched", async () => {
-                expect(await tokenServiceWAleo.min_transfers(ethChainTokenInfo)).toBeLessThanOrEqual(amount)
-                expect(await tokenServiceWAleo.max_transfers(ethChainTokenInfo)).toBeGreaterThanOrEqual(amount)
-                tokenServiceWAleo.connect(admin);
-                tokenRegistry.connect(admin);
-                const balance = await credits.account(admin)
-                if (balance > amount) {
-                    const tx = await tokenServiceWAleo.token_send_public(
-                        evm2AleoArrWithoutPadding(receiver),
-                        balance - BigInt(1000),
-                        destChainId,
-                        evm2AleoArrWithoutPadding(destTsAddr),
-                        evm2AleoArrWithoutPadding(destToken),
-                        BigInt(1)
-                    );
-                    await tx.wait();
-                }
+            expect(await tokenServiceWAleo.min_transfers(ethChainTokenInfo)).toBeLessThanOrEqual(amount)
+            expect(await tokenServiceWAleo.max_transfers(ethChainTokenInfo)).toBeGreaterThanOrEqual(amount)
+            tokenServiceWAleo.connect(admin);
+            tokenRegistry.connect(admin);
+            const balance = await credits.account(admin)
+            if (balance > amount) {
+                const tx = await tokenServiceWAleo.token_send_public(
+                    evm2AleoArrWithoutPadding(receiver),
+                    balance - BigInt(1000),
+                    destChainId,
+                    evm2AleoArrWithoutPadding(destTsAddr),
+                    evm2AleoArrWithoutPadding(destToken),
+                    BigInt(1)
+                );
+                await tx.wait();
+            }
         }, TIMEOUT)
 
 
@@ -455,7 +455,7 @@ describe("Deployment Token Service For ALeo", () => {
 
             test("Happy receive token(bsc chain) public", async () => {
 
-               const unpauseEthTx = await tokenServiceWAleo.unpause_token_ts(BSC_TESTNET);
+                const unpauseEthTx = await tokenServiceWAleo.unpause_token_ts(BSC_TESTNET);
                 await unpauseEthTx.wait();
 
                 const receiveAmount: bigint = BigInt(100_00)
@@ -512,7 +512,8 @@ describe("Deployment Token Service For ALeo", () => {
                 const user_final_credits = await credits.account(aleoUser1);
 
                 expect(finalHeldAmount).toBe(initial_held_amount);
-                expect(user_final_credits).toBe(user_initial_credits + receiveAmount) //375749 takes as a fee by credits contract
+                expect(user_final_credits).toBeLessThan(user_initial_credits + receiveAmount) //375749 takes as a fee by credits contract
+                expect(user_final_credits).toBeGreaterThan(user_initial_credits + receiveAmount - BigInt(500000))
                 expect(finalTokenSupply).toBe(initialTokenSupply - receiveAmount) //need to pass this as well //currently isssue in contract
             }, TIMEOUT);
 
