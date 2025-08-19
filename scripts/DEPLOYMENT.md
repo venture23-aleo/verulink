@@ -227,7 +227,22 @@ First, go to the installation root directory `verulink_attestor`.
     [mainnet:vars]
     env=mainnet
     ```
-3. Deploy to a specific environment:
+4. Download Ansible playbook
+
+	Download develop ansible playbook
+    ```bash
+	
+	curl -o deploy.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/develop/scripts/ansible/deploy.yml
+    ```
+	Download staging ansible playbook
+	```bash
+	curl -o deploy.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/staging/scripts/ansible/deploy.yml
+    ```
+	Download main ansible playbook
+	```bash
+	curl -o deploy.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/scripts/ansible/deploy.yml
+	```
+4. Deploy to a specific environment:
     
     Deploy to devnet
     ```bash
