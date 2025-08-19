@@ -17,7 +17,7 @@ const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
 const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
 
 
-const intialize = async (initialCouncilList: string[], initialCouncilThresholdData: number, initialAttestorsList: string[], initialAttestorThresholdData: number, aleoSeqData: bigint, ethSeqData: bigint) => {
+const intialize = async (initialCouncilList: string[], initialCouncilThresholdData: number, initialAttestorsList: string[], initialAttestorThresholdData: number) => {
 
   //Initialize council
   console.log(`Initializing council with council members: ${initialCouncilList}` + ` and threshold: ${initialCouncilThresholdData}`);
@@ -26,7 +26,7 @@ const intialize = async (initialCouncilList: string[], initialCouncilThresholdDa
 
   //Initialize bridge
   console.log(`Initializing bridge with attestors: ${initialAttestorsList}` + ` and threshold: ${initialAttestorThresholdData}`);
-  const initializeBridgeTx = await bridge.initialize_tb(initialAttestorsList, initialAttestorThresholdData, bridgeCouncil.address(), aleoSeqData, ethSeqData);
+  const initializeBridgeTx = await bridge.initialize_tb(initialAttestorsList, initialAttestorThresholdData, bridgeCouncil.address());
   await initializeBridgeTx.wait();
 
   // Initialize token service
@@ -42,5 +42,5 @@ const intialize = async (initialCouncilList: string[], initialCouncilThresholdDa
 
 
 
-intialize([council1, council2, council3, council4, council5], councilThreshold, [attestor1, attestor2, attestor3, attestor4, attestor5], attestorThreshold, aleoSeq, ethSeq)
+intialize([council1, council2, council3, council4, council5], councilThreshold, [attestor1, attestor2, attestor3, attestor4, attestor5], attestorThreshold)
 

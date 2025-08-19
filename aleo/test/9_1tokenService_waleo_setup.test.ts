@@ -70,9 +70,7 @@ describe("Deployment Token Service For ALeo", () => {
             const tx = await bridge.initialize_tb(
                 [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser4, ALEO_ZERO_ADDRESS],
                 threshold,
-                admin,
-                BigInt(0),
-                BigInt(3000),
+                admin
             );
             await tx.wait();
         }, TIMEOUT);

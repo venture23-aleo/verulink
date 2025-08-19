@@ -93,9 +93,7 @@ describe("Token Bridge ", () => {
         const tx = await bridge.initialize_tb(
           [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
           1,
-          admin, //governance
-          new_aleo_sequence,
-          new_eth_sequence
+          admin
         );
         await tx.wait();
       },
@@ -109,9 +107,7 @@ describe("Token Bridge ", () => {
         const tx = await bridge.initialize_tb(
           [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
           0,
-          admin, //governance
-          new_aleo_sequence,
-          new_eth_sequence
+          admin
         );
         await tx.wait();
       },
@@ -125,9 +121,7 @@ describe("Token Bridge ", () => {
         const tx = await bridge.initialize_tb(
           [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
           6,
-          admin, //governance
-          new_aleo_sequence,
-          new_eth_sequence
+          admin
         );
         await tx.wait();
       },
@@ -143,9 +137,7 @@ describe("Token Bridge ", () => {
         let tx = await bridge.initialize_tb(
           [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser3, ALEO_ZERO_ADDRESS],
           threshold,
-          admin,
-          new_aleo_sequence,
-          new_eth_sequence
+          admin
         );
         await tx.wait();
       }
@@ -171,9 +163,7 @@ describe("Token Bridge ", () => {
         const tx = await bridge.initialize_tb(
           [aleoUser1, aleoUser2, aleoUser3, aleoUser4, aleoUser5],
           1,
-          admin, //governance
-          new_aleo_sequence,
-          new_eth_sequence
+          admin
         );
         await tx.wait();
       },

@@ -64,11 +64,7 @@ describe("Deployment Token Service For ALeo", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
     tokenID = BigInt("3443843282313283355522573239085696902919850365217539366784739393210722344986");
     const platform_fee = 5000; // 5% in basis points, so 5000 means 5%
-    const relayer_fee = BigInt(10000);
     const admin = aleoUser1;
-    const active_relayer = true;
-    const no_active_relayer = false;
-
 
     tokenServiceWAleo.connect(admin)
 
@@ -97,9 +93,7 @@ describe("Deployment Token Service For ALeo", () => {
             const tx = await bridge.initialize_tb(
                 [aleoUser1, aleoUser2, ALEO_ZERO_ADDRESS, aleoUser4, ALEO_ZERO_ADDRESS],
                 threshold,
-                admin,
-                BigInt(0),
-                BigInt(3000),
+                admin
             );
             await tx.wait();
         }, TIMEOUT);
@@ -195,8 +189,7 @@ describe("Deployment Token Service For ALeo", () => {
                     destChainId,
                     evm2AleoArrWithoutPadding(destTsAddr2),
                     evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    no_active_relayer
+                    platformFee
                 );
                 await tx.wait();
             },
@@ -215,8 +208,7 @@ describe("Deployment Token Service For ALeo", () => {
                     destChainId,
                     evm2AleoArrWithoutPadding(destTsAddr),
                     evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    active_relayer
+                    platformFee
                 );
                 await tx.wait();
             },
@@ -234,8 +226,7 @@ describe("Deployment Token Service For ALeo", () => {
                     destChainId,
                     evm2AleoArrWithoutPadding(destTsAddr),
                     evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    no_active_relayer
+                    platformFee
                 );
                 await tx.wait();
             },
@@ -256,8 +247,7 @@ describe("Deployment Token Service For ALeo", () => {
                     destChainId,
                     evm2AleoArrWithoutPadding(destTsAddr),
                     evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    no_active_relayer
+                    platformFee
                 );
                 await tx.wait();
         }, TIMEOUT)
@@ -275,8 +265,7 @@ describe("Deployment Token Service For ALeo", () => {
                         destChainId,
                         evm2AleoArrWithoutPadding(destTsAddr),
                         evm2AleoArrWithoutPadding(destToken),
-                        BigInt(1),
-                        no_active_relayer
+                        BigInt(1)
                     );
                     await tx.wait();
                 }
@@ -313,8 +302,7 @@ describe("Deployment Token Service For ALeo", () => {
                         destChainId,
                         evm2AleoArrWithoutPadding(destTsAddr),
                         evm2AleoArrWithoutPadding(destToken),
-                        platformFee,
-                        no_active_relayer
+                        platformFee
                     );
                     await tx.wait();
                     const admin_final_credit = await credits.account(admin);
