@@ -2,6 +2,7 @@
 
 ## Table of Contents
 - [Installation on VM](#installing-on-vm-manual)
+- [Installing using Ansible Playbook](#installing-using-ansible-playbook)
 - [Installing on AWS](#installing-on-aws)
 - [Verulink Attestor Migration Guide ](#verulink-attestor-migration-guide)
 - [Troubleshooting](#troubleshooting)
@@ -131,6 +132,71 @@ First, go to the installation root directory `verulink_attestor`.
 	cd ../logs
 	cat verulink.log
 	```
+### Installing using Ansible playbook
+
+## Deployment Steps
+
+1. Download ansbile variables for specific environments and update the values
+   To download devnet ansible vars
+   ```bash
+   Select the respective **branch** based on your deployment environment:
+    | Branch   | Deployment Environment |
+    |----------|------------------------|
+    | develop  | devnet                 |
+    | staging  | staging/testnet        |
+    | main     | mainnet                |
+
+   Run the following commands, replacing `<branch>` with the appropriate branch name from the table above:
+    Download devnet ansible vars file
+	```bash
+	
+	curl -o devnet_vars.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/develop/scripts/ansible/devnet_vars.yml
+    ```
+	Download staging ansible vars file
+	```bash
+	curl -o staging_vars.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/staging/scripts/ansible/devnet_vars.yml
+    ```
+	Download mainnet ansible vars file
+	```bash
+	curl -o mainnet_vars.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/scripts/ansible/devnet_vars.yml
+	```
+2. Create `inventory.txt`
+   Sample `inventory.txt` file.
+    ```yaml
+    [devnet]
+    192.168.1.100 ansible_host=devnet.example.com ansible_user=ubuntu
+    
+    [staging]
+    192.168.1.101 ansible_host=staging.example.com ansible_user=ubuntu
+    
+    [mainnet]
+    192.168.1.102 ansible_host=mainnet.example.com ansible_user=ubuntu
+    
+    [devnet:vars]
+    env=devnet
+    
+    [staging:vars]
+    env=staging
+    
+    [mainnet:vars]
+    env=mainnet
+    ```
+3. Deploy to a specific environment:
+    
+    Deploy to devnet
+    ```bash
+    ansible-playbook -i inventory.txt deploy.yml --limit devnet
+    ```
+    Deploy to staging
+    ```bash
+    ansible-playbook -i inventory.txt deploy.yml --limit staging
+    ```
+    Deploy to mainnet
+    ```bash
+    ansible-playbook -i inventory.txt deploy.yml --limit mainnet
+    ```
+
+
 ### Installing on AWS
 
 The attestor service can be deployed using two method
