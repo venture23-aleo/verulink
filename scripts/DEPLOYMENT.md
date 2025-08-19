@@ -192,7 +192,7 @@ First, go to the installation root directory `verulink_attestor`.
     | staging  | staging/testnet        |
     | main     | mainnet                |
 
-   Run the following commands, replacing `<branch>` with the appropriate branch name from the table above:
+
     Download devnet ansible vars file
 	```bash
 	
