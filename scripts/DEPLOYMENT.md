@@ -133,6 +133,15 @@ First, go to the installation root directory `verulink_attestor`.
 	cat verulink.log
 	```
 ### Installing using Ansible playbook
+## Machine Configuration
+1. VM Specification
+	- OS: Ubuntu 22.04 LTS
+	- vCPU: 1
+	- Memory: 2 GB
+	- Storage: 50 GB
+2. Networking
+	- Host Firewall: SSH Access (Port 22)
+	- Docker Network: Signing Service (Port 8080)
 
 ## Deployment Steps
 
