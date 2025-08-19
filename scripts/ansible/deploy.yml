@@ -1,0 +1,236 @@
+---
+- name: Deploy Verulink Attestor Service
+  hosts: all
+  become: yes
+  gather_facts: yes
+  
+  vars:
+    attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
+    mtls_dir: "{{ attestor_install_dir }}/.mtls"
+    github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads"
+    
+  pre_tasks:
+    - name: Include environment variables
+      include_vars: "{{ env }}_vars.yml"
+    
+  tasks:
+    - name: Create installation directory
+      file:
+        path: "{{ attestor_install_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Create mTLS directory
+      file:
+        path: "{{ mtls_dir }}"
+        state: directory
+        mode: '0750'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Determine branch based on environment
+      set_fact:
+        branch: "{{ 'develop' if env == 'devnet' else 'staging' if env == 'staging' else 'main' }}"
+
+    - name: Download compose file
+      get_url:
+        url: "{{ github_base_url }}/{{ branch }}/attestor/compose.yaml"
+        dest: "{{ attestor_install_dir }}/compose.yaml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Download config file
+      get_url:
+        url: "{{ github_base_url }}/{{ branch }}/attestor/config.yaml.j2"
+        dest: "{{ attestor_install_dir }}/config.yaml.j2"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        
+    - name: Render combined attestor config
+      template:
+        src: "{{ attestor_install_dir }}/config.yaml.j2"
+        dest: "{{ attestor_install_dir }}/attestor_combined.yaml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Read combined config
+      slurp:
+        src: "{{ attestor_install_dir }}/attestor_combined.yaml"
+      register: combined_file
+
+    - name: Split YAML documents
+      set_fact:
+        split_docs: "{{ (combined_file.content | b64decode).split('---') }}"
+
+  
+    - name: Write config sections
+      copy:
+        content: "{{ item.content | trim }}"
+        dest: "{{ attestor_install_dir }}/{{ item.filename }}"
+        mode: "{{ item.mode | default('0644') }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      loop:
+        - { filename: "chain_config.yaml", content: "{{ split_docs[1] }}" }
+        - { filename: "sign_config.yaml",  content: "{{ split_docs[2] }}" }
+        - { filename: "secrets.yaml",      content: "{{ split_docs[3] }}", mode: "0600" }
+        - { filename: ".env",              content: "{{ split_docs[4] }}" }
+
+    - name: Copy mTLS certificates and keys
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ mtls_dir }}/{{ item.dest }}"
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      loop:
+        - { src: "files/ca.crt", dest: "ca.crt" }
+        - { src: "files/{{ attestor_name }}.crt", dest: "{{ attestor_name }}.crt" }
+        - { src: "files/{{ attestor_name }}.key", dest: "{{ attestor_name }}.key" }
+      when: item.src is file
+
+    - name: Install Docker on Ubuntu/Debian systems
+      block:
+        - name: Update apt cache
+          apt:
+            update_cache: yes
+
+        - name: Install required packages
+          apt:
+            name:
+              - ca-certificates
+              - curl
+              - gnupg
+            state: present
+
+        - name: Create keyrings directory
+          file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: '0755'
+
+        - name: Add Docker's official GPG key
+          get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: '0644'
+
+        - name: Set correct permissions for Docker GPG key
+          file:
+            path: /etc/apt/keyrings/docker.asc
+            mode: '0644'
+
+        - name: Add Docker repository to apt sources
+          apt_repository:
+            repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+            filename: docker
+
+        - name: Update apt cache after adding repository
+          apt:
+            update_cache: yes
+
+        - name: Install Docker packages
+          apt:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+            state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker on RHEL/CentOS systems
+      block:
+        - name: Install dnf-plugins-core
+          dnf:
+            name: dnf-plugins-core
+            state: present
+
+        - name: Add Docker repository
+          dnf_repository:
+            name: docker-ce-stable
+            description: Docker CE Stable - $basearch
+            baseurl: https://download.docker.com/linux/rhel/$basearch/stable
+            gpgcheck: yes
+            gpgkey: https://download.docker.com/linux/rhel/gpg
+            enabled: yes
+
+        - name: Install Docker packages
+          dnf:
+            name:
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+            state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Pull Docker images
+      docker_image:
+        name: "{{ item }}"
+        source: pull
+      loop:
+        - "{{ docker_image_tag_sign }}"
+        - "{{ docker_image_tag_chain }}"
+
+    - name: Start attestor services
+      docker_compose:
+        project_src: "{{ attestor_install_dir }}"
+        state: present
+        restarted: yes
+
+    - name: Wait for services to be ready
+      wait_for:
+        port: "{{ item }}"
+        timeout: 60
+      loop:
+        - 8080  # signing service port
+        - 8081  # chain service port (adjust if different)
+
+    - name: Verify services are running
+      docker_container_info:
+        name: "{{ item }}"
+      register: container_info
+      loop:
+        - "attestor-chainservice"
+        - "attestor-signingservice"
+
+    - name: Display service status
+      debug:
+        msg: "Service {{ item.name }} is {{ 'running' if item.State.Running else 'not running' }}"
+      loop: "{{ container_info.results }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Check service logs
+      shell: "docker logs {{ item }} --tail 20"
+      register: service_logs
+      loop:
+        - "attestor-chainservice"
+        - "attestor-signingservice"
+
+    - name: Display recent logs
+      debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ service_logs.results }}"
+      when: item.stdout_lines is defined

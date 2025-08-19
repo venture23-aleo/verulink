@@ -1,0 +1,93 @@
+---
+## config.yaml chain-service
+name: {{ attestor_name }}
+version: 1.0.1
+chains:
+  - name: aleo
+    chain_id: {{ aleo_chain_id }}
+    chain_type: aleo
+    wallet_address: {{ aleo_wallet_address }} # wallet indentifier
+    bridge_contract: {{ aleo_bridge_contract }}
+    node_url: {{ aleo_node_url }}
+    sequence_num_start:
+      bsc: 1
+    retry_packet_wait_dur: 2m0s
+    prune_base_seq_num_wait_dur: 5m0s
+    average_block_gen_dur: 3s
+    dest_chains:
+      bsc:
+        pkt_validity_wait_dur: 2m0s
+        finality_height: 23
+  - name: bsc
+    chain_id: {{ bsc_chain_id }}
+    chain_type: evm
+    wallet_address: {{ bsc_wallet_address }} # can be same as ethereum address
+    bridge_contract: {{ bsc_bridge_contract }}
+    node_url: {{ bsc_node_url }}
+    filter_topic: {{ bsc_filter_topic }}
+    retry_packet_wait_dur: 1m0s
+    prune_base_seq_num_wait_dur: 1m0s
+    average_block_gen_dur: 2s
+    dest_chains:
+      aleo:
+        pkt_validity_wait_dur: 1m0s
+        finality_height: 21
+        feed_pkt_wait_dur: 1m0s
+        start_height: {{ bsc_start_height }}
+
+check_health_service: 1m
+db_dir: {{ db_dir }}
+consume_packet_workers: 10 # Default is 10
+log:
+  encoding: console
+  output_dir: {{ log_dir }}
+mode: stag
+signing_service:
+  host: {{ signing_service_host }}
+  port: {{ signing_service_port }}
+  endpoint: "/sign"
+  scheme: "http" # https, http, rpc, etc.
+  username: {{ signing_service_username }}
+  password: {{ signing_service_password }}
+  health_end_point: "/health"
+collector_service:
+  uri: {{ collector_service_url }}
+  # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
+  collector_wait_dur: 1h
+  ca_certificate: {{ ca_certificate }}
+  attestor_certificate: {{ attestor_certificate }}
+  attestor_key: {{ attestor_key }}
+
+metrics:
+  host: {{ prometheus_pushgateway_url }}
+  job_name: {{ prometheus_job_name }}
+
+---
+## config.yaml signing-service
+chains:
+  - name: aleo
+    chain_type: aleo
+    chain_id: {{ aleo_chain_id }}
+  - name: bsc
+    chain_type: evm
+    chain_id: {{ bsc_chain_id }}
+cred:
+  username: {{ signing_service_username }}
+  password: {{ signing_service_password }}
+
+---
+## secrets.yaml
+chain:
+ bsc:
+   chain_type: evm
+   private_key: {{ bsc_private_key }}
+   wallet_address: {{ bsc_wallet_address }}
+ aleo:
+   chain_type: aleo
+   private_key: {{ aleo_private_key }}
+   wallet_address: {{ aleo_wallet_address }}
+---
+## Docker Image Tags
+DOCKER_IMAGE_TAG_SIGN={{ docker_image_tag_sign }}
+DOCKER_IMAGE_TAG_CHAIN={{ docker_image_tag_chain }}
+DEPLOYMENT_ENVIRONMENT={{ deployment_environment }}
