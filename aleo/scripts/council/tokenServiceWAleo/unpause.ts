@@ -1,6 +1,6 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { BSC_TESTNET, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/testdata.data";
+import { BSC_MAINNET, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/mainnet.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
@@ -137,8 +137,8 @@ export const execUnpauseToken = async (proposalId: number, chainId: bigint) => {
 
 
 async function run() {
-  const proposalId = await proposeUnpauseToken(BSC_TESTNET);
-  await execUnpauseToken(proposalId, BSC_TESTNET);
+  const proposalId = await proposeUnpauseToken(BSC_MAINNET);
+  await execUnpauseToken(proposalId, BSC_MAINNET);
 }
 
 run();

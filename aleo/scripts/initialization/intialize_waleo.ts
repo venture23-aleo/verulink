@@ -5,7 +5,7 @@ import { Vlink_holding_cd_v2Contract } from "../../artifacts/js/vlink_holding_cd
 import { Vlink_token_bridge_v2Contract } from "../../artifacts/js/vlink_token_bridge_v2";
 import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
 import { Vlink_bridge_council_v2Contract } from "../../artifacts/js/vlink_bridge_council_v2";
-import { aleoSeq, attestor1, attestor2, attestor3, attestor4, attestor5, attestorThreshold, council1, council2, council3, council4, council5, councilThreshold, ethSeq } from "../../utils/testdata.data";
+import { attestor1, attestor2, attestor3, attestor4, attestor5, attestorThreshold, council1, council2, council3, council4, council5, councilThreshold } from "../../utils/mainnet.data";
 
 
 const mode = ExecutionMode.SnarkExecute;

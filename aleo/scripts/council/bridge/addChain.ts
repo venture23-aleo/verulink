@@ -2,7 +2,7 @@ import { hashStruct } from "../../../utils/hash";
 
 import { Vlink_token_bridge_v2Contract } from "../../../artifacts/js/vlink_token_bridge_v2";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/testdata.data";
+import { BSC_MAINNET, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/mainnet.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v2";
 import { TbAddChain } from "../../../artifacts/js/types/vlink_bridge_council_v2";
@@ -137,8 +137,8 @@ export const execAddChain = async (proposalId: number, newChainId: bigint) => {
 }
 
 async function run() {
-  const proposalId = await proposeAddChain(BigInt(422842677857));
-  await execAddChain(proposalId, BigInt(422842677857));
+  const proposalId = await proposeAddChain(BSC_MAINNET);
+  await execAddChain(proposalId, BSC_MAINNET);
 }
 
 run();

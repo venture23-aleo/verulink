@@ -1,6 +1,6 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { BSC_PLATFORM_FEE, BSC_TESTNET, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, waleoBSCTokenAddress, waleoBSCTokenService, waleoMaxTranfer, waleoMinTranfer } from "../../../utils/testdata.data";
+import { BSC_PLATFORM_FEE, BSC_MAINNET, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, waleoBSCTokenAddress, waleoBSCTokenService, waleoMaxTranfer, waleoMinTranfer } from "../../../utils/mainnet.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
@@ -182,8 +182,8 @@ export const execAddTokenInfo = async (
 
 
 async function run() {
-  const proposalId = await proposeAddTokenInfo(waleoMinTranfer, waleoMaxTranfer, waleoBSCTokenAddress, waleoBSCTokenService, BSC_TESTNET, BSC_PLATFORM_FEE);
-  await execAddTokenInfo(proposalId, waleoMinTranfer, waleoMaxTranfer, waleoBSCTokenAddress, waleoBSCTokenService, BSC_TESTNET, BSC_PLATFORM_FEE);
+  const proposalId = await proposeAddTokenInfo(waleoMinTranfer, waleoMaxTranfer, waleoBSCTokenAddress, waleoBSCTokenService, BSC_MAINNET, BSC_PLATFORM_FEE);
+  await execAddTokenInfo(proposalId, waleoMinTranfer, waleoMaxTranfer, waleoBSCTokenAddress, waleoBSCTokenService, BSC_MAINNET, BSC_PLATFORM_FEE);
 }
 
 run();

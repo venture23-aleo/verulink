@@ -7,12 +7,14 @@
 # npx tsx scripts/initialization/intialize_waleo.ts
 
 # # 3. Add BSC chain
+## check data in beforing runing
 # npx tsx scripts/council/bridge/addChain.ts
 
 # # 4. Add token Service
 # npx tsx scripts/council/bridge/addService.ts
 
 # 5. Add token Info
+## check data in beforing runing
 # npx tsx scripts/council/tokenServiceWAleo/addNewToken.ts
 
 #6 . unpause token in tokenService
