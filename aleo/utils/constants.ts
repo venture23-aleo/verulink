@@ -108,14 +108,14 @@ export const TAG_UPDATE_THRESHOLD = 4;
 
 
 export const TAG_TS2_TRANSFER_OWNERSHIP = 1;
-export const TAG_TS2_ADD_TOKEN= 2;
+export const TAG_TS2_ADD_TOKEN = 2;
 export const TAG_TS2_UPDATE_MAX_MIN_TRANSFER = 3;
 export const TAG_TS2_PAUSE_TOKEN = 4;
-export const TAG_TS2_UNPAUSE_TOKEN = 5; 
-export const TAG_HOLDING2_RELEASE= 6;
+export const TAG_TS2_UNPAUSE_TOKEN = 5;
+export const TAG_HOLDING2_RELEASE = 6;
 export const TAG_HOLDING2_OWNERSHIP_TRANSFER = 7;
-export const TAG_TS2_REGISTER_TOKEN = 8;
-export const TAG_TS2_UP_TS_SETTING = 9;
-export const TAG_TS2_ADD_CHAIN_TO_ET = 10;
-export const TAG_TS2_REMOVE_OTHER_CHAIN_ADD = 11;
-export const TAG_TS2_UPDATE_FEES = 12;
+export const TAG_TS2_UP_TS_SETTING = 8;
+export const TAG_TS2_ADD_CHAIN_TO_ET = 9;
+export const TAG_TS2_REMOVE_OTHER_CHAIN_ADD = 10;
+export const TAG_TS2_UPDATE_FEES = 11;
+export const TAG_WITHDRAW_FEES_TS2 = 12;

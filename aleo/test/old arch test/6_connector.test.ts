@@ -34,7 +34,7 @@ import { createRandomPacket } from "../../utils/packet";
 import { getBytes } from "ethers";
 import { ExecutionMode } from "@doko-js/core";
 import { Vlink_token_bridge_v2Contract } from "../../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;

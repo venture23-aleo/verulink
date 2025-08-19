@@ -3,7 +3,7 @@ import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
 import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
 import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
 
 
 import {
@@ -34,7 +34,7 @@ import { ExecutionMode } from "@doko-js/core";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
 import { Balance } from "../artifacts/js/types/token_registry";
-import { TokenOwner } from "../artifacts/js/types/vlink_token_service_v2";
+import { TokenOwner } from "../artifacts/js/types/vlink_token_service_v7";
 
 
 

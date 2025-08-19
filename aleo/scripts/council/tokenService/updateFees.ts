@@ -1,5 +1,5 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { arbitrumChainId, COUNCIL_TOTAL_PROPOSALS_INDEX, ethHoleskyChainId, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE, wusdcFeeRelayerPrivate, wusdcFeeRelayerPublic } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
@@ -27,7 +27,7 @@ const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_
 ///// Propose ////////
 //////////////////////
 export const proposeUpdateFees = async (
-    chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number
+  chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number
 ): Promise<number> => {
 
   console.log(`👍 Proposing to update fees: ${token_id}`)
@@ -70,7 +70,7 @@ export const proposeUpdateFees = async (
 ///// Vote ////////
 ///////////////////
 export const voteUpdateFees = async (
-    proposalId: number, chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number) => {
+  proposalId: number, chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number) => {
 
   console.log(`👍 Voting to update fees: ${token_id}`)
 
@@ -109,7 +109,7 @@ export const voteUpdateFees = async (
 ///// Execute ////////
 //////////////////////
 export const execUpdateFees = async (
-    proposalId: number, chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number) => {
+  proposalId: number, chain_id: bigint, token_id: bigint, public_relayer_fee: bigint, private_relayer_fee: bigint, public_platform_fee: number, private_platform_fee: number) => {
 
   console.log(`Updating fees ${token_id}`)
 
@@ -167,8 +167,8 @@ const private_platform_fee = 36;
 
 
 const update = async () => {
-const proposal_id = await proposeUpdateFees(arbitrumChainId, usdc, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate, public_platform_fee, private_platform_fee);
-execUpdateFees(proposal_id, arbitrumChainId, usdc, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate, public_platform_fee, private_platform_fee)
+  const proposal_id = await proposeUpdateFees(arbitrumChainId, usdc, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate, public_platform_fee, private_platform_fee);
+  execUpdateFees(proposal_id, arbitrumChainId, usdc, wusdcFeeRelayerPublic, wusdcFeeRelayerPrivate, public_platform_fee, private_platform_fee)
 }
 
 // update();

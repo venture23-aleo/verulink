@@ -9,7 +9,7 @@ import { signPacket } from "../../utils/sign";
 import { TokenOwner } from "../../artifacts/js/types/token_registry";
 import { hashStruct } from "../../utils/hash";
 import { getTokenLeo, getTokenOwnerLeo } from "../../artifacts/js/js2leo/token_registry";
-import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v7";
 import { wusdcName } from "../../utils/mainnet.data";
 import { hash } from "aleo-hasher";
 

@@ -5,7 +5,7 @@ import { ExecutionMode } from "@doko-js/core";
 import { hashStruct, hashStructToAddress } from "../utils/hash";
 import { TokenOwner } from "../artifacts/js/types/token_registry";
 import { Image } from "../artifacts/js/types/vlink_holding_v2";
-import { Holder } from "../artifacts/js/types/vlink_token_service_v2";
+import { Holder } from "../artifacts/js/types/vlink_token_service_v7";
 
 
 const mode = ExecutionMode.SnarkExecute;

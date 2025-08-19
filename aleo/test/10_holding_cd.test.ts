@@ -39,7 +39,7 @@ describe("Holding", () => {
     })
 
     describe("Initialization", () => {
-       
+
         test.failing("Should not initialized from non initializer", async () => {
             holding.connect(aleoUser3);
             const tx = await holding.initialize_holding(admin);
@@ -148,7 +148,6 @@ describe("Holding", () => {
             expect(finalHeldAmount).toBe(heldAmount - amountToRelease);
         }, TIMEOUT);
     });
-
 
 
     describe("Transfer Ownership", () => {

@@ -16,10 +16,10 @@ import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_counc
 
 
 const mode = ExecutionMode.SnarkExecute;
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({mode, priorityFee: 10_000});
-const bridge = new Vlink_token_bridge_v2Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
 
 export const proposeRemoveChain = async (chainId: bigint): Promise<number> => {
 
@@ -40,21 +40,21 @@ export const proposeRemoveChain = async (chainId: bigint): Promise<number> => {
     id: proposalId,
     chain_id: chainId
   };
-  const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain)); 
+  const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveChainProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveChainProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   // proposing
-  const proposeRemoveChainTx = await council.propose(proposalId, ExternalProposalHash); 
+  const proposeRemoveChainTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeRemoveChainTx.wait();
 
   getProposalStatus(ExternalProposalHash);
-  
+
   return proposalId
 };
 
@@ -72,21 +72,21 @@ export const voteRemoveChain = async (proposalId: number, chainId: bigint) => {
     id: proposalId,
     chain_id: chainId
   };
-  const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain)); 
+  const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveChainProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveChainProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
- 
+
 
   const voter = council.getAccounts()[0];
   validateVote(ExternalProposalHash, voter);
 
   // vote
-  const voteRemoveChainTx = await council.vote(ExternalProposalHash, true); 
+  const voteRemoveChainTx = await council.vote(ExternalProposalHash, true);
   await voteRemoveChainTx.wait();
 
   getProposalStatus(ExternalProposalHash);
@@ -95,12 +95,12 @@ export const voteRemoveChain = async (proposalId: number, chainId: bigint) => {
 
 export const execRemoveChain = async (proposalId: number, chainId: bigint) => {
 
-    console.log(`👍 removing chainId: ${chainId}`)
-    let isChainIdSupported = await bridge.supported_chains(chainId, false);
-    if (!isChainIdSupported) {
-      throw Error(`ChainId ${chainId} is not found!`);
-    }
-  
+  console.log(`👍 removing chainId: ${chainId}`)
+  let isChainIdSupported = await bridge.supported_chains(chainId, false);
+  if (!isChainIdSupported) {
+    throw Error(`ChainId ${chainId} is not found!`);
+  }
+
   const bridgeOwner = await bridge.owner_TB(true);
   if (bridgeOwner != bridgeCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
@@ -112,12 +112,12 @@ export const execRemoveChain = async (proposalId: number, chainId: bigint) => {
     id: proposalId,
     chain_id: chainId
   };
-  const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain)); 
+  const tbRemoveChainProposalHash = hashStruct(getTbRemoveChainLeo(tbRemoveChain));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveChainProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveChainProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

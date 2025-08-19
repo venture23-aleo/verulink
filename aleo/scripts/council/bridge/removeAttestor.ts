@@ -42,9 +42,9 @@ export const proposeRemoveAttestor = async (attestor: string, new_threshold: num
   const tbRemoveAttestorProposalHash = hashStruct(getTbRemoveAttestorLeo(tbRemoveAttestor));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveAttestorProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveAttestorProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -75,9 +75,9 @@ export const voteRemoveAttestor = async (proposalId: number, attestor: string, n
   const tbRemoveAttestorProposalHash = hashStruct(getTbRemoveAttestorLeo(tbRemoveAttestor));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveAttestorProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveAttestorProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -115,9 +115,9 @@ export const execRemoveAttestor = async (proposalId: number, attestor: string, n
   const tbRemoveAttestorProposalHash = hashStruct(getTbRemoveAttestorLeo(tbRemoveAttestor));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveAttestorProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveAttestorProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

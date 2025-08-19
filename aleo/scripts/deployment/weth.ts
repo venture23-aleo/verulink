@@ -1,5 +1,5 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
 import { getRegisterToken } from "../../artifacts/js/leo2js/vlink_token_service_council_v2";
 import { hashStruct } from "../../utils/hash";

@@ -1,12 +1,11 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/testdata.data";
+import { BSC_TESTNET, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-
 import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_cd_cuncl_v2";
-import { TAG_TS2_UNPAUSE_TOKEN, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/constants";
+import { TAG_TS2_UNPAUSE_TOKEN } from "../../../utils/constants";
 import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_cd_cuncl_v2";
 import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
 import { Vlink_token_service_cd_cuncl_v2Contract } from "../../../artifacts/js/vlink_token_service_cd_cuncl_v2";
@@ -23,13 +22,10 @@ const tokenServiceWALEOCouncil = new Vlink_token_service_cd_cuncl_v2Contract({ m
 //////////////////////
 ///// Propose ////////
 //////////////////////
-export const proposeUnpauseToken = async (): Promise<number> => {
+export const proposeUnpauseToken = async (chainId: bigint): Promise<number> => {
+
 
   console.log(`👍 Proposing to unpause token service`)
-  const isTokenPaused = (await tokenServiceWALEO.status(TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
-  if (!isTokenPaused) {
-    throw Error(`Token is already unpaused!`);
-  }
 
   const proposer = council.getAccounts()[0];
   validateProposer(proposer);
@@ -39,14 +35,15 @@ export const proposeUnpauseToken = async (): Promise<number> => {
   // making hash
   const tsUnpauseToken: TsUnpauseToken = {
     tag: TAG_TS2_UNPAUSE_TOKEN,
+    chain_id: chainId,
     id: proposalId,
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
   const externalProposal: ExternalProposal = {
-        id: proposalId,
-        external_program: tokenServiceWALEOCouncil.address(),
-        proposal_hash: tsUnpauseTokenHash
+    id: proposalId,
+    external_program: tokenServiceWALEOCouncil.address(),
+    proposal_hash: tsUnpauseTokenHash
   }
 
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
@@ -63,25 +60,22 @@ export const proposeUnpauseToken = async (): Promise<number> => {
 ///////////////////
 ///// Vote ////////
 ///////////////////
-export const voteUnpauseToken = async (proposalId: number, token_id: bigint) => {
+export const voteUnpauseToken = async (proposalId: number, chainId: bigint) => {
 
   console.log(`👍 Voting to unpause token service`)
-  const isTokenPaused = (await tokenServiceWALEO.status(TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
-  if (!isTokenPaused) {
-    throw Error(`Token is already unpaused!`);
-  }
 
   // making hash
   const tsUnpauseToken: TsUnpauseToken = {
     tag: TAG_TS2_UNPAUSE_TOKEN,
+    chain_id: chainId,
     id: proposalId,
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
   const externalProposal: ExternalProposal = {
-        id: proposalId,
-        external_program: tokenServiceWALEOCouncil.address(),
-        proposal_hash: tsUnpauseTokenHash
+    id: proposalId,
+    external_program: tokenServiceWALEOCouncil.address(),
+    proposal_hash: tsUnpauseTokenHash
   }
 
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
@@ -101,13 +95,9 @@ export const voteUnpauseToken = async (proposalId: number, token_id: bigint) => 
 //////////////////////
 ///// Execute ////////
 //////////////////////
-export const execUnpauseToken = async (proposalId: number) => {
+export const execUnpauseToken = async (proposalId: number, chainId: bigint) => {
 
   console.log(`Unpausing token service`)
-  let isTokenPaused = (await tokenServiceWALEO.status(TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
-  if (!isTokenPaused) {
-    throw Error(`Token is already unpaused!`);
-  }
 
   const tsOwner = await tokenServiceWALEO.owner_TS(true);
   if (tsOwner != tokenServiceWALEOCouncil.address()) {
@@ -117,14 +107,15 @@ export const execUnpauseToken = async (proposalId: number) => {
   // making hash
   const tsUnpauseToken: TsUnpauseToken = {
     tag: TAG_TS2_UNPAUSE_TOKEN,
+    chain_id: chainId,
     id: proposalId,
   };
   const tsUnpauseTokenHash = hashStruct(getTsUnpauseTokenLeo(tsUnpauseToken));
 
   const externalProposal: ExternalProposal = {
-        id: proposalId,
-        external_program: tokenServiceWALEOCouncil.address(),
-        proposal_hash: tsUnpauseTokenHash
+    id: proposalId,
+    external_program: tokenServiceWALEOCouncil.address(),
+    proposal_hash: tsUnpauseTokenHash
   }
 
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
@@ -135,15 +126,19 @@ export const execUnpauseToken = async (proposalId: number) => {
   // execute
   const unpauseTokenTx = await tokenServiceWALEOCouncil.ts_unpause_token(
     tsUnpauseToken.id,
+    tsUnpauseToken.chain_id,
     voters
   );
   await unpauseTokenTx.wait();
 
-  isTokenPaused = (await tokenServiceWALEO.status(TOKEN_UNPAUSED_VALUE)) == TOKEN_PAUSED_VALUE;
-  if (isTokenPaused) {
-    console.log(`❌ Unknown error.`);
-  }
-
   console.log(` ✅ Token Service unpaused successfully.`)
 
 }
+
+
+async function run() {
+  const proposalId = await proposeUnpauseToken(BSC_TESTNET);
+  await execUnpauseToken(proposalId, BSC_TESTNET);
+}
+
+run();

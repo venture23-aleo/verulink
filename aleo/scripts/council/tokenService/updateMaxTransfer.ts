@@ -6,7 +6,7 @@ import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters
 import { ExecutionMode } from "@doko-js/core";
 
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { TsUpdateMaxMinTransfer } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getTsUpdateMaxMinTransferLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
@@ -14,18 +14,18 @@ import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
 import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v2Contract({mode, priorityFee: 10_000});
+const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({mode, priorityFee: 10_000});
-const tokenService = new Vlink_token_service_v2Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
 export const proposeUpdateMaxTransfer = async (
-    tokenId: bigint,
-    maxTransfer: bigint,
-    minTransfer: bigint,
+  tokenId: bigint,
+  maxTransfer: bigint,
+  minTransfer: bigint,
 ): Promise<number> => {
 
   console.log(`👍 Proposing to update maximum, minimum transfer value of token: ${tokenId}`)
@@ -42,7 +42,7 @@ export const proposeUpdateMaxTransfer = async (
     max_transfer: maxTransfer,
     min_transfer: minTransfer,
   };
-  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer));
 
   const externalProposal: ExternalProposal = {
     id: proposalId,
@@ -63,10 +63,10 @@ export const proposeUpdateMaxTransfer = async (
 ///// Vote ////////
 ///////////////////
 export const voteUpdateMaxTransfer = async (
-    proposalId: number, 
-    tokenId: bigint,
-    maxTransfer: bigint,
-    minTransfer: bigint,
+  proposalId: number,
+  tokenId: bigint,
+  maxTransfer: bigint,
+  minTransfer: bigint,
 ) => {
   console.log(`👍 Voting to update maximum, minimum transfer value of token: ${tokenId}`)
 
@@ -80,7 +80,7 @@ export const voteUpdateMaxTransfer = async (
     max_transfer: maxTransfer,
     min_transfer: minTransfer,
   };
-  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer));
 
   const externalProposal: ExternalProposal = {
     id: proposalId,
@@ -103,10 +103,10 @@ export const voteUpdateMaxTransfer = async (
 ///// Execute ////////
 //////////////////////
 export const execUpdateMinTransfer = async (
-    proposalId: number, 
-    tokenId: bigint,
-    maxTransfer: bigint,
-    minTransfer: bigint,
+  proposalId: number,
+  tokenId: bigint,
+  maxTransfer: bigint,
+  minTransfer: bigint,
 ) => {
   console.log(`Updating maximum, minimum transfer value of token: ${tokenId}`)
 
@@ -124,7 +124,7 @@ export const execUpdateMinTransfer = async (
     max_transfer: maxTransfer,
     min_transfer: minTransfer,
   };
-  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer)); 
+  const tsUpdateMaxTransferHash = hashStruct(getTsUpdateMaxMinTransferLeo(tsUpdateMaxTransfer));
 
   const externalProposal: ExternalProposal = {
     id: proposalId,
@@ -144,7 +144,7 @@ export const execUpdateMinTransfer = async (
     tsUpdateMaxTransfer.max_transfer,
     tsUpdateMaxTransfer.min_transfer,
     voters
-  ) 
+  )
 
   await updateMaxTransferTx.wait();
 

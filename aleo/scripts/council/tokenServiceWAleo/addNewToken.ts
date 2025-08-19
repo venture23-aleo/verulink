@@ -1,6 +1,6 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/testdata.data";
+import { BSC_PLATFORM_FEE, BSC_TESTNET, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, waleoBSCTokenAddress, waleoBSCTokenService, waleoMaxTranfer, waleoMinTranfer } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
@@ -29,8 +29,7 @@ export const proposeAddTokenInfo = async (
   tokenContractAddr: string,
   tokenServiceAddress: string,
   chain_id: bigint,
-  fee_of_platform: number, 
-  fee_of_relayer: bigint
+  fee_of_platform: number
 ): Promise<number> => {
 
 
@@ -50,15 +49,14 @@ export const proposeAddTokenInfo = async (
     token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
     token_service: evm2AleoArrWithoutPadding(tokenServiceAddress),
     chain_id,
-    fee_platform: fee_of_platform,
-    fee_relayer: fee_of_relayer,
+    fee_platform: fee_of_platform
   };
   const tbAddTokenProposalHash = hashStruct(getTsAddTokenInfoLeo(tsAddTokenInfo));
 
   const externalProposal: ExternalProposal = {
-        id: proposalId,
-        external_program: tokenServiceWALEOCouncil.address(),
-        proposal_hash: tbAddTokenProposalHash
+    id: proposalId,
+    external_program: tokenServiceWALEOCouncil.address(),
+    proposal_hash: tbAddTokenProposalHash
   }
 
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
@@ -82,8 +80,7 @@ export const voteAddToken = async (
   tokenContractAddr: string,
   chain_id: bigint,
   tokenServiceAddress: string,
-  fee_of_platform: number,
-  fee_of_relayer: bigint
+  fee_of_platform: number
 ) => {
   console.log(`👍 Voting to add token Info`)
 
@@ -97,15 +94,14 @@ export const voteAddToken = async (
     token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
     token_service: evm2AleoArrWithoutPadding(tokenServiceAddress),
     chain_id,
-    fee_platform: fee_of_platform,
-    fee_relayer: fee_of_relayer,
+    fee_platform: fee_of_platform
   };
   const tbAddTokenProposalHash = hashStruct(getTsAddTokenInfoLeo(tsAddTokenInfo));
 
   const externalProposal: ExternalProposal = {
-        id: proposalId,
-        external_program: tokenServiceWALEOCouncil.address(),
-        proposal_hash: tbAddTokenProposalHash
+    id: proposalId,
+    external_program: tokenServiceWALEOCouncil.address(),
+    proposal_hash: tbAddTokenProposalHash
   }
 
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
@@ -131,8 +127,7 @@ export const execAddTokenInfo = async (
   tokenContractAddr: string,
   tokenServiceAddress: string,
   chain_id: bigint,
-  fee_of_platform: number, 
-  fee_of_relayer: bigint
+  fee_of_platform: number
 ) => {
   console.log(`Adding token Info`)
 
@@ -150,15 +145,14 @@ export const execAddTokenInfo = async (
     token_address: evm2AleoArrWithoutPadding(tokenContractAddr),
     token_service: evm2AleoArrWithoutPadding(tokenServiceAddress),
     chain_id,
-    fee_platform: fee_of_platform,
-    fee_relayer: fee_of_relayer,
+    fee_platform: fee_of_platform
   };
   const tbAddTokenProposalHash = hashStruct(getTsAddTokenInfoLeo(tsAddTokenInfo));
 
   const externalProposal: ExternalProposal = {
-        id: proposalId,
-        external_program: tokenServiceWALEOCouncil.address(),
-        proposal_hash: tbAddTokenProposalHash
+    id: proposalId,
+    external_program: tokenServiceWALEOCouncil.address(),
+    proposal_hash: tbAddTokenProposalHash
   }
 
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
@@ -175,8 +169,7 @@ export const execAddTokenInfo = async (
     evm2AleoArrWithoutPadding(tokenContractAddr),
     evm2AleoArrWithoutPadding(tokenServiceAddress),
     chain_id,
-    fee_of_platform,
-    fee_of_relayer,
+    fee_of_platform
   )
 
   await addChainTx.wait();
@@ -184,3 +177,17 @@ export const execAddTokenInfo = async (
   console.log(` ✅ Token info added successfully.`)
 
 }
+
+
+
+
+async function run() {
+  const proposalId = await proposeAddTokenInfo(waleoMinTranfer, waleoMaxTranfer, waleoBSCTokenAddress, waleoBSCTokenService, BSC_TESTNET, BSC_PLATFORM_FEE);
+  await execAddTokenInfo(proposalId, waleoMinTranfer, waleoMaxTranfer, waleoBSCTokenAddress, waleoBSCTokenService, BSC_TESTNET, BSC_PLATFORM_FEE);
+}
+
+run();
+
+
+
+

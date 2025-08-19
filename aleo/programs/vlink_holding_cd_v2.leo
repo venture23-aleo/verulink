@@ -2,6 +2,12 @@ import credits.aleo;
 
 program vlink_holding_cd_v2.aleo {
 
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
+    
     struct Holder{
         account : address, 
         token_id : field 

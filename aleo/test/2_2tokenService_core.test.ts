@@ -1,6 +1,6 @@
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
 import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
@@ -26,7 +26,7 @@ import {
 } from "../utils/testdata.data";
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
-import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
 import { ExecutionMode } from "@doko-js/core";
 import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v2";
 import { Balance, TokenOwner } from "../artifacts/js/types/token_registry";

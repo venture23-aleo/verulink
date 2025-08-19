@@ -1,7 +1,7 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_SET_ROLE_TOKEN, ethChainId, usdcContractAddr } from "../../../utils/constants";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getSetRoleForTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
@@ -50,9 +50,9 @@ export const proposeRole = async (
   const tsSetRoleProposalHash = hashStruct(getSetRoleForTokenLeo(tsSetRole));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsSetRoleProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsSetRoleProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -89,9 +89,9 @@ export const voteRole = async (
   const tsSetRoleProposalHash = hashStruct(getSetRoleForTokenLeo(tsSetRole));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsSetRoleProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsSetRoleProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -135,9 +135,9 @@ export const execRole = async (
   const tsSetRoleProposalHash = hashStruct(getSetRoleForTokenLeo(tsSetRole));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsSetRoleProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsSetRoleProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

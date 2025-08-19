@@ -1,6 +1,6 @@
 import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
 import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import {
   ALEO_ZERO_ADDRESS,
@@ -13,7 +13,7 @@ import {
   max_supply,
   usdcContractAddr,
 } from "../utils/constants";
-import { ChainToken, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { ChainToken, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
 import { hashStruct, hashU128Field } from "../utils/hash";
 import { ExecutionMode, js2leo } from "@doko-js/core";
 import {
@@ -36,14 +36,14 @@ import {
   getAddChainExistingTokenLeo,
   getUpdateFeesLeo,
 } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
-import {evm2AleoArrWithoutPadding } from "../utils/ethAddress";
+import { evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
 import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
 import { baseChainId, baseTsContractAddr, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../utils/testdata.data";
 import { RegisterToken, RemoveOtherChainAddresses, SetRoleForToken, TsTransferOwnership, UpdateTokenMetadata } from "../artifacts/js/types/vlink_token_service_council_v2";
 import { getRegisterTokenLeo, getRemoveOtherChainAddressesLeo, getSetRoleForTokenLeo, getUpdateTokenMetadataLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getTsTransferOwnershipLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
-import { ExternalProposal} from "../artifacts/js/types/vlink_council_v2";
+import { ExternalProposal } from "../artifacts/js/types/vlink_council_v2";
 import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v2";
 
 
@@ -58,24 +58,24 @@ const bridge = new Vlink_token_bridge_v2Contract({ mode });
 const holding = new Vlink_holding_v2Contract({ mode });
 
 
-    const TAG_TS_TRANSFER_OWNERSHIP = 1;
-    const TAG_TS_ADD_TOKEN = 2;
-    const TAG_TS_REMOVE_TOKEN = 3;
-    const TAG_TS_UPDATE_MAX_MIN_TRANSFER = 4;
-    const TAG_TS_PAUSE_TOKEN = 5;
-    const TAG_TS_UNPAUSE_TOKEN = 6;
-    const TAG_TS_UP_OUTGOING_PERCENT = 7;
-    const TAG_HOLDING_RELEASE = 8;
-    const TAG_HOLDING_RELEASE_PRIVATE = 9;
-    const TAG_HOLDING_OWNERSHIP_TRANSFER = 10;
-    const TAG_TS_REGISTER_TOKEN = 11;
-    const TAG_UPDATE_TOKEN_METADATA = 12;
-    const TAG_SET_ROLE_TOKEN = 13;
-    const TAG_TS_UP_TS_SETTING = 14;
-    const TAG_TS_ADD_CHAIN_TO_ET = 15;
-    const TAG_TS_REMOVE_OTHER_CHAIN_ADD = 16;
-    const TAG_TS_UPDATE_FEES = 17;
-    const TAG_REMOVE_ROLE = 18;
+const TAG_TS_TRANSFER_OWNERSHIP = 1;
+const TAG_TS_ADD_TOKEN = 2;
+const TAG_TS_REMOVE_TOKEN = 3;
+const TAG_TS_UPDATE_MAX_MIN_TRANSFER = 4;
+const TAG_TS_PAUSE_TOKEN = 5;
+const TAG_TS_UNPAUSE_TOKEN = 6;
+const TAG_TS_UP_OUTGOING_PERCENT = 7;
+const TAG_HOLDING_RELEASE = 8;
+const TAG_HOLDING_RELEASE_PRIVATE = 9;
+const TAG_HOLDING_OWNERSHIP_TRANSFER = 10;
+const TAG_TS_REGISTER_TOKEN = 11;
+const TAG_UPDATE_TOKEN_METADATA = 12;
+const TAG_SET_ROLE_TOKEN = 13;
+const TAG_TS_UP_TS_SETTING = 14;
+const TAG_TS_ADD_CHAIN_TO_ET = 15;
+const TAG_TS_REMOVE_OTHER_CHAIN_ADD = 16;
+const TAG_TS_UPDATE_FEES = 17;
+const TAG_REMOVE_ROLE = 18;
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString() + "field";
@@ -723,7 +723,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Remove  chain to existing token", () => { 
+  describe("Remove  chain to existing token", () => {
 
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -777,7 +777,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Update fees", () => { 
+  describe("Update fees", () => {
 
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);

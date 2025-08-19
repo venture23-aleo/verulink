@@ -1,7 +1,7 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_REMOVE_ROLE} from "../../../utils/constants";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_REMOVE_ROLE } from "../../../utils/constants";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { RemoveRole, SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getRemoveRoleLeo, getSetRoleForTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
@@ -42,9 +42,9 @@ export const proposeRemoveRole = async (
   const tsRemoveRoleProposalHash = hashStruct(getRemoveRoleLeo(tsRemoveRole));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsRemoveRoleProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsRemoveRoleProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -76,9 +76,9 @@ export const voteRemoveRole = async (
   const tsRemoveRoleProposalHash = hashStruct(getRemoveRoleLeo(tsRemoveRole));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsRemoveRoleProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsRemoveRoleProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -117,9 +117,9 @@ export const execRemoveRole = async (
   const tsRemoveRoleProposalHash = hashStruct(getRemoveRoleLeo(tsRemoveRole));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsRemoveRoleProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsRemoveRoleProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

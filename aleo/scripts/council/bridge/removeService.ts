@@ -16,10 +16,10 @@ import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_counc
 
 
 const mode = ExecutionMode.SnarkExecute;
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({mode, priorityFee: 10_000});
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({mode, priorityFee: 10_000});
-const bridge = new Vlink_token_bridge_v2Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
 
 
 //////////////////////
@@ -47,9 +47,9 @@ export const proposeRemoveService = async (tokenService: string): Promise<number
   const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveTokenServiceProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveTokenServiceProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -83,9 +83,9 @@ export const voteRemoveService = async (proposalId: number, tokenService: string
   const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveTokenServiceProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveTokenServiceProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -94,7 +94,7 @@ export const voteRemoveService = async (proposalId: number, tokenService: string
   validateVote(ExternalProposalHash, voter);
 
   // vote
-  const  voteRemoveChainTx = await council.vote(ExternalProposalHash, true); 
+  const voteRemoveChainTx = await council.vote(ExternalProposalHash, true);
   await council.wait(voteRemoveChainTx);
 
   getProposalStatus(ExternalProposalHash);
@@ -127,9 +127,9 @@ export const execRemoveService = async (proposalId: number, tokenService: string
   const tbRemoveTokenServiceProposalHash = hashStruct(getTbRemoveServiceLeo(tbRemoveService));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbRemoveTokenServiceProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbRemoveTokenServiceProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

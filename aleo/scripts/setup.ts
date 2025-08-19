@@ -1,5 +1,5 @@
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate, aleoSeq, ethSeq } from "../utils/testdata.data";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -87,7 +87,7 @@ const setup = async () => {
     initialAttestors,
     initialCouncilMembers,
     councilThreshold,
-    councilThreshold, 
+    councilThreshold,
     aleoSeq,
     ethSeq
   );
@@ -96,11 +96,11 @@ const setup = async () => {
   const changeOwnerUSDC_proposalID = await proposeTransferAdmin(serviceCouncil.address(), wusdc_id, serviceCouncil.address());
   await execTranferAdmin(changeOwnerUSDC_proposalID, serviceCouncil.address(), wusdc_id, serviceCouncil.address())
 
-   // give old token ownership to newly deployed 
+  // give old token ownership to newly deployed 
   const changeOwnerUSDT_proposalID = await proposeTransferAdmin(serviceCouncil.address(), wusdt_id, serviceCouncil.address());
   await execTranferAdmin(changeOwnerUSDT_proposalID, serviceCouncil.address(), wusdt_id, serviceCouncil.address())
 
-   // give old token ownership to newly deployed 
+  // give old token ownership to newly deployed 
   const changeOwnerETH_proposalID = await proposeTransferAdmin(serviceCouncil.address(), weth_id, serviceCouncil.address());
   await execTranferAdmin(changeOwnerETH_proposalID, serviceCouncil.address(), weth_id, serviceCouncil.address())
 
@@ -424,7 +424,7 @@ async function wethSetupandInit() {
     wethPlatformFeePublic,
     wethFeeRelayerPublic,
     wethPlatformFeePrivate,
-    wethFeeRelayerPrivate  
+    wethFeeRelayerPrivate
   );
   await execAddToken(
     weth_id,

@@ -1,10 +1,10 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_UPDATE_TOKEN_METADATA, ethChainId, usdcContractAddr } from "../../../utils/constants";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { SetRoleForToken, UpdateTokenMetadata } from "../../../artifacts/js/types/vlink_token_service_council_v2";
-import { getSetRoleForTokenLeo, getUpdateTokenMetadataLeo,  } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { getSetRoleForTokenLeo, getUpdateTokenMetadataLeo, } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
@@ -112,7 +112,7 @@ export const execUpdateAdmin = async (
   if (tokenServiceOwner != serviceCouncil.address()) {
     throw Error("Council is not the owner of tokenService program");
   }
-  
+
   // GENERATE HASH
   const tsUpdateAdmin: UpdateTokenMetadata = {
     tag: TAG_UPDATE_TOKEN_METADATA,

@@ -1,5 +1,5 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";

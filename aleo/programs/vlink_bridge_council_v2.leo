@@ -3,6 +3,11 @@ import vlink_token_bridge_v2.aleo;
 
 program vlink_bridge_council_v2.aleo
 {   
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
     ///////////////////////////////////////////
     /////// Bridge: Transfer Ownership ////////
     ///////////////////////////////////////////

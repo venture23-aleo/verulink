@@ -12,12 +12,15 @@ import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bri
 import { TAG_TB_ADD_SERVICE } from "../../../utils/constants";
 import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
 import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
+import { Vlink_token_service_cd_v2Contract } from "../../../artifacts/js/vlink_token_service_cd_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 
 const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
 const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
 const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenServiceWAleo = new Vlink_token_service_cd_v2Contract({ mode: mode });
+
 
 //////////////////////
 ///// Propose ////////
@@ -44,9 +47,9 @@ export const proposeAddService = async (tokenService: string): Promise<number> =
   const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddTokenServiceProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddTokenServiceProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -79,9 +82,9 @@ export const voteAddService = async (proposalId: number, tokenService: string) =
   const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddTokenServiceProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddTokenServiceProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -122,9 +125,9 @@ export const execAddService = async (proposalId: number, tokenService: string) =
   const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddTokenServiceProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddTokenServiceProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -148,3 +151,12 @@ export const execAddService = async (proposalId: number, tokenService: string) =
   console.log(` ✅ TokenService: ${tokenService} added successfully.`)
 
 }
+
+
+
+async function run() {
+  const proposalId = await proposeAddService(tokenServiceWAleo.address());
+  await execAddService(proposalId, tokenServiceWAleo.address());
+}
+
+run();

@@ -43,9 +43,9 @@ export const proposeUnpauseBridge = async (): Promise<number> => {
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbUnpauseProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbUnpauseProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -77,9 +77,9 @@ export const voteUnpauseBridge = async (proposalId: number) => {
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbUnpauseProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbUnpauseProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -118,9 +118,9 @@ export const execUnpause = async (proposalId: number) => {
   const tbUnpauseProposalHash = hashStruct(getTbUnpauseLeo(tbUnpause));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbUnpauseProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbUnpauseProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -142,3 +142,12 @@ export const execUnpause = async (proposalId: number) => {
   console.log(` ✅ Bridge unpaused successfully.`)
 
 }
+
+
+async function run() {
+  const proposalId = await proposeUnpauseBridge();
+  await execUnpause(proposalId);
+}
+
+run();
+

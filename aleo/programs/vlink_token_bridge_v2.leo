@@ -1,6 +1,12 @@
 // The 'bridge' program.
 program vlink_token_bridge_v2.aleo {
 
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
+    
     // Default Aleo Program
     struct AleoProgram {
         // Chain Id of Aleo Network
@@ -163,17 +169,17 @@ program vlink_token_bridge_v2.aleo {
 
     /// Initialize the token bridge program
     /// Note: This async function must be allowed to be called only once.
-async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address, seq_ALEO: u64, seq_ETH:u64) -> Future{
+async transition initialize_tb(public initial_attestors: [address; 5], public threshold: u8, public owner: address) -> Future{
         assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_attestors: u8 = get_valid_unique_address_count(initial_attestors);
 
         // Sanity check for threshold
         assert(threshold >= 1u8 && threshold <= unique_attestors );
 
-        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner, seq_ALEO, seq_ETH);
+        return finalize_initialize_tb(initial_attestors, threshold, unique_attestors, owner);
     }
 
-    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address, seq_ALEO: u64, seq_ETH:u64) {
+    async function finalize_initialize_tb(initial_attestors: [address; 5], threshold: u8, total: u8, owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(bridge_settings, THRESHOLD_INDEX));
 
@@ -191,12 +197,20 @@ async transition initialize_tb(public initial_attestors: [address; 5], public th
 
         // Initialize the bridge as paused
         Mapping::set(bridge_settings, PAUSABILITY_INDEX, PAUSED_VALUE);
-
-        const ETH_CHAIN_ID: u128 = 27234042785u128; // TODO: check before deploying if it is correct 
-        // migrate previous sequences
-        Mapping::set(sequences, ALEO_CHAIN_ID, seq_ALEO);
-        Mapping::set(sequences, ETH_CHAIN_ID, seq_ETH);    
     }
+
+
+    // migrate ethereum data 
+    async transition migrate_eth_seq(seq_ETH:u64) -> Future{
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
+        return finalize_migrate_eth_seq(seq_ETH);
+    }
+
+    async function finalize_migrate_eth_seq(seq_ETH:u64) {
+        const ETH_CHAIN_ID: u128 = 27234042785u128; // TODO: check before deploying if it is correct 
+        assert(!Mapping::contains(sequences, ETH_CHAIN_ID));
+        Mapping::set(sequences, ETH_CHAIN_ID, seq_ETH);    
+    } 
 
     ////////////////////////////////
     ///// Transfer Ownership ///////

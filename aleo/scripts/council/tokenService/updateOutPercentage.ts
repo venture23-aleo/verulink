@@ -1,7 +1,7 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_TS_UP_OUTGOING_PERCENT } from "../../../utils/constants";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TsUpdateWithdrawalLimit } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getTsUpdateWithdrawalLimitLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";

@@ -37,9 +37,9 @@ export const proposeupdateThreshold = async (new_threshold: number): Promise<num
   const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbUpdateThresholdProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbUpdateThresholdProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -48,7 +48,7 @@ export const proposeupdateThreshold = async (new_threshold: number): Promise<num
   await proposeUpdateThresholdTx.wait();
 
   getProposalStatus(ExternalProposalHash);
-  
+
   return proposalId
 };
 
@@ -65,9 +65,9 @@ export const voteUpdateThredhold = async (proposalId: number, new_threshold: num
   const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbUpdateThresholdProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbUpdateThresholdProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -100,9 +100,9 @@ export const execUpdateThreshold = async (proposalId: number, new_threshold: num
   const tbUpdateThresholdProposalHash = hashStruct(getTbUpdateThresholdLeo(tbUpdateThreshold));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbUpdateThresholdProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbUpdateThresholdProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

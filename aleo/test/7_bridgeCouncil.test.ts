@@ -3,7 +3,7 @@ import { PrivateKey } from "@aleohq/sdk";
 import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
 import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
 
 import {
   ALEO_ZERO_ADDRESS,
@@ -27,7 +27,7 @@ import {
 } from "../artifacts/js/types/vlink_council_v2";
 
 
-import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";

@@ -1,7 +1,7 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr, wusdcFeeRelayerPrivate, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcPlatformFeePublic } from "../../../utils/testdata.data";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { AddChainExistingToken, TsAddToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getAddChainExistingTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
@@ -28,7 +28,7 @@ const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_
 ///// Propose ////////
 //////////////////////
 export const proposeAddChainToToken = async (
-    tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint,  fee_of_relayer_private: bigint,
+    tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint, fee_of_relayer_private: bigint,
 ): Promise<number> => {
 
 
@@ -57,9 +57,9 @@ export const proposeAddChainToToken = async (
     const tsAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
     const externalProposal: ExternalProposal = {
-            id: proposalId,
-            external_program: serviceCouncil.address(),
-            proposal_hash: tsAddChainToTokenProposalHash
+        id: proposalId,
+        external_program: serviceCouncil.address(),
+        proposal_hash: tsAddChainToTokenProposalHash
     }
     const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -107,9 +107,9 @@ export const voteAddChainToToken = async (
     const tsAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
     const externalProposal: ExternalProposal = {
-            id: proposalId,
-            external_program: serviceCouncil.address(),
-            proposal_hash: tsAddChainToTokenProposalHash
+        id: proposalId,
+        external_program: serviceCouncil.address(),
+        proposal_hash: tsAddChainToTokenProposalHash
     }
     const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -127,7 +127,7 @@ export const voteAddChainToToken = async (
 ///// Execute ////////
 //////////////////////
 export const execAddChainToToken = async (
-    proposalId: number, tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint,  fee_of_relayer_private: bigint,
+    proposalId: number, tokenId: bigint, chain_id: bigint, token_service_address: string, token_address: string, fee_of_platform_public: number, fee_of_platform_private: number, fee_of_relayer_public: bigint, fee_of_relayer_private: bigint,
 ) => {
     console.log(`Adding chain ${chain_id} to token ${tokenId}`)
     // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
@@ -155,9 +155,9 @@ export const execAddChainToToken = async (
     const tsAddChainToTokenProposalHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToToken));
 
     const externalProposal: ExternalProposal = {
-            id: proposalId,
-            external_program: serviceCouncil.address(),
-            proposal_hash: tsAddChainToTokenProposalHash
+        id: proposalId,
+        external_program: serviceCouncil.address(),
+        proposal_hash: tsAddChainToTokenProposalHash
     }
     const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

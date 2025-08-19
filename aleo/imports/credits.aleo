@@ -40,6 +40,10 @@ mapping withdraw:
     key as address.public;
     value as address.public;
 
+mapping pool:
+    key as address.public;
+    value as u64.public;
+
 record credits:
     owner as address.private;
     microcredits as u64.private;
@@ -55,6 +59,7 @@ function bond_validator:
     assert.neq r4 true;
     async bond_validator self.signer r0 r1 r2 into r5;
     output r5 as credits.aleo/bond_validator.future;
+
 finalize bond_validator:
     input r0 as address.public;
     input r1 as address.public;
@@ -101,6 +106,7 @@ function bond_public:
     assert.neq self.caller r0;
     async bond_public self.caller r0 r1 r2 into r4;
     output r4 as credits.aleo/bond_public.future;
+
 finalize bond_public:
     input r0 as address.public;
     input r1 as address.public;
@@ -142,6 +148,7 @@ function unbond_public:
     input r1 as u64.public;
     async unbond_public self.caller r0 r1 into r2;
     output r2 as credits.aleo/unbond_public.future;
+
 finalize unbond_public:
     input r0 as address.public;
     input r1 as address.public;
@@ -223,6 +230,7 @@ function claim_unbond_public:
     input r0 as address.public;
     async claim_unbond_public r0 into r1;
     output r1 as credits.aleo/claim_unbond_public.future;
+
 finalize claim_unbond_public:
     input r0 as address.public;
     get unbonding[r0] into r1;
@@ -242,6 +250,7 @@ function set_validator_state:
     input r0 as boolean.public;
     async set_validator_state self.caller r0 into r1;
     output r1 as credits.aleo/set_validator_state.future;
+
 finalize set_validator_state:
     input r0 as address.public;
     input r1 as boolean.public;
@@ -254,6 +263,7 @@ function transfer_public:
     input r1 as u64.public;
     async transfer_public self.caller r0 r1 into r2;
     output r2 as credits.aleo/transfer_public.future;
+
 finalize transfer_public:
     input r0 as address.public;
     input r1 as address.public;
@@ -270,6 +280,7 @@ function transfer_public_as_signer:
     input r1 as u64.public;
     async transfer_public_as_signer self.signer r0 r1 into r2;
     output r2 as credits.aleo/transfer_public_as_signer.future;
+
 finalize transfer_public_as_signer:
     input r0 as address.public;
     input r1 as address.public;
@@ -300,6 +311,7 @@ function transfer_private_to_public:
     async transfer_private_to_public r1 r2 into r5;
     output r4 as credits.record;
     output r5 as credits.aleo/transfer_private_to_public.future;
+
 finalize transfer_private_to_public:
     input r0 as address.public;
     input r1 as u64.public;
@@ -314,6 +326,7 @@ function transfer_public_to_private:
     async transfer_public_to_private self.caller r1 into r3;
     output r2 as credits.record;
     output r3 as credits.aleo/transfer_public_to_private.future;
+
 finalize transfer_public_to_private:
     input r0 as address.public;
     input r1 as u64.public;
@@ -359,9 +372,27 @@ function fee_public:
     add r0 r1 into r3;
     async fee_public self.signer r3 into r4;
     output r4 as credits.aleo/fee_public.future;
+
 finalize fee_public:
     input r0 as address.public;
     input r1 as u64.public;
     get account[r0] into r2;
     sub r2 r1 into r3;
     set r3 into account[r0];
+
+function upgrade:
+    input r0 as credits.record;
+    lte r0.microcredits 1000000000000u64 into r1;
+    assert.eq r1 true;
+    cast r0.owner r0.microcredits into r2 as credits.record;
+    async upgrade r0.microcredits into r3;
+    output r2 as credits.record;
+    output r3 as credits.aleo/upgrade.future;
+
+finalize upgrade:
+    input r0 as u64.public;
+    get.or_use pool[aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc] 0u64 into r1;
+    add r1 r0 into r2;
+    lte r2 4000000000000u64 into r3;
+    assert.eq r3 true;
+    set r2 into pool[aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc];

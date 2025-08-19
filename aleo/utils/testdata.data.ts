@@ -1,23 +1,23 @@
 import { hashStruct } from "./hash";
+export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";
+
 
 // User address on Aleo
-export const attestor1 = "aleo1eslxvrgwtev28t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
-export const attestor2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
-export const attestor3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
-export const attestor4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
-export const attestor5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc" // Devnet Wallet
+export const attestor1 = "aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24";
+export const attestor2 = "aleo1efm3hazscfvwawkg6rast4p9eq9gsvgwsdr9vv9wgzmula8ckqrsh7udnv"
+export const attestor3 = ALEO_ZERO_ADDRESS
+export const attestor4 = ALEO_ZERO_ADDRESS
+export const attestor5 = ALEO_ZERO_ADDRESS
 
 // User address on Aleo
-export const council1 = "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
-export const council2 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
-export const council3 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
-export const council4 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc"
-export const council5 = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc" // Devnet Wallet
+export const council1 = "aleo1gnl5q0pp7kq04e00pfsdc6x3pz4lntsgaskdh50enxv9aq5eaggss0umwp";
+export const council2 = ALEO_ZERO_ADDRESS
+export const council3 = ALEO_ZERO_ADDRESS
+export const council4 = ALEO_ZERO_ADDRESS
+export const council5 = ALEO_ZERO_ADDRESS
 
 export const councilThreshold = 1;
-
-export const aleoSeq = BigInt(1);
-export const ethSeq = BigInt(1);
+export const attestorThreshold = 2;
 
 // vusdc related data
 export const wusdcMinTransfer = BigInt(1_000_000);
@@ -77,6 +77,17 @@ export const wethFeeRelayerPrivate = BigInt(200_000_000_000_000);
 export const wethPlatformFeePrivate = 34;
 
 
+
+// WALEO
+export const BSC_TESTNET = BigInt(422842677857);
+export const waleoMinTranfer = BigInt(10_000_000);
+export const waleoMaxTranfer = BigInt(1_000_000_000_000_000);
+export const waleoBSCTokenService = "0xA85b0e240E1F081d7D8A9127731c4D2ff318124f";
+export const waleoBSCTokenAddress = "0x5e3Eb2307AE6191b3a12fb40cc5E16Ac952Fc783";
+export const BSC_PLATFORM_FEE = 0;
+export const ALEO_CREDITS_TOKEN_ID = BigInt("3443843282313283355522573239085696902919850365217539366784739393210722344986");
+
+
 // const token_name = BigInt('1464161352')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
 // const symbol = BigInt("1464161352") //"USDC" // to ascii for each char = 85 83 68 67 then to hex= 55 53 44 43 then concatenate all values= 55534443 convert this to decimal= 1431655763
 // const decimals = 6
@@ -103,7 +114,6 @@ export const TOKEN_UNPAUSED_VALUE = false;
 export const PACKET_VERSION_PUBLIC = 1;
 export const PACKET_VERSION_PRIVATE = 2;
 
-export const ALEO_ZERO_ADDRESS = "aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc";
 
 export const OWNER_INDEX = true;
 
@@ -174,5 +184,5 @@ export const VERSION_PRIVATE_NORELAYER_PREDICATE = 13;
 export const VERSION_PRIVATE_RELAYER_PREDICATE = 14;
 
 
-export const aleoSeq = BigInt(1);
-export const ethSeq = BigInt(1);
+export const aleoSeq = BigInt(3000);
+export const ethSeq = BigInt(3000);

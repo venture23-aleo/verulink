@@ -9,8 +9,8 @@ import { TbAddAttestor } from "../../../artifacts/js/types/vlink_bridge_council_
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
-import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v1";
 import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 
@@ -42,11 +42,11 @@ export const proposeAddAttestor = async (newAttestor: string, new_threshold: num
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddAttestorProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddAttestorProposalHash
   }
-  
+
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   // proposing
@@ -76,11 +76,11 @@ export const voteAddAttestor = async (proposalId: number, newAttestor: string, n
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddAttestorProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddAttestorProposalHash
   }
-  
+
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   const voter = council.getDefaultAccount();
@@ -117,11 +117,11 @@ export const execAddAttestor = async (proposalId: number, newAttestor: string, n
   const tbAddAttestorProposalHash = hashStruct(getTbAddAttestorLeo(tbAddAttestor));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: bridgeCouncil.address(),
-          proposal_hash: tbAddAttestorProposalHash
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddAttestorProposalHash
   }
-  
+
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   validateExecution(ExternalProposalHash);

@@ -3,6 +3,12 @@ import vlink_token_service_cd_v2.aleo;
 
 program vlink_token_service_cd_cuncl_v2.aleo
 {
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
+    
      //////////////////////////////////////////////
     /////// Token Service: Transfer Ownership ////
     //////////////////////////////////////////////

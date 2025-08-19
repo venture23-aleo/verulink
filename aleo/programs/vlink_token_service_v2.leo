@@ -5,6 +5,11 @@ import vlink_holding_v2.aleo;
 
 program vlink_token_service_v2.aleo {
 
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
     struct WithdrawalLimit {
         // Withdrawal limit represented as basis points.
         // For example, 10% is represented as 1000 (10% = 10_00 in basis points).

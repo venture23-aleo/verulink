@@ -1,5 +1,5 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
 import { evm2AleoArrWithoutPadding } from "./ethAddress";
 import { ALEO_ZERO_ADDRESS, wethFeeRelayer, wethPlatformFee, wusdcFeeRelayer, wusdcPlatformFee } from "./testdata.data";
 import { Token_registryContract } from "../artifacts/js/token_registry";

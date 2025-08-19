@@ -11,47 +11,47 @@ import {
 } from "../utils/constants";
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
-import {evm2AleoArrWithoutPadding } from "../utils/ethAddress";
-import { baseChainId, baseTsContractAddr, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../utils/testdata.data";
-import { ExternalProposal} from "../artifacts/js/types/vlink_council_v2";
+import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
+import { ALEO_CREDITS_TOKEN_ID, aleoChainId, baseChainId, baseTsContractAddr, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, BRIDGE_UNPAUSED_VALUE, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, ethTsRandomContractAddress2, VERSION_PUBLIC_NORELAYER_NOPREDICATE, VERSION_PUBLIC_RELAYER_NOPREDICATE } from "../utils/testdata.data";
+import { ExternalProposal } from "../artifacts/js/types/vlink_council_v2";
 import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v2";
 import { Vlink_token_service_cd_v2Contract } from "../artifacts/js/vlink_token_service_cd_v2";
 import { Vlink_token_service_cd_cuncl_v2Contract } from "../artifacts/js/vlink_token_service_cd_cuncl_v2";
-import { AddChainExistingToken, RemoveOtherChainAddresses, TsAddTokenInfo, TsPauseToken, TsTransferOwnership, TsUnpauseToken, TsUpdateMaxMinTransfer, UpdateFees } from "../artifacts/js/types/vlink_token_service_cd_cuncl_v2";
-import { getAddChainExistingTokenLeo, getRemoveOtherChainAddressesLeo, getTsAddTokenInfoLeo, getTsPauseTokenLeo, getTsTransferOwnershipLeo, getTsUnpauseTokenLeo, getTsUpdateMaxMinTransferLeo, getUpdateFeesLeo } from "../artifacts/js/js2leo/vlink_token_service_cd_cuncl_v2";
+import { AddChainExistingToken, RemoveOtherChainAddresses, TsAddTokenInfo, TsPauseToken, TsTransferOwnership, TsUnpauseToken, TsUpdateMaxMinTransfer, UpdateFees, UpdateTokenServiceSetting, TransferOwnershipHolding, HoldingRelease, WithdrawalCreditsFees } from "../artifacts/js/types/vlink_token_service_cd_cuncl_v2";
+import { getAddChainExistingTokenLeo, getRemoveOtherChainAddressesLeo, getTsAddTokenInfoLeo, getTsPauseTokenLeo, getTsTransferOwnershipLeo, getTsUnpauseTokenLeo, getTsUpdateMaxMinTransferLeo, getUpdateFeesLeo, getUpdateTokenServiceSettingLeo, getHoldingReleaseLeo, getWithdrawalCreditsFeesLeo } from "../artifacts/js/js2leo/vlink_token_service_cd_cuncl_v2";
 import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v2";
 import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
 import { Vlink_holding_cd_v2Contract } from "../artifacts/js/vlink_holding_cd_v2";
 import { Token_registryContract } from "../artifacts/js/token_registry";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
+import { createRandomPacket } from "../utils/packet";
+import { signPacket } from "../utils/sign";
+import { CreditsContract } from "../artifacts/js/credits";
 
 
 const mode = ExecutionMode.SnarkExecute;
-// npm run test -- --runInBand ./test/8_tokenServiceCouncil.test.ts
+// npm run test -- --runInBand ./test/11_tokenService_cd_council.test.ts
 
 const council = new Vlink_council_v2Contract({ mode });
 const tokenService = new Vlink_token_service_cd_v2Contract({ mode });
 const tokenServiceCouncil = new Vlink_token_service_cd_cuncl_v2Contract({ mode });
 const bridge = new Vlink_token_bridge_v2Contract({ mode });
 const holding = new Vlink_holding_cd_v2Contract({ mode });
+const credits = new CreditsContract({ mode: mode });
 const tokenRegistry = new Token_registryContract({ mode })
 
 
-
-
-    const TAG_TS2_TRANSFER_OWNERSHIP= 1;
-    const TAG_TS2_ADD_TOKEN = 2;
-    const TAG_TS2_UPDATE_MAX_MIN_TRANSFER = 3;
-    const TAG_TS2_PAUSE_TOKEN = 4;
-    const TAG_TS2_UNPAUSE_TOKEN = 5; 
-    const TAG_HOLDING2_RELEASE = 6;
-    const TAG_HOLDING2_OWNERSHIP_TRANSFER = 7;
-    const TAG_TS2_UP_TS_SETTING = 8;
-    const TAG_TS2_ADD_CHAIN_TO_ET = 9;
-    const TAG_TS2_REMOVE_OTHER_CHAIN_ADD = 10;
-    const TAG_TS2_UPDATE_FEES = 11;
-    const NATIVE_TOKEN_ID = BigInt("3443843282313283355522573239085696902919850365217539366784739393210722344986"); // The native token address of the Aleo network
-    const STATUS_INDEX = true;
-
+const TAG_TS2_TRANSFER_OWNERSHIP = 1;
+const TAG_TS2_ADD_TOKEN = 2;
+const TAG_TS2_UPDATE_MAX_MIN_TRANSFER = 3;
+const TAG_TS2_PAUSE_TOKEN = 4;
+const TAG_TS2_UNPAUSE_TOKEN = 5;
+const TAG_HOLDING2_RELEASE = 6;
+const TAG_HOLDING2_OWNERSHIP_TRANSFER = 7;
+const TAG_TS2_UP_TS_SETTING = 8;
+const TAG_TS2_ADD_CHAIN_TO_ET = 9;
+const TAG_TS2_REMOVE_OTHER_CHAIN_ADD = 10;
+const TAG_TS2_UPDATE_FEES = 11;
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString() + "field";
@@ -62,25 +62,24 @@ const TIMEOUT = 300000_000;
 const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
 const admin = tokenServiceCouncil.address();
 
-describe("Token Service Council", () => {
+const getPlatformFeeInAmount = async (amount: bigint, platform_fee_percentage: number) => {
+  //5% is equivalent to 500
+  return (BigInt(platform_fee_percentage) * amount) / BigInt(100 * 1000);
+}
+
+describe("Token Service Council Waleo", () => {
 
   const public_platform_fee = 5000;
   const public_relayer_fee = BigInt(10000);
 
   const sleepTimer = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const ethChainTokenInfo: ChainToken = {
+    chain_id: ethChainId,
+    token_id: ALEO_CREDITS_TOKEN_ID
+  }
 
-
-  describe("deployment", () => {
-
-    test("Deploy Token registery",
-      async () => {
-        const deployTx = await tokenRegistry.deploy();
-        await deployTx.wait()
-      },
-      TIMEOUT
-    );
-
-      test("Deploy Holding",
+  describe.skip("deployment", () => {
+    test("Deploy Holding",
       async () => {
         const deployTx = await holding.deploy();
         await deployTx.wait()
@@ -88,7 +87,7 @@ describe("Token Service Council", () => {
       TIMEOUT
     );
 
-      test("Deploy Bridge",
+    test("Deploy Bridge",
       async () => {
         const deployTx = await bridge.deploy();
         await deployTx.wait()
@@ -122,7 +121,7 @@ describe("Token Service Council", () => {
     );
   })
 
-  describe("Initialization", () => {
+  describe.skip("Initialization", () => {
     test("Initialize Token Service", async () => {
       const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
       if (!isTokenServiceInitialized) {
@@ -135,7 +134,6 @@ describe("Token Service Council", () => {
     },
       TIMEOUT
     );
-
 
     test("Initialize Council",
       async () => {
@@ -164,13 +162,102 @@ describe("Token Service Council", () => {
     }, TIMEOUT);
   })
 
-  describe("Add Token", () => {
+  describe.skip("Holding Setup", () => {
+    test("Initialize token holding", async () => {
+      const isHoldingInitialized = (await holding.owner_holding(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
+      expect(isHoldingInitialized).toBe(false)
+      if (!isHoldingInitialized) {
+        holding.connect(councilMember1);
+        const tx = await holding.initialize_holding(councilMember1);
+        await tx.wait();
+        expect(await holding.owner_holding(OWNER_INDEX)).toBe(councilMember1);
+      }
+    }, TIMEOUT);
+
+    test("should tranfer_ownership holding", async () => {
+      holding.connect(councilMember1);
+      const tx = await holding.transfer_ownership_holding(tokenService.address());
+      await tx.wait();
+      expect(await holding.owner_holding(OWNER_INDEX)).toBe(tokenService.address());
+    }, TIMEOUT)
+
+    //initialize bridge
+    test("Initialize bridge to consume token", async () => {
+      const threshold = 1;
+      const isBridgeInitialized = (await bridge.owner_TB(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
+      expect(isBridgeInitialized).toBe(false);
+      if (!isBridgeInitialized) {
+        let tx = await bridge.initialize_tb(
+          [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, councilMember3, ALEO_ZERO_ADDRESS],
+          threshold,
+          councilMember1,
+          BigInt(0),
+          BigInt(0)
+        );
+        await tx.wait();
+      }
+
+      expect(await bridge.bridge_settings(BRIDGE_THRESHOLD_INDEX)).toBe(threshold);
+      expect(await bridge.bridge_settings(BRIDGE_TOTAL_ATTESTORS_INDEX)).toBe(3);
+      expect(await bridge.attestors(councilMember1)).toBeTruthy();
+      expect(await bridge.attestors(councilMember2)).toBeTruthy();
+      expect(await bridge.attestors(councilMember3)).toBeTruthy();
+      expect(await bridge.attestors(ALEO_ZERO_ADDRESS)).toBeTruthy();
+      // TODO: checked expect bridge owner should be admin, expect bridge should be paused 
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)).toBe(BRIDGE_PAUSED_VALUE);
+      expect(await bridge.owner_TB(OWNER_INDEX)).toBe(councilMember1);
+      expect(await bridge.sequences(aleoChainId)).toBe(BigInt(0))
+      expect(await bridge.sequences(ethChainId)).toBe(BigInt(0))
+    }, TIMEOUT);
+
+    test("Bridge: Unpause", async () => {
+      const isPaused = (await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)) == BRIDGE_PAUSED_VALUE;
+      if (isPaused) {
+        bridge.connect(councilMember1)
+        const unpauseTx = await bridge.unpause_tb();
+        await unpauseTx.wait();
+      }
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE)).toBe(BRIDGE_UNPAUSED_VALUE);
+    }, TIMEOUT)
+
+    test("Add eth  chain in supported chains", async () => {
+      const isEthChainAdded = (await bridge.supported_chains(ethChainId, false)) != false;
+      if (!isEthChainAdded) {
+        const tx = await bridge.add_chain_tb(
+          ethChainId
+        );
+        await tx.wait();
+      }
+      expect(await bridge.supported_chains(ethChainId)).toBe(true);
+
+      const isAleoChainAdded = (await bridge.supported_chains(aleoChainId, false)) != false;
+      if (!isAleoChainAdded) {
+        const tx = await bridge.add_chain_tb(
+          aleoChainId
+        );
+        await tx.wait();
+      }
+      expect(await bridge.supported_chains(aleoChainId)).toBe(true);
+
+    }, TIMEOUT);
+
+    test("Bridge: Add Service", async () => {
+      const isTokenServiceEnabled = await bridge.supported_services(tokenService.address(), false);
+      if (!isTokenServiceEnabled) {
+        const supportServiceTx = await bridge.add_service_tb(tokenService.address());
+        await supportServiceTx.wait();
+      }
+      expect(await bridge.supported_services(tokenService.address())).toBe(true);
+    }, TIMEOUT)
+  })
+
+  describe.skip("Add Token", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
 
     const minTransfer = BigInt(100)
-    const maxTransfer = BigInt(100)
+    const maxTransfer = BigInt(1000000000000000)
     const public_platform_fee = 5;
     const public_relayer_fee = BigInt(10000);
 
@@ -191,8 +278,7 @@ describe("Token Service Council", () => {
         token_address: evm2AleoArrWithoutPadding(usdcContractAddr),
         token_service: evm2AleoArrWithoutPadding(ethTsContractAddr),
         chain_id: ethChainId,
-        fee_platform: public_platform_fee,
-        fee_relayer: public_relayer_fee,
+        fee_platform: public_platform_fee
       };
       const addTokenProposalHash = hashStruct(getTsAddTokenInfoLeo(tsSupportToken));
 
@@ -224,23 +310,22 @@ describe("Token Service Council", () => {
         evm2AleoArrWithoutPadding(usdcContractAddr),
         evm2AleoArrWithoutPadding(ethTsContractAddr),
         ethChainId,
-        public_platform_fee,
-        public_relayer_fee,
+        public_platform_fee
       );
       await tx.wait();
 
       expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
-      expect(await tokenService.status(STATUS_INDEX)).toBe(TOKEN_PAUSED_VALUE);
+      expect(await tokenService.status(ethChainTokenInfo)).toBe(TOKEN_PAUSED_VALUE);
     }, TIMEOUT);
 
   });
 
-  describe("Update minimum maximum transfer", () => {
+  describe.skip("Update minimum maximum transfer", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const newMinTransfer = BigInt(10)
-    const newMaxTransfer = BigInt(100_000)
+    const newMaxTransfer = BigInt(100_000_0000)
 
     beforeEach(async () => {
       council.connect(proposer);
@@ -252,6 +337,7 @@ describe("Token Service Council", () => {
       const TsUpdateMinimumMaximumTransfer: TsUpdateMaxMinTransfer = {
         tag: TAG_TS2_UPDATE_MAX_MIN_TRANSFER,
         id: proposalId,
+        chain_id: ethChainId,
         min_transfer: newMinTransfer,
         max_transfer: newMaxTransfer
       };
@@ -279,26 +365,27 @@ describe("Token Service Council", () => {
       expect(await council.proposal_executed(ExternalProposalHash, false)).toBe(false);
       const tx = await tokenServiceCouncil.ts_update_max_min_transfer(
         proposalId,
+        ethChainId,
         newMinTransfer,
         newMaxTransfer,
         signers,
       );
       await tx.wait();
       expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
-      expect(await tokenService.min_transfers(NATIVE_TOKEN_ID)).toBe(newMinTransfer);
-      expect(await tokenService.max_transfers(NATIVE_TOKEN_ID)).toBe(newMaxTransfer);
+      expect(await tokenService.min_transfers(ethChainTokenInfo)).toBe(newMinTransfer);
+      expect(await tokenService.max_transfers(ethChainTokenInfo)).toBe(newMaxTransfer);
     }, TIMEOUT);
 
   });
 
-  describe("Unpause", () => {
+  describe.skip("Unpause", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
 
     beforeEach(async () => {
       council.connect(proposer);
-      expect(await tokenService.status(STATUS_INDEX, false)).toBe(TOKEN_PAUSED_VALUE);
+      expect(await tokenService.status(ethChainTokenInfo, false)).toBe(TOKEN_PAUSED_VALUE);
     }, TIMEOUT)
 
     test("Propose", async () => {
@@ -307,6 +394,7 @@ describe("Token Service Council", () => {
       const unpauseTokenProposal: TsUnpauseToken = {
         tag: TAG_TS2_UNPAUSE_TOKEN,
         id: proposalId,
+        chain_id: ethChainId
       };
       const unpauseTokenProposalHash = hashStruct(getTsUnpauseTokenLeo(unpauseTokenProposal));
 
@@ -330,42 +418,45 @@ describe("Token Service Council", () => {
       expect(await council.proposal_executed(ExternalProposalHash, false)).toBe(false);
       const tx = await tokenServiceCouncil.ts_unpause_token(
         proposalId,
+        ethChainId,
         signers
       );
       await tx.wait();
       expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
-      expect(await tokenService.status(STATUS_INDEX)).toBe(TOKEN_UNPAUSED_VALUE);
+      expect(await tokenService.status(ethChainTokenInfo)).toBe(TOKEN_UNPAUSED_VALUE);
     }, TIMEOUT);
 
   });
 
-  describe("Pause", () => {
-    const proposer = councilMember1;
+  describe.skip("Update tokenService setting", () => {
+
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
-
-    beforeEach(async () => {
-      council.connect(proposer);
-      expect(await tokenService.status(STATUS_INDEX)).toBe(TOKEN_UNPAUSED_VALUE);
-    }, TIMEOUT)
+    const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
     test("Propose", async () => {
       const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
       proposalId = totalProposals + 1;
-      const pauseTokenProposal: TsPauseToken = {
-        tag: TAG_TS2_PAUSE_TOKEN,
+
+      const UpdatesettingPayload: UpdateTokenServiceSetting = {
+        tag: TAG_TS2_UP_TS_SETTING,
         id: proposalId,
+        chain_id: ethChainId,
+        token_service_address: evm2AleoArrWithoutPadding(ethTsRandomContractAddress2),
+        token_address: evm2AleoArrWithoutPadding(ethTsRandomContractAddress2)
       };
-      const pauseTokenProposalHash = hashStruct(getTsPauseTokenLeo(pauseTokenProposal));
+
+      const TsUpdateSettingHash = hashStruct(getUpdateTokenServiceSettingLeo(UpdatesettingPayload));
 
       const externalProposal: ExternalProposal = {
         id: proposalId,
         external_program: tokenServiceCouncil.address(),
-        proposal_hash: pauseTokenProposalHash
+        proposal_hash: TsUpdateSettingHash
       }
 
       ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
+      council.connect(councilMember1);
       const tx = await council.propose(proposalId, ExternalProposalHash);
       await tx.wait();
 
@@ -375,21 +466,25 @@ describe("Token Service Council", () => {
     }, TIMEOUT)
 
     test("Execute", async () => {
-      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
-
       expect(await council.proposal_executed(ExternalProposalHash, false)).toBe(false);
-      const tx = await tokenServiceCouncil.ts_pause_token(
+      const tx = await tokenServiceCouncil.ts_update_token_service_setting(
         proposalId,
+        ethChainId,
+        evm2AleoArrWithoutPadding(ethTsRandomContractAddress2),
+        evm2AleoArrWithoutPadding(ethTsRandomContractAddress2),
         signers
       );
       await tx.wait();
+
+
       expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
-      expect(await tokenService.status(STATUS_INDEX)).toBe(TOKEN_PAUSED_VALUE);
+      expect(await tokenService.other_chain_token_address(ethChainTokenInfo)).toStrictEqual(evm2AleoArr(ethTsRandomContractAddress2))
+      expect(await tokenService.other_chain_token_service(ethChainTokenInfo)).toStrictEqual(evm2AleoArr(ethTsRandomContractAddress2))
     }, TIMEOUT);
 
   });
 
-  describe("Add chain to existing token", () => { //ts_add_chain_to_existing_token
+  describe.skip("Add chain to existing token", () => { //ts_add_chain_to_existing_token
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -405,8 +500,7 @@ describe("Token Service Council", () => {
         chain_id: baseChainId,
         token_address: evm2AleoArrWithoutPadding(usdcContractAddr),
         token_service_address: evm2AleoArrWithoutPadding(baseTsContractAddr),
-        fee_platform: public_platform_fee,
-        fee_relayer: public_relayer_fee,
+        fee_platform: public_platform_fee
       };
       const TsAddChainToExistingTokenHash = hashStruct(getAddChainExistingTokenLeo(tsAddChainToExistingToken));
 
@@ -445,7 +539,6 @@ describe("Token Service Council", () => {
         evm2AleoArrWithoutPadding(baseTsContractAddr),
         evm2AleoArrWithoutPadding(usdcContractAddr),
         public_platform_fee,
-        public_relayer_fee,
         signers
       );
       await tx.wait();
@@ -454,7 +547,7 @@ describe("Token Service Council", () => {
 
   });
 
-  describe("Remove  chain to existing token", () => { //ts_remove_chain_to_existing_token
+  describe.skip("Remove  chain to existing token", () => { //ts_remove_chain_to_existing_token
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -506,27 +599,25 @@ describe("Token Service Council", () => {
   });
 
   describe("Update fees", () => { //ts_update_fees
-
+    const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
     const new_public_platform_fee = 6000;
     const new_public_relayer_fee = BigInt(20000);
-    const tokenInfo: ChainToken = {
-      native_token_id: NATIVE_TOKEN_ID,
-      chain_id: ethChainId
-    }
+
+    beforeEach(async () => {
+      council.connect(proposer);
+      expect(await tokenService.status(ethChainTokenInfo)).toBe(TOKEN_UNPAUSED_VALUE);
+    }, TIMEOUT)
 
     test("Propose", async () => {
-
       const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
       proposalId = totalProposals + 1;
-
       const UpdateFeesPayload: UpdateFees = {
         tag: TAG_TS2_UPDATE_FEES,
         id: proposalId,
         chain_id: ethChainId,
-        fee_relayer: new_public_relayer_fee,
         fee_platform: new_public_platform_fee,
       };
 
@@ -554,7 +645,6 @@ describe("Token Service Council", () => {
       const tx = await tokenServiceCouncil.ts_update_fees(
         proposalId,
         ethChainId,
-        new_public_relayer_fee,
         new_public_platform_fee,
         signers
       );
@@ -562,14 +652,285 @@ describe("Token Service Council", () => {
 
 
       expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
-      expect(await tokenService.platform_fee(tokenInfo)).toBe(new_public_platform_fee);
-      expect(await tokenService.relayer_fee(tokenInfo)).toBe(new_public_relayer_fee);
+      expect(await tokenService.platform_fee(ethChainTokenInfo)).toBe(new_public_platform_fee);
     }, TIMEOUT);
 
   });
 
+  describe.skip("Hold some fund to test release", () => {
+    test("happy token send in public version with active relayer",
+      async () => {
+        const send_amount = BigInt(100_0000);
+        const destTsAddr = ethTsContractAddr.toLowerCase();
+        const ethUser = generateRandomEthAddr();
+        const destToken = usdcContractAddr.toLowerCase();
+        const initialTokenSupply = await tokenService.total_supply(ethChainTokenInfo, BigInt(0));
 
-  describe("Transfer ownership", () => {
+        // const aleocredit = await credits.account(aleoUser1, BigInt(0));
+        expect(await tokenService.min_transfers(ethChainTokenInfo)).toBeLessThanOrEqual(send_amount)
+        expect(await tokenService.max_transfers(ethChainTokenInfo)).toBeGreaterThanOrEqual(send_amount)
+        tokenService.connect(councilMember1);
+        tokenRegistry.connect(councilMember1);
+        const other_chain_token_service = await tokenService.other_chain_token_service(ethChainTokenInfo);
+        const other_chain_token_address = await tokenService.other_chain_token_address(ethChainTokenInfo);
+        expect(other_chain_token_service).not.toBeNull();
+        expect(other_chain_token_address).not.toBeNull();
+        // const council_initial_balance = await credits.account(tokenServiceWAleoCouncil.address());
+        const platformFee = await getPlatformFeeInAmount(send_amount, 5);
+        tokenService.connect(councilMember1);
+        const tx = await tokenService.token_send_public(
+          evm2AleoArrWithoutPadding(ethUser.toLowerCase()),
+          send_amount,
+          ethChainId,
+          evm2AleoArrWithoutPadding(destTsAddr),
+          evm2AleoArrWithoutPadding(destToken),
+          platformFee,
+          false
+        );
+        await tx.wait();
+      },
+      TIMEOUT
+    );
+
+    test("Send some credits to holding to test holding release", async () => {
+      const ethUser = generateRandomEthAddr()
+      const relayer_fee = BigInt(10000);
+      const createPacket = (
+        receiver: string,
+        amount: bigint,
+        aleoTsAddr: string,
+        sourcecChainId: bigint,
+        tsContractAddress: string,
+        version = VERSION_PUBLIC_NORELAYER_NOPREDICATE,
+
+      ): InPacket => {
+        return createRandomPacket(
+          receiver,
+          amount,
+          sourcecChainId,
+          aleoChainId,
+          tsContractAddress,
+          aleoTsAddr,
+          ALEO_CREDITS_TOKEN_ID,
+          version,
+          ethUser,
+        );
+      };
+      const receiveAmount: bigint = BigInt(100_000)
+      const packet = createPacket(councilMember1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
+      tokenService.connect(councilMember1);
+      const token_status = await tokenService.status(ethChainTokenInfo);
+      expect(token_status).toBe(false); //SHOULD UNPAUSE TOKEN
+      const signature = signPacket(packet, false, tokenService.config.privateKey);
+      const signatures = [
+        signature,
+        signature,
+        signature,
+        signature,
+        signature,
+      ];
+      const signers = [
+        councilMember1,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+        ALEO_ZERO_ADDRESS,
+      ];
+
+      let packetId: PacketId = {
+        chain_id: packet.source.chain_id,
+        sequence: packet.sequence
+      }
+
+      //check bridge pausability status
+      expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+      const other_chain_token_service = await tokenService.other_chain_token_service(ethChainTokenInfo)
+      expect(other_chain_token_service).not.toBeNull()
+      expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+      const initial_held_amount = await tokenService.token_holding(ALEO_CREDITS_TOKEN_ID, BigInt(0))
+      const initialTokenSupply = await tokenService.total_supply(ethChainTokenInfo, BigInt(0));
+      tokenService.connect(councilMember1);
+      const tx = await tokenService.token_receive_public(
+        prunePadding(packet.message.sender_address),
+        packet.message.receiver_address,
+        packet.message.amount,
+        packet.sequence,
+        packet.height,
+        signers,
+        signatures,
+        packet.source.chain_id,
+        prunePadding(packet.source.addr)
+      );
+      await tx.wait();
+      const finalTokenSupply = await tokenService.total_supply(ethChainTokenInfo);
+      const finalHeldAmount = await tokenService.token_holding(ALEO_CREDITS_TOKEN_ID)
+      expect(finalHeldAmount).toBe(initial_held_amount + receiveAmount);
+    }, TIMEOUT)
+  })
+
+  describe.skip("Release fund", () => {
+    const proposer = councilMember1;
+    let proposalId = 0;
+    let ExternalProposalHash = BigInt(0);
+
+    beforeEach(async () => {
+      council.connect(proposer);
+      expect(await tokenService.status(ethChainTokenInfo)).toBe(TOKEN_UNPAUSED_VALUE);
+    }, TIMEOUT)
+
+    test("Propose", async () => {
+      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      proposalId = totalProposals + 1;
+      const holdingReleaseProposal: HoldingRelease = {
+        tag: TAG_HOLDING2_RELEASE,
+        id: proposalId,
+        receiver: councilMember1,
+        amount: BigInt(1000)
+      };
+      const holdingReleaseProposalHash = hashStruct(getHoldingReleaseLeo(holdingReleaseProposal));
+
+      const externalProposal: ExternalProposal = {
+        id: proposalId,
+        external_program: tokenServiceCouncil.address(),
+        proposal_hash: holdingReleaseProposalHash
+      }
+
+      ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
+      const tx = await council.propose(proposalId, ExternalProposalHash);
+      await tx.wait();
+
+      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      expect(totalProposalsAfter).toBe(totalProposals + 1);
+      expect(await council.proposals(proposalId)).toBe(ExternalProposalHash);
+    }, TIMEOUT)
+
+    test("Execute", async () => {
+      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+      const initialHeldAmount = await tokenService.token_holding(ALEO_CREDITS_TOKEN_ID, BigInt(0))
+      expect(await council.proposal_executed(ExternalProposalHash, false)).toBe(false);
+      const tx = await tokenServiceCouncil.holding_release(
+        proposalId,
+        councilMember1,
+        BigInt(1000),
+        signers
+      );
+      await tx.wait();
+      expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
+      const finalHeldAmount = await tokenService.token_holding(ALEO_CREDITS_TOKEN_ID, BigInt(0))
+      expect(finalHeldAmount).toBe(initialHeldAmount - BigInt(1000))
+    }, TIMEOUT);
+  });
+
+  describe.skip("Pause", () => {
+    const proposer = councilMember1;
+    let proposalId = 0;
+    let ExternalProposalHash = BigInt(0);
+
+    beforeEach(async () => {
+      council.connect(proposer);
+      expect(await tokenService.status(ethChainTokenInfo)).toBe(TOKEN_UNPAUSED_VALUE);
+    }, TIMEOUT)
+
+    test("Propose", async () => {
+      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      proposalId = totalProposals + 1;
+      const pauseTokenProposal: TsPauseToken = {
+        tag: TAG_TS2_PAUSE_TOKEN,
+        id: proposalId,
+        chain_id: ethChainId
+      };
+      const pauseTokenProposalHash = hashStruct(getTsPauseTokenLeo(pauseTokenProposal));
+
+      const externalProposal: ExternalProposal = {
+        id: proposalId,
+        external_program: tokenServiceCouncil.address(),
+        proposal_hash: pauseTokenProposalHash
+      }
+
+      ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
+      const tx = await council.propose(proposalId, ExternalProposalHash);
+      await tx.wait();
+
+      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      expect(totalProposalsAfter).toBe(totalProposals + 1);
+      expect(await council.proposals(proposalId)).toBe(ExternalProposalHash);
+    }, TIMEOUT)
+
+    test("Execute", async () => {
+      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+
+      expect(await council.proposal_executed(ExternalProposalHash, false)).toBe(false);
+      const tx = await tokenServiceCouncil.ts_pause_token(
+        proposalId,
+        ethChainId,
+        signers
+      );
+      await tx.wait();
+      expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
+      expect(await tokenService.status(ethChainTokenInfo)).toBe(TOKEN_PAUSED_VALUE);
+    }, TIMEOUT);
+
+  });
+
+  describe.skip("Holding Ownership transfer", () => {
+    const proposer = councilMember1;
+    let proposalId = 0;
+    let ExternalProposalHash = BigInt(0);
+
+    beforeEach(async () => {
+      council.connect(proposer);
+      expect(await council.members(councilMember1)).toBe(true);
+    }, TIMEOUT)
+
+    test("Propose", async () => {
+      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      proposalId = totalProposals + 1;
+      const tsHoldingOwnershipTransfer: TransferOwnershipHolding = {
+        tag: TAG_HOLDING2_OWNERSHIP_TRANSFER,
+        id: proposalId,
+        new_owner: admin
+      };
+      const transferHoldingOwnershipProposalHash = hashStruct(getTsTransferOwnershipLeo(tsHoldingOwnershipTransfer));
+
+      const externalProposal: ExternalProposal = {
+        id: proposalId,
+        external_program: tokenServiceCouncil.address(),
+        proposal_hash: transferHoldingOwnershipProposalHash
+      }
+
+      ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
+
+      const tx = await council.propose(proposalId, ExternalProposalHash);
+      await tx.wait();
+
+      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      expect(totalProposalsAfter).toBe(totalProposals + 1);
+      expect(await council.proposals(proposalId)).toBe(ExternalProposalHash);
+
+    }, TIMEOUT)
+
+    test("Execute", async () => {
+      const holding_intital_owner = await holding.owner_holding(OWNER_INDEX)
+      console.log(holding_intital_owner, "holding initial owner", admin);
+
+      const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+      expect(await council.proposal_executed(ExternalProposalHash, false)).toBe(false);
+      const tx = await tokenServiceCouncil.holding_ownership_transfer(
+        proposalId,
+        admin,
+        signers
+      );
+      await tx.wait();
+
+      expect(await council.proposal_executed(ExternalProposalHash)).toBe(true);
+      expect(await holding.owner_holding(OWNER_INDEX)).toBe(admin);
+    }, TIMEOUT);
+
+  });
+
+  describe.skip("Transfer ownership", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);

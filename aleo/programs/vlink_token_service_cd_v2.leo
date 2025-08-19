@@ -4,6 +4,12 @@ import vlink_holding_cd_v2.aleo;
 
 program vlink_token_service_cd_v2.aleo {
 
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
+    
     struct ChainToken{
         // Id of one of the supported chains.
         chain_id: u128,
@@ -42,9 +48,6 @@ program vlink_token_service_cd_v2.aleo {
     /// Key is the combination of chain_id and token_id
     mapping other_chain_token_service: ChainToken => [u8; 32];  // token
     mapping other_chain_token_address: ChainToken => [u8; 32];  // token
-
-    // flat fee that will be taken by the relayer
-    mapping relayer_fee: ChainToken => u64;
 
     //percentage of the fee that will be taken by the platform
     mapping platform_fee: ChainToken => u32;
@@ -171,7 +174,6 @@ program vlink_token_service_cd_v2.aleo {
         Mapping::remove(other_chain_token_address, chaintokeninfo);
 
         Mapping::remove(platform_fee, chaintokeninfo);
-        Mapping::remove(relayer_fee, chaintokeninfo);
     }
 
 
@@ -323,8 +325,7 @@ program vlink_token_service_cd_v2.aleo {
         public dest_chain_id: u128,
         public dest_token_service: [u8;20],
         public dest_token_address: [u8;20],
-        public fee_platform: u64, 
-        public is_relayer_on: bool
+        public fee_platform: u64
         ) -> Future{
 
         assert_neq(self.caller, ZERO_ADDRESS);
@@ -525,8 +526,6 @@ program vlink_token_service_cd_v2.aleo {
         assert_eq(owner, from);
         assert(Mapping::contains(platform_fee, chain_token_info));
         Mapping::set(platform_fee, chain_token_info, fee_platform);
-
-        assert(Mapping::contains(relayer_fee, chain_token_info));
     }
 
 

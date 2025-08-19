@@ -2,6 +2,10 @@ import token_registry.aleo;
 
 program vlink_holding_v2.aleo {
 
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
     
     struct Image {
         pre_image: field,

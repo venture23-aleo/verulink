@@ -2,6 +2,11 @@ import token_registry.aleo;
 
 program vlink_council_v2.aleo {
 
+
+    // for upgrade
+    @noupgrade
+    async constructor() {}
+
     struct ProposalVote {
         // Hash of the proposal
         proposal: field,

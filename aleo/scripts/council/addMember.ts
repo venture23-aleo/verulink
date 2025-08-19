@@ -36,7 +36,7 @@ export const proposeAddMember = async (member: string, new_threshold: number): P
   };
   const addMemberProposalHash = hashStruct(getAddMemberLeo(addMemeberProposal));
 
-  const addMemberTx= await council.propose(proposalId, addMemberProposalHash);
+  const addMemberTx = await council.propose(proposalId, addMemberProposalHash);
   await addMemberTx.wait();
 
   return proposalId

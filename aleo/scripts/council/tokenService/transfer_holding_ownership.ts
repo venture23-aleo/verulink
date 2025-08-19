@@ -2,7 +2,7 @@ import { TransferOwnershipHolding } from "../../../artifacts/js/types/vlink_toke
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { ExecutionMode } from "@doko-js/core";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_HOLDING_OWNERSHIP_TRANSFER } from "../../../utils/constants";
 import { hashStruct } from "../../../utils/hash";
@@ -36,13 +36,13 @@ export const proposeTransferHoldingOnwership = async (new_owner: string): Promis
   };
   const tbRemoveAttestorProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tbRemoveAttestorProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tbRemoveAttestorProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  
+
   const proposeRemoveAttestorTx = await council.propose(proposalId, ExternalProposalHash);
   await proposeRemoveAttestorTx.wait();
 
@@ -62,9 +62,9 @@ export const voteTransferHoldingOwnership = async (proposalId: number, new_owner
   };
   const tbRemoveAttestorProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tbRemoveAttestorProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tbRemoveAttestorProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -88,9 +88,9 @@ export const execTransferHoldingOwnership = async (proposalId: number, new_owner
   };
   const tbRemoveAttestorProposalHash = hashStruct(getTransferOwnershipHoldingLeo(transferHolding));
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tbRemoveAttestorProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tbRemoveAttestorProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 

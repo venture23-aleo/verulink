@@ -1,7 +1,7 @@
 import { hashStruct } from "../../../utils/hash";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
 import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, ethTsContractAddr } from "../../../utils/testdata.data";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { TsAddToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
@@ -68,9 +68,9 @@ export const proposeAddToken = async (
   const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsAddTokenProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsAddTokenProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -128,9 +128,9 @@ export const voteAddToken = async (
   const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsAddTokenProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsAddTokenProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -192,15 +192,15 @@ export const execAddToken = async (
   const tsAddTokenProposalHash = hashStruct(getTsAddTokenLeo(tsAddToken));
 
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tsAddTokenProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsAddTokenProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   validateExecution(ExternalProposalHash);
   const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
-  
+
   // EXECUTE
   const addChainTx = await serviceCouncil.ts_add_token(
     tsAddToken.id,

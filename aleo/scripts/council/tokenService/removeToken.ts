@@ -5,7 +5,7 @@ import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters
 import { ExecutionMode } from "@doko-js/core";
 import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { TsRemoveToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
 import { getTsRemoveTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
@@ -13,17 +13,17 @@ import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_counc
 
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v2Contract({mode, priorityFee: 10_000});
+const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({mode, priorityFee: 10_000});
-const tokenService = new Vlink_token_service_v2Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
 //////////////////////
 export const proposeRemoveToken = async (
-    tokenId: bigint,
-    chainID: bigint
+  tokenId: bigint,
+  chainID: bigint
 ): Promise<number> => {
 
   console.log(`👍 Proposing to remove token: ${tokenId}`)
@@ -39,11 +39,11 @@ export const proposeRemoveToken = async (
     token_id: tokenId
   };
   const tbRemoveTokenProposalHash = hashStruct(getTsRemoveTokenLeo(tsRemoveToken));
-  
+
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tbRemoveTokenProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tbRemoveTokenProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -59,9 +59,9 @@ export const proposeRemoveToken = async (
 ///// Vote ////////
 ///////////////////
 export const voteRemoveToken = async (
-    proposalId: number, 
-    tokenId: bigint,
-    chainID: bigint
+  proposalId: number,
+  tokenId: bigint,
+  chainID: bigint
 ) => {
   console.log(`👍 Voting to remove token: ${tokenId}`)
 
@@ -74,11 +74,11 @@ export const voteRemoveToken = async (
     token_id: tokenId
   };
   const tbRemoveTokenProposalHash = hashStruct(getTsRemoveTokenLeo(tsRemoveToken));
-  
+
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tbRemoveTokenProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tbRemoveTokenProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -96,9 +96,9 @@ export const voteRemoveToken = async (
 ///// Execute ////////
 //////////////////////
 export const execRemoveToken = async (
-    proposalId: number, 
-    tokenId: bigint,
-    chainID: bigint 
+  proposalId: number,
+  tokenId: bigint,
+  chainID: bigint
 ) => {
   console.log(`Adding token ${tokenId}`)
 
@@ -114,11 +114,11 @@ export const execRemoveToken = async (
     token_id: tokenId
   };
   const tbRemoveTokenProposalHash = hashStruct(getTsRemoveTokenLeo(tsRemoveToken));
-  
+
   const externalProposal: ExternalProposal = {
-          id: proposalId,
-          external_program: serviceCouncil.address(),
-          proposal_hash: tbRemoveTokenProposalHash
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tbRemoveTokenProposalHash
   }
   const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
@@ -131,7 +131,7 @@ export const execRemoveToken = async (
     tsRemoveToken.chain_id,
     tsRemoveToken.token_id,
     voters
-  ) 
+  )
   await removeTokenTx.wait();
 
   console.log(` ✅ Token: ${tokenId} removed successfully.`)

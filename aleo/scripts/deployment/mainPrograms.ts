@@ -1,5 +1,5 @@
 import { Vlink_token_bridge_v2Contract } from "../../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
 import { Vlink_bridge_council_v2Contract } from "../../artifacts/js/vlink_bridge_council_v2";
 import { Vlink_token_service_council_v2Contract } from "../../artifacts/js/vlink_token_service_council_v2";
@@ -27,32 +27,14 @@ export const deployMainPrograms = async (initialAttestors: string[], initialCoun
   const wusdcHoldingDeployTx = await holding.deploy(); // 5_039_000
   await wusdcHoldingDeployTx.wait();
 
-  // Deploy token bridge
-  // // bridge.connect("aleo1s9jt6t6esqg4caw0lzhr393f80jd5mw2w4mn0hudze60fvnrlq9s9ryctf");
-  const bridgeDeployTx = await bridge.deploy(); // 19_840_000
-  await bridgeDeployTx.wait();
-
   // // Deploy token service
   const tokenServiceDeployTx = await tokenService.deploy(); // 14_051_000
   await tokenServiceDeployTx.wait();
 
-  // Deploy council
-  const councilDeployTx = await council.deploy(); // 29_917_000
-  await councilDeployTx.wait()
-
-  const bridgeCouncilDeployTx = await bridgeCouncil.deploy();
-  await bridgeCouncilDeployTx.wait();
 
   const serviceCouncilDeployTx = await tokenServiceCouncil.deploy();
   await serviceCouncilDeployTx.wait();
 
-  //Initialize council
-  const initializeCouncilTx = await council.initialize(initialCouncilMembers, initialCouncilThreshold);
-  await initializeCouncilTx.wait();
-
-  //Initialize bridge
-  const initializeBridgeTx = await bridge.initialize_tb(initialAttestors, initialAttestorThreshold, bridgeCouncil.address(), aleoSeq, ethSeq);
-  await initializeBridgeTx.wait()
 
   // Initialize token service
   const initializeTokenServiceTx = await tokenService.initialize_ts(tokenServiceCouncil.address());
