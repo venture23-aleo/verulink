@@ -33,7 +33,12 @@
     - name: Determine branch based on environment
       set_fact:
         branch: "{{ 'develop' if env == 'devnet' else 'ci/ansible-deployment' if env == 'staging' else 'main' }}"
-
+    
+    - name: Download docker compose file
+      get_url:
+        url: "{{ github_base_url }}/{{ branch }}/attestor/compose.yaml"
+        dest: "{{ attestor_install_dir }}/compose.yml"
+      
 
     - name: Download config template to local controller
       get_url:
@@ -72,10 +77,11 @@
         - { filename: "sign_config.yaml",  content: "{{ split_docs[2] }}" }
         - { filename: "secrets.yaml",      content: "{{ split_docs[3] }}", mode: "0600" }
         - { filename: ".env",              content: "{{ split_docs[4] }}" }
+      no_log: true
 
     - name: Write mTLS CA certificate from base64
       copy:
-        content: "{{ ca_certificate | b64decode }}"
+        content: "{{ ca_certificate_base64 | b64decode }}"
         dest: "{{ mtls_dir }}/ca.crt"
         mode: '0600'
         owner: "{{ ansible_user }}"
@@ -83,7 +89,7 @@
 
     - name: Write mTLS attestor certificate from base64
       copy:
-        content: "{{ attestor_certificate | b64decode }}"
+        content: "{{ attestor_certificate_base64 | b64decode }}"
         dest: "{{ mtls_dir }}/{{ attestor_name }}.crt"
         mode: '0600'
         owner: "{{ ansible_user }}"
@@ -91,78 +97,66 @@
 
     - name: Write mTLS attestor key from base64
       copy:
-        content: "{{ attestor_key | b64decode }}"
+        content: "{{ attestor_key_base64 | b64decode }}"
         dest: "{{ mtls_dir }}/{{ attestor_name }}.key"
         mode: '0600'
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
 
-    - name: Install Docker on Ubuntu/Debian systems
-      block:
-        - name: Update apt cache
-          apt:
-            update_cache: yes
-        - name: Install required packages
-          apt:
-            name:
-              - ca-certificates
-              - curl
-              - gnupg
-            state: present
-        - name: Create keyrings directory
-          file:
-            path: /etc/apt/keyrings
-            state: directory
-            mode: '0755'
-        - name: Add Docker's official GPG key
-          get_url:
-            url: https://download.docker.com/linux/ubuntu/gpg
-            dest: /etc/apt/keyrings/docker.asc
-            mode: '0644'
-        - name: Set correct permissions for Docker GPG key
-          file:
-            path: /etc/apt/keyrings/docker.asc
-            mode: '0644'
-        - name: Add Docker repository to apt sources
-          apt_repository:
-            repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
-            state: present
-            filename: docker
-        - name: Update apt cache after adding repository
-          apt:
-            update_cache: yes
-        - name: Install Docker packages
-          apt:
-            name:
-              - docker-ce
-              - docker-ce-cli
-              - containerd.io
-              - docker-buildx-plugin
-              - docker-compose-plugin
-            state: present
+    - name: Update apt cache
+      apt:
+        update_cache: yes
       when: ansible_os_family == "Debian"
 
-    - name: Install Docker on RHEL/CentOS systems
-      block:
-        - name: Install dnf-plugins-core
-          dnf:
-            name: dnf-plugins-core
-            state: present
-        - name: Add Docker repository using shell
-          shell: |
-            sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
-          args:
-            creates: /etc/yum.repos.d/docker-ce.repo
-        - name: Install Docker packages
-          dnf:
-            name:
-              - docker-ce
-              - docker-ce-cli
-              - containerd.io
-              - docker-buildx-plugin
-              - docker-compose-plugin
-            state: present
-      when: ansible_os_family == "RedHat"
+    - name: Install required packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Create keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      when: ansible_os_family == "Debian"
+
+    - name: Download Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+      when: ansible_os_family == "Debian"
+
+    - name: Get Ubuntu codename
+      shell: . /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+      register: ubuntu_codename
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ubuntu_codename.stdout }} stable"
+        state: present
+        filename: docker
+      when: ansible_os_family == "Debian"
+
+    - name: Update apt cache after adding repository
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+      when: ansible_os_family == "Debian"
 
     - name: Start Docker service
       service:
@@ -176,52 +170,8 @@
         groups: docker
         append: yes
 
-    - name: Pull Docker images
-      community.docker.docker_image:
-        name: "{{ item }}"
-        source: pull
-      loop:
-        - "{{ docker_image_tag_sign }}"
-        - "{{ docker_image_tag_chain }}"
-
     - name: Start attestor services
-      community.docker.docker_compose_v2:
-        project_src: "{{ attestor_install_dir }}"
-        state: present
-        restarted: yes
+      command: docker compose -f {{ attestor_install_dir }}/compose.yml up -d
 
-    - name: Wait for services to be ready
-      wait_for:
-        port: "{{ item }}"
-        timeout: 60
-      loop:
-        - 8080  # signing service port
-        - 8081  # chain service port (adjust if different)
 
-    - name: Verify services are running
-      community.docker.docker_container_info:
-        name: "{{ item }}"
-      register: container_info
-      loop:
-        - "attestor-chainservice"
-        - "attestor-signingservice"
-
-    - name: Display service status
-      debug:
-        msg: "Service {{ item.name }} is {{ 'running' if item.State.Running else 'not running' }}"
-      loop: "{{ container_info.results }}"
-      loop_control:
-        label: "{{ item.name }}"
-
-    - name: Check service logs
-      shell: "docker logs {{ item }} --tail 20"
-      register: service_logs
-      loop:
-        - "attestor-chainservice"
-        - "attestor-signingservice"
-
-    - name: Display recent logs
-      debug:
-        msg: "{{ item.stdout_lines }}"
-      loop: "{{ service_logs.results }}"
-      when: item.stdout_lines is defined
+   
