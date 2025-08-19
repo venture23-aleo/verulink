@@ -54,9 +54,9 @@ collector_service:
   uri: {{ collector_service_url }}
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
-  ca_certificate: {{ ca_certificate }}
-  attestor_certificate: {{ attestor_certificate }}
-  attestor_key: {{ attestor_key }}
+  ca_certificate: {{ ca_certificate_base64 }}
+  attestor_certificate: {{ attestor_certificate_base64 }}
+  attestor_key: {{ attestor_key_base64 }}
 
 metrics:
   host: {{ prometheus_pushgateway_url }}
@@ -80,11 +80,11 @@ cred:
 chain:
  bsc:
    chain_type: evm
-   private_key: {{ bsc_private_key }}
+   private_key: {{ bsc_private_key_base64 }}
    wallet_address: {{ bsc_wallet_address }}
  aleo:
    chain_type: aleo
-   private_key: {{ aleo_private_key }}
+   private_key: {{ aleo_private_key_base64 }}
    wallet_address: {{ aleo_wallet_address }}
 ---
 ## Docker Image Tags
