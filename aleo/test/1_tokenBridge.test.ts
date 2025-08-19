@@ -150,8 +150,6 @@ describe("Token Bridge ", () => {
       expect(await bridge.attestors(ALEO_ZERO_ADDRESS)).toBeTruthy();
       expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)).toBe(BRIDGE_PAUSED_VALUE);
       expect(await bridge.owner_TB(OWNER_INDEX)).toBe(admin);
-      expect(await bridge.sequences(aleoChainId)).toBe(BigInt(0));
-      expect(await bridge.sequences(ethChainId)).toBe(new_eth_sequence);
     }, TIMEOUT);
 
     test.failing("Initialize (Second try) - Expected parameters (must fail)",

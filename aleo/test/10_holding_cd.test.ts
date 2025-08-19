@@ -57,13 +57,10 @@ describe("Holding", () => {
             }
         }, TIMEOUT);
 
-        test("cannot initialize token holding twice", async () => {
-            const isHoldingInitialized = (await holding.owner_holding(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
-            expect(isHoldingInitialized).toBe(true);
+        test.failing("cannot initialize token holding twice", async () => {
             holding.connect(admin);
             const tx = await holding.initialize_holding(aleoUser1);
             await tx.wait();
-            expect(await holding.owner_holding(OWNER_INDEX)).toBe(aleoUser1);
         }, TIMEOUT);
     })
 
