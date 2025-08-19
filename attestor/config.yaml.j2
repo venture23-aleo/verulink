@@ -54,9 +54,9 @@ collector_service:
   uri: {{ collector_service_url }}
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
-  ca_certificate: {{ ca_certificate_base64 }}
-  attestor_certificate: {{ attestor_certificate_base64 }}
-  attestor_key: {{ attestor_key_base64 }}
+  ca_certificate: /configs/.mtls/ca.crt
+  attestor_certificate: /configs/.mtls/{{ attestor_name }}.crt
+  attestor_key: /configs/.mtls/{{ attestor_name }}.key
 
 metrics:
   host: {{ prometheus_pushgateway_url }}
