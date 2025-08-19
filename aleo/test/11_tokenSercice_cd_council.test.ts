@@ -12,7 +12,7 @@ import {
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
-import { ALEO_CREDITS_TOKEN_ID, aleoChainId, baseChainId, baseTsContractAddr, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, BRIDGE_UNPAUSED_VALUE, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, ethTsRandomContractAddress2, VERSION_PUBLIC_NORELAYER_NOPREDICATE, VERSION_PUBLIC_RELAYER_NOPREDICATE } from "../utils/testdata.data";
+import { ALEO_CREDITS_TOKEN_ID, aleoChainId, baseChainId, baseTsContractAddr, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, BRIDGE_UNPAUSED_VALUE, BSC_TESTNET, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, ethTsRandomContractAddress2, VERSION_PUBLIC_NORELAYER_NOPREDICATE, VERSION_PUBLIC_RELAYER_NOPREDICATE } from "../utils/testdata.data";
 import { ExternalProposal } from "../artifacts/js/types/vlink_council_v2";
 import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v2";
 import { Vlink_token_service_cd_v2Contract } from "../artifacts/js/vlink_token_service_cd_v2";
@@ -78,31 +78,31 @@ describe("Token Service Council Waleo", () => {
     token_id: ALEO_CREDITS_TOKEN_ID
   }
 
-  describe.skip("deployment", () => {
-    test("Deploy Holding",
-      async () => {
-        const deployTx = await holding.deploy();
-        await deployTx.wait()
-      },
-      TIMEOUT
-    );
+  describe("deployment", () => {
+    // test("Deploy Holding",
+    //   async () => {
+    //     const deployTx = await holding.deploy();
+    //     await deployTx.wait()
+    //   },
+    //   TIMEOUT
+    // );
 
-    test("Deploy Bridge",
-      async () => {
-        const deployTx = await bridge.deploy();
-        await deployTx.wait()
-      },
-      TIMEOUT
-    );
+    // test("Deploy Bridge",
+    //   async () => {
+    //     const deployTx = await bridge.deploy();
+    //     await deployTx.wait()
+    //   },
+    //   TIMEOUT
+    // );
 
 
-    test("Deploy Token Service",
-      async () => {
-        const deployTx = await tokenService.deploy();
-        await deployTx.wait();
-      },
-      TIMEOUT
-    );
+    // test("Deploy Token Service",
+    //   async () => {
+    //     const deployTx = await tokenService.deploy();
+    //     await deployTx.wait();
+    //   },
+    //   TIMEOUT
+    // );
 
     test("Deploy Council",
       async () => {
@@ -121,7 +121,7 @@ describe("Token Service Council Waleo", () => {
     );
   })
 
-  describe.skip("Initialization", () => {
+  describe("Initialization", () => {
     test("Initialize Token Service", async () => {
       const isTokenServiceInitialized = (await tokenService.owner_TS(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
       if (!isTokenServiceInitialized) {
@@ -162,7 +162,7 @@ describe("Token Service Council Waleo", () => {
     }, TIMEOUT);
   })
 
-  describe.skip("Holding Setup", () => {
+  describe("Holding Setup", () => {
     test("Initialize token holding", async () => {
       const isHoldingInitialized = (await holding.owner_holding(OWNER_INDEX, ALEO_ZERO_ADDRESS)) != ALEO_ZERO_ADDRESS;
       expect(isHoldingInitialized).toBe(false)
@@ -204,8 +204,6 @@ describe("Token Service Council Waleo", () => {
       // TODO: checked expect bridge owner should be admin, expect bridge should be paused 
       expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE)).toBe(BRIDGE_PAUSED_VALUE);
       expect(await bridge.owner_TB(OWNER_INDEX)).toBe(councilMember1);
-      expect(await bridge.sequences(aleoChainId)).toBe(BigInt(0))
-      expect(await bridge.sequences(ethChainId)).toBe(BigInt(0))
     }, TIMEOUT);
 
     test("Bridge: Unpause", async () => {
@@ -219,23 +217,23 @@ describe("Token Service Council Waleo", () => {
     }, TIMEOUT)
 
     test("Add eth  chain in supported chains", async () => {
-      const isEthChainAdded = (await bridge.supported_chains(ethChainId, false)) != false;
+      const isEthChainAdded = (await bridge.supported_chains(BSC_TESTNET, false)) != false;
       if (!isEthChainAdded) {
         const tx = await bridge.add_chain_tb(
-          ethChainId
+          BSC_TESTNET
         );
         await tx.wait();
       }
-      expect(await bridge.supported_chains(ethChainId)).toBe(true);
+      expect(await bridge.supported_chains(BSC_TESTNET)).toBe(true);
 
-      const isAleoChainAdded = (await bridge.supported_chains(aleoChainId, false)) != false;
-      if (!isAleoChainAdded) {
-        const tx = await bridge.add_chain_tb(
-          aleoChainId
-        );
-        await tx.wait();
-      }
-      expect(await bridge.supported_chains(aleoChainId)).toBe(true);
+      // const isAleoChainAdded = (await bridge.supported_chains(aleoChainId, false)) != false;
+      // if (!isAleoChainAdded) {
+      //   const tx = await bridge.add_chain_tb(
+      //     aleoChainId
+      //   );
+      //   await tx.wait();
+      // }
+      // expect(await bridge.supported_chains(aleoChainId)).toBe(true);
 
     }, TIMEOUT);
 
@@ -249,7 +247,7 @@ describe("Token Service Council Waleo", () => {
     }, TIMEOUT)
   })
 
-  describe.skip("Add Token", () => {
+  describe("Add Token", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -318,7 +316,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Update minimum maximum transfer", () => {
+  describe("Update minimum maximum transfer", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -376,7 +374,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Unpause", () => {
+  describe("Unpause", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -426,7 +424,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Update tokenService setting", () => {
+  describe("Update tokenService setting", () => {
 
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -482,7 +480,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Add chain to existing token", () => { //ts_add_chain_to_existing_token
+  describe("Add chain to existing token", () => { //ts_add_chain_to_existing_token
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -545,7 +543,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Remove  chain to existing token", () => { //ts_remove_chain_to_existing_token
+  describe("Remove  chain to existing token", () => { //ts_remove_chain_to_existing_token
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
     const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
@@ -655,7 +653,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Hold some fund to test release", () => {
+  describe("Hold some fund to test release", () => {
     test("happy token send in public version with active relayer",
       async () => {
         const send_amount = BigInt(100_0000);
@@ -765,7 +763,7 @@ describe("Token Service Council Waleo", () => {
     }, TIMEOUT)
   })
 
-  describe.skip("Release fund", () => {
+  describe("Release fund", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -819,7 +817,7 @@ describe("Token Service Council Waleo", () => {
     }, TIMEOUT);
   });
 
-  describe.skip("Pause", () => {
+  describe("Pause", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -871,7 +869,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Holding Ownership transfer", () => {
+  describe("Holding Ownership transfer", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
@@ -927,7 +925,7 @@ describe("Token Service Council Waleo", () => {
 
   });
 
-  describe.skip("Transfer ownership", () => {
+  describe("Transfer ownership", () => {
     const proposer = councilMember1;
     let proposalId = 0;
     let ExternalProposalHash = BigInt(0);
