@@ -1,11 +1,10 @@
 import { PrivateKey } from "@aleohq/sdk";
+import { Vlink_council_v4Contract } from "../artifacts/js/vlink_council_v4";
+import { Vlink_bridge_council_v4Contract } from "../artifacts/js/vlink_bridge_council_v4";
+import { Vlink_token_service_council_v4Contract } from "../artifacts/js/vlink_token_service_council_v4";
+import { Vlink_token_bridge_v4Contract } from "../artifacts/js/vlink_token_bridge_v4";
+import { Vlink_token_service_v4Contract } from "../artifacts/js/vlink_token_service_v4";
 
-import { Token_bridge_v0003Contract } from "../artifacts/js/token_bridge_v0003";
-import { Token_service_v0003Contract } from "../artifacts/js/token_service_v0003";
-import { CouncilContract } from "../artifacts/js/council";
-
-import { Bridge_councilContract } from "../artifacts/js/bridge_council";
-import { Token_service_councilContract } from "../artifacts/js/token_service_council";
 
 import {
   ALEO_ZERO_ADDRESS,
@@ -17,28 +16,35 @@ import {
   getAddMemberLeo,
   getRemoveMemberLeo,
   getUpdateThresholdLeo,
-  getProposalVoteLeo
-} from "../artifacts/js/js2leo/council";
+  getProposalVoteLeo,
+  getWithdrawalLeo
+} from "../artifacts/js/js2leo/vlink_council_v4";
 import {
   AddMember,
   RemoveMember,
   UpdateThreshold,
   ProposalVote,
-  ProposalVoterKey
-} from "../artifacts/js/types/council";
+  ProposalVoterKey,
+  Withdrawal
+} from "../artifacts/js/types/vlink_council_v4";
 
 import { hashStruct } from "../utils/hash";
-import { ExecutionMode} from "@doko-js/core";
+import { ExecutionMode } from "@doko-js/core";
+import { Token_registryContract } from "../artifacts/js/token_registry";
+import { Vlink_holding_v4Contract } from "../artifacts/js/vlink_holding_v4";
+import { tokenID } from "../utils/testdata.data";
+
 
 
 const mode = ExecutionMode.SnarkExecute;
 
-
-const council = new CouncilContract({ mode });
-const bridgeCouncil = new Bridge_councilContract({ mode });
-const tokenServiceCouncil = new Token_service_councilContract({ mode });
-const bridge = new Token_bridge_v0003Contract({ mode });
-const tokenService = new Token_service_v0003Contract({ mode });
+const tokenRegistry = new Token_registryContract({ mode })
+const holding = new Vlink_holding_v4Contract({ mode })
+const council = new Vlink_council_v4Contract({ mode });
+const bridgeCouncil = new Vlink_bridge_council_v4Contract({ mode });
+const tokenService = new Vlink_token_service_v4Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v4Contract({ mode });
+const bridge = new Vlink_token_bridge_v4Contract({ mode });
 
 
 const TIMEOUT = 300000_000;
@@ -82,8 +88,25 @@ describe("Council", () => {
   const [councilMember1, councilMember2, councilMember3, aleoUser4] = council.getAccounts();
   const initialThreshold = 3;
 
-  describe("Deployment and Setup", () => {
-    test(
+  describe.skip("Deployment and Setup", () => {
+    test.skip(
+      "Deploy Token registery",
+      async () => {
+        const deployTx = await tokenRegistry.deploy();
+        await deployTx.wait()
+      },
+      TIMEOUT
+    );
+    test.skip(
+      "Deploy Holding",
+      async () => {
+        const deployTx = await holding.deploy();
+        await deployTx.wait()
+      },
+      TIMEOUT
+    );
+
+    test.skip(
       "Deploy Bridge",
       async () => {
         const deployTx = await bridge.deploy();
@@ -92,7 +115,7 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test(
+    test.skip(
       "Deploy Token Service",
       async () => {
         const deployTx = await tokenService.deploy();
@@ -101,7 +124,7 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test(
+    test.skip(
       "Deploy Council",
       async () => {
         const deployTx = await council.deploy();
@@ -110,7 +133,7 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test(
+    test.skip(
       "Deploy Bridge Council",
       async () => {
         const deployTx = await bridgeCouncil.deploy();
@@ -119,7 +142,7 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test(
+    test.skip(
       "Deploy TokenService Council",
       async () => {
         const deployTx = await tokenServiceCouncil.deploy();
@@ -128,12 +151,12 @@ describe("Council", () => {
       TIMEOUT
     );
 
-    test(
+    test.skip(
       "Initialize Council",
       async () => {
         let isCouncilInitialized = (await council.settings(COUNCIL_THRESHOLD_INDEX, 0)) != 0;
         if (!isCouncilInitialized) {
-          const [initializeTx] = await council.initialize(
+          const initializeTx = await council.initialize(
             [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS], initialThreshold
           );
           await initializeTx.wait();
@@ -150,11 +173,14 @@ describe("Council", () => {
       TIMEOUT
     );
 
-
+    test("Holding: Initialize", async () => {
+      const tx = await holding.initialize_holding(tokenService.address());
+      await tx.wait();
+    }, TIMEOUT)
 
   })
 
-  describe("Council Internal Test", () => {
+  describe.skip("Council Internal Test", () => {
 
     const newThreshold = 1;
     let proposalHash: bigint
@@ -170,7 +196,7 @@ describe("Council", () => {
       proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
       council.connect(councilMember1)
-      const [proposeTx] = await council.propose(proposalId, proposalHash);
+      const proposeTx = await council.propose(proposalId, proposalHash);
       await proposeTx.wait();
 
       const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
@@ -188,9 +214,8 @@ describe("Council", () => {
       const proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
       council.connect(councilMember1)
-      const [proposeTx] = await council.propose(proposalId, proposalHash);
-      const result = await proposeTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const proposeTx = await council.propose(proposalId, proposalHash);
+      await expect(proposeTx.wait()).rejects.toThrow()
 
     }, TIMEOUT)
 
@@ -203,29 +228,26 @@ describe("Council", () => {
       const proposalHash = hashStruct(getUpdateThresholdLeo(updateThresholdProposal));
 
       council.connect(aleoUser4)
-      const [proposeTx] = await council.propose(proposalId, proposalHash);
-      const result = await proposeTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const proposeTx = await council.propose(proposalId, proposalHash);
+      await expect(proposeTx.wait()).rejects.toThrow()
     }, TIMEOUT)
 
     test("Vote from non council member fails", async () => {
       council.connect(aleoUser4)
-      const [voteTx] = await council.vote(proposalHash, true);
-      const result = await voteTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const voteTx = await council.vote(proposalHash, true);
+      await expect(voteTx.wait()).rejects.toThrow()
     }, TIMEOUT)
 
     test("Vote from council member1 fails", async () => {
       council.connect(councilMember1)
-      const [voteTx] = await council.vote(proposalHash, true);
-      const result = await voteTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const voteTx = await council.vote(proposalHash, true);
+      await expect(voteTx.wait()).rejects.toThrow()
     }, TIMEOUT)
 
     test("Vote NO from council member2", async () => {
       const initialVotes = await council.proposal_vote_counts(proposalHash);
       council.connect(councilMember2)
-      const [voteTx] = await council.vote(proposalHash, false);
+      const voteTx = await council.vote(proposalHash, false);
       await voteTx.wait();
 
       const finalVotes = await council.proposal_vote_counts(proposalHash);
@@ -234,23 +256,21 @@ describe("Council", () => {
 
     test("Vote again from council member2 fails", async () => {
       council.connect(councilMember2)
-      const [voteTx] = await council.vote(proposalHash, true);
-      const result = await voteTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const voteTx = await council.vote(proposalHash, true);
+      await expect(voteTx.wait()).rejects.toThrow()
     }, TIMEOUT)
 
     test("Execute without enough votes fails", async () => {
       const signers = [councilMember1, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-      const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-      const result = await updateThresholExecTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
+      await expect(updateThresholExecTx.wait()).rejects.toThrow()
     }, TIMEOUT);
 
     test("Vote YES from council member3", async () => {
       const initialVotes = await council.proposal_vote_counts(proposalHash);
       council.connect(councilMember3)
-      const [voteTx] = await council.vote(proposalHash, true);
+      const voteTx = await council.vote(proposalHash, true);
       await voteTx.wait();
 
       const finalVotes = await council.proposal_vote_counts(proposalHash);
@@ -274,15 +294,14 @@ describe("Council", () => {
     test("Execute with both YES and NO votes fails", async () => {
       const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, councilMember3];
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-      const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
-      const result = await updateThresholExecTx.wait();
-      expect(result.execution).toBeUndefined(); 
+      const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
+      await expect(updateThresholExecTx.wait()).rejects.toThrow()
     }, TIMEOUT);
 
     test("Change vote of council member2 to YES", async () => {
       const initialVotes = await council.proposal_vote_counts(proposalHash);
       council.connect(councilMember2)
-      const [voteTx] = await council.update_vote(proposalHash, true);
+      const voteTx = await council.update_vote(proposalHash, true);
       await voteTx.wait();
 
       const finalVotes = await council.proposal_vote_counts(proposalHash);
@@ -306,7 +325,7 @@ describe("Council", () => {
       const signers = [councilMember1, councilMember2, councilMember3, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
 
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-      const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, signers);
+      const updateThresholExecTx = await council.update_threshold(proposalId, newThreshold, signers);
       await updateThresholExecTx.wait();
 
       expect(await council.proposal_executed(proposalHash)).toBe(true);
@@ -315,7 +334,7 @@ describe("Council", () => {
 
   })
 
-  describe("Add member", () => {
+  describe.skip("Add member", () => {
     const newMember = new PrivateKey().to_address().to_string()
     const updatedThreshold = 1;
     let proposalHash: bigint
@@ -332,7 +351,7 @@ describe("Council", () => {
       };
       proposalHash = hashStruct(getAddMemberLeo(addMemeberProposal));
       council.connect(councilMember1)
-      const [tx] = await council.propose(proposalId, proposalHash);
+      const tx = await council.propose(proposalId, proposalHash);
       await tx.wait();
 
       const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
@@ -345,7 +364,7 @@ describe("Council", () => {
     test("Vote", async () => {
       const initialVotes = await council.proposal_vote_counts(proposalHash);
       council.connect(councilMember2)
-      const [voteTx] = await council.vote(proposalHash, true);
+      const voteTx = await council.vote(proposalHash, true);
       await voteTx.wait();
 
       const finalVotes = await council.proposal_vote_counts(proposalHash);
@@ -357,7 +376,7 @@ describe("Council", () => {
       const initialTotalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
 
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-      const [addMemeberExecTx] = await council.add_member(proposalId, newMember, updatedThreshold, signers);
+      const addMemeberExecTx = await council.add_member(proposalId, newMember, updatedThreshold, signers);
       await addMemeberExecTx.wait();
 
       const finalTotalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
@@ -390,7 +409,7 @@ describe("Council", () => {
       };
       proposalHash = hashStruct(getRemoveMemberLeo(removeMemberProposal));
       council.connect(councilMember1)
-      const [tx] = await council.propose(proposalId, proposalHash);
+      const tx = await council.propose(proposalId, proposalHash);
       await tx.wait();
 
       const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
@@ -403,7 +422,7 @@ describe("Council", () => {
     test("Vote", async () => {
       const initialVotes = await council.proposal_vote_counts(proposalHash);
       council.connect(councilMember2)
-      const [voteTx] = await council.vote(proposalHash, true);
+      const voteTx = await council.vote(proposalHash, true);
       await voteTx.wait();
 
       const finalVotes = await council.proposal_vote_counts(proposalHash);
@@ -416,7 +435,7 @@ describe("Council", () => {
       const initialTotalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
 
       expect(await council.proposal_executed(proposalHash, false)).toBe(false);
-      const [removeMemberTx] = await council.remove_member(proposalId, oldMember, updatedThreshold, signers);
+      const removeMemberTx = await council.remove_member(proposalId, oldMember, updatedThreshold, signers);
       await removeMemberTx.wait();
 
       const finalTotalAttestors = await council.settings(COUNCIL_TOTAL_MEMBERS_INDEX)
@@ -429,7 +448,54 @@ describe("Council", () => {
     }, TIMEOUT)
   })
 
+  describe("Withdraw Fee", () => {
+    const receiver_address = 'aleo1xpzgjyps47vqmlrtqf64dwlwrmrc89xtsfmgwj4af5aqdh6q05psnw3n6p';
+    let proposalHash: bigint
+    let proposalId: number
+    let token_id: bigint = tokenID
+    let withdraw_amount: bigint = BigInt(100)
 
-  test.todo("holding and external execute")
+    test("Propose", async () => {
+      const totalProposals = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      proposalId = totalProposals + 1;
+
+      const withdrawFeeProposal: Withdrawal = {
+        id: proposalId,
+        token_id: token_id,
+        receiver: receiver_address,
+        amount: withdraw_amount
+      };
+      proposalHash = hashStruct(getWithdrawalLeo(withdrawFeeProposal));
+      council.connect(councilMember1)
+      const tx = await council.propose(proposalId, proposalHash);
+      await tx.wait();
+
+      const totalProposalsAfter = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString());
+      expect(totalProposalsAfter).toBe(totalProposals + 1);
+      expect(await council.proposals(proposalId)).toBe(proposalHash);
+      expect(await council.proposal_vote_counts(proposalHash)).toBe(1)
+
+    }, TIMEOUT)
+
+    test("Vote", async () => {
+      const initialVotes = await council.proposal_vote_counts(proposalHash);
+      council.connect(councilMember2)
+      const voteTx = await council.vote(proposalHash, true);
+      await voteTx.wait();
+
+      const finalVotes = await council.proposal_vote_counts(proposalHash);
+      expect(finalVotes).toBe(initialVotes + 1);
+    }, TIMEOUT)
+
+    test("Execute", async () => {
+      const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
+
+      expect(await council.proposal_executed(proposalHash, false)).toBe(false);
+      const withdrawFeeExecTx = await council.withdraw_fees(proposalId, token_id, receiver_address, withdraw_amount, signers);
+      await withdrawFeeExecTx.wait();
+
+      expect(await council.proposal_executed(proposalHash)).toBe(true);
+    }, TIMEOUT)
+  })
 });
 

@@ -1,17 +1,17 @@
 import { hashStruct } from "../../utils/hash";
 
-import { Vlink_council_v1Contract } from "../../artifacts/js/vlink_council_v1";
+import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer } from "./councilUtils";
-import { UpdateThreshold } from "../../artifacts/js/types/vlink_council_v1";
-import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/vlink_council_v1";
+import { UpdateThreshold } from "../../artifacts/js/types/vlink_council_v2";
+import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/vlink_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Vlink_council_v1Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
@@ -72,31 +72,31 @@ export const voteUpdateThreshold = async (proposalId: number, newThreshold: numb
 //////////////////////
 ///// Execute ////////
 //////////////////////
-export const execUpdateThreshold = async (proposalId: number, newThreshold: number, ) => {
+export const execUpdateThreshold = async (proposalId: number, newThreshold: number,) => {
 
-    console.log(`👍 Executing to update Threshold: ${newThreshold}`)
-    const isOldThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
-    if (isOldThreshold == newThreshold || newThreshold == 0) {
-      throw Error(`${newThreshold} is invalid!`);
-    }
+  console.log(`👍 Executing to update Threshold: ${newThreshold}`)
+  const isOldThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
+  if (isOldThreshold == newThreshold || newThreshold == 0) {
+    throw Error(`${newThreshold} is invalid!`);
+  }
 
-    const updateThresholdProposalHash = await council.proposals(proposalId);
-    validateExecution(updateThresholdProposalHash);
+  const updateThresholdProposalHash = await council.proposals(proposalId);
+  validateExecution(updateThresholdProposalHash);
 
-    const voters = padWithZeroAddress(await getVotersWithYesVotes(updateThresholdProposalHash), SUPPORTED_THRESHOLD);
-    const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, voters);
-    await council.wait(updateThresholExecTx);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(updateThresholdProposalHash), SUPPORTED_THRESHOLD);
+  const [updateThresholExecTx] = await council.update_threshold(proposalId, newThreshold, voters);
+  await council.wait(updateThresholExecTx);
 
-    const isNewThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
-    if (isNewThreshold != newThreshold || newThreshold == 0) {
-        throw Error(`❌ Unknown error.`);
-    }
+  const isNewThreshold = await council.settings(COUNCIL_THRESHOLD_INDEX, 0);
+  if (isNewThreshold != newThreshold || newThreshold == 0) {
+    throw Error(`❌ Unknown error.`);
+  }
 
-    console.log(` ✅ Threshold update successfully.`)
+  console.log(` ✅ Threshold update successfully.`)
 }
 
 
-const update = async() =>{
+const update = async () => {
   // const propid = await proposeUpdateThreshold(1);
   // await voteUpdateThreshold(19, 1);
   await execUpdateThreshold(19, 1);

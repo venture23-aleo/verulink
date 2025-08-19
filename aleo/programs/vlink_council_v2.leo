@@ -1,4 +1,6 @@
-program vlink_council_v1.aleo {
+import token_registry.aleo;
+
+program vlink_council_v2.aleo {
 
     struct ProposalVote {
         // Hash of the proposal
@@ -55,23 +57,26 @@ program vlink_council_v1.aleo {
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
 
+    const INITIALIZER_ADDRESS : address = aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27;    
+
+
     //////////////////////////////
     /////// Initialization ///////
     //////////////////////////////
 
     /// Initialize the council program
     /// Note: This function must be allowed to be called only once.
-    transition initialize(public initial_members: [address; 5], public threshold: u8) {
-        
+    async transition initialize(public initial_members: [address; 5], public threshold: u8) -> Future{
+        assert_eq(self.caller, INITIALIZER_ADDRESS);
         let unique_members: u8 = get_valid_unique_address_count(initial_members);
 
         // Sanity check for threshold
         assert(threshold > 0u8 && threshold <= unique_members );
 
-        return then finalize(initial_members, threshold, unique_members);
+        return finalize_initialize(initial_members, threshold, unique_members);
     }
 
-    finalize initialize(initial_members: [address; 5], threshold: u8, total: u8) {
+    async function finalize_initialize(initial_members: [address; 5], threshold: u8, total: u8) {
         // Assert council has not been initialized before
         assert(!Mapping::contains(settings, true));
 
@@ -91,7 +96,7 @@ program vlink_council_v1.aleo {
     /////// Propose ///////
     ///////////////////////
 
-    transition propose(public id: u32, public proposal_hash: field) {
+    async transition propose(public id: u32, public proposal_hash: field) -> Future{
         let from: address = self.caller;
         assert_neq(from, ZERO_ADDRESS);
 
@@ -109,10 +114,10 @@ program vlink_council_v1.aleo {
             }
         );
 
-        return then finalize(from, id, proposal_hash, proposal_sign, zero_proposal_sign);
+        return finalize_propose(from, id, proposal_hash, proposal_sign, zero_proposal_sign);
     }
 
-    finalize propose(from: address, proposal_id: u32, proposal_hash: field, proposal_sign: field, zero_proposal_sign: field) {
+    async function finalize_propose(from: address, proposal_id: u32, proposal_hash: field, proposal_sign: field, zero_proposal_sign: field) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -144,7 +149,7 @@ program vlink_council_v1.aleo {
     /////// Vote ///////
     ///////////////////////
 
-    transition vote(public proposal_hash: field, acceptance: bool) {
+    async transition vote(public proposal_hash: field, acceptance: bool) -> Future{
         let from: address = self.caller;
         assert_neq(from, ZERO_ADDRESS);
 
@@ -155,10 +160,10 @@ program vlink_council_v1.aleo {
             }
         );
 
-        return then finalize(from, proposal_hash, proposal_sign, acceptance);
+        return finalize_vote(from, proposal_hash, proposal_sign, acceptance);
     }
 
-    finalize vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
+    async function finalize_vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
         // Assert that the proposal/vote is from valid member
         assert(Mapping::get(members, from));
 
@@ -184,7 +189,7 @@ program vlink_council_v1.aleo {
     /////// Update Vote ///////
     ///////////////////////////
 
-    transition update_vote(public proposal_hash: field, acceptance: bool) {
+    async transition update_vote(public proposal_hash: field, acceptance: bool) -> Future{
         let from: address = self.caller;
         assert_neq(from, ZERO_ADDRESS);
 
@@ -195,10 +200,10 @@ program vlink_council_v1.aleo {
             }
         );
 
-        return then finalize(from, proposal_hash, proposal_sign, acceptance);
+        return finalize_update_vote(from, proposal_hash, proposal_sign, acceptance);
     }
 
-    finalize update_vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
+    async function finalize_update_vote(from: address, proposal_hash: field, proposal_sign: field, acceptance: bool) {
         // Assert that the member has already voted the proposal earlier
         assert(Mapping::contains(proposal_votes, proposal_sign));
 
@@ -216,7 +221,7 @@ program vlink_council_v1.aleo {
         new_threshold: u8
     }
 
-    transition add_member(public id: u32, public new_member: address, public new_threshold: u8, public voters: [address; 5]) {
+    async transition add_member(public id: u32, public new_member: address, public new_threshold: u8, public voters: [address; 5]) -> Future{
         assert(new_threshold > 0u8);
         let proposal: AddMember = AddMember {
             id,
@@ -228,10 +233,10 @@ program vlink_council_v1.aleo {
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
 
-        return then finalize(proposal_hash, new_member, new_threshold, voters, vote_keys, votes);
+        return finalize_add_member(proposal_hash, new_member, new_threshold, voters, vote_keys, votes);
     }
 
-    finalize add_member(proposal_hash: field, new_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+    async function finalize_add_member(proposal_hash: field, new_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
             assert(Mapping::get(proposal_votes, vote_keys[i]));
@@ -269,7 +274,7 @@ program vlink_council_v1.aleo {
         new_threshold: u8
     }
 
-    transition remove_member(public id: u32, public existing_member: address, public new_threshold: u8, public voters: [address; 5]) {
+    async transition remove_member(public id: u32, public existing_member: address, public new_threshold: u8, public voters: [address; 5]) -> Future{
         assert_neq(existing_member, ZERO_ADDRESS);
         assert(new_threshold > 0u8);
         let proposal: RemoveMember = RemoveMember {
@@ -282,10 +287,10 @@ program vlink_council_v1.aleo {
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);        
 
-        return then finalize(proposal_hash, existing_member, new_threshold, voters, vote_keys, votes);
+        return finalize_remove_member(proposal_hash, existing_member, new_threshold, voters, vote_keys, votes);
     }
 
-    finalize remove_member(proposal_hash: field, existing_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+    async function finalize_remove_member(proposal_hash: field, existing_member: address, new_threshold: u8, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
@@ -314,6 +319,55 @@ program vlink_council_v1.aleo {
         Mapping::set(settings, TOTAL_MEMBERS_INDEX, current_members_count - 1u8);
     }
 
+    struct Withdrawal {
+        id: u32,
+        token_id: field,
+        receiver: address,
+        amount: u128
+    }
+
+    async transition withdraw_fees(public id: u32, public token_id:field, public receiver: address, public amount: u128, public voters: [address; 5]) -> Future{
+        assert(amount > 0u128);
+        let proposal: Withdrawal = Withdrawal {
+            id,
+            token_id,
+            receiver,
+            amount
+        };
+
+        let proposal_hash: field = BHP256::hash_to_field(proposal);
+        let votes: u8 = get_valid_unique_address_count(voters);
+        let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
+
+        let withdraw_fee: Future = token_registry.aleo/transfer_public(
+            token_id,
+            receiver,
+            amount
+        );
+
+        return finalize_withdraw_fees(proposal_hash, amount, voters, vote_keys, votes, withdraw_fee);
+    }
+
+    async function finalize_withdraw_fees(proposal_hash: field, amount: u128, voters: [address; 5], vote_keys: [field; 5], votes: u8, f0: Future) {
+        f0.await();
+        // Ensure that the votes are from valid members
+        for i: u8 in 0u8..SUPPORTED_THRESHOLD {
+            assert(Mapping::contains(members, voters[i]));
+            assert(Mapping::get(proposal_votes, vote_keys[i]));
+        }
+
+        // Get the threshold
+        let threshold: u8 = Mapping::get(settings, THRESHOLD_INDEX);
+
+        assert(votes >= threshold);
+
+        // Ensure that the proposal has not been executed
+        assert(!Mapping::contains(proposal_executed, proposal_hash));
+
+        // Mark the proposal as executed
+        Mapping::set(proposal_executed, proposal_hash, true);
+    }
+
     ////////////////////////////////////////
     /////// Council: Update Threshold //////
     ////////////////////////////////////////
@@ -323,7 +377,7 @@ program vlink_council_v1.aleo {
         new_threshold: u8
     }
 
-    transition update_threshold(public id: u32, public new_threshold: u8, public voters: [address; 5]) {
+    async transition update_threshold(public id: u32, public new_threshold: u8, public voters: [address; 5]) -> Future{
         assert(new_threshold > 0u8);
 
         let proposal: UpdateThreshold = UpdateThreshold {
@@ -334,10 +388,10 @@ program vlink_council_v1.aleo {
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
 
-        return then finalize(proposal_hash, new_threshold, voters, vote_keys, votes);
+        return finalize_update_threshold(proposal_hash, new_threshold, voters, vote_keys, votes);
     }
 
-    finalize update_threshold(proposal_hash: field, new_threshold: u8, voters: [address;5], vote_keys: [field; 5], votes: u8) {
+    async function finalize_update_threshold(proposal_hash: field, new_threshold: u8, voters: [address;5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
@@ -369,11 +423,11 @@ program vlink_council_v1.aleo {
 
     struct ExternalProposal {
         id: u32,
-        external_program: address
-        proposal_hash: field,
+        external_program: address,
+        proposal_hash: field
     }
 
-    transition external_execute(public id: u32, public proposal_hash: field, public voters: [address; 5]) {
+    async transition external_execute(public id: u32, public proposal_hash: field, public voters: [address; 5]) -> Future{
         let external_proposal: ExternalProposal = ExternalProposal {
             id,
             external_program: self.caller,
@@ -385,10 +439,10 @@ program vlink_council_v1.aleo {
         let votes: u8 = get_valid_unique_address_count(voters);
         let vote_keys: [field; 5] = get_proposal_vote_keys(proposal_hash, voters);
 
-        return then finalize(proposal_hash, voters, vote_keys, votes);
+        return finalize_external_execute(proposal_hash, voters, vote_keys, votes);
     }
 
-    finalize external_execute(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
+    async function finalize_external_execute(proposal_hash: field, voters: [address; 5], vote_keys: [field; 5], votes: u8) {
         // Ensure that the votes are from valid members
         for i: u8 in 0u8..SUPPORTED_THRESHOLD {
             assert(Mapping::contains(members, voters[i]));
@@ -409,7 +463,7 @@ program vlink_council_v1.aleo {
 
     // Validates that the addresses are unique except for ZERO_ADDRESS
     // Returs the count of the unique addresses
-    function get_valid_unique_address_count(addresses: [address; 5]) -> u8 {
+    inline get_valid_unique_address_count(addresses: [address; 5]) -> u8 {
         let unique_addresses: u8 = 0u8;
         if (addresses[0u8] != ZERO_ADDRESS) {
             assert_neq(addresses[0u8], addresses[1u8]);
@@ -443,7 +497,7 @@ program vlink_council_v1.aleo {
         return unique_addresses;
     }
 
-    function get_proposal_vote_keys(proposal_hash: field, voters: [address; 5]) -> [field; 5] {
+    inline get_proposal_vote_keys(proposal_hash: field, voters: [address; 5]) -> [field; 5] {
         return ( [
             BHP256::hash_to_field(ProposalVote {
                 proposal: proposal_hash,
