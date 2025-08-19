@@ -24,7 +24,7 @@ services:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
-      MODE: stag
+      MODE: ${DEPLOYMENT_ENVIRONMENT}
       CLEAN_START: false
       MAINTENANCE: false
   signingservice:

@@ -1,0 +1,47 @@
+---
+# Staging Environment Variables for Attestor Service
+
+# Attestor Configuration
+attestor_name: "<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>"
+mode: "dev"
+
+# Aleo Chain Configuration
+aleo_chain_id: "6694886634403"
+aleo_wallet_address: "<your_aleo_wallet_address>"
+aleo_bridge_contract: "vlink_token_bridge_v6.aleo"
+aleo_node_url: "https://api.explorer.provable.com/v1|testnet"
+aleo_private_key_base64: "<your_aleo_private_key_base64>"
+
+# BSC Chain Configuration
+bsc_chain_id: "422842677857"  # BSC Testnet
+bsc_wallet_address: "<your_evm_wallet_address>"
+bsc_bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
+bsc_node_url: "wss://base-sepolia-rpc.publicnode.com"
+bsc_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
+bsc_start_height: 1
+bsc_private_key_base64: "<your_evm_private_key_base64>"
+
+# Service Configuration
+db_dir: "/var/lib/attestor/dev"
+log_dir: "/var/log/attestor/dev"
+
+# Signing Service Configuration
+signing_service_host: "signingservice"
+signing_service_port: 8080
+signing_service_username: "<your_signing_service_username>"
+signing_service_password: "<your_signing_service_password>"
+
+# Collector Service Configuration
+collector_service_url: "<collector_service_url>"
+ca_certificate_base64: "<ca_certificate_base64>"
+attestor_certificate_base64: "<attestor_certificate_base64>"
+attestor_key_base64: "<attestor_key_base64>"
+
+# Metrics Configuration
+prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
+prometheus_job_name: "dev-push-gateway"
+
+# Docker Image Tags
+docker_image_tag_sign: "devnet-v2.0.0-beta1"
+docker_image_tag_chain: "devnet-v2.0.0-beta1"
+deployment_environment: "dev"
