@@ -18,7 +18,7 @@ bsc_wallet_address: "<your_evm_wallet_address>"
 bsc_bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
 bsc_node_url: "wss://base-sepolia-rpc.publicnode.com"
 bsc_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-bsc_start_height: 1
+bsc_start_height: 62353380
 bsc_private_key: "<your_evm_private_key>"
 
 # Service Configuration
