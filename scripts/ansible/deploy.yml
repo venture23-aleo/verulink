@@ -3,16 +3,16 @@
   hosts: all
   become: yes
   gather_facts: yes
-  
+
   vars:
     attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
     mtls_dir: "{{ attestor_install_dir }}/.mtls"
     github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads"
-    
+
   pre_tasks:
     - name: Include environment variables
       include_vars: "{{ env }}_vars.yml"
-    
+
   tasks:
     - name: Create installation directory
       file:
@@ -32,31 +32,24 @@
 
     - name: Determine branch based on environment
       set_fact:
-        branch: "{{ 'develop' if env == 'devnet' else 'staging' if env == 'staging' else 'main' }}"
+        branch: "{{ 'develop' if env == 'devnet' else 'ci/ansible-deployment' if env == 'staging' else 'main' }}"
 
-    - name: Download compose file
-      get_url:
-        url: "{{ github_base_url }}/{{ branch }}/attestor/compose.yaml"
-        dest: "{{ attestor_install_dir }}/compose.yaml"
-        mode: '0644'
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
 
-    - name: Download config file
+    - name: Download config template to local controller
       get_url:
         url: "{{ github_base_url }}/{{ branch }}/attestor/config.yaml.j2"
-        dest: "{{ attestor_install_dir }}/config.yaml.j2"
-        mode: '0644'
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        
-    - name: Render combined attestor config
+        dest: "./config.yaml.j2"
+      delegate_to: localhost
+      become: no
+
+    - name: Render config locally and copy to remote
       template:
-        src: "{{ attestor_install_dir }}/config.yaml.j2"
+        src: "./config.yaml.j2"
         dest: "{{ attestor_install_dir }}/attestor_combined.yaml"
         mode: '0644'
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
+
 
     - name: Read combined config
       slurp:
@@ -67,7 +60,6 @@
       set_fact:
         split_docs: "{{ (combined_file.content | b64decode).split('---') }}"
 
-  
     - name: Write config sections
       copy:
         content: "{{ item.content | trim }}"
@@ -81,25 +73,35 @@
         - { filename: "secrets.yaml",      content: "{{ split_docs[3] }}", mode: "0600" }
         - { filename: ".env",              content: "{{ split_docs[4] }}" }
 
-    - name: Copy mTLS certificates and keys
+    - name: Write mTLS CA certificate from base64
       copy:
-        src: "{{ item.src }}"
-        dest: "{{ mtls_dir }}/{{ item.dest }}"
+        content: "{{ ca_certificate | b64decode }}"
+        dest: "{{ mtls_dir }}/ca.crt"
         mode: '0600'
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
-      loop:
-        - { src: "files/ca.crt", dest: "ca.crt" }
-        - { src: "files/{{ attestor_name }}.crt", dest: "{{ attestor_name }}.crt" }
-        - { src: "files/{{ attestor_name }}.key", dest: "{{ attestor_name }}.key" }
-      when: item.src is file
+
+    - name: Write mTLS attestor certificate from base64
+      copy:
+        content: "{{ attestor_certificate | b64decode }}"
+        dest: "{{ mtls_dir }}/{{ attestor_name }}.crt"
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Write mTLS attestor key from base64
+      copy:
+        content: "{{ attestor_key | b64decode }}"
+        dest: "{{ mtls_dir }}/{{ attestor_name }}.key"
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
 
     - name: Install Docker on Ubuntu/Debian systems
       block:
         - name: Update apt cache
           apt:
             update_cache: yes
-
         - name: Install required packages
           apt:
             name:
@@ -107,34 +109,28 @@
               - curl
               - gnupg
             state: present
-
         - name: Create keyrings directory
           file:
             path: /etc/apt/keyrings
             state: directory
             mode: '0755'
-
         - name: Add Docker's official GPG key
           get_url:
             url: https://download.docker.com/linux/ubuntu/gpg
             dest: /etc/apt/keyrings/docker.asc
             mode: '0644'
-
         - name: Set correct permissions for Docker GPG key
           file:
             path: /etc/apt/keyrings/docker.asc
             mode: '0644'
-
         - name: Add Docker repository to apt sources
           apt_repository:
             repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
             state: present
             filename: docker
-
         - name: Update apt cache after adding repository
           apt:
             update_cache: yes
-
         - name: Install Docker packages
           apt:
             name:
@@ -152,16 +148,11 @@
           dnf:
             name: dnf-plugins-core
             state: present
-
-        - name: Add Docker repository
-          dnf_repository:
-            name: docker-ce-stable
-            description: Docker CE Stable - $basearch
-            baseurl: https://download.docker.com/linux/rhel/$basearch/stable
-            gpgcheck: yes
-            gpgkey: https://download.docker.com/linux/rhel/gpg
-            enabled: yes
-
+        - name: Add Docker repository using shell
+          shell: |
+            sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+          args:
+            creates: /etc/yum.repos.d/docker-ce.repo
         - name: Install Docker packages
           dnf:
             name:
@@ -186,7 +177,7 @@
         append: yes
 
     - name: Pull Docker images
-      docker_image:
+      community.docker.docker_image:
         name: "{{ item }}"
         source: pull
       loop:
@@ -194,7 +185,7 @@
         - "{{ docker_image_tag_chain }}"
 
     - name: Start attestor services
-      docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ attestor_install_dir }}"
         state: present
         restarted: yes
@@ -208,7 +199,7 @@
         - 8081  # chain service port (adjust if different)
 
     - name: Verify services are running
-      docker_container_info:
+      community.docker.docker_container_info:
         name: "{{ item }}"
       register: container_info
       loop:
