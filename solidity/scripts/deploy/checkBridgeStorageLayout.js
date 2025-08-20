@@ -1,5 +1,6 @@
-import hardhat from 'hardhat';
-const { ethers } = hardhat;
+// SPDX-License-Identifier: MIT
+import hardhat from "hardhat";
+const { ethers, upgrades } = hardhat;
 async function main() {
     console.log("Starting Bridge Upgrade Test on Local Hardhat Network");
     console.log("=====================================================");
@@ -34,15 +35,12 @@ async function main() {
 
     console.log("\nStep 3: Deploying Proxy Contract");
     console.log("-----------------------------------");
-    const ProxyContract = await
-        ethers.getContractFactory("ProxyContract");
+    const ProxyContract = await ethers.getContractFactory("ProxyContract");
     // Initialize data for Bridge V1
     const destChainId = 1; // Aleo chain ID
-    const initializeData = new
-        ethers.utils.Interface(BridgeV1.interface.format())
+    const initializeData = new ethers.utils.Interface(BridgeV1.interface.format())
         .encodeFunctionData("Bridge_init", [destChainId, deployer.address]);
-    const bridgeProxy = await ProxyContract.deploy(bridgeV1Impl.address,
-        initializeData);
+    const bridgeProxy = await ProxyContract.deploy(bridgeV1Impl.address, initializeData);
     await bridgeProxy.deployed();
     console.log("✅ Bridge Proxy deployed to:", bridgeProxy.address);
     // Step 4: Create Bridge V1 Contract Instance
@@ -75,6 +73,7 @@ async function main() {
     // Step 7: Upgrade Bridge to V2
     console.log("\nStep 7: Upgrading Bridge to V2");
     console.log("---------------------------------");
+    // Manual upgrade using the proxy's upgradeTo function
     const upgradeTx = await bridgeV1.upgradeTo(bridgeV2Impl.address);
     await upgradeTx.wait();
     console.log("✅ Bridge upgraded to V2 successfully!");
