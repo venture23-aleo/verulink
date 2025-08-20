@@ -43,6 +43,9 @@ interface IIERC20 is IERC20 {
     /// @return True if the account is blacklisted, false otherwise.
     function getBlackListStatus(address _maker) external view returns (bool);
 
+   //  Arbitrum USDT Contract 
+   function isBlocked(address _maker) external view returns (bool);
+
    /// @notice Mints new tokens and assigns them to the specified address.
    /// @param to The address to receive the minted tokens.
    /// @param amount The number of tokens to mint.
