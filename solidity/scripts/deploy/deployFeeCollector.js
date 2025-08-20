@@ -8,10 +8,7 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
-    const chainId = process.env.ETHEREUM_CHAINID;
-    const destChainId = process.env.ALEO_CHAINID;
 
-    const bridgeAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const FeeCollector = await ethers.getContractFactory("FeeCollector");
 
@@ -31,7 +28,7 @@ async function main() {
 
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
     const initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize",
-        [process.env.TOKENSERVICE_PROXY_ADDRESS, deployerSigner.address, process.env.USDC_ADDR, process.env.USDT_ADDR, 100, 175]);
+        [process.env.TOKENSERVICE_PROXY_ADDRESS, deployerSigner.address]);
 
     const feeCollectorProxy = await ProxyContract.deploy(feeCollectorImpl.address, initializeData);
     await feeCollectorProxy.deployTransaction.wait(3);
