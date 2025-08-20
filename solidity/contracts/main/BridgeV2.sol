@@ -9,7 +9,6 @@ import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManage
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
 import {OutgoingPacketManagerImplV2} from "../base/bridge/OutgoingPacketmanagerImplV2.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 
 /// @title Bridge Contract
@@ -20,8 +19,7 @@ contract BridgeV2 is
     AttestorManagerV2,
     BridgeTokenServiceManager,
     ConsumedPacketManagerImpl,
-    OutgoingPacketManagerImplV2,
-    Upgradeable
+    OutgoingPacketManagerImplV2
 {
     using PacketLibrary for PacketLibrary.InPacket;
     
@@ -38,9 +36,18 @@ contract BridgeV2 is
         _disableInitializers();
     }
 
-    function _authorizeUpgrade(address) internal virtual view override {
-        require(msg.sender == owner());
+    /// @dev Initializes the Bridge contract
+    /// @param _destChainId The initial destination chain ID
+    function Bridge_init(
+        uint256 _destChainId,
+        address _owner
+    ) public initializer {
+        __Ownable_init_unchained(_owner);
+        __Pausable_init_unchained();
+        destinationChainId = _destChainId;
+        maxAttestorCount=5;
     }
+
 
     /// @notice Checks if a given destination chain is supported
     /// @param destChainId The destination chain ID to check
