@@ -23,14 +23,14 @@ describe("BlackListService", () => {
         let abi = BlackListService.interface.format();
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
         // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("initialize", [usdcMock.address, usdtMock.address, owner.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address, owner.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxiedContract = BlackListService.attach(proxy.address);
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedContract["initialize"](usdcMock.address, usdtMock.address, owner.address)).to.be.revertedWithCustomError(proxiedContract, 'InvalidInitialization');
+        await expect(proxiedContract["BlackList_init"](usdcMock.address, usdtMock.address, owner.address)).to.be.revertedWithCustomError(proxiedContract, 'InvalidInitialization');
     });
 
     it("should add to and remove from the black list", async () => {
@@ -277,7 +277,7 @@ describe('Upgradeabilty: BlacklistServiceV2', () => {
         BlackListServiceProxy = await ethers.getContractFactory('ProxyContract');
         let abi = BlackListService.interface.format();
         // initializeData = new ethers.utils.Interface(BlackListService.interface.format()).encodeFunctionData(["initializemock"](owner.address, usdcMock.address, usdtMock.address));
-        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("initialize", [usdcMock.address, usdtMock.address, owner.address]);
+        initializeData = new ethers.utils.Interface(abi).encodeFunctionData("BlackList_init", [usdcMock.address, usdtMock.address, owner.address]);
         const proxy = await BlackListServiceProxy.deploy(blackListServiceImpl.address, initializeData);
         await proxy.deployed();
         proxied = BlackListService.attach(proxy.address);
