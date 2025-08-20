@@ -399,7 +399,7 @@ program vlink_token_service_cd_v2.aleo {
     ) -> (public bool, Future) {
         assert_neq(self.caller, ZERO_ADDRESS);
         assert_neq(receiver, ZERO_ADDRESS);
-        const version: u8 = 1u8;
+        const version: u8 = VERSION;
         // call consume on bridge
         let screening_passed: (bool, Future) = vlink_token_bridge_v2.aleo/consume(
             version,
