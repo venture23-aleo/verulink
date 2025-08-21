@@ -17,7 +17,6 @@ bsc_chain_id: "422842677816"  # BSC Mainnet
 bsc_wallet_address: "<your_evm_wallet_address>"
 bsc_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
 bsc_node_url: "wss://bsc-rpc.publicnode.com"
-bsc_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
 bsc_start_height: 58383959
 bsc_private_key: "<your_evm_private_key>"
 
