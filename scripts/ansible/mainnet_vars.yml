@@ -39,7 +39,7 @@ attestor_key_base64: "<attestor_key_base64>"
 
 # Metrics Configuration
 prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
-prometheus_job_name: "bsc-prod-push-gateway"
+prometheus_job_name: "prod-push-gateway-v200"
 
 # Docker Image Tags
 docker_image_tag_sign: "v2.0.0"
