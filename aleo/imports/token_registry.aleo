@@ -701,3 +701,7 @@ finalize transfer_from_public_to_private:
     sub r9.balance r2 into r14;
     cast r0 r1 r14 r9.authorized_until into r15 as Balance;
     set r15 into authorized_balances[r5];
+
+
+constructor:
+    assert.eq edition 0u16;

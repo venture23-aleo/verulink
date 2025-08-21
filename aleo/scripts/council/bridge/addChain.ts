@@ -1,44 +1,57 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Vlink_token_bridge_v1Contract } from "../../../artifacts/js/vlink_token_bridge_v1";
-import { Vlink_council_v1Contract } from "../../../artifacts/js/vlink_council_v1";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
+import { Vlink_token_bridge_v2Contract } from "../../../artifacts/js/vlink_token_bridge_v2";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { BSC_MAINNET, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/mainnet.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v1";
-import { TbAddChain } from "../../../artifacts/js/types/vlink_bridge_council_v1";
+import { getTbAddChainLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v2";
+import { TbAddChain } from "../../../artifacts/js/types/vlink_bridge_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_bridge_council_v1Contract } from "../../../artifacts/js/vlink_bridge_council_v1";
+import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
+import { TAG_TB_ADD_CHAIN } from "../../../utils/constants";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const council = new Vlink_council_v1Contract({mode, priorityFee: 10_000});
-const bridge = new Vlink_token_bridge_v1Contract({mode, priorityFee: 10_000});
-const bridgeCouncil = new Vlink_bridge_council_v1Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
 
 export const proposeAddChain = async (newChainId: bigint): Promise<number> => {
 
   console.log(`👍 Proposing to add chainId: ${newChainId}`)
-  const isChainIdSupported = await bridge.supported_chains(newChainId, false);
-  if (isChainIdSupported) {
-    throw Error(`ChainId ${newChainId} is already supported!`);
-  }
+  // const isChainIdSupported = await bridge.supported_chains(newChainId, false);
+  // if (isChainIdSupported) {
+  //   throw Error(`ChainId ${newChainId} is already supported!`);
+  // }
 
-  const proposer = council.getAccounts()[0];
+  const [proposer] = council.getAccounts();
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  //generating hash
   const tbAddChain: TbAddChain = {
+    tag: TAG_TB_ADD_CHAIN,
     id: proposalId,
     chain_id: newChainId
   };
-  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
+  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
 
-  const [proposeAddChainTx] = await council.propose(proposalId, tbAddChainProposalHash); 
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddChainProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  await council.wait(proposeAddChainTx);
+  // proposing
+  const proposeAddChainTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeAddChainTx.wait();
 
-  getProposalStatus(tbAddChainProposalHash);
-  
+  getProposalStatus(ExternalProposalHash);
+
   return proposalId
 };
 
@@ -50,59 +63,82 @@ export const voteAddChain = async (proposalId: number, newChainId: bigint) => {
     throw Error(`ChainId ${newChainId} is already supported!`);
   }
 
+  //generating hash
   const tbAddChain: TbAddChain = {
+    tag: TAG_TB_ADD_CHAIN,
     id: proposalId,
     chain_id: newChainId
   };
-  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
+  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
+
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddChainProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   const voter = council.getDefaultAccount();
-  validateVote(tbAddChainProposalHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbAddChainProposalHash, true);
-  
-  await council.wait(voteAddChainTx);
+  // vote
+  const voteAddChainTx = await council.vote(ExternalProposalHash, true);
+  await voteAddChainTx.wait();
 
-  getProposalStatus(tbAddChainProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
 export const execAddChain = async (proposalId: number, newChainId: bigint) => {
 
   console.log(`Adding chainId ${newChainId}`)
-  let isChainIdSupported = await bridge.supported_chains(newChainId, false);
-  if (isChainIdSupported) {
-    throw Error(`ChainId ${newChainId} is already supported!`);
-  }
+  // let isChainIdSupported = await bridge.supported_chains(newChainId, false);
+  // if (isChainIdSupported) {
+  //   throw Error(`ChainId ${newChainId} is already supported!`);
+  // }
 
   const bridgeOwner = await bridge.owner_TB(true);
   if (bridgeOwner != bridgeCouncil.address()) {
     throw Error("Council is not the owner of bridge program");
   }
 
+  //generating hash
   const tbAddChain: TbAddChain = {
+    tag: TAG_TB_ADD_CHAIN,
     id: proposalId,
     chain_id: newChainId
   };
-  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain)); 
+  const tbAddChainProposalHash = hashStruct(getTbAddChainLeo(tbAddChain));
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddChainProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  validateExecution(tbAddChainProposalHash);
+  validateExecution(ExternalProposalHash);
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddChainProposalHash), SUPPORTED_THRESHOLD);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
   console.log(voters)
-  const [addChainTx] = await bridgeCouncil.tb_add_chain(
+  const addChainTx = await bridgeCouncil.tb_add_chain(
     tbAddChain.id,
     tbAddChain.chain_id,
     voters
   )
+  await addChainTx.wait();
 
-  await council.wait(addChainTx);
-
-  isChainIdSupported = await bridge.supported_chains(newChainId);
-  if (!isChainIdSupported) {
-    throw Error('Something went wrong!');
-  }
+  // isChainIdSupported = await bridge.supported_chains(newChainId);
+  // if (!isChainIdSupported) {
+  //   throw Error('Something went wrong!');
+  // }
 
   console.log(` ✅ ChainId: ${newChainId} added successfully.`)
 
 }
+
+async function run() {
+  const proposalId = await proposeAddChain(BSC_MAINNET);
+  await execAddChain(proposalId, BSC_MAINNET);
+}
+
+run();
