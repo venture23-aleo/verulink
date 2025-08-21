@@ -9,7 +9,6 @@ import (
 	"math/big"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 	"go.uber.org/zap"
 )
@@ -126,7 +125,7 @@ func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
 	}{}
 
 	if err := json.Unmarshal(data, &mPKt); err != nil {
-		logger.GetLogger().Error("Error while unmarshaling missed packet ", zap.Error(err))
+		zap.L().Error("Error while unmarshaling missed packet ", zap.Error(err))
 		return err
 	}
 

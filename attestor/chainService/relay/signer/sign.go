@@ -13,7 +13,6 @@ import (
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"go.uber.org/zap"
 )
 
@@ -39,8 +38,8 @@ type signService struct {
 
 // HashAndSignScreendedPacket calls the signing service to hash and sign the screened packets
 func (s *signService) HashAndSignScreenedPacket(
-	ctx context.Context, sp *chain.ScreenedPacket) (hash, signature string, err error) {
-
+	ctx context.Context, sp *chain.ScreenedPacket,
+) (hash, signature string, err error) {
 	var data []byte
 	data, err = json.Marshal(sp)
 	if err != nil {
@@ -89,7 +88,6 @@ func (s *signService) HashAndSignScreenedPacket(
 }
 
 func (s *signService) CheckSigningServiceHealth(ctx context.Context, cfg *config.SigningServiceConfig) error {
-
 	u := &url.URL{
 		Host:   fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Path:   cfg.HealthEndpoint,
@@ -119,7 +117,7 @@ func (s *signService) CheckSigningServiceHealth(ctx context.Context, cfg *config
 // SetupSigner checks if url can be dialed and sets up given parameters for chainservice to
 // communicate with signing service securely.
 func SetupSigner(cfg *config.SigningServiceConfig) error {
-	logger.GetLogger().Info("Setting up signer",
+	zap.L().Info("Setting up signer",
 		zap.String("scheme", cfg.Scheme),
 		zap.String("endpoint", cfg.Endpoint),
 		zap.String("host", cfg.Host),
@@ -150,7 +148,6 @@ func SetupSigner(cfg *config.SigningServiceConfig) error {
 // dial simply sends post request on sign endpoint.
 // without proper request body it should respond with status in 4xx range.
 func dial(u string, client *http.Client) error {
-
 	ctx, cncl := context.WithTimeout(context.TODO(), time.Second*30)
 	defer cncl()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, nil)

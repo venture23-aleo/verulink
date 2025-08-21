@@ -52,18 +52,25 @@ func main() {
 		Maintenance: maintenance,
 	}
 
-	err := config.InitConfig(flagArgs)
-	if err != nil {
-		fmt.Println("Error while loading config. ", err)
+	if err := config.InitConfig(flagArgs); err != nil {
+		fmt.Printf("failed to initialize config: %v\n", err)
 		os.Exit(1)
 	}
 
-	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
-	logger.GetLogger().Info("Attestor started")
+	log, err := logger.New(config.GetConfig().LogConfig)
+	if err != nil {
+		fmt.Printf("failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+	defer log.Sync() // flushes buffer, if any
+
+	zap.ReplaceGlobals(log)
+
+	zap.L().Info("Attestor started", zap.String("name", config.GetConfig().Name))
 
 	pusher, err := metrics.InitMetrics(config.GetConfig().CollectorServiceConfig, config.GetConfig().MetricConfig)
 	if err != nil {
-		logger.GetLogger().Error("Error initializing metrics logging", zap.Error(err))
+		zap.L().Error("Error initializing metrics logging", zap.Error(err))
 	}
 
 	signal.Ignore(getIgnoreSignals()...)
@@ -77,21 +84,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: currently embaded only for migration. remove for future releases
-	if maintenance {
-		logger.GetLogger().Info("*********** Starting attestor in maintenance mode **********")
-		if err := store.MigrateKVStore(); err != nil {
-			logger.GetLogger().Error("Migration failed", zap.Error(err))
-			os.Exit(1)
-		}
-		logger.GetLogger().Info("********** Maintenance completed. Please turn off the maintenance flag " +
-		"and restart the attestor service. **********")
-		os.Exit(0)
-	}
-
 	pmetrics := metrics.NewPrometheusMetrics()
 	go metrics.PushMetrics(ctx, pusher, pmetrics)
-	pmetrics.StartVersion(logger.AttestorName, config.GetConfig().Version)
+	pmetrics.StartVersion(config.GetConfig().Name, config.GetConfig().Version)
 
 	relay.StartRelay(ctx, config.GetConfig(), pmetrics)
 }

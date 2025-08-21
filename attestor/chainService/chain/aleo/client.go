@@ -11,7 +11,6 @@ import (
 	aleoRpc "github.com/venture23-aleo/verulink/attestor/chainService/chain/aleo/rpc"
 	"github.com/venture23-aleo/verulink/attestor/chainService/common"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 	"github.com/venture23-aleo/verulink/attestor/chainService/store"
 
@@ -109,9 +108,9 @@ func (cl *Client) Name() string {
 // If it finds some immature packet then it will wait accordingly for that packet.
 // If there are no more packets then it will wait for given wait duration.
 func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uint64, ch chan<- *chain.Packet) {
-	ns := generateNamespcae(baseSeqNumNameSpacePrefix,cl.chainID.String(),chainID)
+	ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), chainID)
 	startSeqNum, _ := store.GetStartingSeqNumAndHeight(ns)
-	cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), chainID, float64(startSeqNum))
+	cl.metrics.StoredSequenceNo(config.GetConfig().Name, cl.chainID.String(), chainID, float64(startSeqNum))
 
 	if nextSeqNum < startSeqNum {
 		nextSeqNum = startSeqNum
@@ -137,11 +136,11 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 
 		switch {
 		case availableInHeight == 0:
-			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", cl.validityWaitDursMap[chainID]))
+			zap.L().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", cl.validityWaitDursMap[chainID]))
 			time.Sleep(cl.validityWaitDursMap[chainID])
 		case availableInHeight > curMaturedHeight:
 			dur := time.Duration(availableInHeight-curMaturedHeight) * cl.avgBlockGenDur
-			logger.GetLogger().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", dur))
+			zap.L().Info("Sleeping aleo client of", zap.String("chainId", chainID), zap.Duration("duration", dur))
 			time.Sleep(dur)
 		}
 
@@ -151,7 +150,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 		}
 
 		for { // pull all packets as long as all are matured against waitDuration
-			logger.GetLogger().Info("Getting packet for", zap.String("chainId", chainID), zap.Uint64("seqnum", nextSeqNum))
+			zap.L().Info("Getting packet for", zap.String("chainId", chainID), zap.Uint64("seqnum", nextSeqNum))
 			pkt, err := cl.getPktWithSeq(ctx, chainID, nextSeqNum)
 			if err != nil {
 				if errors.Is(err, common.ErrPacketNotFound{}) {
@@ -159,7 +158,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 					break
 				}
 
-				logger.GetLogger().Error("Error while fetching aleo packets for", zap.String("chainId", chainID),
+				zap.L().Error("Error while fetching aleo packets for", zap.String("chainId", chainID),
 					zap.Uint64("Seq_num", nextSeqNum),
 					zap.Error(err),
 				)
@@ -170,7 +169,7 @@ func (cl *Client) feedPacket(ctx context.Context, chainID string, nextSeqNum uin
 				availableInHeight = int64(pkt.Height)
 				break
 			}
-			cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
+			cl.metrics.AddInPackets(config.GetConfig().Name, cl.chainID.String(), pkt.Destination.ChainID.String())
 			ch <- pkt
 			nextSeqNum++
 
@@ -198,11 +197,11 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 func (cl *Client) blockHeightPriorWaitDur(ctx context.Context, destChaindId string) int64 {
 	h, err := cl.aleoClient.GetLatestHeight(ctx)
 	if err != nil {
-		logger.GetLogger().Error("error while getting height", zap.Error(err))
-		cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), DOWN)
+		zap.L().Error("error while getting height", zap.Error(err))
+		cl.metrics.UpdateAleoRPCStatus(config.GetConfig().Name, cl.chainID.String(), DOWN)
 		return 0
 	}
-	cl.metrics.UpdateAleoRPCStatus(logger.AttestorName, cl.chainID.String(), UP)
+	cl.metrics.UpdateAleoRPCStatus(config.GetConfig().Name, cl.chainID.String(), UP)
 	waitHeight := cl.waitHeightsMap[destChaindId]
 	return h - waitHeight
 }
@@ -225,8 +224,8 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		if index == len(baseSeqNamespaces) {
 			index = 0
 		}
-		logger.GetLogger().Info("pruning base sequence number", zap.String("namespace", baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
+		zap.L().Info("pruning base sequence number", zap.String("namespace", baseSeqNamespaces[index]))
+		cl.metrics.SetAttestorHealth(config.GetConfig().Name, cl.chainID.String(), float64(time.Now().Unix()))
 
 		var (
 			startSeqNum, endSeqNum uint64
@@ -249,7 +248,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		for i := startSeqNum; i < endSeqNum; i++ {
 			pkt, err := cl.getPktWithSeq(ctx, chainIDStr, i)
 			if err != nil {
-				logger.GetLogger().Error("error while getting packet.",
+				zap.L().Error("error while getting packet.",
 					zap.String("chainId", chainIDStr), zap.Uint64("seq_num", i), zap.Error(err))
 				continue
 			}
@@ -276,14 +275,14 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 		if index == len(retryPacketNamespaces) {
 			index = 0
 		}
-		logger.GetLogger().Info("retrying aleo feeds", zap.String("namespace", retryPacketNamespaces[index]))
+		zap.L().Info("retrying aleo feeds", zap.String("namespace", retryPacketNamespaces[index]))
 
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this is the most efficient approach.
 		pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespaces[index], 10)
 		if err != nil {
-			logger.GetLogger().Error("error while retrieving retry packets", zap.Error(err))
+			zap.L().Error("error while retrieving retry packets", zap.Error(err))
 			goto indIncr
 		}
 		for _, pkt := range pkts {
@@ -305,18 +304,18 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 		case <-ctx.Done():
 			return
 		case pkt := <-retryCh:
-			logger.GetLogger().Info("Adding packet to retry namespace", zap.Any("packet", pkt))
+			zap.L().Info("Adding packet to retry namespace", zap.Any("packet", pkt))
 			ns := generateNamespcae(retryPacketNamespacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
-				logger.GetLogger().Error(
+				zap.L().Error(
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
 			ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
-			logger.GetLogger().Info("Updating base seq num",
+			zap.L().Info("Updating base seq num",
 				zap.String("namespace", ns),
 				zap.String("source_chain_id", pkt.Source.ChainID.String()),
 				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
@@ -324,20 +323,20 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 			)
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, 0)
 			if err != nil {
-				logger.GetLogger().Error(
+				zap.L().Error(
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
-			cl.metrics.UpdateProcessedSequence(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), float64(pkt.Sequence))
+			cl.metrics.UpdateProcessedSequence(config.GetConfig().Name, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), float64(pkt.Sequence))
 		}
 	}
 }
 
 func (cl *Client) GetMissedPacket(
 	ctx context.Context, missedPkt *chain.MissedPacket) (
-	*chain.Packet, error) {
-
+	*chain.Packet, error,
+) {
 	pkt, err := cl.getPktWithSeq(ctx, missedPkt.TargetChainID.String(), missedPkt.SeqNum)
 	if err != nil {
 		return nil, err

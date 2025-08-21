@@ -39,7 +39,14 @@ db_dir: /path/to/db/dir
 consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
-  output_dir: /path/to/log/dir
+  rotation:
+      max_size: 100
+      max_age: 14
+      max_backups: 10
+      compress: true
+  output_paths:
+    - /var/log/attestor/
+    - stdout
 mode: stag
 signing_service:
   host: signingservice

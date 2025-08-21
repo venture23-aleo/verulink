@@ -13,7 +13,6 @@ import (
 
 	abi "github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum/abi"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 	"github.com/venture23-aleo/verulink/attestor/chainService/store"
 
@@ -164,11 +163,11 @@ func (cl *Client) Name() string {
 func (cl *Client) blockHeightPriorWaitDur(ctx context.Context, waitHeight uint64) (uint64, error) {
 	curHeight, err := cl.eth.GetCurrentBlock(ctx)
 	if err != nil {
-		logger.GetLogger().Error("error while getting current height", zap.Any("chain", cl.name))
-		cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), DOWN)
+		zap.L().Error("error while getting current height", zap.Any("chain", cl.name))
+		cl.metrics.UpdateEthRPCStatus(config.GetConfig().Name, cl.chainID.String(), DOWN)
 		return 0, err
 	}
-	cl.metrics.UpdateEthRPCStatus(logger.AttestorName, cl.chainID.String(), UP)
+	cl.metrics.UpdateEthRPCStatus(config.GetConfig().Name, cl.chainID.String(), UP)
 
 	return curHeight - waitHeight, nil // total number of blocks that has to be passed in the waiting duration
 }
@@ -207,7 +206,7 @@ func (cl *Client) filterPacketLogs(ctx context.Context, fromHeight, toHeight uin
 			Height: packetDispatched.Packet.Height.Uint64(),
 		}
 		packets = append(packets, commonPacket)
-		logger.GetLogger().Debug("packet fetched", zap.String("chain", cl.name), zap.Uint64("sequence_number", commonPacket.Sequence))
+		zap.L().Debug("packet fetched", zap.String("chain", cl.name), zap.Uint64("sequence_number", commonPacket.Sequence))
 	}
 	return packets, nil
 }
@@ -218,7 +217,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 		// close the routine for instantly processing packet
 		return
 	}
-	logger.GetLogger().Info("instant packet delivery starting for", zap.String("chain", cl.name))
+	zap.L().Info("instant packet delivery starting for", zap.String("chain", cl.name))
 	ticker := time.NewTicker(dur)
 
 	defer ticker.Stop()
@@ -238,12 +237,12 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 		case <-ticker.C:
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.instantWaitHeightMap[destchain])
 			if err != nil {
-				logger.GetLogger().Error("error while getting block height", zap.Error(err))
+				zap.L().Error("error while getting block height", zap.Error(err))
 				continue
 			}
 			if maturedHeight < cl.instantNextBlockHeightMap[destchain] {
 				diff := cl.instantNextBlockHeightMap[destchain] - maturedHeight
-				logger.GetLogger().Info("Sleeping eth client for instant packet", zap.Uint64("height", diff))
+				zap.L().Info("Sleeping eth client for instant packet", zap.Uint64("height", diff))
 				time.Sleep((time.Duration(diff) * cl.averageBlockGenDur))
 				continue
 			}
@@ -257,7 +256,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 				}
 				pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 				if err != nil {
-					logger.GetLogger().Error("Filter packet log error",
+					zap.L().Error("Filter packet log error",
 						zap.Error(err),
 						zap.Uint64("start_height", startHeight),
 						zap.Uint64("end_height", endHeight),
@@ -271,7 +270,7 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 
 						destChainID := pkt.Destination.ChainID.String()
 						if _, ok := cl.destChainsIDMap[destChainID]; ok {
-							cl.metrics.AddInstantPackets(logger.AttestorName, cl.chainID.String(), destChainID)
+							cl.metrics.AddInstantPackets(config.GetConfig().Name, cl.chainID.String(), destChainID)
 							ch <- pkt
 						}
 					}
@@ -308,7 +307,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 
 			maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.waitHeightMap[destchain])
 			if err != nil {
-				logger.GetLogger().Error("error while getting block height for", zap.String("chain", cl.name), zap.Error(err))
+				zap.L().Error("error while getting block height for", zap.String("chain", cl.name), zap.Error(err))
 				break L1
 			}
 
@@ -327,7 +326,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 				}
 				pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 				if err != nil {
-					logger.GetLogger().Error("Filter packet log error",
+					zap.L().Error("Filter packet log error",
 						zap.Error(err),
 						zap.String("chain", cl.name),
 						zap.Uint64("start_height", startHeight),
@@ -338,7 +337,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 
 				for _, pkt := range pkts {
 					if _, ok := cl.destChainsIDMap[pkt.Destination.ChainID.String()]; ok {
-						cl.metrics.AddInPackets(logger.AttestorName, cl.chainID.String(), pkt.Destination.ChainID.String())
+						cl.metrics.AddInPackets(config.GetConfig().Name, cl.chainID.String(), pkt.Destination.ChainID.String())
 						ch <- pkt
 					}
 				}
@@ -364,7 +363,7 @@ func (cl *Client) FeedPacket(ctx context.Context, ch chan<- *chain.Packet, compl
 		ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), dest)
 		startSeqNum, startHeight := store.GetStartingSeqNumAndHeight(ns)
 
-		cl.metrics.StoredSequenceNo(logger.AttestorName, cl.chainID.String(), dest, float64(startSeqNum))
+		cl.metrics.StoredSequenceNo(config.GetConfig().Name, cl.chainID.String(), dest, float64(startSeqNum))
 
 		if startHeight < baseHeight {
 			baseHeight = startHeight
@@ -389,13 +388,13 @@ func (cl *Client) retryFeed(ctx context.Context, ch chan<- *chain.Packet) {
 			return
 		case <-ticker.C:
 		}
-		logger.GetLogger().Info("retrying feed for ", zap.String("chain", cl.name), zap.String("namespace", cl.retryPktNamespaces[index]))
+		zap.L().Info("retrying feed for ", zap.String("chain", cl.name), zap.String("namespace", cl.retryPktNamespaces[index]))
 		// retrieve and delete is inefficient approach as it deletes the entry each time it retrieves it
 		// for each packet. However with an assumption that packet will rarely reside inside retry namespace
 		// this seems to be the efficient approach.
 		pkts, err := store.RetrieveAndDeleteNPackets(cl.retryPktNamespaces[index], retrievePacketNum)
 		if err != nil {
-			logger.GetLogger().Error("error while retrieving retry packets", zap.String("chain", cl.name), zap.Error(err))
+			zap.L().Error("error while retrieving retry packets", zap.String("chain", cl.name), zap.Error(err))
 			goto indIncr
 		}
 
@@ -425,9 +424,9 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 		case <-ticker.C:
 		}
 
-		logger.GetLogger().Info("pruning base sequence number namespace of ", zap.String("chain", cl.name),
+		zap.L().Info("pruning base sequence number namespace of ", zap.String("chain", cl.name),
 			zap.String("namespace", cl.baseSeqNamespaces[index]))
-		cl.metrics.SetAttestorHealth(logger.AttestorName, cl.chainID.String(), float64(time.Now().Unix()))
+		cl.metrics.SetAttestorHealth(config.GetConfig().Name, cl.chainID.String(), float64(time.Now().Unix()))
 
 		ns := cl.baseSeqNamespaces[index]
 		trimmmdNamespace := strings.TrimPrefix(ns, baseSeqNumNameSpacePrefix+"_")
@@ -454,7 +453,7 @@ func (cl *Client) pruneBaseSeqNum(ctx context.Context, ch chan<- *chain.Packet) 
 
 			pkts, err := cl.filterPacketLogs(ctx, s, e)
 			if err != nil {
-				logger.GetLogger().Error(err.Error())
+				zap.L().Error(err.Error())
 				break
 			}
 
@@ -486,18 +485,18 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 		case <-ctx.Done():
 			return
 		case pkt := <-retryCh:
-			logger.GetLogger().Info("Adding to retry namespace", zap.Any("packet", pkt))
+			zap.L().Info("Adding to retry namespace", zap.Any("packet", pkt))
 			ns := generateNamespcae(retryPacketNamespacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
 			err := store.StoreRetryPacket(ns, pkt)
 			if err != nil {
-				logger.GetLogger().Error(
+				zap.L().Error(
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
 		case pkt := <-completedCh:
 			ns := generateNamespcae(baseSeqNumNameSpacePrefix, cl.chainID.String(), pkt.Destination.ChainID.String())
-			logger.GetLogger().Info("Updating base seq num",
+			zap.L().Info("Updating base seq num",
 				zap.String("namespace", ns),
 				zap.String("source_chain_id", pkt.Source.ChainID.String()),
 				zap.String("dest_chain_id", pkt.Destination.ChainID.String()),
@@ -506,12 +505,12 @@ func (cl *Client) managePacket(ctx context.Context, completedCh chan *chain.Pack
 
 			err := store.StoreBaseSeqNum(ns, pkt.Sequence, pkt.Height)
 			if err != nil {
-				logger.GetLogger().Error(
+				zap.L().Error(
 					"error while storing packet info",
 					zap.Error(err),
 					zap.String("namespace", ns))
 			}
-			cl.metrics.UpdateProcessedSequence(logger.AttestorName, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), float64(pkt.Sequence))
+			cl.metrics.UpdateProcessedSequence(config.GetConfig().Name, pkt.Source.ChainID.String(), pkt.Destination.ChainID.String(), float64(pkt.Sequence))
 		}
 	}
 }
