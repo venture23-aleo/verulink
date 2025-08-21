@@ -114,7 +114,7 @@ log:
     max_backups: 10
     compress: true
   output_paths:
-    - /path/to/log/dir/
+    - /var/log/attestor/
     - stdout
 mode: dev
 signing_service:
