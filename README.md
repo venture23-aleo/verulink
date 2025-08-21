@@ -17,7 +17,7 @@ Verulink is a trusted bridge platform that is designed to help move assets betwe
 ## Attestor
 [Attestor Architecture Overview](./docs/attestor_architecture_overview.md)
 
-[Attestor Deployment Guide](./scripts/DEPLOYMENT.md)
+[Attestor Deployment Guide](./scripts/aws/DEPLOYMENT.md)
 
 ## Contracts
 [Bridge Contract Info](./docs/bridge_contract.md)
