@@ -48,7 +48,11 @@ module.exports = {
         },
         "bsc-testnet": {
             url: process.env.PROVIDER || "",
-            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY, process.env.ADMIN_PRIVATE_KEY] : []
+            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
+        },
+        "bsc-mainnet": {
+            url: process.env.PROVIDER || "",
+            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
         },
     },
     etherscan: {
@@ -58,6 +62,7 @@ module.exports = {
             "base-sepolia": process.env.ETHERSCAN_API_KEY,
             "arbitrum-sepolia": process.env.ETHERSCAN_API_KEY,
             "bsc-testnet": process.env.ETHERSCAN_API_KEY,
+            "bsc-mainnet": process.env.ETHERSCAN_API_KEY,
         },
         customChains: [
             {
@@ -98,6 +103,14 @@ module.exports = {
                 urls: {
                   apiURL: "https://api-testnet.bscscan.com/api",
                   browserURL: "https://testnet.bscscan.com/"
+                }
+              },
+              {
+                network: "bsc-mainnet",
+                chainId: 56,
+                urls: {
+                  apiURL: "https://api.bscscan.com/api",
+                  browserURL: "https://bscscan.com/"
                 }
               }
         ]
