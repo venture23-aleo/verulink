@@ -12,7 +12,6 @@ import (
 )
 
 func TestValidateKeys(t *testing.T) {
-
 	t.Run("valid key should return nil error", func(t *testing.T) {
 		t.Cleanup(func() {
 			pkeyMap = nil
@@ -77,5 +76,20 @@ func TestSetUpPrivateKey(t *testing.T) {
 		require.Error(t, err)
 
 		require.Nil(t, pkeyMap["ethereum"])
+	})
+}
+
+func TestSignHash(t *testing.T) {
+	t.Run("sign hash", func(t *testing.T) {
+		keyDetails := config.KeyPair{
+			PrivateKey:    "b570a51f150a0cfb7a39017365e3cdc8da76af1805a5903f4b83e88eabdc9c21",
+			WalletAddress: "0x832894550007b560bd35d28ce564c2ccd690318f",
+			ChainType:     "evm",
+		}
+		err := SetUpPrivateKey(&keyDetails, "ethereum")
+		require.NoError(t, err)
+		sig, err := sign("0x5fed48e10cfa0f4922d33b2e9addfa84155ea79ad1ed84ea97280fdb941da6f4", "ethereum")
+		require.NoError(t, err)
+		require.Equal(t, "0xcf6708575951fce45d5fab038b65d2adc6ef1f27181e839d72200be13815623d229a5aa6e21003bbccce747bfaee33ff602236f2c15a6a1720f053c958e6e69b1c", sig)
 	})
 }
