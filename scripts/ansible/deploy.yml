@@ -32,7 +32,7 @@
 
     - name: Determine branch based on environment
       set_fact:
-        branch: "{{ 'develop' if env == 'devnet' else 'ci/ansible-deployment' if env == 'staging' else 'main' }}"
+        branch: "{{ 'develop' if env == 'devnet' else 'ci/ansible-deployment' if env == 'staging' else 'release-v2.0.0-bsc' }}"
     
     - name: Download docker compose file
       get_url:
