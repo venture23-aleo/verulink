@@ -11,7 +11,7 @@ async function main() {
     const new_holding = process.env.HOLDING_PROXY_ADDRESS;
     const ERC20TokenService = await ethers.getContractFactory("TokenServiceWrapped");
     const tokenServiceProxyAddress = process.env.WRAPPED_TOKENSERVICE_PROXY_ADDRESS;
-    console.log("Setting Holding to TokenService...");
+    console.log("Setting Holding to TokenService Wrapped...");
     const ERC20TokenServiceABI = ERC20TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);
     await TokenServiceContract.setHolding(new_holding);
