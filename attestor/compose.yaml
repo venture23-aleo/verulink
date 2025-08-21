@@ -1,8 +1,7 @@
 x-dbpath: &p # server as value holder for compose file
   /db
 
-x-logpath: &l
-  /log
+x-logpath: &l /log
 
 services:
   chainservice:
@@ -16,7 +15,7 @@ services:
         target: *p
       - type: volume
         source: log-path
-        target: *l      
+        target: *l
       - type: bind
         source: ./chain_config.yaml
         target: /configs/config.yaml
@@ -25,7 +24,7 @@ services:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
-      MODE: dev
+      MODE: ${DEPLOYMENT_ENVIRONMENT}
       CLEAN_START: false
       MAINTENANCE: false
   signingservice:
@@ -36,7 +35,7 @@ services:
       - ./secrets.yaml:/configs/keys.yaml
     expose:
       - "8080"
-      
+
 volumes:
   db-path:
   log-path:

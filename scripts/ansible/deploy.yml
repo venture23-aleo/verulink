@@ -1,0 +1,177 @@
+---
+- name: Deploy Verulink Attestor Service
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
+    mtls_dir: "{{ attestor_install_dir }}/.mtls"
+    github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads"
+
+  pre_tasks:
+    - name: Include environment variables
+      include_vars: "{{ env }}_vars.yml"
+
+  tasks:
+    - name: Create installation directory
+      file:
+        path: "{{ attestor_install_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Create mTLS directory
+      file:
+        path: "{{ mtls_dir }}"
+        state: directory
+        mode: '0750'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Determine branch based on environment
+      set_fact:
+        branch: "{{ 'develop' if env == 'devnet' else 'ci/ansible-deployment' if env == 'staging' else 'main' }}"
+    
+    - name: Download docker compose file
+      get_url:
+        url: "{{ github_base_url }}/{{ branch }}/attestor/compose.yaml"
+        dest: "{{ attestor_install_dir }}/compose.yml"
+      
+
+    - name: Download config template to local controller
+      get_url:
+        url: "{{ github_base_url }}/{{ branch }}/attestor/config.yaml.j2"
+        dest: "./config.yaml.j2"
+      delegate_to: localhost
+      become: no
+
+    - name: Render config locally and copy to remote
+      template:
+        src: "./config.yaml.j2"
+        dest: "{{ attestor_install_dir }}/attestor_combined.yaml"
+        mode: '0644'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+
+    - name: Read combined config
+      slurp:
+        src: "{{ attestor_install_dir }}/attestor_combined.yaml"
+      register: combined_file
+
+    - name: Split YAML documents
+      set_fact:
+        split_docs: "{{ (combined_file.content | b64decode).split('---') }}"
+
+    - name: Write config sections
+      copy:
+        content: "{{ item.content | trim }}"
+        dest: "{{ attestor_install_dir }}/{{ item.filename }}"
+        mode: "{{ item.mode | default('0644') }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      loop:
+        - { filename: "chain_config.yaml", content: "{{ split_docs[1] }}" }
+        - { filename: "sign_config.yaml",  content: "{{ split_docs[2] }}" }
+        - { filename: "secrets.yaml",      content: "{{ split_docs[3] }}", mode: "0600" }
+        - { filename: ".env",              content: "{{ split_docs[4] }}" }
+      no_log: true
+
+    - name: Write mTLS CA certificate from base64
+      copy:
+        content: "{{ ca_certificate_base64 | b64decode }}"
+        dest: "{{ mtls_dir }}/ca.crt"
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Write mTLS attestor certificate from base64
+      copy:
+        content: "{{ attestor_certificate_base64 | b64decode }}"
+        dest: "{{ mtls_dir }}/{{ attestor_name }}.crt"
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Write mTLS attestor key from base64
+      copy:
+        content: "{{ attestor_key_base64 | b64decode }}"
+        dest: "{{ mtls_dir }}/{{ attestor_name }}.key"
+        mode: '0600'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install required packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Create keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      when: ansible_os_family == "Debian"
+
+    - name: Download Docker GPG key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+      when: ansible_os_family == "Debian"
+
+    - name: Get Ubuntu codename
+      shell: . /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+      register: ubuntu_codename
+      when: ansible_os_family == "Debian"
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ubuntu_codename.stdout }} stable"
+        state: present
+        filename: docker
+      when: ansible_os_family == "Debian"
+
+    - name: Update apt cache after adding repository
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Start attestor services
+      command: docker compose -f {{ attestor_install_dir }}/compose.yml up -d
+
+
+   
