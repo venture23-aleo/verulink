@@ -214,9 +214,9 @@ First, go to the installation root directory `verulink_attestor`.
 	```bash
 	curl -o staging_vars.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/staging/scripts/ansible/staging_vars.yml
     ```
-	Download mainnet ansible vars file
+	Download mainnet v2.0.0 ansible vars file
 	```bash
-	curl -o mainnet_vars.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/scripts/ansible/mainnet_vars.yml
+	curl -o mainnet_vars.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/release-v2.0.0-bsc/scripts/ansible/mainnet_vars.yml
 	```
 2. Create `inventory.txt`
    Sample `inventory.txt` file.
@@ -250,9 +250,9 @@ First, go to the installation root directory `verulink_attestor`.
 	```bash
 	curl -o deploy.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/staging/scripts/ansible/deploy.yml
     ```
-	Download main ansible playbook
+	Download mainnet v2.0.0 ansible playbook
 	```bash
-	curl -o deploy.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/main/scripts/ansible/deploy.yml
+	curl -o deploy.yml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/release-v2.0.0-bsc/scripts/ansible/deploy.yml
 	```
 4. Deploy to a specific environment:
     
