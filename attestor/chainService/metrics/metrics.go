@@ -188,7 +188,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 }
 
 func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig) (*push.Pusher, error) {
-	zap.L().Info("Initilizing metrics")
+	zap.L().Info("Initializing metrics")
 
 	caCert, err := os.ReadFile(cfg.CaCertificate)
 	if err != nil {
