@@ -40,7 +40,14 @@ db_dir: {{ db_dir }}
 consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
-  output_dir: {{ log_dir }}
+  rotation:
+      max_size: 100
+      max_age: 14
+      max_backups: 10
+      compress: true
+  output_paths:
+    - {{ log_dir }}
+    - stdout
 mode: stag
 signing_service:
   host: {{ signing_service_host }}
