@@ -10,21 +10,22 @@ import (
 	"github.com/venture23-aleo/verulink/attestor/signingService/config"
 )
 
-var pKey *ecdsa.PrivateKey
+var pkeyMap = make(map[string]*ecdsa.PrivateKey)
 
 // sign returns the ecdsa signature of the attestors on the input hash string
-func sign(hashString string) (string, error) {
+func sign(hashString string, chainName string) (string, error) {
 	hash := common.HexToHash(hashString)
-	b, err := crypto.Sign(hash.Bytes(), pKey)
+	ppKey := pkeyMap[chainName]
+	b, err := crypto.Sign(hash.Bytes(), ppKey)
 	if err != nil {
 		return "", err
 	}
-
+	b[64] += 27
 	return "0x" + common.Bytes2Hex(b), nil
 }
 
 // SetUpPrivateKey accepts the private-key address pair and validates the private key to set the pKey
-func SetUpPrivateKey(keyPair *config.KeyPair) error {
+func SetUpPrivateKey(keyPair *config.KeyPair, chainName string) error {
 	privKey := strings.Replace(keyPair.PrivateKey, "0x", "", 1) // remove 0x
 
 	privateKey, err := crypto.HexToECDSA(privKey)
@@ -37,7 +38,7 @@ func SetUpPrivateKey(keyPair *config.KeyPair) error {
 		return err
 	}
 
-	pKey = privateKey
+	pkeyMap[chainName] = privateKey
 	return nil
 }
 

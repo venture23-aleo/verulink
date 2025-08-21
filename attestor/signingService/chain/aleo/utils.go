@@ -12,15 +12,12 @@ import (
 // return: string :: example ::
 // "{version: 0u8, sequence: 1u64, source: { chain_id: 1u64, addr: <source contract address in the form of len 32 long byte array in which eth address is represented by the last 20 bytes>}....}
 func constructAleoPacket(pkt *chainService.Packet) (string, error) {
-
 	sourceAddress, err := constructEthAddressForAleoParameter(pkt.Source.Address)
-
 	if err != nil {
 		return "", err
 	}
 
 	senderAddress, err := constructEthAddressForAleoParameter(pkt.Message.SenderAddress)
-
 	if err != nil {
 		return "", err
 	}

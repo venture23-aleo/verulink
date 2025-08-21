@@ -3,7 +3,8 @@ package attestor
 import "testing"
 
 func TestWriteConfig(t *testing.T) {
-	WriteE2EConifg("../../chainService/config.yaml", "https://endpoints.omniatech.io/v1/eth/sepolia/public", "https://api.explorer.aleo.org/v1|testnet", 6243094, 17,false)
+	WriteE2EConifg("config.yaml", "https://eth-sepolia.g.alchemy.com/v2/WddzdzI2o9S3COdT73d5w6AIogbKq4X-", "wss://base-sepolia.drpc.org", 
+	"https://api.explorer.aleo.org/v1|testnet", 6243094,22689851, 1,false)
 }
 
 func TestBuildDockerImage(t *testing.T) {
@@ -16,8 +17,4 @@ func TestRunRelayImage(t *testing.T) {
 
 func TestStopRelayImage(t *testing.T) {
 	StopRelayImage("../../compose.yaml")
-}
-
-func TestBuildRelayImage(t *testing.T) {
-	BuildRelayImage()
 }

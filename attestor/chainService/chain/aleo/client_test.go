@@ -39,16 +39,19 @@ func setupDB(p string) (func(), error) {
 
 func TestNewClient(t *testing.T) {
 	cfg := &config.ChainConfig{
-		Name:                       "aleo",
-		ChainID:                    big.NewInt(1),
-		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:                    "https://node.url|testnet3",
-		PacketValidityWaitDuration: time.Hour * 24,
-		DestChains:                 []string{"1"},
+		Name:           "aleo",
+		ChainID:        big.NewInt(1),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		DestChains: map[string]config.PktValidConfig{
+			"1": {
+				PacketValidityWaitDuration: time.Hour * 24,
+				StartHeight:                100,
+			},
+		},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
-		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("happy path", func(t *testing.T) {
@@ -78,16 +81,19 @@ func TestNewClientUninitializedDB(t *testing.T) {
 
 	store.CloseDB()
 	cfg := &config.ChainConfig{
-		Name:                       "aleo",
-		ChainID:                    big.NewInt(2),
-		BridgeContract:             "0x718721F8A5D3491357965190f5444Ef8B3D37553",
-		NodeUrl:                    "https://node.url|testnet3",
-		PacketValidityWaitDuration: time.Hour * 24,
-		DestChains:                 []string{"1"},
+		Name:           "aleo",
+		ChainID:        big.NewInt(2),
+		BridgeContract: "0x718721F8A5D3491357965190f5444Ef8B3D37553",
+		NodeUrl:        "https://node.url|testnet3",
+		DestChains: map[string]config.PktValidConfig{
+			"1": {
+				PacketValidityWaitDuration: time.Hour * 24,
+				StartHeight:                100,
+			},
+		},
 		StartSeqNum: map[string]uint64{
 			"2": 1,
 		},
-		StartHeight: 100,
 		FilterTopic: "0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9",
 	}
 	t.Run("case: uninitialized database", func(t *testing.T) {
@@ -194,16 +200,18 @@ func TestFeedPacket(t *testing.T) {
 			destChainsIDMap:     map[string]uint64{dstChainId: uint64(1)},
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
-			waitHeight:          1,
+			waitHeightsMap:      map[string]int64{dstChainId: 1},
 			avgBlockGenDur:      time.Second,
 			metrics:             newMetrics(),
 		}
 		pktCh := make(chan *chain.Packet)
+		completedCh := make(chan *chain.Packet)
+		retryCh := make(chan *chain.Packet)
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		go client.FeedPacket(ctx, pktCh)
+		go client.FeedPacket(ctx, pktCh, completedCh, retryCh)
 
 		assert.Equal(t, client.destChainsIDMap[dstChainId], uint64(1))
 
@@ -254,12 +262,14 @@ func TestFeedPacket(t *testing.T) {
 			destChainsIDMap:     map[string]uint64{dstChainId: uint64(1)},
 			retryPacketWaitDur:  time.Hour,
 			pruneBaseSeqWaitDur: time.Hour,
-			waitHeight:          90,
+			waitHeightsMap:      map[string]int64{dstChainId: 90},
 			avgBlockGenDur:      time.Second,
 			metrics:             newMetrics(),
 		}
 		pktCh := make(chan *chain.Packet)
-		go client.FeedPacket(context.Background(), pktCh)
+		completedCh := make(chan *chain.Packet)
+		retryCh := make(chan *chain.Packet)
+		go client.FeedPacket(context.Background(), pktCh, completedCh, retryCh)
 
 		ctx, cncl := context.WithTimeout(context.Background(), time.Second*10)
 		defer cncl()
@@ -281,10 +291,11 @@ func TestRetryFeed(t *testing.T) {
 	client := &Client{
 		retryPacketWaitDur:  time.Second,
 		pruneBaseSeqWaitDur: time.Hour,
+		chainID:             big.NewInt(2),
 	}
 
-	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
-	retryPacketNamespaces = append(retryPacketNamespaces, retryPacketNamespacePrefix+"1")
+	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "_1_" + "1", retryPacketNamespacePrefix + "_2_" + "1", baseSeqNumNameSpacePrefix + "_2_" + "1"})
+	retryPacketNamespaces = append(retryPacketNamespaces, retryPacketNamespacePrefix+"_2_"+"1", retryPacketNamespacePrefix+"_1_"+"1")
 
 	// store packet in retry bucket
 	modelPacket := &chain.Packet{
@@ -309,7 +320,7 @@ func TestRetryFeed(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		modelPacket.Sequence = uint64(i + 1)
-		store.StoreRetryPacket("aleo_rpns1", modelPacket)
+		store.StoreRetryPacket(retryPacketNamespacePrefix+"_2_"+"1", modelPacket)
 	}
 
 	packetCh := make(chan *chain.Packet)
@@ -346,9 +357,12 @@ func TestManagePacket(t *testing.T) {
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
+		chainID:             big.NewInt(2),
 	}
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
 
-	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
+	store.CreateNamespaces([]string{retryPacketNamespacePrefix + "_2_" + "1", baseSeqNumNameSpacePrefix + "_2_" + "1"})
 
 	// store packet in retry bucket
 	modelPacket := &chain.Packet{
@@ -372,10 +386,10 @@ func TestManagePacket(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.managePacket(ctx)
+	go client.managePacket(ctx, completedCh, retryCh)
 	retryCh <- modelPacket
 	time.Sleep(time.Millisecond * 10) // wait to fill in the database
-	pkts, err := store.RetrieveAndDeleteNPackets("aleo_rpns1", 1)
+	pkts, err := store.RetrieveAndDeleteNPackets(retryPacketNamespacePrefix+"_2_"+"1", 1)
 	assert.NoError(t, err)
 	assert.Len(t, pkts, 1)
 	assert.Equal(t, pkts[0], modelPacket)
@@ -386,14 +400,17 @@ func TestManagePacket2(t *testing.T) {
 	dbRemover, err := setupDB("tmp/db")
 	require.NoError(t, err)
 	t.Cleanup(dbRemover)
+	completedCh := make(chan *chain.Packet)
+	retryCh := make(chan *chain.Packet)
 
 	client := &Client{
 		retryPacketWaitDur:  time.Hour,
 		pruneBaseSeqWaitDur: time.Hour,
 		metrics:             newMetrics(),
+		chainID:             big.NewInt(2),
 	}
 
-	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "1", baseSeqNumNameSpacePrefix + "1"})
+	err = store.CreateNamespaces([]string{retryPacketNamespacePrefix + "_2_" + "1", baseSeqNumNameSpacePrefix + "_2_" + "1"})
 	assert.NoError(t, err)
 
 	// store packet in retry bucket
@@ -419,15 +436,15 @@ func TestManagePacket2(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go client.managePacket(ctx)
+	go client.managePacket(ctx, completedCh, retryCh)
 
 	completedCh <- modelPacket
 	time.Sleep(time.Second) // wait to fill in the database
 	exists := store.ExistInGivenNamespace(
-		baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
+		baseSeqNumNameSpacePrefix+"_2_"+modelPacket.Destination.ChainID.String(), modelPacket.Sequence)
 	assert.True(t, exists)
 
-	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+modelPacket.Destination.ChainID.String(), 1)
+	key := store.GetFirstKey[uint64](baseSeqNumNameSpacePrefix+"_2_"+modelPacket.Destination.ChainID.String(), 1)
 	assert.Equal(t, uint64(1), key)
 }
 
@@ -476,7 +493,7 @@ func TestPruneBaseSeqNumber(t *testing.T) {
 		metrics:             newMetrics(),
 	}
 
-	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"1")
+	baseSeqNamespaces = append(baseSeqNamespaces, baseSeqNumNameSpacePrefix+"_2_"+"1")
 	store.CreateNamespace(baseSeqNamespaces[0])
 
 	for i := 0; i < 15; i++ {

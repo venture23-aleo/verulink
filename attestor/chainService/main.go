@@ -11,22 +11,22 @@ import (
 	_ "github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 	"go.uber.org/zap"
-	
+
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"github.com/venture23-aleo/verulink/attestor/chainService/relay"
 	"github.com/venture23-aleo/verulink/attestor/chainService/store"
-
 )
 
 // flags
 var (
-	configFile string
-	dbDir      string
-	logDir     string
-	logEnc     string
-	mode       string
-	cleanStart bool
+	configFile  string
+	dbDir       string
+	logDir      string
+	logEnc      string
+	mode        string
+	cleanStart  bool
+	maintenance bool
 )
 
 func init() {
@@ -36,18 +36,20 @@ func init() {
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
 	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
 	flag.BoolVar(&cleanStart, "clean", false, "Remove local db and start")
+	flag.BoolVar(&maintenance, "maintenance", false, "Start with maintenance mode")
 }
 
 func main() {
 	flag.Parse()
 
 	flagArgs := &config.FlagArgs{
-		ConfigFile: configFile,
-		DBDir:      dbDir,
-		LogDir:     logDir,
-		LogEnc:     logEnc,
-		Mode:       mode,
-		CleanStart: cleanStart,
+		ConfigFile:  configFile,
+		DBDir:       dbDir,
+		LogDir:      logDir,
+		LogEnc:      logEnc,
+		Mode:        mode,
+		CleanStart:  cleanStart,
+		Maintenance: maintenance,
 	}
 
 	err := config.InitConfig(flagArgs)
@@ -73,6 +75,18 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error while initializing db store: %s\n", err.Error())
 		os.Exit(1)
+	}
+
+	// TODO: currently embaded only for migration. remove for future releases
+	if maintenance {
+		logger.GetLogger().Info("*********** Starting attestor in maintenance mode **********")
+		if err := store.MigrateKVStore(); err != nil {
+			logger.GetLogger().Error("Migration failed", zap.Error(err))
+			os.Exit(1)
+		}
+		logger.GetLogger().Info("********** Maintenance completed. Please turn off the maintenance flag " +
+		"and restart the attestor service. **********")
+		os.Exit(0)
 	}
 
 	pmetrics := metrics.NewPrometheusMetrics()

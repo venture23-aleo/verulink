@@ -8,11 +8,7 @@ async function main() {
     const provider = new ethers.providers.JsonRpcProvider(
         process.env.PROVIDER
     );
-    const chainId = process.env.ETHEREUM_CHAINID;
-    const destChainId = process.env.ALEO_CHAINID;
-
-    const bridgeAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
-    const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
+   
     const TokenService = await ethers.getContractFactory("TokenServiceV2");
 
     console.log("Deploying TokenServiceV2");

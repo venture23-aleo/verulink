@@ -10,18 +10,20 @@ import (
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
-	"go.uber.org/zap"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
+	"go.uber.org/zap"
 )
 
-type ClientFunc func(cfg *config.ChainConfig) IClient
-type HashFunc func(sp *ScreenedPacket) string
+type (
+	ClientFunc func(cfg *config.ChainConfig) IClient
+	HashFunc   func(sp *ScreenedPacket) string
+)
 
 type IClient interface {
 	// Name gives the name of the client
 	Name() string
 	// FeedPacket fetches the packet from the source chain and sends it to the channel `ch`
-	FeedPacket(ctx context.Context, ch chan<- *Packet)
+	FeedPacket(ctx context.Context, ch chan<- *Packet, compCh chan *Packet, retryCh chan *Packet)
 	// GetMissedPacket queries the db-service for information about the packet the attestor
 	// node has to reverify and resign
 	GetMissedPacket(
@@ -58,6 +60,9 @@ type Packet struct {
 	Sequence    uint64         `json:"sequence"`
 	Message     Message        `json:"message"`
 	Height      uint64         `json:"height"`
+	// Instant specify that this packet is delivered instantly. This flag is set true based on
+	// version of the packet
+	Instant bool `json:"instant"`
 	// isMissed specify that this packet was somehow missed and db-service administrator has
 	// requested attestors to re-process it
 	isMissed bool
@@ -71,8 +76,16 @@ func (p *Packet) SetMissed(isMissed bool) {
 	p.isMissed = isMissed
 }
 
+func (p *Packet) SetInstant(isInstant bool) {
+	p.Instant = isInstant
+}
+
+func (p *Packet) GetInstant() bool {
+	return p.Instant
+}
+
 func (p *Packet) GetSha256Hash() string {
-	s:= fmt.Sprintf("%d-%s-%s-%d-%s-%d", p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
+	s := fmt.Sprintf("%d-%s-%s-%d-%s-%d", p.Version, p.Source, p.Destination, p.Sequence, p.Message, p.Height)
 	h := sha256.New()
 	h.Write([]byte(s))
 	b := h.Sum(nil)
@@ -104,7 +117,6 @@ type MissedPacketDetails struct {
 
 // Custom unmarshal function to convert a JSON string into a *big.Int
 func (packet *MissedPacket) UnmarshalJSON(data []byte) error {
-
 	mPKt := &struct {
 		TargetChainID string `json:"destChainId"`
 		SourceChainID string `json:"sourceChainId"`

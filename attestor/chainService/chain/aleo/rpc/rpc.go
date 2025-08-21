@@ -37,7 +37,6 @@ func getHttpsResponse(ctx context.Context, method, requestURL string) (*http.Res
 	}
 
 	req = req.WithContext(ctx)
-
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -88,7 +87,6 @@ func (c *Client) GetMappingValue(ctx context.Context, programId, mappingName, ma
 	defer response.Body.Close()
 
 	t, err := io.ReadAll(response.Body)
-
 	if err != nil {
 		return nil, err
 	}
