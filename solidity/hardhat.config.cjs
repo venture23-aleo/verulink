@@ -1,8 +1,9 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@openzeppelin/hardhat-upgrades")
 require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-etherscan");
+
 require("hardhat-contract-sizer");
-require('solidity-coverage')
 require("dotenv").config()
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -45,6 +46,10 @@ module.exports = {
             url: process.env.PROVIDER || "",
             accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
         },
+        "bsc-testnet": {
+            url: process.env.PROVIDER || "",
+            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY, process.env.ADMIN_PRIVATE_KEY] : []
+        },
     },
     etherscan: {
         apiKey: {
@@ -52,6 +57,7 @@ module.exports = {
             holesky: process.env.ETHERSCAN_API_KEY,
             "base-sepolia": process.env.ETHERSCAN_API_KEY,
             "arbitrum-sepolia": process.env.ETHERSCAN_API_KEY,
+            "bsc-testnet": process.env.ETHERSCAN_API_KEY,
         },
         customChains: [
             {
@@ -84,6 +90,14 @@ module.exports = {
                 urls: {
                   apiURL: "https://api-sepolia.arbiscan.io/api",
                   browserURL: "https://sepolia.arbiscan.io/",
+                }
+              },
+              {
+                network: "bsc-testnet",
+                chainId: 97,
+                urls: {
+                  apiURL: "https://api-testnet.bscscan.com/api",
+                  browserURL: "https://testnet.bscscan.com/"
                 }
               }
         ]
