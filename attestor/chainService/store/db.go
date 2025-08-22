@@ -54,7 +54,14 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 	return put(namespace, key, value)
 }
 
+// RetrieveAndDeleteNPackets returns up to n packets from the given namespace,
+// deleting them as it retrieves. If the namespace is empty or does not exist,
+// it returns an empty slice and no error. If n <= 0, it returns immediately
+// with an empty slice and no error.
 func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
+	if n <= 0 {
+		return []*chain.Packet{}, nil
+	}
 	s, err := retrieveAndDeleteNKeysFromFirst(namespace, n)
 	if err != nil {
 		return nil, err
