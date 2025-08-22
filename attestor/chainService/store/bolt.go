@@ -2,7 +2,6 @@ package store
 
 import (
 	"errors"
-	"fmt"
 
 	"go.etcd.io/bbolt"
 )
@@ -149,6 +148,11 @@ func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 		count := 0
 		db.View(func(tx *bbolt.Tx) error { // nolint
 			bkt := tx.Bucket([]byte(bucket))
+			if bkt == nil {
+				// Nothing to read; return an empty channel without error
+				close(ch)
+				return nil
+			}
 			c := bkt.Cursor()
 			for key, value := c.First(); count != n && key != nil; key, value = c.Next() {
 				k := make([]byte, len(key))
@@ -165,25 +169,24 @@ func retrieveNKeyValuesFromFirst(bucket string, n int) <-chan [2][]byte {
 	return ch
 }
 
-// retrieveAndDeleteNKeysFromFirst returns n number of keys from first index and deletes
-// them. It returns error if the bucket is empty
+// retrieveAndDeleteNKeysFromFirst returns up to n values starting from the first key
+// and deletes those keys. If the bucket does not exist or is empty, it returns an
+// empty slice and no error.
 func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err error) {
 	s = make([][]byte, 0, n)
 	err = db.Update(func(tx *bbolt.Tx) error {
 		bkt := tx.Bucket([]byte(bucket))
+		if bkt == nil {
+			return nil
+		}
 		c := bkt.Cursor()
-		count := 0
-		for key, value := c.First(); key != nil && count != n; key, value = c.Next() {
+		for key, value := c.First(); key != nil && len(s) < n; key, value = c.Next() {
 			v := make([]byte, len(value))
 			copy(v, value)
 			if err := bkt.Delete(key); err != nil {
 				return err
 			}
 			s = append(s, v)
-			count++
-		}
-		if count == 0 {
-			return fmt.Errorf("empty bucket: %s", bucket)
 		}
 		return nil
 	})
