@@ -186,7 +186,15 @@ func retrieveAndDeleteNKeysFromFirst(bucket string, n int) (s [][]byte, err erro
 			if err := bkt.Delete(key); err != nil {
 				return err
 			}
+		count := 0
+		for key, value := c.First(); key != nil && count < n; key, value = c.Next() {
+			v := make([]byte, len(value))
+			copy(v, value)
+			if err := bkt.Delete(key); err != nil {
+				return err
+			}
 			s = append(s, v)
+			count++
 		}
 		return nil
 	})
