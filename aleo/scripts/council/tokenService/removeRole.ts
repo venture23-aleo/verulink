@@ -1,23 +1,23 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { Vlink_council_v07Contract } from "../../../artifacts/js/vlink_council_v07";
 import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_REMOVE_ROLE } from "../../../utils/constants";
-import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
+import { Vlink_token_service_v7Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { RemoveRole, SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
-import { getRemoveRoleLeo, getSetRoleForTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
+import { RemoveRole, SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v07";
+import { getRemoveRoleLeo, getSetRoleForTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v07";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
-import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
-import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
+import { Vlink_token_service_council_v07Contract } from "../../../artifacts/js/vlink_token_service_council_v07";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v07";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v07";
 
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v07Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v07Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v7Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////

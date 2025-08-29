@@ -1,22 +1,22 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { Vlink_council_v07Contract } from "../../../artifacts/js/vlink_council_v07";
 import { BSC_MAINNET, COUNCIL_TOTAL_PROPOSALS_INDEX } from "../../../utils/mainnet.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_cd_cuncl_v2";
+import { TsUnpauseToken } from "../../../artifacts/js/types/vlink_token_service_cd_cncl_v07";
 import { TAG_TS2_UNPAUSE_TOKEN } from "../../../utils/constants";
-import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_cd_cuncl_v2";
-import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
-import { Vlink_token_service_cd_cuncl_v2Contract } from "../../../artifacts/js/vlink_token_service_cd_cuncl_v2";
-import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
-import { Vlink_token_service_cd_v2Contract } from "../../../artifacts/js/vlink_token_service_cd_v2";
+import { getTsUnpauseTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_cd_cncl_v07";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v07";
+import { Vlink_token_service_cd_cncl_v07Contract } from "../../../artifacts/js/vlink_token_service_cd_cncl_v07";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v07";
+import { Vlink_token_service_cd_v7Contract } from "../../../artifacts/js/vlink_token_service_cd_v7";
 
 const mode = ExecutionMode.SnarkExecute;
 
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
-const tokenServiceWALEO = new Vlink_token_service_cd_v2Contract({ mode, priorityFee: 10_000 });
-const tokenServiceWALEOCouncil = new Vlink_token_service_cd_cuncl_v2Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v07Contract({ mode, priorityFee: 10_000 });
+const tokenServiceWALEO = new Vlink_token_service_cd_v7Contract({ mode, priorityFee: 10_000 });
+const tokenServiceWALEOCouncil = new Vlink_token_service_cd_cncl_v07Contract({ mode, priorityFee: 10_000 });
 
 
 //////////////////////

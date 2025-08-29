@@ -1,13 +1,13 @@
 import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
 import { ExecutionMode } from "@doko-js/core";
 import { Holder } from "../artifacts/js/types/vlink_token_service_v2";
-import { Vlink_holding_cd_v2Contract } from "../artifacts/js/vlink_holding_cd_v2";
+import { Vlink_holding_cd_v7Contract } from "../artifacts/js/vlink_holding_cd_v7";
 import { CreditsContract } from "../artifacts/js/credits";
 
 
 const mode = ExecutionMode.SnarkExecute;
 
-const holding = new Vlink_holding_cd_v2Contract({ mode: mode });
+const holding = new Vlink_holding_cd_v7Contract({ mode: mode });
 const credits = new CreditsContract({ mode: mode });
 const TIMEOUT = 20000_000;
 (BigInt.prototype as any).toJSON = function () {

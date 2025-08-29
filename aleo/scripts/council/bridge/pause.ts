@@ -1,21 +1,21 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_token_bridge_v2Contract } from "../../../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { Vlink_token_bridge_v7Contract } from "../../../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_council_v07Contract } from "../../../artifacts/js/vlink_council_v07";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_UNPAUSED_VALUE, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_TB_PAUSE } from "../../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbPause, TbUnpause } from "../../../artifacts/js/types/vlink_bridge_council_v2";
-import { getTbPauseLeo, getTbUnpauseLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v2";
+import { TbPause, TbUnpause } from "../../../artifacts/js/types/vlink_bridge_council_v07";
+import { getTbPauseLeo, getTbUnpauseLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v07";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
-import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
-import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
+import { Vlink_bridge_council_v07Contract } from "../../../artifacts/js/vlink_bridge_council_v07";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v07";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v07";
 
 const mode = ExecutionMode.SnarkExecute;
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
+const bridgeCouncil = new Vlink_bridge_council_v07Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
-const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v07Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v7Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////

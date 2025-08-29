@@ -1,20 +1,20 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_cd_v2Contract } from "../../artifacts/js/vlink_token_service_cd_v2";
-import { Vlink_token_service_cd_cuncl_v2Contract } from "../../artifacts/js/vlink_token_service_cd_cuncl_v2";
-import { Vlink_holding_cd_v2Contract } from "../../artifacts/js/vlink_holding_cd_v2";
-import { Vlink_token_bridge_v2Contract } from "../../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
-import { Vlink_bridge_council_v2Contract } from "../../artifacts/js/vlink_bridge_council_v2";
+import { Vlink_token_service_cd_v7Contract } from "../../artifacts/js/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_cncl_v07Contract } from "../../artifacts/js/vlink_token_service_cd_cncl_v07";
+import { Vlink_holding_cd_v7Contract } from "../../artifacts/js/vlink_holding_cd_v7";
+import { Vlink_token_bridge_v7Contract } from "../../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_council_v07Contract } from "../../artifacts/js/vlink_council_v07";
+import { Vlink_bridge_council_v07Contract } from "../../artifacts/js/vlink_bridge_council_v07";
 import { attestor1, attestor2, attestor3, attestor4, attestor5, attestorThreshold, council1, council2, council3, council4, council5, councilThreshold } from "../../utils/mainnet.data";
 
 
 const mode = ExecutionMode.SnarkExecute;
-const tokenServiceWAleo = new Vlink_token_service_cd_v2Contract({ mode: mode });
-const tokenServiceWAleoCouncil = new Vlink_token_service_cd_cuncl_v2Contract({ mode: mode });
-const holdingWAleo = new Vlink_holding_cd_v2Contract({ mode: mode });
-const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenServiceWAleo = new Vlink_token_service_cd_v7Contract({ mode: mode });
+const tokenServiceWAleoCouncil = new Vlink_token_service_cd_cncl_v07Contract({ mode: mode });
+const holdingWAleo = new Vlink_holding_cd_v7Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v07Contract({ mode, priorityFee: 10_000 });
+const bridgeCouncil = new Vlink_bridge_council_v07Contract({ mode, priorityFee: 10_000 });
 
 
 const intialize = async (initialCouncilList: string[], initialCouncilThresholdData: number, initialAttestorsList: string[], initialAttestorThresholdData: number) => {

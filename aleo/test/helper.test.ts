@@ -1,6 +1,6 @@
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v7";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 
 import { aleoArr2Evm, evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
@@ -35,14 +35,14 @@ import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
 import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
 import { ExecutionMode, parseJSONLikeString } from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v2";
-import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
-import { TokenMetadata } from "../artifacts/js/types/vlink_holding_v2";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v07";
+import { Vlink_holding_v7Contract } from "../artifacts/js/vlink_holding_v7";
+import { TokenMetadata } from "../artifacts/js/types/vlink_holding_v7";
 import { Balance, Token, TokenLeo, TokenOwner } from "../artifacts/js/types/token_registry";
 import { hashStruct, hashStructToAddress } from "../utils/hash";
-import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_council_v07Contract } from "../artifacts/js/vlink_token_service_council_v07";
 import { decryptToken, getToken } from "../artifacts/js/leo2js/token_registry";
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
 import { decryptcredits } from "../artifacts/js/leo2js/credits";
 import { getSignerPackets } from "../utils/getRecords";
 import { Transition } from "@doko-js/core/dist/outputs/types/transaction";
@@ -52,12 +52,12 @@ const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/2_tokenService.test.ts
 
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode: mode });
+const tokenService = new Vlink_token_service_v7Contract({ mode: mode });
 const mtsp = new Token_registryContract({ mode: mode });
-const holding = new Vlink_holding_v2Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode: mode });
-const council = new Vlink_council_v2Contract({ mode: mode });
+const holding = new Vlink_holding_v7Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v07Contract({ mode: mode });
+const council = new Vlink_council_v07Contract({ mode: mode });
 
 // let tokenID = BigInt("7190692537453907461105790569797103513515746302149567971663963167242253971983");
 let tokenID;

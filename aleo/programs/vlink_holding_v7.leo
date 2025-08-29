@@ -1,19 +1,23 @@
-import credits.aleo;
+import token_registry.aleo;
 
-program vlink_holding_cd_v2.aleo {
+program vlink_holding_v7.aleo {
 
 
     // for upgrade
     @noupgrade
     async constructor() {}
-
     
+    struct Image {
+        pre_image: field,
+        receiver: address
+    }
+
     struct Holder{
         account : address, 
         token_id : field 
     }
 
-    mapping holdings: Holder => u64;
+    mapping holdings: Holder => u128;
 
     // mapping used as variable
     // true: address of owner 
@@ -22,10 +26,7 @@ program vlink_holding_cd_v2.aleo {
 
     const OWNER_INDEX: bool = true;
 
-    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px; 
-
-    const ALEO_CREDITS_TOKEN_ID: field = 3443843282313283355522573239085696902919850365217539366784739393210722344986field; // The native token address of the Aleo network
-   
+    const INITIALIZER_ADDRESS : address = aleo1rhgdu77hgyqd3xjj8ucu3jj9r2krwz6mnzyd80gncr5fxcwlh5rsvzp9px;    
 
 
     //////////////////////////////
@@ -62,48 +63,77 @@ program vlink_holding_cd_v2.aleo {
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        // set the owner of the program
+        // If attestor does not exist, this is expected to fail
         Mapping::set(owner_holding, OWNER_INDEX, new_owner);
     }
 
 
-    async transition hold_fund(public user: address, public amount: u64) -> Future{
+    async transition hold_fund(public user: address, token_id: field, public amount: u128) -> Future{
         let token_holder: Holder = Holder{
             account: user,
-            token_id: ALEO_CREDITS_TOKEN_ID
+            token_id: token_id
         };
         return(finalize_hold_fund(self.caller, token_holder, amount));
     }
 
-    async function finalize_hold_fund(from: address, token_holder: Holder, amount: u64) {
+    async function finalize_hold_fund(from: address, token_holder: Holder, amount: u128) {
         // Assert only owner can hold fund
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let held_amount: u64 = Mapping::get_or_use(holdings, token_holder, 0u64);
+        let held_amount: u128 = Mapping::get_or_use(holdings, token_holder, 0u128);
 
         // Increase the held amount for the token_user
         Mapping::set(holdings, token_holder, held_amount + amount);
     }
 
-    async transition release_fund(public user: address, public amount: u64) -> Future {
-        let transfer: Future = credits.aleo/transfer_public(user, amount);
+    async transition release_fund(public user: address, public token_id :field, public amount: u128) -> Future {
+        let transfer: Future = token_registry.aleo/transfer_public(token_id, user, amount);
 
         let token_holder: Holder = Holder{
             account: user,
-            token_id: ALEO_CREDITS_TOKEN_ID
+            token_id: token_id
         };
 
         return (finalize_release_fund(self.caller, token_holder, amount, transfer));
     }
 
-    async function finalize_release_fund(from: address, token_holder: Holder, amount: u64, f0: Future) {
+    async function finalize_release_fund(from: address, token_holder: Holder, amount: u128, f0: Future) {
         f0.await();
         // Assert only owner can release fund
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let held_amount: u64 = Mapping::get(holdings, token_holder);
+        let held_amount: u128 = Mapping::get(holdings, token_holder);
+
+        // Decrease the held amount for the token_user
+        Mapping::set(holdings, token_holder, held_amount - amount);
+    }
+
+    async transition release_fund_private(receiver: address,pre_image: field, public token_id :field, public amount: u128) -> (token_registry.aleo/Token, Future) {
+
+        let image_address: address = BHP256::hash_to_address(Image {
+          pre_image,
+          receiver  
+        });
+
+        let transfer_private: (token_registry.aleo/Token, Future) = token_registry.aleo/transfer_public_to_private(token_id, receiver, amount, false);
+
+        let token_holder: Holder = Holder{
+            account: image_address,
+            token_id: token_id
+        };
+
+        return (transfer_private.0, finalize_release_fund_private(self.caller, token_holder, amount, transfer_private.1));
+    }
+
+    async function finalize_release_fund_private(from: address, token_holder: Holder, amount: u128, f0: Future) {
+        f0.await();
+        // Assert only owner can release fund
+        let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
+        assert_eq(from, owner);
+
+        let held_amount: u128 = Mapping::get(holdings, token_holder);
 
         // Decrease the held amount for the token_user
         Mapping::set(holdings, token_holder, held_amount - amount);

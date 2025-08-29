@@ -1,9 +1,9 @@
 import { PrivateKey } from "@aleohq/sdk";
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
-import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
+import { Vlink_bridge_council_v07Contract } from "../artifacts/js/vlink_bridge_council_v07";
+import { Vlink_token_service_council_v07Contract } from "../artifacts/js/vlink_token_service_council_v07";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 
 
 import {
@@ -18,7 +18,7 @@ import {
   getUpdateThresholdLeo,
   getProposalVoteLeo,
   getWithdrawalLeo
-} from "../artifacts/js/js2leo/vlink_council_v2";
+} from "../artifacts/js/js2leo/vlink_council_v07";
 import {
   AddMember,
   RemoveMember,
@@ -27,12 +27,12 @@ import {
   ProposalVoterKey,
   Withdrawal,
   ExternalProposal
-} from "../artifacts/js/types/vlink_council_v2";
+} from "../artifacts/js/types/vlink_council_v07";
 
 import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
 import { Token_registryContract } from "../artifacts/js/token_registry";
-import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
+import { Vlink_holding_v7Contract } from "../artifacts/js/vlink_holding_v7";
 import { Balance } from "../artifacts/js/types/token_registry";
 import { TokenOwner } from "../artifacts/js/types/vlink_token_service_v7";
 
@@ -42,10 +42,10 @@ const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/5_council.test.ts
 
 const tokenRegistry = new Token_registryContract({ mode })
-const holding = new Vlink_holding_v2Contract({ mode })
-const council = new Vlink_council_v2Contract({ mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode });
-const bridge = new Vlink_token_bridge_v2Contract({ mode });
+const holding = new Vlink_holding_v7Contract({ mode })
+const council = new Vlink_council_v07Contract({ mode });
+const tokenService = new Vlink_token_service_v7Contract({ mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode });
 
 const TAG_ADD_MEMBER = 1;
 const TAG_REMOVE_MEMBER = 2;

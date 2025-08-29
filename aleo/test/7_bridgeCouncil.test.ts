@@ -1,9 +1,9 @@
 import { PrivateKey } from "@aleohq/sdk";
 
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
+import { Vlink_bridge_council_v07Contract } from "../artifacts/js/vlink_bridge_council_v07";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 
 import {
   ALEO_ZERO_ADDRESS,
@@ -19,12 +19,12 @@ import {
 import {
   getExternalProposalLeo,
   getProposalVoteLeo
-} from "../artifacts/js/js2leo/vlink_council_v2";
+} from "../artifacts/js/js2leo/vlink_council_v07";
 import {
   ExternalProposal,
   ProposalVote,
   ProposalVoterKey
-} from "../artifacts/js/types/vlink_council_v2";
+} from "../artifacts/js/types/vlink_council_v07";
 
 
 import { WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
@@ -41,7 +41,7 @@ import {
   TbRemoveService,
   TbUnpause,
   TbTransferOwnership
-} from "../artifacts/js/types/vlink_bridge_council_v2";
+} from "../artifacts/js/types/vlink_bridge_council_v07";
 
 import {
   getTbAddChainLeo,
@@ -53,22 +53,22 @@ import {
   getTbRemoveServiceLeo,
   getTbUnpauseLeo,
   getTbTransferOwnershipLeo
-} from "../artifacts/js/js2leo/vlink_bridge_council_v2";
-import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
+} from "../artifacts/js/js2leo/vlink_bridge_council_v07";
+import { Vlink_holding_v7Contract } from "../artifacts/js/vlink_holding_v7";
 import { Token_registryContract } from "../artifacts/js/token_registry";
-import { TbUpdateThreshold } from "../artifacts/js/types/vlink_bridge_council_v2";
+import { TbUpdateThreshold } from "../artifacts/js/types/vlink_bridge_council_v07";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../utils/testdata.data";
-import { getTbUpdateThresholdLeo } from "../artifacts/js/js2leo/vlink_bridge_council_v2";
+import { getTbUpdateThresholdLeo } from "../artifacts/js/js2leo/vlink_bridge_council_v07";
 
 
 const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/7_bridgeCouncil.test.ts
 
-const council = new Vlink_council_v2Contract({ mode });
-const holding = new Vlink_holding_v2Contract({ mode })
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode });
-const bridge = new Vlink_token_bridge_v2Contract({ mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode });
+const council = new Vlink_council_v07Contract({ mode });
+const holding = new Vlink_holding_v7Contract({ mode })
+const bridgeCouncil = new Vlink_bridge_council_v07Contract({ mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode });
+const tokenService = new Vlink_token_service_v7Contract({ mode });
 
 const TAG_TB_TRANSFER_OWNERSHIP = 1;
 const TAG_TB_ADD_ATTESTOR = 2;

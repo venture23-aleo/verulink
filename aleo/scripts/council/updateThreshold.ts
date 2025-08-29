@@ -1,17 +1,17 @@
 import { hashStruct } from "../../utils/hash";
 
-import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
+import { Vlink_council_v07Contract } from "../../artifacts/js/vlink_council_v07";
 import { COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_UPDATE_THRESHOLD } from "../../utils/constants";
 import { getProposalStatus, validateExecution, validateProposer } from "./councilUtils";
-import { UpdateThreshold } from "../../artifacts/js/types/vlink_council_v2";
-import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/vlink_council_v2";
+import { UpdateThreshold } from "../../artifacts/js/types/vlink_council_v07";
+import { getUpdateThresholdLeo } from "../../artifacts/js/js2leo/vlink_council_v07";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v07Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////

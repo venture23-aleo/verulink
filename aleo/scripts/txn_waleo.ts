@@ -1,5 +1,5 @@
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_service_cd_v2Contract } from "../artifacts/js/vlink_token_service_cd_v2";
+import { Vlink_token_service_cd_v7Contract } from "../artifacts/js/vlink_token_service_cd_v7";
 import { evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 import { BSC_TESTNET, waleoBSCTokenAddress, waleoBSCTokenService } from "../utils/testdata.data";
 import { ALEO_ZERO_ADDRESS } from "../utils/constants";
@@ -7,7 +7,7 @@ import { ALEO_ZERO_ADDRESS } from "../utils/constants";
 
 
 const mode = ExecutionMode.SnarkExecute;
-const tokenServiceWAleo = new Vlink_token_service_cd_v2Contract({ mode: mode });
+const tokenServiceWAleo = new Vlink_token_service_cd_v7Contract({ mode: mode });
 
 
 

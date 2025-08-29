@@ -28,21 +28,21 @@ import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../../utils/eth
 import { signPacket } from "../../utils/sign";
 import { hashStruct } from "../../utils/hash";
 // import { getConnectorUpdateLeo, getHoldingReleaseLeo } from "../artifacts/js/js2leo/council_v0003";
-import { InPacket, PacketId } from "../../artifacts/js/types/vlink_token_bridge_v2";
+import { InPacket, PacketId } from "../../artifacts/js/types/vlink_token_bridge_v7";
 // import { ConnectorUpdate, HoldingRelease, leoProposalVoteSchema } from "../artifacts/js/types/council_v0003";
 import { createRandomPacket } from "../../utils/packet";
 import { getBytes } from "ethers";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_token_bridge_v2Contract } from "../../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../../artifacts/js/vlink_token_service_v7";
-import { Vlink_council_v2Contract } from "../../artifacts/js/vlink_council_v2";
+import { Vlink_token_bridge_v7Contract } from "../../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_token_service_v7Contract } from "../../artifacts/js/vlink_token_service_v7";
+import { Vlink_council_v07Contract } from "../../artifacts/js/vlink_council_v07";
 
 const mode = ExecutionMode.SnarkExecute;
 
 
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode: mode });
-const council = new Vlink_council_v2Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode: mode });
+const tokenService = new Vlink_token_service_v7Contract({ mode: mode });
+const council = new Vlink_council_v07Contract({ mode: mode });
 const wusdcToken = new Wusdc_token_v0003Contract({ mode: mode });
 const wusdcHolding = new Wusdc_holding_v0003Contract({ mode: mode });
 const wusdcConnector = new Wusdc_connector_v0003_0Contract({ mode: mode });

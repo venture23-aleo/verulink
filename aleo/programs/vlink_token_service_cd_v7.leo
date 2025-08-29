@@ -1,8 +1,8 @@
 // The 'token_service' program.
-import vlink_token_bridge_v2.aleo;
-import vlink_holding_cd_v2.aleo;
+import vlink_token_bridge_v7.aleo;
+import vlink_holding_cd_v7.aleo;
 
-program vlink_token_service_cd_v2.aleo {
+program vlink_token_service_cd_v7.aleo {
 
 
     // for upgrade
@@ -58,7 +58,7 @@ program vlink_token_service_cd_v2.aleo {
     const PAUSED_VALUE: bool = true;
     const UNPAUSED_VALUE: bool = false;
 
-    const HOLDING_ADDRESS: address = vlink_holding_cd_v2.aleo;
+    const HOLDING_ADDRESS: address = vlink_holding_cd_v7.aleo;
 
     const ZERO_ADDRESS: address = aleo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3ljyzc;
  
@@ -332,7 +332,7 @@ program vlink_token_service_cd_v2.aleo {
         // lock funds
         let transfer_from_user: Future = credits.aleo/transfer_public_as_signer(self.address, amount - fee_platform);
         // transfer platform fee
-        let transfer_platform_fee: Future = credits.aleo/transfer_public_as_signer(vlink_token_service_cd_cuncl_v2.aleo, fee_platform);
+        let transfer_platform_fee: Future = credits.aleo/transfer_public_as_signer(vlink_token_service_cd_cncl_v07.aleo, fee_platform);
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
@@ -341,7 +341,7 @@ program vlink_token_service_cd_v2.aleo {
 
         let version: u8 = VERSION;
 
-        let publish : Future = vlink_token_bridge_v2.aleo/publish(
+        let publish : Future = vlink_token_bridge_v7.aleo/publish(
             version,
             dest_chain_id, 
             pad_20_to_32(dest_token_service), 
@@ -401,7 +401,7 @@ program vlink_token_service_cd_v2.aleo {
         assert_neq(receiver, ZERO_ADDRESS);
         const version: u8 = VERSION;
         // call consume on bridge
-        let screening_passed: (bool, Future) = vlink_token_bridge_v2.aleo/consume(
+        let screening_passed: (bool, Future) = vlink_token_bridge_v7.aleo/consume(
             version,
             source_chain_id, 
             pad_20_to_32(source_token_service_address), 
@@ -431,7 +431,7 @@ program vlink_token_service_cd_v2.aleo {
         // send to receiver
         let send_to_user: Future = credits.aleo/transfer_public(actual_receiver, amount);
 
-        let hold: Future = vlink_holding_cd_v2.aleo/hold_fund(receiver, held_amount);
+        let hold: Future = vlink_holding_cd_v7.aleo/hold_fund(receiver, held_amount);
 
         return (screening_passed.0, finalize_token_receive_public(amount, held_amount, chain_token_info, source_token_service_address, screening_passed.1, send_to_user, hold));
     }
@@ -489,7 +489,7 @@ program vlink_token_service_cd_v2.aleo {
     }
 
     async transition holding_release(public receiver: address, public amount: u64) -> Future{
-        let release: Future = vlink_holding_cd_v2.aleo/release_fund(receiver, amount);
+        let release: Future = vlink_holding_cd_v7.aleo/release_fund(receiver, amount);
         return finalize_holding_release(self.caller, amount, release);
     }
     async function finalize_holding_release(from:address, amount:u64, f0: Future){
@@ -503,7 +503,7 @@ program vlink_token_service_cd_v2.aleo {
 
     async transition holding_transfer_ownership(public new_owner: address) -> Future{
         assert_neq(new_owner, ZERO_ADDRESS);
-        let transfer_ownership: Future = vlink_holding_cd_v2.aleo/transfer_ownership_holding(new_owner);
+        let transfer_ownership: Future = vlink_holding_cd_v7.aleo/transfer_ownership_holding(new_owner);
         return finalize_holding_TF_OWN(self.caller, transfer_ownership);
     }
     async function finalize_holding_TF_OWN(from:address, f0: Future){

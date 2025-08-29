@@ -1,5 +1,5 @@
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v7";
 import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import {
@@ -23,23 +23,23 @@ import {
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
 import { ExecutionMode } from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v2";
-import { Vlink_token_service_cd_v2Contract } from "../artifacts/js/vlink_token_service_cd_v2";
-import { Vlink_token_service_cd_cuncl_v2Contract } from "../artifacts/js/vlink_token_service_cd_cuncl_v2";
-import { Vlink_holding_cd_v2Contract } from "../artifacts/js/vlink_holding_cd_v2";
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_v7Contract } from "../artifacts/js/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_cncl_v07Contract } from "../artifacts/js/vlink_token_service_cd_cncl_v07";
+import { Vlink_holding_cd_v7Contract } from "../artifacts/js/vlink_holding_cd_v7";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import { VERSION_PRIVATE_NORELAYER_NOPREDICATE } from "../utils/constants";
-import { Holder } from "../artifacts/js/types/vlink_holding_cd_v2";
+import { Holder } from "../artifacts/js/types/vlink_holding_cd_v7";
 import { CreditsContract } from "../artifacts/js/credits";
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenServiceWAleo = new Vlink_token_service_cd_v2Contract({ mode: mode });
-const tokenServiceWAleoCouncil = new Vlink_token_service_cd_cuncl_v2Contract({ mode: mode });
-const holdingWAleo = new Vlink_holding_cd_v2Contract({ mode: mode });
-const council = new Vlink_council_v2Contract({ mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode: mode });
+const tokenServiceWAleo = new Vlink_token_service_cd_v7Contract({ mode: mode });
+const tokenServiceWAleoCouncil = new Vlink_token_service_cd_cncl_v07Contract({ mode: mode });
+const holdingWAleo = new Vlink_holding_cd_v7Contract({ mode: mode });
+const council = new Vlink_council_v07Contract({ mode });
 const tokenRegistry = new Token_registryContract({ mode: mode });
 const credits = new CreditsContract({ mode: mode });
 //npm run test -- --runInBand ./test/9_2_ts_waleo_core.test.ts

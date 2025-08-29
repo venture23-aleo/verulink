@@ -1,4 +1,4 @@
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
 import { aleoArr2Evm, evm2AleoArr, evm2AleoArrWithoutPadding } from "../utils/ethAddress";
 
 import {
@@ -18,15 +18,15 @@ import {
     BSC_TESTNET
 } from "../utils/testdata.data";
 import { ExecutionMode } from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v2";
-import { Vlink_token_service_cd_v2Contract } from "../artifacts/js/vlink_token_service_cd_v2";
-import { Vlink_holding_cd_v2Contract } from "../artifacts/js/vlink_holding_cd_v2";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_v7Contract } from "../artifacts/js/vlink_token_service_cd_v7";
+import { Vlink_holding_cd_v7Contract } from "../artifacts/js/vlink_holding_cd_v7";
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenServiceWAleo = new Vlink_token_service_cd_v2Contract({ mode: mode });
-const holdingWAleo = new Vlink_holding_cd_v2Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode: mode });
+const tokenServiceWAleo = new Vlink_token_service_cd_v7Contract({ mode: mode });
+const holdingWAleo = new Vlink_holding_cd_v7Contract({ mode: mode });
 //npm run test -- --runInBand ./test/9_1tokenService_waleo_setup.test.ts
 
 let tokenID;

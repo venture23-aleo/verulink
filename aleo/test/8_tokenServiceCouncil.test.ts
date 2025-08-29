@@ -1,6 +1,6 @@
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
+import { Vlink_token_service_council_v07Contract } from "../artifacts/js/vlink_token_service_council_v07";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v2";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import {
   ALEO_ZERO_ADDRESS,
@@ -25,7 +25,7 @@ import {
   TsUpdateMaxMinTransfer,
   AddChainExistingToken,
   UpdateFees
-} from "../artifacts/js/types/vlink_token_service_council_v2";
+} from "../artifacts/js/types/vlink_token_service_council_v07";
 import {
   getTsAddTokenLeo,
   getTsRemoveTokenLeo,
@@ -35,27 +35,27 @@ import {
   getTsUpdateMaxMinTransferLeo,
   getAddChainExistingTokenLeo,
   getUpdateFeesLeo,
-} from "../artifacts/js/js2leo/vlink_token_service_council_v2";
+} from "../artifacts/js/js2leo/vlink_token_service_council_v07";
 import { evm2AleoArrWithoutPadding } from "../utils/ethAddress";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_holding_v7Contract } from "../artifacts/js/vlink_holding_v7";
 import { baseChainId, baseTsContractAddr, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX } from "../utils/testdata.data";
-import { RegisterToken, RemoveOtherChainAddresses, SetRoleForToken, TsTransferOwnership, UpdateTokenMetadata } from "../artifacts/js/types/vlink_token_service_council_v2";
-import { getRegisterTokenLeo, getRemoveOtherChainAddressesLeo, getSetRoleForTokenLeo, getUpdateTokenMetadataLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
-import { getTsTransferOwnershipLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v2";
-import { ExternalProposal } from "../artifacts/js/types/vlink_council_v2";
-import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v2";
+import { RegisterToken, RemoveOtherChainAddresses, SetRoleForToken, TsTransferOwnership, UpdateTokenMetadata } from "../artifacts/js/types/vlink_token_service_council_v07";
+import { getRegisterTokenLeo, getRemoveOtherChainAddressesLeo, getSetRoleForTokenLeo, getUpdateTokenMetadataLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v07";
+import { getTsTransferOwnershipLeo } from "../artifacts/js/js2leo/vlink_token_service_council_v07";
+import { ExternalProposal } from "../artifacts/js/types/vlink_council_v07";
+import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v07";
 
 
 const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/8_tokenServiceCouncil.test.ts
 
-const council = new Vlink_council_v2Contract({ mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_council_v2Contract({ mode });
+const council = new Vlink_council_v07Contract({ mode });
+const tokenService = new Vlink_token_service_v7Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_council_v07Contract({ mode });
 const tokenRegistry = new Token_registryContract({ mode })
-const bridge = new Vlink_token_bridge_v2Contract({ mode });
-const holding = new Vlink_holding_v2Contract({ mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode });
+const holding = new Vlink_holding_v7Contract({ mode });
 
 
 const TAG_TS_TRANSFER_OWNERSHIP = 1;

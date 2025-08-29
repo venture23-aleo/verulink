@@ -1,10 +1,10 @@
 import { Token_registryContract } from "../artifacts/js/token_registry";
-import { Vlink_holding_v2Contract } from "../artifacts/js/vlink_holding_v2";
+import { Vlink_holding_v7Contract } from "../artifacts/js/vlink_holding_v7";
 import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
 import { ExecutionMode } from "@doko-js/core";
 import { hashStruct, hashStructToAddress } from "../utils/hash";
 import { TokenOwner } from "../artifacts/js/types/token_registry";
-import { Image } from "../artifacts/js/types/vlink_holding_v2";
+import { Image } from "../artifacts/js/types/vlink_holding_v7";
 import { Holder } from "../artifacts/js/types/vlink_token_service_v7";
 
 
@@ -12,7 +12,7 @@ const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/4_holding.test.ts
 
 const tokenRegistry = new Token_registryContract({ mode: mode });
-const holding = new Vlink_holding_v2Contract({ mode: mode });
+const holding = new Vlink_holding_v7Contract({ mode: mode });
 const TIMEOUT = 20000_000;
 (BigInt.prototype as any).toJSON = function () {
     return this.toString() + "field";

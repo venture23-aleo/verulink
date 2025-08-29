@@ -1,7 +1,7 @@
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v2";
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v7";
 import { aleoArr2Evm, evm2AleoArr, generateRandomEthAddr } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
 import {
@@ -32,9 +32,9 @@ import { ExecutionMode } from "@doko-js/core";
 const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/1_tokenBridge.test.ts
 
-const bridge = new Vlink_token_bridge_v2Contract({ mode: mode });
-const tokenService = new Vlink_token_service_v2Contract({ mode: mode });
-const council = new Vlink_council_v2Contract({ mode: mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode: mode });
+const tokenService = new Vlink_token_service_v7Contract({ mode: mode });
+const council = new Vlink_council_v07Contract({ mode: mode });
 
 const tokenID = BigInt(123456789);
 

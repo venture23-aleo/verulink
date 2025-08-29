@@ -1,4 +1,4 @@
-import { Vlink_council_v2Contract } from "../artifacts/js/vlink_council_v2";
+import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
 import {
   ALEO_ZERO_ADDRESS,
   COUNCIL_TOTAL_PROPOSALS_INDEX,
@@ -12,17 +12,17 @@ import { hashStruct } from "../utils/hash";
 import { ExecutionMode } from "@doko-js/core";
 import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { ALEO_CREDITS_TOKEN_ID, aleoChainId, baseChainId, baseTsContractAddr, BRIDGE_PAUSABILITY_INDEX, BRIDGE_PAUSED_VALUE, BRIDGE_THRESHOLD_INDEX, BRIDGE_TOTAL_ATTESTORS_INDEX, BRIDGE_UNPAUSED_VALUE, BSC_TESTNET, COUNCIL_THRESHOLD_INDEX, COUNCIL_TOTAL_MEMBERS_INDEX, ethTsRandomContractAddress2, VERSION_PUBLIC_NORELAYER_NOPREDICATE, VERSION_PUBLIC_RELAYER_NOPREDICATE } from "../utils/testdata.data";
-import { ExternalProposal } from "../artifacts/js/types/vlink_council_v2";
-import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v2";
-import { Vlink_token_service_cd_v2Contract } from "../artifacts/js/vlink_token_service_cd_v2";
-import { Vlink_token_service_cd_cuncl_v2Contract } from "../artifacts/js/vlink_token_service_cd_cuncl_v2";
-import { AddChainExistingToken, RemoveOtherChainAddresses, TsAddTokenInfo, TsPauseToken, TsTransferOwnership, TsUnpauseToken, TsUpdateMaxMinTransfer, UpdateFees, UpdateTokenServiceSetting, TransferOwnershipHolding, HoldingRelease, WithdrawalCreditsFees } from "../artifacts/js/types/vlink_token_service_cd_cuncl_v2";
-import { getAddChainExistingTokenLeo, getRemoveOtherChainAddressesLeo, getTsAddTokenInfoLeo, getTsPauseTokenLeo, getTsTransferOwnershipLeo, getTsUnpauseTokenLeo, getTsUpdateMaxMinTransferLeo, getUpdateFeesLeo, getUpdateTokenServiceSettingLeo, getHoldingReleaseLeo, getWithdrawalCreditsFeesLeo } from "../artifacts/js/js2leo/vlink_token_service_cd_cuncl_v2";
-import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v2";
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_holding_cd_v2Contract } from "../artifacts/js/vlink_holding_cd_v2";
+import { ExternalProposal } from "../artifacts/js/types/vlink_council_v07";
+import { getExternalProposalLeo } from "../artifacts/js/js2leo/vlink_council_v07";
+import { Vlink_token_service_cd_v7Contract } from "../artifacts/js/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_cncl_v07Contract } from "../artifacts/js/vlink_token_service_cd_cncl_v07";
+import { AddChainExistingToken, RemoveOtherChainAddresses, TsAddTokenInfo, TsPauseToken, TsTransferOwnership, TsUnpauseToken, TsUpdateMaxMinTransfer, UpdateFees, UpdateTokenServiceSetting, TransferOwnershipHolding, HoldingRelease, WithdrawalCreditsFees } from "../artifacts/js/types/vlink_token_service_cd_cncl_v07";
+import { getAddChainExistingTokenLeo, getRemoveOtherChainAddressesLeo, getTsAddTokenInfoLeo, getTsPauseTokenLeo, getTsTransferOwnershipLeo, getTsUnpauseTokenLeo, getTsUpdateMaxMinTransferLeo, getUpdateFeesLeo, getUpdateTokenServiceSettingLeo, getHoldingReleaseLeo, getWithdrawalCreditsFeesLeo } from "../artifacts/js/js2leo/vlink_token_service_cd_cncl_v07";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v7";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_holding_cd_v7Contract } from "../artifacts/js/vlink_holding_cd_v7";
 import { Token_registryContract } from "../artifacts/js/token_registry";
-import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v2";
+import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v7";
 import { createRandomPacket } from "../utils/packet";
 import { signPacket } from "../utils/sign";
 import { CreditsContract } from "../artifacts/js/credits";
@@ -31,11 +31,11 @@ import { CreditsContract } from "../artifacts/js/credits";
 const mode = ExecutionMode.SnarkExecute;
 // npm run test -- --runInBand ./test/11_tokenService_cd_council.test.ts
 
-const council = new Vlink_council_v2Contract({ mode });
-const tokenService = new Vlink_token_service_cd_v2Contract({ mode });
-const tokenServiceCouncil = new Vlink_token_service_cd_cuncl_v2Contract({ mode });
-const bridge = new Vlink_token_bridge_v2Contract({ mode });
-const holding = new Vlink_holding_cd_v2Contract({ mode });
+const council = new Vlink_council_v07Contract({ mode });
+const tokenService = new Vlink_token_service_cd_v7Contract({ mode });
+const tokenServiceCouncil = new Vlink_token_service_cd_cncl_v07Contract({ mode });
+const bridge = new Vlink_token_bridge_v7Contract({ mode });
+const holding = new Vlink_holding_cd_v7Contract({ mode });
 const credits = new CreditsContract({ mode: mode });
 const tokenRegistry = new Token_registryContract({ mode })
 

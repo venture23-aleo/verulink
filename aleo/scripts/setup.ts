@@ -1,5 +1,5 @@
-import { Vlink_token_bridge_v2Contract } from "../artifacts/js/vlink_token_bridge_v2";
-import { Vlink_token_service_v2Contract } from "../artifacts/js/vlink_token_service_v7";
+import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 import { BRIDGE_PAUSABILITY_INDEX, BRIDGE_UNPAUSED_VALUE, max_supply, ethChainId, baseChainId, baseEthContractAddr, baseUsdcContractAddr, baseUsdtContractAddr, ethUsdcContractAddr, ethUsdtContractAddr, ethEthContractAddr, SUPPLY_MANAGER_ROLE, baseTsContractAddr, arbitrumChainId, arbitrumTsContractAddr, arbitrumUsdcContractAddr, arbitrumUsdtContractAddr, arbitrumEthContractAddr, ethHoleskyChainId, ethHoleskyTsContractAddr, ethHoleskyUsdcContractAddr, ethHoleskyUsdtContractAddr, ethHoleskyEthContractAddr, wusdcPlatformFeePublic, wusdcFeeRelayerPublic, wusdcPlatformFeePrivate, wusdcFeeRelayerPrivate, wusdtPlatformFeePublic, wusdtFeeRelayerPublic, wusdtPlatformFeePrivate, wusdtFeeRelayerPrivate, wethPlatformFeePublic, wethFeeRelayerPublic, wethPlatformFeePrivate, wethFeeRelayerPrivate, aleoSeq, ethSeq } from "../utils/testdata.data";
 import { execAddChain, proposeAddChain } from "./council/bridge/addChain";
 import { execAddService, proposeAddService } from "./council/bridge/addService";
@@ -43,7 +43,7 @@ import {
   wethDecimals
 } from "../utils/testdata.data";
 import { execUnpauseToken, proposeUnpauseToken } from "./council/tokenService/unpause";
-import { Vlink_bridge_council_v2Contract } from "../artifacts/js/vlink_bridge_council_v2";
+import { Vlink_bridge_council_v07Contract } from "../artifacts/js/vlink_bridge_council_v07";
 import { ExecutionMode, leo2js } from "@doko-js/core";
 import { hash } from "aleo-hasher";
 import { execRole, proposeRole } from "./council/tokenService/proposeRole";
@@ -54,13 +54,13 @@ import { execAddChainToToken, proposeAddChainToToken } from "./council/tokenServ
 import { ethTsContractAddr } from "../utils/constants";
 import { execTranferAdmin, proposeTransferAdmin } from "./token_admin_transfer";
 import { execRemoveRole, proposeRemoveRole } from "./council/tokenService/removeRole";
-import { Vlink_token_service_council_v2Contract } from "../artifacts/js/vlink_token_service_council_v2";
+import { Vlink_token_service_council_v07Contract } from "../artifacts/js/vlink_token_service_council_v07";
 import { Vlink_token_service_v1Contract } from "../artifacts/js/vlink_token_service_v1";
 
-const bridge = new Vlink_token_bridge_v2Contract({ mode: ExecutionMode.SnarkExecute });
-const tokenService = new Vlink_token_service_v2Contract({ mode: ExecutionMode.SnarkExecute });
-const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode: ExecutionMode.SnarkExecute });
-const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode: ExecutionMode.SnarkExecute });
+const bridge = new Vlink_token_bridge_v7Contract({ mode: ExecutionMode.SnarkExecute });
+const tokenService = new Vlink_token_service_v7Contract({ mode: ExecutionMode.SnarkExecute });
+const bridgeCouncil = new Vlink_bridge_council_v07Contract({ mode: ExecutionMode.SnarkExecute });
+const serviceCouncil = new Vlink_token_service_council_v07Contract({ mode: ExecutionMode.SnarkExecute });
 const old_tokenService = new Vlink_token_service_v1Contract({ mode: ExecutionMode.SnarkExecute });
 
 const initialAttestors = [
