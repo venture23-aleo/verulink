@@ -1,5 +1,9 @@
 ---
 # Mainnet Environment Variables for Attestor Service
+install_dir: "/home/ubuntu/attestor"
+# Infrastructure provider: choose one of [aws, gcp, azure, baremetal]
+infrastructure_provider: "aws"
+region: "us-east-1"
 
 # Attestor Configuration
 attestor_name: "<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>"
@@ -35,6 +39,12 @@ collector_service_url: "<collector_service_url>"
 ca_certificate_base64: "<ca_certificate_base64>"
 attestor_certificate_base64: "<attestor_certificate_base64>"
 attestor_key_base64: "<attestor_key_base64>"
+
+# mTLS certificates update
+update_mtls_certificates: true
+mtls_secret_name: "<mtls_secret_name>"
+new_ca_certificate_base64: "<new_ca_certificate_base64>"
+new_attestor_certificate_base64: "<new_attestor_certificate_base64>"
 
 # Metrics Configuration
 prometheus_pushgateway_url: "<prometheus_pushgateway_url>"

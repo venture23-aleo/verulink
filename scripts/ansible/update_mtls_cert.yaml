@@ -1,0 +1,195 @@
+---
+- name: Update Attestor mTLS Certificates
+  hosts: all
+  connection: ssh
+  become: true
+  vars:
+    has_new_ca_cert: true
+    has_new_attestor_cert: false
+
+  vars_files:
+    - devnet_vars.yaml
+
+  
+  pre_tasks:
+    - name: Check if mTLS certificate update is enabled
+      fail:
+        msg: "mTLS certificate update is disabled. Set update_mtls_certificates to true to proceed."
+      when: not update_mtls_certificates | default(false)
+
+  tasks:
+    - name: Check if AWS CLI is installed
+      ansible.builtin.command: aws --version
+      register: aws_cli_check
+      ignore_errors: true
+
+    - name: Install AWS CLI on Ubuntu Linux
+      block:
+        - name: Download AWS CLI v2 bundle
+          ansible.builtin.command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          args:
+            chdir: /tmp
+
+        - name: Unzip AWS CLI bundle
+          ansible.builtin.command: unzip awscliv2.zip
+          args:
+            chdir: /tmp
+
+        - name: Install AWS CLI
+          ansible.builtin.command: sudo ./aws/install
+          args:
+            chdir: /tmp
+          become: true
+
+        - name: Verify AWS CLI installation
+          ansible.builtin.command: aws --version
+          register: aws_cli_verify
+
+        - name: Display AWS CLI version
+          ansible.builtin.debug:
+            msg: "AWS CLI installed successfully: {{ aws_cli_verify.stdout }}"
+      when: aws_cli_check is failed
+
+    - name: Verify AWS access and permissions
+      ansible.builtin.command: aws sts get-caller-identity
+      register: caller_info
+
+    - name: Display AWS caller info
+      ansible.builtin.debug:
+        msg: "AWS Access verified for user: {{ caller_info.stdout | from_json }}"
+
+    - name: Check if secret exists in AWS Secrets Manager
+      ansible.builtin.command: aws secretsmanager describe-secret --secret-id "{{ mtls_secret_name }}" --region "{{ region }}"
+      register: secret_info
+      ignore_errors: true
+
+    - name: Fail if secret doesn't exist
+      fail:
+        msg: "Secret {{ mtls_secret_name }} does not exist in AWS Secrets Manager"
+      when: secret_info is failed
+
+    - name: Download current secret value to /tmp/current_secret.json
+      shell: |
+        aws secretsmanager get-secret-value \
+          --secret-id "{{ mtls_secret_name }}" \
+          --region "{{ region }}" \
+          --query SecretString \
+          --output text > /tmp/current_secret.json
+
+    - name: Ensure .mtls directory exists
+      ansible.builtin.file:
+        path: "{{ install_dir }}/chainService/.mtls"
+        state: directory
+        mode: '0755'
+
+
+    - name: Read config.yaml to get CA certificate file path
+      ansible.builtin.slurp:
+        src: "{{ install_dir }}/chainService/config.yaml"
+      register: config_yaml_slurp
+      when: has_new_ca_cert or has_new_attestor_cert
+
+    - name: Parse config.yaml content into dictionary
+      set_fact:
+        config_yaml_dict: "{{ (config_yaml_slurp.content | b64decode | from_yaml) | default({}, true) }}"
+      when: has_new_ca_cert or has_new_attestor_cert
+
+    - name: Parse config.yaml to get CA certificate filename
+      set_fact:
+        ca_cert_filename: "{{ (config_yaml_dict.get('collector_service', {}).get('ca_certificate', '/configs/.mtls/ca.cer')) | basename }}"
+      when: has_new_ca_cert
+    
+    - name: Print ca_cert_filename
+      ansible.builtin.debug:
+        msg: "ca_cert_filename: {{ ca_cert_filename }}"
+
+    - name: Set CA certificate path
+      set_fact:
+        ca_cert_path: "{{ install_dir }}/chainService/.mtls/{{ ca_cert_filename }}"
+      when: has_new_ca_cert
+
+    - name: Parse config.yaml to get attestor certificate filename and set path
+      set_fact:
+        attestor_cert_filename: "{{ (config_yaml_dict.get('collector_service', {}).get('attestor_certificate', '/configs/.mtls/attestor1.crt')) | basename }}"
+        attestor_cert_path: "{{ install_dir }}/chainService/.mtls/{{ attestor_cert_filename }}"
+      when: has_new_attestor_cert
+
+    - name: Get current CA certificate file stat
+      ansible.builtin.stat:
+        path: "{{ ca_cert_path }}"
+      register: ca_cert_stat
+      when: has_new_ca_cert
+
+
+    - name: Download CA certificate from Base64 URL
+      ansible.builtin.shell: |
+        curl -sSL -o "{{ ca_cert_path }}" "$(echo '{{ new_ca_certificate_base64 }}' | base64 -d)"
+      args:
+        executable: /bin/bash
+
+
+    - name: Set ownership of CA certificate file to match original
+      ansible.builtin.file:
+        path: "{{ ca_cert_path }}"
+        owner: "{{ ca_cert_stat.stat.pw_name | default(omit) }}"
+        group: "{{ ca_cert_stat.stat.gr_name | default(omit) }}"
+        mode: "{{ ca_cert_stat.stat.mode | default(omit) }}"
+      when: has_new_ca_cert and ca_cert_stat.stat.exists | default(false)
+
+  
+    - name: Read downloaded CA certificate
+      ansible.builtin.slurp:
+        src: "{{ ca_cert_path }}"
+      register: ca_cert_slurp
+      when: has_new_ca_cert
+
+    - name: Read downloaded attestor certificate
+      ansible.builtin.slurp:
+        src: "{{ attestor_cert_path }}"
+      register: attestor_cert_slurp
+      when: has_new_attestor_cert
+    
+    - name: Update ca_certificate in secret JSON with new cert
+      shell: |
+        cert_content=$(cat "{{ ca_cert_path }}")
+        jq --arg cert "$cert_content" '.ca_certificate = $cert' /tmp/current_secret.json > /tmp/updated_secret.json
+      args:
+        executable: /bin/bash
+
+    - name: Update AWS Secrets Manager with new certificates
+      ansible.builtin.command: aws secretsmanager update-secret --secret-id "{{ mtls_secret_name }}" --secret-string file:///tmp/updated_secret.json --region "{{ region }}"
+      when: has_new_ca_cert or has_new_attestor_cert
+      register: secret_update
+
+    - name: Clean up all current temporary secret files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/updated_secret.json"
+        - "/tmp/current_secret.json"
+      when: has_new_ca_cert or has_new_attestor_cert
+
+    - name: Display update summary
+      ansible.builtin.debug:
+        msg: |
+          Certificate Update Summary:
+          - CA Certificate: {{ 'Updated' if has_new_ca_cert else 'No change' }}
+          - Attestor Certificate: {{ 'Updated' if has_new_attestor_cert else 'No change' }}
+
+    - name: Restart docker compose services
+      ansible.builtin.command: docker compose restart
+      args:
+        chdir: "{{ install_dir }}"
+      when: has_new_ca_cert or has_new_attestor_cert
+      register: docker_restart
+
+    - name: Display restart status
+      ansible.builtin.debug:
+        msg: "Docker services restarted successfully"
+      when: docker_restart is changed
+
+    - name: Display no update message
+      ansible.builtin.debug:
+        msg: "No certificate updates required. All certificates are up to date."
+      when: not has_new_ca_cert and not has_new_attestor_cert
