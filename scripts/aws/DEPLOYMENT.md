@@ -4,6 +4,7 @@
 - [Installation on VM](#installing-on-vm-manual)
 - [Installing using Ansible Playbook](#installing-using-ansible-playbook)
 - [Installing on AWS](#installing-on-aws)
+- [Updating mTLS Certificates](#updating-mtls-certificates)
 - [Installing on Local machine, VM, or baremetal](#installing-on-local-machine-vm-or-baremetal)
   - [Prerequisites](#prerequisites)
   - [Deployment Steps](#deployment-steps-1)
@@ -269,7 +270,33 @@ First, go to the installation root directory `verulink_attestor`.
     ansible-playbook -i inventory.txt deploy.yml --limit mainnet
     ```
 
-
+### Updating mTLS Certificates
+1. Create `inventory.txt`
+   Sample `inventory.txt` file.
+    ```yaml
+    [devnet]
+    192.168.1.100 ansible_user=ubuntu
+    
+    [staging]
+    192.168.1.101 ansible_user=ubuntu
+    
+    [mainnet]
+    192.168.1.102 ansible_user=ubuntu
+    
+    [devnet:vars]
+    env=devnet
+    
+    [staging:vars]
+    env=staging
+    
+    [mainnet:vars]
+    env=mainnet
+    ```
+2. Update the mTLS CA certificate download link (base64-encoded) in the Ansible variables of the playbook `update_mtls_cert.yaml` with the value `<new_ca_certificate_base64>`
+3. Update
+   ```bash
+   ansible-playbook -i inventory.txt  update_mtls_cert.yaml --limit devnet_gcp
+   ```
 ### Installing on AWS
 
 The attestor service can be deployed using two method

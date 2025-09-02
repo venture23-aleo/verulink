@@ -4,12 +4,22 @@
   connection: ssh
   become: true
   vars:
-    has_new_ca_cert: true
-    has_new_attestor_cert: false
-
-  vars_files:
-    - devnet_vars.yaml
-
+      has_new_ca_cert: true
+      has_new_attestor_cert: false
+      # gcp_project: <gcp_project_id> # gcp project id
+      region: us-east-1 # aws region
+      # region: us-central1 # gcp region
+      ansible_root: "{{ playbook_dir }}"
+      attestor_install_dir: "/home/ubuntu/verulink_attestor" # v2.0.0
+      # attestor_install_dir: "/home/ubuntu/verulink/attestor" # v1.0.0
+      chain_config_file: "{{ attestor_install_dir }}/chain_config.yaml" # v2.0.0
+      # chain_config_file: "{{ attestor_install_dir }}/chainService/config.yaml" # v1.0.0
+      mtls_dir: "{{ attestor_install_dir }}/.mtls"
+      mtls_secret_name: "<mtls_secret_name>"
+      new_ca_certificate_base64: "<new_ca_certificate_base64>"
+      new_attestor_certificate_base64: "<new_attestor_certificate_base64>"
+      infrastructure_provider: "aws" # gcp or aws
+      update_mtls_certificates: true # true or false
   
   pre_tasks:
     - name: Check if mTLS certificate update is enabled
@@ -17,75 +27,208 @@
         msg: "mTLS certificate update is disabled. Set update_mtls_certificates to true to proceed."
       when: not update_mtls_certificates | default(false)
 
-  tasks:
-    - name: Check if AWS CLI is installed
-      ansible.builtin.command: aws --version
-      register: aws_cli_check
-      ignore_errors: true
+    - block:
+        - name: Check if GCP CLI is installed
+          ansible.builtin.command: gcloud --version
+          register: gcloud_cli_check
+          ignore_errors: true
 
-    - name: Install AWS CLI on Ubuntu Linux
-      block:
-        - name: Download AWS CLI v2 bundle
-          ansible.builtin.command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          args:
-            chdir: /tmp
+        - name: Install GCP CLI on Ubuntu Linux
+          block:
+            - name: Update apt package index
+              ansible.builtin.apt:
+                update_cache: yes
 
-        - name: Unzip AWS CLI bundle
-          ansible.builtin.command: unzip awscliv2.zip
-          args:
-            chdir: /tmp
+            - name: Install required dependencies for GCP CLI
+              ansible.builtin.apt:
+                name:
+                  - apt-transport-https
+                  - ca-certificates
+                  - gnupg
+                  - curl
+                state: present
 
-        - name: Install AWS CLI
-          ansible.builtin.command: sudo ./aws/install
-          args:
-            chdir: /tmp
-          become: true
+            - name: Download Google Cloud public key and save as dearmored gpg
+              ansible.builtin.shell: |
+                curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+              args:
+                executable: /bin/bash
 
-        - name: Verify AWS CLI installation
+            - name: Add Google Cloud SDK distribution URI as a package source
+              ansible.builtin.shell: |
+                echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+              args:
+                executable: /bin/bash
+
+            - name: Update apt package index after adding Google Cloud SDK repo
+              ansible.builtin.apt:
+                update_cache: yes
+
+            - name: Install Google Cloud CLI
+              ansible.builtin.apt:
+                name: google-cloud-cli
+                state: present
+
+            - name: Verify GCP CLI installation
+              ansible.builtin.command: gcloud --version
+              register: gcloud_cli_verify
+
+            - name: Display GCP CLI version
+              ansible.builtin.debug:
+                msg: "GCP CLI installed successfully: {{ gcloud_cli_verify.stdout }}"
+          when: gcloud_cli_check is failed
+
+        - name: Copy GCP service account key to VM
+          copy:
+            src: "{{ ansible_root }}/verulink-attestor-sa.json"
+            dest: "/root/.gcp-sa.json"
+            owner: root
+            group: root
+            mode: '0600'
+          no_log: false
+
+        - name: Authenticate gcloud with service account
+          command: gcloud auth activate-service-account --key-file=/root/.gcp-sa.json
+          changed_when: false
+          no_log: true
+          run_once: true
+          environment:
+            CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+            GOOGLE_APPLICATION_CREDENTIALS: "/root/.gcp-sa.json"
+
+        - name: Read single config secret (JSON/YAML payload)
+          command: >
+            gcloud secrets versions access latest
+            --secret={{ mtls_secret_name }}
+            --project={{ gcp_project }}
+          register: _secret_blob
+          changed_when: false
+          failed_when: _secret_blob.rc is defined and _secret_blob.rc != 0
+          no_log: false
+          run_once: true
+          environment:
+            CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+            GOOGLE_APPLICATION_CREDENTIALS: "/root/.gcp-sa.json"
+
+        - name: Parse secret blob into a dict
+          set_fact:
+            _secret_map: "{{ _secret_blob.stdout | from_yaml }}"   # JSON or YAML
+          no_log: true
+          run_once: true
+
+        - name: Sanity-check the secret payload is a mapping with keys
+          assert:
+            that:
+              - _secret_map is mapping
+              - _secret_map | length > 0
+            fail_msg: "Secret payload is empty or not a dict. Check your Secret Manager content."
+          run_once: true
+
+        # Apply to each host (remove run_once so every host gets the facts)
+        - name: Merge secret dict into host vars (iterative, robust)
+          set_fact:
+            "{{ item.key }}": "{{ item.value }}"
+          loop: "{{ _secret_map | dict2items }}"
+          no_log: true
+      when: infrastructure_provider == "gcp"
+
+    - block:
+        - name: Check if AWS CLI is installed
           ansible.builtin.command: aws --version
-          register: aws_cli_verify
+          register: aws_cli_check
+          ignore_errors: true
 
-        - name: Display AWS CLI version
-          ansible.builtin.debug:
-            msg: "AWS CLI installed successfully: {{ aws_cli_verify.stdout }}"
-      when: aws_cli_check is failed
+        - name: Install AWS CLI on Ubuntu Linux
+          block:
+            - name: Download AWS CLI v2 bundle
+              ansible.builtin.command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              args:
+                chdir: /tmp
+    
+            - name: Unzip AWS CLI bundle
+              ansible.builtin.command: unzip awscliv2.zip
+              args:
+                chdir: /tmp
+    
+            - name: Install AWS CLI
+              ansible.builtin.command: sudo ./aws/install
+              args:
+                chdir: /tmp
+              become: true
+    
+            - name: Verify AWS CLI installation
+              ansible.builtin.command: aws --version
+              register: aws_cli_verify
+    
+            - name: Display AWS CLI version
+              ansible.builtin.debug:
+                msg: "AWS CLI installed successfully: {{ aws_cli_verify.stdout }}"
+          when: aws_cli_check is failed
+      when: infrastructure_provider == "aws"
 
-    - name: Verify AWS access and permissions
-      ansible.builtin.command: aws sts get-caller-identity
-      register: caller_info
+  tasks:
+    - block:
+      - name: Verify GCP access and permissions
+        ansible.builtin.command: gcloud auth list --filter=status:ACTIVE --format="value(account)"
+        register: gcp_auth_info
+  
+      - name: Display GCP auth info
+        ansible.builtin.debug:
+          msg: "GCP Access verified for account: {{ gcp_auth_info.stdout }}"
+  
+      - name: Check if secret exists in GCP Secret Manager
+        ansible.builtin.command: gcloud secrets describe "{{ mtls_secret_name }}" --project="{{ gcp_project }}"
+        register: secret_info
+        ignore_errors: true
+  
+      - name: Fail if secret doesn't exist
+        fail:
+          msg: "Secret {{ mtls_secret_name }} does not exist in GCP Secret Manager"
+        when: secret_info is failed
+  
+      - name: Download current secret value to /tmp/current_secret.json
+        shell: |
+          gcloud secrets versions access latest \
+            --secret="{{ mtls_secret_name }}" \
+            --project="{{ gcp_project }}" > /tmp/current_secret.json
+      when: infrastructure_provider == "gcp"
+    - block:
+      - name: Verify AWS access and permissions
+        ansible.builtin.command: aws sts get-caller-identity
+        register: caller_info
 
-    - name: Display AWS caller info
-      ansible.builtin.debug:
-        msg: "AWS Access verified for user: {{ caller_info.stdout | from_json }}"
-
-    - name: Check if secret exists in AWS Secrets Manager
-      ansible.builtin.command: aws secretsmanager describe-secret --secret-id "{{ mtls_secret_name }}" --region "{{ region }}"
-      register: secret_info
-      ignore_errors: true
-
-    - name: Fail if secret doesn't exist
-      fail:
-        msg: "Secret {{ mtls_secret_name }} does not exist in AWS Secrets Manager"
-      when: secret_info is failed
-
-    - name: Download current secret value to /tmp/current_secret.json
-      shell: |
-        aws secretsmanager get-secret-value \
-          --secret-id "{{ mtls_secret_name }}" \
-          --region "{{ region }}" \
-          --query SecretString \
-          --output text > /tmp/current_secret.json
+      - name: Display AWS caller info
+        ansible.builtin.debug:
+          msg: "AWS Access verified for user: {{ caller_info.stdout | from_json }}"
+  
+      - name: Check if secret exists in AWS Secrets Manager
+        ansible.builtin.command: aws secretsmanager describe-secret --secret-id "{{ mtls_secret_name }}" --region "{{ region }}"
+        register: secret_info
+        ignore_errors: true
+  
+      - name: Fail if secret doesn't exist
+        fail:
+          msg: "Secret {{ mtls_secret_name }} does not exist in AWS Secrets Manager"
+        when: secret_info is failed
+  
+      - name: Download current secret value to /tmp/current_secret.json
+        shell: |
+          aws secretsmanager get-secret-value \
+            --secret-id "{{ mtls_secret_name }}" \
+            --region "{{ region }}" \
+            --query SecretString \
+            --output text > /tmp/current_secret.json
+      when: infrastructure_provider == "aws"
 
     - name: Ensure .mtls directory exists
       ansible.builtin.file:
-        path: "{{ install_dir }}/chainService/.mtls"
+        path: "{{ mtls_dir }}"
         state: directory
         mode: '0755'
 
-
     - name: Read config.yaml to get CA certificate file path
       ansible.builtin.slurp:
-        src: "{{ install_dir }}/chainService/config.yaml"
+        src: "{{ chain_config_file }}"
       register: config_yaml_slurp
       when: has_new_ca_cert or has_new_attestor_cert
 
@@ -105,13 +248,13 @@
 
     - name: Set CA certificate path
       set_fact:
-        ca_cert_path: "{{ install_dir }}/chainService/.mtls/{{ ca_cert_filename }}"
+        ca_cert_path: "{{ mtls_dir }}/{{ ca_cert_filename }}"
       when: has_new_ca_cert
 
     - name: Parse config.yaml to get attestor certificate filename and set path
       set_fact:
         attestor_cert_filename: "{{ (config_yaml_dict.get('collector_service', {}).get('attestor_certificate', '/configs/.mtls/attestor1.crt')) | basename }}"
-        attestor_cert_path: "{{ install_dir }}/chainService/.mtls/{{ attestor_cert_filename }}"
+        attestor_cert_path: "{{ mtls_dir }}/{{ attestor_cert_filename }}"
       when: has_new_attestor_cert
 
     - name: Get current CA certificate file stat
@@ -119,14 +262,12 @@
         path: "{{ ca_cert_path }}"
       register: ca_cert_stat
       when: has_new_ca_cert
-
-
+    
     - name: Download CA certificate from Base64 URL
       ansible.builtin.shell: |
         curl -sSL -o "{{ ca_cert_path }}" "$(echo '{{ new_ca_certificate_base64 }}' | base64 -d)"
       args:
         executable: /bin/bash
-
 
     - name: Set ownership of CA certificate file to match original
       ansible.builtin.file:
@@ -136,12 +277,14 @@
         mode: "{{ ca_cert_stat.stat.mode | default(omit) }}"
       when: has_new_ca_cert and ca_cert_stat.stat.exists | default(false)
 
-  
     - name: Read downloaded CA certificate
       ansible.builtin.slurp:
         src: "{{ ca_cert_path }}"
       register: ca_cert_slurp
       when: has_new_ca_cert
+    - name: Print ca_cert_slurp
+      ansible.builtin.debug:
+        msg: "ca_cert_slurp: {{ ca_cert_slurp }}"
 
     - name: Read downloaded attestor certificate
       ansible.builtin.slurp:
@@ -156,11 +299,24 @@
       args:
         executable: /bin/bash
 
-    - name: Update AWS Secrets Manager with new certificates
-      ansible.builtin.command: aws secretsmanager update-secret --secret-id "{{ mtls_secret_name }}" --secret-string file:///tmp/updated_secret.json --region "{{ region }}"
-      when: has_new_ca_cert or has_new_attestor_cert
+    - name: Update GCP Secret Manager with new certificates
+      ansible.builtin.command: |
+        gcloud secrets versions add "{{ mtls_secret_name }}" \
+          --data-file="/tmp/updated_secret.json" \
+          --project="{{ gcp_project }}"
+      when: (has_new_ca_cert or has_new_attestor_cert) and infrastructure_provider == "gcp"
       register: secret_update
+      
 
+    - name: Update AWS Secrets Manager with new certificates
+      ansible.builtin.command: | 
+        aws secretsmanager update-secret \
+          --secret-id "{{ mtls_secret_name }}" \
+          --secret-string file:///tmp/updated_secret.json \
+          --region "{{ region }}"
+      when: (has_new_ca_cert or has_new_attestor_cert) and infrastructure_provider == "aws"
+      register: secret_update
+      
     - name: Clean up all current temporary secret files
       ansible.builtin.file:
         path: "{{ item }}"
@@ -180,7 +336,7 @@
     - name: Restart docker compose services
       ansible.builtin.command: docker compose restart
       args:
-        chdir: "{{ install_dir }}"
+        chdir: "{{ attestor_install_dir }}"
       when: has_new_ca_cert or has_new_attestor_cert
       register: docker_restart
 
