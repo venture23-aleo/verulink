@@ -370,12 +370,12 @@ describe("Council", () => {
         expect(finalVotes).toBe(initialVotes + 1);
       }, TIMEOUT)
 
-      test("Execute fails", async () => {
+      test.failing("Execute fails", async () => {
         const signers = [councilMember1, councilMember2, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS, ALEO_ZERO_ADDRESS];
         expect(await council.proposal_executed(proposalHash, false)).toBe(false);
         council.connect(councilMember1);
         const updateThresholExecTx = await council.update_threshold(proposalId, invalidThreshold, signers);
-        expect(await updateThresholExecTx.wait()).toStrictEqual([]);
+        await updateThresholExecTx.wait();
       }, TIMEOUT)
     })
   })

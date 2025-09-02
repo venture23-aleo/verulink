@@ -42,7 +42,7 @@ const holdingWAleo = new Vlink_holding_cd_v7Contract({ mode: mode });
 const council = new Vlink_council_v07Contract({ mode });
 const tokenRegistry = new Token_registryContract({ mode: mode });
 const credits = new CreditsContract({ mode: mode });
-//npm run test -- --runInBand ./test/9_2_ts_waleo_core.test.ts
+//npm run test -- --runInBand ./test/9_2tokenService_waleo_core.test.ts
 
 let tokenID;
 (BigInt.prototype as any).toJSON = function () {

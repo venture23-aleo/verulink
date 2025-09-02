@@ -1,6 +1,6 @@
 import { ALEO_ZERO_ADDRESS, OWNER_INDEX } from "../utils/constants";
 import { ExecutionMode } from "@doko-js/core";
-import { Holder } from "../artifacts/js/types/vlink_token_service_v2";
+import { Holder } from "../artifacts/js/types/vlink_token_service_v7";
 import { Vlink_holding_cd_v7Contract } from "../artifacts/js/vlink_holding_cd_v7";
 import { CreditsContract } from "../artifacts/js/credits";
 

@@ -1,4 +1,4 @@
-import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
 import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
 import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v7";

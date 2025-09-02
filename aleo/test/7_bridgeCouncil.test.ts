@@ -149,9 +149,7 @@ describe("Bridge", () => {
         const initializeTx = await bridge.initialize_tb(
           [councilMember1, councilMember2, councilMember3, aleoUser4, ALEO_ZERO_ADDRESS],
           threshold,
-          admin,
-          aleo_sequence,
-          eth_sequence
+          admin
         );
         await initializeTx.wait();
       }

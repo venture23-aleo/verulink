@@ -17,7 +17,7 @@ export const createRandomPacket = (
 
 ): InPacket => {
   let incomingSequence = sequence ?? BigInt(
-    Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+    3000 + Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
   );
   let incomingHeight = height ?? BigInt(Math.round(Math.random() * Math.pow(2, 32) - 1));
 

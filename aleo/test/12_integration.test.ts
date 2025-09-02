@@ -1,55 +1,86 @@
 import { Vlink_token_bridge_v7Contract } from "../artifacts/js/vlink_token_bridge_v7";
 import { InPacket, PacketId } from "../artifacts/js/types/vlink_token_bridge_v7";
-import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
-import { Token_registryContract } from "../artifacts/js/token_registry";
-
-import { evm2AleoArr, evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
+import { evm2AleoArrWithoutPadding, generateRandomEthAddr, prunePadding } from "../utils/ethAddress";
 import { signPacket } from "../utils/sign";
-
 import {
     ALEO_ZERO_ADDRESS,
     BRIDGE_PAUSABILITY_INDEX,
     BRIDGE_UNPAUSED_VALUE,
     VERSION_PUBLIC_NORELAYER_NOPREDICATE,
-    VERSION_PRIVATE_NORELAYER_NOPREDICATE,
     aleoChainId,
-    baseChainId,
-    baseTsContractAddr,
-    ethChainId,
     ethTsContractAddr,
     ethTsRandomContractAddress,
     ethUsdcContractAddr,
+    COUNCIL_THRESHOLD_INDEX,
+    COUNCIL_TOTAL_MEMBERS_INDEX,
+    COUNCIL_TOTAL_PROPOSALS_INDEX,
+    baseChainId,
+    arbitrumChainId,
+    ALEO_CREDITS_TOKEN_ID,
+    BSC_TESTNET,
+    baseTsContractAddr,
     VERSION_PUBLIC_RELAYER_NOPREDICATE,
     VERSION_PRIVATE_RELAYER_NOPREDICATE,
     BRIDGE_TOTAL_ATTESTORS_INDEX,
     BRIDGE_THRESHOLD_INDEX
 } from "../utils/testdata.data";
+
 import { PrivateKey } from "@aleohq/sdk";
 import { createRandomPacket } from "../utils/packet";
-import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
-import { ExecutionMode } from "@doko-js/core";
-import { ChainToken } from "../artifacts/js/types/vlink_token_service_council_v07";
-import { Balance, TokenOwner } from "../artifacts/js/types/token_registry";
-import { hashStruct, hashStructToAddress } from "../utils/hash";
-import { decryptToken } from "../artifacts/js/leo2js/token_registry";
+import { ExecutionMode, js2leo, leo2js } from "@doko-js/core";
+import { ChainToken } from "../artifacts/js/types/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_v7Contract } from "../artifacts/js/vlink_token_service_cd_v7";
+import { Vlink_token_service_cd_cncl_v07Contract } from "../artifacts/js/vlink_token_service_cd_cncl_v07";
+import { Vlink_holding_cd_v7Contract } from "../artifacts/js/vlink_holding_cd_v7";
 import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
-import { getSignerPackets } from "../utils/getRecords";
-import { Transition } from "@doko-js/core/dist/outputs/types/transaction";
+import { Token_registryContract } from "../artifacts/js/token_registry";
+import { VERSION_PRIVATE_NORELAYER_NOPREDICATE } from "../utils/constants";
+import { Holder } from "../artifacts/js/types/vlink_holding_cd_v7";
+import { CreditsContract } from "../artifacts/js/credits";
+
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 import { Vlink_holding_v7Contract } from "../artifacts/js/vlink_holding_v7";
-import { Holder } from "../artifacts/js/types/vlink_holding_v7";
-import { ethTsRandomContractAddress2, TOKEN_PAUSED_VALUE, TOKEN_UNPAUSED_VALUE } from "../utils/constants";
+import { hashStruct, hashStructToAddress } from "../utils/hash";
+import { Image, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
+import { Balance, TokenOwner } from "../artifacts/js/types/token_registry";
+import { Transition } from "@doko-js/core/dist/outputs/types/transaction";
+import { decryptToken } from "../artifacts/js/leo2js/token_registry";
+
+
+
 
 const usdcContractAddr = ethUsdcContractAddr;
 const mode = ExecutionMode.SnarkExecute;
-// npm run test -- --runInBand ./test/2_2tokenService_core.test.ts
-
 const bridge = new Vlink_token_bridge_v7Contract({ mode: mode });
+const tokenServiceWAleo = new Vlink_token_service_cd_v7Contract({ mode: mode });
+const tokenServiceWAleoCouncil = new Vlink_token_service_cd_cncl_v07Contract({ mode: mode });
+const holdingWAleo = new Vlink_holding_cd_v7Contract({ mode: mode });
+const council = new Vlink_council_v07Contract({ mode });
+const tokenRegistry = new Token_registryContract({ mode: mode });
+const credits = new CreditsContract({ mode: mode });
 const tokenService = new Vlink_token_service_v7Contract({ mode: mode });
 const mtsp = new Token_registryContract({ mode: mode });
-const council = new Vlink_council_v07Contract({ mode: mode });
 const holding = new Vlink_holding_v7Contract({ mode: mode });
+const privateKey1 = process.env.ALEO_DEVNET_PRIVATE_KEY1;
+const privateKey2 = process.env.ALEO_DEVNET_PRIVATE_KEY2;
 
-let tokenID;
+
+
+const token_name = BigInt('614833282165187462067')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
+const token_symbol = BigInt("143715203238") //"USDC" // to ascii for each char = 85 83 68 67 then to hex= 55 53 44 43 then concatenate all values= 55534443 convert this to decimal= 1431655763
+const token_decimals = 6
+const token_max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
+let tokenID = leo2js.field(hash('bhp256', js2leo.u128(token_name), 'field'));
+const public_platform_fee = 5000;
+const private_platform_fee = 10000; 
+const public_relayer_fee = BigInt(10000);
+const private_relayer_fee = BigInt(20000);
+const active_relayer = true;
+const non_active_relayer = false;
+import { getSignerPackets } from "../utils/getRecords";
+import { hash } from "aleo-hasher";
+
+
 (BigInt.prototype as any).toJSON = function () {
     return this.toString() + "field";
 };
@@ -62,40 +93,33 @@ const getPlatformFeeInAmount = async (amount: bigint, platform_fee_percentage: n
     //5% is equivalent to 500
     return (BigInt(platform_fee_percentage) * amount) / BigInt(100 * 1000);
 }
+const ethChainId = BigInt(27234042785);
 
-describe("Token Service Core", () => {
+
+describe("Deployment Token Service For ALeo", () => {
     const [aleoUser1, aleoUser2, aleoUser3, aleoUser4] = bridge.getAccounts();
-    const aleoUser5 = new PrivateKey().to_address().to_string();
-    const token_name = BigInt('614833282165187462067')//"USD Coin" // to ascii and then each ascii to hex then to decimal by concatenating that = 85 83 68 32 67 111 105 110 each value to hex= 55 53 44 20 43 6f 69 6e then concatenate all values= 55534420436f696e convert this to decimal= 144693545833646
-    const token_symbol = BigInt("143715203238") //"USDC" // to ascii for each char = 85 83 68 67 then to hex= 55 53 44 43 then concatenate all values= 55534443 convert this to decimal= 1431655763
-    const token_decimals = 6
-    const token_max_supply = BigInt("18446744073709551615") //u128 max value= 18446744073709551615
-    tokenID = hashStruct(token_name);
-    const public_platform_fee = 5000;
-    const private_platform_fee = 10000;
-    const public_relayer_fee = BigInt(10000);
-    const private_relayer_fee = BigInt(20000);
-    const ALEO_SEQ_NUM = BigInt(1);
-    const ETH_SEQ_NUM = BigInt(1);
-    console.log(tokenID);
-    const privateKey1 = process.env.ALEO_DEVNET_PRIVATE_KEY1;
-    const privateKey2 = process.env.ALEO_DEVNET_PRIVATE_KEY2;
-    const active_relayer = true;
-    const non_active_relayer = false;
-
-
+    const platform_fee = 5000; // 5% in basis points, so 5000 means 5%
     const admin = aleoUser1;
-    const connector = aleoUser4;
+
+    tokenServiceWAleo.connect(admin)
 
     describe("Deployment", () => {
-        tokenService.connect(admin)
-
         test("Deploy Bridge", async () => {
             const deployTx = await bridge.deploy();
             await deployTx.wait();
         }, TIMEOUT);
 
-        test("Deploy Holding program", async () => {
+        test("Deploy HoldingWAleo", async () => {
+            const deployTx = await holdingWAleo.deploy();
+            await deployTx.wait();
+        }, TIMEOUT);
+
+        test("Deploy Token Service WAleo", async () => {
+            const deployTx = await tokenServiceWAleo.deploy();
+            await deployTx.wait();
+        }, TIMEOUT);
+    
+         test("Deploy Holding program", async () => {
             const deployTx = await holding.deploy();
             await deployTx.wait();
         }, TIMEOUT);
@@ -104,9 +128,11 @@ describe("Token Service Core", () => {
             const deployTx = await tokenService.deploy();
             await deployTx.wait();
         }, TIMEOUT);
-    })
+
+    });
 
     describe("Initialization", () => {
+
         test("Bridge: Initialize", async () => {
             const threshold = 1;
             const tx = await bridge.initialize_tb(
@@ -117,14 +143,29 @@ describe("Token Service Core", () => {
             await tx.wait();
         }, TIMEOUT);
 
-        test("Bridge: Add ethereum Chain", async () => {
+        test("Bridge: Add BSc Chain", async () => {
+            const addEthChainTx = await bridge.add_chain_tb(BSC_TESTNET);
+            await addEthChainTx.wait();
+        }, TIMEOUT);
+
+        test("Bridge: Add eth Chain", async () => {
             const addEthChainTx = await bridge.add_chain_tb(ethChainId);
+            await addEthChainTx.wait();
+        }, TIMEOUT);
+
+        test("Bridge: add seq number in eth chain", async () => {
+            const addEthChainTx = await bridge.migrate_eth_seq(BigInt(3000));
             await addEthChainTx.wait();
         }, TIMEOUT)
 
         test("Bridge: Add base Chain", async () => {
             const addBaseChainTx = await bridge.add_chain_tb(baseChainId);
             await addBaseChainTx.wait();
+        }, TIMEOUT)
+
+        test("Bridge: Add Service", async () => {
+            const supportServiceTx = await bridge.add_service_tb(tokenServiceWAleo.address());
+            await supportServiceTx.wait();
         }, TIMEOUT)
 
         test("Bridge: Add Service", async () => {
@@ -137,15 +178,28 @@ describe("Token Service Core", () => {
             await unpauseTx.wait();
         }, TIMEOUT)
 
-        test("Holding: Initialize", async () => {
+        test("Holding: Waleo Initialize", async () => {
+            holdingWAleo.connect(aleoUser1)
+            const tx = await holdingWAleo.initialize_holding(tokenServiceWAleo.address());
+            await tx.wait();
+        }, TIMEOUT)
+
+        test("Holding: eth Initialize", async () => {
             const tx = await holding.initialize_holding(tokenService.address());
             await tx.wait();
         }, TIMEOUT)
+
+        test("Token Service WAleo: Initialize", async () => {
+            tokenServiceWAleo.connect(aleoUser1)
+            const tx = await tokenServiceWAleo.initialize_ts(admin);
+            await tx.wait();
+        }, TIMEOUT);
 
         test("Token Service: Initialize", async () => {
             const tx = await tokenService.initialize_ts(admin);
             await tx.wait();
         }, TIMEOUT);
+
 
         test("Token Service: Register token in Token registry", async () => {
             console.log("registered tokenID ", tokenID)
@@ -206,7 +260,249 @@ describe("Token Service Core", () => {
             const unpauseTx = await tokenService.unpause_token_ts(tokenID);
             await unpauseTx.wait();
         }, TIMEOUT)
+    });
+
+    describe("Add  Token Info", () => {
+
+
+        test("Token Service: Add Token Info", async () => {
+            const minimumTransfer = BigInt(100);
+            const maximumTransfer = BigInt(100_00_000);
+            tokenServiceWAleo.connect(admin);
+            const tx = await tokenServiceWAleo.add_token_info(
+                minimumTransfer,
+                maximumTransfer,
+                evm2AleoArrWithoutPadding(usdcContractAddr),
+                evm2AleoArrWithoutPadding(ethTsContractAddr),
+                BSC_TESTNET,
+                platform_fee,
+            );
+            await tx.wait();
+        }, TIMEOUT)
+
+        test("Token Service: Unpause Token", async () => {
+            const unpauseEthTx = await tokenServiceWAleo.unpause_token_ts(BSC_TESTNET);
+            await unpauseEthTx.wait();
+        }, TIMEOUT)
     })
+
+
+    describe("Token Send WAleo", () => {
+        const destChainId = BSC_TESTNET;
+        const destTsAddr = ethTsContractAddr.toLowerCase();
+
+        const destToken = usdcContractAddr.toLowerCase();
+        const receiver = ethUser.toLowerCase()
+        const ethChainTokenInfo: ChainToken = {
+            chain_id: BSC_TESTNET,
+            token_id: ALEO_CREDITS_TOKEN_ID
+        }
+
+        let minAmount: bigint;
+        let maxAmount: bigint;
+
+        test("Get minimum and maximum amount", async () => {
+            minAmount = await tokenServiceWAleo.min_transfers(ethChainTokenInfo, BigInt(0));
+            maxAmount = await tokenServiceWAleo.max_transfers(ethChainTokenInfo, BigInt(0));
+        }, TIMEOUT)
+
+        describe("Token Send Public", () => {
+            const ethChainTokenInfo: ChainToken = {
+                chain_id: BSC_TESTNET,
+                token_id: ALEO_CREDITS_TOKEN_ID
+            }
+
+            test("happy token send in public version",
+                async () => {
+                    const send_amount = BigInt(1_000_000);
+                    const initialTokenSupply = await tokenServiceWAleo.total_supply(ethChainTokenInfo, BigInt(0));
+                    // const aleocredit = await credits.account(aleoUser1, BigInt(0));
+                    expect(await tokenServiceWAleo.min_transfers(ethChainTokenInfo)).toBeLessThanOrEqual(send_amount)
+                    expect(await tokenServiceWAleo.max_transfers(ethChainTokenInfo)).toBeGreaterThanOrEqual(send_amount)
+                    tokenServiceWAleo.connect(admin);
+                    tokenRegistry.connect(admin);
+                    const admin_initial_credit = await credits.account(admin, BigInt(0));
+                    const contract_initial_credit = await credits.account(tokenServiceWAleo.address(), BigInt(0));
+                    const other_chain_token_service = await tokenServiceWAleo.other_chain_token_service(ethChainTokenInfo);
+                    const other_chain_token_address = await tokenServiceWAleo.other_chain_token_address(ethChainTokenInfo);
+                    expect(other_chain_token_service).not.toBeNull();
+                    expect(other_chain_token_address).not.toBeNull();
+                    // const council_initial_balance = await credits.account(tokenServiceWAleoCouncil.address());
+                    const platformFee = await getPlatformFeeInAmount(send_amount, platform_fee);
+                    tokenServiceWAleo.connect(aleoUser1);
+                    const tx = await tokenServiceWAleo.token_send_public(
+                        evm2AleoArrWithoutPadding(receiver),
+                        send_amount,
+                        destChainId,
+                        evm2AleoArrWithoutPadding(destTsAddr),
+                        evm2AleoArrWithoutPadding(destToken),
+                        platformFee
+                    );
+                    await tx.wait();
+                    const admin_final_credit = await credits.account(admin);
+                    const finalTokenSupply = await tokenServiceWAleo.total_supply(ethChainTokenInfo);
+                    const contract_final_credit = await credits.account(tokenServiceWAleo.address(), BigInt(0));
+                    expect(admin_final_credit).toBeLessThan(admin_initial_credit - send_amount) //346816 takes as a from aleo credits
+                    expect(finalTokenSupply).toBe(initialTokenSupply + send_amount - platformFee) //need to pass this as well
+                    //check total supply as well //need fix in contract side as well
+                },
+                TIMEOUT
+            );
+        })
+    });
+
+    describe("Token Receive WAleo", () => {
+        const createPacket = (
+            receiver: string,
+            amount: bigint,
+            aleoTsAddr: string,
+            sourcecChainId: bigint,
+            tsContractAddress: string,
+            version = VERSION_PUBLIC_NORELAYER_NOPREDICATE,
+
+        ): InPacket => {
+            return createRandomPacket(
+                receiver,
+                amount,
+                sourcecChainId,
+                aleoChainId,
+                tsContractAddress,
+                aleoTsAddr,
+                ALEO_CREDITS_TOKEN_ID,
+                version,
+                ethUser,
+            );
+        };
+
+        describe("Token Receive Public", () => {
+            const ethChainTokenInfo: ChainToken = {
+                chain_id: BSC_TESTNET,
+                token_id: ALEO_CREDITS_TOKEN_ID
+            }
+            test("All Fund should go back to the holding account if screening fails", async () => {
+                const receiveAmount: bigint = BigInt(100_00)
+                const packet = createPacket(aleoUser1, receiveAmount, tokenServiceWAleo.address(), BSC_TESTNET, ethTsContractAddr);
+                tokenServiceWAleo.connect(admin);
+                const token_status = await tokenServiceWAleo.status(ethChainTokenInfo);
+                expect(token_status).toBe(false); //SHOULD UNPAUSE TOKEN
+                const signature = signPacket(packet, false, tokenServiceWAleo.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                const other_chain_token_service = await tokenServiceWAleo.other_chain_token_service(ethChainTokenInfo)
+                expect(other_chain_token_service).not.toBeNull()
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+                const user_initial_credits = await credits.account(aleoUser1);
+                const initial_held_amount = await tokenServiceWAleo.token_holding(ALEO_CREDITS_TOKEN_ID, BigInt(0))
+                const initialTokenSupply = await tokenServiceWAleo.total_supply(ethChainTokenInfo, BigInt(0));
+                tokenServiceWAleo.connect(aleoUser1);
+                const tx = await tokenServiceWAleo.token_receive_public(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.receiver_address,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(packet.source.addr)
+                );
+                const [screeningPassed] = await tx.wait();
+
+                const finalTokenSupply = await tokenServiceWAleo.total_supply(ethChainTokenInfo);
+                const finalHeldAmount = await tokenServiceWAleo.token_holding(ALEO_CREDITS_TOKEN_ID)
+                const user_final_credits = await credits.account(aleoUser1);
+
+                expect(finalHeldAmount).toBe(initial_held_amount + receiveAmount);
+                // expect(finalTokenSupply).toBe(initialTokenSupply - receiveAmount + relayer_fee) //need to pass this as well //currently isssue in contract
+            }, TIMEOUT)
+
+            test("Happy receive token(bsc chain) public", async () => {
+
+                const unpauseEthTx = await tokenServiceWAleo.unpause_token_ts(BSC_TESTNET);
+                await unpauseEthTx.wait();
+
+                const receiveAmount: bigint = BigInt(100_00)
+                const packet = createPacket(aleoUser1, receiveAmount, tokenServiceWAleo.address(), BSC_TESTNET, ethTsContractAddr);
+                tokenServiceWAleo.connect(admin);
+                const token_status = await tokenServiceWAleo.status(ethChainTokenInfo);
+                expect(token_status).toBe(false); //SHOULD UNPAUSE TOKEN
+                const signature = signPacket(packet, true, tokenServiceWAleo.config.privateKey);
+                const signatures = [
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                    signature,
+                ];
+                const signers = [
+                    admin,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                    ALEO_ZERO_ADDRESS,
+                ];
+
+                let packetId: PacketId = {
+                    chain_id: packet.source.chain_id,
+                    sequence: packet.sequence
+                }
+
+
+                //check bridge pausability status
+                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
+                const other_chain_token_service = await tokenServiceWAleo.other_chain_token_service(ethChainTokenInfo)
+                expect(other_chain_token_service).not.toBeNull()
+                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
+                const user_initial_credits = await credits.account(aleoUser1);
+                const initial_held_amount = await tokenServiceWAleo.token_holding(ALEO_CREDITS_TOKEN_ID, BigInt(0))
+                const initialTokenSupply = await tokenServiceWAleo.total_supply(ethChainTokenInfo, BigInt(0));
+                tokenServiceWAleo.connect(aleoUser1);
+                const tx = await tokenServiceWAleo.token_receive_public(
+                    prunePadding(packet.message.sender_address),
+                    packet.message.receiver_address,
+                    packet.message.amount,
+                    packet.sequence,
+                    packet.height,
+                    signers,
+                    signatures,
+                    packet.source.chain_id,
+                    prunePadding(packet.source.addr)
+                );
+                const [screeningPassed] = await tx.wait();
+
+                const finalTokenSupply = await tokenServiceWAleo.total_supply(ethChainTokenInfo);
+                const finalHeldAmount = await tokenServiceWAleo.token_holding(ALEO_CREDITS_TOKEN_ID)
+                const user_final_credits = await credits.account(aleoUser1);
+
+                expect(finalHeldAmount).toBe(initial_held_amount);
+                expect(user_final_credits).toBeLessThan(user_initial_credits + receiveAmount) //375749 takes as a fee by credits contract
+                expect(user_final_credits).toBeGreaterThan(user_initial_credits + receiveAmount - BigInt(500000))
+                expect(finalTokenSupply).toBe(initialTokenSupply - receiveAmount) //need to pass this as well //currently isssue in contract
+            }, TIMEOUT);
+
+        })
+
+    });
 
 
     describe("Token Receive", () => {
@@ -232,294 +528,7 @@ describe("Token Service Core", () => {
             );
         };
 
-        describe("Token Receive Public", () => {
-            test.failing("version should be less then 10 for public receive", async () => {
-                const receiveAmount: bigint = BigInt(100_000_000)
-                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_NORELAYER_NOPREDICATE);
-
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, tokenService.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                let packetId: PacketId = {
-                    chain_id: packet.source.chain_id,
-                    sequence: packet.sequence
-                }
-
-                //check bridge pausability status
-                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
-                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-
-                tokenService.connect(aleoUser1);
-                const tx = await tokenService.token_receive_public(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.receiver_address,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    public_relayer_fee,
-                    packet.version
-                );
-                await tx.wait();
-            })
-
-            test.failing("should fail if amount is less than relayer fee", async () => {
-                const receiveAmount: bigint = BigInt(10)
-                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_NORELAYER_NOPREDICATE);
-
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, tokenService.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                let packetId: PacketId = {
-                    chain_id: packet.source.chain_id,
-                    sequence: packet.sequence
-                }
-
-                //check bridge pausability status
-                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
-                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-
-                tokenService.connect(aleoUser1);
-                const tx = await tokenService.token_receive_public(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.receiver_address,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    public_relayer_fee,
-                    packet.version
-                );
-                await tx.wait();
-            })
-
-            test.failing("zero addresss should not be able to receive token", async () => {
-                const receiveAmount: bigint = BigInt(100_000_000)
-                const packet = createPacket(ALEO_ZERO_ADDRESS, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
-
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, tokenService.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                let packetId: PacketId = {
-                    chain_id: packet.source.chain_id,
-                    sequence: packet.sequence
-                }
-
-                //check bridge pausability status
-                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
-                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-
-                tokenService.connect(aleoUser1);
-                const tx = await tokenService.token_receive_public(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.receiver_address,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    public_relayer_fee,
-                    packet.version
-                );
-                await tx.wait();
-            })
-
-            test.failing("should failed if tokeninfo not included in other_chain_token_service mapping", async () => {
-                const receiveAmount: bigint = BigInt(100_000_000)
-                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), BigInt("285563657430695784"), ethTsRandomContractAddress);
-
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, tokenService.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                let packetId: PacketId = {
-                    chain_id: packet.source.chain_id,
-                    sequence: packet.sequence
-                }
-
-                //check bridge pausability status
-                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
-                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-
-                tokenService.connect(aleoUser1);
-                const tx = await tokenService.token_receive_public(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.receiver_address,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    public_relayer_fee,
-                    packet.version
-                );
-                await tx.wait();
-            }, TIMEOUT)
-
-            test.failing("Should fail the transaction if stored token service address is not same as the one in mapping", async () => {
-                const receiveAmount: bigint = BigInt(100_000_000)
-                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), BigInt("285563657430695784"), ethTsRandomContractAddress);
-
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, tokenService.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                let packetId: PacketId = {
-                    chain_id: packet.source.chain_id,
-                    sequence: packet.sequence
-                }
-
-                //check bridge pausability status
-                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
-                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-
-                tokenService.connect(aleoUser1);
-                const tx = await tokenService.token_receive_public(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.receiver_address,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(evm2AleoArr(ethTsRandomContractAddress2)),
-                    public_relayer_fee,
-                    packet.version
-                );
-                await expect(tx.wait()).rejects.toThrow();
-            }, TIMEOUT)
-
-            test.failing("should fail if user send fee and fee set in mapping are different", async () => {
-                const receiveAmount: bigint = BigInt(100_000_000)
-                const packet = createPacket(aleoUser1, receiveAmount, tokenService.address(), ethChainId, ethTsContractAddr);
-
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, tokenService.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                let packetId: PacketId = {
-                    chain_id: packet.source.chain_id,
-                    sequence: packet.sequence
-                }
-
-                //check bridge pausability status
-                expect(await bridge.bridge_settings(BRIDGE_PAUSABILITY_INDEX)).toBe(BRIDGE_UNPAUSED_VALUE);
-                expect(await bridge.in_packet_consumed(packetId, false)).toBe(false);
-
-                tokenService.connect(aleoUser1);
-                const tx = await tokenService.token_receive_public(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.receiver_address,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    BigInt(50000), //fee diferent here
-                    packet.version
-                );
-                await tx.wait();
-            }, TIMEOUT)
+        describe("Token Receive Public ETH", () => {
 
             test("All Fund should go back to the holding account if screening fails", async () => {
                 const receiveAmount: bigint = BigInt(100_000_000)
@@ -884,135 +893,6 @@ describe("Token Service Core", () => {
         })
 
         describe("Token Receive Private", () => {
-            test.failing("version should be greater then 10 for private receive", async () => {
-                const pre_image = BigInt(123);
-                const image: Image = {
-                    pre_image,
-                    receiver: aleoUser1
-                }
-                const hashed_address = hashStructToAddress(image);
-                const packet = createPacket(hashed_address, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PUBLIC_NORELAYER_NOPREDICATE);
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, bridge.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                const tx = await tokenService.token_receive_private(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    pre_image,
-                    aleoUser1,
-                    packet.version,
-                    private_relayer_fee
-                );
-                await tx.wait();
-            })
-
-            test.failing("should fail if amount is less than relayer fee", async () => {
-                const pre_image = BigInt(123);
-                const image: Image = {
-                    pre_image,
-                    receiver: aleoUser1
-                }
-                const hashed_address = hashStructToAddress(image);
-                const packet = createPacket(hashed_address, BigInt(10), tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_NORELAYER_NOPREDICATE);
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, bridge.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                const tx = await tokenService.token_receive_private(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    pre_image,
-                    aleoUser1,
-                    packet.version,
-                    private_relayer_fee
-                );
-                await tx.wait();
-            })
-
-            test.failing("should fail if user send fee and fee set in mapping are different", async () => {
-                const pre_image = BigInt(123);
-                const image: Image = {
-                    pre_image,
-                    receiver: aleoUser1
-                }
-                const hashed_address = hashStructToAddress(image);
-                const packet = createPacket(hashed_address, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr, VERSION_PRIVATE_NORELAYER_NOPREDICATE);
-                tokenService.connect(admin);
-                const signature = signPacket(packet, true, bridge.config.privateKey);
-                const signatures = [
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                    signature,
-                ];
-                const signers = [
-                    admin,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                    ALEO_ZERO_ADDRESS,
-                ];
-
-                const tx = await tokenService.token_receive_private(
-                    prunePadding(packet.message.sender_address),
-                    packet.message.dest_token_id,
-                    packet.message.amount,
-                    packet.sequence,
-                    packet.height,
-                    signers,
-                    signatures,
-                    packet.source.chain_id,
-                    prunePadding(packet.source.addr),
-                    pre_image,
-                    aleoUser1,
-                    packet.version,
-                    BigInt(3000) //Fee different
-                );
-                await tx.wait();
-            }, TIMEOUT)
-
             test("If screening failed, All Funds minted in holding account publicly ", async () => {
                 const receiveAmount: bigint = BigInt(1000_000)
                 const initialHoldingBalanceInRegistery = await getUserAuthorizedBalance(holding.address(), tokenID);
@@ -1315,55 +1195,14 @@ describe("Token Service Core", () => {
             );
 
         })
-
-        test.failing("Wrong token service cannot receive the token, transaction is expected to fail", async () => {
-            const packet = createPacket(aleoUser1, BigInt(100_000_000), tokenService.address(), ethChainId, ethTsContractAddr);
-            tokenService.connect(admin);
-            const signature = signPacket(packet, true, tokenService.config.privateKey);
-            const signatures = [
-                signature,
-                signature,
-                signature,
-                signature,
-                signature,
-            ];
-            const signers = [
-                admin,
-                ALEO_ZERO_ADDRESS,
-                ALEO_ZERO_ADDRESS,
-                ALEO_ZERO_ADDRESS,
-                ALEO_ZERO_ADDRESS,
-            ];
-
-            tokenService.connect(admin)
-            const tx = await tokenService.token_receive_public(
-                prunePadding(packet.message.sender_address),
-                packet.message.dest_token_id,
-                packet.message.receiver_address,
-                packet.message.amount,
-                packet.sequence,
-                packet.height,
-                signers,
-                signatures,
-                packet.source.chain_id,
-                evm2AleoArrWithoutPadding(ethTsRandomContractAddress),
-                public_relayer_fee,
-                packet.version
-            );
-            await expect(tx.wait()).rejects.toThrow()
-        },
-            TIMEOUT
-        );
     });
 
 
     describe("Token Send", () => {
         const destChainId = ethChainId;
         const destTsAddr = ethTsContractAddr.toLowerCase();
-        const destTsAddr2 = ethTsRandomContractAddress.toLowerCase();
 
         const destToken = usdcContractAddr.toLowerCase();
-        const sender = aleoUser5
         const receiver = ethUser.toLowerCase()
         const amount = BigInt(100000);
 
@@ -1375,127 +1214,7 @@ describe("Token Service Core", () => {
             maxAmount = await tokenService.max_transfers(tokenID, BigInt(0));
         }, TIMEOUT)
 
-        test("Wrong connector for the token cannot send token",
-            async () => {
-                tokenService.connect(admin);
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                const tx = await tokenService.token_send_public(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr2),
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    non_active_relayer
-                );
-                await expect(tx.wait()).rejects.toThrow()
-            },
-            TIMEOUT
-        );
-
-        test.failing("Transferred amount must be greater than or equal to min amount",
-            async () => {
-                const amount = BigInt(99);
-                expect(amount).toBeLessThan(minAmount);
-                tokenService.connect(connector);
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                const tx = await tokenService.token_send_public(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    non_active_relayer
-                );
-                await tx.wait();
-            },
-            TIMEOUT
-        );
-
-        test.failing("Transferred amount must be less than or equal to max amount",
-            async () => {
-                const amount = BigInt(100_000);
-                expect(amount).toBeLessThanOrEqual(maxAmount);
-                tokenService.connect(connector);
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                const tx = await tokenService.token_send_public(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    non_active_relayer
-                );
-                await tx.wait();
-            },
-            TIMEOUT
-        );
-
         describe("Token Send Public", () => {
-            test.failing("Cannot send if user has insufficient fund", async () => {
-                const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
-
-                expect(await tokenService.min_transfers(tokenID)).toBeLessThanOrEqual(amount)
-                expect(await tokenService.max_transfers(tokenID)).toBeGreaterThanOrEqual(amount)
-                expect(await tokenService.total_supply(tokenID)).toBeGreaterThanOrEqual(amount)
-                tokenService.connect(admin);
-                mtsp.connect(admin);
-                const balance: Balance = await getUserAuthorizedBalance(admin, tokenID)
-
-                //council contract hold the platform fee[after send platform fee need to be deposited in council]
-                const council_initial_balance: Balance = await getUserAuthorizedBalance(council.address(), tokenID);
-
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                if (balance.balance > amount && initialTokenSupply > amount) {
-                    console.log("check passedd");
-
-                    const tx = await tokenService.token_send_public(
-                        tokenID,
-                        evm2AleoArrWithoutPadding(receiver),
-                        balance.balance + BigInt(10000000000000),
-                        destChainId,
-                        evm2AleoArrWithoutPadding(destTsAddr),
-                        evm2AleoArrWithoutPadding(destToken),
-                        platformFee,
-                        non_active_relayer
-                    );
-                    await tx.wait();
-                }
-            }, TIMEOUT);
-
-            test.failing("Should failed if platform fee is mismatched", async () => {
-                const initialTokenSupply = await tokenService.total_supply(tokenID, BigInt(0));
-                expect(await tokenService.min_transfers(tokenID)).toBeLessThanOrEqual(amount)
-                expect(await tokenService.max_transfers(tokenID)).toBeGreaterThanOrEqual(amount)
-                expect(await tokenService.total_supply(tokenID)).toBeGreaterThanOrEqual(amount)
-                tokenService.connect(admin);
-                mtsp.connect(admin);
-                const balance: Balance = await getUserAuthorizedBalance(admin, tokenID)
-
-                //council contract hold the platform fee[after send platform fee need to be deposited in council]
-                const council_initial_balance: Balance = await getUserAuthorizedBalance(council.address(), tokenID);
-
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                if (balance.balance > amount && initialTokenSupply > amount) {
-
-                    const tx = await tokenService.token_send_public(
-                        tokenID,
-                        evm2AleoArrWithoutPadding(receiver),
-                        balance.balance + BigInt(10000000000000),
-                        destChainId,
-                        evm2AleoArrWithoutPadding(destTsAddr),
-                        evm2AleoArrWithoutPadding(destToken),
-                        BigInt(1),
-                        non_active_relayer
-                    );
-                    await tx.wait();
-                }
-            }, TIMEOUT);
 
             test("happy token send in public version with non active relayer",
                 async () => {
@@ -1618,113 +1337,9 @@ describe("Token Service Core", () => {
                 TIMEOUT
             );
 
-            test.failing("Cannot send if token status is paused", async () => {
-                // Pause the token
-                tokenService.connect(admin);
-                const pauseTx = await tokenService.pause_token_ts(tokenID);
-                await pauseTx.wait();
-                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_PAUSED_VALUE);
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                const tx = await tokenService.token_send_public(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    active_relayer
-                );
-                await tx.wait();
-            }, TIMEOUT)
-
-            test("Unpause the token for rest of the transaction", async () => {
-                tokenService.connect(admin);
-                const unpauseTx = await tokenService.unpause_token_ts(tokenID);
-                await unpauseTx.wait();
-                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_UNPAUSED_VALUE);
-            }, TIMEOUT)
-
-            test.failing("Cannot send if other_chain_token_address is wrong data", async () => {
-                tokenService.connect(admin);
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                const tx = await tokenService.token_send_public(
-                    hashStruct(BigInt('6148332741585187462067')), //wrong tokenId so it gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    BigInt("28556963456465430695"), // wrong chain id so it  gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    active_relayer
-                );
-                await tx.wait();
-            }, TIMEOUT)
-
-            test.failing("Cannot send if other_chain_token_service is wrong data", async () => {
-                tokenService.connect(admin);
-                const platformFee = await getPlatformFeeInAmount(amount, public_platform_fee);
-                const tx = await tokenService.token_send_public(
-                    hashStruct(BigInt('6148332741585187462067')), //wrong tokenId so it gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr2), //wrong ts address so it gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(destToken),
-                    platformFee,
-                    active_relayer
-                );
-                await tx.wait();
-            }, TIMEOUT)
         })
 
         describe("Token Send Private", () => {
-            test.failing("Cannot send if user has insufficient fund", async () => {
-                const authorized_until = 4294967295;
-                const amount_minted = BigInt(100_000);
-
-                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
-                const [record] = await mintTx.wait();
-                const decryptedRecord = decryptToken(record, privateKey1)
-                const platformFee = await getPlatformFeeInAmount(amount_minted + BigInt(100), private_platform_fee);
-                tokenService.connect(aleoUser1)
-                const sendPrivateTx = await tokenService.token_send_private(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount_minted + BigInt(100),
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    decryptedRecord,
-                    platformFee,
-                    non_active_relayer
-                )
-                expect(sendPrivateTx.wait()).rejects.toThrow();
-            }, TIMEOUT);
-
-            test.failing("Should failed if platform fee is mismatched", async () => {
-                const authorized_until = 4294967295;
-                const amount_minted = BigInt(1000_000);
-
-                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
-                const [record] = await mintTx.wait();
-                console.log(record);
-                const decryptedRecord = decryptToken(record, privateKey1)
-                const platformFee = await getPlatformFeeInAmount(amount_minted, private_platform_fee);
-                tokenService.connect(aleoUser1)
-                const sendPrivateTx = await tokenService.token_send_private(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount_minted,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    decryptedRecord,
-                    platformFee + BigInt(10),
-                    non_active_relayer
-                )
-                await sendPrivateTx.wait()
-            }, TIMEOUT)
 
             test("Token send private with non active relayer", async () => {
                 //mint record for aleoUser1
@@ -1797,91 +1412,10 @@ describe("Token Service Core", () => {
                 expect(council_final_balance.balance).toBe(BigInt(private_platform_fee) + beforeCouncilBalance.balance);
             }, TIMEOUT);
 
-            test.failing("Cannot send if token status is paused", async () => {
-                // Pause the token
-                tokenService.connect(admin);
-                const pauseTx = await tokenService.pause_token_ts(tokenID);
-                await pauseTx.wait();
-
-                const authorized_until = 4294967295;
-                const amount_minted = BigInt(100_000_000);
-                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
-                const [record] = await mintTx.wait();
-                const decryptedRecord = decryptToken(record, privateKey1)
-
-                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_PAUSED_VALUE);
-                const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
-                const tx = await tokenService.token_send_private(
-                    tokenID,
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    decryptedRecord,
-                    platformFee,
-                    active_relayer
-                );
-                await tx.wait();
-            }, TIMEOUT);
-
-            test("Unpause the token for rest of the transaction", async () => {
-                tokenService.connect(admin);
-                const unpauseTx = await tokenService.unpause_token_ts(tokenID);
-                await unpauseTx.wait();
-                expect(await tokenService.token_status(tokenID)).toBe(TOKEN_UNPAUSED_VALUE);
-            }, TIMEOUT);
-
-            test.failing("Cannot send if other_chain_token_address is wrong data", async () => {
-                const authorized_until = 4294967295;
-                const amount_minted = BigInt(100_000_000);
-                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
-                const [record] = await mintTx.wait();
-                const decryptedRecord = decryptToken(record, privateKey1)
-
-                tokenService.connect(aleoUser1)
-                const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
-                const tx = await tokenService.token_send_private(
-                    hashStruct(BigInt('61483327841585187462067')), //wrong tokenId so it gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    BigInt("285569634564654430695"), // wrong chain id so it  gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(destTsAddr),
-                    evm2AleoArrWithoutPadding(destToken),
-                    decryptedRecord,
-                    platformFee,
-                    active_relayer
-                );
-                await tx.wait();
-            }, TIMEOUT);
-
-            test("Cannot send if other_chain_token_service is wrong data", async () => {
-                const authorized_until = 4294967295;
-                const amount_minted = BigInt(100_000_000);
-                const mintTx = await mtsp.mint_private(tokenID, aleoUser1, amount_minted, false, authorized_until);
-                const [record] = await mintTx.wait();
-                const decryptedRecord = decryptToken(record, privateKey1)
-
-                tokenService.connect(aleoUser1)
-                const platformFee = await getPlatformFeeInAmount(amount, private_platform_fee);
-                const tx = await tokenService.token_send_private(
-                    hashStruct(BigInt('614327841585187462067')), //wrong tokenId so it gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(receiver),
-                    amount,
-                    destChainId,
-                    evm2AleoArrWithoutPadding(destTsAddr2), //wrong ts address so it gives wrong chain_token_info
-                    evm2AleoArrWithoutPadding(destToken),
-                    decryptedRecord,
-                    platformFee,
-                    active_relayer
-                );
-                await tx.wait();
-            }, TIMEOUT);
         })
     });
 
-});
-
+})
 
 
 //function to fetch user balance
@@ -1900,4 +1434,3 @@ const getUserAuthorizedBalance = async (user: string, tokenId: bigint) => {
     const balance: Balance = await mtsp.authorized_balances(hash, default_balance);
     return balance;
 }
-

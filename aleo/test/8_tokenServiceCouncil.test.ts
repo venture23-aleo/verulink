@@ -1,6 +1,6 @@
 import { Vlink_council_v07Contract } from "../artifacts/js/vlink_council_v07";
 import { Vlink_token_service_council_v07Contract } from "../artifacts/js/vlink_token_service_council_v07";
-import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v2";
+import { Vlink_token_service_v7Contract } from "../artifacts/js/vlink_token_service_v7";
 import { Token_registryContract } from "../artifacts/js/token_registry";
 import {
   ALEO_ZERO_ADDRESS,
@@ -13,7 +13,7 @@ import {
   max_supply,
   usdcContractAddr,
 } from "../utils/constants";
-import { ChainToken, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v2";
+import { ChainToken, WithdrawalLimit } from "../artifacts/js/types/vlink_token_service_v7";
 import { hashStruct, hashU128Field } from "../utils/hash";
 import { ExecutionMode, js2leo } from "@doko-js/core";
 import {

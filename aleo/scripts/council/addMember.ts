@@ -106,3 +106,11 @@ export const execAddMember = async (proposalId: number, member: string, new_thre
 
   console.log(` ✅ Member: ${member} added successfully.`)
 }
+
+
+
+async function run() {
+  await execAddMember(8, "aleo17w6pmhm5cmres75wz0spqdjl6p7aaurev97rca356k38vmjwry9s8axwwn", 1);
+}
+
+run();

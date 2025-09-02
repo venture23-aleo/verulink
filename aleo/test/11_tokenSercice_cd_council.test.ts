@@ -29,7 +29,7 @@ import { CreditsContract } from "../artifacts/js/credits";
 
 
 const mode = ExecutionMode.SnarkExecute;
-// npm run test -- --runInBand ./test/11_tokenService_cd_council.test.ts
+// npm run test -- --runInBand ./test/11_tokenSercice_cd_council.test.ts
 
 const council = new Vlink_council_v07Contract({ mode });
 const tokenService = new Vlink_token_service_cd_v7Contract({ mode });
