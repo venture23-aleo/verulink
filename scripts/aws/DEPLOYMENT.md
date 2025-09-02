@@ -295,7 +295,7 @@ First, go to the installation root directory `verulink_attestor`.
 2. Update the mTLS CA certificate download link (base64-encoded) in the Ansible variables of the playbook `update_mtls_cert.yaml` with the value `<new_ca_certificate_base64>`
 3. Update
    ```bash
-   ansible-playbook -i inventory.txt  update_mtls_cert.yaml --limit devnet_gcp
+   ansible-playbook -i inventory.txt  update_mtls_cert.yaml --limit mainnet
    ```
 ### Installing on AWS
 
