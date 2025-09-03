@@ -5,8 +5,9 @@
   become: true
   vars:
       has_new_ca_cert: true
-      has_new_attestor_cert: false
-      # gcp_project: <gcp_project_id> # gcp project id
+      has_new_attestor_cert: true
+      infrastructure_provider: "aws" # gcp or aws
+      # gcp_project: <gcp_project_id # gcp project id
       region: us-east-1 # aws region
       # region: us-central1 # gcp region
       ansible_root: "{{ playbook_dir }}"
@@ -18,7 +19,6 @@
       mtls_secret_name: "<mtls_secret_name>"
       new_ca_certificate_base64: "<new_ca_certificate_base64>"
       new_attestor_certificate_base64: "<new_attestor_certificate_base64>"
-      infrastructure_provider: "aws" # gcp or aws
       update_mtls_certificates: true # true or false
   
   pre_tasks:
@@ -26,7 +26,7 @@
       fail:
         msg: "mTLS certificate update is disabled. Set update_mtls_certificates to true to proceed."
       when: not update_mtls_certificates | default(false)
-
+      
     - block:
         - name: Check if GCP CLI is installed
           ansible.builtin.command: gcloud --version
@@ -251,9 +251,13 @@
         ca_cert_path: "{{ mtls_dir }}/{{ ca_cert_filename }}"
       when: has_new_ca_cert
 
-    - name: Parse config.yaml to get attestor certificate filename and set path
+    - name: Parse config.yaml to get attestor certificate filename
       set_fact:
         attestor_cert_filename: "{{ (config_yaml_dict.get('collector_service', {}).get('attestor_certificate', '/configs/.mtls/attestor1.crt')) | basename }}"
+      when: has_new_attestor_cert
+
+    - name: Set attestor certificate path
+      set_fact:
         attestor_cert_path: "{{ mtls_dir }}/{{ attestor_cert_filename }}"
       when: has_new_attestor_cert
 
@@ -269,6 +273,13 @@
       args:
         executable: /bin/bash
 
+    - name: Decode and save attestor certificate to filesystem
+      ansible.builtin.shell: |
+        echo "{{ new_attestor_certificate_base64 }}" | base64 -d > "{{ attestor_cert_path }}"
+      args:
+        executable: /bin/bash
+      when: has_new_attestor_cert
+
     - name: Set ownership of CA certificate file to match original
       ansible.builtin.file:
         path: "{{ ca_cert_path }}"
@@ -276,6 +287,20 @@
         group: "{{ ca_cert_stat.stat.gr_name | default(omit) }}"
         mode: "{{ ca_cert_stat.stat.mode | default(omit) }}"
       when: has_new_ca_cert and ca_cert_stat.stat.exists | default(false)
+
+    - name: Get current attestor certificate file stat
+      ansible.builtin.stat:
+        path: "{{ attestor_cert_path }}"
+      register: attestor_cert_stat
+      when: has_new_attestor_cert
+
+    - name: Set ownership of attestor certificate file to match original
+      ansible.builtin.file:
+        path: "{{ attestor_cert_path }}"
+        owner: "{{ attestor_cert_stat.stat.pw_name | default(omit) }}"
+        group: "{{ attestor_cert_stat.stat.gr_name | default(omit) }}"
+        mode: "{{ attestor_cert_stat.stat.mode | default(omit) }}"
+      when: has_new_attestor_cert and attestor_cert_stat.stat.exists | default(false)
 
     - name: Read downloaded CA certificate
       ansible.builtin.slurp:
@@ -285,12 +310,6 @@
     - name: Print ca_cert_slurp
       ansible.builtin.debug:
         msg: "ca_cert_slurp: {{ ca_cert_slurp }}"
-
-    - name: Read downloaded attestor certificate
-      ansible.builtin.slurp:
-        src: "{{ attestor_cert_path }}"
-      register: attestor_cert_slurp
-      when: has_new_attestor_cert
     
     - name: Update ca_certificate in secret JSON with new cert
       shell: |
@@ -298,6 +317,20 @@
         jq --arg cert "$cert_content" '.ca_certificate = $cert' /tmp/current_secret.json > /tmp/updated_secret.json
       args:
         executable: /bin/bash
+      when: has_new_ca_cert
+
+    - name: Update attestor_certificate in secret JSON with new cert
+      shell: |
+        attestor_cert_content=$(cat "{{ attestor_cert_path }}")
+        if [ "{{ has_new_ca_cert }}" = "true" ]; then
+          jq --arg cert "$attestor_cert_content" '.attestor_certificate = $cert' /tmp/updated_secret.json > /tmp/updated_secret_final.json
+          mv /tmp/updated_secret_final.json /tmp/updated_secret.json
+        else
+          jq --arg cert "$attestor_cert_content" '.attestor_certificate = $cert' /tmp/current_secret.json > /tmp/updated_secret.json
+        fi
+      args:
+        executable: /bin/bash
+      when: has_new_attestor_cert
 
     - name: Update GCP Secret Manager with new certificates
       ansible.builtin.command: |
@@ -317,14 +350,14 @@
       when: (has_new_ca_cert or has_new_attestor_cert) and infrastructure_provider == "aws"
       register: secret_update
       
-    - name: Clean up all current temporary secret files
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "/tmp/updated_secret.json"
-        - "/tmp/current_secret.json"
-      when: has_new_ca_cert or has_new_attestor_cert
+    # - name: Clean up all current temporary secret files
+    #   ansible.builtin.file:
+    #     path: "{{ item }}"
+    #     state: absent
+    #   loop:
+    #     - "/tmp/updated_secret.json"
+    #     - "/tmp/current_secret.json"
+    #   when: has_new_ca_cert or has_new_attestor_cert
 
     - name: Display update summary
       ansible.builtin.debug:
