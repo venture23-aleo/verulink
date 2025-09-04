@@ -15,7 +15,8 @@
       # attestor_install_dir: "/home/ubuntu/verulink/attestor" # v1.0.0
       chain_config_file: "{{ attestor_install_dir }}/chain_config.yaml" # v2.0.0
       # chain_config_file: "{{ attestor_install_dir }}/chainService/config.yaml" # v1.0.0
-      mtls_dir: "{{ attestor_install_dir }}/.mtls"
+      mtls_dir: "{{ attestor_install_dir }}/.mtls" # v2.0.0
+      # mtls_dir: "{{ attestor_install_dir }}/chainService/.mtls" #v1.0.0
       mtls_secret_name: "<mtls_secret_name>"
       new_ca_certificate_base64: "<new_ca_certificate_base64>"
       new_attestor_certificate_base64: "<new_attestor_certificate_base64>"
