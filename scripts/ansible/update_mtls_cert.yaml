@@ -221,6 +221,10 @@
             --output text > /tmp/current_secret.json
       when: infrastructure_provider == "aws"
 
+    - name: Backup mtls directory
+      ansible.builtin.command: cp -a "{{ mtls_dir }}" "{{ mtls_dir }}_old"
+      ignore_errors: true
+      
     - name: Ensure .mtls directory exists
       ansible.builtin.file:
         path: "{{ mtls_dir }}"
