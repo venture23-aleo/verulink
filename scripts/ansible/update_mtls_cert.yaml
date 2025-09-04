@@ -262,11 +262,11 @@
         attestor_cert_path: "{{ mtls_dir }}/{{ attestor_cert_filename }}"
       when: has_new_attestor_cert
 
-    - name: Get current CA certificate file stat
-      ansible.builtin.stat:
-        path: "{{ ca_cert_path }}"
-      register: ca_cert_stat
-      when: has_new_ca_cert
+    # - name: Get current CA certificate file stat
+    #   ansible.builtin.stat:
+    #     path: "{{ ca_cert_path }}"
+    #   register: ca_cert_stat
+    #   when: has_new_ca_cert
     
     - name: Download CA certificate from Base64 URL
       ansible.builtin.shell: |
@@ -281,27 +281,27 @@
         executable: /bin/bash
       when: has_new_attestor_cert
 
-    - name: Set ownership of CA certificate file to match original
-      ansible.builtin.file:
-        path: "{{ ca_cert_path }}"
-        owner: "{{ ca_cert_stat.stat.pw_name | default(omit) }}"
-        group: "{{ ca_cert_stat.stat.gr_name | default(omit) }}"
-        mode: "{{ ca_cert_stat.stat.mode | default(omit) }}"
-      when: has_new_ca_cert and ca_cert_stat.stat.exists | default(false)
+    # - name: Set ownership of CA certificate file to match original
+    #   ansible.builtin.file:
+    #     path: "{{ ca_cert_path }}"
+    #     owner: "{{ ca_cert_stat.stat.pw_name | default(omit) }}"
+    #     group: "{{ ca_cert_stat.stat.gr_name | default(omit) }}"
+    #     mode: "{{ ca_cert_stat.stat.mode | default(omit) }}"
+    #   when: has_new_ca_cert and ca_cert_stat.stat.exists | default(false)
 
-    - name: Get current attestor certificate file stat
-      ansible.builtin.stat:
-        path: "{{ attestor_cert_path }}"
-      register: attestor_cert_stat
-      when: has_new_attestor_cert
+    # - name: Get current attestor certificate file stat
+    #   ansible.builtin.stat:
+    #     path: "{{ attestor_cert_path }}"
+    #   register: attestor_cert_stat
+    #   when: has_new_attestor_cert
 
-    - name: Set ownership of attestor certificate file to match original
-      ansible.builtin.file:
-        path: "{{ attestor_cert_path }}"
-        owner: "{{ attestor_cert_stat.stat.pw_name | default(omit) }}"
-        group: "{{ attestor_cert_stat.stat.gr_name | default(omit) }}"
-        mode: "{{ attestor_cert_stat.stat.mode | default(omit) }}"
-      when: has_new_attestor_cert and attestor_cert_stat.stat.exists | default(false)
+    # - name: Set ownership of attestor certificate file to match original
+    #   ansible.builtin.file:
+    #     path: "{{ attestor_cert_path }}"
+    #     owner: "{{ attestor_cert_stat.stat.pw_name | default(omit) }}"
+    #     group: "{{ attestor_cert_stat.stat.gr_name | default(omit) }}"
+    #     mode: "{{ attestor_cert_stat.stat.mode | default(omit) }}"
+    #   when: has_new_attestor_cert and attestor_cert_stat.stat.exists | default(false)
 
     - name: Read downloaded CA certificate
       ansible.builtin.slurp:
@@ -351,14 +351,14 @@
       when: (has_new_ca_cert or has_new_attestor_cert) and infrastructure_provider == "aws"
       register: secret_update
       
-    # - name: Clean up all current temporary secret files
-    #   ansible.builtin.file:
-    #     path: "{{ item }}"
-    #     state: absent
-    #   loop:
-    #     - "/tmp/updated_secret.json"
-    #     - "/tmp/current_secret.json"
-    #   when: has_new_ca_cert or has_new_attestor_cert
+    - name: Clean up all current temporary secret files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/updated_secret.json"
+        - "/tmp/current_secret.json"
+      when: has_new_ca_cert or has_new_attestor_cert
 
     - name: Display update summary
       ansible.builtin.debug:
