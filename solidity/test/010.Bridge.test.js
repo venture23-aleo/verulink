@@ -80,7 +80,7 @@ describe('Bridge', () => {
     });
 
     it('reverts if the contract is already initialized', async function () {
-        await expect(proxiedV1["Bridge_init(uint256,address)"](destChainId,owner.address)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxiedV1["Bridge_init(uint256,address)"](destChainId,owner.address)).to.be.revertedWithCustomError(proxiedV1, 'InvalidInitialization');
     });
 
     it('should check if a chain is supported', async () => {
@@ -101,7 +101,7 @@ describe('Bridge', () => {
 
     it('should revert on updating destinationChainId by anyone other than owner', async () => {
         const newDestChainId = 3; // Assuming a new destination chainId
-        await expect(proxiedV1.connect(other).updateDestinationChainId(newDestChainId)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedV1.connect(other).updateDestinationChainId(newDestChainId)).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         const updatedDestChainId = await proxiedV1.destinationChainId();
         expect(updatedDestChainId).to.equal(destChainId);
@@ -176,7 +176,7 @@ describe('Bridge', () => {
         const signature2 = await attestor2.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2);
         await(await proxiedV1.connect(owner).pause());
-        await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWith("Pausable: paused");
+        await expect(proxiedV1.connect(tokenService).consume(inPacket, signatures)).to.be.revertedWithCustomError(proxiedV1, "EnforcedPause");
     });
 
     it('should revert on consuming an incoming packet with an unknown token service', async () => {
@@ -268,7 +268,7 @@ describe('Bridge', () => {
             100
         ];
         await(await proxiedV1.connect(owner).pause());
-        await expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWith("Pausable: paused");
+        await expect(proxiedV1.connect(tokenService).sendMessage(outPacket)).to.be.revertedWithCustomError(proxiedV1, "EnforcedPause");
     });
 
     it('should revert when calling sendMessage with unknown destination chainId', async () => {
@@ -371,6 +371,6 @@ describe('Upgradeabilty: ERC20TokenBridgeV2', () => {
     });
 
     it('reverts if the contract is initialized twice', async function () {
-        await expect(proxied.initializev2(100)).to.be.revertedWith('Initializable: contract is already initialized');
+        await expect(proxied.initializev2(100)).to.be.revertedWithCustomError(proxied, 'InvalidInitialization');
     });
 });

@@ -80,7 +80,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestor
-        await expect(proxiedV1.connect(other).updateQuorum(quorumRequired)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedV1.connect(other).updateQuorum(quorumRequired)).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         // Check if the attestor was added
         // const isAttestor = await proxiedV1.isAttestor(newAttestor);
@@ -133,7 +133,7 @@ describe('AttestorManager', () => {
         const quorumRequired = 2;
 
         // Add attestors
-        await expect(proxiedV1.connect(other).addAttestors(attestors, quorumRequired)).to.be.revertedWith("Ownable: caller is not the owner");
+        await expect(proxiedV1.connect(other).addAttestors(attestors, quorumRequired)).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
 
         // Check if the attestor was added
         const isAttestor0 = await proxiedV1.isAttestor(attestors[0]);
@@ -224,7 +224,7 @@ describe('AttestorManager', () => {
         // Try to add attestor with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).addAttestor(newAttestor, quorumRequired)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
     });
 
     // Test onlyOwner modifier for removeAttestor function
@@ -238,7 +238,7 @@ describe('AttestorManager', () => {
         // Try to remove attestor with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).removeAttestor(existingAttestor, quorumRequired)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
     });
 
     it('should emit AttestorAdded event when adding a new attestor', async () => {

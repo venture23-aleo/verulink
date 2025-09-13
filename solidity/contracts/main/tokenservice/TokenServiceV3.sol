@@ -2,14 +2,12 @@
 pragma solidity ^0.8.19;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenServiceV2} from "../../main/tokenservice/TokenServiceV2.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
-
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {PredicateService} from "../../main/tokenservice/predicate/PredicateService.sol";
-
 import {FeeCollector} from "./FeeCollector.sol";
 
 
@@ -24,6 +22,14 @@ contract TokenServiceV3 is TokenServiceV2 {
         FeeCollector _feeCollector
     ) external virtual onlyOwner {
         feeCollector = _feeCollector;
+    }
+
+    function setBlackListService(
+        IBlackListService _blackListService
+    ) external virtual onlyOwner {
+        require(address(_blackListService) != address(0), "TokenService: BlackListServiceCannotBeZero");
+        require(address(blackListService) != address(_blackListService), "TokenService: BlackListServiceCannotBeSameAsCurrent");
+        blackListService = _blackListService;
     }
 
     function _packetify(
@@ -94,7 +100,7 @@ contract TokenServiceV3 is TokenServiceV2 {
         _transfer(tokenAddress, amount, receiver, version, data);
     }
 
-    /// @notice Transfers ETH with predicate authorization
+    /// @notice Transfers ETH without predicate authorization
     /// @param receiver The intended receiver of the transferred ETH
     function transfer(
         string memory receiver,
@@ -106,7 +112,7 @@ contract TokenServiceV3 is TokenServiceV2 {
         _transfer(receiver, version, data);
     }
 
-    /// @notice Transfers ERC20 tokens with predicate authorization
+    /// @notice Transfers ERC20 tokens without predicate authorization
     /// @param tokenAddress The address of the ERC20 token
     /// @param amount Amount of tokens to be transferred
     /// @param receiver The intended receiver of the transferred tokens
@@ -171,40 +177,6 @@ contract TokenServiceV3 is TokenServiceV2 {
         // Perform ERC20 token transfer
         _transfer(tokenAddress, amount, receiver, version, data);
     }
-
-    // /// @notice Deprecated function
-    // function transfer(
-    //     string memory
-    // ) public payable virtual override whenNotPaused nonReentrant {
-    //     revert("TokenService: useNewVersion");
-    // }
-
-    // /// @notice Deprecated function
-    // function transfer(
-    //     address,
-    //     uint256,
-    //     string calldata
-    // ) public virtual override whenNotPaused nonReentrant {
-    //     revert("TokenService: useNewVersion");
-    // }
-
-    // /// @notice Deprecated function
-    // function transfer(
-    //     string calldata,
-    //     PredicateMessage calldata 
-    // ) public payable virtual override whenNotPaused nonReentrant {
-    //     revert("TokenService: useNewVersion");
-    // }
-
-    // /// @notice Deprecated function
-    // function transfer(
-    //     address ,
-    //     uint256 ,
-    //     string calldata ,
-    //     PredicateMessage calldata 
-    // ) external virtual override whenNotPaused nonReentrant {
-    //     revert("TokenService: useNewVersion");
-    // }
 
     /// @notice Internal function to handle fee calculations and transfers
     /// @param tokenAddress The address of the token
@@ -295,36 +267,23 @@ contract TokenServiceV3 is TokenServiceV2 {
     ) external virtual nonReentrant whenNotPaused {
         require(
             packet.destTokenService.addr == address(this),
-            "TokenService: invalidToken"
+            "TokenService: invalidDestTokenService"
         );
+
+        require(destChainId == packet.sourceTokenService.chainId, "TokenService: invalidSourceChainId");
+        require(self.chainId == packet.destTokenService.chainId, "TokenService: invalidDestChainId");
 
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
-        require(isEnabledToken(tokenAddress), "TokenService: invalidToken");
-        
         uint256 amount = packet.message.amount;
-        // uint256 version = packet.version;
-        // uint256 feesDeductedAmount = amount;
-        // uint256 relayerFeeAmount = 0;
-        // bool isRelayerPacket = false;
 
-        // if (version == PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER || 
-        //     version == PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER) {
-        //     isRelayerPacket = true;
-        //     relayerFeeAmount = feeCollector.relayerFees(tokenAddress);
-        // } else if (version == PacketLibrary.VERSION_PRIVATE_TRANSFER_RELAYER || 
-        // version == PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE_RELAYER) {
-        //     isRelayerPacket = true;
-        //     relayerFeeAmount = feeCollector.privateRelayerFees(tokenAddress);
-        // }
-
-        // if (isRelayerPacket && relayerFeeAmount > 0) {
-        //     require(amount > relayerFeeAmount, "TokenService: feesNotEnough");
-        //     feesDeductedAmount = amount - relayerFeeAmount;
-        // } else {
-        //     feesDeductedAmount = amount;
-        //     relayerFeeAmount = 0;
-        // }
+        require(isEnabledToken(tokenAddress), "TokenService: invalidToken");
+        require(amount > 0, "TokenService: invalidAmount");
+         require(
+            keccak256(abi.encodePacked(packet.sourceTokenService.addr)) == 
+            keccak256(abi.encodePacked(supportedTokens[tokenAddress].destTokenService)),
+            "TokenService: invalidSourceTokenService"
+        );  
 
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
@@ -333,44 +292,29 @@ contract TokenServiceV3 is TokenServiceV2 {
             blackListService.isBlackListed(receiver)
         ) {
             if (tokenAddress == ETH_TOKEN) {
-                // eth lock
-                // if(relayerFeeAmount > 0){
-                //     (bool sent, ) = payable(msg.sender).call{value: relayerFeeAmount}("");
-                //     require(sent, "TokenService: feesTransferFailed");
-                //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
-                // }
                 holding.lock{value: amount}(receiver);
             } else {
-                // if(relayerFeeAmount > 0){
-                //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
-                // }
                 IIERC20(tokenAddress).safeTransfer(address(holding), amount);
                 holding.lock(receiver, tokenAddress, amount);
             }
         } else if (quorum == PacketLibrary.Vote.YEA) {
             if (tokenAddress == ETH_TOKEN) {
                 bool sent;
-                // if(relayerFeeAmount > 0){
-                //     (sent, ) = payable(msg.sender).call{value: relayerFeeAmount}("");
-                //     require(sent, "TokenService: feesTransferFailed");
-                //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
-                // }
                 (sent, ) = payable(receiver).call{value: amount}("");
                 require(sent, "TokenService: ethWithdrawFailed");
             } else {
-                // if(relayerFeeAmount > 0){
-                //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
-                // }
                 IIERC20(tokenAddress).safeTransfer(receiver, amount);
             }
         } else {
             revert("TokenService: insufficientQuorum");
         }
     }
- 
-    uint256[49] private __gap;
+
 
     FeeCollector public feeCollector;
     mapping(address => uint256) public collectedFees;
+ 
+    uint256[49] private __gap;
+
     
 }

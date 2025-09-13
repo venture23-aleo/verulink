@@ -8,9 +8,6 @@ async function main() {
         process.env.PROVIDER
     );
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
-    
-    const attestor = "0xBA48014E26178e1A34DcB9F316b09dDC85FF2e85";
-    const newQuorumRequired = process.env.NEW_QUORUM_REQUIRED;
 
     // Get the contract factory for the "Bridge" contract
     const Bridge = await ethers.getContractFactory("BridgeV2", {
@@ -21,11 +18,11 @@ async function main() {
     });
 
     const tokenbridgeProxyAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
-    console.log("Removing Attestor");
+    console.log("Setting Quorum on Bridge");
     const BridgeABI = Bridge.interface.format();
     const BridgeContract = new ethers.Contract(tokenbridgeProxyAddress, BridgeABI, deployerSigner);
-    await BridgeContract.removeAttestor(attestor, newQuorumRequired);
-    console.log("Attestor removed successfully!");
+    await BridgeContract.updateQuorum(1);
+    console.log("Quorum updated successfully!");
 }
 main()
     .then(() => process.exit(0))
