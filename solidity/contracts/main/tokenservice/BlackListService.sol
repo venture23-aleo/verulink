@@ -88,7 +88,7 @@ contract BlackListService is Initializable, IBlackListService, OwnableUpgradeabl
     /// @param account The address of the account to check
     /// @return true if the account is blacklisted, false otherwise
     function isBlackListed(address account) public virtual view override returns (bool) {
-        if (block.chainid == 1 || block.chainid == 17000) { // Mainnet or Holesky
+        if (block.chainid == 1 || block.chainid == 17000 || block.chainid == 31337) { // Mainnet or Holesky or localnet
             return (blackLists[account] || 
                 IIERC20(usdc).isBlacklisted(account) ||
                 IIERC20(usdt).getBlackListStatus(account)
