@@ -6,6 +6,7 @@ import {EthVaultService} from "../../../main/tokenservice/vault/EthVaultService.
 contract EthVaultServiceV2 is EthVaultService {
     uint256 public val;
 
+    /// @custom:oz-upgrades-validate-as-initializer
     function initializev2(uint256 val1) public reinitializer(2) {
         val = val1;
     }

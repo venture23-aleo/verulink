@@ -6,6 +6,7 @@ import {Erc20VaultService} from "../../../main/tokenservice/vault/Erc20VaultServ
 contract Erc20VaultServiceV2 is Erc20VaultService {
     uint256 public val;
 
+    /// @custom:oz-upgrades-validate-as-initializer
     function initializev2(uint256 val1) public reinitializer(2) {
         val = val1;
     }

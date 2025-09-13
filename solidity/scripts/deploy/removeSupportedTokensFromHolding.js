@@ -9,17 +9,13 @@ async function main() {
     );
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const tokenServiceProxy = process.env.TOKENSERVICE_PROXY_ADDRESS;
-    const Bridge = await ethers.getContractFactory("BridgeV2", {
-        libraries: {
-            PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
-            AleoAddressLibrary: process.env.ALEO_ADDRESS_LIBRARY,
-        },
-    });
-    const bridgeProxy = process.env.TOKENBRIDGE_PROXY_ADDRESS;
-    console.log("Removing Tokenservice from Bridge...");
-    const BridgeABI = Bridge.interface.format();
-    const BridgeContract = new ethers.Contract(bridgeProxy, BridgeABI, deployerSigner);
-    await BridgeContract.removeTokenService(tokenServiceProxy);
+    const Holding = await ethers.getContractFactory("Holding");
+
+    const HoldingProxy = process.env.HOLDING_PROXY_ADDRESS;
+    console.log("Removing Tokenservice from Holding...");
+    const HoldingABI = Holding.interface.format();
+    const HoldingContract = new ethers.Contract(HoldingProxy, HoldingABI, deployerSigner);
+    await HoldingContract.removeTokenService(tokenServiceProxy);
     console.log("TokenService Successfully removed!!!");
 }
 main()

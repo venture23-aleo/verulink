@@ -170,7 +170,7 @@ describe('BridgeTokenServiceManager', () => {
         // Try to add token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).addTokenService(newTokenService)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
     });
 
     // Test that only the owner can remove a token service
@@ -183,6 +183,6 @@ describe('BridgeTokenServiceManager', () => {
         // Try to remove token service with another account and expect it to revert
         await expect(
             proxiedV1.connect(other).removeTokenService(newTokenService)
-        ).to.be.revertedWith("Ownable: caller is not the owner");
+        ).to.be.revertedWithCustomError(proxiedV1, "OwnableUnauthorizedAccount");
     });
 });

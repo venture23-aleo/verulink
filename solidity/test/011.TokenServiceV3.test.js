@@ -40,7 +40,7 @@ describe('TokenService', () => {
         [owner, signer, bridge, other, attestor, attestor1, deployer] = await ethers.getSigners();
         // this.ADMIN_ROLE = ethers.keccak256(Buffer.from('ADMIN_ROLE'));
         // let predicateservice = await ethers.getContractFactory("PredicateService");
-        console.log("kekeccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
+        // console.log("kekeccak256 value for SERVICE_ROLE = ", ethers.utils.keccak256(ethers.utils.toUtf8Bytes("SERVICE_ROLE")));
         // 0xd8a7a79547af723ee3e12b59a480111268d8969c634e1a34a144d2c8b91d635b
         // Deploy ERC20TokenBridge
         lib = await ethers.getContractFactory("PacketLibrary", { from: owner.address });
@@ -49,7 +49,7 @@ describe('TokenService', () => {
         aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
         const aleoLibInstance = await aleolib.deploy();
         await aleoLibInstance.deployed();
-        ERC20TokenBridge = await ethers.getContractFactory("Bridge", {
+        ERC20TokenBridge = await ethers.getContractFactory("BridgeV2", {
             libraries: {
                 PacketLibrary: libInstance.address,
                 AleoAddressLibrary: aleoLibInstance.address,
@@ -58,8 +58,6 @@ describe('TokenService', () => {
         erc20TokenBridge = await ERC20TokenBridge.deploy();
         await erc20TokenBridge.deployed();
         initializeData = new ethers.utils.Interface(ERC20TokenBridge.interface.format()).encodeFunctionData("Bridge_init(uint256,address)", [ALEO_CHAINID, owner.address]);
-
-        console.log("ERC20TokenBridge address: ", erc20TokenBridge.address);
 
         Proxied = await ethers.getContractFactory('ProxyContract');
         proxy = await Proxied.deploy(erc20TokenBridge.address, initializeData);
@@ -134,29 +132,9 @@ describe('TokenService', () => {
         await (await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2)).wait();
 
-
-        // upgrade to bridge v2
-        const BridgeV2 = await ethers.getContractFactory("BridgeV2", {
-            libraries: {
-                PacketLibrary: libInstance.address,
-                AleoAddressLibrary: aleoLibInstance.address,
-            }
-        });
-        let bridgeV2 = await BridgeV2.deploy();
-        await bridgeV2.deployed();
-
-        const upgradeTx = await proxiedBridge.upgradeTo(bridgeV2.address);
-        await upgradeTx.wait();
-
-        bridgeV2 = BridgeV2.attach(proxiedBridge.address);
-        console.log("bridgeV2 address: ", bridgeV2.address);
-
-        await bridgeV2.connect(owner).setAttestorCount(2);
-        await bridgeV2.connect(owner).updateMaxAttestorCount(5);
-
         FeeCollector = await ethers.getContractFactory("FeeCollector");
         feeCollectorImpl = await FeeCollector.deploy();
-        initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize", [proxiedV1.address, owner.address, usdcMock.address, usdTMock.address, 0, 0]);
+        initializeData = new ethers.utils.Interface(FeeCollector.interface.format()).encodeFunctionData("initialize", [proxiedV1.address, owner.address]);
         proxy = await Proxied.deploy(feeCollectorImpl.address, initializeData);
         await proxy.deployed();
         feeCollector = FeeCollector.attach(proxy.address);
@@ -382,5 +360,25 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(signer.address)).to.equal(0);
         expect(await usdcMock.balanceOf(other.address)).to.equal(100);
       });
+
+      describe("Receive Function", () => {
+        it('should allow owner to receive ETH', async () => {
+            await expect(
+                owner.sendTransaction({
+                    to: proxiedV1.address,
+                    value: ethers.utils.parseEther("1")
+                })
+            ).to.not.be.reverted;
+        });
+
+        it('should reject ETH from non-owner', async () => {
+            await expect(
+                other.sendTransaction({
+                    to: proxiedV1.address,
+                    value: ethers.utils.parseEther("1")
+                })
+            ).to.be.reverted;
+        });
+    });
 
 });

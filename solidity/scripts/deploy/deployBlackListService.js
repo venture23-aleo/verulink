@@ -9,8 +9,8 @@ async function main() {
         process.env.PROVIDER
     );
 
-    const usdc = process.env.USDC_ADDR;
-    const usdt = process.env.USDT_ADDR;
+    const usdc = process.env.ZERO_ADDRESS;
+    const usdt = process.env.ZERO_ADDRESS;
 
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const BlackListService = await ethers.getContractFactory("BlackListService");

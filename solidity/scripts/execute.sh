@@ -136,9 +136,9 @@
 
 # npx hardhat run scripts/deploy/addTokenService.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/setHolding.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/addTokenUSDC.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/addTokenUSDT.js --network arbitrum-sepolia
-npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/addTokenUSDC.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/addTokenUSDT.js --network arbitrum-sepolia
+# npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
 # npx hardhat run scripts/deploy/addAttestor.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/removeAttestor.js --network arbitrum-sepolia
@@ -197,3 +197,20 @@ npx hardhat run scripts/deploy/addTokenETH.js --network arbitrum-sepolia
 
 # npx hardhat run scripts/deploy/deployFeeCollector.js --network bnb-testnet
 # npx hardhat run scripts/deploy/setFeeCollectorAddress.js --network bnb-testnet
+
+
+# npx hardhat run scripts/deployLib/deployLib.js --network bsc-testnet
+# npx hardhat run scripts/deployLib/deployAleoAddressLib.js --network bsc-testnet
+# npx hardhat run scripts/deploy/deployBlackListService.js --network bsc-testnet
+# npx hardhat run scripts/deploy/deployBridgeV2.js --network bsc-testnet
+# npx hardhat run scripts/deploy/deployWrappedTokenService.js --network bsc-testnet
+# npx hardhat run scripts/deploy/deployWrappedToken.js --network bsc-testnet
+# npx hardhat run scripts/deploy/deployHolding.js --network bsc-testnet
+
+# npx hardhat run scripts/deploy/addTokenService.js --network bsc-testnet 
+# npx hardhat run scripts/deploy/setHolding.js --network bsc-testnet  
+
+# npx hardhat run scripts/deploy/setFeeCollectorOnWrappedTS.js --network bsc-testnet
+#  npx hardhat run scripts/deploy/addWrappedToken.js --network bsc-testnet
+
+npx hardhat run scripts/deploy/addAttestor.js --network sepolia

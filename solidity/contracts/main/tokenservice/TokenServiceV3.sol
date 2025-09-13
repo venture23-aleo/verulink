@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenServiceV2} from "../../main/tokenservice/TokenServiceV2.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {PredicateService} from "../../main/tokenservice/predicate/PredicateService.sol";
@@ -21,6 +22,14 @@ contract TokenServiceV3 is TokenServiceV2 {
         FeeCollector _feeCollector
     ) external virtual onlyOwner {
         feeCollector = _feeCollector;
+    }
+
+    function setBlackListService(
+        IBlackListService _blackListService
+    ) external virtual onlyOwner {
+        require(address(_blackListService) != address(0), "TokenService: BlackListServiceCannotBeZero");
+        require(address(blackListService) != address(_blackListService), "TokenService: BlackListServiceCannotBeSameAsCurrent");
+        blackListService = _blackListService;
     }
 
     function _packetify(
@@ -168,8 +177,6 @@ contract TokenServiceV3 is TokenServiceV2 {
         // Perform ERC20 token transfer
         _transfer(tokenAddress, amount, receiver, version, data);
     }
-
-   
 
     /// @notice Internal function to handle fee calculations and transfers
     /// @param tokenAddress The address of the token
