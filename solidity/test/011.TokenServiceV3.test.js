@@ -49,7 +49,7 @@ describe('TokenService', () => {
         aleolib = await ethers.getContractFactory("AleoAddressLibrary", { from: owner.address });
         const aleoLibInstance = await aleolib.deploy();
         await aleoLibInstance.deployed();
-        ERC20TokenBridge = await ethers.getContractFactory("Bridge", {
+        ERC20TokenBridge = await ethers.getContractFactory("BridgeV2", {
             libraries: {
                 PacketLibrary: libInstance.address,
                 AleoAddressLibrary: aleoLibInstance.address,
@@ -58,8 +58,6 @@ describe('TokenService', () => {
         erc20TokenBridge = await ERC20TokenBridge.deploy();
         await erc20TokenBridge.deployed();
         initializeData = new ethers.utils.Interface(ERC20TokenBridge.interface.format()).encodeFunctionData("Bridge_init(uint256,address)", [ALEO_CHAINID, owner.address]);
-
-        console.log("ERC20TokenBridge address: ", erc20TokenBridge.address);
 
         Proxied = await ethers.getContractFactory('ProxyContract');
         proxy = await Proxied.deploy(erc20TokenBridge.address, initializeData);
@@ -133,26 +131,6 @@ describe('TokenService', () => {
         await (await proxiedBridge.connect(owner).addTokenService(proxiedV1.address)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)).wait();
         await (await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2)).wait();
-
-
-        // upgrade to bridge v2
-        const BridgeV2 = await ethers.getContractFactory("BridgeV2", {
-            libraries: {
-                PacketLibrary: libInstance.address,
-                AleoAddressLibrary: aleoLibInstance.address,
-            }
-        });
-        let bridgeV2 = await BridgeV2.deploy();
-        await bridgeV2.deployed();
-
-        const upgradeTx = await proxiedBridge.upgradeTo(bridgeV2.address);
-        await upgradeTx.wait();
-
-        bridgeV2 = BridgeV2.attach(proxiedBridge.address);
-        console.log("bridgeV2 address: ", bridgeV2.address);
-
-        await bridgeV2.connect(owner).setAttestorCount(2);
-        await bridgeV2.connect(owner).updateMaxAttestorCount(5);
 
         FeeCollector = await ethers.getContractFactory("FeeCollector");
         feeCollectorImpl = await FeeCollector.deploy();
