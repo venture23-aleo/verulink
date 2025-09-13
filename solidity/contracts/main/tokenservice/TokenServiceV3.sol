@@ -267,14 +267,23 @@ contract TokenServiceV3 is TokenServiceV2 {
     ) external virtual nonReentrant whenNotPaused {
         require(
             packet.destTokenService.addr == address(this),
-            "TokenService: invalidToken"
+            "TokenService: invalidDestTokenService"
         );
+
+        require(destChainId == packet.sourceTokenService.chainId, "TokenService: invalidSourceChainId");
+        require(self.chainId == packet.destTokenService.chainId, "TokenService: invalidDestChainId");
 
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
-        require(isEnabledToken(tokenAddress), "TokenService: invalidToken");
-        
         uint256 amount = packet.message.amount;
+
+        require(isEnabledToken(tokenAddress), "TokenService: invalidToken");
+        require(amount > 0, "TokenService: invalidAmount");
+         require(
+            keccak256(abi.encodePacked(packet.sourceTokenService.addr)) == 
+            keccak256(abi.encodePacked(supportedTokens[tokenAddress].destTokenService)),
+            "TokenService: invalidSourceTokenService"
+        );  
 
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
