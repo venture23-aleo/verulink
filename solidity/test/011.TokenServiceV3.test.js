@@ -361,6 +361,188 @@ describe('TokenService', () => {
         expect(await usdcMock.balanceOf(other.address)).to.equal(100);
       });
 
+      // Test cases for TokenServiceV3 withdraw function validations
+      describe("Withdraw Function Validations", () => {
+        let validPacket, validSignatures;
+
+        beforeEach(async () => {
+          // Create a valid packet for testing
+          validPacket = [
+            100,
+            1,
+            [ALEO_CHAINID, "aleo.TokenService"],
+            [ETH_CHAINID, proxiedV1.address],
+            ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+            100
+          ];
+
+          const packetHash = inPacketHash(validPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          validSignatures = signature1 + signature2.slice(2);
+
+          // Mint tokens to the contract for successful withdrawal
+          await usdcMock.mint(proxiedV1.address, 100);
+        });
+
+        it('should revert with invalidDestTokenService when packet destination is wrong', async () => {
+          const invalidPacket = [
+            100,
+            1,
+            [ALEO_CHAINID, "aleo.TokenService"],
+            [ETH_CHAINID, other.address], // Wrong destination address
+            ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+            100
+          ];
+
+          const packetHash = inPacketHash(invalidPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          const signatures = signature1 + signature2.slice(2);
+
+          await expect(proxiedV1.connect(signer).withdraw(invalidPacket, signatures))
+            .to.be.revertedWith("TokenService: invalidDestTokenService");
+        });
+
+        it('should revert with invalidSourceChainId when source chain ID is wrong', async () => {
+          const invalidPacket = [
+            100,
+            1,
+            [3, "aleo.TokenService"], // Wrong source chain ID
+            [ETH_CHAINID, proxiedV1.address],
+            ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+            100
+          ];
+
+          const packetHash = inPacketHash(invalidPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          const signatures = signature1 + signature2.slice(2);
+
+          await expect(proxiedV1.connect(signer).withdraw(invalidPacket, signatures))
+            .to.be.revertedWith("TokenService: invalidSourceChainId");
+        });
+
+        it('should revert with invalidDestChainId when destination chain ID is wrong', async () => {
+          const invalidPacket = [
+            100,
+            1,
+            [ALEO_CHAINID, "aleo.TokenService"],
+            [3, proxiedV1.address], // Wrong destination chain ID
+            ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+            100
+          ];
+
+          const packetHash = inPacketHash(invalidPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          const signatures = signature1 + signature2.slice(2);
+
+          await expect(proxiedV1.connect(signer).withdraw(invalidPacket, signatures))
+            .to.be.revertedWith("TokenService: invalidDestChainId");
+        });
+
+        it('should revert with invalidToken when token is not enabled', async () => {
+          const invalidPacket = [
+            100,
+            1,
+            [ALEO_CHAINID, "aleo.TokenService"],
+            [ETH_CHAINID, proxiedV1.address],
+            ["aleo.SenderAddress", unsupportedToken.address, 100, other.address], // Unsupported token
+            100
+          ];
+
+          const packetHash = inPacketHash(invalidPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          const signatures = signature1 + signature2.slice(2);
+
+          await expect(proxiedV1.connect(signer).withdraw(invalidPacket, signatures))
+            .to.be.revertedWith("TokenService: invalidToken");
+        });
+
+        it('should revert with invalidAmount when amount is zero', async () => {
+          const invalidPacket = [
+            100,
+            1,
+            [ALEO_CHAINID, "aleo.TokenService"],
+            [ETH_CHAINID, proxiedV1.address],
+            ["aleo.SenderAddress", usdcMock.address, 0, other.address], // Zero amount
+            100
+          ];
+
+          const packetHash = inPacketHash(invalidPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          const signatures = signature1 + signature2.slice(2);
+
+          await expect(proxiedV1.connect(signer).withdraw(invalidPacket, signatures))
+            .to.be.revertedWith("TokenService: invalidAmount");
+        });
+
+        it('should revert with invalidSourceTokenService when source token service mismatch', async () => {
+          const invalidPacket = [
+            100,
+            1,
+            [ALEO_CHAINID, "wrong.TokenService"], // Wrong source token service
+            [ETH_CHAINID, proxiedV1.address],
+            ["aleo.SenderAddress", usdcMock.address, 100, other.address],
+            100
+          ];
+
+          const packetHash = inPacketHash(invalidPacket);
+          let message = ethers.utils.solidityKeccak256(
+            ['bytes32', 'uint8'],
+            [packetHash, 1]
+          );
+
+          const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
+          const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
+          const signatures = signature1 + signature2.slice(2);
+
+          await expect(proxiedV1.connect(signer).withdraw(invalidPacket, signatures))
+            .to.be.revertedWith("TokenService: invalidSourceTokenService");
+        });
+
+        it('should successfully withdraw with valid packet', async () => {
+          await expect(proxiedV1.connect(signer).withdraw(validPacket, validSignatures))
+            .to.emit(proxiedBridge, "Consumed");
+
+          // Verify token transfer
+          expect(await usdcMock.balanceOf(other.address)).to.equal(100);
+        });
+      });
+
       describe("Receive Function", () => {
         it('should allow owner to receive ETH', async () => {
             await expect(
