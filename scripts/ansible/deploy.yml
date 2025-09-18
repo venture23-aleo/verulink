@@ -1,19 +1,249 @@
 ---
 - name: Deploy Verulink Attestor Service
   hosts: all
-  become: yes
-  gather_facts: yes
-
+  connection: ssh
+  become: true
   vars:
-    attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
-    mtls_dir: "{{ attestor_install_dir }}/.mtls"
-    github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads"
+      infrastructure_provider: "aws" # gcp or aws
+      # gcp_project: <gcp_project_id # gcp project id
+      region: us-east-1 # aws region
+      # region: us-central1 # gcp region
+      ansible_root: "{{ playbook_dir }}"
+      overwrite_secret: true
+      attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
+      mtls_dir: "{{ attestor_install_dir }}/.mtls"
+      github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads"
 
   pre_tasks:
     - name: Include environment variables
       include_vars: "{{ env }}_vars.yml"
+    - block:
+        - name: Check if GCP CLI is installed
+          ansible.builtin.command: gcloud --version
+          register: gcloud_cli_check
+          ignore_errors: true
+
+        - name: Install GCP CLI on Ubuntu Linux
+          block:
+            - name: Update apt package index
+              ansible.builtin.apt:
+                update_cache: yes
+
+            - name: Install required dependencies for GCP CLI
+              ansible.builtin.apt:
+                name:
+                  - apt-transport-https
+                  - ca-certificates
+                  - gnupg
+                  - curl
+                state: present
+
+            - name: Download Google Cloud public key and save as dearmored gpg
+              ansible.builtin.shell: |
+                curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+              args:
+                executable: /bin/bash
+
+            - name: Add Google Cloud SDK distribution URI as a package source
+              ansible.builtin.shell: |
+                echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+              args:
+                executable: /bin/bash
+
+            - name: Update apt package index after adding Google Cloud SDK repo
+              ansible.builtin.apt:
+                update_cache: yes
+
+            - name: Install Google Cloud CLI
+              ansible.builtin.apt:
+                name: google-cloud-cli
+                state: present
+
+            - name: Verify GCP CLI installation
+              ansible.builtin.command: gcloud --version
+              register: gcloud_cli_verify
+
+            - name: Display GCP CLI version
+              ansible.builtin.debug:
+                msg: "GCP CLI installed successfully: {{ gcloud_cli_verify.stdout }}"
+          when: gcloud_cli_check is failed
+
+        - name: Copy GCP service account key to VM
+          copy:
+            src: "{{ ansible_root }}/verulink-attestor-sa.json"
+            dest: "/root/.gcp-sa.json"
+            owner: root
+            group: root
+            mode: '0600'
+          no_log: false
+
+        - name: Authenticate gcloud with service account
+          command: gcloud auth activate-service-account --key-file=/root/.gcp-sa.json
+          changed_when: false
+          no_log: true
+          run_once: true
+          environment:
+            CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+            GOOGLE_APPLICATION_CREDENTIALS: "/root/.gcp-sa.json"
+
+        - name: Read single config secret (JSON/YAML payload)
+          command: >
+            gcloud secrets versions access latest
+            --secret={{ mtls_secret_name }}
+            --project={{ gcp_project }}
+          register: _secret_blob
+          changed_when: false
+          failed_when: _secret_blob.rc is defined and _secret_blob.rc != 0
+          no_log: false
+          run_once: true
+          environment:
+            CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+            GOOGLE_APPLICATION_CREDENTIALS: "/root/.gcp-sa.json"
+
+        - name: Parse secret blob into a dict
+          set_fact:
+            _secret_map: "{{ _secret_blob.stdout | from_yaml }}"   # JSON or YAML
+          no_log: true
+          run_once: true
+
+        - name: Sanity-check the secret payload is a mapping with keys
+          assert:
+            that:
+              - _secret_map is mapping
+              - _secret_map | length > 0
+            fail_msg: "Secret payload is empty or not a dict. Check your Secret Manager content."
+          run_once: true
+
+        # Apply to each host (remove run_once so every host gets the facts)
+        - name: Merge secret dict into host vars (iterative, robust)
+          set_fact:
+            "{{ item.key }}": "{{ item.value }}"
+          loop: "{{ _secret_map | dict2items }}"
+          no_log: true
+      when: infrastructure_provider == "gcp"
+
+    - block:
+        - name: Check if AWS CLI is installed
+          ansible.builtin.command: aws --version
+          register: aws_cli_check
+          ignore_errors: true
+          no_log: true
+
+        - name: Install AWS CLI on Ubuntu Linux
+          block:
+            - name: Update apt package index
+              ansible.builtin.apt:
+                update_cache: yes
+
+            - name: Install unzip package
+              ansible.builtin.apt:
+                name: unzip
+                state: present
+
+            - name: Download AWS CLI v2 bundle
+              ansible.builtin.command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              args:
+                chdir: /tmp
+    
+            - name: Unzip AWS CLI bundle
+              ansible.builtin.command: unzip awscliv2.zip
+              args:
+                chdir: /tmp
+    
+            - name: Install AWS CLI
+              ansible.builtin.command: sudo ./aws/install
+              args:
+                chdir: /tmp
+              become: true
+    
+            - name: Verify AWS CLI installation
+              ansible.builtin.command: aws --version
+              register: aws_cli_verify
+    
+            - name: Display AWS CLI version
+              ansible.builtin.debug:
+                msg: "AWS CLI installed successfully: {{ aws_cli_verify.stdout }}"
+
+            - name: Clean up AWS CLI installation files
+              ansible.builtin.file:
+                path: "{{ item }}"
+                state: absent
+              loop:
+                - /tmp/awscliv2.zip
+                - /tmp/aws
+          when: aws_cli_check is failed
+      when: infrastructure_provider == "aws"
 
   tasks:
+    - block:
+      - name: Verify GCP access and permissions
+        ansible.builtin.command: gcloud auth list --filter=status:ACTIVE --format="value(account)"
+        register: gcp_auth_info
+  
+      - name: Display GCP auth info
+        ansible.builtin.debug:
+          msg: "GCP Access verified for account: {{ gcp_auth_info.stdout }}"
+  
+      - name: Check if secret exists in GCP Secret Manager
+        ansible.builtin.command: gcloud secrets describe "{{ mtls_secret_name }}" --project="{{ gcp_project }}"
+        register: secret_info
+        ignore_errors: true
+  
+      - name: Fail if secret doesn't exist
+        fail:
+          msg: "Secret {{ mtls_secret_name }} does not exist in GCP Secret Manager"
+        when: secret_info is failed
+  
+      - name: Download current secret value to /tmp/current_secret.json
+        shell: |
+          gcloud secrets versions access latest \
+            --secret="{{ mtls_secret_name }}" \
+            --project="{{ gcp_project }}" > /tmp/current_secret.json
+      when: infrastructure_provider == "gcp"
+    - block:
+      - name: Verify AWS access and permissions
+        ansible.builtin.command: aws sts get-caller-identity
+        register: caller_info
+
+      - name: Display AWS caller info
+        ansible.builtin.debug:
+          msg: "AWS Access verified for user: {{ caller_info.stdout | from_json }}"
+  
+      - name: Check if secrets exist in AWS Secrets Manager
+        ansible.builtin.shell: |
+          aws secretsmanager describe-secret --secret-id "{{ item }}" --region "{{ region }}" >/dev/null 2>&1 && echo 0 || echo 1
+        loop:
+          - "{{ mtls_secret_name }}"
+          - "{{ signingservice_secret_name }}"
+        register: aws_secret_check_results
+        ignore_errors: true
+        no_log: false
+
+      - name: Print AWS secret check logs for debugging
+        ansible.builtin.debug:
+          msg: |
+            Secret: {{ item.item }}
+            Output: {{ item.stdout | default(item.msg) }}
+            RC: {{ item.rc | default('N/A') }}
+        loop: "{{ aws_secret_check_results.results }}"
+        when: aws_secret_check_results is defined
+
+      
+
+      # - name: Fail if mTLS secret already exists
+      #   fail:
+      #     msg: "Secret {{ mtls_secret_name }} already exists in AWS Secrets Manager."
+      #   when: >
+      #     (aws_secret_check_results.results | selectattr('item', 'equalto', mtls_secret_name) | first).stdout == "0"
+
+      # - name: Fail if Signing Service secret already exists
+      #   fail:
+      #     msg: "Secret {{ signingservice_secret_name }} already exists in AWS Secrets Manager."
+      #   when: >
+      #     (aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | first).stdout == "0"
+
+      when: infrastructure_provider == "aws"
+      
     - name: Create installation directory
       file:
         path: "{{ attestor_install_dir }}"
@@ -102,7 +332,149 @@
         mode: '0600'
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
+    - name: Prepare mTLS secret JSON for storage
+      copy:
+        dest: /tmp/mtls_secret.json
+        content: |
+          {
+            "ca_certificate": "{{ ca_certificate_base64 | b64decode }}",
+            "attestor_certificate": "{{ attestor_certificate_base64 | b64decode }}",
+            "attestor_key": "{{ attestor_key_base64 | b64decode }}"
+          }
+        mode: '0600'
+      no_log: true
 
+    - name: Prepare signing service secret JSON for storage
+      copy:
+        dest: /tmp/signingservice_secret.json
+        content: |
+          {
+            "ethereum_private_key": "{{ bsc_private_key }}",
+            "ethereum_wallet_address": "{{ bsc_wallet_address }}",
+            "aleo_private_key": "{{ aleo_private_key }}",
+            "aleo_wallet_address": "{{ aleo_wallet_address }}"
+          }
+        mode: '0600'
+      no_log: true
+
+    - name: Store mTLS secret to GCP Secret Manager
+      ansible.builtin.command: >
+        gcloud secrets versions add "{{ mtls_secret_name }}"
+        --data-file="/tmp/mtls_secret.json"
+        --project="{{ gcp_project }}"
+      when: infrastructure_provider == "gcp"
+      register: mtls_secret_gcp_result
+      no_log: true
+
+    - name: Store signing service secret to GCP Secret Manager
+      ansible.builtin.command: >
+        gcloud secrets versions add "{{ signingservice_secret_name }}"
+        --data-file="/tmp/signingservice_secret.json"
+        --project="{{ gcp_project }}"
+      when: infrastructure_provider == "gcp"
+      register: signingservice_secret_gcp_result
+      no_log: true
+
+    # This task stores the mTLS secret in AWS Secrets Manager. It checks if the secret already exists:
+    # - If the secret does not exist (stdout == "1"), it uses 'create-secret' to create a new secret.
+    # - If the secret exists (stdout != "1"), it uses 'update-secret' to update the existing secret.
+    # The secret value is read from the file /tmp/mtls_secret.json.
+    # This task only runs when the infrastructure provider is AWS.
+    - name: Store mTLS secret to AWS Secrets Manager (create only if not exists)
+      ansible.builtin.command: >
+        aws secretsmanager create-secret --name "{{ mtls_secret_name }}"
+        --secret-string file:///tmp/mtls_secret.json
+        --region "{{ region }}"
+      when:
+        - infrastructure_provider == "aws"
+        - (aws_secret_check_results.results | selectattr('item', 'equalto', mtls_secret_name) | first).stdout == "1"
+      register: mtls_secret_aws_result
+      failed_when: >
+        mtls_secret_aws_result.rc != 0 and
+        (
+          mtls_secret_aws_result.stderr is not defined or
+          'ResourceExistsException' not in mtls_secret_aws_result.stderr
+        )
+      ignore_errors: true
+    - name: Store mTLS secret to AWS Secrets Manager (update if exists and overwrite is true)
+      ansible.builtin.command: >
+        aws secretsmanager update-secret
+        --secret-id "{{ mtls_secret_name }}"
+        --secret-string file:///tmp/mtls_secret.json
+        --region "{{ region }}"
+      when:
+        - infrastructure_provider == "aws"
+        - (aws_secret_check_results.results | selectattr('item', 'equalto', mtls_secret_name) | first).stdout != "0"
+        - overwrite | default(false) | bool
+      register: mtls_secret_aws_update_result
+
+    # This task stores the signing service secret in AWS Secrets Manager. It checks if the secret already exists:
+    # - If the secret does not exist (stdout == "1"), it uses 'create-secret' to create a new secret.
+    # - If the secret exists (stdout != "1"), it uses 'update-secret' to update the existing secret.
+    # The secret value is read from the file /tmp/signingservice_secret.json.
+    # This task only runs when the infrastructure provider is AWS.
+    # The skipping is likely because the 'when' condition is not matching as expected.
+    # Let's add a debug task to show what the value of the secret check is, and ensure the logic is correct.
+    # Also, add a fail-safe to handle the case where the secret check result is missing or not as expected.
+
+    - name: Debug signingservice_secret_name secret check result
+      debug:
+        msg: "{{ (aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | first) }}"
+      when: infrastructure_provider == "aws"
+
+    - name: Store signing service secret to AWS Secrets Manager (create only if not exists)
+      ansible.builtin.command: >
+        aws secretsmanager create-secret --name "{{ signingservice_secret_name }}"
+        --secret-string file:///tmp/signingservice_secret.json
+        --region "{{ region }}"
+      when:
+        - infrastructure_provider == "aws"
+        - >
+          (
+            aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | list | length > 0
+            and
+            (aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | first).stdout == "1"
+          )
+      register: signingservice_secret_aws_result
+      failed_when: >
+        signingservice_secret_aws_result.rc != 0 and
+        (
+          signingservice_secret_aws_result.stderr is not defined or
+          'ResourceExistsException' not in signingservice_secret_aws_result.stderr
+        )
+      ignore_errors: true
+
+    - name: Store signing service secret to AWS Secrets Manager (update if exists and overwrite is true)
+      ansible.builtin.command: >
+        aws secretsmanager update-secret
+        --secret-id "{{ signingservice_secret_name }}"
+        --secret-string file:///tmp/signingservice_secret.json
+        --region "{{ region }}"
+      when:
+        - infrastructure_provider == "aws"
+        - >
+          (
+            aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | list | length > 0
+            and
+            (aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | first).stdout != "0"
+          )
+        - overwrite | default(false) | bool
+      register: signingservice_secret_aws_update_result
+
+    - name: Fail if signingservice_secret_name check result is missing
+      fail:
+        msg: "Could not determine if signingservice_secret_name exists in AWS Secrets Manager. Check aws_secret_check_results."
+      when:
+        - infrastructure_provider == "aws"
+        - aws_secret_check_results.results | selectattr('item', 'equalto', signingservice_secret_name) | list | length == 0
+
+    - name: Clean up temporary secret files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/mtls_secret.json
+        - /tmp/signingservice_secret.json
     - name: Update apt cache
       apt:
         update_cache: yes

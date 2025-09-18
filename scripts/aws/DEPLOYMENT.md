@@ -1,4 +1,4 @@
-## Attestor Server Deployment Guide
+stg## Attestor Server Deployment Guide
 
 ## Table of Contents
 - [Installation on VM](#installing-on-vm-manual)
@@ -145,6 +145,37 @@ First, go to the installation root directory `verulink_attestor`.
 2. Networking
 	- Host Firewall: SSH Access (Port 22)
 	- Docker Network: Signing Service (Port 8080)
+### AWS Instance Secrets Manager Access Policy
+
+> Attach an instance profile to the AWS instance to allow create, update, and read access to Secrets Manager secrets. Update the policy file as necessary below.
+<details> <summary><strong>Instance Profile IAM Policy JSON</strong></summary>
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AttestorSecretManagerAccess",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:UpdateSecret",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:CreateSecret"
+      ],
+      "Resource": [
+        "arn:aws:secretsmanager:<aws_region>:<aws_account_id>:secret:stg/verulink/attestor/signingservice-*",
+        "arn:aws:secretsmanager:<aws_region>:<aws_account_id>:secret:stg/verulink/attestor/mtls-*"
+      ]
+    }
+  ]
+}
+```
+
+</details>
+
 
 ## Deployment Steps
 
