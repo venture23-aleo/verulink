@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "lib": ["ES2020"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowJs": true
   }
 }

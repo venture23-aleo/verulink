@@ -11,9 +11,6 @@ type keyConstraint interface {
 func getKeyByteForKeyConstraint[T keyConstraint](key T) (k []byte) {
 	var i interface{} = key
 	switch v := i.(type) {
-	case int64:
-		k = make([]byte, 8)
-		binary.BigEndian.PutUint64(k, uint64(v))
 	case uint64:
 		k = make([]byte, 8)
 		binary.BigEndian.PutUint64(k, v)
@@ -29,8 +26,6 @@ func convertType[T keyConstraint](returnType T, b []byte) T {
 	var i any = returnType
 	var v any
 	switch i.(type) {
-	case int64:
-		v = int64(binary.BigEndian.Uint64(b))
 	case uint64:
 		v = binary.BigEndian.Uint64(b)
 	case string:

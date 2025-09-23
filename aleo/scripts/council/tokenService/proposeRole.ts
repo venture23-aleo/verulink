@@ -1,23 +1,25 @@
 import { hashStruct } from "../../../utils/hash";
-import { Vlink_council_v1Contract } from "../../../artifacts/js/vlink_council_v1";
-import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, ethChainId, usdcContractAddr } from "../../../utils/constants";
-import { Vlink_token_service_v1Contract } from "../../../artifacts/js/vlink_token_service_v1";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { ALEO_ZERO_ADDRESS, COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD, TAG_SET_ROLE_TOKEN, ethChainId, usdcContractAddr } from "../../../utils/constants";
+import { Vlink_token_service_v2Contract } from "../../../artifacts/js/vlink_token_service_v7";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v1";
-import { getSetRoleForTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v1";
+import { SetRoleForToken } from "../../../artifacts/js/types/vlink_token_service_council_v2";
+import { getSetRoleForTokenLeo, getTsAddTokenLeo } from "../../../artifacts/js/js2leo/vlink_token_service_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
 
-import { Vlink_token_service_council_v1Contract } from "../../../artifacts/js/vlink_token_service_council_v1";
+import { Vlink_token_service_council_v2Contract } from "../../../artifacts/js/vlink_token_service_council_v2";
 import { hash } from "aleo-hasher";
 import { evm2AleoArr, evm2AleoArrWithoutPadding } from "../../../utils/ethAddress";
-import { getSetRoleForToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v1";
+import { getSetRoleForToken } from "../../../artifacts/js/leo2js/vlink_token_service_council_v2";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
 
 const mode = ExecutionMode.SnarkExecute;
-const serviceCouncil = new Vlink_token_service_council_v1Contract({ mode, priorityFee: 10_000 });
+const serviceCouncil = new Vlink_token_service_council_v2Contract({ mode, priorityFee: 10_000 });
 
-const council = new Vlink_council_v1Contract({ mode, priorityFee: 10_000 });
-const tokenService = new Vlink_token_service_v1Contract({ mode, priorityFee: 10_000 });
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenService = new Vlink_token_service_v2Contract({ mode, priorityFee: 10_000 });
 
 //////////////////////
 ///// Propose ////////
@@ -27,7 +29,7 @@ export const proposeRole = async (
   role: number
 ): Promise<number> => {
 
-  
+
   console.log(`👍 Proposing to add role: ${tokenId}`)
   // const storedTokenConnector = await tokenService.token_connectors(tokenAddress, ALEO_ZERO_ADDRESS);
   // if (storedTokenConnector != ALEO_ZERO_ADDRESS) {
@@ -39,18 +41,26 @@ export const proposeRole = async (
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
   const tsSetRole: SetRoleForToken = {
-      id: proposalId,
-      token_id: tokenId,
-      account: tokenService.address(),
-      role: role
+    tag: TAG_SET_ROLE_TOKEN,
+    id: proposalId,
+    token_id: tokenId,
+    account: tokenService.address(),
+    role: role
   };
   const tsSetRoleProposalHash = hashStruct(getSetRoleForTokenLeo(tsSetRole));
 
-  const [proposeSetRoleTx] = await council.propose(proposalId, tsSetRoleProposalHash);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsSetRoleProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  await council.wait(proposeSetRoleTx);
+  // propose
+  const proposeSetRoleTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeSetRoleTx.wait();
 
-  getProposalStatus(tsSetRoleProposalHash);
+  getProposalStatus(ExternalProposalHash);
   return proposalId
 };
 
@@ -70,6 +80,7 @@ export const voteRole = async (
 
   const voter = council.getAccounts()[0];
   const tsSetRole: SetRoleForToken = {
+    tag: TAG_SET_ROLE_TOKEN,
     id: proposalId,
     token_id: tokenId,
     account: tokenService.address(),
@@ -77,13 +88,20 @@ export const voteRole = async (
   };
   const tsSetRoleProposalHash = hashStruct(getSetRoleForTokenLeo(tsSetRole));
 
-  validateVote(tsSetRoleProposalHash, voter);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsSetRoleProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const [voteSetRoleTx] = await council.vote(tsSetRoleProposalHash, true);
+  validateVote(ExternalProposalHash, voter);
 
-  await council.wait(voteSetRoleTx);
+  // vote
+  const voteSetRoleTx = await council.vote(ExternalProposalHash, true);
+  await voteSetRoleTx.wait();
 
-  getProposalStatus(tsSetRoleProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -108,6 +126,7 @@ export const execRole = async (
   }
 
   const tsSetRole: SetRoleForToken = {
+    tag: TAG_SET_ROLE_TOKEN,
     id: proposalId,
     token_id: tokenId,
     account: tokenService.address(),
@@ -115,19 +134,26 @@ export const execRole = async (
   };
   const tsSetRoleProposalHash = hashStruct(getSetRoleForTokenLeo(tsSetRole));
 
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: serviceCouncil.address(),
+    proposal_hash: tsSetRoleProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  validateExecution(tsSetRoleProposalHash);
 
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tsSetRoleProposalHash), SUPPORTED_THRESHOLD);
-  const [setRoleTx] = await serviceCouncil.set_role_token(
+  validateExecution(ExternalProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+  // vote
+  const setRoleTx = await serviceCouncil.set_role_token(
     proposalId,
-    tokenId, 
+    tokenId,
     tokenService.address(),
     role,
     voters
   )
-
-  await serviceCouncil.wait(setRoleTx);
+  await setRoleTx.wait();
 
   // const updatedConnector = await tokenService.token_connectors(tokenAddress);
   // if (updatedConnector != tokenConnector) {

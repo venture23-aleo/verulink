@@ -27,3 +27,4 @@ coverage.json
 # ignore keys
 attestor/signingService/secrets.yaml
 **/**/secrets.yaml
+.amareleo-*

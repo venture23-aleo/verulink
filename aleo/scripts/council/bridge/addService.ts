@@ -1,20 +1,26 @@
 import { hashStruct } from "../../../utils/hash";
 
-import { Vlink_token_bridge_v1Contract } from "../../../artifacts/js/vlink_token_bridge_v1";
-import { Vlink_council_v1Contract } from "../../../artifacts/js/vlink_council_v1";
-import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/constants";
+import { Vlink_token_bridge_v2Contract } from "../../../artifacts/js/vlink_token_bridge_v2";
+import { Vlink_council_v2Contract } from "../../../artifacts/js/vlink_council_v2";
+import { COUNCIL_TOTAL_PROPOSALS_INDEX, SUPPORTED_THRESHOLD } from "../../../utils/testdata.data";
 import { getProposalStatus, validateExecution, validateProposer, validateVote } from "../councilUtils";
-import { TbAddService } from "../../../artifacts/js/types/vlink_bridge_council_v1";
-import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v1";
+import { TbAddService } from "../../../artifacts/js/types/vlink_bridge_council_v2";
+import { getTbAddServiceLeo } from "../../../artifacts/js/js2leo/vlink_bridge_council_v2";
 import { getVotersWithYesVotes, padWithZeroAddress } from "../../../utils/voters";
 import { ExecutionMode } from "@doko-js/core";
-import { Vlink_bridge_council_v1Contract } from "../../../artifacts/js/vlink_bridge_council_v1";
+import { Vlink_bridge_council_v2Contract } from "../../../artifacts/js/vlink_bridge_council_v2";
+import { TAG_TB_ADD_SERVICE } from "../../../utils/constants";
+import { ExternalProposal } from "../../../artifacts/js/types/vlink_council_v2";
+import { getExternalProposalLeo } from "../../../artifacts/js/js2leo/vlink_council_v2";
+import { Vlink_token_service_cd_v2Contract } from "../../../artifacts/js/vlink_token_service_cd_v2";
 
 const mode = ExecutionMode.SnarkExecute;
 
-const council = new Vlink_council_v1Contract({mode, priorityFee: 10_000});
-const bridge = new Vlink_token_bridge_v1Contract({mode, priorityFee: 10_000});
-const bridgeCouncil = new Vlink_bridge_council_v1Contract({mode, priorityFee: 10_000});
+const council = new Vlink_council_v2Contract({ mode, priorityFee: 10_000 });
+const bridge = new Vlink_token_bridge_v2Contract({ mode, priorityFee: 10_000 });
+const bridgeCouncil = new Vlink_bridge_council_v2Contract({ mode, priorityFee: 10_000 });
+const tokenServiceWAleo = new Vlink_token_service_cd_v2Contract({ mode: mode });
+
 
 //////////////////////
 ///// Propose ////////
@@ -31,17 +37,27 @@ export const proposeAddService = async (tokenService: string): Promise<number> =
   validateProposer(proposer);
 
   const proposalId = parseInt((await council.proposals(COUNCIL_TOTAL_PROPOSALS_INDEX)).toString()) + 1;
+
+  // generating hash
   const tbAddService: TbAddService = {
+    tag: TAG_TB_ADD_SERVICE,
     id: proposalId,
     service: tokenService
   };
-  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
+  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService));
 
-  const [proposeAddTokenServiceTx] = await council.propose(proposalId, tbAddTokenServiceProposalHash); 
-  
-  await council.wait(proposeAddTokenServiceTx);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddTokenServiceProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  getProposalStatus(tbAddTokenServiceProposalHash);
+  // proposing
+  const proposeAddTokenServiceTx = await council.propose(proposalId, ExternalProposalHash);
+  await proposeAddTokenServiceTx.wait();
+
+  getProposalStatus(ExternalProposalHash);
 
   return proposalId
 };
@@ -57,19 +73,29 @@ export const voteAddService = async (proposalId: number, tokenService: string) =
     throw Error(`Service ${tokenService} is already added!`);
   }
 
+  // generating hash
   const tbAddService: TbAddService = {
+    tag: TAG_TB_ADD_SERVICE,
     id: proposalId,
     service: tokenService
   };
-  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
+  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService));
+
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddTokenServiceProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
   const voter = council.getAccounts()[0];
-  validateVote(tbAddTokenServiceProposalHash, voter);
+  validateVote(ExternalProposalHash, voter);
 
-  const [voteAddChainTx] = await council.vote(tbAddTokenServiceProposalHash, true); 
-  await council.wait(voteAddChainTx);
+  // vote
+  const voteAddChainTx = await council.vote(ExternalProposalHash, true);
+  await voteAddChainTx.wait();
 
-  getProposalStatus(tbAddTokenServiceProposalHash);
+  getProposalStatus(ExternalProposalHash);
 
 }
 
@@ -90,22 +116,32 @@ export const execAddService = async (proposalId: number, tokenService: string) =
     throw Error("Council is not the owner of bridge program");
   }
 
+  // generating hash
   const tbAddService: TbAddService = {
+    tag: TAG_TB_ADD_SERVICE,
     id: proposalId,
     service: tokenService
   };
-  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService)); 
+  const tbAddTokenServiceProposalHash = hashStruct(getTbAddServiceLeo(tbAddService));
 
-  validateExecution(tbAddTokenServiceProposalHash);
-  const voters = padWithZeroAddress(await getVotersWithYesVotes(tbAddTokenServiceProposalHash), SUPPORTED_THRESHOLD);
+  const externalProposal: ExternalProposal = {
+    id: proposalId,
+    external_program: bridgeCouncil.address(),
+    proposal_hash: tbAddTokenServiceProposalHash
+  }
+  const ExternalProposalHash = hashStruct(getExternalProposalLeo(externalProposal));
 
-  const [addServiceTx] = await bridgeCouncil.tb_add_service(
+  validateExecution(ExternalProposalHash);
+  const voters = padWithZeroAddress(await getVotersWithYesVotes(ExternalProposalHash), SUPPORTED_THRESHOLD);
+
+  // execute
+  const addServiceTx = await bridgeCouncil.tb_add_service(
     tbAddService.id,
     tbAddService.service,
     voters
-  ) 
-  
-  await council.wait(addServiceTx);
+  )
+
+  await addServiceTx.wait();
 
   isTokenServiceSupported = await bridge.supported_services(tokenService);
   if (!isTokenServiceSupported) {
@@ -115,3 +151,12 @@ export const execAddService = async (proposalId: number, tokenService: string) =
   console.log(` ✅ TokenService: ${tokenService} added successfully.`)
 
 }
+
+
+
+async function run() {
+  const proposalId = await proposeAddService(tokenServiceWAleo.address());
+  await execAddService(proposalId, tokenServiceWAleo.address());
+}
+
+run();
