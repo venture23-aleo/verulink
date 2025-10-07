@@ -13,7 +13,7 @@ program vlink_holding_sealance_v1.aleo {
         token_id : field 
     }
 
-    mapping holdings: Holder => u64;
+    mapping holdings: Holder => u128;
 
     // mapping used as variable
     // true: address of owner 
@@ -69,7 +69,7 @@ program vlink_holding_sealance_v1.aleo {
     }
 
 
-    async transition hold_fund(public user: address, public amount: u64) -> Future{
+    async transition hold_fund(public user: address, public amount: u128) -> Future{
         let token_holder: Holder = Holder{
             account: user,
             token_id: TOKEN_ID
@@ -77,18 +77,18 @@ program vlink_holding_sealance_v1.aleo {
         return(finalize_hold_fund(self.caller, token_holder, amount));
     }
 
-    async function finalize_hold_fund(from: address, token_holder: Holder, amount: u64) {
+    async function finalize_hold_fund(from: address, token_holder: Holder, amount: u128) {
         // Assert only owner can hold fund
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let held_amount: u64 = Mapping::get_or_use(holdings, token_holder, 0u64);
+        let held_amount: u128 = Mapping::get_or_use(holdings, token_holder, 0u128);
 
         // Increase the held amount for the token_user
         Mapping::set(holdings, token_holder, held_amount + amount);
     }
 
-    async transition release_fund(public user: address, public amount: u64) -> Future {
+    async transition release_fund(public user: address, public amount: u128) -> Future {
         let transfer: Future = sealed_report_token.aleo/transfer_public(user, amount);
 
         let token_holder: Holder = Holder{
@@ -99,13 +99,13 @@ program vlink_holding_sealance_v1.aleo {
         return (finalize_release_fund(self.caller, token_holder, amount, transfer));
     }
 
-    async function finalize_release_fund(from: address, token_holder: Holder, amount: u64, f0: Future) {
+    async function finalize_release_fund(from: address, token_holder: Holder, amount: u128, f0: Future) {
         f0.await();
         // Assert only owner can release fund
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
 
-        let held_amount: u64 = Mapping::get(holdings, token_holder);
+        let held_amount: u128 = Mapping::get(holdings, token_holder);
 
         // Decrease the held amount for the token_user
         Mapping::set(holdings, token_holder, held_amount - amount);

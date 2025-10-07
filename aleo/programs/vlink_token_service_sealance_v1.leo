@@ -2,7 +2,7 @@
 
 import vlink_token_bridge_v2.aleo;
 import vlink_holding_sealance_v1.aleo;
-
+import sealed_report_token.aleo;
 
 program vlink_token_service_sealance_v1.aleo {
 
@@ -472,35 +472,35 @@ program vlink_token_service_sealance_v1.aleo {
 
         assert_eq(Mapping::get(token_status, TOKEN_ID), UNPAUSED_VALUE);
 
-        let withdrawal_limit: WithdrawalLimit = Mapping::get(token_withdrawal_limits, wrapped_token_id);
+        let withdrawal_limit: WithdrawalLimit = Mapping::get(token_withdrawal_limits, TOKEN_ID);
 
-        let current_supply: u128 = Mapping::get(total_supply, wrapped_token_id);
+        let current_supply: u128 = Mapping::get(total_supply, TOKEN_ID);
         let current_height: u32 = block.height;
 
 
-        let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, wrapped_token_id, 0u32);
-        let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, wrapped_token_id, 0u128);
+        let snapshot_height: u32 = Mapping::get_or_use(token_snapshot_height, TOKEN_ID, 0u32);
+        let amount_withdrawn: u128 = Mapping::get_or_use(token_amount_withdrawn, TOKEN_ID, 0u128);
 
         if ( current_height - snapshot_height > withdrawal_limit.duration) {
-            let held_amount:u128 = Mapping::get_or_use(token_holding, wrapped_token_id, 0u128);
-            Mapping::set(token_snapshot_supply, wrapped_token_id, current_supply-held_amount);
-            Mapping::set(token_snapshot_height, wrapped_token_id, current_height);
-            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount - fee_platform);
+            let held_amount:u128 = Mapping::get_or_use(token_holding, TOKEN_ID, 0u128);
+            Mapping::set(token_snapshot_supply, TOKEN_ID, current_supply-held_amount);
+            Mapping::set(token_snapshot_height, TOKEN_ID, current_height);
+            Mapping::set(token_amount_withdrawn, TOKEN_ID, amount - fee_platform);
 
         } else {
-            Mapping::set(token_amount_withdrawn, wrapped_token_id, amount_withdrawn + amount - fee_platform);
+            Mapping::set(token_amount_withdrawn, TOKEN_ID, amount_withdrawn + amount - fee_platform);
 
         }
-        let snapshot_supply:u128 = Mapping::get(token_snapshot_supply, wrapped_token_id);
+        let snapshot_supply:u128 = Mapping::get(token_snapshot_supply, TOKEN_ID);
 
         if (snapshot_supply >= withdrawal_limit.threshold_no_limit) {
-            let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, wrapped_token_id);
+            let withdraw_amount:u128  = Mapping::get(token_amount_withdrawn, TOKEN_ID);
             let max_withdrawal: u128 = get_x_percent_of_y(withdrawal_limit.percentage, snapshot_supply);
             assert(withdraw_amount <= max_withdrawal);
         }
         
         // Decrease the total supply
-        Mapping::set(total_supply, wrapped_token_id, current_supply - amount + fee_platform);
+        Mapping::set(total_supply, TOKEN_ID, current_supply - amount + fee_platform);
 
     }
 
@@ -564,7 +564,7 @@ program vlink_token_service_sealance_v1.aleo {
 
         let mint: Future = sealed_report_token.aleo/mint_public(actual_receiver, amount-fee_relayer);
 
-        let hold: Future = vlink_holding_sealance_v1.aleo/hold_fund(receiver, TOKEN_ID, held_amount);
+        let hold: Future = vlink_holding_sealance_v1.aleo/hold_fund(receiver, held_amount);
 
 
 
@@ -632,7 +632,7 @@ program vlink_token_service_sealance_v1.aleo {
     }
 
     async transition holding_release(public receiver: address, public amount: u128) -> Future{
-        let release: Future = vlink_holding_sealance_v1.aleo/release_fund(receiver, TOKEN_ID, amount);
+        let release: Future = vlink_holding_sealance_v1.aleo/release_fund(receiver, amount);
         return finalize_holding_release(self.caller, amount, release);
     }
     async function finalize_holding_release(from:address, amount:u128, f0: Future){

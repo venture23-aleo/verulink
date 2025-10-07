@@ -45,7 +45,7 @@ program sealed_report_token.aleo {
         leaf_index: u32
     }
 
-    struct TokenMetadata {
+    struct MetaData {
         name: u128, // ASCII text represented in bits, and the u128 value of the bitstring
         symbol: u128, // ASCII text represented in bits, and the u128 value of the bitstring
         decimals: u8,
@@ -53,17 +53,17 @@ program sealed_report_token.aleo {
         max_supply: u128,
     }
 
-    struct Allowance {
+    struct SharedWith {
         account: address,
         spender: address,
     }
     
     const TOKEN_METADATA_INDEX: bool = true;
     // token specs
-    mapping token_metadata: bool => TokenMetadata;
+    mapping token_metadata: bool => MetaData;
 
     mapping balances: address => u128;
-    mapping allowances: field => u128; // hash(account, spender) => Allowance
+    mapping allowances: field => u128; // hash(account, spender) => SharedWith
     mapping supply_roles: address => u8;
 
     // Maps a role ID to an address (e.g., 1 = admin).
@@ -218,7 +218,7 @@ program sealed_report_token.aleo {
         let already_initialized: bool = token_metadata.contains(TOKEN_METADATA_INDEX);
         assert_eq(already_initialized, false);
         
-        let token: TokenMetadata = TokenMetadata {
+        let token: MetaData = MetaData {
             name: name,
             symbol: symbol,
             decimals: decimals,
@@ -270,7 +270,7 @@ program sealed_report_token.aleo {
  
 
         // Update the token supply
-        let new_metadata: TokenMetadata = TokenMetadata {
+        let new_metadata: MetaData = MetaData {
             name: token.name,
             symbol: token.symbol,
             decimals: token.decimals,
@@ -313,7 +313,7 @@ program sealed_report_token.aleo {
         assert(new_supply <= token.max_supply);
 
         // Update the token supply
-        let new_metadata: TokenMetadata = TokenMetadata {
+        let new_metadata: MetaData = MetaData {
             name: token.name,
             symbol: token.symbol,
             decimals: token.decimals,
@@ -352,7 +352,7 @@ program sealed_report_token.aleo {
 
         let token = token_metadata.get(TOKEN_METADATA_INDEX);
 
-        let new_metadata: TokenMetadata = TokenMetadata {
+        let new_metadata: MetaData = MetaData {
             name: token.name,
             symbol: token.symbol,
             decimals: token.decimals,
@@ -389,7 +389,7 @@ program sealed_report_token.aleo {
         let token = token_metadata.get(TOKEN_METADATA_INDEX);
 
         // Update the token supply
-        let new_metadata: TokenMetadata = TokenMetadata {
+        let new_metadata: MetaData = MetaData {
             name: token.name,
             symbol: token.symbol,
             decimals: token.decimals,
@@ -460,7 +460,7 @@ program sealed_report_token.aleo {
         public spender: address,
         public amount: u128
     ) -> Future {
-        let allowance: Allowance = Allowance {
+        let allowance: SharedWith = SharedWith {
             account: self.caller,
             spender: spender
         };
@@ -484,7 +484,7 @@ program sealed_report_token.aleo {
         public spender: address,
         public amount: u128
     ) -> Future {
-        let allowance: Allowance = Allowance {
+        let allowance: SharedWith = SharedWith {
             account: self.caller,
             spender: spender
         };
@@ -510,7 +510,7 @@ program sealed_report_token.aleo {
         public recipient: address,
         public amount: u128
     ) -> Future {
-        let allowance: Allowance = Allowance {
+        let allowance: SharedWith = SharedWith {
             account: owner,
             spender: self.caller,
         };
@@ -612,7 +612,7 @@ program sealed_report_token.aleo {
             amount: amount
         };
 
-        let allowance: Allowance = Allowance {
+        let allowance: SharedWith = SharedWith {
             account: owner,
             spender: self.caller,
         };

@@ -113,7 +113,7 @@ program vlink_council_sealance_v1.aleo
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
         // Execute the proposal
-        let add_token : Future = vlink_token_service_sealance_v1.aleo/add_token_ts(min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
+        let add_token : Future = vlink_token_service_sealance_v1.aleo/add_token_ts(min_transfer, max_transfer, outgoing_percentage, time, max_no_cap, token_address, token_service, chain_id, pub_platform_fee, pub_relayer_fee);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
