@@ -37,6 +37,13 @@ ca_certificate_base64: "<ca_certificate_base64>"
 attestor_certificate_base64: "<attestor_certificate_base64>"
 attestor_key_base64: "<attestor_key_base64>"
 
+# Secret names
+mtls_secret_name: "stg/verulink/attestor/mtls" # aws
+signingservice_secret_name: "stg/verulink/attestor/signingservice" # aws
+
+# mtls_secret_name: "stg_verulink_attestor_mtls" # gcp
+# signingservice_secret_name: "stg_verulink_attestor_signingservice" # gcp
+
 # Metrics Configuration
 prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
 prometheus_job_name: "stg-push-gateway"
