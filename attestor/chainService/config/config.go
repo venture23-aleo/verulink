@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -166,13 +167,7 @@ func InitConfig(flagArgs *FlagArgs) error {
 		}
 		logFilePath := filepath.Join(flagArgs.LogDir, logFileName)
 		// Avoid duplicating the path if it's already in the config
-		found := false
-		for _, path := range config.LogConfig.OutputPaths {
-			if path == logFilePath {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(config.LogConfig.OutputPaths, logFilePath)
 		if !found {
 			config.LogConfig.OutputPaths = append(config.LogConfig.OutputPaths, logFilePath)
 		}

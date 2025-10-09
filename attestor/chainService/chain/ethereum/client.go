@@ -222,12 +222,17 @@ func (cl *Client) instantFeedPacket(ctx context.Context, baseHeight uint64, dest
 
 	defer ticker.Stop()
 
-	// if start height provided from config is less than already processed packet as stated
-	// by database, then next height is taken from database.
-	// If start height should be greater than already stored in database then start height from
-	// config should be considered.
+	// If start height from config is less than already processed packet as stated by DB,
+	// take the next height from DB. If neither config nor DB has a start height (both 0),
+	// default to the latest matured block + 1 so we don't backfill from genesis.
 	if cl.instantNextBlockHeightMap[destchain] < baseHeight {
 		cl.instantNextBlockHeightMap[destchain] = baseHeight
+	}
+	if cl.instantNextBlockHeightMap[destchain] == 0 && baseHeight == 0 {
+		maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.instantWaitHeightMap[destchain])
+		if err == nil {
+			cl.instantNextBlockHeightMap[destchain] = maturedHeight + 1
+		}
 	}
 
 	for {
@@ -288,12 +293,17 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 	}
 	ticker := time.NewTicker(dur)
 	defer ticker.Stop()
-	// if start height provided from config is less than already processed packet as stated
-	// by database, then next height is taken from database.
-	// If start height should be greater than already stored in database then start height from
-	// config should be considered.
+	// If start height from config is less than already processed packet as stated by DB,
+	// take the next height from DB. If neither config nor DB has a start height (both 0),
+	// default to the latest matured block + 1 so we don't backfill from genesis.
 	if cl.nextBlockHeightMap[destchain] < baseHeight {
 		cl.nextBlockHeightMap[destchain] = baseHeight
+	}
+	if cl.nextBlockHeightMap[destchain] == 0 && baseHeight == 0 {
+		maturedHeight, err := cl.blockHeightPriorWaitDur(ctx, cl.waitHeightMap[destchain])
+		if err == nil {
+			cl.nextBlockHeightMap[destchain] = maturedHeight + 1
+		}
 	}
 
 	for {
@@ -320,10 +330,7 @@ func (cl *Client) feedPacket(ctx context.Context, baseHeight uint64, destchain s
 			// startHeight adds 1, because filterLogs returns packets inclusively for startHeight and endHeight.
 			// We don't want to re-process already processed packets
 			for startHeight := cl.nextBlockHeightMap[destchain]; startHeight <= maturedHeight; startHeight += defaultHeightDifferenceForFilterLogs + 1 {
-				endHeight := startHeight + defaultHeightDifferenceForFilterLogs
-				if endHeight > maturedHeight {
-					endHeight = maturedHeight
-				}
+				endHeight := min(startHeight+defaultHeightDifferenceForFilterLogs, maturedHeight)
 				pkts, err := cl.filterPacketLogs(ctx, startHeight, endHeight)
 				if err != nil {
 					zap.L().Error("Filter packet log error",
@@ -580,6 +587,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		baseSeqNamespace = append(baseSeqNamespace, bns)
 		destChainsMap[destChain] = true
 
+		// Seed with config value; if it's zero we'll adjust after constructing the client
 		nextBlockHeight[destChain] = duration.StartHeight
 		instantNextBlockHeight[destChain] = duration.StartHeight
 		feedPktDurMap[destChain] = duration.FeedPacketWaitDuration
@@ -623,7 +631,7 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		pruneBaseSeqWaitDur = defaultPruneBaseSeqWaitDur
 	}
 
-	return &Client{
+	cl := &Client{
 		name:                      name,
 		address:                   ethCommon.HexToAddress(cfg.BridgeContract),
 		eth:                       ethclient,
@@ -643,4 +651,24 @@ func NewClient(cfg *config.ChainConfig) chain.IClient {
 		instantWaitHeightMap:      instantPacketWaitHeightMap,
 		instantNextBlockHeightMap: instantNextBlockHeight,
 	}
+
+	// If StartHeight is unset (0) in config and DB is also empty, adjust maps to start from latest matured + 1
+	// We can't read DB here for each dest, but FeedPacket will finalize baseHeight; this pre-adjustment is best-effort.
+	// It helps instant paths that might run before FeedPacket computes baseHeight.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	for dest := range destChainsMap {
+		if cl.nextBlockHeightMap[dest] == 0 {
+			if matured, err := cl.blockHeightPriorWaitDur(ctx, cl.waitHeightMap[dest]); err == nil {
+				cl.nextBlockHeightMap[dest] = matured + 1
+			}
+		}
+		if cl.instantNextBlockHeightMap[dest] == 0 {
+			if matured, err := cl.blockHeightPriorWaitDur(ctx, cl.instantWaitHeightMap[dest]); err == nil {
+				cl.instantNextBlockHeightMap[dest] = matured + 1
+			}
+		}
+	}
+
+	return cl
 }

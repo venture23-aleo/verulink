@@ -66,7 +66,7 @@ func main() {
 
 	zap.ReplaceGlobals(log)
 
-	zap.L().Info("Attestor started", zap.String("name", config.GetConfig().Name))
+	zap.L().Info("Attestor started", zap.String("name", config.GetConfig().Name), zap.String("version", config.GetConfig().Version))
 
 	pusher, err := metrics.InitMetrics(config.GetConfig().CollectorServiceConfig, config.GetConfig().MetricConfig)
 	if err != nil {

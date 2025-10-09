@@ -195,16 +195,6 @@ func retrieveAndDeleteNKeysFromFirst(bucket string, n int) ([][]byte, error) {
 	return s, err
 }
 
-func namespaceExists(namespace string) bool {
-	exists := false
-	db.View(func(tx *bbolt.Tx) error { // nolint
-		bkt := tx.Bucket([]byte(namespace))
-		exists = bkt != nil
-		return nil
-	})
-	return exists
-}
-
 func deleteBucket(ns string) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		return tx.DeleteBucket([]byte(ns))
