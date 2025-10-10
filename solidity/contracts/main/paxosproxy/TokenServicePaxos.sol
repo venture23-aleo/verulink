@@ -8,6 +8,7 @@ import {FeeCollector} from "../tokenservice/FeeCollector.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {ITellerWithMultiAssetSupport} from "../../common/interface/paxos/ITellerWithMultiAssetSupport.sol";
+import {console} from "hardhat/console.sol";
 
 contract TokenServicePaxos is TokenServiceV2 {
     using SafeERC20 for IIERC20;
@@ -19,24 +20,20 @@ contract TokenServicePaxos is TokenServiceV2 {
 
     event PlatformFeesPaid(address indexed tokenAddress, uint256 amount);
 
-    function setTeller(
-        address _teller
-    ) external virtual onlyOwner {
+    function setTeller(address _teller) external virtual onlyOwner {
         teller = ITellerWithMultiAssetSupport(_teller);
     }
 
-    function setFeeCollector(
-        FeeCollector _feeCollector
-    ) external virtual onlyOwner {
+    function setFeeCollector(FeeCollector _feeCollector) external virtual onlyOwner {
         feeCollector = _feeCollector;
     }
 
-    function _packetify(
-        uint256 version,
-        address tokenAddress,
-        uint256 amount,
-        string memory receiver
-    ) internal view virtual returns (PacketLibrary.OutPacket memory packet) {
+    function _packetify(uint256 version, address tokenAddress, uint256 amount, string memory receiver)
+        internal
+        view
+        virtual
+        returns (PacketLibrary.OutPacket memory packet)
+    {
         packet = _packetify(tokenAddress, amount, receiver);
         packet.version = version;
     }
@@ -46,38 +43,29 @@ contract TokenServicePaxos is TokenServiceV2 {
     /// @param amount The total amount to calculate fees from
     /// @param version The version number to determine fee type
     /// @return amountToTransfer The amount remaining after fees
-    function _handleFees(
-        address tokenAddress,
-        uint256 amount,
-        uint256 version
-    ) internal virtual returns (uint256 amountToTransfer) {
+    function _handleFees(address tokenAddress, uint256 amount, uint256 version)
+        internal
+        virtual
+        returns (uint256 amountToTransfer)
+    {
         require(amount > 0, "TokenService: notEnoughAmount");
         uint256 payingFees = 0;
 
         if (version > 10) {
-            payingFees =
-                (feeCollector.privatePlatformFees(tokenAddress) * amount) /
-                100000;
+            payingFees = (feeCollector.privatePlatformFees(tokenAddress) * amount) / 100000;
         } else {
-            payingFees =
-                (feeCollector.platformFees(tokenAddress) * amount) /
-                100000;
+            payingFees = (feeCollector.platformFees(tokenAddress) * amount) / 100000;
         }
 
         if (payingFees > 0) {
             if (tokenAddress == ETH_TOKEN) {
                 collectedFees[ETH_TOKEN] += payingFees;
-                (bool sent, ) = payable(address(feeCollector)).call{
-                    value: payingFees
-                }("");
+                (bool sent,) = payable(address(feeCollector)).call{value: payingFees}("");
                 require(sent, "TokenService: feesTransferFailed");
                 emit PlatformFeesPaid(ETH_TOKEN, payingFees);
             } else {
                 collectedFees[tokenAddress] += payingFees;
-                IIERC20(tokenAddress).safeTransfer(
-                    address(feeCollector),
-                    payingFees
-                );
+                IIERC20(tokenAddress).safeTransfer(address(feeCollector), payingFees);
                 emit PlatformFeesPaid(tokenAddress, payingFees);
             }
         }
@@ -96,23 +84,14 @@ contract TokenServicePaxos is TokenServiceV2 {
         uint256 version,
         bytes memory data
     ) internal virtual {
-        require(
-            erc20Bridge.validateAleoAddress(receiver),
-            "TokenService: InvalidReceiverAddress"
-        );
+        require(erc20Bridge.validateAleoAddress(receiver), "TokenService: InvalidReceiverAddress");
         require(tokenAddress != ETH_TOKEN, "TokenService: ethNotAllowed");
 
         uint256 amountToTransfer = _handleFees(tokenAddress, amount, version);
 
-        IIERC20(tokenAddress).safeTransfer(
-            address(this),
-            amountToTransfer
-        );
+        IIERC20(tokenAddress).safeTransfer(address(this), amountToTransfer);
 
-        erc20Bridge.sendMessage(
-            _packetify(version, tokenAddress, amountToTransfer, receiver),
-            data
-        );
+        erc20Bridge.sendMessage(_packetify(version, tokenAddress, amountToTransfer, receiver), data);
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization. The user submits the borinng vault supported token.
@@ -137,25 +116,19 @@ contract TokenServicePaxos is TokenServiceV2 {
         require(amount > 0, "TokenService: amountZero");
 
         IIERC20 depositToken = IIERC20(depositAsset);
+        console.log("We're here ~~~~~~~~~~~~~~~~~~~~~~~~~~");
         depositToken.safeTransferFrom(msg.sender, address(this), amount);
 
-        depositToken.safeIncreaseAllowance(address(teller), amount);
+        depositToken.safeIncreaseAllowance(0xC60a7e21A6753ED4305C93034607009fAeC2A5F3, amount);
         uint256 sharesMinted = teller.deposit(depositAsset, amount, minimumShares);
         depositToken.safeApprove(address(teller), 0);
-
+        console.log("shared minted:", sharesMinted);
+        console.log("Address thois", address(this));
         // Handle predicate message
         require(
-            predicateservice.handleMessage(
-                tokenAddress,
-                amount,
-                receiver,
-                predicateMessage,
-                msg.sender,
-                0
-            ),
+            predicateservice.handleMessage(tokenAddress, amount, receiver, predicateMessage, msg.sender, 0),
             "TokenService: unauthorizedFromPredicate"
         );
-
         uint256 version = isRelayerOn
             ? PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER
             : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
@@ -173,10 +146,7 @@ contract TokenServicePaxos is TokenServiceV2 {
         address withdrawAsset,
         uint256 minimumAssets
     ) external virtual nonReentrant whenNotPaused {
-        require(
-            packet.destTokenService.addr == address(this),
-            "TokenService: invalidToken"
-        );
+        require(packet.destTokenService.addr == address(this), "TokenService: invalidToken");
 
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
@@ -208,10 +178,7 @@ contract TokenServicePaxos is TokenServiceV2 {
 
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
-        if (
-            PacketLibrary.Vote.NAY == quorum ||
-            blackListService.isBlackListed(receiver)
-        ) {
+        if (PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
             if (tokenAddress == ETH_TOKEN) {
                 // eth lock
                 // if(relayerFeeAmount > 0){
@@ -235,7 +202,7 @@ contract TokenServicePaxos is TokenServiceV2 {
                 //     require(sent, "TokenService: feesTransferFailed");
                 //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
                 // }
-                (sent, ) = payable(receiver).call{value: amount}("");
+                (sent,) = payable(receiver).call{value: amount}("");
                 require(sent, "TokenService: ethWithdrawFailed");
             } else {
                 // if(relayerFeeAmount > 0){
@@ -243,7 +210,6 @@ contract TokenServicePaxos is TokenServiceV2 {
                 // }
                 // Perform bulkWithdraw from teller
                 teller.bulkWithdraw(withdrawAsset, amount, minimumAssets, receiver);
-
             }
         } else {
             revert("TokenService: insufficientQuorum");
