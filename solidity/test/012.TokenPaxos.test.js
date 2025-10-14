@@ -4,12 +4,15 @@ import { packFunctionArgs, signaturesToBytes } from "predicate-sdk";
 const { ethers } = hardhat;
 
 const ETH_CHAINID = 1;
-const ALEO_CHAINID = 2;
+const ALEO_CHAINID = 6694886634401;
 const ADDRESS_ONE = "0x0000000000000000000000000000000000000001";
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 const TELLER_CONTRACT = "0xede35ea2dc28444b52b6b5d47009926910783d7b";
 const PREDICATE_SERVICE = "0x053f202A596450908CDcf99F8e24B424EEBbaeE4";
 const BRIDGE_PROXY = "0x7440176A6F367D3Fad1754519bD8033EAF173133";
+const BRIDGE_V2 = "0x57CD053A5056a9B9104e3D1981F487c192BEdEa6";
+const PACKET_LIBRARY = "0xe0c41fdfe2f183b7f705507532ad395425eedc6f";
+const ALEO_LIBRARY = "0xf692e3f5ec1e71415447d0ea2dee0a370d531063";
 
 // Real mainnet token addresses
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
@@ -78,6 +81,8 @@ describe("TokenServicePaxos", () => {
     TokenServiceImpl,
     TokenServiceImplAddr,
     signer,
+    proxyBridgeOwner,
+    proxyBridgeSigner,
     usdcContract, // ← Changed name to be clearer
     usdtContract, // ← Changed name to be clearer
     chainId,
@@ -141,7 +146,17 @@ describe("TokenServicePaxos", () => {
     await proxy.deployed();
     proxiedBridge = ERC20TokenBridge.attach(proxy.address);
 
-    // proxiedBridge = await ethers.getContractAt("ProxyContract", BRIDGE_PROXY);
+    /**
+     *
+    ERC20TokenBridge = await ethers.getContractFactory("BridgeV2", {
+        libraries: {
+            PacketLibrary: PACKET_LIBRARY,
+            AleoAddressLibrary: ALEO_LIBRARY,
+        },
+    });
+    proxy = await ethers.getContractAt("ProxyContract", BRIDGE_PROXY);
+    proxiedBridge = ERC20TokenBridge.attach(proxy.address);
+    */
 
     // ========================================
     // USE REAL USDC AND USDT FROM MAINNET FORK
@@ -315,16 +330,33 @@ describe("TokenServicePaxos", () => {
         ethers.utils.parseEther("0.001"),
         ethers.utils.parseEther("100000000000")
       );
+
+    proxyBridgeOwner = await proxiedBridge.owner();
+    console.log("proxyBridgeOwner: ", proxyBridgeOwner);
+    proxyBridgeSigner = await ethers.getImpersonatedSigner(proxyBridgeOwner);
+    console.log("Funding from rich accounts:");
+    await owner.sendTransaction({
+      to: proxyBridgeOwner,
+      value: ethers.utils.parseEther("2.0"),
+    });
     await (
-      await proxiedBridge.connect(owner).addTokenService(proxiedV1.address)
-    ).wait();
-    await (
-      await proxiedBridge.connect(owner).addAttestor(attestor.address, 1)
-    ).wait();
-    await (
-      await proxiedBridge.connect(owner).addAttestor(attestor1.address, 2)
+      await proxiedBridge
+        .connect(proxyBridgeSigner)
+        .addTokenService(proxiedV1.address)
     ).wait();
 
+    await (
+      await proxiedBridge
+        .connect(proxyBridgeSigner)
+        .addAttestor(attestor.address, 1)
+    ).wait();
+    await (
+      await proxiedBridge
+        .connect(proxyBridgeSigner)
+        .addAttestor(attestor1.address, 2)
+    ).wait();
+
+    console.log("Deploying Fee Collector📃");
     // ========================================
     // Deploy FeeCollector with REAL tokens
     // ========================================
@@ -346,6 +378,8 @@ describe("TokenServicePaxos", () => {
 
     await proxiedV1.connect(owner).setFeeCollector(feeCollector.address);
     await proxiedV1.connect(owner).setTeller(TELLER_CONTRACT);
+    //adding the bridge token
+    await proxiedV1.connect(owner).setBridgeToken(ALEO_USD);
 
     console.log("✅ All contracts deployed and configured with real tokens");
   });
@@ -464,7 +498,19 @@ describe("TokenServicePaxos", () => {
     const additionalData =
       "0x04010b65e222bc6ccb31cef42a8acef4bd9aac060a00112460f03d5701876ab53ca74316808776b70d44badb0abc27aae0bd402f9f8e84fc5c8ca43d36176bbd73b8d880f38990f15ebfab23c5959dea6db4df284db08f726797175474096228d821b988ffa925c8c281beb7f438d5688ab9577a711565f57e9b4e56936654cd3907e1514e227340efc83e304ff7770f8cfc5436db4ee36bbdb0d983f90385ef3916efc2adb8052fbb1df02fa8b85a70d1ccb8d4b20f278fb1ac69d6a9bd5fa4b8108c";
 
+    //! Updating the destination chainId for a mock . [Checkpoint 1]
+    console.log("Proxied V1 address: ", await proxiedV1.address);
+    console.log(
+      await proxiedBridge.isRegisteredTokenService(await proxiedV1.address)
+    );
+    console.log(
+      "Should be supported: ",
+      await proxiedBridge.isSupportedChain(ALEO_CHAINID)
+    );
     console.log("\n🚀 Executing transfer with real USDC...");
+    // await proxiedBridge
+    //   .connect(proxyBridgeSigner)
+    //   .updateDestinationChainId(ALEO_CHAINID);
 
     const tx = await proxiedV1
       .connect(other)
