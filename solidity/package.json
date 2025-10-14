@@ -14,7 +14,6 @@
     "@typechain/hardhat": "^6.1.2",
     "@types/chai": "^4.2.0",
     "@types/mocha": ">=9.1.0",
-    "axios": "^1.7.9",
     "chai": "^4.3.10",
     "dotenv": "^16.3.1",
     "ethers": "^5.4.7",
@@ -32,7 +31,7 @@
     "coverage": "npx hardhat coverage"
   },
   "dependencies": {
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+    "@nomicfoundation/hardhat-network-helpers": "^1.1.0",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@predicate/contracts": "^1.0.10",
     "@thirdweb-dev/contracts": "3.11.0",

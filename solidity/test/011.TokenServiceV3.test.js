@@ -157,6 +157,7 @@ describe('TokenService', () => {
     });
 
     // Test for transfer
+    ``
     it('should transfer USDC', async () => {
         await (await usdcMock.mint(other.address, 150)).wait();
         console.log(await usdcMock.balanceOf(other.address));
@@ -193,14 +194,14 @@ describe('TokenService', () => {
 
     // Test for transfer
     it('should transfer USDC with platform fees deducted', async () => {
-        await (await feeCollector.connect(owner).setPlatformFees(usdcMock.address, 100)).wait();  
+        await (await feeCollector.connect(owner).setPlatformFees(usdcMock.address, 100)).wait();
 
         await (await usdcMock.mint(other.address, 1500)).wait();
         await (await usdcMock.connect(other).approve(proxiedV1.address, 1000)).wait();
 
         await (await proxiedV1.connect(other)["transfer(address,uint256,string,bool,bytes)"]
             (usdcMock.address, 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false, "0x")).wait();
-        
+
         expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(1);
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(999);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(500);
@@ -236,13 +237,13 @@ describe('TokenService', () => {
         ]
 
         const tx = await proxiedV1.connect(other)["privateTransfer(address,uint256,string,bool,bytes)"]
-            (usdcMock.address, 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false, 
+            (usdcMock.address, 1000, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false,
                 "0x1234567890");
 
         await expect(tx)
         .to.emit(proxiedV1, "PlatformFeesPaid")
         .withArgs(usdcMock.address, 2);
-        
+
         // const receipt = await tx.wait();
         // console.log("receipt: ", receipt.events);
 
@@ -262,9 +263,9 @@ describe('TokenService', () => {
         await (await proxiedV1.connect(other)["transfer(string,bool,bytes)"]
         ("aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false, "0x",
             { value: ethers.utils.parseEther("100")})).wait();
-        
+
         console.log("feeCollector balance: ", await ethers.provider.getBalance(feeCollector.address));
-        
+
         expect(await ethers.provider.getBalance(feeCollector.address)).to.be.equal(ethers.utils.parseEther("0.1"));
         expect(await ethers.provider.getBalance(proxiedV1.address)).to.be.equal(ethers.utils.parseEther("99.9"));
     });
@@ -300,8 +301,8 @@ describe('TokenService', () => {
 
         await (await proxiedV1.connect(other)["privateTransfer(address,uint256,string,bool,bytes)"]
             (usdTMock.address, 500, "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27", false, "0x")).wait();
-             
-        
+
+
         expect(await usdcMock.balanceOf(feeCollector.address)).to.be.equal(13);
         expect(await usdcMock.balanceOf(proxiedV1.address)).to.be.equal(887);
         expect(await usdcMock.balanceOf(other.address)).to.be.equal(600);
@@ -338,24 +339,24 @@ describe('TokenService', () => {
             ["aleo.SenderAddress", usdcMock.address, 100, other.address],
             100
         ];
-    
+
         const packetHash = inPacketHash(packet);
         let message = ethers.utils.solidityKeccak256(
                 ['bytes32', 'uint8'],
                 [packetHash, 1]
             );
-    
+
         const signature1 = await attestor.signMessage(ethers.utils.arrayify(message));
         const signature2 = await attestor1.signMessage(ethers.utils.arrayify(message));
         const signatures = signature1 + signature2.slice(2);
-    
+
         // Transfer tokens to the contract
         await usdcMock.mint(proxiedV1.address, 100);
-      
+
         await expect(proxiedV1.connect(signer).withdraw(packet, signatures))
           .to.emit(proxiedBridge, "Consumed")
           .withArgs(ALEO_CHAINID, packet[1], packetHash, 1);
-    
+
         // Check balances
         expect(await usdcMock.balanceOf(signer.address)).to.equal(0);
         expect(await usdcMock.balanceOf(other.address)).to.equal(100);

@@ -11,10 +11,9 @@ import {OutgoingPacketManagerImplV2} from "../base/bridge/OutgoingPacketmanagerI
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
-
 /// @title Bridge Contract
 /// @dev This contract implements OwnableUpgradeable, Pausable, AttestorManager, BridgeTokenServiceManager, ConsumedPacketManagerImpl, OutgoingPacketManagerImpl, and Upgradeable contracts.
-contract BridgeV2 is 
+contract BridgeV2 is
     OwnableUpgradeable,
     Pausable,
     AttestorManager,
@@ -24,7 +23,7 @@ contract BridgeV2 is
     Upgradeable
 {
     using PacketLibrary for PacketLibrary.InPacket;
-    
+
     /// @notice Event triggered when the destination chain is updated
     /// @param oldDestinationChainId The old destination chain ID
     /// @param newDestinationChainId The new destination chain ID
@@ -35,17 +34,14 @@ contract BridgeV2 is
 
     /// @dev Initializes the Bridge contract
     /// @param _destChainId The initial destination chain ID
-    function Bridge_init(
-        uint256 _destChainId,
-        address _owner
-    ) public initializer {
+    function Bridge_init(uint256 _destChainId, address _owner) public initializer {
         __Ownable_init_unchained();
         __Pausable_init_unchained();
         destinationChainId = _destChainId;
-        _transferOwnership(_owner);      
+        _transferOwnership(_owner);
     }
 
-    function _authorizeUpgrade(address) internal virtual view override {
+    function _authorizeUpgrade(address) internal view virtual override {
         require(msg.sender == owner());
     }
 
@@ -75,10 +71,10 @@ contract BridgeV2 is
     /// @param packet The input packet to be consumed
     /// @param signatures The array of signatures for attestation
     /// @return Votes result of the packet consumption
-    function consume(
-        PacketLibrary.InPacket memory packet, 
-        bytes memory signatures
-    ) external whenNotPaused returns (PacketLibrary.Vote)
+    function consume(PacketLibrary.InPacket memory packet, bytes memory signatures)
+        external
+        whenNotPaused
+        returns (PacketLibrary.Vote)
     {
         require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, signatures, quorumRequired);
@@ -94,7 +90,7 @@ contract BridgeV2 is
         require(isSupportedChain(packet.destTokenService.chainId), "Bridge: unknown destination chain");
         require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
         _sendMessage(packet, data);
-    } 
+    }
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
