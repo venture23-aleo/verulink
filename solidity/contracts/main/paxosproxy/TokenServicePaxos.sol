@@ -18,10 +18,16 @@ contract TokenServicePaxos is TokenServiceV2 {
 
     ITellerWithMultiAssetSupport public teller;
 
+    address public bridgeToken;
+
     event PlatformFeesPaid(address indexed tokenAddress, uint256 amount);
 
     function setTeller(address _teller) external virtual onlyOwner {
         teller = ITellerWithMultiAssetSupport(_teller);
+    }
+
+    function setBridgeToken(address _token) external virtual onlyOwner {
+        bridgeToken = _token;
     }
 
     function setFeeCollector(FeeCollector _feeCollector) external virtual onlyOwner {
@@ -118,8 +124,7 @@ contract TokenServicePaxos is TokenServiceV2 {
         IIERC20 depositToken = IIERC20(depositAsset);
         console.log("We're here ~~~~~~~~~~~~~~~~~~~~~~~~~~");
         depositToken.safeTransferFrom(msg.sender, address(this), amount);
-
-        depositToken.safeIncreaseAllowance(0xC60a7e21A6753ED4305C93034607009fAeC2A5F3, amount);
+        depositToken.safeIncreaseAllowance(bridgeToken, amount);
         uint256 sharesMinted = teller.deposit(depositAsset, amount, minimumShares);
         depositToken.safeApprove(address(teller), 0);
         console.log("shared minted:", sharesMinted);
@@ -134,7 +139,7 @@ contract TokenServicePaxos is TokenServiceV2 {
             : PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE;
 
         // Perform ERC20 token transfer
-        _transfer(tokenAddress, amount, receiver, version, data);
+        _transfer(tokenAddress, sharesMinted, receiver, version, data);
     }
 
     /// @notice Transfers ERC20 tokens to the destination chain via the bridge
