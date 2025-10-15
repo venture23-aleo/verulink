@@ -3,6 +3,7 @@
 ## Table of Contents
 - [Installation on VM](#installing-on-vm-manual)
 - [Installing on AWS](#installing-on-aws)
+- [Installing on Kubernetes via Helm](#installing-on-kubernetes-via-helm)
 - [Verulink Attestor Migration Guide ](#verulink-attestor-migration-guide)
 - [Troubleshooting](#troubleshooting)
 
@@ -333,6 +334,106 @@ Reference: [Creating and Attaching IAM Policy to user](https://docs.aws.amazon.c
 	cd ../logs
 	cat verulink.log
 	```
+
+---
+
+### Installing on Kubernetes via Helm
+#### Pre-Deployment Steps
+
+1. Ensure Kubernetes cluster is available and `kubectl` is configured.
+2. Install [Helm v3](https://helm.sh/docs/intro/install/).
+3. Login to GitHub Container Registry (GHCR) to pull the Helm chart and images:
+
+```bash
+helm registry login ghcr.io -u <your-github-username> --password-stdin
+```
+
+---
+
+#### Install Verulink Attestor Chart
+
+Select the branch/environment:
+
+| Branch  | Environment | Namespace        |
+| ------- | ----------- | ---------------- |
+| develop | devnet      | attestor-develop |
+| staging | staging     | attestor-staging |
+| main    | mainnet     | attestor         |
+
+Install the Helm chart:
+
+```bash
+# Example for staging
+helm install verulink-attestor oci://ghcr.io/venture23-aleo/verulink-attestor \
+  --version <chart-version> \
+  --namespace attestor-staging \
+  --create-namespace \
+  -f values.yaml
+```
+
+> You can override any value inline with `--set key=value`.
+
+---
+
+#### Verify Deployment
+
+```bash
+kubectl get pods -n attestor-staging
+kubectl get svc -n attestor-staging
+kubectl logs -f <signingservice-pod> -n attestor-staging
+```
+
+* `signingservice` is exposed via Kubernetes service.
+* `chainservice` runs as a pod only (no service needed).
+
+---
+
+#### Upgrade / Update
+
+```bash
+helm upgrade verulink-attestor oci://ghcr.io/venture23-aleo/verulink-attestor \
+  --version <new-chart-version> \
+  -n attestor-staging \
+  -f values.yaml
+```
+
+---
+
+#### Uninstall
+
+```bash
+helm uninstall verulink-attestor -n attestor-staging
+kubectl delete namespace attestor-staging
+```
+
+---
+
+### `values.yaml` Quick Reference
+
+| Key                           | Description                                | Example/Placeholder                    |
+| ----------------------------- | ------------------------------------------ | -------------------------------------- |
+| `attestor_name`               | Name of the attestor node                  | `stg_attestor_verulink_xyz`            |
+| `mode`                        | Deployment mode                            | `stage`                                |
+| `aleo_chain_id`               | Aleo chain ID                              | `6694886634403`                        |
+| `aleo_wallet_address`         | Aleo wallet address                        | `<your_aleo_wallet_address>`           |
+| `aleo_private_key`            | Aleo private key                           | `<your_aleo_private_key>`              |
+| `bsc_chain_id`                | BSC chain ID                               | `422842677857`                         |
+| `bsc_wallet_address`          | BSC wallet address                         | `<your_evm_wallet_address>`            |
+| `bsc_private_key`             | BSC private key                            | `<your_evm_private_key>`               |
+| `db_dir`                      | Persistent volume path for chain DB        | `/var/lib/attestor/staging`            |
+| `log_dir`                     | Log volume path                            | `/var/log/attestor/staging`            |
+| `signing_service_username`    | Signing service user                       | `<your_signing_service_username>`      |
+| `signing_service_password`    | Signing service password                   | `<your_signing_service_password>`      |
+| `collector_service_url`       | Collector service endpoint                 | `<collector_service_url>`              |
+| `ca_certificate_base64`       | Base64 encoded CA certificate              | `<base64-encoded-cert>`                |
+| `attestor_certificate_base64` | Base64 encoded attestor certificate        | `<base64-encoded-cert>`                |
+| `attestor_key_base64`         | Base64 encoded attestor key                | `<base64-encoded-key>`                 |
+| `mtls_secret_name`            | Kubernetes secret for MTLS                 | `stg/verulink/attestor/mtls`           |
+| `signingservice_secret_name`  | Kubernetes secret for signing service keys | `stg/verulink/attestor/signingservice` |
+| `prometheus_pushgateway_url`  | Prometheus pushgateway URL                 | `<prometheus_pushgateway_url>`         |
+| `docker_image_tag_sign`       | Docker image tag for signing service       | `staging-v2.0.0-beta1`                 |
+| `docker_image_tag_chain`      | Docker image tag for chain service         | `staging-v2.0.0-beta1`                 |
+| `deployment_environment`      | Environment label                          | `stage`                                |
 
 ---
 

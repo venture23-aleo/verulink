@@ -1,0 +1,130 @@
+name: Helm Chart Release
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+      - release/*
+      - ci/add-helm-chart
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write  # needed to push to gh-pages
+
+env:
+  CHART_NAME: verulink-attestor
+  CHART_PATH: attestor/attestor-chart
+  HELM_REPO_URL: https://venture23-aleo.github.io/verulink/
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.1
+
+      - name: Determine Chart Version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            VERSION="0.0.0-latest"
+          elif [[ "${GITHUB_REF}" == refs/heads/develop ]]; then
+            VERSION="0.0.0-dev.$(date +'%Y%m%d%H%M')-beta"
+          elif [[ "${GITHUB_REF}" == refs/heads/staging ]]; then
+            VERSION="0.0.0-stg.$(date +'%Y%m%d%H%M')-beta"
+          else
+            VERSION="0.0.0-build.$(date +'%Y%m%d%H%M')"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Using Chart Version: $VERSION"
+
+      - name: Lint Helm Chart
+        run: helm lint ./${{ env.CHART_PATH }} --set isCICD=true
+
+
+
+      - name: Package Helm Chart
+        run: |
+          mkdir -p packaged
+          helm package ./${{ env.CHART_PATH }} \
+            --version "${{ steps.version.outputs.version }}" \
+            --app-version "${{ steps.version.outputs.version }}" \
+            -d packaged/
+      
+      - name: Generate JWT
+        run: |
+          cat <<'EOF' > ~/generate_jwt.sh
+          #!/usr/bin/env bash
+          set -o pipefail
+          client_id=$1
+          pem=$2
+          now=$(date +%s)
+          iat=$((${now} - 60))
+          exp=$((${now} + 600))
+          b64enc() { openssl base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'; }
+          header_json='{"typ":"JWT","alg":"RS256"}'
+          header=$( echo -n "${header_json}" | b64enc )
+          payload_json="{\"iat\":${iat},\"exp\":${exp},\"iss\":\"${client_id}\"}"
+          payload=$( echo -n "${payload_json}" | b64enc )
+          header_payload="${header}.${payload}"
+          signature=$(openssl dgst -sha256 -sign <(echo "${pem}" | sed 's/\\n/\n/g') <(echo -n "${header_payload}") | b64enc)
+          JWT="${header_payload}.${signature}"
+          echo "JWT=${JWT}" >> $GITHUB_ENV
+          EOF
+          chmod +x ~/generate_jwt.sh
+          ~/generate_jwt.sh "${{ secrets.CI_APP_ID }}" "${{ secrets.CI_APP_PRIVATE_KEY }}"
+          
+      - name: Get installation ID dynamically
+        id: get-installation
+        run: |
+          INSTALLATION_ID=$(curl -s -H "Authorization: Bearer $JWT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/app/installations | jq -r '.[0].id')
+          
+          echo "INSTALLATION_ID=$INSTALLATION_ID" >> $GITHUB_ENV
+          echo "Found installation ID: $INSTALLATION_ID"
+
+      - name: Get installation access token
+        id: get-token
+        run: |
+          TOKEN=$(curl -s -X POST \
+            -H "Authorization: Bearer $JWT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens | jq -r .token)
+          
+          echo "APP_TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "✅ Installation token fetched successfully"
+      
+      - name: Switch to gh-pages branch
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git config user.name "ci-v23"
+          git config user.email "238069220+ci-v23@users.noreply.github.com"
+
+      - name: Update Helm Repo Index and Push
+        run: |
+          # Move packaged charts
+          mv ./packaged/*.tgz .
+
+          # Update Helm index.yaml
+          if [ -f index.yaml ]; then
+            helm repo index . --url ${{ env.HELM_REPO_URL }} --merge index.yaml
+          else
+            helm repo index . --url ${{ env.HELM_REPO_URL }}
+          fi
+
+          # Commit and push changes
+          git add .
+          git commit -m "Add chart version ${{ steps.version.outputs.version }}"
+          git push https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }} gh-pages
