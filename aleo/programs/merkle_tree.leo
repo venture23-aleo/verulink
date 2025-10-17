@@ -33,7 +33,7 @@ program merkle_tree.aleo {
         let root: field = calculate_hash_for_leaves(merkle_proof.siblings[0u8], merkle_proof.siblings[1u8],  merkle_proof.leaf_index % 2u32);
         for i: u32 in 2u32..MAX_TREE_DEPTH + 1u32 {
             if (merkle_proof.siblings[i] == 0field) {
-                return (root, i);
+                return (root, i - 1u32);
             }
             root = calculate_hash_for_nodes(root, merkle_proof.siblings[i], (merkle_proof.leaf_index / (2u32**(i-1u32))) % 2u32);
         }
@@ -45,7 +45,7 @@ program merkle_tree.aleo {
     // Computes the Merkle root and returns it for comparison against a known root.
     transition verify_inclusion(addr: address, merkle_proof: MerkleProof) -> field {
       assert_eq(addr as field, merkle_proof.siblings[0u32]);
-      let (root, depth): (field, u32)= calculate_root_depth_siblings(merkle_proof);
+      let (root, depth): (field, u32) = calculate_root_depth_siblings(merkle_proof);
       return root;
     } 
 
@@ -67,7 +67,7 @@ program merkle_tree.aleo {
                 assert(addr_field < merkle_proofs[0u32].siblings[0u32]);
             } else {
                 // Ensure that if the address is the most right leaf
-                let last_index_leaf: u32 = 2u32 ** (depth1 - 1u32) - 1u32;
+                let last_index_leaf: u32 = 2u32 ** depth1 - 1u32;
                 assert_eq(merkle_proofs[0u32].leaf_index, last_index_leaf);
                 // Ensure that the address is bigger than the first sibling
                 assert(addr_field > merkle_proofs[0u32].siblings[0u32]);
@@ -76,6 +76,11 @@ program merkle_tree.aleo {
             // Ensure the address is in between the provided leaves
             assert(addr_field > merkle_proofs[0u32].siblings[0u32]);
             assert(addr_field < merkle_proofs[1u32].siblings[0u32]);
+
+            // Ensure that the leaf indexes are not greater than the last possible leaf index
+            let last_index_leaf: u32 = 2u32 ** depth1 - 1u32;
+            assert(merkle_proofs[1u32].leaf_index <= last_index_leaf);
+
             // Ensure the leaves are adjacent
             assert_eq(merkle_proofs[0u32].leaf_index + 1u32, merkle_proofs[1u32].leaf_index);
         }

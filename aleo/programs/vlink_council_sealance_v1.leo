@@ -12,8 +12,6 @@ program vlink_council_sealance_v1.aleo
     /////// Token Service: Transfer Ownership ////
     //////////////////////////////////////////////
 
-    const SELF_ADDRESS: address = vlink_token_service_council_v2.aleo;  
-
     const TAG_TS_TRANSFER_OWNERSHIP: u8 = 1u8;
     const TAG_TS_ADD_TOKEN: u8 = 2u8;
     const TAG_TS_REMOVE_TOKEN: u8 = 3u8; 
@@ -431,9 +429,7 @@ program vlink_council_sealance_v1.aleo
         token_service_address: [u8; 20],
         token_address: [u8; 20],
         pub_platform_fee: u32,
-        pri_platform_fee: u32,
         pub_relayer_fee: u128,
-        pri_relayer_fee: u128,
     }
 
     async transition ts_add_chain_to_existing_token(
@@ -443,9 +439,7 @@ program vlink_council_sealance_v1.aleo
         public token_address: [u8; 20],
         public voters: [address; 5],
         public pub_platform_fee: u32,
-        public pri_platform_fee: u32,
         public pub_relayer_fee: u128,
-        public pri_relayer_fee: u128,
     ) -> Future{
         let proposal: AddChainExistingToken  = AddChainExistingToken {
             tag: TAG_TS_ADD_CHAIN_TO_ET,
@@ -454,14 +448,12 @@ program vlink_council_sealance_v1.aleo
             token_service_address,  
             token_address,
             pub_platform_fee,
-            pri_platform_fee,
-            pub_relayer_fee,
-            pri_relayer_fee
+            pub_relayer_fee
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
        // Execute the proposal
-        let add_chain: Future = vlink_token_service_sealance_v1.aleo/add_chain_to_existing_token(chain_id, token_service_address, token_address, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
+        let add_chain: Future = vlink_token_service_sealance_v1.aleo/add_chain_to_existing_token(chain_id, token_service_address, token_address, pub_platform_fee, pub_relayer_fee);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 
@@ -518,18 +510,14 @@ program vlink_council_sealance_v1.aleo
         id: u32,
         chain_id: u128,
         public_relayer_fee: u128,
-        private_relayer_fee: u128,
         public_platform_fee: u32,
-        private_platform_fee: u32
     }
  
     async transition ts_update_fees(
         public id: u32,
         public chain_id: u128,
         public public_relayer_fee: u128,
-        public private_relayer_fee: u128,
         public public_platform_fee: u32,
-        public private_platform_fee: u32,
         public voters: [address; 5],
     ) -> Future {
         let proposal: UpdateFees = UpdateFees {
@@ -537,15 +525,13 @@ program vlink_council_sealance_v1.aleo
             id,
             chain_id,
             public_relayer_fee,
-            private_relayer_fee,
-            public_platform_fee,
-            private_platform_fee  
+            public_platform_fee
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 
-        let update_relayer_fee: Future = vlink_token_service_sealance_v1.aleo/update_relayer_fee(chain_id, public_relayer_fee, private_relayer_fee);
+        let update_relayer_fee: Future = vlink_token_service_sealance_v1.aleo/update_relayer_fee(chain_id, public_relayer_fee);
 
-        let update_platform_fee: Future = vlink_token_service_sealance_v1.aleo/update_platform_fee(chain_id, public_platform_fee, private_platform_fee);
+        let update_platform_fee: Future = vlink_token_service_sealance_v1.aleo/update_platform_fee(chain_id, public_platform_fee);
 
         let external_execute: Future = vlink_council_v2.aleo/external_execute(id, proposal_hash, voters);
 

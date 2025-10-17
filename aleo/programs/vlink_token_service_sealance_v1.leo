@@ -2,7 +2,7 @@
 
 import vlink_token_bridge_v2.aleo;
 import vlink_holding_sealance_v1.aleo;
-import sealed_report_token.aleo;
+import compliant_token_template.aleo;
 
 program vlink_token_service_sealance_v1.aleo {
 
@@ -119,10 +119,10 @@ program vlink_token_service_sealance_v1.aleo {
     // total_supply, 
     async transition initialize_ts(public owner: address) -> Future {
         assert_eq(self.caller, INITIALIZER_ADDRESS);
-        return finalize_initialize_ts(owner, self.caller);
+        return finalize_initialize_ts(owner);
     }
 
-    async function finalize_initialize_ts(owner: address, caller: address) {
+    async function finalize_initialize_ts(owner: address) {
         // Assert bridge has not been initialized before
         assert(!Mapping::contains(owner_TS, OWNER_INDEX));
 
@@ -421,10 +421,10 @@ program vlink_token_service_sealance_v1.aleo {
         public is_relayer_on: bool
         ) -> Future{
         assert_neq(self.caller, ZERO_ADDRESS);
-        let burn: Future = sealed_report_token.aleo/burn_public(self.caller, amount);
+        let burn: Future = compliant_token_template.aleo/burn_public(self.caller, amount);
 
         // transferring platform fee to the token service
-        let mint: Future = sealed_report_token.aleo/mint_public(vlink_council_v2.aleo, fee_platform);
+        let mint: Future = compliant_token_template.aleo/mint_public(vlink_council_v2.aleo, fee_platform);
 
         let chain_token_info: ChainToken = ChainToken{
             chain_id: dest_chain_id,
@@ -560,9 +560,9 @@ program vlink_token_service_sealance_v1.aleo {
         }
 
         // minting in relayer address
-        let mint_relayer: Future = sealed_report_token.aleo/mint_public(fee_receiver, fee_relayer);
+        let mint_relayer: Future = compliant_token_template.aleo/mint_public(fee_receiver, fee_relayer);
 
-        let mint: Future = sealed_report_token.aleo/mint_public(actual_receiver, amount-fee_relayer);
+        let mint: Future = compliant_token_template.aleo/mint_public(actual_receiver, amount-fee_relayer);
 
         let hold: Future = vlink_holding_sealance_v1.aleo/hold_fund(receiver, held_amount);
 
@@ -596,17 +596,16 @@ program vlink_token_service_sealance_v1.aleo {
 
     }
 
-    async transition add_chain_to_existing_token(public chain_id: u128, public token_service_address:[u8;20], public token_address:[u8;20], public pub_platform_fee: u32, public pri_platform_fee: u32, public pub_relayer_fee: u128, public pri_relayer_fee: u128) -> Future{
+    async transition add_chain_to_existing_token(public chain_id: u128, public token_service_address:[u8;20], public token_address:[u8;20], public pub_platform_fee: u32, public pub_relayer_fee: u128) -> Future{
         let chain_token_info:ChainToken = ChainToken{
             token_id:TOKEN_ID,
             chain_id:chain_id
         };
         assert(pub_platform_fee <= HUNDRED_PERCENTAGE);
-        assert(pri_platform_fee <= HUNDRED_PERCENTAGE);
-        return finalize_add_chain_to_EX_token(self.caller, chain_token_info, token_service_address, token_address, pub_platform_fee, pri_platform_fee, pub_relayer_fee, pri_relayer_fee);
+        return finalize_add_chain_to_EX_token(self.caller, chain_token_info, token_service_address, token_address, pub_platform_fee, pub_relayer_fee);
     }
 
-    async function finalize_add_chain_to_EX_token(from:address, chain_token_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public pub_platform_fee: u32, public pri_platform_fee: u32, public pub_relayer_fee: u128, public pri_relayer_fee: u128){
+    async function finalize_add_chain_to_EX_token(from:address, chain_token_info: ChainToken, token_service_address:[u8;20], token_address:[u8;20], public pub_platform_fee: u32, public pub_relayer_fee: u128){
         assert(!Mapping::contains(other_chain_token_service, chain_token_info));
         assert(!Mapping::contains(other_chain_token_address, chain_token_info));
         // token should have already been registered previously, otherwise use add_token_ts. 
@@ -655,11 +654,11 @@ program vlink_token_service_sealance_v1.aleo {
         assert_eq(owner, from);
     }
 
-    async transition update_platform_fee(public chain_id: u128, public public_fee: u32, public private_fee: u32) -> Future{
-        return finalize_update_platform_fee(self.caller, chain_id, public_fee, private_fee);
+    async transition update_platform_fee(public chain_id: u128, public public_fee: u32) -> Future{
+        return finalize_update_platform_fee(self.caller, chain_id, public_fee);
     }
 
-    async function finalize_update_platform_fee(from:address, public chain_id: u128, public public_fee: u32, public private_fee: u32){
+    async function finalize_update_platform_fee(from:address, public chain_id: u128, public public_fee: u32){
         let chain_token_info: ChainToken = ChainToken{
             chain_id: chain_id,
             token_id: TOKEN_ID
@@ -670,11 +669,11 @@ program vlink_token_service_sealance_v1.aleo {
         Mapping::set(public_platform_fee, chain_token_info, public_fee);
     }
 
-    async transition update_relayer_fee(public chain_id: u128, public public_fee: u128, public private_fee: u128) -> Future{
-        return finalize_update_relayer_fee(self.caller, chain_id, public_fee, private_fee);
+    async transition update_relayer_fee(public chain_id: u128, public public_fee: u128) -> Future{
+        return finalize_update_relayer_fee(self.caller, chain_id, public_fee);
     }
 
-    async function finalize_update_relayer_fee(from:address, public chain_id: u128, public public_fee: u128, public private_fee: u128){
+    async function finalize_update_relayer_fee(from:address, public chain_id: u128, public public_fee: u128){
         let owner: address = Mapping::get(owner_TS, true);
         assert_eq(owner, from);
         let chain_token_info: ChainToken = ChainToken{

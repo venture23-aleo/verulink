@@ -1,4 +1,4 @@
-import sealed_report_token.aleo;
+import compliant_token_template.aleo;
 
 program vlink_holding_sealance_v1.aleo {
 
@@ -89,7 +89,7 @@ program vlink_holding_sealance_v1.aleo {
     }
 
     async transition release_fund(public user: address, public amount: u128) -> Future {
-        let transfer: Future = sealed_report_token.aleo/transfer_public(user, amount);
+        let transfer: Future = compliant_token_template.aleo/transfer_public(user, amount);
 
         let token_holder: Holder = Holder{
             account: user,
@@ -100,10 +100,11 @@ program vlink_holding_sealance_v1.aleo {
     }
 
     async function finalize_release_fund(from: address, token_holder: Holder, amount: u128, f0: Future) {
-        f0.await();
         // Assert only owner can release fund
         let owner: address = Mapping::get(owner_holding, OWNER_INDEX);
         assert_eq(from, owner);
+
+        f0.await();
 
         let held_amount: u128 = Mapping::get(holdings, token_holder);
 
