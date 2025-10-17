@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Verulink Attestor Values",
+  "type": "object",
+  "required": [
+    "attestor_name",
+    "secret_name"
+  ],
+  "properties": {
+    "secret_name": {
+      "type": "string",
+      "description": "The name of the single, pre-existing Kubernetes secret for all sensitive data.",
+      "minLength": 1
+    },
+    "attestor_name": {
+      "type": "string",
+      "description": "Must be a non-empty, unique name for the attestor.",
+      "minLength": 1
+    },
+    "docker_image_tag_sign": {
+      "type": "string",
+      "minLength": 1
+    },
+    "docker_image_tag_chain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "aleo_wallet_address": {
+      "type": "string",
+      "description": "The Aleo wallet address (required at install time)."
+    },
+    "bsc_wallet_address": {
+      "type": "string",
+      "description": "The BSC wallet address (required at install time)."
+    }
+  }
+}
