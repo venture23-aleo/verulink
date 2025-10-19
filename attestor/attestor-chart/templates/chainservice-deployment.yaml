@@ -63,11 +63,11 @@ spec:
       volumes:
         - name: attestor-db
           hostPath:
-            path: /home/k3sadmin/.attestor_db/db
+            path: /home/k3sadmin/.attestor_db/db-stg
             type: DirectoryOrCreate
         - name: attestor-logs
           hostPath:
-            path: /home/k3sadmin/.attestor_db/logs
+            path: /home/k3sadmin/.attestor_db/logs-stg
             type: DirectoryOrCreate
         - name: chain-config-volume
           configMap:
