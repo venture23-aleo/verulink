@@ -61,10 +61,14 @@ spec:
               mountPath: /secret
               readOnly: true
       volumes:
-        - name: db
-          emptyDir: {}
-        - name: logs
-          emptyDir: {}
+        - name: attestor-db
+          hostPath:
+            path: /home/k3sadmin/.attestor_db/db
+            type: DirectoryOrCreate
+        - name: attestor-logs
+          hostPath:
+            path: /home/k3sadmin/.attestor_db/logs
+            type: DirectoryOrCreate
         - name: chain-config-volume
           configMap:
             name: attestor-chain-service-config
