@@ -47,9 +47,9 @@ spec:
             - configMapRef:
                 name: attestor-config
           volumeMounts:
-            - name: db
+            - name: attestor-db
               mountPath: {{ .Values.db_dir }}
-            - name: logs
+            - name: attestor-logs
               mountPath: {{ .Values.log_dir }}
             - name: chain-config-volume
               mountPath: /configs/config.yaml
@@ -63,11 +63,11 @@ spec:
       volumes:
         - name: attestor-db
           hostPath:
-            path: /home/k3sadmin/.attestor_db/db-stg
+            path: /home/k3sadmin/.attestor_db/db
             type: DirectoryOrCreate
         - name: attestor-logs
           hostPath:
-            path: /home/k3sadmin/.attestor_db/logs-stg
+            path: /home/k3sadmin/.attestor_db/logs
             type: DirectoryOrCreate
         - name: chain-config-volume
           configMap:

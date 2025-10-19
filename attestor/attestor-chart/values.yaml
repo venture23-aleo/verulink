@@ -47,3 +47,6 @@ prometheus_job_name: "stg-push-gateway"
 service:
   type: ClusterIP
   port: 8080
+## Kubernetes host path storage
+db_host_path: /home/k3sadmin/.attestor_db/db
+logs_host_path: /home/k3sadmin/.attestor_db/logs
