@@ -1,0 +1,46 @@
+---
+# Mainnet Environment Variables for Attestor Service
+
+# Attestor Configuration
+attestor_name: "<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>"
+mode: "prod"
+
+# Aleo Chain Configuration
+aleo_chain_id: "6694886634401"
+aleo_wallet_address: "<your_aleo_wallet_address>"
+aleo_bridge_contract: "vlink_token_bridge_v3.aleo"
+aleo_node_url: "https://api.explorer.provable.com/v1|mainnet"
+aleo_private_key: "<your_aleo_private_key>"
+
+# BSC Chain Configuration
+bsc_chain_id: "422842677816"  # BSC Mainnet
+bsc_wallet_address: "<your_evm_wallet_address>"
+bsc_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+bsc_node_url: "wss://bsc-rpc.publicnode.com"
+bsc_start_height: 58383959
+bsc_private_key: "<your_evm_private_key>"
+
+# Service Configuration
+db_dir: "/var/lib/attestor/mainnet"
+log_dir: "/var/log/attestor/mainnet"
+
+# Signing Service Configuration
+signing_service_host: "signingservice"
+signing_service_port: 8080
+signing_service_username: "<your_signing_service_username>"
+signing_service_password: "<your_signing_service_password>"
+
+# Collector Service Configuration
+collector_service_url: "<collector_service_url>"
+ca_certificate_base64: "<ca_certificate_base64>"
+attestor_certificate_base64: "<attestor_certificate_base64>"
+attestor_key_base64: "<attestor_key_base64>"
+
+# Metrics Configuration
+prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
+prometheus_job_name: "prod-push-gateway-v200"
+
+# Docker Image Tags
+docker_image_tag_sign: "v2.0.0"
+docker_image_tag_chain: "v2.0.0"
+deployment_environment: "prod"

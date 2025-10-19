@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chainservice
+  template:
+    metadata:
+      labels:
+        app: chainservice
+    spec:
+      initContainers:
+        - name: init-decode-mtls
+          image: ubuntu:24.04
+          env:
+            - name: ATTESTOR_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: attestor-config
+                  key: attestor_name   # must exist in your ConfigMap
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              apt update >/dev/null && apt install -y coreutils >/dev/null
+              mkdir -p /output
+              echo "Using attestor name: ${ATTESTOR_NAME}"
+              echo "Copying certs..."
+              cp /input/CA_MTLS_CERT /output/ca.crt
+              cp /input/ATTESTOR_MTLS_CERT /output/${ATTESTOR_NAME}.crt
+              cp /input/ATTESTOR_MTLS_KEY /output/${ATTESTOR_NAME}.key
+              echo "Files created:"
+              ls -l /output
+          volumeMounts:
+            - name: mtls-secret
+              mountPath: /input
+            - name: mtls
+              mountPath: /output
+      containers:
+        - name: chainservice
+          image: "venture23/verulink-attestor-chain:{{ .Values.docker_image_tag_chain }}"
+          envFrom:
+            - configMapRef:
+                name: attestor-config
+          volumeMounts:
+            - name: attestor-db
+              mountPath: {{ .Values.db_dir }}
+            - name: attestor-logs
+              mountPath: {{ .Values.log_dir }}
+            - name: chain-config-volume
+              mountPath: /configs/config.yaml
+              subPath: config.yaml
+            - name: mtls
+              mountPath: /configs/.mtls
+              readOnly: true
+            - name: mtls-secret
+              mountPath: /secret
+              readOnly: true
+      volumes:
+        - name: attestor-db
+          hostPath:
+            path: /home/k3sadmin/.attestor_db/db
+            type: DirectoryOrCreate
+        - name: attestor-logs
+          hostPath:
+            path: /home/k3sadmin/.attestor_db/logs
+            type: DirectoryOrCreate
+        - name: chain-config-volume
+          configMap:
+            name: attestor-chain-service-config
+        - name: mtls
+          emptyDir: {}
+        - name: mtls-secret
+          secret:
+            secretName: attestor-secret

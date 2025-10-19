@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="be34622e-a933-47ef-af31-891ad5aceb0e" name="Changes" comment="Update unitTest for V3 TokenService&#10;- test platform fees collection, withdraw &#10;- test executerFees implementation&#10;- private transfer test" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" url="file:///opt/homebrew/opt/go/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="0dbde8e8-824f-4132-95ae-4d5e897324a7" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2sWPSK704X51bnddKoTx5Na2mQI" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showMembers" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;SONARLINT_PRECOMMIT_ANALYSIS&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feat/support-private-transactions&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/sdpbhandari/GitRepo/verulink&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Users/sdpbhandari/GitRepo/verulink/solidity/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="verulink" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="verulink" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="verulink" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="verulink" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="verulink" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="Python.FlaskServer">
+      <module name="verulink" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="Tox" factoryName="Tox">
+      <module name="verulink" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-125ca727e0f0-intellij.indexing.shared.core-IU-243.24978.46" />
+        <option value="bundled-js-predefined-d6986cc7102b-76f8388c3a79-JavaScript-IU-243.24978.46" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="be34622e-a933-47ef-af31-891ad5aceb0e" name="Changes" comment="" />
+      <changelist id="" name="linter" comment="" />
+      <created>1738568361389</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1738568361389</updated>
+      <workItem from="1738568364175" duration="374000" />
+      <workItem from="1739279962060" duration="3432000" />
+      <workItem from="1739292836928" duration="3942000" />
+      <workItem from="1739302748685" duration="18000" />
+      <workItem from="1739352377102" duration="1891000" />
+      <workItem from="1740462366324" duration="824000" />
+      <workItem from="1741143030217" duration="14000" />
+      <workItem from="1743611079026" duration="2518000" />
+    </task>
+    <task id="LOCAL-00001" summary="update latest serviceManager and PolicyId for holesky">
+      <option name="closed" value="true" />
+      <created>1739280234698</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1739280234698</updated>
+    </task>
+    <task id="LOCAL-00002" summary="add vaultAddress as env">
+      <option name="closed" value="true" />
+      <created>1739280245715</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1739280245715</updated>
+    </task>
+    <task id="LOCAL-00003" summary="update package.json for updated dependencies">
+      <option name="closed" value="true" />
+      <created>1739280281097</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1739280281097</updated>
+    </task>
+    <task id="LOCAL-00004" summary="add enable disable predicate service functions on V2">
+      <option name="closed" value="true" />
+      <created>1739282144039</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282144039</updated>
+    </task>
+    <task id="LOCAL-00005" summary="update &#10;- add param name on v1 Transfer methods &#10;- use predicateEnable flag on transfers &#10;- update error messages">
+      <option name="closed" value="true" />
+      <created>1739282223113</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282223113</updated>
+    </task>
+    <task id="LOCAL-00006" summary="remove duplicate use of IIERC20">
+      <option name="closed" value="true" />
+      <created>1739282255339</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282255339</updated>
+    </task>
+    <task id="LOCAL-00007" summary="update on errorMessages">
+      <option name="closed" value="true" />
+      <created>1739282267002</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282267002</updated>
+    </task>
+    <task id="LOCAL-00008" summary="add&#10;- add `isPredicateEnabled` flag for Predicate usage&#10;- add `isWhitelistedSender` to manage whitelist addresses &#10;- add `onlyWhitelistedSender` modifier&#10;- receive method with `onlyWhitelistedSender` modifier&#10;- manageWhitelist() to add or remove the whitelist address to send the eth to TS&#10;-">
+      <option name="closed" value="true" />
+      <created>1739282380806</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282380806</updated>
+    </task>
+    <task id="LOCAL-00009" summary="add &#10;- deploy  mockUSDC, USDT contracts with minted 1M to deployer">
+      <option name="closed" value="true" />
+      <created>1739282539370</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282539370</updated>
+    </task>
+    <task id="LOCAL-00010" summary="scripts for&#10;- enable predicate service on TS V2&#10;- disable predicate service on TS V2&#10;- manage whitelistAddress on TS V2">
+      <option name="closed" value="true" />
+      <created>1739282599821</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282599821</updated>
+    </task>
+    <task id="LOCAL-00011" summary="script for removing token from TokenService">
+      <option name="closed" value="true" />
+      <created>1739282635543</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282635543</updated>
+    </task>
+    <task id="LOCAL-00012" summary="scripts for &#10;- transferring ETH balance, USDC balance and USDT balance to Vault address">
+      <option name="closed" value="true" />
+      <created>1739282696719</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282696719</updated>
+    </task>
+    <task id="LOCAL-00013" summary="scripts to withdraw funds from TS">
+      <option name="closed" value="true" />
+      <created>1739282718129</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282718129</updated>
+    </task>
+    <task id="LOCAL-00014" summary="script to update vault address for tokens in TS">
+      <option name="closed" value="true" />
+      <created>1739282740539</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282740539</updated>
+    </task>
+    <task id="LOCAL-00015" summary="script to transfer fund to TS V1 and V2 with Predicate API">
+      <option name="closed" value="true" />
+      <created>1739282772399</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1739282772399</updated>
+    </task>
+    <task id="LOCAL-00016" summary="add scripts for sepolia to deploy v2">
+      <option name="closed" value="true" />
+      <created>1739283343208</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1739283343208</updated>
+    </task>
+    <task id="LOCAL-00017" summary="add new script on holesky for setting the variables">
+      <option name="closed" value="true" />
+      <created>1739283357320</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1739283357320</updated>
+    </task>
+    <task id="LOCAL-00018" summary="mainnet scripts to update vaultAddress, transfer funds to Vault address, deploy predicate service, deploy v2 TS and manageWhitelist">
+      <option name="closed" value="true" />
+      <created>1739283393819</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1739283393819</updated>
+    </task>
+    <task id="LOCAL-00019" summary="remove unused imports">
+      <option name="closed" value="true" />
+      <created>1739283579246</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1739283579246</updated>
+    </task>
+    <task id="LOCAL-00020" summary="add more scripts commands for mainnet deployment">
+      <option name="closed" value="true" />
+      <created>1739293134782</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1739293134782</updated>
+    </task>
+    <task id="LOCAL-00021" summary="update `receive()` with virtual to support the updatability">
+      <option name="closed" value="true" />
+      <created>1739293188455</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1739293188455</updated>
+    </task>
+    <task id="LOCAL-00022" summary="update transfer script with BigNumber">
+      <option name="closed" value="true" />
+      <created>1739293208022</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1739293208022</updated>
+    </task>
+    <task id="LOCAL-00023" summary="update `manageWhitelist.js` to add/removeWhiteList">
+      <option name="closed" value="true" />
+      <created>1739293267390</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1739293267390</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Revert &quot;update solidity test CICD&quot;&#10;&#10;This reverts commit d13e59b3">
+      <option name="closed" value="true" />
+      <created>1739299273173</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1739299273173</updated>
+    </task>
+    <task id="LOCAL-00025" summary="fix solidity test ci-cd">
+      <option name="closed" value="true" />
+      <created>1739299375104</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1739299375104</updated>
+    </task>
+    <task id="LOCAL-00026" summary="update hardhat config for cicd setup">
+      <option name="closed" value="true" />
+      <created>1739299885325</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1739299885325</updated>
+    </task>
+    <task id="LOCAL-00027" summary="fix solidity contracts test cicd pipeline">
+      <option name="closed" value="true" />
+      <created>1739299909194</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1739299909194</updated>
+    </task>
+    <task id="LOCAL-00028" summary="fix solidity codeCoverage cicd pipeline">
+      <option name="closed" value="true" />
+      <created>1739299929179</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1739299929179</updated>
+    </task>
+    <task id="LOCAL-00029" summary="update few scripts for hardhat">
+      <option name="closed" value="true" />
+      <created>1739300062433</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1739300062433</updated>
+    </task>
+    <task id="LOCAL-00030" summary="fix `solidity-coverage` version">
+      <option name="closed" value="true" />
+      <created>1739300422401</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1739300422401</updated>
+    </task>
+    <task id="LOCAL-00031" summary="update add/remove whitelistAddress() with updated method">
+      <option name="closed" value="true" />
+      <created>1739352400167</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1739352400167</updated>
+    </task>
+    <task id="LOCAL-00032" summary="separate out  add/remove whitelistAddress methods">
+      <option name="closed" value="true" />
+      <created>1739352429420</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1739352429420</updated>
+    </task>
+    <task id="LOCAL-00033" summary="update hardcoded version number to generic">
+      <option name="closed" value="true" />
+      <created>1743612955001</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1743612955001</updated>
+    </task>
+    <task id="LOCAL-00034" summary="update packetify with virtual keyword">
+      <option name="closed" value="true" />
+      <created>1743613101504</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613101504</updated>
+    </task>
+    <task id="LOCAL-00035" summary="add `base-sepolia` and `arbitrum-sepolia` chains on hardhat config">
+      <option name="closed" value="true" />
+      <created>1743613141262</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613141262</updated>
+    </task>
+    <task id="LOCAL-00036" summary="add execute command to support added chains">
+      <option name="closed" value="true" />
+      <created>1743613171378</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613171378</updated>
+    </task>
+    <task id="LOCAL-00037" summary="remove unused variables">
+      <option name="closed" value="true" />
+      <created>1743613191304</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613191304</updated>
+    </task>
+    <task id="LOCAL-00038" summary="update TokenService contract version">
+      <option name="closed" value="true" />
+      <created>1743613208991</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613208991</updated>
+    </task>
+    <task id="LOCAL-00039" summary="line intent fix">
+      <option name="closed" value="true" />
+      <created>1743613222944</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613222944</updated>
+    </task>
+    <task id="LOCAL-00040" summary="withdraw funds script changed to test">
+      <option name="closed" value="true" />
+      <created>1743613395842</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613395842</updated>
+    </task>
+    <task id="LOCAL-00041" summary="add private transfer on the script">
+      <option name="closed" value="true" />
+      <created>1743613501031</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613501031</updated>
+    </task>
+    <task id="LOCAL-00042" summary="add script to remove eth from tokenService">
+      <option name="closed" value="true" />
+      <created>1743613589069</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613589069</updated>
+    </task>
+    <task id="LOCAL-00043" summary="add script to deploy version 3 tokenService">
+      <option name="closed" value="true" />
+      <created>1743613620214</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613620214</updated>
+    </task>
+    <task id="LOCAL-00044" summary="update TokenService Contract &#10;- supply version number from transfer()&#10;- add privateTransfer() to transfer token from EVM to ALEO and also with Predicate Flag&#10;- update each transfer method with dynamic versions and platform fees&#10;- update withdraw() to support the executer fees&#10;- add Mapping for executerFees to support executer from EVM side &#10;- add record for platform fees for platform charges&#10;- add withdraw funds from platformFees pool to `_to` address provided by `owner`&#10;- implement version number constants">
+      <option name="closed" value="true" />
+      <created>1743613865320</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613865320</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Update unitTest for V3 TokenService&#10;- test platform fees collection, withdraw &#10;- test executerFees implementation&#10;- private transfer test">
+      <option name="closed" value="true" />
+      <created>1743613915721</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1743613915721</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <confirmRemoveEmptyChangelist value="2" />
+    <MESSAGE value="update transfer script with BigNumber" />
+    <MESSAGE value="update `manageWhitelist.js` to add/removeWhiteList" />
+    <MESSAGE value="Revert &quot;update solidity test CICD&quot;&#10;&#10;This reverts commit d13e59b3" />
+    <MESSAGE value="fix solidity test ci-cd" />
+    <MESSAGE value="update hardhat config for cicd setup" />
+    <MESSAGE value="fix solidity contracts test cicd pipeline" />
+    <MESSAGE value="fix solidity codeCoverage cicd pipeline" />
+    <MESSAGE value="update few scripts for hardhat" />
+    <MESSAGE value="fix `solidity-coverage` version" />
+    <MESSAGE value="update add/remove whitelistAddress() with updated method" />
+    <MESSAGE value="separate out  add/remove whitelistAddress methods" />
+    <MESSAGE value="linter" />
+    <MESSAGE value="update hardcoded version number to generic" />
+    <MESSAGE value="update packetify with virtual keyword" />
+    <MESSAGE value="add `base-sepolia` and `arbitrum-sepolia` chains on hardhat config" />
+    <MESSAGE value="add execute command to support added chains" />
+    <MESSAGE value="remove unused variables" />
+    <MESSAGE value="update TokenService contract version" />
+    <MESSAGE value="line intent fix" />
+    <MESSAGE value="withdraw funds script changed to test" />
+    <MESSAGE value="add private transfer on the script" />
+    <MESSAGE value="add script to remove eth from tokenService" />
+    <MESSAGE value="add script to deploy version 3 tokenService" />
+    <MESSAGE value="update TokenService Contract &#10;- supply version number from transfer()&#10;- add privateTransfer() to transfer token from EVM to ALEO and also with Predicate Flag&#10;- update each transfer method with dynamic versions and platform fees&#10;- update withdraw() to support the executer fees&#10;- add Mapping for executerFees to support executer from EVM side &#10;- add record for platform fees for platform charges&#10;- add withdraw funds from platformFees pool to `_to` address provided by `owner`&#10;- implement version number constants" />
+    <MESSAGE value="Update unitTest for V3 TokenService&#10;- test platform fees collection, withdraw &#10;- test executerFees implementation&#10;- private transfer test" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update unitTest for V3 TokenService&#10;- test platform fees collection, withdraw &#10;- test executerFees implementation&#10;- private transfer test" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

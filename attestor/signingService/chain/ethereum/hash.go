@@ -13,9 +13,9 @@ import (
 
 // HashAndSign returns the hash of screenedPacket and the signature of the attestor on the hash of
 // screenedPacket
-func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err error) {
+func HashAndSign(sp *chainService.ScreenedPacket, chainName string) (hsh, signature string, err error) {
 	hsh = hash(sp)
-	signature, err = sign(hsh)
+	signature, err = sign(hsh, chainName)
 	if err != nil {
 		return "", "", err
 	}
@@ -55,10 +55,8 @@ func hash(sp *chainService.ScreenedPacket) string {
 		ethCommon.HexToAddress(sp.Packet.Message.ReceiverAddress).Bytes(),
 		heightBytes,
 	)
-
 	hashOfPktHashAndVote := crypto.Keccak256Hash(pktHash.Bytes(), getEthBoolByte(sp.IsWhite))
-
-	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(pktHash))), hashOfPktHashAndVote.Bytes())
+	finalHash := crypto.Keccak256Hash([]byte(fmt.Sprintf("\x19Ethereum Signed Message:\n%d", len(hashOfPktHashAndVote))), hashOfPktHashAndVote.Bytes())
 	return finalHash.Hex()
 }
 
@@ -68,7 +66,7 @@ func getEthBoolByte(b bool) []byte {
 		yay := big.NewInt(1)
 		yay.FillBytes(boolByte)
 	} else {
-		nay := big.NewInt(0)
+		nay := big.NewInt(2)
 		nay.FillBytes(boolByte)
 	}
 	return boolByte

@@ -15,8 +15,9 @@ type Cred struct {
 }
 
 type ChainConfig struct {
-	Name    string   `yaml:"name"`
-	ChainID *big.Int `yaml:"chain_id"`
+	Name      string   `yaml:"name"`
+	ChainType string   `yaml:"chain_type"`
+	ChainID   *big.Int `yaml:"chain_id"`
 }
 
 type config struct {
@@ -54,6 +55,7 @@ type KeyConfig struct {
 type KeyPair struct {
 	PrivateKey    string `yaml:"private_key"`
 	WalletAddress string `yaml:"wallet_address"`
+	ChainType     string `yaml:"chain_type"`
 }
 
 func LoadKeys(keyPath string) (map[string]*KeyPair, error) {

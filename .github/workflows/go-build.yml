@@ -1,51 +1,72 @@
-name: BUILD - build and binary upload
+name: Run Go Unit Tests
 
 on:
-  pull_request:
   push:
     branches:
       - main
+    paths:
+      - "attestor/**"
+  pull_request:
+    paths:
+      - "attestor/**"
 
 jobs:
   build:
-    name: build
+    name: Build
     runs-on: ubuntu-latest
+
     steps:
-      # Install and setup go
-      - name: Set up Go 1.19
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.19
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # setup gopath
-      - name: Set PATH
+      # Setup Go
+      - name: Set up Go 1.23
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.23
+
+      # Generate go.sum files BEFORE caching
+      - name: Tidy Go modules
         run: |
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-        shell: bash
-
-      # checkout relayer
-      - name: checkout relayer
-        uses: actions/checkout@v2
-
-      # setup cache
-      - uses: actions/cache@v1
+          cd attestor/chainService && go mod tidy
+          cd ../signingService && go mod tidy
+        
+      # Cache Go modules
+      - name: Cache Go modules
+        uses: actions/cache@v4
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          # Use a more specific path for hashing
+          key: ${{ runner.os }}-go-${{ hashFiles('attestor/**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
-      # unit tests
-      - name: run unit tests
-        run: make test
-        
-      # build binary
-      - name: build binary and move to upload location
-        run: make build
 
-      # upload resulting binaries
-      - name: upload binaries
-        uses: actions/upload-artifact@v1
-        with:
-          name: aleo
-          path: ./build/aleo
+      # chainService module
+      - name: Download dependencies - chainService
+        working-directory: attestor/chainService
+        run: go mod download
+
+      - name: Clean Go test cache - chainService
+        working-directory: attestor/chainService
+        run: go clean -testcache
+
+      - name: Run tests - chainService
+        working-directory: attestor/chainService
+        run: go test ./...
+
+      # signingService module
+      - name: Download dependencies - signingService
+        working-directory: attestor/signingService
+        run: go mod download
+
+      - name: Clean Go test cache - signingService
+        working-directory: attestor/signingService
+        run: go clean -testcache
+
+      - name: Run tests - signingService
+        working-directory: attestor/signingService
+        run: go test ./...

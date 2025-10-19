@@ -11,22 +11,22 @@ import (
 	_ "github.com/venture23-aleo/verulink/attestor/chainService/chain/ethereum"
 	"github.com/venture23-aleo/verulink/attestor/chainService/metrics"
 	"go.uber.org/zap"
-	
+
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
 	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"github.com/venture23-aleo/verulink/attestor/chainService/relay"
 	"github.com/venture23-aleo/verulink/attestor/chainService/store"
-
 )
 
 // flags
 var (
-	configFile string
-	dbDir      string
-	logDir     string
-	logEnc     string
-	mode       string
-	cleanStart bool
+	configFile  string
+	dbDir       string
+	logDir      string
+	logEnc      string
+	mode        string
+	cleanStart  bool
+	maintenance bool
 )
 
 func init() {
@@ -36,32 +36,41 @@ func init() {
 	flag.StringVar(&logEnc, "log-enc", "", "json or console encoding")
 	flag.StringVar(&mode, "mode", "dev", "Set mode. Especially useful for logging")
 	flag.BoolVar(&cleanStart, "clean", false, "Remove local db and start")
+	flag.BoolVar(&maintenance, "maintenance", false, "Start with maintenance mode")
 }
 
 func main() {
 	flag.Parse()
 
 	flagArgs := &config.FlagArgs{
-		ConfigFile: configFile,
-		DBDir:      dbDir,
-		LogDir:     logDir,
-		LogEnc:     logEnc,
-		Mode:       mode,
-		CleanStart: cleanStart,
+		ConfigFile:  configFile,
+		DBDir:       dbDir,
+		LogDir:      logDir,
+		LogEnc:      logEnc,
+		Mode:        mode,
+		CleanStart:  cleanStart,
+		Maintenance: maintenance,
 	}
 
-	err := config.InitConfig(flagArgs)
-	if err != nil {
-		fmt.Println("Error while loading config. ", err)
+	if err := config.InitConfig(flagArgs); err != nil {
+		fmt.Printf("failed to initialize config: %v\n", err)
 		os.Exit(1)
 	}
 
-	logger.InitLogging(config.GetConfig().Mode, config.GetConfig().Name, config.GetConfig().LogConfig)
-	logger.GetLogger().Info("Attestor started")
+	log, err := logger.New(config.GetConfig().LogConfig)
+	if err != nil {
+		fmt.Printf("failed to initialize logger: %v\n", err)
+		os.Exit(1)
+	}
+	defer log.Sync() // flushes buffer, if any
+
+	zap.ReplaceGlobals(log)
+
+	zap.L().Info("Attestor started", zap.String("name", config.GetConfig().Name), zap.String("version", config.GetConfig().Version))
 
 	pusher, err := metrics.InitMetrics(config.GetConfig().CollectorServiceConfig, config.GetConfig().MetricConfig)
 	if err != nil {
-		logger.GetLogger().Error("Error initializing metrics logging", zap.Error(err))
+		zap.L().Error("Error initializing metrics logging", zap.Error(err))
 	}
 
 	signal.Ignore(getIgnoreSignals()...)
@@ -77,7 +86,7 @@ func main() {
 
 	pmetrics := metrics.NewPrometheusMetrics()
 	go metrics.PushMetrics(ctx, pusher, pmetrics)
-	pmetrics.StartVersion(logger.AttestorName, config.GetConfig().Version)
+	pmetrics.StartVersion(config.GetConfig().Name, config.GetConfig().Version)
 
 	relay.StartRelay(ctx, config.GetConfig(), pmetrics)
 }

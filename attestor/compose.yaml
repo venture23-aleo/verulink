@@ -1,41 +1,41 @@
 x-dbpath: &p # server as value holder for compose file
   /db
 
-x-logpath: &l
-  /log
+x-logpath: &l /log
 
 services:
   chainservice:
     depends_on:
       - signingservice
-    build: ./chainService
+    container_name: verulink-chain
+    image: venture23/verulink-attestor-chain:${DOCKER_IMAGE_TAG_CHAIN}
     volumes:
       - type: volume
         source: db-path
         target: *p
       - type: volume
         source: log-path
-        target: *l      
+        target: *l
       - type: bind
-        source: ./chainService/config.yaml
+        source: ./chain_config.yaml
         target: /configs/config.yaml
-      - ./chainService/.mtls:/configs/.mtls
+      - ./.mtls:/configs/.mtls
     environment:
       DB_PATH: *p
       LOG_PATH: *l
       LOG_ENC: json
-      MODE: prod
+      MODE: ${DEPLOYMENT_ENVIRONMENT}
       CLEAN_START: false
+      MAINTENANCE: false
   signingservice:
-    build:
-      context: .
-      dockerfile: ./signingService/Dockerfile
+    container_name: verulink-sign
+    image: venture23/verulink-attestor-sign:${DOCKER_IMAGE_TAG_SIGN}
     volumes:
-      - ./signingService/config.yaml:/configs/config.yaml
-      - ./signingService/secrets.yaml:/configs/keys.yaml
-    ports:
-      - 8080:8080
-      
+      - ./sign_config.yaml:/configs/config.yaml
+      - ./secrets.yaml:/configs/keys.yaml
+    expose:
+      - "8080"
+
 volumes:
   db-path:
   log-path:

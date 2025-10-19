@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/venture23-aleo/verulink/attestor/chainService/config"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 
 	"go.uber.org/zap"
 )
@@ -20,6 +19,7 @@ import (
 type PrometheusMetrics struct {
 	Registry                     *prometheus.Registry
 	InPacketsCounter             *prometheus.CounterVec
+	InstantPacketsCounter        *prometheus.CounterVec
 	DeliveredPacketsCounter      *prometheus.CounterVec
 	HashedAndSignedPacketCounter *prometheus.CounterVec
 	AttestorService              *prometheus.GaugeVec
@@ -38,6 +38,10 @@ func (m *PrometheusMetrics) StartVersion(attestorName string, version string) {
 
 func (m *PrometheusMetrics) AddInPackets(attestorName string, chain string, destinationChain string) {
 	m.InPacketsCounter.WithLabelValues(attestorName, chain, destinationChain).Add(float64(1))
+}
+
+func (m *PrometheusMetrics) AddInstantPackets(attestorName string, chain string, destinationChain string) {
+	m.InstantPacketsCounter.WithLabelValues(attestorName, chain, destinationChain).Add(float64(1))
 }
 
 func (m *PrometheusMetrics) DeliveredPackets(attestorName string, sourceChain string, destinationChain string) {
@@ -85,6 +89,12 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		prometheus.CounterOpts{
 			Name: "packet_received",
 			Help: "Total packet received",
+		}, packetLables)
+
+	instantPacketsCounter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "instant_packet_received",
+			Help: "Total instant packet received",
 		}, packetLables)
 
 	outPacktesCounter := prometheus.NewCounterVec(
@@ -148,6 +158,7 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		}, []string{"attestor_name", "chain_id"})
 
 	registry.MustRegister(inPacketsCounter)
+	registry.MustRegister(instantPacketsCounter)
 	registry.MustRegister(outPacktesCounter)
 	registry.MustRegister(attestorHealth)
 	registry.MustRegister(dbServiceHealth)
@@ -172,11 +183,12 @@ func NewPrometheusMetrics() *PrometheusMetrics {
 		ProcessedSequenceNo:          processedSeqInfo,
 		AleoRPCSignal:                aleoRPC,
 		EhtereumRPCSignal:            ethRPC,
+		InstantPacketsCounter:        instantPacketsCounter,
 	}
 }
 
 func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig) (*push.Pusher, error) {
-	logger.GetLogger().Info("Initilizing metrics")
+	zap.L().Info("Initializing metrics")
 
 	caCert, err := os.ReadFile(cfg.CaCertificate)
 	if err != nil {
@@ -199,7 +211,7 @@ func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig
 
 	httpClient := &http.Client{
 		Transport: transport,
-		Timeout: time.Second * 30,
+		Timeout:   time.Second * 30,
 	}
 
 	host := config.GetConfig().MetricConfig.Host
@@ -212,21 +224,18 @@ func InitMetrics(cfg config.CollecterServiceConfig, mConfig config.MetricsConfig
 }
 
 func PushMetrics(ctx context.Context, pusher *push.Pusher, pmetrics *PrometheusMetrics) {
-
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	pusher.Gatherer(pmetrics.Registry)
 	for {
-
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
 			if err := pusher.Push(); err != nil {
-				logger.GetLogger().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
+				zap.L().Error("Error pushing metrics to Pushgateway:", zap.Error(err))
 			}
 		}
 	}
-
 }

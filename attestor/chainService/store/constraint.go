@@ -5,7 +5,7 @@ import (
 )
 
 type keyConstraint interface {
-	int64 | uint64 | ~string | ~[]byte
+	uint64 | ~string | ~[]byte
 }
 
 func getKeyByteForKeyConstraint[T keyConstraint](key T) (k []byte) {

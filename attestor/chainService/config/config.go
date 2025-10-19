@@ -6,9 +6,11 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"gopkg.in/yaml.v3"
 )
 
@@ -25,38 +27,45 @@ const (
 )
 
 type FlagArgs struct {
-	ConfigFile string
-	DBDir      string
-	LogDir     string
-	LogEnc     string
-	Mode       string
-	CleanStart bool
+	ConfigFile  string
+	DBDir       string
+	LogDir      string
+	LogEnc      string
+	Mode        string
+	CleanStart  bool
+	Maintenance bool
 }
 
 type ChainConfig struct {
-	Name                       string            `yaml:"name"`
-	ChainID                    *big.Int          `yaml:"chain_id"`
-	BridgeContract             string            `yaml:"bridge_contract"`
-	NodeUrl                    string            `yaml:"node_url"`
-	PacketValidityWaitDuration time.Duration     `yaml:"pkt_validity_wait_dur"`
-	FeedPacketWaitDuration     time.Duration     `yaml:"feed_pkt_wait_dur"`
-	FinalityHeight             uint64            `yaml:"finality_height"`
-	WalletPath                 string            `yaml:"wallet_path"`
-	DestChains                 []string          `yaml:"dest_chains"`
-	WalletAddress              string            `yaml:"wallet_address"`
-	StartSeqNum                map[string]uint64 `yaml:"sequence_num_start"` // useful for aleo
-	StartHeight                uint64            `yaml:"start_height"`       // useful for ethereum
-	FilterTopic                string            `yaml:"filter_topic"`       // useful for ethereum
-	RetryPacketWaitDur         time.Duration     `yaml:"retry_packet_wait_dur"`
-	PruneBaseSeqNumberWaitDur  time.Duration     `yaml:"prune_base_seq_num_wait_dur"`
-	AverageBlockGenDur         time.Duration     `yaml:"average_block_gen_dur"` // useful for aleo
+	Name                      string                    `yaml:"name"`
+	ChainType                 string                    `yaml:"chain_type"`
+	ChainID                   *big.Int                  `yaml:"chain_id"`
+	BridgeContract            string                    `yaml:"bridge_contract"`
+	NodeUrl                   string                    `yaml:"node_url"`
+	WalletPath                string                    `yaml:"wallet_path"`
+	DestChains                map[string]PktValidConfig `yaml:"dest_chains"`
+	WalletAddress             string                    `yaml:"wallet_address"`
+	StartSeqNum               map[string]uint64         `yaml:"sequence_num_start"` // useful for aleo
+	FilterTopic               string                    `yaml:"filter_topic"`       // useful for ethereum
+	RetryPacketWaitDur        time.Duration             `yaml:"retry_packet_wait_dur"`
+	PruneBaseSeqNumberWaitDur time.Duration             `yaml:"prune_base_seq_num_wait_dur"`
+	AverageBlockGenDur        time.Duration             `yaml:"average_block_gen_dur"` // useful for aleo
+	Disabled                  bool                      `yaml:"disabled"`              // whether to enable chain
+}
+
+type PktValidConfig struct {
+	PacketValidityWaitDuration time.Duration `yaml:"pkt_validity_wait_dur"`
+	FinalityHeight             uint64        `yaml:"finality_height"`
+	FeedPacketWaitDuration     time.Duration `yaml:"feed_pkt_wait_dur"`
+	StartHeight                uint64        `yaml:"start_height"`         // useful for ethereum
+	InstantPktWaitDuration     time.Duration `yaml:"instant_pkt_wait_dur"` // fetch packets with predicate signatures
 }
 
 type Config struct {
 	// ChainConfigs is set of configs of chains each required to communicate with its respective bridge contract
 	Name                   string                 `yaml:"name"`
 	ChainConfigs           []*ChainConfig         `yaml:"chains"`
-	LogConfig              *LoggerConfig          `yaml:"log"`
+	LogConfig              logger.Config          `yaml:"log"`
 	DBDir                  string                 `yaml:"db_dir"`
 	DBPath                 string                 `yaml:"-"` // Calculate based on DBDir
 	ConsumePacketWorker    int                    `yaml:"consume_packet_workers"`
@@ -65,7 +74,7 @@ type Config struct {
 	CollectorServiceConfig CollecterServiceConfig `yaml:"collector_service"`
 	CheckHealthServiceDur  time.Duration          `yaml:"check_health_service"`
 	MetricConfig           MetricsConfig          `yaml:"metrics"`
-	Version                string                    `yaml:"version"`
+	Version                string                 `yaml:"version"`
 }
 
 type LoggerConfig struct {
@@ -90,7 +99,7 @@ type SigningServiceConfig struct {
 }
 
 type CollecterServiceConfig struct {
-	Uri                 string        `yaml:"uri"`
+	URI                 string        `yaml:"uri"`
 	CollectorWaitDur    time.Duration `yaml:"collector_wait_dur"`
 	CaCertificate       string        `yaml:"ca_certificate"`
 	AttestorCertificate string        `yaml:"attestor_certificate"`
@@ -98,10 +107,6 @@ type CollecterServiceConfig struct {
 }
 
 var config *Config
-
-func GetConfig() *Config {
-	return config
-}
 
 func InitConfig(flagArgs *FlagArgs) error {
 	b, err := os.ReadFile(flagArgs.ConfigFile)
@@ -119,6 +124,17 @@ func InitConfig(flagArgs *FlagArgs) error {
 		return err
 	}
 
+	var chains []*ChainConfig
+
+	for _, chain := range config.ChainConfigs {
+		if chain.Disabled {
+			continue
+		}
+		chains = append(chains, chain)
+	}
+
+	config.ChainConfigs = chains
+
 	if config.SigningServiceConfig.Scheme != "https" &&
 		config.SigningServiceConfig.Scheme != "http" {
 		return fmt.Errorf("%s scheme is not supported", config.SigningServiceConfig.Scheme)
@@ -128,37 +144,52 @@ func InitConfig(flagArgs *FlagArgs) error {
 		config.ConsumePacketWorker = 10
 	}
 
-	dbFilePath, err := getPath(flagArgs.DBDir, config.DBDir, dbFileName)
+	dbPath, err := getPath(flagArgs.DBDir, config.DBDir, dbFileName)
 	if err != nil {
 		return err
 	}
-	logFilePath, err := getPath(flagArgs.LogDir, config.LogConfig.OutputDir, logFileName)
-	if err != nil {
-		return err
-	}
+	config.DBPath = dbPath
 
 	if flagArgs.CleanStart {
-		err := os.Remove(dbFilePath)
-		if err != nil && !os.IsNotExist(err) {
+		err = os.RemoveAll(dbPath)
+		if err != nil {
 			return err
 		}
 	}
 
-	config.DBPath = dbFilePath
-	config.LogConfig.OutputPath = logFilePath
+	// If a log directory is provided via flags, we add a default log file path
+	// to the list of output paths. This allows overriding/adding file logging
+	// via command line.
+	if flagArgs.LogDir != "" {
+		// Create the directory if it doesn't exist
+		if err := os.MkdirAll(flagArgs.LogDir, perm); err != nil {
+			return fmt.Errorf("failed to create log directory: %w", err)
+		}
+		logFilePath := filepath.Join(flagArgs.LogDir, logFileName)
+		// Avoid duplicating the path if it's already in the config
+		found := slices.Contains(config.LogConfig.OutputPaths, logFilePath)
+		if !found {
+			config.LogConfig.OutputPaths = append(config.LogConfig.OutputPaths, logFilePath)
+		}
+	}
 
 	if flagArgs.LogEnc != "" {
 		config.LogConfig.Encoding = flagArgs.LogEnc
 	}
 
-	if flagArgs.Mode == Production {
+	if flagArgs.Mode != "" {
 		config.Mode = flagArgs.Mode
-	} else if flagArgs.Mode == Stage {
-		config.Mode = flagArgs.Mode
-	} else {
+	}
+
+	if config.Mode != Production && config.Mode != Stage {
 		config.Mode = Development
 	}
+
 	return nil
+}
+
+func GetConfig() *Config {
+	return config
 }
 
 func getPath(pathFrmFlag, pathFrmYaml, fileName string) (string, error) {
@@ -207,15 +238,15 @@ func validateChainConfig(cfg *Config) error {
 	}
 
 	for _, chainCfg := range cfg.ChainConfigs {
-		mDestChains := make([]string, 0, len(chainCfg.DestChains))
+		mDestChains := make(map[string]PktValidConfig)
 		mStartSeqMap := make(map[string]uint64)
 
-		for _, name := range chainCfg.DestChains {
+		for name, pktValidCfg := range chainCfg.DestChains {
 			chainID, ok := chainNameToChainID[name]
 			if !ok {
 				return fmt.Errorf("chain-id not available for %s", name)
 			}
-			mDestChains = append(mDestChains, chainID)
+			mDestChains[chainID] = pktValidCfg
 		}
 		chainCfg.DestChains = mDestChains
 

@@ -2,7 +2,6 @@ package aleo
 
 import (
 	"context"
-	"os/exec"
 	"time"
 
 	chainService "github.com/venture23-aleo/verulink/attestor/chainService/chain"
@@ -37,12 +36,12 @@ func HashAndSign(sp *chainService.ScreenedPacket) (hsh, signature string, err er
 
 // hash returns the bhp256-hash of screenedPacket by calling a rust binary
 func hash(sp *chainService.ScreenedPacket) (hash string, err error) {
-	aleoPacket := constructAleoPacket(sp.Packet)
+	aleoPacket, err := constructAleoPacket(sp.Packet)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*5)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, command, hashCmd, hashType, aleoPacket, hashOutput)
+	cmd := execCommand(ctx, command, hashCmd, hashType, aleoPacket, hashOutput)
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -52,7 +51,7 @@ func hash(sp *chainService.ScreenedPacket) (hash string, err error) {
 
 	aleoPacketWithScreening := constructAleoScreeningPacket(packetHash, getAleoBool(sp.IsWhite))
 
-	cmd = exec.CommandContext(ctx, command, hashCmd, hashType, aleoPacketWithScreening, hashOutput)
+	cmd = execCommand(ctx, command, hashCmd, hashType, aleoPacketWithScreening, hashOutput)
 	output, err = cmd.Output()
 	if err != nil {
 		return "", err

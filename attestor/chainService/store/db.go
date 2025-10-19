@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/venture23-aleo/verulink/attestor/chainService/chain"
-	"github.com/venture23-aleo/verulink/attestor/chainService/logger"
 	"go.uber.org/zap"
 )
 
@@ -31,6 +30,10 @@ func CreateNamespace(ns string) error {
 	return createBucket(ns)
 }
 
+func DeleteNamespace(namespace string) error {
+	return deleteBucket(namespace)
+}
+
 /*****************************************************************************************************/
 
 func StoreBaseSeqNum(namespace string, k, v uint64) error {
@@ -51,7 +54,14 @@ func StoreRetryPacket(namespace string, pkt *chain.Packet) error {
 	return put(namespace, key, value)
 }
 
+// RetrieveAndDeleteNPackets returns up to n packets from the given namespace,
+// deleting them as it retrieves. If the namespace is empty or does not exist,
+// it returns an empty slice and no error. If n <= 0, it returns immediately
+// with an empty slice and no error.
 func RetrieveAndDeleteNPackets(namespace string, n int) ([]*chain.Packet, error) {
+	if n <= 0 {
+		return []*chain.Packet{}, nil
+	}
 	s, err := retrieveAndDeleteNKeysFromFirst(namespace, n)
 	if err != nil {
 		return nil, err
@@ -143,7 +153,7 @@ func PruneBaseSeqNum(namespace string) (a [2][2]uint64, shouldFetch bool) { // [
 		go func(key []byte) {
 			defer wg.Done()
 			if err := batchDelete(namespace, key); err != nil {
-				logger.GetLogger().Error("Error while batch deleting", zap.Error(err))
+				zap.L().Error("Error while batch deleting", zap.Error(err))
 			}
 		}(key)
 	}
