@@ -71,9 +71,7 @@ program vlink_council_sealance_v1.aleo
         token_service: [u8; 20],
         chain_id: u128,
         pub_platform_fee: u32,
-        pri_platform_fee: u32,
         pub_relayer_fee: u128,
-        pri_relayer_fee: u128,
     }
 
     async transition ts_add_token(
@@ -88,9 +86,7 @@ program vlink_council_sealance_v1.aleo
         public token_service: [u8; 20],
         public chain_id: u128,
         public pub_platform_fee: u32,
-        public pri_platform_fee: u32,
         public pub_relayer_fee: u128,
-        public pri_relayer_fee: u128,
     ) -> Future{
         let proposal: TsAddToken  = TsAddToken {
             tag: TAG_TS_ADD_TOKEN,
@@ -104,9 +100,7 @@ program vlink_council_sealance_v1.aleo
             token_service,
             chain_id,
             pub_platform_fee,
-            pri_platform_fee,
             pub_relayer_fee,
-            pri_relayer_fee
         };
         let proposal_hash: field = BHP256::hash_to_field(proposal);
 

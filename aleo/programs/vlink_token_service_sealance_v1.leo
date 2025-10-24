@@ -443,13 +443,17 @@ program vlink_token_service_sealance_v1.aleo {
             amount - fee_platform        
         );
 
-        return finalize_token_send_public(amount, chain_token_info, dest_token_address, dest_token_service, fee_platform, burn, mint, publish);
+        return finalize_token_send_public(self.caller, amount, chain_token_info, dest_token_address, dest_token_service, fee_platform, burn, mint, publish);
     }
 
-    async function finalize_token_send_public(amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], fee_platform:u128, f0: Future, f1: Future, f2: Future) {
+    async function finalize_token_send_public(caller: address, amount: u128, chain_token_info:ChainToken, dest_token_address:[u8;20], dest_token_service:[u8;20], fee_platform:u128, f0: Future, f1: Future, f2: Future) {
         f0.await();
         f1.await();
         f2.await();
+
+        // to check if sender is frozen
+        let is_sender_frozen: bool = sealance_freezelist_registry.aleo/freeze_list.get_or_use(caller, false);
+        assert_eq(is_sender_frozen, false);
 
         // ASSERT FEE OF AGRUMENT AND OF MAPPING
         let fee_in_percentage: u32 = Mapping::get(public_platform_fee, chain_token_info);
@@ -568,14 +572,20 @@ program vlink_token_service_sealance_v1.aleo {
 
 
 
-        return (screening_passed.0, finalize_token_receive_public(amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer, mint, hold));
+        return (screening_passed.0, finalize_token_receive_public(receiver, amount, held_amount, chain_token_info, source_token_service_address, fee_relayer, screening_passed.1, mint_relayer, mint, hold));
     }
 
-    async function finalize_token_receive_public(amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer:u128, f0: Future, f1: Future, f2: Future, f3: Future) {
+    async function finalize_token_receive_public(receiver: address, amount: u128, held_amount:u128, chain_token_info:ChainToken, source_token_service_address: [u8;20], fee_relayer:u128, f0: Future, f1: Future, f2: Future, f3: Future) {
         f0.await();
         f1.await();
         f2.await();
         f3.await();
+
+        // to check if sender is frozen
+        let is_sender_frozen: bool = sealance_freezelist_registry.aleo/freeze_list.get_or_use(receiver, false);
+        assert_eq(is_sender_frozen, false);
+
+
         assert_eq(Mapping::get(token_status, TOKEN_ID), UNPAUSED_VALUE);
 
         assert(Mapping::contains(other_chain_token_service, chain_token_info));
