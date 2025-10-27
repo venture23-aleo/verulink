@@ -118,6 +118,8 @@ contract TokenServicePaxos is TokenServiceV2 {
         uint256 minimumShares
     ) external virtual whenNotPaused nonReentrant {
         //Pull funds from user and deposit into teller
+        // FIX #01: CRITICAL - Enforce that tokenAddress must be aleoUSD
+        require(tokenAddress == aleoUSD, "TokenService: tokenAddress must be aleoUSD");
         require(depositAsset != address(0) && teller.isSupported(depositAsset), "TokenService: invalidAsset");
         require(amount > 0, "TokenService: amountZero");
 
