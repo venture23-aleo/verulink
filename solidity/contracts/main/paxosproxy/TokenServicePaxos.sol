@@ -8,7 +8,6 @@ import {FeeCollector} from "../tokenservice/FeeCollector.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {ITellerWithMultiAssetSupport} from "../../common/interface/paxos/ITellerWithMultiAssetSupport.sol";
-import {console} from "hardhat/console.sol";
 
 contract TokenServicePaxos is TokenServiceV2 {
     using SafeERC20 for IIERC20;
@@ -18,7 +17,7 @@ contract TokenServicePaxos is TokenServiceV2 {
 
     ITellerWithMultiAssetSupport public teller;
 
-    address public bridgeToken;
+    address public aleoUSD;
 
     event PlatformFeesPaid(address indexed tokenAddress, uint256 amount);
 
@@ -27,22 +26,23 @@ contract TokenServicePaxos is TokenServiceV2 {
     }
 
     function setBridgeToken(address _token) external virtual onlyOwner {
-        bridgeToken = _token;
+        aleoUSD = _token;
     }
 
     function setFeeCollector(FeeCollector _feeCollector) external virtual onlyOwner {
         feeCollector = _feeCollector;
     }
 
-    function _packetify(uint256 version, address tokenAddress, uint256 amount, string memory receiver)
-        internal
-        view
-        virtual
-        returns (PacketLibrary.OutPacket memory packet)
-    {
-        packet = _packetify(tokenAddress, amount, receiver);
-        packet.version = version;
-    }
+    /**
+     * struct OutPacket {
+     *     uint256 version;
+     *     uint256 sequence;
+     *     InNetworkAddress sourceTokenService;
+     *     OutNetworkAddress destTokenService;
+     *     OutTokenMessage message;
+     *     uint256 height;
+     * }
+     */
 
     /// @notice Internal function to handle fee calculations and transfers
     /// @param tokenAddress The address of the token
@@ -80,7 +80,7 @@ contract TokenServicePaxos is TokenServiceV2 {
     }
 
     /// @notice Internal function to handle ERC20 transfers
-    /// @param tokenAddress The address of the ERC20 token
+    /// @param tokenAddress The address of the ERC20 token (shares minted)
     /// @param amount Amount of tokens to be transferred
     /// @param receiver The intended receiver of the tokens
     function _transfer(
@@ -95,9 +95,42 @@ contract TokenServicePaxos is TokenServiceV2 {
 
         uint256 amountToTransfer = _handleFees(tokenAddress, amount, version);
 
-        IIERC20(tokenAddress).safeTransfer(address(this), amountToTransfer);
-
+        // FIX #06: Removed unnecessary self-transfer
         erc20Bridge.sendMessage(_packetify(version, tokenAddress, amountToTransfer, receiver), data);
+    }
+
+    // FIX #05: Low - Paxos-specific state variables are not initialized,leaving contract non-functional after deployment
+    function TokenServicePaxos_init(
+        address bridge,
+        address _owner,
+        uint256 _chainId,
+        uint256 _destChainId,
+        address _blackListService,
+        address _teller, // NEW
+        address _aleoUSD, // NEW
+        address _feeCollector // NEW
+    ) external virtual initializer {
+        // Initialize parent contract FIRST
+        TokenService_init(bridge, _owner, _chainId, _destChainId, _blackListService);
+
+        // Then initialize Paxos-specific state
+        require(_teller != address(0), "TokenService: invalid teller address");
+        require(_aleoUSD != address(0), "TokenService: invalid aleoUSD address");
+        require(_feeCollector != address(0), "TokenService: invalid feeCollector address");
+
+        teller = ITellerWithMultiAssetSupport(_teller);
+        aleoUSD = _aleoUSD;
+        feeCollector = FeeCollector(_feeCollector);
+    }
+
+    function _packetify(uint256 version, address tokenAddress, uint256 amount, string memory receiver)
+        internal
+        view
+        virtual
+        returns (PacketLibrary.OutPacket memory packet)
+    {
+        packet = _packetify(tokenAddress, amount, receiver);
+        packet.version = version;
     }
 
     /// @notice Transfers ERC20 tokens with predicate authorization. The user submits the borinng vault supported token.
@@ -124,16 +157,14 @@ contract TokenServicePaxos is TokenServiceV2 {
         require(amount > 0, "TokenService: amountZero");
 
         IIERC20 depositToken = IIERC20(depositAsset);
-        console.log("We're here ~~~~~~~~~~~~~~~~~~~~~~~~~~");
         depositToken.safeTransferFrom(msg.sender, address(this), amount);
-        depositToken.safeIncreaseAllowance(bridgeToken, amount);
+        depositToken.safeIncreaseAllowance(aleoUSD, amount);
         uint256 sharesMinted = teller.deposit(depositAsset, amount, minimumShares);
-        depositToken.safeApprove(address(teller), 0);
-        console.log("shared minted:", sharesMinted);
-        console.log("Address thois", address(this));
-        // Handle predicate message
+        // FIX #02: Reset approval to the correct address (aleoUSD, not teller)
+        depositToken.safeApprove(aleoUSD, 0);
+        // FIX #04: Note - predicate authorization uses deposit amount refactored to sharesMinted.
         require(
-            predicateservice.handleMessage(tokenAddress, amount, receiver, predicateMessage, msg.sender, 0),
+            predicateservice.handleMessage(tokenAddress, sharesMinted, receiver, predicateMessage, msg.sender, 0),
             "TokenService: unauthorizedFromPredicate"
         );
         uint256 version = isRelayerOn
@@ -157,67 +188,20 @@ contract TokenServicePaxos is TokenServiceV2 {
 
         address receiver = packet.message.receiverAddress;
         address tokenAddress = packet.message.destTokenAddress;
+        // #Fix: 07 Token address validation
+        require(tokenAddress == aleoUSD, "TokenService: tokenAddress must be aleoUSD");
         require(isEnabledToken(tokenAddress), "TokenService: invalidToken");
 
         uint256 amount = packet.message.amount;
-        // uint256 version = packet.version;
-        // uint256 feesDeductedAmount = amount;
-        // uint256 relayerFeeAmount = 0;
-        // bool isRelayerPacket = false;
-
-        // if (version == PacketLibrary.VERSION_PUBLIC_TRANSFER_RELAYER ||
-        //     version == PacketLibrary.VERSION_PUBLIC_TRANSFER_PREDICATE_RELAYER) {
-        //     isRelayerPacket = true;
-        //     relayerFeeAmount = feeCollector.relayerFees(tokenAddress);
-        // } else if (version == PacketLibrary.VERSION_PRIVATE_TRANSFER_RELAYER ||
-        // version == PacketLibrary.VERSION_PRIVATE_TRANSFER_PREDICATE_RELAYER) {
-        //     isRelayerPacket = true;
-        //     relayerFeeAmount = feeCollector.privateRelayerFees(tokenAddress);
-        // }
-
-        // if (isRelayerPacket && relayerFeeAmount > 0) {
-        //     require(amount > relayerFeeAmount, "TokenService: feesNotEnough");
-        //     feesDeductedAmount = amount - relayerFeeAmount;
-        // } else {
-        //     feesDeductedAmount = amount;
-        //     relayerFeeAmount = 0;
-        // }
 
         PacketLibrary.Vote quorum = erc20Bridge.consume(packet, signatures);
 
         if (PacketLibrary.Vote.NAY == quorum || blackListService.isBlackListed(receiver)) {
-            if (tokenAddress == ETH_TOKEN) {
-                // eth lock
-                // if(relayerFeeAmount > 0){
-                //     (bool sent, ) = payable(msg.sender).call{value: relayerFeeAmount}("");
-                //     require(sent, "TokenService: feesTransferFailed");
-                //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
-                // }
-                holding.lock{value: amount}(receiver);
-            } else {
-                // if(relayerFeeAmount > 0){
-                //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
-                // }
-                IIERC20(tokenAddress).safeTransfer(address(holding), amount);
-                holding.lock(receiver, tokenAddress, amount);
-            }
+            IIERC20(tokenAddress).safeTransfer(address(holding), amount);
+            holding.lock(receiver, tokenAddress, amount);
         } else if (quorum == PacketLibrary.Vote.YEA) {
-            if (tokenAddress == ETH_TOKEN) {
-                bool sent;
-                // if(relayerFeeAmount > 0){
-                //     (sent, ) = payable(msg.sender).call{value: relayerFeeAmount}("");
-                //     require(sent, "TokenService: feesTransferFailed");
-                //     emit FeePaid(ETH_TOKEN, relayerFeeAmount, true);
-                // }
-                (sent,) = payable(receiver).call{value: amount}("");
-                require(sent, "TokenService: ethWithdrawFailed");
-            } else {
-                // if(relayerFeeAmount > 0){
-                //     IIERC20(tokenAddress).safeTransfer(msg.sender, relayerFeeAmount);
-                // }
-                // Perform bulkWithdraw from teller
-                teller.bulkWithdraw(withdrawAsset, amount, minimumAssets, receiver);
-            }
+            // Fixes 03: This is indesign decision.
+            teller.bulkWithdraw(withdrawAsset, amount, minimumAssets, receiver);
         } else {
             revert("TokenService: insufficientQuorum");
         }
