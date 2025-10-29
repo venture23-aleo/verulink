@@ -8,6 +8,7 @@ import {FeeCollector} from "../tokenservice/FeeCollector.sol";
 import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {ITellerWithMultiAssetSupport} from "../../common/interface/paxos/ITellerWithMultiAssetSupport.sol";
+import {console} from "hardhat/console.sol";
 
 interface IAuthority {
     function canCall(address user, address target, bytes4 functionSig) external view returns (bool);
@@ -145,6 +146,7 @@ contract TokenServicePaxos is TokenServiceV2 {
         require(amount > 0, "TokenService: amountZero");
 
         IIERC20 depositToken = IIERC20(depositAsset);
+        console.log("We're here ~~~~~~~~~~~~~~~~~~~~~~~~~~");
         depositToken.safeTransferFrom(msg.sender, address(this), amount);
         depositToken.safeIncreaseAllowance(tokenAddress, amount);
         uint256 sharesMinted = teller.deposit(depositAsset, amount, minimumShares);
