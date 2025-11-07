@@ -14,16 +14,17 @@ async function callPredicateApi() {
   const args = process.argv.slice(2);
   const walletAddress = args[0];
   const deployedContract = args[1];
-  const data = args[2];
+  const tokenAmount = args[2];
+  const data = args[3];
 
   const body = {
     from: walletAddress,
     to: deployedContract,
     data: data || "0x",
     msg_value: "0",
-    chain_id: 1,
+    value: tokenAmount,
+    chain_id: 11155111,
   };
-
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {

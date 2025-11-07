@@ -20,23 +20,22 @@ contract TokenServicePaxosForkTest is Test {
     /*//////////////////////////////////////////////////////////////
                                CONSTANTS
     //////////////////////////////////////////////////////////////*/
-    uint256 constant ETH_CHAINID = 1;
-    uint256 constant ALEO_CHAINID = 6694886634401;
+    uint256 constant ETH_CHAINID = 28556963657430695;
+    uint256 constant ALEO_CHAINID = 6694886634403;
     address constant ADDRESS_ZERO = address(0);
     address constant ADDRESS_ONE = address(1);
 
     // Real mainnet contracts
-    address constant TELLER_CONTRACT = 0xedE35eA2dc28444b52b6B5d47009926910783d7b;
     address constant PREDICATE_SERVICE = 0x053f202A596450908CDcf99F8e24B424EEBbaeE4;
-    address constant BRIDGE_PROXY = 0x7440176A6F367D3Fad1754519bD8033EAF173133;
-    address constant BRIDGE_V2 = 0x57CD053A5056a9B9104e3D1981F487c192BEdEa6;
-    address constant PACKET_LIBRARY = 0xe0c41fDFe2f183B7f705507532Ad395425eedC6F;
-    address constant ALEO_LIBRARY = 0xF692e3f5eC1e71415447D0eA2dEE0a370D531063;
+    address constant TELLER_CONTRACT = 0x74066bF569FC0077072ff4c08A83f790dfF3F254;
+    address constant BRIDGE_PROXY = 0x54d1540631cACfa5f8d9b3371B88f562355387fA;
+    address constant PACKET_LIBRARY = 0xa7B1D7637E4D980063c24c93879440251f007DE4;
+    address constant ALEO_LIBRARY = 0x10f237b359aC142d2956774cEe32d384782756C2;
 
     // Real token addresses
-    address constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-    address constant ALEO_USD = 0xC60a7e21A6753ED4305C93034607009fAeC2A5F3;
+    address constant USDC = 0x532842De9470816Cf7cc7Cee2d15f19593fBaf64;
+    address constant USDT = 0x26FC611307b28f347eE66D057f1E3F3a903B3630;
+    address constant ALEO_USD = 0x9fa87E2a02D6E187658ae232D3a3cAB38Fd638Ca;
 
     // Whale addresses with lots of tokens
     address constant USDC_WHALE = 0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341;

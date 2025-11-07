@@ -9,7 +9,7 @@ abstract contract TokenSupport is OwnableUpgradeable {
 
     /// @notice Emitted when the vault of a token is updated
     /// @param token address of token
-    /// @param oldVault address of old vault 
+    /// @param oldVault address of old vault
     /// @param newVault address of new vault
     event VaultUpdated(address token, address oldVault, address newVault);
 
@@ -97,8 +97,8 @@ abstract contract TokenSupport is OwnableUpgradeable {
         address vault,
         string memory destTokenAddress,
         string memory destTokenService,
-        uint256 min,
-        uint256 max
+        uint256 min, // 1
+        uint256 max // million
     ) external virtual onlyOwner {
         require(tokenAddress != ZERO_ADDRESS, "TokenSupport: zero address");
         require(!isSupportedToken(tokenAddress),"TokenSupport: token already supported");

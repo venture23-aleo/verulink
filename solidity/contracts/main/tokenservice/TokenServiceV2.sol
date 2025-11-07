@@ -7,6 +7,10 @@ import {TokenService} from "../../main/tokenservice/TokenService.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {PredicateService} from "../../main/tokenservice/predicate/PredicateService.sol";
 
+
+// TODO: setScript for transfer.
+
+
 /// @title TokenServiceV2 Contract
 /// @dev Inherits TokenService and PredicateService for predicate-based authorization
 contract TokenServiceV2 is TokenService {
@@ -61,9 +65,9 @@ contract TokenServiceV2 is TokenService {
     //     // Handle predicate verification
     //     require(isPredicateEnabled, "TokenService: PredicateAuthorizationDisabled");
     //     require(predicateservice.handleMessage(
-    //         receiver, 
-    //         predicateMessage, 
-    //         msg.sender, 
+    //         receiver,
+    //         predicateMessage,
+    //         msg.sender,
     //         msg.value),
     //         "TokenService: unauthorizedFromPredicate") ;
 
@@ -134,7 +138,7 @@ contract TokenServiceV2 is TokenService {
     // }
 
     receive() external payable virtual override onlyWhitelistedSender {}
-    
+
     function addWhitelistAddress(address _addr) external virtual onlyOwner {
         if (!isWhitelistedSender[_addr]){
             isWhitelistedSender[_addr] = true;

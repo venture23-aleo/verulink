@@ -1,0 +1,47 @@
+{
+  "transactions": [
+    {
+      "hash": "0xedc0866710255fa97c50b38d1c76ad32c29907144f5695bcfcf5041344c813e5",
+      "transactionType": "CALL",
+      "contractName": "ProxyContract",
+      "contractAddress": "0x35c540e8081d2dba0229eaf8c8d5cc9cc11b003d",
+      "function": null,
+      "arguments": null,
+      "transaction": {
+        "from": "0xbbb91dd1337852056a870b4e81d8f582552eca89",
+        "to": "0x35c540e8081d2dba0229eaf8c8d5cc9cc11b003d",
+        "gas": "0xa9ec",
+        "value": "0x0",
+        "input": "0xa42dce800000000000000000000000006142bfbdf9ceff271daad912fe886ef59e2a69b7",
+        "nonce": "0x96",
+        "chainId": "0xaa36a7"
+      },
+      "additionalContracts": [],
+      "isFixedGasLimit": false
+    }
+  ],
+  "receipts": [
+    {
+      "status": "0x1",
+      "cumulativeGasUsed": "0x26ba9ec",
+      "logs": [],
+      "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "type": "0x2",
+      "transactionHash": "0xedc0866710255fa97c50b38d1c76ad32c29907144f5695bcfcf5041344c813e5",
+      "transactionIndex": "0x15a",
+      "blockHash": "0xf64776ce90bb488beeca9105b98f118fd16880dab48db7c31bc56acff703a25c",
+      "blockNumber": "0x921074",
+      "gasUsed": "0x7b06",
+      "effectiveGasPrice": "0x85c9",
+      "from": "0xbbb91dd1337852056a870b4e81d8f582552eca89",
+      "to": "0x35c540e8081d2dba0229eaf8c8d5cc9cc11b003d",
+      "contractAddress": null
+    }
+  ],
+  "libraries": [],
+  "pending": [],
+  "returns": {},
+  "timestamp": 1762428674590,
+  "chain": 11155111,
+  "commit": "fd4b907c"
+}

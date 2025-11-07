@@ -6,12 +6,20 @@ const verifyNumber = (num: number) => {
 
 const ASCII_SEPARATOR = ":".charCodeAt(0).toString(16);
 
+// Step by step:
+// "eth" → ASCII: [101, 116, 104] → Hex: ["65", "74", "68"]
+// ":" → ASCII: [58] → Hex: ["3a"]
+// 11155111 → Hex: ["2aacb87"]
+// Joined: "65746873a2aacb87"
+// As BigInt: 0x65746873a2aacb87n
+
+// Result: 7381162886968824711n
 export const encodeNetworkChainId = (
   networkType: string,
   chainId: number | bigint
 ): bigint => {
   if (typeof chainId == "number") {
-    verifyNumber(chainId)
+    verifyNumber(chainId);
   }
   const asciiNetworkType = networkType
     .split("")
@@ -25,7 +33,7 @@ export const encodeNetworkChainId = (
 
 export const decodeNetworkChainId = (encodedChainId: number | bigint) => {
   if (typeof encodedChainId == "number") {
-    verifyNumber(encodedChainId)
+    verifyNumber(encodedChainId);
   }
   const encodedChainIdHex = encodedChainId.toString(16);
   const hexArray = encodedChainIdHex.match(/.{2}/g);

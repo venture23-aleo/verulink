@@ -9,9 +9,6 @@ import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {ITellerWithMultiAssetSupport} from "../../common/interface/paxos/ITellerWithMultiAssetSupport.sol";
 
-interface IAuthority {
-    function canCall(address user, address target, bytes4 functionSig) external view returns (bool);
-}
 
 contract TokenServicePaxos is TokenServiceV2 {
     using SafeERC20 for IIERC20;
