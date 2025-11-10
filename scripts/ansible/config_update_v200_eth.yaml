@@ -113,7 +113,6 @@
       ansible.builtin.copy:
         dest: "{{ sign_config_file }}"
         content: "{{ sign_config_dict | to_nice_yaml(indent=2) }}"
-        backup: yes
 
     
     # --- Update secrets.yaml properly using YAML parsing ---
@@ -145,7 +144,7 @@
       ansible.builtin.copy:
         dest: "{{ secrets_file }}"
         content: "{{ secrets_dict | to_nice_yaml(indent=2) }}"
-        backup: yes
+
 
 
     # --- Restart Service via Docker Compose ---
