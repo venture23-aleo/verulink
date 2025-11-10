@@ -1,6 +1,6 @@
 ---
 name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
-version: 2.0.0
+version: 2.0.1
 chains:
 - name: aleo
   chain_id: 6694886634401
