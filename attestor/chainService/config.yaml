@@ -86,7 +86,7 @@ signing_service:
   password: "password"
   health_end_point: "/health"
 collector_service:
-  uri : <collector_service_url>
+  uri: <collector_service_url>
   # Within collector_wait_dur, collector-service will try to collect all unconfirmed packets iteratively
   collector_wait_dur: 1h
   ca_certificate: /configs/.mtls/ca.cer
