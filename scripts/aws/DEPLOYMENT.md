@@ -283,12 +283,19 @@ To deploy on a local machine, VM, or bare metal server, follow the guide provide
 
    ```yaml
    chain:
+     bsc:
+       chain_type: evm
+       private_key: <eth_private_key>
+       wallet_address: <eth_wallet_address>
      ethereum:
+	   chain_type: evm
        private_key: <eth_private_key>
        wallet_address: <eth_wallet_address>
      aleo:
+	   chain_type: aleo
        private_key: <aleo_private_key>
        wallet_address: <aleo_wallet_address>
+	 
    ```
  
 6. Run the script with the required arguments as shown below:
