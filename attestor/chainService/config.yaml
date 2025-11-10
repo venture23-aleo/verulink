@@ -45,7 +45,7 @@ chains:
   node_url: https://eth.llamarpc.com
   start_height: 20740576
   finality_height: 7050
-  filter_topic: 0x23b9e965d90a00cd3ad31e46b58592d41203f5789805c086b955e34ecd462eb9
+  filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
   feed_pkt_wait_dur: 15m
   pkt_validity_wait_dur: 84600s
   retry_packet_wait_dur: 1m0s
