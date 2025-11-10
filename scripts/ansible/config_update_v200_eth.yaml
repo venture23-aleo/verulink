@@ -1,0 +1,163 @@
+---
+- name: Verulink Relayer Config Update
+  hosts: attestors
+  become: true
+  vars:
+    deploy_dir: "{{ lookup('env', 'DEPLOY_DIR') | default('/home/ubuntu/verulink_attestor', true) }}"
+    backup_dir: "{{ deploy_dir }}_backup_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+    new_chain_config_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/config/release-v2.0.0-eth/attestor/chainService/config.yaml"
+    chain_config_file: "{{ deploy_dir }}/chain_config.yaml"
+    sign_config_file: "{{ deploy_dir }}/sign_config.yaml"
+    secrets_file: "{{ deploy_dir }}/secrets.yaml"
+
+  tasks:
+
+    - name: Backup existing config directory
+      ansible.builtin.command:
+        cmd: cp -r {{ deploy_dir }} {{ backup_dir }}
+      tags: backup
+
+    - name: Read chain_config.yaml
+      ansible.builtin.slurp:
+        src: "{{ chain_config_file }}"
+      register: chain_config_raw
+
+    - name: Parse chain_config.yaml as dict
+      set_fact:
+        chain_config: "{{ chain_config_raw.content | b64decode | from_yaml }}"
+    
+    - name: Capture required values
+      set_fact:
+        attestor_name: "{{ chain_config.name }}"
+        aleo_wallet: "{{ (chain_config.chains | selectattr('name','equalto','aleo') | list)[0].wallet_address }}"
+        bsc_wallet: "{{ (chain_config.chains | selectattr('name','equalto','bsc') | list)[0].wallet_address }}"
+        signing_username: "{{ chain_config.signing_service.username }}"
+        signing_password: "{{ chain_config.signing_service.password }}"
+        collector_uri: "{{ chain_config.collector_service.uri }}"
+        metrics_host: "{{ chain_config.metrics.host }}"
+        ca_certificate_path: "{{ chain_config.collector_service.ca_certificate }}"
+        attestor_certificate_path: "{{ chain_config.collector_service.attestor_certificate }}"
+        attestor_key_path: "{{ chain_config.collector_service.attestor_key }}"
+
+    
+    - name: Debug captured values
+      debug:
+        msg:
+          - "Attestor name: {{ attestor_name }}"
+          - "Aleo wallet: {{ aleo_wallet }}"
+          - "BSC wallet: {{ bsc_wallet }}"
+          - "Signing username: {{ signing_username }}"
+          - "Signing password: {{ signing_password }}"
+          - "Collector URI: {{ collector_uri }}"
+          - "Metrics host: {{ metrics_host }}"
+          - "CA Certificate: {{ ca_certificate_path }}"
+          - "Attestor Certificate: {{ attestor_certificate_path }}"
+          - "Attestor Key: {{ attestor_key_path }}"
+
+    - name: Download new chain_config.yaml
+      ansible.builtin.get_url:
+        url: "{{ new_chain_config_url }}"
+        dest: "{{ chain_config_file }}.new"
+
+    - name: Replace placeholders in new chain_config.yaml
+      ansible.builtin.replace:
+        path: "{{ chain_config_file }}.new"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      loop:
+        - { regexp: 'name:\s*<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>', replace: 'name: {{ attestor_name }}' }
+        - { regexp: "<your_aleo_wallet_address>", replace: "{{ aleo_wallet }}" }
+        - { regexp: "<your_bsc_wallet_address>", replace: "{{ bsc_wallet }}" }
+        - { regexp: "<your_ethereum_wallet_address>", replace: "{{ bsc_wallet }}" }
+        - { regexp: '^\s*username:\s*".*?"', replace: '  username: "{{ signing_username }}"' }
+        - { regexp: '^\s*password:\s*".*?"', replace: '  password: "{{ signing_password }}"' }
+        - { regexp: "<collector_service_url>", replace: "{{ metrics_host }}" }
+        - { regexp: "<prometheus_pushgateway_url>", replace: "{{ metrics_host }}" }
+        - { regexp: 'ca_certificate: .*', replace: '  ca_certificate: {{ ca_certificate_path }}' }
+        - { regexp: 'attestor_certificate: .*', replace: '  attestor_certificate: {{ attestor_certificate_path }}' }
+        - { regexp: 'attestor_key: .*', replace: '  attestor_key: {{ attestor_key_path }}' }
+      no_log: true
+
+
+    - name: Move new chain_config.yaml to active
+      ansible.builtin.copy:
+        src: "{{ chain_config_file }}.new"
+        dest: "{{ chain_config_file }}"
+        remote_src: true
+
+    # --- Update sign_config.yaml properly using YAML parsing ---
+    - name: Read existing sign_config.yaml as dict
+      ansible.builtin.slurp:
+        src: "{{ sign_config_file }}"
+      register: sign_config_content
+    
+    - name: Parse sign_config.yaml content
+      set_fact:
+        sign_config_dict: "{{ sign_config_content.content | b64decode | from_yaml }}"
+    
+    - name: Add Ethereum chain to sign_config if not exists
+      set_fact:
+        sign_config_dict: >-
+          {{
+            sign_config_dict.update({
+              'chains': (
+                sign_config_dict.chains +
+                [{'name': 'ethereum', 'chain_type': 'evm', 'chain_id': 27234042785}]
+                if sign_config_dict.chains | selectattr('name','equalto','ethereum') | list | length == 0
+                else sign_config_dict.chains
+              )
+            }) or sign_config_dict
+          }}
+    
+    - name: Write updated sign_config.yaml with proper indentation
+      ansible.builtin.copy:
+        dest: "{{ sign_config_file }}"
+        content: "{{ sign_config_dict | to_nice_yaml(indent=2) }}"
+        backup: yes
+
+    
+    # --- Update secrets.yaml properly using YAML parsing ---
+    - name: Read existing secrets.yaml as dict
+      ansible.builtin.slurp:
+        src: "{{ secrets_file }}"
+      register: secrets_content
+    
+    - name: Parse secrets.yaml content
+      set_fact:
+        secrets_dict: "{{ secrets_content.content | b64decode | from_yaml }}"
+    
+    - name: Add ethereum section if not exists
+      set_fact:
+        secrets_dict: >-
+          {{
+            secrets_dict.update({
+              'chain': secrets_dict.chain | combine({
+                'ethereum': {
+                  'chain_type': 'evm',
+                  'private_key': secrets_dict.chain.bsc.private_key,
+                  'wallet_address': secrets_dict.chain.bsc.wallet_address
+                }
+              })
+            }) or secrets_dict
+          }}
+    
+    - name: Write updated secrets.yaml with proper indentation
+      ansible.builtin.copy:
+        dest: "{{ secrets_file }}"
+        content: "{{ secrets_dict | to_nice_yaml(indent=2) }}"
+        backup: yes
+
+
+    # --- Restart Service via Docker Compose ---
+    - name: Restart Verulink Relayer using Docker Compose
+      ansible.builtin.shell: |
+        cd {{ deploy_dir }}
+        docker compose down
+        docker compose up -d
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: Print confirmation
+      ansible.builtin.debug:
+        msg: "Config update completed successfully for {{ inventory_hostname }}"
+
