@@ -4,6 +4,7 @@ version: 2.0.1
 chains:
 - name: aleo
   chain_id: 6694886634401
+  chain_type: aleo
   wallet_address: <your_aleo_wallet_address> # wallet indentifier
   bridge_contract: vlink_token_bridge_v3.aleo
   node_url: https://api.explorer.provable.com/v1|mainnet
@@ -40,6 +41,7 @@ chains:
 
 - name: ethereum
   chain_id: 27234042785
+  chain_type: evm
   wallet_address: <your_ethereum_wallet_address>
   bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
   node_url: https://eth.llamarpc.com
@@ -61,7 +63,7 @@ chains:
       instant_pkt_wait_dur: 15m
 
 check_health_service : 1m
-db_dir: /path/to/db/dir
+db_dir: /var/lib/attestor/mainnet
 consume_packet_workers: 10 # Default is 10
 log:
   encoding: console
@@ -93,4 +95,4 @@ collector_service:
 
 metrics:
   host: <prometheus_pushgateway_url>
-  job_name: prod-push-gateway
+  job_name: prod-push-gateway-v200
