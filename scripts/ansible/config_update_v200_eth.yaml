@@ -1,5 +1,5 @@
 ---
-- name: Verulink Relayer Config Update
+- name: Verulink Attestor Config Update - v200 Eth expansion
   hosts: attestors
   become: true
   vars:
