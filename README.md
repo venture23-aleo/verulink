@@ -35,7 +35,7 @@ Verulink is a trusted bridge platform that is designed to help move assets betwe
 [Security Doc](./docs/security.md)
 
 ## Socials
-For latest updates please check our [Twitter](https://x.com/verulink) and for support join our community on [Discord](https://discord.gg/bDCGxjwcYX)
+For latest updates please check our [Twitter](https://x.com/verulink) and for support join our community on [Discord](https://discord.gg/nxMCsWpgGs)
 
 Interested to learn more? Follow us on [Medium](https://verulinkbridge.medium.com/) for lastest articles related to Verulink.
 
