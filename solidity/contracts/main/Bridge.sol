@@ -39,7 +39,7 @@ contract Bridge is
         uint256 _destChainId,
         address _owner
     ) public initializer {
-        __Ownable_init_unchained(_owner);
+        __Ownable_init_unchained();
         __Pausable_init_unchained();
         destinationChainId = _destChainId;
         _transferOwnership(_owner);      
