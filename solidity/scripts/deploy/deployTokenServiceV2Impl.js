@@ -11,10 +11,11 @@ async function main() {
    
     const TokenService = await ethers.getContractFactory("TokenServiceV2");
 
-    console.log("Deploying TokenServiceV2");
+    console.log("Deploying TokenServiceV2 Implementation...");
 
     const tokenServiceImpl = await TokenService.deploy();
     await tokenServiceImpl.deployTransaction.wait(3);
+    updateEnvFile("TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address);
     console.log("TokenService Impl Deployed to: ", tokenServiceImpl.address);
     // Verification process
     console.log("Verifying impl contract...");
@@ -23,7 +24,6 @@ async function main() {
         constructorArguments: [], // Pass the constructor arguments here
         contract: "contracts/main/tokenservice/TokenServiceV2.sol:TokenServiceV2"
     });
-    updateEnvFile("TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address);
 }
 main()
     .then(() => process.exit(0))
