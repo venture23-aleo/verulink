@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { use } from "chai";
 import hardhat from "hardhat";
 const { ethers, upgrades } = hardhat;
 async function main() {
@@ -110,25 +111,35 @@ async function main() {
     console.log("- Bridge V2 Implementation:", bridgeV2Impl.address);
     console.log("- Bridge Proxy:", bridgeProxy.address);
 
-    console.log("✅ Updating Attestor Count to 2");
-    await bridgeV2.setAttestorCount(1);
+     console.log("✅ Updating Attestor Count to 2");
+    await bridgeV2.setAttestorCount(2);
     
     console.log("✅ Updating Max Attestor Count to 5");
     await bridgeV2.updateMaxAttestorCount(5);
 
+    console.log("\nFinal Tests on Bridge V2:");
+    console.log("✅ Getting Destination Chain ID");
+    const finalDestChainId = await bridgeV2 .destinationChainId();
+    console.log("✅ Destination Chain ID (Final):", finalDestChainId.toString());
+
+    console.log("✅ Getting Source Chain ID");
+    const isAttestor = await bridgeV2.isAttestor(user1.address);
+    const isAttestor2 = await bridgeV2.isAttestor(user2.address);
+    console.log("✅ Source Chain ID (Final):", isAttestor.toString());
+    console.log("✅ Source Chain ID (Final):", isAttestor2.toString());
+
+     let quorumRequired = await bridgeV2.quorumRequired();
+    console.log("✅ Quorum Required:", quorumRequired.toString());
+
 
     console.log("✅ Getting Attestor Count, Max Attestor Count, and Quorum Required");
-    let attestorCount = await bridgeV2.attestorCount();
-    console.log("✅ Attestor Count:", attestorCount.toString());
-    let maxAttestorCount = await bridgeV2.maxAttestorCount();
-    console.log("✅ Max Attestor Count:", maxAttestorCount.toString());
-    let quorumRequired = await bridgeV2.quorumRequired();
+    quorumRequired = await bridgeV2.quorumRequired();
     console.log("✅ Quorum Required:", quorumRequired.toString());
 
     await bridgeV2.addAttestor(user3.address, 3);
-    attestorCount = await bridgeV2.attestorCount();
+    let attestorCount = await bridgeV2.attestorCount();
     console.log("✅ Attestor Count:", attestorCount.toString());
-    maxAttestorCount = await bridgeV2.maxAttestorCount();
+    let maxAttestorCount = await bridgeV2.maxAttestorCount();
     console.log("✅ Max Attestor Count:", maxAttestorCount.toString());
     quorumRequired = await bridgeV2.quorumRequired();
     console.log("✅ Quorum Required:", quorumRequired.toString());

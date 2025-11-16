@@ -7,11 +7,16 @@ import { BigNumber } from "ethers";
 dotenv.config();
 
 async function main() {
-  const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER);
-  const deployerSigner = new ethers.Wallet(
-    process.env.DEPLOYER_PRIVATE_KEY,
-    provider
-  );
+  try{
+    const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER);
+    const deployerSigner = new ethers.Wallet(
+      process.env.DEPLOYER_PRIVATE_KEY,
+      provider
+    );
+    
+    // Check network connection
+    const network = await provider.getNetwork();
+    console.log("Connected to network:", network.name, "Chain ID:", network.chainId);
 
   const usdcToken = process.env.USDC_ADDR;
   const usdcTokenAddress = await ethers.getContractFactory("USDCMock");
@@ -39,46 +44,78 @@ async function main() {
   );
 
   console.log("Transfering USDC to tokenservice...");
-  let receiver =
-    "aleo1fg8y0ax9g0yhahrknngzwxkpcf7ejy3mm6cent4mmtwew5ueps8s6jzl27";
+  console.log("USDC Token Address:", usdcToken);
+  console.log("TokenService Proxy Address:", tokenServiceProxyAddress);
+  console.log("Deployer Address:", deployerSigner.address);
+  
+  // // Check current allowance
+  const currentAllowance = await usdcTokenContract.allowance(deployerSigner.address, tokenServiceProxyAddress);
+  console.log("Current USDC allowance:", currentAllowance.toString());
+  
+  // Check deployer's USDC balance
+  const balance = await usdcTokenContract.balanceOf(deployerSigner.address);
+  console.log("Deployer USDC balance:", balance.toString());
 
-    await usdcTokenContract["approve(address,uint256)"](
-      tokenServiceProxyAddress,
-      BigNumber.from("100000000")
-    ); // approving USDC to tokenservice
-  // await usdtTokenContract["approve(address,uint256)"](tokenServiceProxyAddress, BigNumber.from("100000000")); // approving USDT to tokenservice
+  const approvalAmount = BigNumber.from("100000000");
+  console.log("Approving USDC amount:", approvalAmount.toString());
 
-    await TokenServiceContract["transfer(address,uint256,string,bool,bytes)"](
+  const approveTx = await usdcTokenContract["approve(address,uint256)"](
+    tokenServiceProxyAddress,
+    approvalAmount
+  ); // approving USDC to tokenservice
+  
+  console.log("Approval transaction hash:", approveTx.hash);
+  console.log("Waiting for transaction confirmation...");
+  
+  let receipt = await approveTx.wait();
+  console.log("Transaction confirmed in block:", receipt.blockNumber);
+  console.log("Gas used:", receipt.gasUsed.toString());
+  
+  // Verify the approval
+  const newAllowance = await usdcTokenContract.allowance(deployerSigner.address, tokenServiceProxyAddress);
+  console.log("New USDC allowance:", newAllowance.toString());
+
+  let receiver = "aleo19lu7tcg5v3c7ke5gn98h0v7crsn4jcct4uck0u0q9ewuhtc0hc9s0rygds";
+
+    const transferTx = await TokenServiceContract["transfer(address,uint256,string,bool,bytes)"](
       usdcToken,
-      BigNumber.from("100000000"),
+      BigNumber.from("30000000"),
       receiver,
       false,
       "0x",
       { gasLimit: 10000000 }
     );
-
-  //   await TokenServiceContract["transfer(address,uint256,string,bool,bytes)"](
-  //     usdcToken,
-  //     BigNumber.from("20000000"),
-  //     receiver,
-  //     true,
-  //     "0x04c02fdc697d4dfd945ccaf72b623338f7a1fa567b1995b87386c45989efd95a973998920367363cdb3b198ce33b6cb97680cbb0aea5090a67fbede038dad8764ce83af3a078de3f26f51701be2919905158109a5781e150a64eda5d4e370b207fe567bbfb026a05f9fdf4e86a608d6c0def1b5b45d52095870bc0ac0748bb7afde452bf0c5543a1bcc6f44a0c900a314ee442553c98e58a38fd252a776639a30dc7500cd84cf32a1076a6a5de2c558e9943ecaa64f5c20695d69fb9e541e53f40bdae97e5c0b17b1ea3191f307de13c4b4ab15cf937831c389a3a47920ed1303e9e9886ea2a49ca11f02cd5491b0225f09160a0e2591b3dcfe05937bbaf9fa8af02a1993dc2",
-  //     { gasLimit: 10000000 }
-  //   );
-  // await TokenServiceContract["transfer(address,uint256,string)"](usdtToken, BigNumber.from("100000"), receiver, {gasLimit: 1000000});
+    console.log("Transfer transaction hash:", transferTx.hash);
+    console.log("Waiting for transaction confirmation...");
+    
+    receipt = await transferTx.wait();
+    console.log("Transaction confirmed in block:", receipt.blockNumber);
+    console.log("Gas used:", receipt.gasUsed.toString());
+    
   // await TokenServiceContract["transfer(string)"](receiver, { value: ethers.utils.parseEther("0.01"),  gasLimit:1000000 });
 
   console.log("USDC transferred successfully!!!");
 
-  // receiver = "aleo1jga9hrn0d5umq2tsqty2tcvtjkvd8n9r0g7cj7fq5vld4y6hesgsq23n3l";
+  } catch (error) {
+    console.error("Error in main function:", error.message);
+    if (error.transaction) {
+      console.error("Transaction hash:", error.transaction.hash);
+    }
+    if (error.receipt) {
+      console.error("Transaction failed in block:", error.receipt.blockNumber);
+    }
+    throw error;
+  }
+
+  // receiver = "aleo19lu7tcg5v3c7ke5gn98h0v7crsn4jcct4uck0u0q9ewuhtc0hc9s0rygds";
   // await TokenServiceContract[
   //   "privateTransfer(address,uint256,string,bool,bytes)"
   // ](
   //   usdcToken,
-  //   BigNumber.from("10000000"),
+  //   BigNumber.from("11000000"),
   //   receiver,
   //   true,
-  //   "0x04010b65e222bc6ccb31cef42a8acef4bd9aac060a00112460f03d5701876ab53ca74316808776b70d44badb0abc27aae0bd402f9f8e84fc5c8ca43d36176bbd73b8d880f38990f15ebfab23c5959dea6db4df284db08f726797175474096228d821b988ffa925c8c281beb7f438d5688ab9577a711565f57e9b4e56936654cd3907e1514e227340efc83e304ff7770f8cfc5436db4ee36bbdb0d983f90385ef3916efc2adb8052fbb1df02fa8b85a70d1ccb8d4b20f278fb1ac69d6a9bd5fa4b8108c",
+  //   "0x04641ae3a7b0c7ec055d227b57b990f20baeecb75e18e510bcb6547df04622d429c46e91938be23a40ce4ebe4c34651a8a941a5dbd4f82d37d9914e6a9143803cad7cec09968f1f9177251bd5df83cfce582f268553bf7559bcad083416fa1211345c04b0fb576f3523cef82fc37f8959a1c3bc590055fb8e1e25f60eef82a8685ce5998a5078b899e3056ef6ec7796a619134a747ced7edbb98c9517a90c070cfa5fbe46471fae8b316109e09337da64d0de9f3b65be6c29d47b67b2ef3238842b279",
   //   { gasLimit: 1000000 }
   // );
   // await TokenServiceContract["privateTransfer(address,uint256,string)"](usdtToken, BigNumber.from("1000000"), receiver, {gasLimit: 1000000});
