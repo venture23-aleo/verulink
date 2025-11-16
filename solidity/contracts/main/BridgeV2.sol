@@ -7,8 +7,9 @@ import {Pausable} from "../common/Pausable.sol";
 import {AttestorManagerV2} from "../base/bridge/AttestorManagerV2.sol";
 import {BridgeTokenServiceManager} from "../base/bridge/BridgeTokenServiceManager.sol";
 import {ConsumedPacketManagerImpl} from "../base/bridge/ConsumedPacketManagerImpl.sol";
-import {OutgoingPacketManagerImplV2} from "../base/bridge/OutgoingPacketmanagerImplV2.sol";
+import {OutgoingPacketManagerImplV2} from "../base/bridge/OutgoingPacketManagerImplV2.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 
 
 /// @title Bridge Contract
@@ -19,7 +20,8 @@ contract BridgeV2 is
     AttestorManagerV2,
     BridgeTokenServiceManager,
     ConsumedPacketManagerImpl,
-    OutgoingPacketManagerImplV2
+    OutgoingPacketManagerImplV2,
+    Upgradeable
 {
     using PacketLibrary for PacketLibrary.InPacket;
     
@@ -36,16 +38,30 @@ contract BridgeV2 is
         _disableInitializers();
     }
 
-    /// @dev Initializes the Bridge contract
+     /// @dev Initializes the Bridge contract
     /// @param _destChainId The initial destination chain ID
     function Bridge_init(
-        uint256 _destChainId,
-        address _owner
+        uint256 _destChainId
     ) public initializer {
-        __Ownable_init_unchained(_owner);
+        __Ownable_init_unchained();
         __Pausable_init_unchained();
         destinationChainId = _destChainId;
-        maxAttestorCount=5;
+    }
+
+     /**
+     * @notice Initializes version 2 of the bridge contract with attestor configuration
+     * @dev Can only be called by the contract owner. Sets both the current attestor count and maximum attestor count
+     * @param _attestorCount The number of attestors currently active in the bridge
+     * @param _maxAttestorCount The maximum number of attestors allowed in the bridge
+     */
+    function initializeV2(uint8 _attestorCount, uint8 _maxAttestorCount) external onlyOwner {
+        updateMaxAttestorCount(_maxAttestorCount);
+        setAttestorCount(_attestorCount);
+        }
+
+    /// @dev Authorize upgrades (keeps compatibility with UUPS-style implementations)
+    function _authorizeUpgrade(address) internal view virtual override {
+        require(msg.sender == owner(), "Bridge: caller is not owner");
     }
 
 
@@ -59,7 +75,7 @@ contract BridgeV2 is
     /// @notice Updates the destination chain ID, callable only by the owner
     /// @param newDestChainId The new destination chain ID
     function updateDestinationChainId(uint256 newDestChainId) external onlyOwner {
-        require(!isSupportedChain(newDestChainId), "Bridge: destination chain already supported");
+        require(!isSupportedChain(newDestChainId), "Bridge: destinationChainAlreadySupported");
         emit ChainUpdated(destinationChainId, newDestChainId);
         destinationChainId = newDestChainId;
     }
@@ -78,9 +94,8 @@ contract BridgeV2 is
     function consume(
         PacketLibrary.InPacket memory packet, 
         bytes memory signatures
-    ) external whenNotPaused returns (PacketLibrary.Vote)
-    {
-        require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
+    ) external whenNotPaused returns (PacketLibrary.Vote){
+        require(isRegisteredTokenService(msg.sender), "Bridge: unknownTokenService");
         return _consume(packet.hash(), packet.sourceTokenService.chainId, packet.sequence, signatures, quorumRequired);
     }
 
@@ -91,8 +106,8 @@ contract BridgeV2 is
     /// @notice Sends a message packet to the specified destination chain
     /// @param packet The outgoing packet to be sent
     function sendMessage(PacketLibrary.OutPacket memory packet, bytes calldata data) public virtual whenNotPaused {
-        require(isSupportedChain(packet.destTokenService.chainId), "Bridge: unknown destination chain");
-        require(isRegisteredTokenService(msg.sender), "Bridge: unknown token service");
+        require(isSupportedChain(packet.destTokenService.chainId), "Bridge: unknownDestinationChain");
+        require(isRegisteredTokenService(msg.sender), "Bridge: unknownTokenService");
         _sendMessage(packet, data);
     } 
 
