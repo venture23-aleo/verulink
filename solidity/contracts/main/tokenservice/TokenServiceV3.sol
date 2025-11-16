@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IIERC20} from "../../common/interface/tokenservice/IIERC20.sol";
 import {TokenServiceV2} from "../../main/tokenservice/TokenServiceV2.sol";
-import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
-import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {PredicateMessage} from "@predicate/contracts/src/interfaces/IPredicateClient.sol";
 import {PredicateService} from "../../main/tokenservice/predicate/PredicateService.sol";
+import {IBlackListService} from "../../common/interface/tokenservice/IBlackListService.sol";
+import {PacketLibrary} from "../../common/libraries/PacketLibrary.sol";
 import {FeeCollector} from "./FeeCollector.sol";
 
 
@@ -314,7 +314,7 @@ contract TokenServiceV3 is TokenServiceV2 {
     FeeCollector public feeCollector;
     mapping(address => uint256) public collectedFees;
  
-    uint256[49] private __gap;
+    uint256[44] private __gap;
 
     
 }
