@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {IIERC20} from "../common/interface/tokenservice/IIERC20.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Pausable} from "../common/Pausable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -50,7 +50,7 @@ contract Holding is OwnableUpgradeable, Pausable, ReentrancyGuardUpgradeable, Up
     /// @dev Initializes the Holding contract
     /// @param _tokenService Address of the token service
     function Holding_init(address _tokenService, address _owner) public initializer {
-        __Ownable_init_unchained(_owner);
+        __Ownable_init_unchained();
         __Pausable_init_unchained();
         _transferOwnership(_owner);
         supportedTokenServices[_tokenService] = true;

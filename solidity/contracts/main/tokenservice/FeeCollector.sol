@@ -32,12 +32,21 @@ contract FeeCollector is Initializable, AccessControlUpgradeable {
     /// @param _owner The address of the contract owner
     function initialize(
         address _tokenService,
-        address _owner
+        address _owner,
+        address _usdc,
+        address _usdt
     ) public initializer {
         __AccessControl_init();
         
         _grantRole(TOKEN_SERVICE_ROLE, _tokenService);
         _grantRole(DEFAULT_ADMIN_ROLE, _owner);
+
+        platformFees[_usdc] = 100; // 0.1%
+        privatePlatformFees[_usdc] = 150; // 0.15%
+
+        platformFees[_usdt] = 100; // 0.1%
+        privatePlatformFees[_usdt] = 150; // 0.15%
+
     }
 
     /// @notice Sets the fees for the platform

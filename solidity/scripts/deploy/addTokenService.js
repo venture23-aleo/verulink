@@ -9,7 +9,7 @@ async function main() {
     );
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const tokenServiceProxy = process.env.TOKENSERVICE_PROXY_ADDRESS;
-    const Bridge = await ethers.getContractFactory("Bridge", {
+    const Bridge = await ethers.getContractFactory("BridgeV2", {
         libraries: {
             PacketLibrary: process.env.PACKET_LIBRARY_CONTRACT_ADDRESS,
             AleoAddressLibrary: process.env.ALEO_ADDRESS_LIBRARY,
@@ -19,7 +19,7 @@ async function main() {
     console.log("Adding Tokenservice to Bridge...");
     const BridgeABI = Bridge.interface.format();
     const BridgeContract = new ethers.Contract(bridgeProxy, BridgeABI, deployerSigner);
-    await BridgeContract.addTokenService(tokenServiceProxy);
+    await BridgeContract.addTokenService("0x35c540E8081d2dBa0229Eaf8c8D5CC9Cc11B003D");
     console.log("TokenService Succefully added!!!");
 }
 main()

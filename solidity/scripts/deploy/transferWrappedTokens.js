@@ -37,12 +37,12 @@ async function main() {
 
     await wrappedTokenContract["approve(address,uint256)"](
       tokenServiceProxyAddress,
-      BigNumber.from("16000000")
+      BigNumber.from("11000000")
     ); // approving wrapped Token to tokenservice
 
     await TokenServiceContract["publicTokenSend(address,uint256,string)"](
       wrappedToken,
-      BigNumber.from("1200000"),
+      BigNumber.from("11000000"),
       receiver,
       { gasLimit: 10000000 }
     );

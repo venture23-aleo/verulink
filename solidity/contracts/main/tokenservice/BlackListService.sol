@@ -44,8 +44,8 @@ contract BlackListService is Initializable, IBlackListService, OwnableUpgradeabl
     /// @dev Initializes the BlackListService contract
     /// @param _usdc Address of the USDC contract
     /// @param _usdt Address of the USDT contract
-    function BlackList_init(address _usdc, address _usdt, address _owner) public virtual initializer {
-        __Ownable_init_unchained(_owner);
+    function BlackList_init(address _usdc, address _usdt) public virtual initializer {
+        __Ownable_init_unchained();
         usdc = _usdc;
         usdt = _usdt;
     }
@@ -88,17 +88,17 @@ contract BlackListService is Initializable, IBlackListService, OwnableUpgradeabl
     /// @param account The address of the account to check
     /// @return true if the account is blacklisted, false otherwise
     function isBlackListed(address account) public virtual view override returns (bool) {
-        if (block.chainid == 1 || block.chainid == 17000 || block.chainid == 31337) { // Mainnet or Holesky or localnet
+        if (block.chainid == 1) { // Mainnet or Holesky or localnet
             return (blackLists[account] || 
                 IIERC20(usdc).isBlacklisted(account) ||
                 IIERC20(usdt).getBlackListStatus(account)
             );
-        }else if (block.chainid == 42161 || block.chainid == 421614) { // Arbitrum or Arbitrum Sepolia
+        }else if (block.chainid == 42161) { // Arbitrum or Arbitrum Sepolia
             return (blackLists[account] || 
                 IIERC20(usdc).isBlacklisted(account) ||
                 IIERC20(usdt).isBlocked(account)
             );
-        } else if (block.chainid == 8453 || block.chainid == 84532) { // Base or Base Sepolia
+        } else if (block.chainid == 8453) { // Base or Base Sepolia
             return (blackLists[account] || 
                 IIERC20(usdc).isBlacklisted(account));
         }else{ 

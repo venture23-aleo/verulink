@@ -14,14 +14,17 @@ async function main() {
     console.log("Setting up the protocol fees...");
     const feeCollectorABI = feeCollector.interface.format();
     const FeeCollectorContract = new ethers.Contract(feeCollectorProxyAddress, feeCollectorABI, deployerSigner);
-    // await FeeCollectorContract.setPlatformFees(process.env.USDC_ADDR, publicProtocolFees);
-    // await FeeCollectorContract.setPlatformFees(process.env.USDC_ADDR, privateProtocolFees);
+    await FeeCollectorContract.setPlatformFees(process.env.USDC_ADDR, 100);
+    await FeeCollectorContract.setPrivatePlatformFees(process.env.USDC_ADDR, 150);
 
-    await FeeCollectorContract.setPlatformFees(process.env.USDT_ADDR, 125);
-    await FeeCollectorContract.setPrivatePlatformFees(process.env.USDT_ADDR, 233);
+    await FeeCollectorContract.setPlatformFees(process.env.USDT_ADDR, 100);
+    await FeeCollectorContract.setPrivatePlatformFees(process.env.USDT_ADDR, 150);
 
-    await FeeCollectorContract.setPlatformFees(process.env.ONE_ADDRESS, 133);
-    await FeeCollectorContract.setPrivatePlatformFees(process.env.ONE_ADDRESS, 188);
+    // await FeeCollectorContract.setPlatformFees(process.env.WRAPPED_TOKEN_PROXY_ADDRESS, 100);
+    // await FeeCollectorContract.setPrivatePlatformFees(process.env.USDT_ADDR, 233);
+
+    await FeeCollectorContract.setPlatformFees(process.env.ONE_ADDRESS, 100);
+    await FeeCollectorContract.setPrivatePlatformFees(process.env.ONE_ADDRESS, 150);
     console.log("Protocol fees updated successfully!!!");
 }
 main()

@@ -1,9 +1,8 @@
 require("@nomicfoundation/hardhat-toolbox");
-require("@openzeppelin/hardhat-upgrades")
 require('@nomiclabs/hardhat-ethers');
 require("@nomiclabs/hardhat-etherscan");
-
 require("hardhat-contract-sizer");
+require('solidity-coverage')
 require("dotenv").config()
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -29,90 +28,35 @@ module.exports = {
         sepolia: {
             url: process.env.PROVIDER || "",
             accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
-        },
-        holesky: {
-            url: process.env.PROVIDER || "",
-            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+            chainId: 11155111,
         },
         mainnet: {
             url: process.env.PROVIDER || "",
             accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
-        },
-        "base-sepolia": {
-            url: process.env.PROVIDER || "",
-            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
-        },
-        "arbitrum-sepolia": {
-            url: process.env.PROVIDER || "",
-            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
-        },
-        "bsc-testnet": {
-            url: process.env.PROVIDER || "",
-            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
-        },
-        "bsc-mainnet": {
-            url: process.env.PROVIDER || "",
-            accounts: process.env.DEPLOYER_PRIVATE_KEY ? [process.env.DEPLOYER_PRIVATE_KEY] : []
-        },
+        }
     },
     etherscan: {
         apiKey: {
             sepolia: process.env.ETHERSCAN_API_KEY,
-            holesky: process.env.ETHERSCAN_API_KEY,
-            "base-sepolia": process.env.ETHERSCAN_API_KEY,
-            "arbitrum-sepolia": process.env.ETHERSCAN_API_KEY,
-            "bsc-testnet": process.env.ETHERSCAN_API_KEY,
-            "bsc-mainnet": process.env.ETHERSCAN_API_KEY,
+            mainnet: process.env.ETHERSCAN_API_KEY,
         },
         customChains: [
             {
-                network: "base",
-                chainId: 8453,
+                network: "sepolia",
+                chainId: 11155111,
                 urls: {
-                  apiURL: "https://api.basescan.org/api",
-                  browserURL: "https://basescan.org"
-                }
-              },
-              {
-                network: "base-sepolia",
-                chainId: 84532,
-                urls: {
-                  apiURL: "https://api-sepolia.basescan.org/api",
-                  browserURL: "https://sepolia.basescan.org"
-                }
-              },
-            {
-                network: "holesky",
-                chainId: 17000,
-                urls: {
-                    apiURL: "https://api-holesky.etherscan.io/api",
-                    browserURL: "https://holesky.etherscan.io/",
+                    apiURL: "https://api.etherscan.io/v2/api?chainid=11155111",
+                    browserURL: "https://sepolia.etherscan.io/",
                 },
             },
             {
-                network: "arbitrum-sepolia",
-                chainId: 421614,
+                network: "mainnet",
+                chainId: 1,
                 urls: {
-                  apiURL: "https://api-sepolia.arbiscan.io/api",
-                  browserURL: "https://sepolia.arbiscan.io/",
-                }
-              },
-              {
-                network: "bsc-testnet",
-                chainId: 97,
-                urls: {
-                  apiURL: "https://api-testnet.bscscan.com/api",
-                  browserURL: "https://testnet.bscscan.com/"
-                }
-              },
-              {
-                network: "bsc-mainnet",
-                chainId: 56,
-                urls: {
-                  apiURL: "https://api.bscscan.com/api",
-                  browserURL: "https://bscscan.com/"
-                }
-              }
+                    apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+                    browserURL: "https://etherscan.io/",
+                },
+            },
         ]
     },
     // contractSizer: {

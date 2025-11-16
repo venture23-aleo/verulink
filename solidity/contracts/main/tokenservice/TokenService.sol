@@ -9,7 +9,7 @@ import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Upgradeable} from "@thirdweb-dev/contracts/extension/Upgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -54,7 +54,7 @@ contract TokenService is
         uint256 _destChainId,
         address _blackListService
     ) public virtual initializer {
-        __Ownable_init_unchained(_owner);
+        __Ownable_init_unchained();
         __TokenSupport_init_unchained(_destChainId);
         __Pausable_init_unchained();
         __ReentrancyGuard_init_unchained();

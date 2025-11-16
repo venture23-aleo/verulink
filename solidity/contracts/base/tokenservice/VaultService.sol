@@ -23,7 +23,7 @@ abstract contract VaultService is IVaultService, OwnableUpgradeable {
         string memory _name,
         address _owner
     ) internal {
-        __Ownable_init_unchained(_owner);
+        __Ownable_init_unchained();
         _transferOwnership(_owner);
         token = _token;
         name = _name;

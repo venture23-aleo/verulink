@@ -9,7 +9,7 @@ import {Pausable} from "../../common/Pausable.sol";
  */
 contract PausableMock is Pausable {
   function Pausable_init(address _owner) public initializer {
-    __Ownable_init_unchained(_owner);
+    __Ownable_init_unchained();
     __Pausable_init_unchained();
   }
 }

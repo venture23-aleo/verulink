@@ -14,31 +14,14 @@ async function main() {
     const aleoAddressLib = process.env.ALEO_ADDRESS_LIBRARY;
     const packetLib = process.env.PACKET_LIBRARY_CONTRACT_ADDRESS;
 
-    // Deploy BridgeV2 
-    console.log("Deploying BridgeV2...");
-    const Bridge = await ethers.getContractFactory("BridgeV2", {
+    // // Deploy BridgeV2 
+    // console.log("Deploying BridgeV2...");
+    const Bridge = await ethers.getContractFactory("Bridge", {
         libraries: {
             AleoAddressLibrary: aleoAddressLib,
             PacketLibrary: packetLib
         }
     });
-
-    const bridgeImpl = await Bridge.deploy();
-    await bridgeImpl.deployTransaction.wait(3);
-    console.log("Bridge V2 Impl Deployed to: ", bridgeImpl.address);
-
-    // Verification process
-    console.log("Verifying impl contract...");
-    await run("verify:verify", {
-        address: bridgeImpl.address,
-        constructorArguments: [], // Pass the constructor arguments here
-        contract: "contracts/main/BridgeV2.sol:BridgeV2",
-        libraries: {
-            AleoAddressLibrary: aleoAddressLib,
-            PacketLibrary: packetLib
-        }
-    });
-    updateEnvFile("TOKENBRIDGE_NEW_IMPLEMENTATION_ADDRESS", bridgeImpl.address);
 
     const bridgeProxyAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
     console.log("Upgrading Bridge Implementation...");

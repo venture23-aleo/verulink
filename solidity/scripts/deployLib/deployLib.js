@@ -9,6 +9,8 @@ async function main() {
   console.log("Deploying PacketLibrary: ");
   const packetLibrary = await PacketLibrary.deploy();
   await packetLibrary.deployTransaction.wait(3);
+  
+  updateEnvFile("PACKET_LIBRARY_CONTRACT_ADDRESS", packetLibrary.address)
   console.log("PacketLibrary Deployed to:", packetLibrary.address);
   // Verification process
   console.log("Verifying PacketLibrary contract...");
@@ -17,7 +19,7 @@ async function main() {
     constructorArguments: [], // Pass the constructor arguments here
     contract: "contracts/common/libraries/PacketLibrary.sol:PacketLibrary"
   });
-  updateEnvFile("PACKET_LIBRARY_CONTRACT_ADDRESS", packetLibrary.address)
+  
 }
 main()
   .then(() => process.exit(0))

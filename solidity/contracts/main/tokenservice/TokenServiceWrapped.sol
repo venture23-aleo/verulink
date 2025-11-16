@@ -9,7 +9,7 @@ import {Pausable} from "../../common/Pausable.sol";
 import {TokenSupport} from "../../base/tokenservice/TokenSupport.sol";
 import {Holding} from "../Holding.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {FeeCollector} from "./FeeCollector.sol";
@@ -69,7 +69,7 @@ contract TokenServiceWrapped is
         require(_chainId != 0, "TokenService: chainIdZero");
         require(_destChainId != 0, "TokenService: destChainIdZero");
 
-        __Ownable_init_unchained(_owner);
+        __Ownable_init_unchained();
         __ReentrancyGuard_init();
         __Pausable_init();
         

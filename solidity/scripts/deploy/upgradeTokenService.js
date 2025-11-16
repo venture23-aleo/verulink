@@ -10,27 +10,14 @@ async function main() {
     );
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
 
-    const TokenService = await ethers.getContractFactory("TokenService");
+    const TokenService = await ethers.getContractFactory("TokenServiceV2");
 
     console.log("Deploying TokenService New Impl...");
-
-    const tokenServiceImpl = await TokenService.deploy();
-    await tokenServiceImpl.deployTransaction.wait(3);
-    console.log("TokenService Implementation Deployed to: ", tokenServiceImpl.address);
-    // Verification process
-    console.log("Verifying impl contract...");
-    await run("verify:verify", {
-        address: tokenServiceImpl.address,
-        constructorArguments: [],
-        contract: "contracts/main/tokenservice/TokenService.sol:TokenService"
-    });
-    updateEnvFile("TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address);
-
     const tokenServiceProxyAddress = process.env.TOKENSERVICE_PROXY_ADDRESS;
     console.log("Upgrading TokenService Implementation...");
     const ERC20TokenServiceABI = TokenService.interface.format();
     const TokenServiceContract = new ethers.Contract(tokenServiceProxyAddress, ERC20TokenServiceABI, deployerSigner);
-    await TokenServiceContract.upgradeTo(tokenServiceImpl.address);
+    await TokenServiceContract.upgradeTo(process.env.TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS);
     console.log("TokenService Implementation upgraded successfully!!!");
 }
 main()
