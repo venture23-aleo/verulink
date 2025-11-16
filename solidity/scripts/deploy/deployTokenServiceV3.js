@@ -14,37 +14,39 @@ async function main() {
     const bridgeAddress = process.env.TOKENBRIDGE_PROXY_ADDRESS;
     const deployerSigner = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
     const TokenService = await ethers.getContractFactory("TokenServiceV3");
-
-    console.log("Deploying TokenService Impl and Proxy...");
-
+        
+    console.log("  ➤ Deploying TokenServiceV3 Implementation...");
     const tokenServiceImpl = await TokenService.deploy();
     await tokenServiceImpl.deployTransaction.wait(3);
-    console.log("TokenService Impl Deployed to: ", tokenServiceImpl.address);
-    // Verification process
-    console.log("Verifying impl contract...");
+    console.log("  ✓ TokenServiceV3 Impl deployment initiated");
+    console.log("  ✅ TokenServiceV3 Impl deployed to:", tokenServiceImpl.address);
+    
+    updateEnvFile("TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address);
+     console.log("Verifying impl contract...");
     await run("verify:verify", {
         address: tokenServiceImpl.address,
         constructorArguments: [], // Pass the constructor arguments here
         contract: "contracts/main/tokenservice/TokenServiceV3.sol:TokenServiceV3"
     });
-    updateEnvFile("TOKENSERVICE_IMPLEMENTATION_ADDRESS", tokenServiceImpl.address)
 
+    const tokenServiceImplAddress = process.env.TOKENSERVICE_NEW_IMPLEMENTATION_ADDRESS;
     const ProxyContract = await ethers.getContractFactory("ProxyContract");
     const initializeData = new ethers.utils.Interface(TokenService.interface.format()).encodeFunctionData("TokenService_init",
         [bridgeAddress, deployerSigner.address, chainId, destChainId, process.env.BLACKLISTSERVICE_PROXY_ADDRESS]);
+        
+    const tokenServiceProxy = await ProxyContract.deploy(tokenServiceImplAddress, initializeData);
+    await tokenServiceProxy.deployTransaction.wait(1);
 
-    const tokenServiceProxy = await ProxyContract.deploy(tokenServiceImpl.address, initializeData);
-    await tokenServiceProxy.deployTransaction.wait(3);
-
+    updateEnvFile("TOKENSERVICE_PROXY_ADDRESS", tokenServiceProxy.address)
     console.log("TokenService Proxy Deployed to: ", tokenServiceProxy.address);
     console.log("Verifying proxy contract...");
 
     await run("verify:verify", {
         address: tokenServiceProxy.address,
-        constructorArguments: [tokenServiceImpl.address, initializeData], // Pass the constructor arguments here
+        constructorArguments: [tokenServiceImplAddress, initializeData], // Pass the constructor arguments here
         contract: "contracts/proxies/Proxy.sol:ProxyContract"
     });
-    updateEnvFile("TOKENSERVICE_PROXY_ADDRESS", tokenServiceProxy.address)
+    
 }
 main()
     .then(() => process.exit(0))

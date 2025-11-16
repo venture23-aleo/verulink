@@ -3,8 +3,8 @@
 # npx hardhat run scripts/deployLib/deployLib.js --network sepolia
 # npx hardhat run scripts/deployLib/deployAleoAddressLib.js --network sepolia
 # npx hardhat run scripts/deploy/deployBlackListService.js --network sepolia
-# npx hardhat run scripts/deploy/deployBridge.js --network sepolia
-# npx hardhat run scripts/deploy/deployTokenService.js --network sepolia
+# npx hardhat run scripts/deploy/deployBridgeV2.js --network sepolia
+# npx hardhat run scripts/deploy/deployTokenServiceV3.js --network sepolia
 # npx hardhat run scripts/deploy/deployHolding.js --network sepolia
 # npx hardhat run scripts/deploy/deployERC20VaultServiceUSDC.js --network sepolia
 # npx hardhat run scripts/deploy/deployERC20VaultServiceUSDT.js --network sepolia
@@ -49,8 +49,8 @@
 # npx hardhat run scripts/deployLib/deployLib.js --network holesky
 # npx hardhat run scripts/deployLib/deployAleoAddressLib.js --network holesky
 # npx hardhat run scripts/deploy/deployBlackListService.js --network holesky
-# npx hardhat run scripts/deploy/deployBridge.js --network holesky
-# npx hardhat run scripts/deploy/deployTokenService.js --network holesky
+# npx hardhat run scripts/deploy/deployBridgeV2.js --network holesky
+# npx hardhat run scripts/deploy/deployTokenServiceV3.js --network holesky
 # npx hardhat run scripts/deploy/deployHolding.js --network holesky
 # npx hardhat run scripts/deploy/deployERC20VaultServiceUSDC.js --network holesky
 # npx hardhat run scripts/deploy/deployERC20VaultServiceUSDT.js --network holesky
@@ -212,5 +212,3 @@
 
 # npx hardhat run scripts/deploy/setFeeCollectorOnWrappedTS.js --network bsc-testnet
 #  npx hardhat run scripts/deploy/addWrappedToken.js --network bsc-testnet
-
-npx hardhat run scripts/deploy/addAttestor.js --network sepolia
