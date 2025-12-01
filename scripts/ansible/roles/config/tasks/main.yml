@@ -15,7 +15,7 @@
 
 - name: Determine branch based on environment
   set_fact:
-    branch: "{{ branch | default('develop' if env == 'devnet' else 'ci/streamline-deployment' if env == 'staging' else 'main') }}"
+    branch: "{{ branch | default('develop' if env == 'devnet' else 'staging' if env == 'staging' else 'main') }}"
   when: operation | default('deploy') not in ['patch', 'update']
 
 - name: Display branch

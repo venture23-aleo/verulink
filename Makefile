@@ -118,7 +118,8 @@ deploy: check-venv check-inventory check-vars
 		-i "inventories/$(ENV)/hosts.yml" \
 		-e "@$$VARS_FILE" \
 		-e "deployment_type=$(DEPLOYMENT_TYPE)" \
-		-e "overwrite_secret=true"
+		-e "overwrite_secret=true" \
+		$$([ -n "$(BRANCH)" ] && echo "-e branch=$(BRANCH)" || true)
 	@echo "✅ Deployment complete"
 
 patch: check-venv check-inventory check-vars
@@ -148,7 +149,8 @@ update: check-venv check-inventory check-vars
 	ansible-playbook playbooks/update.yml \
 		-i "inventories/$(ENV)/hosts.yml" \
 		-e "@$$VARS_FILE" \
-		-e "deployment_type=$(DEPLOYMENT_TYPE)"
+		-e "deployment_type=$(DEPLOYMENT_TYPE)" \
+		$$([ -n "$(BRANCH)" ] && echo "-e branch=$(BRANCH)" || true)
 	@echo "✅ Update complete"
 
 # =========================
@@ -201,15 +203,17 @@ help:
 	@echo ""
 	@echo "🚀 Deployment:"
 	@echo "  make setup-venv"
-	@echo "  make deploy ENV=dev"
+	@echo "  make deploy ENV=dev [BRANCH=branch-name]"
 	@echo "  make patch ENV=dev"
-	@echo "  make update ENV=dev"
+	@echo "  make update ENV=dev [BRANCH=branch-name]"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make upload-secrets"
 	@echo "  make attach-instance-profile"
 	@echo "  make deploy ENV=staging"
 	@echo "  make deploy ENV=prod DEPLOYMENT_TYPE=k8s"
+	@echo "  make deploy ENV=staging BRANCH=feature-branch"
+	@echo "  make update ENV=staging BRANCH=feature-branch"
 
 .DEFAULT:
 	@$(MAKE) help
