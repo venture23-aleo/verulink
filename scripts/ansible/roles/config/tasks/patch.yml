@@ -1,0 +1,13 @@
+---
+# Tasks for patching config (update .env file with new docker image tags)
+- name: Update .env file with new docker image tags
+  copy:
+    content: |
+      DOCKER_IMAGE_TAG_SIGN={{ docker_image_tag_sign }}
+      DOCKER_IMAGE_TAG_CHAIN={{ docker_image_tag_chain }}
+      DEPLOYMENT_ENVIRONMENT={{ deployment_environment }}
+    dest: "{{ attestor_install_dir }}/.env"
+    mode: '0644'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+

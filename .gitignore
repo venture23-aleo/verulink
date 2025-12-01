@@ -27,3 +27,7 @@ coverage.json
 # ignore keys
 attestor/signingService/secrets.yaml
 **/**/secrets.yaml
+
+.vscode/
+gcpkey.json
+attestor_secret.json
