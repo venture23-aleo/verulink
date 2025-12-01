@@ -14,10 +14,12 @@ coverage.json
 *.cer
 *.key
 *.crt
+*.csr
 *venv
 *.pem
 .temp.*
 .temp
+*.zip
 
 # ignore go build outputs
 /attestor/chainService/chainService

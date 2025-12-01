@@ -2,7 +2,7 @@
 # Staging Environment Variables for Attestor Service
 
 # Attestor Configuration
-attestor_name: "dev_attestor_verulink_v23"
+attestor_name: "stg_attestor_verulink_v23"
 mode: "stage"
 
 # Aleo Chain Configuration
@@ -21,7 +21,7 @@ bsc_start_height: 77777
 ethereum_chain_id: "27234042785"
 ethereum_bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
 ethereum_node_url: "https://eth.llamarpc.com"
-ethereum_start_height: 20740576
+ethereum_start_height: 23813425
 
 
 # Service Configuration
@@ -41,6 +41,6 @@ prometheus_pushgateway_url: "https://pushgateway-aleomtls.venture23.xyz/"
 prometheus_job_name: "staging-push-gateway"
 
 # Docker Image Tags
-docker_image_tag_sign: "staging-v2.0.0-beta2"
-docker_image_tag_chain: "staging-v2.0.0-beta2"
+docker_image_tag_sign: "staging-v2.0.0-beta1"
+docker_image_tag_chain: "staging-v2.0.0-beta1"
 deployment_environment: "staging"

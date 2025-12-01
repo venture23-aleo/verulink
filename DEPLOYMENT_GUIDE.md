@@ -56,6 +56,8 @@ make upload-secrets
     "attestor_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
   },
   "signing_service": {
+    "bsc_private_key": "0x...",
+    "bsc_wallet_address": "0x...",
     "ethereum_private_key": "0x...",
     "ethereum_wallet_address": "0x...",
     "aleo_private_key": "APrivateKey1...",

@@ -1,10 +1,8 @@
 #!/bin/bash
 # secret_store.sh
-# Interactive script to collect secrets, store them in AWS/GCP Secret Manager,
-# and optionally create & attach VM identity (AWS Instance Profile / GCP Service Account)
+# Interactive script to collect secrets and store them in AWS/GCP Secret Manager
 #
-# Behavior: interactive. After storing secrets it will ask:
-#   Configure VM Role / Service Account? (yes/no)
+# Note: To attach instance profile/service account to VM, run: make attach-instance-profile
 #
 # Security note: script writes a JSON file (attestor_secret.json) locally. Remove it after use.
 
@@ -158,6 +156,8 @@ validate_secrets() {
 
     [[ -z "${BSC_PRIVATE_KEY:-}" ]] && missing+=("BSC Private Key")
     [[ -z "${BSC_WALLET_ADDRESS:-}" ]] && missing+=("BSC Wallet Address")
+    [[ -z "${ETHEREUM_PRIVATE_KEY:-}" ]] && missing+=("Ethereum Private Key")
+    [[ -z "${ETHEREUM_WALLET_ADDRESS:-}" ]] && missing+=("Ethereum Wallet Address")
     [[ -z "${ALEO_PRIVATE_KEY:-}" ]] && missing+=("Aleo Private Key")
     [[ -z "${ALEO_WALLET_ADDRESS:-}" ]] && missing+=("Aleo Wallet Address")
     [[ -z "${SIGNING_SERVICE_USERNAME:-}" ]] && missing+=("Signing Service Username")
@@ -201,6 +201,8 @@ generate_json() {
 
     export BSC_PRIVATE_KEY_VAR="$BSC_PRIVATE_KEY"
     export BSC_WALLET_ADDRESS_VAR="$BSC_WALLET_ADDRESS"
+    export ETHEREUM_PRIVATE_KEY_VAR="$ETHEREUM_PRIVATE_KEY"
+    export ETHEREUM_WALLET_ADDRESS_VAR="$ETHEREUM_WALLET_ADDRESS"
     export ALEO_PRIVATE_KEY_VAR="$ALEO_PRIVATE_KEY"
     export ALEO_WALLET_ADDRESS_VAR="$ALEO_WALLET_ADDRESS"
     export SIGNING_SERVICE_USERNAME_VAR="$SIGNING_SERVICE_USERNAME"
@@ -219,8 +221,10 @@ secret = {
         "attestor_key": attestor_key
     },
     "signing_service": {
-        "ethereum_private_key": os.environ.get('BSC_PRIVATE_KEY_VAR', ''),
-        "ethereum_wallet_address": os.environ.get('BSC_WALLET_ADDRESS_VAR', ''),
+        "bsc_private_key": os.environ.get('BSC_PRIVATE_KEY_VAR', ''),
+        "bsc_wallet_address": os.environ.get('BSC_WALLET_ADDRESS_VAR', ''),
+        "ethereum_private_key": os.environ.get('ETHEREUM_PRIVATE_KEY_VAR', ''),
+        "ethereum_wallet_address": os.environ.get('ETHEREUM_WALLET_ADDRESS_VAR', ''),
         "aleo_private_key": os.environ.get('ALEO_PRIVATE_KEY_VAR', ''),
         "aleo_wallet_address": os.environ.get('ALEO_WALLET_ADDRESS_VAR', ''),
         "signing_service_username": os.environ.get('SIGNING_SERVICE_USERNAME_VAR', ''),
@@ -233,7 +237,7 @@ with open("$OUTPUT_FILE", "w") as f:
 print("✓ Secret JSON generated")
 PYEOF
 
-    unset BSC_PRIVATE_KEY_VAR BSC_WALLET_ADDRESS_VAR ALEO_PRIVATE_KEY_VAR ALEO_WALLET_ADDRESS_VAR SIGNING_SERVICE_USERNAME_VAR SIGNING_SERVICE_PASSWORD_VAR
+    unset BSC_PRIVATE_KEY_VAR BSC_WALLET_ADDRESS_VAR ETHEREUM_PRIVATE_KEY_VAR ETHEREUM_WALLET_ADDRESS_VAR ALEO_PRIVATE_KEY_VAR ALEO_WALLET_ADDRESS_VAR SIGNING_SERVICE_USERNAME_VAR SIGNING_SERVICE_PASSWORD_VAR
 
     if command -v jq &>/dev/null; then
         if ! jq empty "$OUTPUT_FILE" 2>/dev/null; then
@@ -266,6 +270,20 @@ store_to_aws() {
         return 1
     fi
 
+    # Check AWS credentials
+    if ! aws sts get-caller-identity --region "$AWS_REGION" &>/dev/null; then
+        echo -e "${RED}Error: AWS credentials not configured.${NC}"
+        echo -e "${YELLOW}Please configure AWS credentials using one of:${NC}"
+        echo -e "  ${CYAN}export AWS_ACCESS_KEY_ID=<your-access-key>${NC}"
+        echo -e "  ${CYAN}export AWS_SECRET_ACCESS_KEY=<your-secret-key>${NC}"
+        echo -e "  ${CYAN}export AWS_DEFAULT_REGION=$AWS_REGION${NC}"
+        echo -e ""
+        echo -e "Or configure AWS CLI:"
+        echo -e "  ${CYAN}aws configure${NC}"
+        echo -e "  ${CYAN}aws configure --profile <profile-name>${NC}"
+        return 1
+    fi
+
     # Get account id for ARN construction
     ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text --region "$AWS_REGION" 2>/dev/null || true)
     if [[ -z "$ACCOUNT_ID" ]]; then
@@ -281,19 +299,30 @@ store_to_aws() {
             return 0
         fi
 
-        if aws secretsmanager put-secret-value --secret-id "$secret_name" --secret-string "file://$OUTPUT_FILE" --region "$AWS_REGION" &>/dev/null; then
+        if aws secretsmanager put-secret-value --secret-id "$secret_name" --secret-string "file://$OUTPUT_FILE" --region "$AWS_REGION"; then
             echo -e "${GREEN}✓ Secret updated successfully${NC}"
             return 0
         else
             echo -e "${RED}✗ Failed to update secret${NC}"
+            echo -e "${YELLOW}Please check:${NC}"
+            echo -e "  - AWS credentials are correctly configured"
+            echo -e "  - You have permissions to update secrets in region $AWS_REGION"
             return 1
         fi
     else
-        if aws secretsmanager create-secret --name "$secret_name" --secret-string "file://$OUTPUT_FILE" --region "$AWS_REGION" --description "Verulink Attestor Combined Secrets ($ENV)" &>/dev/null; then
+        if aws secretsmanager create-secret --name "$secret_name" --secret-string "file://$OUTPUT_FILE" --region "$AWS_REGION" --description "Verulink Attestor Combined Secrets ($ENV)"; then
             echo -e "${GREEN}✓ Secret created successfully${NC}"
             return 0
         else
             echo -e "${RED}✗ Failed to create secret${NC}"
+            echo -e "${YELLOW}Please check:${NC}"
+            echo -e "  - AWS credentials are correctly configured"
+            echo -e "  - You have permissions to create secrets in region $AWS_REGION"
+            echo -e ""
+            echo -e "Configure credentials:"
+            echo -e "  ${CYAN}export AWS_ACCESS_KEY_ID=<your-access-key>${NC}"
+            echo -e "  ${CYAN}export AWS_SECRET_ACCESS_KEY=<your-secret-key>${NC}"
+            echo -e "  ${CYAN}export AWS_DEFAULT_REGION=$AWS_REGION${NC}"
             return 1
         fi
     fi
@@ -555,6 +584,8 @@ main() {
 
     read_masked "BSC Private Key (0x...)" BSC_PRIVATE_KEY
     read_input "BSC Wallet Address (0x...)" BSC_WALLET_ADDRESS ""
+    read_masked "Ethereum Private Key (0x...)" ETHEREUM_PRIVATE_KEY
+    read_input "Ethereum Wallet Address (0x...)" ETHEREUM_WALLET_ADDRESS ""
     read_masked "Aleo Private Key (APrivateKey1...)" ALEO_PRIVATE_KEY
     read_input "Aleo Wallet Address (aleo1...)" ALEO_WALLET_ADDRESS ""
     read_input "Signing Service Username" SIGNING_SERVICE_USERNAME ""
@@ -607,20 +638,7 @@ main() {
         fi
     fi
 
-    # Step 9: Create and attach instance profile / VM identity
-    print_section "Configure VM Role / Service Account"
-    read_input "Do you want to create & attach instance profile/service account to VM? (yes/no)" CREATE_PROFILE "yes"
-    if [[ "$CREATE_PROFILE" == "yes" ]]; then
-        if [[ "$CLOUD_PROVIDER" == "aws" ]]; then
-            if ! configure_aws_instance_profile; then
-                echo -e "${RED}Failed to configure AWS instance profile${NC}"
-            fi
-        else
-            if ! configure_gcp_vm_identity; then
-                echo -e "${RED}Failed to configure GCP service account${NC}"
-            fi
-        fi
-    fi
+    # Note: To attach instance profile/service account to VM, run: make attach-instance-profile
 
     # Success
     echo ""
