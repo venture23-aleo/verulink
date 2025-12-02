@@ -38,12 +38,94 @@ all:
 
 ---
 
+## Configure Cloud Credentials
+
+Before deploying, ensure your cloud credentials are properly configured.
+
+### **AWS Credentials**
+
+**Option 1: Environment Variables**
+```bash
+export AWS_ACCESS_KEY_ID=<your-access-key>
+export AWS_SECRET_ACCESS_KEY=<your-secret-key>
+export AWS_DEFAULT_REGION=us-east-1
+```
+
+**Option 2: AWS CLI Configure**
+```bash
+aws configure
+# Enter: Access Key ID, Secret Access Key, Default region, Output format
+```
+
+**Option 3: AWS Profile**
+```bash
+aws configure --profile <profile-name>
+export AWS_PROFILE=<profile-name>
+```
+
+**Verify Configuration:**
+```bash
+aws sts get-caller-identity
+# Should show your AWS account ID and user/role
+```
+
+---
+
+### **GCP Credentials**
+
+**Option 1: Interactive Login (User Account)**
+```bash
+gcloud auth login
+# Opens browser for authentication
+```
+
+**Option 2: Service Account Key File**
+```bash
+gcloud auth activate-service-account --key-file=<path-to-key.json>
+# Example: gcloud auth activate-service-account --key-file=gcpkey.json
+```
+
+**Set Active Project:**
+```bash
+gcloud config set project <project-id>
+# Or extract from key file:
+gcloud config set project $(cat gcpkey.json | jq -r .project_id)
+```
+
+**Verify Configuration:**
+```bash
+# Check active account
+gcloud auth list
+# Should show * next to active account
+
+# Check active project
+gcloud config get-value project
+# Should show your project ID
+
+# Verify access
+gcloud projects describe $(gcloud config get-value project)
+```
+
+**Switch Between Accounts:**
+```bash
+# List all accounts
+gcloud auth list
+
+# Switch to specific account
+gcloud config set account <account-email>
+
+# Switch back to user account
+gcloud auth login
+```
+
+---
+
 ## Quick Start
 
 ### 1. **Upload Secrets to Cloud Secret Manager**
 
 ```bash
-make upload-secrets
+                                                                              make upload-secrets
 ```
 
 **Secret JSON Format** (if creating manually):
