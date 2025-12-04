@@ -1,0 +1,8 @@
+---
+# Tasks for patching docker deployment (restart services with new image tags from .env)
+- name: Restart attestor services to pick up new image tags from .env
+  command: docker compose -f {{ attestor_install_dir }}/compose.yml up -d --pull always
+  become: true
+  args:
+    chdir: "{{ attestor_install_dir }}"
+

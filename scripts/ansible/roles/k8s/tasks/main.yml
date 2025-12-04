@@ -1,0 +1,53 @@
+---
+- name: Ensure Helm is installed
+  ansible.builtin.command: helm version --short
+  register: helm_version
+  ignore_errors: true
+
+- name: Install Helm
+  ansible.builtin.shell: |
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  when: helm_version is failed
+
+- name: Create Kubernetes namespace if not exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ k8s_namespace }}"
+    state: present
+
+- name: Add Verulink Helm repository
+  helm_repository:
+    name: verulink
+    repo_url: "{{ helm_repo_url }}"
+    state: present
+
+- name: Update Helm repositories
+  command: helm repo update
+
+- name: Render Helm values template
+  template:
+    src: "./values.yaml.j2"
+    dest: "/tmp/verulink-values-{{ env }}.yaml"
+
+- name: Deploy or upgrade Verulink Attestor via Helm
+  helm:
+    name: verulink-attestor
+    chart: verulink/verulink-attestor
+    namespace: "{{ k8s_namespace }}"
+    values: "/tmp/verulink-values-{{ env }}.yaml"
+    state: present
+    wait: true
+    timeout: 600
+
+- name: Patch existing Helm release (if patch_files provided)
+  helm:
+    name: verulink-attestor
+    chart: verulink/verulink-attestor
+    namespace: "{{ k8s_namespace }}"
+    values: "{{ item }}"
+    state: present
+    wait: true
+    timeout: 300
+  loop: "{{ patch_files | default([]) }}"
+  when: patch_files is defined and patch_files | length > 0

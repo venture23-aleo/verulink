@@ -1,58 +1,224 @@
 # Define variables
 IMAGE_NAME := myapp
 DOCKER_COMPOSE_FILE := ./attestor/compose.yaml  # Updated Docker Compose file location
-AWS_PROFILE := attestor  # Changed AWS profile name
+AWS_PROFILE := attestor
 AWS_REGION := us-west-2
 TAR_FILE := attestor.tar.gz
 
-# Default target, will be executed when you run just 'make' without any arguments
+# Ansible deployment variables
+ANSIBLE_DIR := scripts/ansible
+VENV_DIR := venv
+ENV ?= dev
+DEPLOYMENT_TYPE ?= docker
+INVENTORY := $(ANSIBLE_DIR)/inventories/$(ENV)/hosts.yml
+
+SECRET_STORE_SCRIPT := $(ANSIBLE_DIR)/scripts/secret_store.sh
+VM_IDENTITY_SCRIPT := $(ANSIBLE_DIR)/scripts/vm_identity.sh
+
+# Default target
 all: help
+
+# =========================
+#  Docker Build / Run
+# =========================
 
 # Build the Docker images
 build:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) build
 
-# Deploy the application locally
+# Local deploy
 deploy-local:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d attestor
 
-# Deploy the application with AWS Secrets Manager
+# Deploy with AWS Secrets Manager
 deploy-secretmanager:
 	AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) docker-compose -f $(DOCKER_COMPOSE_FILE) up -d attestor
 
-# Configure AWS access (set AWS credentials)
+# Configure AWS locally
 configure-aws:
 	aws configure --profile $(AWS_PROFILE)
 
-# Install Python dependencies using pip
+# Install Python dependencies
 install-dependencies:
 	pip3 install -r scripts/aws/requirements.txt >/dev/null
 
-# Create a tar.gz archive of the 'attestor' folder
+# Tarball of attestor folder
 tar-attestor:
 	tar -czf $(TAR_FILE) ./attestor
 
-
-# Run the deploy_attestor.py script
+# Deploy attestor using Python script
 deploy-to-aws:
 	python3 ./scripts/aws/deploy_attestor.py
 
-# Create a virtual environment using venv
+# Create python venv
 python-venv:
 	python3 -m venv venv
 	. venv/bin/activate && pip3 install -r scripts/aws/requirements.txt
 
-# Help target to display available targets
+# =========================
+#  Secrets Management
+# =========================
+
+# 1. Upload secrets (interactive)
+upload-secrets:
+	@if [ ! -f "$(SECRET_STORE_SCRIPT)" ]; then \
+		echo "❌ Error: Secret store script not found at $(SECRET_STORE_SCRIPT)"; \
+		exit 1; \
+	fi
+	@echo "📤 Uploading secrets to cloud Secret Manager..."
+	@bash "$(SECRET_STORE_SCRIPT)"
+
+# 1b. Create instance profile / GCP service account
+attach-instance-profile:
+	@if [ ! -f "$(VM_IDENTITY_SCRIPT)" ]; then \
+		echo "❌ Error: VM identity script not found at $(VM_IDENTITY_SCRIPT)"; \
+		exit 1; \
+	fi
+	@echo "🔐 Creating + attaching VM instance profile / GCP service account..."
+	@bash "$(VM_IDENTITY_SCRIPT)"
+
+# =========================
+#  Ansible Setup & Deploy
+# =========================
+
+setup-venv:
+	@echo "🐍 Creating Python virtual environment..."
+	@if [ -d "$(VENV_DIR)" ]; then \
+		echo "⚠️  Virtual environment already exists at $(VENV_DIR)"; \
+		echo "   Remove it first if you want to recreate: rm -rf $(VENV_DIR)"; \
+	else \
+		python3 -m venv $(VENV_DIR); \
+		echo "✅ Virtual environment created"; \
+	fi
+
+	@echo "📦 Installing Ansible..."
+	@. $(VENV_DIR)/bin/activate && \
+		pip install --upgrade pip && \
+		pip install ansible
+
+	@echo "✅ Ansible installation complete"
+	@echo ""
+	@echo "📝 Cloud CLIs will be installed on the remote machines"
+	@echo "   - GCP: verulink-attestor-sa.json"
+	@echo "   - AWS: cloud_user_accessKeys.csv"
+	@echo ""
+	@echo "💡 To activate your venv:"
+	@echo "   source $(VENV_DIR)/bin/activate"
+
+deploy: check-venv check-inventory check-vars
+	@echo "🚀 Deploying Verulink Attestor to $(ENV)... (type=$(DEPLOYMENT_TYPE))"
+	@VARS_FILE=$$( \
+		if [ "$(ENV)" = "dev" ]; then echo "devnet_vars.yml"; \
+		elif [ "$(ENV)" = "staging" ]; then echo "staging_vars.yml"; \
+		elif [ "$(ENV)" = "prod" ]; then echo "mainnet_vars.yml"; \
+		else echo "devnet_vars.yml"; fi ) && \
+	. $(VENV_DIR)/bin/activate && \
+	cd $(ANSIBLE_DIR) && \
+	ansible-playbook playbooks/deploy.yml \
+		-i "inventories/$(ENV)/hosts.yml" \
+		-e "@$$VARS_FILE" \
+		-e "deployment_type=$(DEPLOYMENT_TYPE)" \
+		-e "overwrite_secret=true" \
+		$$([ -n "$(BRANCH)" ] && echo "-e branch=$(BRANCH)" || true)
+	@echo "✅ Deployment complete"
+
+patch: check-venv check-inventory check-vars
+	@echo "🔧 Patching Verulink Attestor..."
+	@VARS_FILE=$$( \
+		if [ "$(ENV)" = "dev" ]; then echo "devnet_vars.yml"; \
+		elif [ "$(ENV)" = "staging" ]; then echo "staging_vars.yml"; \
+		elif [ "$(ENV)" = "prod" ]; then echo "mainnet_vars.yml"; \
+		else echo "devnet_vars.yml"; fi ) && \
+	. $(VENV_DIR)/bin/activate && \
+	cd $(ANSIBLE_DIR) && \
+	ansible-playbook playbooks/patch.yml \
+		-i "inventories/$(ENV)/hosts.yml" \
+		-e "@$$VARS_FILE" \
+		-e "deployment_type=$(DEPLOYMENT_TYPE)"
+	@echo "✅ Patch complete"
+
+update: check-venv check-inventory check-vars
+	@echo "🔄 Updating Verulink Attestor..."
+	@VARS_FILE=$$( \
+		if [ "$(ENV)" = "dev" ]; then echo "devnet_vars.yml"; \
+		elif [ "$(ENV)" = "staging" ]; then echo "staging_vars.yml"; \
+		elif [ "$(ENV)" = "prod" ]; then echo "mainnet_vars.yml"; \
+		else echo "devnet_vars.yml"; fi ) && \
+	. $(VENV_DIR)/bin/activate && \
+	cd $(ANSIBLE_DIR) && \
+	ansible-playbook playbooks/update.yml \
+		-i "inventories/$(ENV)/hosts.yml" \
+		-e "@$$VARS_FILE" \
+		-e "deployment_type=$(DEPLOYMENT_TYPE)" \
+		$$([ -n "$(BRANCH)" ] && echo "-e branch=$(BRANCH)" || true)
+	@echo "✅ Update complete"
+
+# =========================
+#  Validation Helpers
+# =========================
+
+check-venv:
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "❌ Virtual environment not found. Run 'make setup-venv' first."; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(VENV_DIR)/bin/ansible-playbook" ]; then \
+		echo "❌ Ansible not installed. Run 'make setup-venv' first."; \
+		exit 1; \
+	fi
+
+check-inventory:
+	@if [ ! -f "$(INVENTORY)" ]; then \
+		echo "❌ Inventory file not found: $(INVENTORY)"; \
+		echo "   Available: dev, staging, prod"; \
+		exit 1; \
+	fi
+
+check-vars:
+	@VARS_FILE=$$( \
+		if [ "$(ENV)" = "dev" ]; then echo "$(ANSIBLE_DIR)/devnet_vars.yml"; \
+		elif [ "$(ENV)" = "staging" ]; then echo "$(ANSIBLE_DIR)/staging_vars.yml"; \
+		elif [ "$(ENV)" = "prod" ]; then echo "$(ANSIBLE_DIR)/mainnet_vars.yml"; \
+		else echo "$(ANSIBLE_DIR)/devnet_vars.yml"; fi ); \
+	if [ ! -f "$$VARS_FILE" ]; then \
+		echo "❌ Variables file missing: $$VARS_FILE"; \
+		exit 1; \
+	fi
+
+# =========================
+#  Help
+# =========================
+
 help:
 	@echo "Available targets:"
-	@echo "  make build              	- Build the Docker images"
-	@echo "  make deploy-local       	- Deploy the application locally"
-	@echo "  make deploy-secretmanager	- Deploy the application with AWS Secrets Manager"
-	@echo "  make configure-aws       	- Configure AWS access (set AWS credentials)"
-	@echo "  make deploy-auto         	- Deploy automatically and run Python script"
-	@echo "  make tar-attestor        	- Create a tar.gz file of the 'attestor' folder"
-	@echo "  make create-venv         	- Create a virtual environment using venv"
-	@echo "  make help               	- Display this help message"
+	@echo ""
+	@echo "📦 Docker:"
+	@echo "  make build"
+	@echo "  make deploy-local"
+	@echo "  make tar-attestor"
+	@echo ""
+	@echo "🔐 Secrets:"
+	@echo "  make upload-secrets            - Upload secrets to AWS/GCP Secret Manager"
+	@echo "  make attach-instance-profile   - Create + attach AWS Instance Profile or GCP Service Account"
+	@echo ""
+	@echo "🚀 Deployment:"
+	@echo "  make setup-venv"
+	@echo "  make deploy ENV=dev [BRANCH=branch-name]"
+	@echo "  make patch ENV=dev"
+	@echo "  make update ENV=dev [BRANCH=branch-name]"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make upload-secrets"
+	@echo "  make attach-instance-profile"
+	@echo "  make deploy ENV=staging"
+	@echo "  make deploy ENV=prod DEPLOYMENT_TYPE=k8s"
+	@echo "  make deploy ENV=staging BRANCH=feature-branch"
+	@echo "  make update ENV=staging BRANCH=feature-branch"
 
-# Ensure that 'make' without arguments runs the 'help' target
-.PHONY: all build deploy-local deploy-secretmanager configure-aws deploy-auto run-script help
+.DEFAULT:
+	@$(MAKE) help
+
+.PHONY: all build deploy-local deploy-secretmanager configure-aws \
+	upload-secrets attach-instance-profile \
+	setup-venv deploy patch update \
+	check-venv check-inventory check-vars help
