@@ -125,7 +125,7 @@ gcloud auth login
 ### 1. **Upload Secrets to Cloud Secret Manager**
 
 ```bash
-                                                                              make upload-secrets
+make upload-secrets
 ```
 
 **Secret JSON Format** (if creating manually):
@@ -173,10 +173,19 @@ make attach-instance-profile
 
 
 ---
+### 3. **Setup venv**
+```bash
+make setup-venv
+```
+After `venv` is setup completely, activate the venv
 
-### 3. **Deploy**
+```bash
+source venv/bin/activate
+```
 
-Full deployment (first time or complete redeploy):
+### 4. **Deploy**
+
+Full deployment **(first time or complete redeploy)**:
 
 ```bash
 make deploy ENV=staging DEPLOYMENT_TYPE=docker
@@ -190,10 +199,11 @@ make deploy ENV=staging DEPLOYMENT_TYPE=docker
 - Starts services
 
 ---
+---
+## Updating Attestor Configurations
+### **Update Config**
 
-### 4. **Update Config**
-
-Update chain service configuration only:
+Update chain service configuration parameters on staging_vars.yml:
 
 ```bash
 make update ENV=staging
@@ -204,21 +214,18 @@ make update ENV=staging
 - Downloads updated config template from GitHub
 - Updates `chain_config.yaml` only
 - Restarts services (no image pull)
-
-**When to use:** Config changes (chain settings, URLs, etc.)
-
 ---
 
-### 5. **Patch (Update Docker Images)**
+## Patch Attestor Docker Image
 
-Quick docker image version update:
-
+### 1. Update image tags in staging_vars.yml
 ```bash
-# 1. Update image tags in staging_vars.yml
 docker_image_tag_sign: "staging-v2.0.1"
 docker_image_tag_chain: "staging-v2.0.1"
+```
 
-# 2. Run patch
+### 2. Run patch
+```bash
 make patch ENV=staging
 ```
 
@@ -227,8 +234,7 @@ make patch ENV=staging
 - Pulls new docker images
 - Restarts services with new images
 
-**When to use:** New code release, image version update
-
+---
 ---
 
 ## Summary
@@ -237,6 +243,7 @@ make patch ENV=staging
 |---------|---------|---------|
 | `make upload-secrets` | Store secrets | Creates/updates secret in cloud |
 | `make attach-instance-profile` | Grant VM access | Attaches IAM role/service account |
+| `make setup-venv` | Setup venv | Installs Ansible |
 | `make deploy ENV=staging` | Full deployment | Everything (first time) |
 | `make update ENV=staging` | Update config | `chain_config.yaml` only |
 | `make patch ENV=staging` | Update images | `.env` + docker images |
