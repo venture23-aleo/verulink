@@ -169,9 +169,14 @@
         existing_sign_config: "{{ sign_config_json.stdout | from_json | default({}) }}"
       when: sign_config_json.stdout is defined
     
+    - name: Display attestor_name from inventory for this host
+      ansible.builtin.debug:
+        msg: "Using attestor_name from inventory: {{ attestor_name }} for host {{ inventory_hostname }}"
+
     - name: Capture required values from current config
       set_fact:
-        attestor_name: "{{ chain_config.name }}"
+        # Use attestor_name from inventory (per-host variable) instead of reading from config file
+        attestor_name: "{{ attestor_name | default(chain_config.name) }}"
         # Wallet addresses for chain_config.yaml (from chain_config.yaml)
         aleo_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','aleo') | list)[0].wallet_address }}"
         bsc_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','bsc') | list)[0].wallet_address }}"
@@ -183,23 +188,32 @@
         attestor_key_path: "{{ chain_config.collector_service.attestor_key }}"
       # no_log: true
 
+    - name: Display final attestor_name being used
+      ansible.builtin.debug:
+        msg: "Final attestor_name: {{ attestor_name }} for host {{ inventory_hostname }}"
+
+    - name: Set unique template path per host
+      set_fact:
+        local_template_path: "./config_{{ inventory_hostname }}.j2.tmp"
+        local_rendered_path: "./config_{{ inventory_hostname }}_rendered.yaml"
+
     - name: Download template to local machine
       ansible.builtin.get_url:
         url: "{{ new_chain_config_url }}"
-        dest: "./config.yaml.j2.tmp"
+        dest: "{{ local_template_path }}"
       delegate_to: localhost
       become: false
 
     - name: Render template with all variables
       ansible.builtin.template:
-        src: "./config.yaml.j2.tmp"
-        dest: "./config_rendered.yaml"
+        src: "{{ local_template_path }}"
+        dest: "{{ local_rendered_path }}"
       delegate_to: localhost
       become: false
 
     - name: Read rendered config file
       ansible.builtin.slurp:
-        src: "./config_rendered.yaml"
+        src: "{{ local_rendered_path }}"
       delegate_to: localhost
       become: false
       register: rendered_config_content
@@ -243,8 +257,8 @@
       delegate_to: localhost
       become: false
       loop:
-        - "./config.yaml.j2.tmp"
-        - "./config_rendered.yaml"
+        - "{{ local_template_path }}"
+        - "{{ local_rendered_path }}"
 
 
     # --- Restart Service via Docker Compose ---

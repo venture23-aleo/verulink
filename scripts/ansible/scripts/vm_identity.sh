@@ -394,7 +394,24 @@ gcp_flow() {
   if [[ -z "$GCP_ZONE" ]]; then read -erp "GCP VM Zone (e.g. us-central1-a): " GCP_ZONE; fi
   if [[ -z "$GCP_PROJECT" || -z "$GCP_VM_NAME" || -z "$GCP_ZONE" ]]; then echo -e "${RED}project, vm name and zone required${NC}"; exit 1; fi
 
-  SA_NAME="verulink-attestor-${ENV}"
+  # Determine default service account name
+  DEFAULT_SA_NAME="verulink-attestor-${ENV}"
+  
+  # Confirm service account name
+  echo -e "${CYAN}Default Service Account Name: $DEFAULT_SA_NAME${NC}"
+  echo -e "${YELLOW}Press Enter to use default, or enter a custom service account name:${NC}"
+  read -erp "Service Account Name [$DEFAULT_SA_NAME]: " SA_NAME_INPUT
+  SA_NAME_INPUT=${SA_NAME_INPUT:-$DEFAULT_SA_NAME}
+  
+  if [[ "$SA_NAME_INPUT" == "$DEFAULT_SA_NAME" ]]; then
+    SA_NAME="$DEFAULT_SA_NAME"
+    echo -e "${GREEN}✓ Using default service account name: $SA_NAME${NC}"
+  else
+    SA_NAME="$SA_NAME_INPUT"
+    echo -e "${GREEN}✓ Using custom service account name: $SA_NAME${NC}"
+  fi
+  echo ""
+
   SA_EMAIL="${SA_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com"
 
   # Determine default secret name

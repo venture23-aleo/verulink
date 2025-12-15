@@ -347,16 +347,31 @@ store_to_aws() {
 store_to_gcp() {
     print_section "Storing to GCP Secret Manager"
 
-    local secret_name=""
+    local default_secret_name=""
     case "$ENV" in
-        devnet) secret_name="dev_verulink_attestor_secrets" ;;
-        staging) secret_name="stg_verulink_attestor_secrets" ;;
-        mainnet) secret_name="mainnet_verulink_attestor_secrets" ;;
+        devnet) default_secret_name="dev_verulink_attestor_secrets" ;;
+        staging) default_secret_name="stg_verulink_attestor_secrets" ;;
+        mainnet) default_secret_name="mainnet_verulink_attestor_secrets" ;;
         *) echo -e "${RED}Error: Invalid environment: $ENV${NC}"; return 1 ;;
     esac
 
-    echo -e "${CYAN}Secret Name: $secret_name${NC}"
+    echo -e "${CYAN}Default Secret Name: $default_secret_name${NC}"
     echo -e "${CYAN}Project: $GCP_PROJECT${NC}"
+    echo ""
+    
+    # Ask user to confirm or overwrite the secret name
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom secret name:${NC}"
+    read_input "Secret Name" SECRET_NAME_INPUT "$default_secret_name"
+    
+    local secret_name=""
+    if [[ -z "$SECRET_NAME_INPUT" ]] || [[ "$SECRET_NAME_INPUT" == "$default_secret_name" ]]; then
+        secret_name="$default_secret_name"
+        echo -e "${GREEN}✓ Using default secret name: $secret_name${NC}"
+    else
+        secret_name="$SECRET_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom secret name: $secret_name${NC}"
+    fi
+    echo ""
 
     if ! command -v gcloud &>/dev/null; then
         echo -e "${RED}Error: gcloud CLI not found.${NC}"
@@ -710,15 +725,49 @@ EOF
 configure_gcp_vm_identity() {
     print_section "GCP Service Account Setup"
 
-    SA_NAME="verulink-attestor-${ENV}"
+    # Determine default service account name
+    DEFAULT_SA_NAME="verulink-attestor-${ENV}"
+    
+    # Confirm service account name
+    echo -e "${CYAN}Default Service Account Name: $DEFAULT_SA_NAME${NC}"
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom service account name:${NC}"
+    read_input "Service Account Name" SA_NAME_INPUT "$DEFAULT_SA_NAME"
+    
+    if [[ "$SA_NAME_INPUT" == "$DEFAULT_SA_NAME" ]]; then
+        SA_NAME="$DEFAULT_SA_NAME"
+        echo -e "${GREEN}✓ Using default service account name: $SA_NAME${NC}"
+    else
+        SA_NAME="$SA_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom service account name: $SA_NAME${NC}"
+    fi
+    echo ""
+
     SA_EMAIL="${SA_NAME}@${GCP_PROJECT}.iam.gserviceaccount.com"
 
-    SECRET_NAME=""
+    # Determine default secret name
+    DEFAULT_SECRET_NAME=""
     case "$ENV" in
-        devnet) SECRET_NAME="dev_verulink_attestor_secrets" ;;
-        staging) SECRET_NAME="stg_verulink_attestor_secrets" ;;
-        mainnet) SECRET_NAME="mainnet_verulink_attestor_secrets" ;;
+        devnet) DEFAULT_SECRET_NAME="dev_verulink_attestor_secrets" ;;
+        staging) DEFAULT_SECRET_NAME="stg_verulink_attestor_secrets" ;;
+        mainnet) DEFAULT_SECRET_NAME="mainnet_verulink_attestor_secrets" ;;
     esac
+
+    # Confirm secret name before attaching
+    echo -e "${CYAN}Default Secret Name: $DEFAULT_SECRET_NAME${NC}"
+    echo -e "${CYAN}Project: $GCP_PROJECT${NC}"
+    echo ""
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom secret name:${NC}"
+    read_input "Secret Name" SECRET_NAME_INPUT "$DEFAULT_SECRET_NAME"
+    
+    SECRET_NAME=""
+    if [[ -z "$SECRET_NAME_INPUT" ]] || [[ "$SECRET_NAME_INPUT" == "$DEFAULT_SECRET_NAME" ]]; then
+        SECRET_NAME="$DEFAULT_SECRET_NAME"
+        echo -e "${GREEN}✓ Using default secret name: $SECRET_NAME${NC}"
+    else
+        SECRET_NAME="$SECRET_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom secret name: $SECRET_NAME${NC}"
+    fi
+    echo ""
 
     if ! command -v gcloud &>/dev/null; then
         echo -e "${RED}Error: gcloud CLI not found${NC}"
