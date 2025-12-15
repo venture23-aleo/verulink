@@ -115,7 +115,7 @@ read_input() {
         echo -n -e "${YELLOW}$prompt${NC}: "
     fi
 
-    read -r value || true
+    read -er value || true
     if [[ -z "$value" && -n "$default" ]]; then
         value="$default"
     fi
@@ -254,16 +254,31 @@ PYEOF
 store_to_aws() {
     print_section "Storing to AWS Secrets Manager"
 
-    local secret_name=""
+    local default_secret_name=""
     case "$ENV" in
-        devnet) secret_name="dev/verulink/attestor/secrets" ;;
-        staging) secret_name="stg/verulink/attestor/secrets" ;;
-        mainnet) secret_name="mainnet/verulink/attestor/secrets" ;;
+        devnet) default_secret_name="dev/verulink/attestor/secrets" ;;
+        staging) default_secret_name="stg/verulink/attestor/secrets" ;;
+        mainnet) default_secret_name="mainnet/verulink/attestor/secrets" ;;
         *) echo -e "${RED}Error: Invalid environment: $ENV${NC}"; return 1 ;;
     esac
 
-    echo -e "${CYAN}Secret Name: $secret_name${NC}"
+    echo -e "${CYAN}Default Secret Name: $default_secret_name${NC}"
     echo -e "${CYAN}Region: $AWS_REGION${NC}"
+    echo ""
+    
+    # Ask user to confirm or overwrite the secret name
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom secret name:${NC}"
+    read_input "Secret Name" SECRET_NAME_INPUT "$default_secret_name"
+    
+    local secret_name=""
+    if [[ -z "$SECRET_NAME_INPUT" ]] || [[ "$SECRET_NAME_INPUT" == "$default_secret_name" ]]; then
+        secret_name="$default_secret_name"
+        echo -e "${GREEN}✓ Using default secret name: $secret_name${NC}"
+    else
+        secret_name="$SECRET_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom secret name: $secret_name${NC}"
+    fi
+    echo ""
 
     if ! command -v aws &>/dev/null; then
         echo -e "${RED}Error: AWS CLI not found. Install & configure it.${NC}"
@@ -400,16 +415,62 @@ configure_aws_instance_profile() {
         return 1
     fi
 
-    ROLE_NAME="verulink-attestor-${ENV}-role"
-    PROFILE_NAME="verulink-attestor-${ENV}-profile"
+    # Determine default role and profile names
+    DEFAULT_ROLE_NAME="verulink-attestor-${ENV}-role"
+    DEFAULT_PROFILE_NAME="verulink-attestor-${ENV}-profile"
 
-    # Secret ARN resource pattern
-    SECRET_NAME=""
+    # Confirm role name
+    echo -e "${CYAN}Default Role Name: $DEFAULT_ROLE_NAME${NC}"
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom role name:${NC}"
+    read_input "Role Name" ROLE_NAME_INPUT "$DEFAULT_ROLE_NAME"
+    
+    if [[ "$ROLE_NAME_INPUT" == "$DEFAULT_ROLE_NAME" ]]; then
+        ROLE_NAME="$DEFAULT_ROLE_NAME"
+        echo -e "${GREEN}✓ Using default role name: $ROLE_NAME${NC}"
+    else
+        ROLE_NAME="$ROLE_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom role name: $ROLE_NAME${NC}"
+    fi
+    echo ""
+
+    # Confirm profile name
+    echo -e "${CYAN}Default Profile Name: $DEFAULT_PROFILE_NAME${NC}"
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom profile name:${NC}"
+    read_input "Profile Name" PROFILE_NAME_INPUT "$DEFAULT_PROFILE_NAME"
+    
+    if [[ "$PROFILE_NAME_INPUT" == "$DEFAULT_PROFILE_NAME" ]]; then
+        PROFILE_NAME="$DEFAULT_PROFILE_NAME"
+        echo -e "${GREEN}✓ Using default profile name: $PROFILE_NAME${NC}"
+    else
+        PROFILE_NAME="$PROFILE_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom profile name: $PROFILE_NAME${NC}"
+    fi
+    echo ""
+
+    # Secret ARN resource pattern - determine default secret name
+    DEFAULT_SECRET_NAME=""
     case "$ENV" in
-        devnet) SECRET_NAME="dev/verulink/attestor/secrets" ;;
-        staging) SECRET_NAME="stg/verulink/attestor/secrets" ;;
-        mainnet) SECRET_NAME="mainnet/verulink/attestor/secrets" ;;
+        devnet) DEFAULT_SECRET_NAME="dev/verulink/attestor/secrets" ;;
+        staging) DEFAULT_SECRET_NAME="stg/verulink/attestor/secrets" ;;
+        mainnet) DEFAULT_SECRET_NAME="mainnet/verulink/attestor/secrets" ;;
     esac
+
+    # Confirm secret name before attaching
+    echo -e "${CYAN}Default Secret Name: $DEFAULT_SECRET_NAME${NC}"
+    echo -e "${CYAN}Region: $AWS_REGION${NC}"
+    echo ""
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom secret name:${NC}"
+    read_input "Secret Name" SECRET_NAME_INPUT "$DEFAULT_SECRET_NAME"
+    
+    SECRET_NAME=""
+    if [[ -z "$SECRET_NAME_INPUT" ]] || [[ "$SECRET_NAME_INPUT" == "$DEFAULT_SECRET_NAME" ]]; then
+        SECRET_NAME="$DEFAULT_SECRET_NAME"
+        echo -e "${GREEN}✓ Using default secret name: $SECRET_NAME${NC}"
+    else
+        SECRET_NAME="$SECRET_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom secret name: $SECRET_NAME${NC}"
+    fi
+    echo ""
 
     # Attempt to fetch account id if not already
     if [[ -z "${ACCOUNT_ID:-}" ]]; then
@@ -445,6 +506,22 @@ EOAP
         echo -e "${YELLOW}Role $ROLE_NAME already exists${NC}"
     fi
 
+    # Confirm policy name before attaching
+    DEFAULT_POLICY_NAME="verulink-attestor-secret-access"
+    echo -e "${CYAN}Default Policy Name: $DEFAULT_POLICY_NAME${NC}"
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom policy name:${NC}"
+    read_input "Policy Name" POLICY_NAME_INPUT "$DEFAULT_POLICY_NAME"
+    
+    local POLICY_NAME=""
+    if [[ "$POLICY_NAME_INPUT" == "$DEFAULT_POLICY_NAME" ]]; then
+        POLICY_NAME="$DEFAULT_POLICY_NAME"
+        echo -e "${GREEN}✓ Using default policy name: $POLICY_NAME${NC}"
+    else
+        POLICY_NAME="$POLICY_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom policy name: $POLICY_NAME${NC}"
+    fi
+    echo ""
+
     # Create inline policy allowing specific secret actions
     cat > "$TMP_POLICY_DOC" <<EOF
 {
@@ -464,23 +541,167 @@ EOAP
 EOF
 
     echo -e "${CYAN}Attaching inline policy to role...${NC}"
-    aws iam put-role-policy --role-name "$ROLE_NAME" --policy-name "verulink-attestor-secret-access" --policy-document file://"$TMP_POLICY_DOC" >/dev/null
+    aws iam put-role-policy --role-name "$ROLE_NAME" --policy-name "$POLICY_NAME" --policy-document file://"$TMP_POLICY_DOC" >/dev/null
 
     echo -e "${CYAN}Creating instance profile if missing...${NC}"
     if ! aws iam get-instance-profile --instance-profile-name "$PROFILE_NAME" &>/dev/null; then
         aws iam create-instance-profile --instance-profile-name "$PROFILE_NAME" >/dev/null
+        echo -e "${GREEN}✓ Created instance profile${NC}"
+        sleep 2
+    else
+        echo -e "${YELLOW}Instance profile already exists${NC}"
     fi
 
-    # Add role to instance profile if not already present
-    if ! aws iam get-instance-profile --instance-profile-name "$PROFILE_NAME" | grep -q "$ROLE_NAME"; then
-        aws iam add-role-to-instance-profile --instance-profile-name "$PROFILE_NAME" --role-name "$ROLE_NAME" >/dev/null || true
+    # Check if instance profile already has a role attached
+    EXISTING_ROLE=$(aws iam get-instance-profile --instance-profile-name "$PROFILE_NAME" --query 'InstanceProfile.Roles[0].RoleName' --output text 2>/dev/null || echo "")
+    
+    if [[ -n "$EXISTING_ROLE" && "$EXISTING_ROLE" != "None" ]]; then
+        if [[ "$EXISTING_ROLE" == "$ROLE_NAME" ]]; then
+            echo -e "${GREEN}✓ Role $ROLE_NAME already attached to instance profile${NC}"
+        else
+            echo -e "${YELLOW}Instance profile already has role: $EXISTING_ROLE${NC}"
+            echo -e "${CYAN}Removing existing role to attach new role: $ROLE_NAME${NC}"
+            if aws iam remove-role-from-instance-profile \
+                --instance-profile-name "$PROFILE_NAME" \
+                --role-name "$EXISTING_ROLE" >/dev/null 2>&1; then
+                echo -e "${GREEN}✓ Removed existing role${NC}"
+                sleep 2
+            else
+                echo -e "${RED}✗ Failed to remove existing role. You may need to remove it manually.${NC}"
+                return 1
+            fi
+            
+            # Now attach the new role
+            echo -e "${CYAN}Attaching role $ROLE_NAME to instance profile...${NC}"
+            if aws iam add-role-to-instance-profile \
+                --instance-profile-name "$PROFILE_NAME" \
+                --role-name "$ROLE_NAME" >/dev/null 2>&1; then
+                echo -e "${GREEN}✓ Role attached successfully${NC}"
+            else
+                echo -e "${RED}✗ Failed to attach role to instance profile${NC}"
+                return 1
+            fi
+        fi
+    else
+        # No role attached, attach the new role
+        echo -e "${CYAN}Attaching role to instance profile...${NC}"
+        if aws iam add-role-to-instance-profile \
+            --instance-profile-name "$PROFILE_NAME" \
+            --role-name "$ROLE_NAME" >/dev/null 2>&1; then
+            echo -e "${GREEN}✓ Role attached successfully${NC}"
+        else
+            echo -e "${RED}✗ Failed to attach role to instance profile${NC}"
+            return 1
+        fi
+    fi
+
+    # Check if the current instance already has an instance profile associated
+    echo -e "${CYAN}Checking existing instance profile associations...${NC}"
+    EXISTING_ASSOCIATION_ID=$(aws ec2 describe-iam-instance-profile-associations \
+        --filters "Name=instance-id,Values=$EC2_INSTANCE_ID" \
+        --query 'IamInstanceProfileAssociations[0].AssociationId' \
+        --output text 2>/dev/null || echo "")
+    
+    if [[ -n "$EXISTING_ASSOCIATION_ID" && "$EXISTING_ASSOCIATION_ID" != "None" ]]; then
+        EXISTING_PROFILE_ARN=$(aws ec2 describe-iam-instance-profile-associations \
+            --filters "Name=instance-id,Values=$EC2_INSTANCE_ID" \
+            --query 'IamInstanceProfileAssociations[0].IamInstanceProfile.Arn' \
+            --output text 2>/dev/null || echo "")
+        
+        if [[ -n "$EXISTING_PROFILE_ARN" && "$EXISTING_PROFILE_ARN" != "None" ]]; then
+            EXISTING_PROFILE_NAME=$(echo "$EXISTING_PROFILE_ARN" | awk -F'/' '{print $NF}')
+            EXISTING_STATE=$(aws ec2 describe-iam-instance-profile-associations \
+                --filters "Name=instance-id,Values=$EC2_INSTANCE_ID" \
+                --query 'IamInstanceProfileAssociations[0].State' \
+                --output text 2>/dev/null || echo "")
+            
+            if [[ "$EXISTING_PROFILE_NAME" == "$PROFILE_NAME" ]]; then
+                echo -e "${GREEN}✓ Instance profile $PROFILE_NAME already associated with this instance (state: $EXISTING_STATE)${NC}"
+                return 0
+            else
+                echo -e "${YELLOW}Instance $EC2_INSTANCE_ID already has instance profile: $EXISTING_PROFILE_NAME (state: $EXISTING_STATE)${NC}"
+                echo -e "${CYAN}Disassociating existing instance profile...${NC}"
+                
+                # Disassociate the existing profile
+                if aws ec2 disassociate-iam-instance-profile --association-id "$EXISTING_ASSOCIATION_ID" >/dev/null 2>&1; then
+                    echo -e "${GREEN}✓ Disassociated existing instance profile${NC}"
+                    
+                    # Wait for disassociation to complete
+                    echo -e "${CYAN}Waiting for disassociation to complete...${NC}"
+                    MAX_WAIT=30
+                    WAIT_COUNT=0
+                    while [[ $WAIT_COUNT -lt $MAX_WAIT ]]; do
+                        CURRENT_ASSOC=$(aws ec2 describe-iam-instance-profile-associations \
+                            --filters "Name=instance-id,Values=$EC2_INSTANCE_ID" \
+                            --query 'IamInstanceProfileAssociations[0].AssociationId' \
+                            --output text 2>/dev/null || echo "")
+                        
+                        if [[ -z "$CURRENT_ASSOC" || "$CURRENT_ASSOC" == "None" ]]; then
+                            echo -e "${GREEN}✓ Disassociation complete${NC}"
+                            break
+                        fi
+                        
+                        sleep 1
+                        WAIT_COUNT=$((WAIT_COUNT + 1))
+                        echo -n "."
+                    done
+                    echo ""
+                    
+                    if [[ $WAIT_COUNT -ge $MAX_WAIT ]]; then
+                        echo -e "${YELLOW}Warning: Disassociation may still be in progress. Waiting additional 5 seconds...${NC}"
+                        sleep 5
+                    fi
+                else
+                    echo -e "${RED}✗ Failed to disassociate existing instance profile${NC}"
+                    echo -e "${YELLOW}You may need to disassociate it manually:${NC}"
+                    echo -e "${CYAN}aws ec2 disassociate-iam-instance-profile --association-id $EXISTING_ASSOCIATION_ID${NC}"
+                    return 1
+                fi
+            fi
+        fi
+    fi
+
+    # Check if the instance profile is associated with other instances
+    # Get the instance profile ARN first
+    PROFILE_ARN=$(aws iam get-instance-profile --instance-profile-name "$PROFILE_NAME" --query 'InstanceProfile.Arn' --output text 2>/dev/null || echo "")
+    
+    if [[ -n "$PROFILE_ARN" ]]; then
+        OTHER_ASSOCIATIONS=$(aws ec2 describe-iam-instance-profile-associations \
+            --filters "Name=iam-instance-profile.arn,Values=$PROFILE_ARN" \
+            --query 'IamInstanceProfileAssociations[?InstanceId!=`'"$EC2_INSTANCE_ID"'`].InstanceId' \
+            --output text 2>/dev/null || echo "")
+        
+        if [[ -n "$OTHER_ASSOCIATIONS" ]]; then
+            OTHER_INSTANCES=$(echo "$OTHER_ASSOCIATIONS" | tr '\t' '\n' | head -5)
+            echo -e "${YELLOW}⚠ Warning: Instance profile $PROFILE_NAME is already associated with other instance(s):${NC}"
+            echo "$OTHER_INSTANCES" | while read -r inst; do
+                [[ -n "$inst" ]] && echo -e "  ${CYAN}- $inst${NC}"
+            done
+            echo ""
+            echo -e "${YELLOW}Each machine should typically have its own unique instance profile.${NC}"
+            echo -e "${CYAN}Do you want to associate this profile with instance $EC2_INSTANCE_ID anyway? (yes/no)${NC}"
+            read_input "Confirm" CONFIRM_ASSOCIATE "no"
+            
+            if [[ "$CONFIRM_ASSOCIATE" != "yes" && "$CONFIRM_ASSOCIATE" != "y" ]]; then
+                echo -e "${YELLOW}Association cancelled.${NC}"
+                echo -e "${CYAN}Consider using a unique profile name for this instance, e.g.: ${PROFILE_NAME}-$(echo $EC2_INSTANCE_ID | tr -d 'i-')${NC}"
+                return 1
+            fi
+            echo -e "${CYAN}Proceeding to associate with instance $EC2_INSTANCE_ID...${NC}"
+        fi
     fi
 
     echo -e "${CYAN}Associating instance profile to EC2 instance...${NC}"
-    aws ec2 associate-iam-instance-profile --instance-id "$EC2_INSTANCE_ID" --iam-instance-profile Name="$PROFILE_NAME" >/dev/null || {
-        echo -e "${RED}✗ Failed to associate instance profile. Ensure the instance is in a state that allows association.${NC}"
+    if aws ec2 associate-iam-instance-profile --instance-id "$EC2_INSTANCE_ID" --iam-instance-profile Name="$PROFILE_NAME" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Instance profile associated successfully${NC}"
+    else
+        echo -e "${RED}✗ Failed to associate instance profile${NC}"
+        echo -e "${YELLOW}Possible reasons:${NC}"
+        echo -e "  - Instance is not in a state that allows association (must be running or stopped)"
+        echo -e "  - Instance already has an instance profile associated (check above)"
+        echo -e "  - Instance profile is already associated with this instance"
         return 1
-    }
+    fi
 
     echo -e "${GREEN}✓ AWS Instance Profile attached successfully${NC}"
     return 0

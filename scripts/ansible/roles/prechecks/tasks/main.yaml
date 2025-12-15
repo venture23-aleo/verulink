@@ -184,7 +184,7 @@
         {{ env | default('mainnet') }}
       {%- endif -%}
 
-- name: Generate attestor secret name based on provider
+- name: Generate attestor secret name based on provider or per-host config
   set_fact:
     attestor_secret_name: >-
       {{

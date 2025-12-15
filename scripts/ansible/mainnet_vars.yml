@@ -21,6 +21,7 @@ bsc_start_height: 58383959
 bsc_private_key: "<your_evm_private_key>"
 
 # Service Configuration
+deploy_dir: "/home/ubuntu/verulink_attestor"  # Deployment directory on target host
 db_dir: "/var/lib/attestor/mainnet"
 log_dir: "/var/log/attestor/mainnet"
 
