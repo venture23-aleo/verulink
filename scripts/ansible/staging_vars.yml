@@ -2,7 +2,7 @@
 # Staging Environment Variables for Attestor Service
 
 # Attestor Configuration
-# attestor_name: "stg_attestor_verulink_v23"
+# attestor_name: "stg_attestor_verulink_xyz"
 mode: "stage"
 
 # Aleo Chain Configuration
@@ -50,10 +50,10 @@ signing_service_port: 8080
 
 
 # Collector Service Configuration
-collector_service_url: "https://aleomtls.venture23.xyz/"
+collector_service_url: "<collector_service_url>"
 
 # Metrics Configuration
-prometheus_pushgateway_url: "https://pushgateway-aleomtls.venture23.xyz/"
+prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
 prometheus_job_name: "staging-push-gateway"
 
 # Docker Image Tags
