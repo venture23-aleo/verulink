@@ -1,4 +1,4 @@
-# Verulink Attestor Deployment Guide
+# Verulink Attestor: Deployment, Updating, and Patching Guide Using the Ansible Role
 
 ## Prerequisites
 
@@ -26,6 +26,30 @@ all:
     ansible_user: ubuntu
     gcp_project: <gcp-project-id>  # Required if infrastructure_provider is gcp
 ```
+**Example for Multiple Attestors:**
+```yaml
+---
+# Staging Environment Inventory
+all:
+  hosts:
+    staging-attestor-01:
+      ansible_host: <ip-address-of-vm>
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: <path-to-private-key>
+    staging-attestor-02:
+      ansible_host: <ip-address-of-vm>
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: <path-to-private-key>
+  vars:
+    env: staging
+    infrastructure_provider: aws  # Options: aws or gcp
+    deployment_type: docker  # Options: docker or k8s
+    region: us-east-1  # AWS region (e.g., us-east-1) or GCP region (e.g., us-central1)
+    ansible_user: ubuntu
+    gcp_project: <gcp-project-id>  # Required if infrastructure_provider is gcp
+```
+Note: For multiple attestors, list each VM under `hosts` with a unique name.
+
 
 **For devnet:** Use `scripts/ansible/inventories/dev/hosts.yml` with `env: devnet`  
 **For production:** Use `scripts/ansible/inventories/prod/hosts.yml` with `env: mainnet`
@@ -199,11 +223,11 @@ make deploy ENV=staging DEPLOYMENT_TYPE=docker
 - Starts services
 
 ---
----
-## Updating Attestor Configurations
+
+## Updating Attestor Configuration and Refreshing Secrets
 ### **Update Config**
 
-Update chain service configuration parameters on staging_vars.yml:
+Update chain service configuration parameters on `staging_vars.yml`:
 
 ```bash
 make update ENV=staging
@@ -215,6 +239,24 @@ make update ENV=staging
 - Updates `chain_config.yaml` only
 - Restarts services (no image pull)
 ---
+
+## Updating Attestor Configuration without Refreshing Secrets
+### **Update Config**
+Update chain service configuration parameters on `staging_vars.yml`:
+
+```bash
+make update-config ENV=staging
+```
+
+**What it does:**
+- Downloads updated config template from GitHub
+- Updates `chain_config.yaml` only
+- Restarts services (no image pull)
+---
+> Note: To update the config from a specific branch:
+```bash
+make update-config ENV=staging BRANCH=staging
+```
 
 ## Patch Attestor Docker Image
 
@@ -234,7 +276,6 @@ make patch ENV=staging
 - Pulls new docker images
 - Restarts services with new images
 
----
 ---
 
 ## Summary
