@@ -14,13 +14,13 @@ aleo_node_url: "https://api.explorer.provable.com/v1|mainnet"
 # BSC Chain Configuration
 bsc_chain_id: "422842677816"  # BSC Mainnet
 bsc_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
-bsc_node_url: "https://bnb-mainnet.g.alchemy.com/v2/nMksy96jdqlj0Mch3hcw3"
+bsc_node_url: "<bsc_rpc_url>"
 bsc_start_height: "71865844"
 
 # Ethereum Chain Configuration
 ethereum_chain_id: "27234042785" # Ethereum Mainnet
 ethereum_bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
-ethereum_node_url: "https://eth-mainnet.g.alchemy.com/v2/xcyICrE5BUkbBiJKGOk5Y"
+ethereum_node_url: "<ethereum_rpc_url>"
 ethereum_start_height: "24026263"
 
 
@@ -28,7 +28,7 @@ ethereum_start_height: "24026263"
 # Base Chain Configuration
 base_chain_id: "27691695965085957"  # Base Mainnet
 base_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
-base_node_url: "https://base-mainnet.g.alchemy.com/v2/xcyICrE5BUkbBiJKGOk5Y"
+base_node_url: "<base_rpc_url>"
 base_start_height: "39558981"
 
 
@@ -43,11 +43,11 @@ signing_service_port: 8080
 
 
 # Collector Service Configuration
-collector_service_url: "https://dbservice-mainnet-mtls.verulink.com/"
+collector_service_url: "<collector_service_url>"
 
 
 # Metrics Configuration
-prometheus_pushgateway_url: "https://prometheus-node-b-mainnet-mtls.verulink.com"
+prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
 prometheus_job_name: "prod-push-gateway-v200"
 
 # Docker Image Tags
