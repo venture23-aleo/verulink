@@ -2,7 +2,7 @@
 # Staging Environment Variables for Attestor Service
 
 # Attestor Configuration
-attestor_name: "stg_attestor_verulink_v23"
+# attestor_name: "stg_attestor_verulink_v23"
 mode: "stage"
 
 # Aleo Chain Configuration
@@ -15,16 +15,16 @@ bsc_chain_id: "422842677857"  # BSC Testnet
 bsc_bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
 bsc_node_url: "wss://base-sepolia-rpc.publicnode.com"
 bsc_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-bsc_start_height: 77777
-
+bsc_start_height: 444444
 # Ethereum Chain Configuration
 ethereum_chain_id: "27234042785"
 ethereum_bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
 ethereum_node_url: "https://eth.llamarpc.com"
-ethereum_start_height: 23813425
+ethereum_start_height: 23555444
 
 
 # Service Configuration
+deploy_dir: "/home/ubuntu/verulink_attestor"  # Deployment directory on target host
 db_dir: "/var/lib/attestor/staging"
 log_dir: "/var/log/attestor/staging"
 
