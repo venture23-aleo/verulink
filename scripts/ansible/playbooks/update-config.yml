@@ -160,9 +160,23 @@
         import yaml
         import json
         import sys
-        
+
         secrets_file = '{{ secrets_file }}'
-        
+
+        def convert_to_hex_string(value):
+            if value == '' or value is None:
+                return ''
+            
+            if isinstance(value, int):
+                hex_val = format(value, 'x')
+                if len(hex_val) <= 40:
+                    hex_val = hex_val.zfill(40)
+                else:
+                    hex_val = hex_val.zfill(64)
+                return '0x' + hex_val
+            
+            return str(value)
+
         try:
             with open(secrets_file, 'r') as f:
                 secrets = yaml.safe_load(f)
@@ -171,21 +185,17 @@
                 chain = secrets.get('chain', dict())
                 aleo = chain.get('aleo', dict())
                 bsc = chain.get('bsc', dict())
-                # Convert wallet addresses to strings to preserve hex format
-                aleo_wallet = aleo.get('wallet_address', '')
-                bsc_wallet = bsc.get('wallet_address', '')
-                # If wallet address was parsed as int (YAML interpreted hex as number), convert back to hex string
-                if isinstance(bsc_wallet, int):
-                    # Convert int back to hex string (hex() includes 0x prefix)
-                    bsc_wallet = hex(bsc_wallet)
-                if isinstance(aleo_wallet, int):
-                    aleo_wallet = str(aleo_wallet)
+
+                aleo_wallet = convert_to_hex_string(aleo.get('wallet_address', ''))
+                aleo_private = convert_to_hex_string(aleo.get('private_key', ''))
+                bsc_wallet = convert_to_hex_string(bsc.get('wallet_address', ''))
+                bsc_private = convert_to_hex_string(bsc.get('private_key', ''))
                 
                 result = dict(
-                    aleo_private_key=str(aleo.get('private_key', '')),
-                    aleo_wallet_address=str(aleo_wallet),
-                    bsc_private_key=str(bsc.get('private_key', '')),
-                    bsc_wallet_address=str(bsc_wallet)
+                    aleo_private_key=aleo_private,
+                    aleo_wallet_address=aleo_wallet,
+                    bsc_private_key=bsc_private,
+                    bsc_wallet_address=bsc_wallet
                 )
                 print(json.dumps(result))
             else:
@@ -199,7 +209,7 @@
       register: secrets_json
       changed_when: false
       failed_when: false
-
+      
     # - name: Debug secrets JSON
     #   ansible.builtin.debug:
     #     msg: "Secrets JSON: {{ secrets_json.stdout }}"
