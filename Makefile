@@ -153,6 +153,22 @@ update: check-venv check-inventory check-vars
 		$$([ -n "$(BRANCH)" ] && echo "-e branch=$(BRANCH)" || true)
 	@echo "✅ Update complete"
 
+update-config: check-venv check-inventory check-vars
+	@echo "⚙️  Updating Verulink Attestor Config (no secret refresh)..."
+	@VARS_FILE=$$( \
+		if [ "$(ENV)" = "dev" ]; then echo "devnet_vars.yml"; \
+		elif [ "$(ENV)" = "staging" ]; then echo "staging_vars.yml"; \
+		elif [ "$(ENV)" = "prod" ]; then echo "mainnet_vars.yml"; \
+		else echo "devnet_vars.yml"; fi ) && \
+	. $(VENV_DIR)/bin/activate && \
+	cd $(ANSIBLE_DIR) && \
+	ansible-playbook playbooks/update-config.yml \
+		-i "inventories/$(ENV)/hosts.yml" \
+		-e "@$$VARS_FILE" \
+		$$([ -n "$(BRANCH)" ] && echo "-e branch=$(BRANCH)" || true) \
+		$$([ -n "$(DEPLOY_DIR)" ] && echo "-e deploy_dir=$(DEPLOY_DIR)" || true)
+	@echo "✅ Config update complete"
+
 # =========================
 #  Validation Helpers
 # =========================
@@ -205,7 +221,8 @@ help:
 	@echo "  make setup-venv"
 	@echo "  make deploy ENV=dev [BRANCH=branch-name]"
 	@echo "  make patch ENV=dev"
-	@echo "  make update ENV=dev [BRANCH=branch-name]"
+	@echo "  make update ENV=dev [BRANCH=branch-name]  # Full update with secret refresh"
+	@echo "  make update-config ENV=dev  # Config-only update (no secret refresh)"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make upload-secrets"
@@ -214,11 +231,13 @@ help:
 	@echo "  make deploy ENV=prod DEPLOYMENT_TYPE=k8s"
 	@echo "  make deploy ENV=staging BRANCH=feature-branch"
 	@echo "  make update ENV=staging BRANCH=feature-branch"
+	@echo "  make update ENV=staging  # Full update with secret refresh"
+	@echo "  make update-config ENV=staging  # Config-only update (no secret refresh)"
 
 .DEFAULT:
 	@$(MAKE) help
 
 .PHONY: all build deploy-local deploy-secretmanager configure-aws \
 	upload-secrets attach-instance-profile \
-	setup-venv deploy patch update \
+	setup-venv deploy patch update update-config \
 	check-venv check-inventory check-vars help

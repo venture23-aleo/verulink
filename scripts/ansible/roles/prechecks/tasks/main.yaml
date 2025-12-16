@@ -184,7 +184,7 @@
         {{ env | default('mainnet') }}
       {%- endif -%}
 
-- name: Generate attestor secret name based on provider
+- name: Generate attestor secret name based on provider or per-host config
   set_fact:
     attestor_secret_name: >-
       {{
@@ -195,6 +195,13 @@
           else env_prefix + '_verulink_attestor_secrets'
         )
       }}
+
+- name: Convert AWS-style secret name to GCP format if needed
+  set_fact:
+    attestor_secret_name: "{{ attestor_secret_name | replace('/', '_') }}"
+  when:
+    - infrastructure_provider == "gcp"
+    - (attestor_secret_name | regex_search('/')) is not none
 
 - name: Validate attestor secret name format (AWS)
   assert:

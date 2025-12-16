@@ -1,0 +1,276 @@
+---
+- name: Verulink Attestor Config Update - no secret refresh
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    deploy_dir: "{{ deploy_dir | default(lookup('env', 'DEPLOY_DIR') | default('/home/ubuntu/verulink_attestor', true)) }}"
+    backup_dir: "{{ deploy_dir }}_backup_{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+    chain_config_file: "{{ deploy_dir }}/chain_config.yaml"
+    sign_config_file: "{{ deploy_dir }}/sign_config.yaml"
+    secrets_file: "{{ deploy_dir }}/secrets.yaml"
+
+  tasks:
+    - name: Determine branch based on environment
+      set_fact:
+        branch: "{{ branch | default('develop' if env == 'devnet' else 'staging' if env == 'staging' else 'main') }}"
+    
+    - name: Set chain config URL
+      set_fact:
+        new_chain_config_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/{{ branch }}/attestor/config.yaml.j2"
+    
+    
+    
+    - name: Backup existing config directory
+      ansible.builtin.command:
+        cmd: cp -r {{ deploy_dir }} {{ backup_dir }}
+      tags: backup
+
+    - name: Read and parse chain_config.yaml using Python
+      ansible.builtin.shell: |
+        python3 << 'PYEOF'
+        import yaml
+        import sys
+        
+        with open("{{ chain_config_file }}", 'r') as f:
+            content = f.read()
+        
+        # Split by --- and get first non-empty document
+        docs = content.split('---')
+        for doc in docs:
+            doc = doc.strip()
+            if doc and not doc.startswith('#'):
+                try:
+                    config = yaml.safe_load(doc)
+                    if config and 'name' in config:
+                        import json
+                        print(json.dumps(config))
+                        sys.exit(0)
+                except:
+                    continue
+        
+        # Fallback: try parsing entire file
+        try:
+            config = yaml.safe_load(content)
+            import json
+            print(json.dumps(config))
+        except Exception as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+        PYEOF
+      register: chain_config_json
+      changed_when: false
+
+    - name: Parse chain_config from JSON
+      set_fact:
+        chain_config: "{{ chain_config_json.stdout | from_json }}"
+
+    - name: Read and parse secrets.yaml using Python
+      ansible.builtin.shell: |
+        python3 -c "
+        import yaml
+        import json
+        import sys
+        
+        secrets_file = '{{ secrets_file }}'
+        
+        try:
+            with open(secrets_file, 'r') as f:
+                secrets = yaml.safe_load(f)
+            
+            if secrets:
+                chain = secrets.get('chain', dict())
+                aleo = chain.get('aleo', dict())
+                bsc = chain.get('bsc', dict())
+                # Convert wallet addresses to strings to preserve hex format
+                aleo_wallet = aleo.get('wallet_address', '')
+                bsc_wallet = bsc.get('wallet_address', '')
+                # If wallet address was parsed as int (YAML interpreted hex as number), convert back to hex string
+                if isinstance(bsc_wallet, int):
+                    # Convert int back to hex string (hex() includes 0x prefix)
+                    bsc_wallet = hex(bsc_wallet)
+                if isinstance(aleo_wallet, int):
+                    aleo_wallet = str(aleo_wallet)
+                
+                result = dict(
+                    aleo_private_key=str(aleo.get('private_key', '')),
+                    aleo_wallet_address=str(aleo_wallet),
+                    bsc_private_key=str(bsc.get('private_key', '')),
+                    bsc_wallet_address=str(bsc_wallet)
+                )
+                print(json.dumps(result))
+            else:
+                print(json.dumps(dict()))
+        except FileNotFoundError:
+            print(json.dumps(dict()))
+        except Exception as e:
+            print(f'Error: {e}', file=sys.stderr)
+            sys.exit(1)
+        "
+      register: secrets_json
+      changed_when: false
+      failed_when: false
+
+    - name: Debug secrets JSON
+      ansible.builtin.debug:
+        msg: "Secrets JSON: {{ secrets_json.stdout }}"
+      when: secrets_json.stdout is defined
+      # no_log: true
+    
+    - name: Parse secrets from JSON
+      set_fact:
+        secrets_data: "{{ secrets_json.stdout | from_json | default({}) }}"
+      when: secrets_json.stdout is defined
+
+    - name: Extract private keys and wallet addresses from secrets.yaml (preserve these)
+      set_fact:
+        aleo_private_key: "{{ secrets_data.aleo_private_key | default('') }}"
+        bsc_private_key: "{{ secrets_data.bsc_private_key | default('') }}"
+        ethereum_private_key: "{{ secrets_data.bsc_private_key | default('') }}"
+        ethereum_wallet_address: "{{ secrets_data.bsc_wallet_address | default('') }}"
+        aleo_wallet_address: "{{ secrets_data.aleo_wallet_address | default('') }}"
+        bsc_wallet_address: "{{ secrets_data.bsc_wallet_address | default('') }}"
+      no_log: true
+    - name: Debug extracted values
+      ansible.builtin.debug:
+        msg: "Extracted values: {{ aleo_private_key }}, {{ bsc_private_key }}, {{ ethereum_private_key }}, {{ ethereum_wallet_address }}, {{ aleo_wallet_address }}, {{ bsc_wallet_address }}"
+      when: secrets_json.stdout is defined
+      # no_log: true
+    
+    - name: Read and parse sign_config.yaml using Python
+      ansible.builtin.shell: |
+        python3 -c "
+        import yaml
+        import json
+        import sys
+        
+        sign_config_file = '{{ sign_config_file }}'
+        
+        try:
+            with open(sign_config_file, 'r') as f:
+                sign_config = yaml.safe_load(f)
+            
+            if sign_config:
+                print(json.dumps(sign_config))
+            else:
+                print(json.dumps(dict()))
+        except FileNotFoundError:
+            print(json.dumps(dict()))
+        except Exception as e:
+            print(f'Error: {e}', file=sys.stderr)
+            sys.exit(1)
+        "
+      register: sign_config_json
+      changed_when: false
+      failed_when: false
+
+    - name: Parse sign_config from JSON
+      set_fact:
+        existing_sign_config: "{{ sign_config_json.stdout | from_json | default({}) }}"
+      when: sign_config_json.stdout is defined
+    
+    - name: Display attestor_name from inventory for this host
+      ansible.builtin.debug:
+        msg: "Using attestor_name from inventory: {{ attestor_name }} for host {{ inventory_hostname }}"
+
+    - name: Capture required values from current config
+      set_fact:
+        # Use attestor_name from inventory (per-host variable) instead of reading from config file
+        attestor_name: "{{ attestor_name | default(chain_config.name) }}"
+        # Wallet addresses for chain_config.yaml (from chain_config.yaml)
+        aleo_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','aleo') | list)[0].wallet_address }}"
+        bsc_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','bsc') | list)[0].wallet_address }}"
+        ethereum_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','ethereum') | list)[0].wallet_address | default(bsc_wallet_address_chain) }}"
+        signing_service_username: "{{ chain_config.signing_service.username }}"
+        signing_service_password: "{{ chain_config.signing_service.password }}"
+        ca_certificate_path: "{{ chain_config.collector_service.ca_certificate }}"
+        attestor_certificate_path: "{{ chain_config.collector_service.attestor_certificate }}"
+        attestor_key_path: "{{ chain_config.collector_service.attestor_key }}"
+      # no_log: true
+
+    - name: Display final attestor_name being used
+      ansible.builtin.debug:
+        msg: "Final attestor_name: {{ attestor_name }} for host {{ inventory_hostname }}"
+
+    - name: Set unique template path per host
+      set_fact:
+        local_template_path: "./config_{{ inventory_hostname }}.j2.tmp"
+        local_rendered_path: "./config_{{ inventory_hostname }}_rendered.yaml"
+
+    - name: Download template to local machine
+      ansible.builtin.get_url:
+        url: "{{ new_chain_config_url }}"
+        dest: "{{ local_template_path }}"
+      delegate_to: localhost
+      become: false
+
+    - name: Render template with all variables
+      ansible.builtin.template:
+        src: "{{ local_template_path }}"
+        dest: "{{ local_rendered_path }}"
+      delegate_to: localhost
+      become: false
+
+    - name: Read rendered config file
+      ansible.builtin.slurp:
+        src: "{{ local_rendered_path }}"
+      delegate_to: localhost
+      become: false
+      register: rendered_config_content
+
+    - name: Split rendered config into separate documents
+      set_fact:
+        config_documents: "{{ (rendered_config_content.content | b64decode).split('---') }}"
+
+    - name: Extract chain_config.yaml (first document after separator)
+      set_fact:
+        chain_config_content: "{{ config_documents[1] | trim }}"
+
+    - name: Extract sign_config.yaml (second document)
+      set_fact:
+        sign_config_content: "{{ config_documents[2] | trim }}"
+
+    - name: Extract secrets.yaml (third document)
+      set_fact:
+        secrets_content: "{{ config_documents[3] | trim }}"
+
+    - name: Write chain_config.yaml to remote host
+      ansible.builtin.copy:
+        content: "{{ chain_config_content }}"
+        dest: "{{ chain_config_file }}"
+
+    - name: Write sign_config.yaml to remote host
+      ansible.builtin.copy:
+        content: "{{ sign_config_content }}"
+        dest: "{{ sign_config_file }}"
+
+    - name: Write updated secrets.yaml to remote host (using extracted values)
+      ansible.builtin.copy:
+        content: "{{ secrets_content }}"
+        dest: "{{ secrets_file }}"
+      no_log: true
+
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      loop:
+        - "{{ local_template_path }}"
+        - "{{ local_rendered_path }}"
+
+
+    # --- Restart Service via Docker Compose ---
+    - name: Restart Verulink Relayer using Docker Compose
+      ansible.builtin.shell: |
+        cd {{ deploy_dir }}
+        docker compose down
+        docker compose up -d
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: Print confirmation
+      ansible.builtin.debug:
+        msg: "Config update completed successfully for {{ inventory_hostname }}"
+
