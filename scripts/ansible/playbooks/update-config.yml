@@ -13,7 +13,7 @@
   tasks:
     - name: Determine branch based on environment
       set_fact:
-        branch: "{{ branch | default('develop' if env == 'devnet' else 'staging' if env == 'staging' else 'main') }}"
+        branch: "{{ branch | default('develop' if env == 'devnet' else 'staging' if env == 'staging' else 'config/release-v2.0.1-base') }}"
     
     - name: Set chain config URL
       set_fact:
@@ -200,10 +200,10 @@
       changed_when: false
       failed_when: false
 
-    - name: Debug secrets JSON
-      ansible.builtin.debug:
-        msg: "Secrets JSON: {{ secrets_json.stdout }}"
-      when: secrets_json.stdout is defined
+    # - name: Debug secrets JSON
+    #   ansible.builtin.debug:
+    #     msg: "Secrets JSON: {{ secrets_json.stdout }}"
+    #   when: secrets_json.stdout is defined
       # no_log: true
     
     - name: Parse secrets from JSON
@@ -228,10 +228,10 @@
         arbitrum_wallet_address: "{{ bsc_wallet_address | default('') }}"
         arbitrum_private_key: "{{ bsc_private_key | default('') }}"
       no_log: true
-    - name: Debug extracted values
-      ansible.builtin.debug:
-        msg: "Extracted values: {{ aleo_private_key }}, {{ bsc_private_key }}, {{ ethereum_private_key }}, {{ ethereum_wallet_address }}, {{ aleo_wallet_address }}, {{ bsc_wallet_address }}"
-      when: secrets_json.stdout is defined
+    # - name: Debug extracted values
+    #   ansible.builtin.debug:
+    #     msg: "Extracted values: {{ aleo_private_key }}, {{ bsc_private_key }}, {{ ethereum_private_key }}, {{ ethereum_wallet_address }}, {{ aleo_wallet_address }}, {{ bsc_wallet_address }}"
+    #   when: secrets_json.stdout is defined
       # no_log: true
     
     - name: Read and parse sign_config.yaml using Python
