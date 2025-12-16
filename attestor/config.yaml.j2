@@ -10,9 +10,8 @@ chains:
     bridge_contract: {{ aleo_bridge_contract }}
     node_url: {{ aleo_node_url }}
     sequence_num_start:
-      bsc: 1
-      ethereum: 1555
-      arbitrum: 1
+      bsc: 370
+      ethereum: 1607
       base: 1
     retry_packet_wait_dur: 2m0s
     prune_base_seq_num_wait_dur: 5m0s
@@ -26,9 +25,6 @@ chains:
         finality_height: 23
       ethereum:
         pkt_validity_wait_dur: 2m0s
-        finality_height: 23
-      arbitrum:
-        pkt_validity_wait_dur: 15m0s
         finality_height: 23
 
   - name: bsc
@@ -56,33 +52,16 @@ chains:
     filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
     retry_packet_wait_dur: 1m0s
     prune_base_seq_num_wait_dur: 1m0s
-    average_block_gen_dur: 12s
+    average_block_gen_dur: 2s
     disabled: false
     dest_chains:
       aleo:
         pkt_validity_wait_dur: 1560m0s
-        finality_height: 75
+        finality_height: 450
         feed_pkt_wait_dur: 1m0s
         start_height: {{ base_start_height }}
         instant_pkt_wait_dur: 15m0s
-  - name: arbitrum
-    chain_id: {{ arbitrum_chain_id }}
-    chain_type: evm
-    wallet_address: {{ arbitrum_wallet_address }}
-    bridge_contract: {{ arbitrum_bridge_contract }}
-    node_url: {{ arbitrum_node_url }}
-    filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
-    retry_packet_wait_dur: 1m0s
-    prune_base_seq_num_wait_dur: 1m0s
-    average_block_gen_dur: 12s
-    disabled: false
-    dest_chains:
-      aleo:
-        pkt_validity_wait_dur: 1560m0s
-        finality_height: 75
-        feed_pkt_wait_dur: 1m0s
-        start_height: {{ arbitrum_start_height }}
-        instant_pkt_wait_dur: 15m0s
+
   - name: ethereum
     chain_id: {{ ethereum_chain_id }}
     chain_type: evm
@@ -151,9 +130,6 @@ chains:
   - name: base
     chain_type: evm
     chain_id: {{ base_chain_id }}
-  - name: arbitrum
-    chain_type: evm
-    chain_id: {{ arbitrum_chain_id }}
 cred:
   username: {{ signing_service_username }}
   password: {{ signing_service_password }}
@@ -177,10 +153,6 @@ chain:
    chain_type: evm
    private_key: {{ base_private_key }}
    wallet_address: {{ base_wallet_address }}
- arbitrum:
-   chain_type: evm
-   private_key: {{ arbitrum_private_key }}
-   wallet_address: {{ arbitrum_wallet_address }}
 ---
 ## Docker Image Tags
 DOCKER_IMAGE_TAG_SIGN={{ docker_image_tag_sign }}
