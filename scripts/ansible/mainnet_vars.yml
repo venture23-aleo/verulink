@@ -31,6 +31,11 @@ base_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
 base_node_url: "<base_rpc_url>"
 base_start_height: "39558981"
 
+# Arbitrum Chain Configuration
+arbitrum_chain_id: "27428839738746033"  # Base Mainnet
+arbitrum_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+arbitrum_node_url: "<base_rpc_url>"
+arbitrum_start_height: "39558981"
 
 # Service Configuration
 deploy_dir: "/home/ubuntu/verulink_attestor"  # Deployment directory on target host
