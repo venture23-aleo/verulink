@@ -2,7 +2,6 @@
 # Mainnet Environment Variables for Attestor Service
 
 # Attestor Configuration
-# attestor_name: "<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>"
 mode: "prod"
 
 # Aleo Chain Configuration
