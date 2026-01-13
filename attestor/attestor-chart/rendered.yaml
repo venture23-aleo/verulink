@@ -1,0 +1,353 @@
+---
+# Source: verulink-attestor/templates/networkpolicy-signing.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-chain-to-sign
+spec:
+  podSelector:
+    matchLabels:
+      app: signingservice
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: chainservice
+    ports:
+    - protocol: TCP
+      port: 8080
+---
+# Source: verulink-attestor/templates/chain-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chain-config
+data:
+  config.yaml: |
+    name: dev_attestor_verulink_v23
+    version: 1.0.1
+
+    chains:
+      - name: aleo
+
+        average_block_gen_dur: 3s
+        bridge_contract: vlink_token_bridge_v9.aleo
+        chain_id: "6694886634403"
+        chain_type: aleo
+        dest_chains:
+          arbitrum:
+            finality_height: 23
+            pkt_validity_wait_dur: 15m0s
+          base:
+            finality_height: 23
+            pkt_validity_wait_dur: 15m0s
+          bsc:
+            finality_height: 23
+            pkt_validity_wait_dur: 15m0s
+          ethereum:
+            finality_height: 23
+            pkt_validity_wait_dur: 15m0s
+        node_url: https://api.explorer.provable.com/v1|testnet
+        prune_base_seq_num_wait_dur: 5m0s
+        retry_packet_wait_dur: 2m0s
+        sequence_num_start:
+          arbitrum: 1
+          base: 1
+          bsc: 1
+          ethereum: 1
+        wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24
+      - name: arbitrum
+
+        average_block_gen_dur: 12s
+        bridge_contract: 0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b
+        chain_id: "438861435819683566"
+        chain_type: evm
+        dest_chains:
+          aleo:
+            feed_pkt_wait_dur: 1m0s
+            finality_height: 75
+            instant_pkt_wait_dur: 15m0s
+            pkt_validity_wait_dur: 1560m0s
+            start_height: 224887156
+        disabled: false
+        filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
+        finality_height: 7050
+        node_url: wss://arbitrum-sepolia.drpc.org
+        prune_base_seq_num_wait_dur: 1m0s
+        retry_packet_wait_dur: 1m0s
+        start_height: 224887156
+        wallet_address: 0x832894550007b560bd35d28ce564c2ccd690318f
+      - name: base
+
+        average_block_gen_dur: 12s
+        bridge_contract: 0x1e12776edb78A5473964cF257E825991ad501533
+        chain_id: "443067135441324596"
+        chain_type: evm
+        dest_chains:
+          aleo:
+            feed_pkt_wait_dur: 1m0s
+            finality_height: 75
+            instant_pkt_wait_dur: 15m0s
+            pkt_validity_wait_dur: 1560m0s
+            start_height: 35024395
+        disabled: false
+        filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
+        finality_height: 7050
+        node_url: wss://base-sepolia-rpc.publicnode.com
+        prune_base_seq_num_wait_dur: 1m0s
+        retry_packet_wait_dur: 1m0s
+        start_height: 35024395
+        wallet_address: 0x832894550007b560bd35d28ce564c2ccd690318f
+      - name: bsc
+
+        average_block_gen_dur: 2s
+        bridge_contract: 0xdeEbcF78DfDa7494f9Bbe4Ca313C486D29F0EC56
+        chain_id: "28556963657430695"
+        chain_type: evm
+        dest_chains:
+          aleo:
+            feed_pkt_wait_dur: 1m0s
+            finality_height: 21
+            pkt_validity_wait_dur: 1m0s
+            start_height: 1
+        filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
+        node_url: wss://base-sepolia-rpc.publicnode.com
+        prune_base_seq_num_wait_dur: 1m0s
+        retry_packet_wait_dur: 1m0s
+        wallet_address: 0x832894550007b560bd35d28ce564c2ccd690318f
+      - name: ethereum
+
+        average_block_gen_dur: 12s
+        bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
+        chain_id: "27234042785"
+        chain_type: evm
+        dest_chains:
+          aleo:
+            feed_pkt_wait_dur: 1m0s
+            finality_height: 75
+            instant_pkt_wait_dur: 15m0s
+            pkt_validity_wait_dur: 1560m0s
+            start_height: 9847133
+        disabled: false
+        filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
+        finality_height: 7050
+        node_url: https://eth.llamarpc.com
+        prune_base_seq_num_wait_dur: 1m0s
+        retry_packet_wait_dur: 1m0s
+        start_height: 9847133
+        wallet_address: 0x832894550007b560bd35d28ce564c2ccd690318f
+
+    check_health_service: 1m
+    db_dir: /var/lib/attestor/dev
+    consume_packet_workers: 10
+
+    log:
+
+      encoding: console
+      output_paths:
+      - /var/log/attestor/dev
+      - stdout
+      rotation:
+        compress: true
+        max_age: 14
+        max_backups: 10
+        max_size: 100
+
+    mode: stag
+
+    signing_service:
+
+      endpoint: /sign
+      health_end_point: /health
+      host: signingservice
+      password: chain
+      port: 8080
+      scheme: http
+      username: aleo
+
+    collector_service:
+
+      attestor_certificate: /configs/.mtls/dev_attestor_verulink_v23.crt
+      attestor_key: /configs/.mtls/dev_attestor_verulink_v23.key
+      ca_certificate: /configs/.mtls/ca.crt
+      collector_wait_dur: 1h
+      uri: https://aleomtls.venture23.xyz/
+
+    metrics:
+
+      host: https://pushgateway-aleomtls.venture23.xyz/
+      job_name: dev-push-gateway
+---
+# Source: verulink-attestor/templates/sign-config-template.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sign-config-template
+data:
+  config.yaml.tmpl: |
+    chains:
+      - name: aleo
+        chain_type: aleo
+        chain_id: 6694886634403
+      - name: arbitrum
+        chain_type: evm
+        chain_id: 438861435819683566
+      - name: base
+        chain_type: evm
+        chain_id: 443067135441324596
+      - name: bsc
+        chain_type: evm
+        chain_id: 28556963657430695
+      - name: ethereum
+        chain_type: evm
+        chain_id: 27234042785
+
+    cred:
+      username: ""
+      password: ""
+---
+# Source: verulink-attestor/templates/signingservice-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: signingservice
+spec:
+  selector:
+    app: signingservice
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# Source: verulink-attestor/templates/deployment-chainservice.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chainservice
+  template:
+    metadata:
+      labels:
+        app: chainservice
+    spec:
+      containers:
+        - name: chainservice
+          image: "venture23/verulink-attestor-chain:staging-v2.0.0-beta1"
+
+          env:
+            - name: DB_PATH
+              value: /var/lib/attestor/dev
+
+            - name: LOG_PATH
+              value: /var/log/attestor/dev
+
+            - name: MODE
+              value: stag
+
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/attestor/dev
+              subPath: db
+    
+            - name: storage
+              mountPath: /var/log/attestor/dev
+              subPath: log
+    
+            - name: chain-config
+              mountPath: /configs/config.yaml
+              subPath: config.yaml
+    
+            - name: mtls
+              mountPath: /configs/.mtls
+              readOnly: true
+  
+      volumes:
+        - name: chain-config
+          configMap:
+            name: chain-config
+
+        - name: mtls
+          secret:
+            secretName: attestor-secret
+            items:
+              - key: CA_MTLS_CERT
+                path: ca.crt
+              - key: ATTESTOR_MTLS_CERT
+                path: dev_attestor_verulink_v23.crt
+              - key: ATTESTOR_MTLS_KEY
+                path: dev_attestor_verulink_v23.key
+
+        - name: storage
+          hostPath:
+            path: /tmp/verulink-attestor
+---
+# Source: verulink-attestor/templates/deployment-signingservice.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signingservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: signingservice
+  template:
+    metadata:
+      labels:
+        app: signingservice
+    spec:
+      initContainers:
+        - name: render-sign-config
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              sed \
+                -e "s|\${SIGNING_SERVICE_USERNAME}|$SIGNING_SERVICE_USERNAME|g" \
+                -e "s|\${SIGNING_SERVICE_PASSWORD}|$SIGNING_SERVICE_PASSWORD|g" \
+                /tmpl/config.yaml.tmpl > /work/config.yaml
+          env:
+            - name: SIGNING_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: attestor-secret
+                  key: SIGNING_SERVICE_USERNAME
+            - name: SIGNING_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: attestor-secret
+                  key: SIGNING_SERVICE_PASSWORD
+          volumeMounts:
+            - name: sign-config-template
+              mountPath: /tmpl
+            - name: rendered-config
+              mountPath: /work
+      containers:
+        - name: signingservice
+          image: "venture23/verulink-attestor-sign:staging-v2.0.0-beta1"
+          ports:
+            - containerPort: 8080
+
+          volumeMounts:
+            - name: rendered-config
+              mountPath: /configs/config.yaml
+              subPath: config.yaml
+
+            - name: signing-secrets
+              mountPath: /configs/keys.yaml
+              subPath: keys.yaml
+              readOnly: true
+      volumes:
+        - name: sign-config-template
+          configMap:
+            name: sign-config-template
+
+        - name: rendered-config
+          emptyDir: {}
+
+        - name: signing-secrets
+          emptyDir: {}

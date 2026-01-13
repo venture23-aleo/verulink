@@ -1,0 +1,13 @@
+{{- if eq (default "hostPath" .Values.storage.type) "pvc" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: attestor-storage
+spec:
+  accessModes:
+{{ toYaml .Values.storage.pvc.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.pvc.size }}
+  storageClassName: {{ .Values.storage.pvc.storageClassName | quote }}
+{{- end }}

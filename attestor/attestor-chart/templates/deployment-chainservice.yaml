@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chainservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chainservice
+  template:
+    metadata:
+      labels:
+        app: chainservice
+    spec:
+      containers:
+        - name: chainservice
+          image: "{{ default "venture23/verulink-attestor-chain" .Values.image.chain.repository }}:{{ default "latest" .Values.image.chain.tag }}"
+          # command:
+          #   - sh
+          #   - -c
+          #   - |
+          #     sleep infinity
+          env:
+            - name: DB_PATH
+              value: {{ default "/var/lib/attestor" .Values.chainService.db_dir }}
+
+            - name: LOG_PATH
+              value: {{ default "/var/log/attestor" (index .Values.chainService.log.output_paths 0) }}
+
+            - name: MODE
+              value: {{ default "staging" .Values.chainService.mode }}
+
+          volumeMounts:
+            - name: storage
+              mountPath: {{ default "/var/lib/attestor" .Values.chainService.db_dir }}
+              subPath: db
+    
+            - name: storage
+              mountPath: {{ default "/var/log/attestor" (index .Values.chainService.log.output_paths 0) }}
+              subPath: log
+    
+            - name: chain-config
+              mountPath: /configs/config.yaml
+              subPath: config.yaml
+    
+            - name: mtls
+              mountPath: /configs/.mtls
+              readOnly: true
+  
+      volumes:
+        - name: chain-config
+          configMap:
+            name: chain-config
+
+        - name: mtls
+          secret:
+            secretName: {{ .Values.secrets.existingSecretName }}
+            items:
+              - key: CA_MTLS_CERT
+                path: ca.crt
+              - key: ATTESTOR_MTLS_CERT
+                path: {{ .Values.chainService.name }}.crt
+              - key: ATTESTOR_MTLS_KEY
+                path: {{ .Values.chainService.name }}.key
+
+        - name: storage
+{{- if eq (default "EmptyDir" .Values.storage.type) "pvc" }}
+          emptyDir: {}
+{{- else if eq (default "PersistentVolumeClaim" .Values.storage.type) "pvc" }}
+          persistentVolumeClaim:
+            claimName: attestor-storage
+{{- else if eq (default "HostPath" .Values.storage.type) "hostPath" }}
+          hostPath:
+            path: {{ .Values.storage.hostPathBase }}
+{{- end }}
