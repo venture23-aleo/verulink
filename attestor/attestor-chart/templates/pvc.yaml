@@ -1,4 +1,4 @@
-{{- if eq (default "hostPath" .Values.storage.type) "pvc" }}
+{{- if eq (default "emptyDir" .Values.storage.type) "pvc" }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -9,5 +9,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.storage.pvc.size }}
+{{- if .Values.storage.pvc.storageClassName }}
   storageClassName: {{ .Values.storage.pvc.storageClassName | quote }}
+{{- end }}
 {{- end }}

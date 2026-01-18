@@ -12,6 +12,25 @@ spec:
       labels:
         app: chainservice
     spec:
+      initContainers:
+        - name: mtls-setup
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              cp /mtls-secret/ca.crt /mtls-output/ca.crt
+              cp /mtls-secret/{{ .Values.chainService.name }}.crt /mtls-output/{{ .Values.chainService.name }}.crt
+              cp /mtls-secret/{{ .Values.chainService.name }}.key /mtls-output/{{ .Values.chainService.name }}.key
+              chmod 644 /mtls-output/ca.crt
+              chmod 644 /mtls-output/{{ .Values.chainService.name }}.crt
+              chmod 600 /mtls-output/{{ .Values.chainService.name }}.key
+          volumeMounts:
+            - name: mtls-secret
+              mountPath: /mtls-secret
+              readOnly: true
+            - name: mtls
+              mountPath: /mtls-output
       containers:
         - name: chainservice
           image: "{{ default "venture23/verulink-attestor-chain" .Values.image.chain.repository }}:{{ default "latest" .Values.image.chain.tag }}"
@@ -35,9 +54,16 @@ spec:
               mountPath: {{ default "/var/lib/attestor" .Values.chainService.db_dir }}
               subPath: db
     
-            - name: storage
-              mountPath: {{ default "/var/log/attestor" (index .Values.chainService.log.output_paths 0) }}
-              subPath: log
+            - name: log-storage
+{{- $logPath := index .Values.chainService.log.output_paths 0 }}
+{{- $logDir := "/var/log/attestor" }}
+{{- if $logPath }}
+{{- $logDir = $logPath | regexReplaceAll "/[^/]+$" "" }}
+{{- if eq $logDir "" }}
+{{- $logDir = "/var/log/attestor" }}
+{{- end }}
+{{- end }}
+              mountPath: {{ $logDir }}
     
             - name: chain-config
               mountPath: /configs/config.yaml
@@ -45,14 +71,13 @@ spec:
     
             - name: mtls
               mountPath: /configs/.mtls
-              readOnly: true
   
       volumes:
         - name: chain-config
           configMap:
             name: chain-config
 
-        - name: mtls
+        - name: mtls-secret
           secret:
             secretName: {{ .Values.secrets.existingSecretName }}
             items:
@@ -63,13 +88,19 @@ spec:
               - key: ATTESTOR_MTLS_KEY
                 path: {{ .Values.chainService.name }}.key
 
-        - name: storage
-{{- if eq (default "EmptyDir" .Values.storage.type) "pvc" }}
+        - name: mtls
           emptyDir: {}
-{{- else if eq (default "PersistentVolumeClaim" .Values.storage.type) "pvc" }}
+
+        - name: log-storage
+          emptyDir: {}
+
+        - name: storage
+{{- if eq (default "emptyDir" .Values.storage.type) "pvc" }}
           persistentVolumeClaim:
             claimName: attestor-storage
-{{- else if eq (default "HostPath" .Values.storage.type) "hostPath" }}
+{{- else if eq (default "emptyDir" .Values.storage.type) "hostPath" }}
           hostPath:
             path: {{ .Values.storage.hostPathBase }}
+{{- else }}
+          emptyDir: {}
 {{- end }}

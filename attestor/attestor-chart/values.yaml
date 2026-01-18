@@ -3,32 +3,32 @@ chainService:
   version: "1.0.1"
   chains:
     aleo:
-    chain_id: "6694886634403"
-    chain_type: aleo
-    wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24 # wallet indentifier
-    bridge_contract: vlink_token_bridge_v9.aleo
-    node_url: https://api.explorer.provable.com/v1|testnet
-    sequence_num_start:
-      bsc: 1
-      ethereum: 1
-      arbitrum: 1
-      base: 1
-    retry_packet_wait_dur: 2m0s
-    prune_base_seq_num_wait_dur: 5m0s
-    average_block_gen_dur: 3s
-    dest_chains:
-      bsc:
-        pkt_validity_wait_dur: 15m0s
-        finality_height: 23
-      base:
-        pkt_validity_wait_dur: 15m0s
-        finality_height: 23
-      ethereum:
-        pkt_validity_wait_dur: 15m0s
-        finality_height: 23
-      arbitrum:
-        pkt_validity_wait_dur: 15m0s
-        finality_height: 23
+      chain_id: "6694886634403"
+      chain_type: aleo
+      wallet_address: aleo1eslxvrgwtev68t9y6l0nxtts86exewrucgj33aw309k20tch45ps6pex24 # wallet indentifier
+      bridge_contract: vlink_token_bridge_v9.aleo
+      node_url: https://api.explorer.provable.com/v1|testnet
+      sequence_num_start:
+        bsc: 1
+        ethereum: 1
+        arbitrum: 1
+        base: 1
+      retry_packet_wait_dur: 2m0s
+      prune_base_seq_num_wait_dur: 5m0s
+      average_block_gen_dur: 3s
+      dest_chains:
+        bsc:
+          pkt_validity_wait_dur: 15m0s
+          finality_height: 23
+        base:
+          pkt_validity_wait_dur: 15m0s
+          finality_height: 23
+        ethereum:
+          pkt_validity_wait_dur: 15m0s
+          finality_height: 23
+        arbitrum:
+          pkt_validity_wait_dur: 15m0s
+          finality_height: 23
     bsc:
       chain_id: "28556963657430695"
       chain_type: evm
@@ -158,13 +158,35 @@ secrets:
   existingSecretName: attestor-secret
 
 storage:
-  type: emptyDir
+  type: pvc  # Options: "emptyDir", "pvc", "hostPath"
   # hostPathBase: /tmp/verulink-attestor
+  
+  # Create a new StorageClass (optional - set to true to create via Helm)
+  createStorageClass: false
+  storageClassName: "attestor-storage-class"  # Name of the storage class to create
+  provisioner: "ebs.csi.aws.com"  # Storage provisioner (ebs.csi.aws.com for AWS EBS)
+  reclaimPolicy: "Delete"  # Options: "Delete" or "Retain"
+  volumeBindingMode: "WaitForFirstConsumer"  # Options: "Immediate" or "WaitForFirstConsumer"
+  allowVolumeExpansion: true  # Allow volume expansion
+  # Storage class parameters (for AWS EBS)
+  parameters:
+    type: gp3  # EBS volume type: gp2, gp3, io1, io2, st1, sc1
+    fsType: ext4  # Filesystem type
+    # encrypted: "true"  # Enable encryption (optional)
+    # iops: "3000"  # IOPS for gp3/io1/io2 (optional)
+    # throughput: "125"  # Throughput in MiB/s for gp3 (optional)
+  
+  # PVC configuration
+  pvc:
+    size: 50Gi  # Storage size (e.g., "10Gi", "50Gi", "100Gi")
+    storageClassName: "ebs-gp3-sc"  # Using existing storage class
+    accessModes:  # Access modes
+      - ReadWriteOnce
 
 image:
   chain:
     repository: venture23/verulink-attestor-chain
-    tag: staging-v2.0.0-beta1
+    tag: v2.0.2
   sign:
     repository: venture23/verulink-attestor-sign
-    tag: staging-v2.0.0-beta1
+    tag: v2.0.2

@@ -45,16 +45,7 @@
           "additionalProperties": {
             "type": "object",
             "required": ["chain_id", "chain_type"],
-            "additionalProperties": true,
-            "properties": {
-              "chain_id": {
-                "type": "string"
-              },
-              "chain_type": {
-                "type": "string",
-                "enum": ["aleo", "evm"]
-              }
-            }
+            "additionalProperties": true
           }
         },
 
@@ -159,6 +150,30 @@
         "hostPathBase": {
           "type": "string",
           "pattern": "^/"
+        },
+        "createStorageClass": {
+          "type": "boolean"
+        },
+        "storageClassName": {
+          "type": "string"
+        },
+        "provisioner": {
+          "type": "string"
+        },
+        "reclaimPolicy": {
+          "type": "string",
+          "enum": ["Delete", "Retain"]
+        },
+        "volumeBindingMode": {
+          "type": "string",
+          "enum": ["Immediate", "WaitForFirstConsumer"]
+        },
+        "allowVolumeExpansion": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
         },
         "pvc": {
           "type": "object",
