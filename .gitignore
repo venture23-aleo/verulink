@@ -33,3 +33,4 @@ attestor/signingService/secrets.yaml
 .vscode/
 gcpkey.json
 attestor_secret.json
+.kube/

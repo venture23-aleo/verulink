@@ -96,6 +96,11 @@ setup-venv:
 		pip install --upgrade pip && \
 		pip install ansible
 
+	@echo "📦 Installing Ansible collections..."
+	@. $(VENV_DIR)/bin/activate && \
+		cd $(ANSIBLE_DIR) && \
+		ansible-galaxy collection install -r requirements.yml
+
 	@echo "✅ Ansible installation complete"
 	@echo ""
 	@echo "📝 Cloud CLIs will be installed on the remote machines"

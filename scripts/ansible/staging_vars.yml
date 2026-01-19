@@ -2,7 +2,7 @@
 # Staging Environment Variables for Attestor Service
 
 # Attestor Configuration
-# attestor_name: "stg_attestor_verulink_v23"
+attestor_name: "stg_attestor_verulink_v23"
 mode: "stage"
 
 # Aleo Chain Configuration

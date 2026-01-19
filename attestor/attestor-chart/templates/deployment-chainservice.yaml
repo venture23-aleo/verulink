@@ -54,7 +54,7 @@ spec:
               mountPath: {{ default "/var/lib/attestor" .Values.chainService.db_dir }}
               subPath: db
     
-            - name: log-storage
+            - name: storage
 {{- $logPath := index .Values.chainService.log.output_paths 0 }}
 {{- $logDir := "/var/log/attestor" }}
 {{- if $logPath }}
@@ -64,6 +64,7 @@ spec:
 {{- end }}
 {{- end }}
               mountPath: {{ $logDir }}
+              subPath: log
     
             - name: chain-config
               mountPath: /configs/config.yaml
@@ -89,9 +90,6 @@ spec:
                 path: {{ .Values.chainService.name }}.key
 
         - name: mtls
-          emptyDir: {}
-
-        - name: log-storage
           emptyDir: {}
 
         - name: storage
