@@ -1,4 +1,0 @@
----
-# Default variables for cloud_common role
-secret_pull: from_target  # Options: from_local or from_target
-

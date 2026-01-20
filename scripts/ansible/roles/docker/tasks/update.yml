@@ -1,8 +1,0 @@
----
-# Tasks for updating docker deployment (restart services to pick up config changes)
-- name: Restart attestor services to pick up config changes
-  command: docker compose -f {{ attestor_install_dir }}/compose.yml up -d
-  become: true
-  args:
-    chdir: "{{ attestor_install_dir }}"
-

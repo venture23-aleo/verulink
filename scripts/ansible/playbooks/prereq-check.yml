@@ -1,8 +1,0 @@
-- name: Verify prerequisites and access before deployment
-  hosts: all
-  become: true
-  gather_facts: true
-
-  roles:
-    - cloud_common
-    - prechecks

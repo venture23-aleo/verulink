@@ -1,6 +1,0 @@
-apiVersion: v2
-name: verulink-attestor
-description: Helm chart for the Verulink Attestor service (chain + signing)
-type: application
-version: 0.0.0
-appVersion: "v2.0.0-beta2"
