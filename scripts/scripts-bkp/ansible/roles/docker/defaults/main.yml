@@ -1,0 +1,7 @@
+---
+# Default variables for docker role
+attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
+github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink"
+# Branch will be determined based on env if not explicitly set
+# branch: main  # Can be overridden
+

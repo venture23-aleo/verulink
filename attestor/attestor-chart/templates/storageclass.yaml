@@ -1,0 +1,17 @@
+{{- if .Values.storage.createStorageClass }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storage.storageClassName }}
+provisioner: {{ .Values.storage.provisioner | default "ebs.csi.aws.com" }}
+parameters:
+{{- if .Values.storage.parameters }}
+{{ toYaml .Values.storage.parameters | nindent 2 }}
+{{- else }}
+  type: gp3
+  fsType: ext4
+{{- end }}
+reclaimPolicy: {{ .Values.storage.reclaimPolicy | default "Delete" }}
+volumeBindingMode: {{ .Values.storage.volumeBindingMode | default "WaitForFirstConsumer" }}
+allowVolumeExpansion: {{ .Values.storage.allowVolumeExpansion | default true }}
+{{- end }}

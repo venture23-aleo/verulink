@@ -1,0 +1,6 @@
+---
+# Kubernetes deployment variables
+k8s_namespace: verulink-attestor
+k8s_secret_name: attestor-secret  # Name of the Kubernetes secret containing attestor secrets
+helm_repo_url: "https://venture23-aleo.github.io/verulink/"
+patch_files: []

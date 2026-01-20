@@ -1,0 +1,91 @@
+## Secret Configuration: Name of the single, pre-existing Kubernetes secret
+secret_name: "{{ k8s_secret_name | default('attestor-secret') }}"
+mtls_secret_name: "{{ k8s_secret_name | default('attestor-secret') }}"
+signingservice_secret_name: "{{ k8s_secret_name | default('attestor-secret') }}"
+
+## Required values that must be provided at install/upgrade time
+attestor_name: "{{ attestor_name }}"
+aleo_wallet_address: "{{ aleo_wallet_address | default('') }}"
+bsc_wallet_address: "{{ bsc_wallet_address | default('') }}"
+
+## General configuration
+deployment_environment: "{{ deployment_environment | default(env) }}"
+docker_image_tag_sign: "{{ docker_image_tag_sign }}"
+docker_image_tag_chain: "{{ docker_image_tag_chain }}"
+
+## Intentionally blank secret values (sourced from the k8s secret)
+aleo_private_key: ""
+bsc_private_key: ""
+ca_certificate_base64: ""
+attestor_certificate_base64: ""
+attestor_key_base64: ""
+
+## Signing Service configuration
+signing_service:
+  host: "{{ signing_service_host | default('signingservice') }}"
+  port: {{ signing_service_port | default(8080) }}
+  username: ""
+  password: ""
+
+## Chain configuration
+aleo_chain_id: "{{ aleo_chain_id }}"
+aleo_bridge_contract: "{{ aleo_bridge_contract }}"
+aleo_node_url: "{{ aleo_node_url }}"
+
+bsc_chain_id: "{{ bsc_chain_id }}"
+bsc_bridge_contract: "{{ bsc_bridge_contract }}"
+bsc_node_url: "{{ bsc_node_url }}"
+bsc_filter_topic: "{{ bsc_filter_topic | default('') }}"
+bsc_start_height: {{ bsc_start_height | default(1) }}
+
+## Directories and optional services
+db_dir: "{{ db_dir }}"
+log_dir: "{{ log_dir }}"
+collector_service_url: "{{ collector_service_url | default('') }}"
+prometheus_pushgateway_url: "{{ prometheus_pushgateway_url | default('') }}"
+prometheus_job_name: "{{ prometheus_job_name | default('') }}"
+
+## Kubernetes service object
+service:
+  type: ClusterIP
+  port: {{ signing_service_port | default(8080) }}
+
+## Storage Configuration
+## Volume types: emptyDir, hostPath, persistentVolumeClaim
+## Default: emptyDir
+storage:
+  db:
+    type: {{ k8s_storage_db_type | default('emptyDir') }}
+    # For hostPath type:
+    hostPath: {{ k8s_storage_db_host_path | default('/var/lib/attestor/' + env) }}
+    # For persistentVolumeClaim type:
+    persistentVolumeClaim:
+      claimName: {{ k8s_storage_db_pvc_claim_name | default('') }}
+      storageClassName: {{ k8s_storage_db_pvc_storage_class | default('') }}
+      size: {{ k8s_storage_db_pvc_size | default('10Gi') }}
+      accessModes:
+        - {{ k8s_storage_db_pvc_access_mode | default('ReadWriteOnce') }}
+  logs:
+    type: {{ k8s_storage_logs_type | default('emptyDir') }}
+    # For hostPath type:
+    hostPath: {{ k8s_storage_logs_host_path | default('/var/log/attestor/' + env) }}
+    # For persistentVolumeClaim type:
+    persistentVolumeClaim:
+      claimName: {{ k8s_storage_logs_pvc_claim_name | default('') }}
+      storageClassName: {{ k8s_storage_logs_pvc_storage_class | default('') }}
+      size: {{ k8s_storage_logs_pvc_size | default('10Gi') }}
+      accessModes:
+        - {{ k8s_storage_logs_pvc_access_mode | default('ReadWriteOnce') }}
+
+## Service Account Configuration
+serviceAccount:
+  create: true
+  name: "verulink-attestor-sa"
+  annotations: {}
+
+## RBAC Configuration
+rbac:
+  create: true
+  roleName: "verulink-attestor-role"
+  roleBindingName: "verulink-attestor-rolebinding"
+

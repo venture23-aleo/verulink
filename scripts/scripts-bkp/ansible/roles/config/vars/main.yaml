@@ -1,0 +1,5 @@
+---
+attestor_install_dir: "/home/{{ ansible_user }}/verulink_attestor"
+mtls_dir: "{{ attestor_install_dir }}/.mtls"
+github_base_url: "https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads"
+# branch is determined dynamically in tasks/main.yml based on env

@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["chainService", "image", "storage", "secrets"],
+  "additionalProperties": false,
+
+  "properties": {
+    "chainService": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "chains",
+        "db_dir",
+        "log",
+        "mode",
+        "signing_service"
+      ],
+      "additionalProperties": false,
+
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string"
+        },
+        "db_dir": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "consume_packet_workers": {
+          "type": "integer",
+          "minimum": 1
+        },
+
+        "chains": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["chain_id", "chain_type"],
+            "additionalProperties": true
+          }
+        },
+
+        "log": {
+          "type": "object",
+          "required": ["encoding", "output_paths"],
+          "additionalProperties": false,
+          "properties": {
+            "encoding": {
+              "type": "string"
+            },
+            "output_paths": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "rotation": {
+              "type": "object",
+              "required": ["max_size", "max_age", "max_backups", "compress"],
+              "additionalProperties": false,
+              "properties": {
+                "max_size": { "type": "integer", "minimum": 1 },
+                "max_age": { "type": "integer", "minimum": 1 },
+                "max_backups": { "type": "integer", "minimum": 0 },
+                "compress": { "type": "boolean" }
+              }
+            }
+          }
+        }
+        ,
+
+        "signing_service": {
+        "type": "object",
+        "required": ["host", "port"],
+        "additionalProperties": false,
+        "properties": {
+          "host": { "type": "string" },
+          "port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "endpoint": { "type": "string" },
+          "scheme": { "type": "string" },
+          "health_end_point": { "type": "string" },
+          "username": { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+
+        "collector_service": {
+          "type": "object",
+          "additionalProperties": true
+        },
+
+        "metrics": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "check_health_service": {
+          "type": "string",
+          "pattern": "^[0-9]+(s|m|h)$"
+        }
+      }
+    },
+
+    "image": {
+      "type": "object",
+      "required": ["chain", "sign"],
+      "additionalProperties": false,
+      "properties": {
+        "chain": {
+          "type": "object",
+          "required": ["repository", "tag"],
+          "properties": {
+            "repository": { "type": "string", "minLength": 1 },
+            "tag": { "type": "string", "minLength": 1 }
+          }
+        },
+        "sign": {
+          "type": "object",
+          "required": ["repository", "tag"],
+          "properties": {
+            "repository": { "type": "string", "minLength": 1 },
+            "tag": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+
+    "storage": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["pvc", "hostPath", "emptyDir"]
+        },
+        "hostPathBase": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "createStorageClass": {
+          "type": "boolean"
+        },
+        "storageClassName": {
+          "type": "string"
+        },
+        "provisioner": {
+          "type": "string"
+        },
+        "reclaimPolicy": {
+          "type": "string",
+          "enum": ["Delete", "Retain"]
+        },
+        "volumeBindingMode": {
+          "type": "string",
+          "enum": ["Immediate", "WaitForFirstConsumer"]
+        },
+        "allowVolumeExpansion": {
+          "type": "boolean"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "pvc": {
+          "type": "object",
+          "required": ["size"],
+          "properties": {
+            "size": {
+              "type": "string",
+              "pattern": "^[0-9]+Gi$"
+            },
+            "storageClassName": {
+              "type": "string"
+            },
+            "accessModes": {
+              "type": "array",
+              "items": {
+                "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "secrets": {
+      "type": "object",
+      "required": ["existingSecretName"],
+      "additionalProperties": false,
+      "properties": {
+        "existingSecretName": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "isCICD": {
+      "type": "boolean",
+      "description": "Flag to indicate CI/CD environment, used to skip certain validations"
+    }
+  }
+}

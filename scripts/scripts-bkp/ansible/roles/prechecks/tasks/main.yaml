@@ -1,0 +1,283 @@
+---
+# Validate cloud access and secret existence
+
+- name: Set secret pull location
+  set_fact:
+    secret_pull_location: "{{ secret_pull | default('from_target') }}"
+
+- name: Validate GCP project is defined
+  assert:
+    that:
+      - gcp_project is defined
+      - gcp_project | length > 0
+    fail_msg: "gcp_project must be defined when infrastructure_provider is 'gcp'."
+  when: infrastructure_provider == "gcp"
+
+# ---------------------------
+# AUTHENTICATION SETUP
+# ---------------------------
+
+- name: Set ansible_root default
+  set_fact:
+    ansible_root: "{{ ansible_root | default(playbook_dir) }}"
+
+# GCP Authentication - Try instance service account first, fallback to file
+- name: Check if GCP instance has service account attached (using Application Default Credentials)
+  ansible.builtin.command: gcloud auth application-default print-access-token
+  register: gcp_instance_auth
+  ignore_errors: true
+  changed_when: false
+  when: infrastructure_provider == "gcp"
+
+- name: Set GCP auth method fact
+  set_fact:
+    gcp_using_instance_sa: "{{ gcp_instance_auth.rc == 0 }}"
+  when: infrastructure_provider == "gcp"
+
+- name: Check for GCP service account key file locally (fallback)
+  ansible.builtin.stat:
+    path: "{{ ansible_root }}/verulink-attestor-sa.json"
+  register: gcp_sa_file
+  delegate_to: localhost
+  become: false
+  when:
+    - infrastructure_provider == "gcp"
+    - not gcp_using_instance_sa | default(false)
+
+- name: Copy GCP service account key to target machine (if needed)
+  ansible.builtin.copy:
+    src: "{{ ansible_root }}/verulink-attestor-sa.json"
+    dest: "/root/.gcp-sa.json"
+    owner: root
+    group: root
+    mode: '0600'
+  when:
+    - infrastructure_provider == "gcp"
+    - not gcp_using_instance_sa | default(false)
+    - gcp_sa_file.stat.exists
+
+- name: Authenticate gcloud with service account file (if needed)
+  ansible.builtin.command: gcloud auth activate-service-account --key-file=/root/.gcp-sa.json
+  changed_when: false
+  no_log: true
+  environment:
+    CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+    GOOGLE_APPLICATION_CREDENTIALS: "/root/.gcp-sa.json"
+  when:
+    - infrastructure_provider == "gcp"
+    - not gcp_using_instance_sa | default(false)
+    - gcp_sa_file.stat.exists
+
+- name: Fail if GCP authentication not available
+  fail:
+    msg: |
+      GCP authentication not available. Either:
+      1. Attach a service account to the VM instance, OR
+      2. Provide verulink-attestor-sa.json in {{ ansible_root }}/
+  when:
+    - infrastructure_provider == "gcp"
+    - not gcp_using_instance_sa | default(false)
+    - not gcp_sa_file.stat.exists
+
+# AWS Authentication - Try instance profile first, fallback to file
+- name: Check if AWS instance has IAM role attached
+  ansible.builtin.command: aws sts get-caller-identity
+  register: aws_instance_auth
+  ignore_errors: true
+  changed_when: false
+  when: infrastructure_provider == "aws"
+
+- name: Set AWS auth method fact
+  set_fact:
+    aws_using_instance_profile: "{{ aws_instance_auth.rc == 0 }}"
+  when: infrastructure_provider == "aws"
+
+- name: Check for AWS access keys CSV file locally (fallback)
+  ansible.builtin.stat:
+    path: "{{ ansible_root }}/cloud_user_accessKeys.csv"
+  register: aws_csv_file
+  delegate_to: localhost
+  become: false
+  when:
+    - infrastructure_provider == "aws"
+    - not aws_using_instance_profile | default(false)
+
+- name: Copy AWS CSV file to target machine (if needed)
+  ansible.builtin.copy:
+    src: "{{ ansible_root }}/cloud_user_accessKeys.csv"
+    dest: "/tmp/aws_accessKeys.csv"
+    mode: '0600'
+  when:
+    - infrastructure_provider == "aws"
+    - not aws_using_instance_profile | default(false)
+    - aws_csv_file.stat.exists
+
+- name: Parse AWS CSV and configure credentials (if needed)
+  block:
+    - name: Read and parse AWS CSV file
+      ansible.builtin.shell: |
+        tail -n +2 /tmp/aws_accessKeys.csv | cut -d',' -f1
+      register: aws_access_key_cmd
+      changed_when: false
+      no_log: true
+
+    - name: Extract AWS secret key from CSV
+      ansible.builtin.shell: |
+        tail -n +2 /tmp/aws_accessKeys.csv | cut -d',' -f2
+      register: aws_secret_key_cmd
+      changed_when: false
+      no_log: true
+
+    - name: Set AWS credentials from CSV
+      ansible.builtin.set_fact:
+        aws_access_key: "{{ aws_access_key_cmd.stdout.strip() }}"
+        aws_secret_key: "{{ aws_secret_key_cmd.stdout.strip() }}"
+      no_log: true
+
+    - name: Configure AWS credentials
+      ansible.builtin.shell: |
+        mkdir -p ~/.aws
+        cat > ~/.aws/credentials << EOF
+        [default]
+        aws_access_key_id = {{ aws_access_key }}
+        aws_secret_access_key = {{ aws_secret_key }}
+        EOF
+        chmod 600 ~/.aws/credentials
+      args:
+        executable: /bin/bash
+      no_log: true
+
+    - name: Clean up AWS CSV file
+      ansible.builtin.file:
+        path: /tmp/aws_accessKeys.csv
+        state: absent
+  when:
+    - infrastructure_provider == "aws"
+    - not aws_using_instance_profile | default(false)
+    - aws_csv_file.stat.exists
+
+- name: Fail if AWS authentication not available
+  fail:
+    msg: |
+      AWS authentication not available. Either:
+      1. Attach an IAM instance profile to the VM, OR
+      2. Provide cloud_user_accessKeys.csv in {{ ansible_root }}/
+  when:
+    - infrastructure_provider == "aws"
+    - not aws_using_instance_profile | default(false)
+    - not aws_csv_file.stat.exists
+
+# ---------------------------
+# ENV PREFIX MAPPING
+# ---------------------------
+
+- name: Map environment to secret name prefix
+  set_fact:
+    env_prefix: >-
+      {%- if env == 'mainnet' -%}
+        mainnet
+      {%- elif env == 'staging' -%}
+        stg
+      {%- elif env == 'devnet' -%}
+        dev
+      {%- else -%}
+        {{ env | default('mainnet') }}
+      {%- endif -%}
+
+- name: Generate attestor secret name based on provider or per-host config
+  set_fact:
+    attestor_secret_name: >-
+      {{
+        attestor_secret_name |
+        default(
+          env_prefix + '/verulink/attestor/secrets'
+          if infrastructure_provider == 'aws'
+          else env_prefix + '_verulink_attestor_secrets'
+        )
+      }}
+
+- name: Convert AWS-style secret name to GCP format if needed
+  set_fact:
+    attestor_secret_name: "{{ attestor_secret_name | replace('/', '_') }}"
+  when:
+    - infrastructure_provider == "gcp"
+    - (attestor_secret_name | regex_search('/')) is not none
+
+- name: Validate attestor secret name format (AWS)
+  assert:
+    that:
+      - (attestor_secret_name | regex_search('^[a-zA-Z0-9/_+=.@-]+$')) is not none
+      - attestor_secret_name | length <= 512
+    fail_msg: "Invalid AWS secret name format."
+  when: infrastructure_provider == "aws"
+
+- name: Display attestor secret name
+  ansible.builtin.debug:
+    msg: "Checking attestor secret: {{ attestor_secret_name }}"
+
+# ---------------------------
+# VERIFY CLOUD ACCESS
+# ---------------------------
+
+- name: Verify GCP access and permissions
+  ansible.builtin.command: gcloud auth list --filter=status:ACTIVE --format="value(account)"
+  register: gcp_auth_info
+  environment:
+    CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ '/root/.gcp-sa.json' if (not gcp_using_instance_sa | default(false)) and gcp_sa_file.stat.exists | default(false) else '' }}"
+  when: infrastructure_provider == "gcp"
+
+- name: Display GCP auth info
+  ansible.builtin.debug:
+    msg: "GCP Access verified for account: {{ gcp_auth_info.stdout }} ({{ 'Instance service account' if gcp_using_instance_sa | default(false) else 'Service account file' }})"
+  when: infrastructure_provider == "gcp"
+
+- name: Check if secret is accessible in GCP Secret Manager
+  ansible.builtin.command: >
+    gcloud secrets versions access latest
+    --secret="{{ attestor_secret_name }}"
+    --project="{{ gcp_project }}"
+  register: gcp_secret_check
+  ignore_errors: true
+  no_log: true
+  environment:
+    CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+    GOOGLE_APPLICATION_CREDENTIALS: "{{ '/root/.gcp-sa.json' if (not gcp_using_instance_sa | default(false)) and gcp_sa_file.stat.exists | default(false) else '' }}"
+  when: infrastructure_provider == "gcp"
+
+- name: Fail if GCP secret is not accessible
+  fail:
+    msg: "Secret {{ attestor_secret_name }} does not exist or is not accessible in GCP Secret Manager. Check service account permissions."
+  when:
+    - infrastructure_provider == "gcp"
+    - gcp_secret_check is failed
+
+- name: Verify AWS access and permissions
+  ansible.builtin.command: aws sts get-caller-identity
+  register: aws_caller_info
+  when: infrastructure_provider == "aws"
+
+- name: Display AWS caller info
+  ansible.builtin.debug:
+    msg: "AWS Access verified for user: {{ aws_caller_info.stdout | from_json }}"
+  when: infrastructure_provider == "aws"
+
+- name: Check if secret exists in AWS Secrets Manager
+  ansible.builtin.command: aws secretsmanager describe-secret --secret-id "{{ attestor_secret_name }}" --region "{{ region }}"
+  register: aws_secret_info
+  ignore_errors: true
+  when: infrastructure_provider == "aws"
+
+- name: Fail if AWS secret missing
+  fail:
+    msg: "Secret {{ attestor_secret_name }} does not exist in AWS Secrets Manager"
+  when:
+    - infrastructure_provider == "aws"
+    - aws_secret_info is failed
+
+# ---------------------------
+# FINAL REQUIRED KEY CHECK
+# ---------------------------
+
+# Secrets (private keys, certificates) are pulled from cloud Secret Manager
+# No need to check them here as they're retrieved by the secrets role

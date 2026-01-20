@@ -1,0 +1,146 @@
+---
+- name: Normalize environment variable
+  ansible.builtin.set_fact:
+    env: "{{ ENV | default(env) }}"
+
+- name: Fail if env is not defined
+  ansible.builtin.fail:
+    msg: "env is not defined. Run with ENV=staging|devnet|production"
+  when: env is not defined
+
+- name: Display deployment environment
+  ansible.builtin.debug:
+    msg: "Deploying Verulink Attestor to environment: {{ env }}"
+
+- name: Check if kubectl is installed
+  ansible.builtin.command: kubectl version --client
+  register: kubectl_version
+  ignore_errors: true
+  changed_when: false
+  delegate_to: localhost
+
+- name: Fail if kubectl is not installed
+  ansible.builtin.fail:
+    msg: "kubectl is not installed."
+  when: kubectl_version.rc != 0
+
+- name: Check Kubernetes cluster connection
+  ansible.builtin.command: kubectl cluster-info
+  register: k8s_cluster_check
+  changed_when: false
+  failed_when: false
+  delegate_to: localhost
+
+- name: Fail if Kubernetes cluster connection failed
+  ansible.builtin.fail:
+    msg: "Failed to connect to Kubernetes cluster."
+  when: k8s_cluster_check.rc != 0
+
+- name: Ensure Helm is installed
+  ansible.builtin.command: helm version --short
+  register: helm_version
+  ignore_errors: true
+  delegate_to: localhost
+
+- name: Install Helm if missing
+  ansible.builtin.shell: |
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  when: helm_version is failed
+  delegate_to: localhost
+
+- name: Create Kubernetes namespace if not exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ k8s_namespace }}"
+    state: present
+  delegate_to: localhost
+
+- name: Check if Kubernetes secret exists
+  kubernetes.core.k8s_info:
+    kind: Secret
+    name: "{{ k8s_secret_name }}"
+    namespace: "{{ k8s_namespace }}"
+  register: k8s_secret_check
+  ignore_errors: true
+  changed_when: false
+  delegate_to: localhost
+
+- name: Create Kubernetes secret if missing
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ k8s_secret_name }}"
+        namespace: "{{ k8s_namespace }}"
+      type: Opaque
+      data:
+        CA_MTLS_CERT: "{{ ca_certificate | b64encode }}"
+        ATTESTOR_MTLS_CERT: "{{ attestor_certificate | b64encode }}"
+        ATTESTOR_MTLS_KEY: "{{ attestor_key | b64encode }}"
+  no_log: true
+  delegate_to: localhost
+  when:
+    - k8s_secret_check.resources | length == 0
+    - ca_certificate is defined
+    - attestor_certificate is defined
+    - attestor_key is defined
+
+- name: Add Verulink Helm repository
+  community.kubernetes.helm_repository:
+    name: verulink
+    repo_url: "{{ helm_repo_url }}"
+    state: present
+  delegate_to: localhost
+
+- name: Update Helm repositories
+  ansible.builtin.command: helm repo update
+  delegate_to: localhost
+
+- name: Render Helm values file
+  ansible.builtin.template:
+    src: "{{ role_path }}/templates/values.yaml.j2"
+    dest: "/tmp/verulink-values-{{ env }}.yaml"
+  delegate_to: localhost
+
+- name: Get available chart versions
+  ansible.builtin.command: >
+    helm search repo verulink/verulink-attestor --versions -o json
+    {% if env in ['staging','devnet'] %} --devel{% endif %}
+  register: chart_versions
+  delegate_to: localhost
+  changed_when: false
+
+- name: Set latest chart version
+  ansible.builtin.set_fact:
+    chart_version: "{{ (chart_versions.stdout | from_json | sort(attribute='version', reverse=true))[0].version }}"
+
+- name: Display selected chart version
+  ansible.builtin.debug:
+    msg: "Using verulink-attestor chart version: {{ chart_version }}"
+
+- name: Deploy Verulink Attestor (foreground, no wait)
+  ansible.builtin.shell: |
+    helm upgrade --install verulink-attestor verulink/verulink-attestor \
+      --namespace {{ k8s_namespace }} \
+      --values /tmp/verulink-values-{{ env }}.yaml \
+      --version {{ chart_version }} \
+      {% if env in ['staging','devnet'] %} --devel{% endif %}
+  delegate_to: localhost
+  register: helm_deploy_result
+
+- name: Show Helm output
+  ansible.builtin.debug:
+    var: helm_deploy_result.stdout
+
+- name: Show current pod status
+  ansible.builtin.command: kubectl get pods -n {{ k8s_namespace }}
+  delegate_to: localhost
+  changed_when: false
+
+- name: Show recent Kubernetes events
+  ansible.builtin.command: kubectl get events -n {{ k8s_namespace }} --sort-by=.metadata.creationTimestamp
+  delegate_to: localhost
+  changed_when: false

@@ -1,0 +1,6 @@
+# Ansible collections - minimal set (no cloud collections needed, using CLI tools)
+collections:
+  - name: kubernetes.core
+    version: ">=2.4.0"
+  - name: community.kubernetes
+    version: ">=2.0.0"

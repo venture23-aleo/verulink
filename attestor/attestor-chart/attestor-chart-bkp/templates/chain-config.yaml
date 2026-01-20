@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chain-config
+data:
+  config.yaml: |
+    name: {{ .Values.chainService.name }}
+    version: {{ .Values.chainService.version }}
+
+    chains:
+{{- range $name, $chain := .Values.chainService.chains }}
+      - name: {{ $name }}
+{{- $yamlOutput := toYaml $chain | nindent 8 | trimPrefix "\n" }}
+{{- $chainIdValue := $chain.chain_id | replace "\"" "" | trim }}
+{{- $yamlOutput = $yamlOutput | replace (printf "chain_id: \"%s\"" $chain.chain_id) (printf "chain_id: %s" $chainIdValue) }}
+{{- $yamlOutput = $yamlOutput | replace "\n\n" "\n" }}
+{{ $yamlOutput }}
+{{- end }}
+
+    check_health_service: {{ .Values.chainService.check_health_service }}
+    db_dir: {{ .Values.chainService.db_dir }}
+    consume_packet_workers: {{ .Values.chainService.consume_packet_workers }}
+
+    log:
+{{ toYaml .Values.chainService.log | nindent 6 }}
+
+    mode: {{ .Values.chainService.mode }}
+
+    signing_service:
+{{ toYaml .Values.chainService.signing_service | nindent 6 }}
+
+    collector_service:
+{{ toYaml .Values.chainService.collector_service | nindent 6 }}
+
+    metrics:
+{{ toYaml .Values.chainService.metrics | nindent 6 }}
