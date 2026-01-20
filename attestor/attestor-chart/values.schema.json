@@ -207,6 +207,10 @@
           "minLength": 1
         }
       }
+    },
+    "isCICD": {
+      "type": "boolean",
+      "description": "Flag to indicate CI/CD environment, used to skip certain validations"
     }
   }
 }
