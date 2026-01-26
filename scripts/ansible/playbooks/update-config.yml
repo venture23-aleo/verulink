@@ -31,36 +31,29 @@
         python3 << 'PYEOF'
         import yaml
         import sys
-        import json
         
+        with open("{{ chain_config_file }}", 'r') as f:
+            content = f.read()
+        
+        # Split by --- and get first non-empty document
+        docs = content.split('---')
+        for doc in docs:
+            doc = doc.strip()
+            if doc and not doc.startswith('#'):
+                try:
+                    config = yaml.safe_load(doc)
+                    if config and 'name' in config:
+                        import json
+                        print(json.dumps(config))
+                        sys.exit(0)
+                except:
+                    continue
+        
+        # Fallback: try parsing entire file
         try:
-            with open("{{ chain_config_file }}", 'r') as f:
-                content = f.read()
-            
-            # Split by --- and get first non-empty document
-            docs = content.split('---')
-            for doc in docs:
-                doc = doc.strip()
-                if doc and not doc.startswith('#'):
-                    try:
-                        config = yaml.safe_load(doc)
-                        if config and 'name' in config:
-                            # Output only JSON to stdout, ensure no extra content
-                            json_output = json.dumps(config)
-                            # Write directly to stdout without newline
-                            sys.stdout.buffer.write(json_output.encode('utf-8'))
-                            sys.exit(0)
-                    except Exception:
-                        continue
-            
-            # Fallback: try parsing entire file
             config = yaml.safe_load(content)
-            if config:
-                json_output = json.dumps(config)
-                sys.stdout.buffer.write(json_output.encode('utf-8'))
-            else:
-                print("Error: No valid config found", file=sys.stderr)
-                sys.exit(1)
+            import json
+            print(json.dumps(config))
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
@@ -68,91 +61,9 @@
       register: chain_config_json
       changed_when: false
 
-    - name: Write raw JSON output to temp file
-      ansible.builtin.copy:
-        content: "{{ chain_config_json.stdout }}"
-        dest: "/tmp/chain_config_raw_{{ inventory_hostname }}.json"
-      when: chain_config_json.stdout is defined
-
-    - name: Write Python extraction script
-      ansible.builtin.copy:
-        content: |
-          import json
-          import sys
-          
-          temp_file = "/tmp/chain_config_raw_{{ inventory_hostname }}.json"
-          
-          try:
-              with open(temp_file, 'r') as f:
-                  output = f.read()
-          except FileNotFoundError:
-              print("Error: Temp file not found", file=sys.stderr)
-              sys.exit(1)
-          
-          # Try to parse the entire output as JSON first
-          try:
-              parsed = json.loads(output)
-              # If successful, output as-is (re-serialize to ensure clean output)
-              sys.stdout.buffer.write(json.dumps(parsed).encode('utf-8'))
-              sys.exit(0)
-          except json.JSONDecodeError:
-              pass
-          
-          # If that fails, try to find the first valid JSON object
-          # Look for the first { and find matching }
-          start_idx = output.find('{')
-          if start_idx == -1:
-              print("Error: No JSON object found", file=sys.stderr)
-              sys.exit(1)
-          
-          # Find matching closing brace
-          brace_count = 0
-          end_idx = start_idx
-          for i in range(start_idx, len(output)):
-              if output[i] == '{':
-                  brace_count += 1
-              elif output[i] == '}':
-                  brace_count -= 1
-                  if brace_count == 0:
-                      end_idx = i + 1
-                      break
-          
-          if brace_count != 0:
-              print("Error: Invalid JSON structure", file=sys.stderr)
-              sys.exit(1)
-          
-          json_str = output[start_idx:end_idx]
-          # Validate it's valid JSON
-          try:
-              parsed = json.loads(json_str)
-              sys.stdout.buffer.write(json.dumps(parsed).encode('utf-8'))
-          except json.JSONDecodeError as e:
-              print(f"Error: Invalid JSON: {e}", file=sys.stderr)
-              sys.exit(1)
-        dest: "/tmp/extract_json_{{ inventory_hostname }}.py"
-        mode: '0755'
-      when: chain_config_json.stdout is defined
-
-    - name: Extract first valid JSON object from output
-      ansible.builtin.command:
-        cmd: python3 /tmp/extract_json_{{ inventory_hostname }}.py
-      register: chain_config_json_clean
-      changed_when: false
-      when: chain_config_json.stdout is defined
-
-    - name: Clean up temp files
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "/tmp/chain_config_raw_{{ inventory_hostname }}.json"
-        - "/tmp/extract_json_{{ inventory_hostname }}.py"
-      when: chain_config_json.stdout is defined
-
     - name: Parse chain_config from JSON
       set_fact:
-        chain_config: "{{ chain_config_json_clean.stdout | from_json }}"
-      when: chain_config_json_clean.stdout is defined
+        chain_config: "{{ chain_config_json.stdout | from_json }}"
 
     - name: Read and parse secrets.yaml using Python
       ansible.builtin.shell: |
@@ -220,14 +131,6 @@
         aleo_wallet_address: "{{ secrets_data.aleo_wallet_address | default('') }}"
         bsc_wallet_address: "{{ secrets_data.bsc_wallet_address | default('') }}"
       no_log: true
-
-    - name: Set base and arbitrum wallet addresses and keys to use bsc values (EVM chains)
-      set_fact:
-        base_wallet_address: "{{ bsc_wallet_address | default('') }}"
-        base_private_key: "{{ bsc_private_key | default('') }}"
-        arbitrum_wallet_address: "{{ bsc_wallet_address | default('') }}"
-        arbitrum_private_key: "{{ bsc_private_key | default('') }}"
-      no_log: true
     - name: Debug extracted values
       ansible.builtin.debug:
         msg: "Extracted values: {{ aleo_private_key }}, {{ bsc_private_key }}, {{ ethereum_private_key }}, {{ ethereum_wallet_address }}, {{ aleo_wallet_address }}, {{ bsc_wallet_address }}"
@@ -275,8 +178,6 @@
         # Use attestor_name from inventory (per-host variable) instead of reading from config file
         attestor_name: "{{ attestor_name | default(chain_config.name) }}"
         # Wallet addresses for chain_config.yaml (from chain_config.yaml)
-        # These facts extract the wallet addresses for aleo and bsc chains from the chain_config variable loaded previously.
-        # They are later referenced as aleo_wallet_address_chain and bsc_wallet_address_chain in subsequent template rendering or secret/generation steps.
         aleo_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','aleo') | list)[0].wallet_address }}"
         bsc_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','bsc') | list)[0].wallet_address }}"
         ethereum_wallet_address_chain: "{{ (chain_config.chains | selectattr('name','equalto','ethereum') | list)[0].wallet_address | default(bsc_wallet_address_chain) }}"

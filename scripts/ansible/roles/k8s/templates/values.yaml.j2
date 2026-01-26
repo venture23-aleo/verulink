@@ -1,5 +1,7 @@
 ## Secret Configuration: Name of the single, pre-existing Kubernetes secret
 secret_name: "{{ k8s_secret_name | default('attestor-secret') }}"
+mtls_secret_name: "{{ k8s_secret_name | default('attestor-secret') }}"
+signingservice_secret_name: "{{ k8s_secret_name | default('attestor-secret') }}"
 
 ## Required values that must be provided at install/upgrade time
 attestor_name: "{{ attestor_name }}"

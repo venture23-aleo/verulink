@@ -3,9 +3,8 @@ kind: Service
 metadata:
   name: signingservice
 spec:
-  type: {{ .Values.service.type }}
   selector:
     app: signingservice
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+    - port: 8080
+      targetPort: 8080
