@@ -208,6 +208,37 @@
         }
       }
     },
+    "serviceAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "rbac": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "type": "boolean"
+        },
+        "roleName": {
+          "type": "string"
+        },
+        "roleBindingName": {
+          "type": "string"
+        }
+      }
+    },
     "isCICD": {
       "type": "boolean",
       "description": "Flag to indicate CI/CD environment, used to skip certain validations"
