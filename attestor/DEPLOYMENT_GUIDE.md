@@ -332,6 +332,7 @@ docker compose -f ~/verulink_attestor/compose.yml logs -f
    ```bash
    helm version
    ```
+  To install Helm, see the instructions [here](https://helm.sh/docs/intro/install/).
 
 
 ### 1. Setup Kubernetes Secrets
@@ -451,16 +452,16 @@ chainService:
   db_dir: "/var/lib/attestor/dev"
 ```
 
-#### Chain Configurations
+#### Chain Configurations (example: mainnet configuration)
 
 **Aleo Chain:**
 ```yaml
 chainService:
   chains:
     aleo:
-      chain_id: "6694886634403"
-      bridge_contract: "vlink_token_bridge_v9.aleo"
-      node_url: "https://api.explorer.provable.com/v1|testnet"
+      chain_id: "6694886634401"
+      bridge_contract: "vlink_token_bridge_v3.aleo"
+      node_url: "<aleo_rpc_url>"
       wallet_address: "aleo1..."  # Your Aleo wallet address
 ```
 
@@ -469,7 +470,7 @@ chainService:
     ethereum:
       chain_id: "27234042785"
       bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
-      node_url: "https://eth.llamarpc.com"
+      node_url: "<ethereum_rpc_url>"
       start_height: 9847133  # Block height to start from
       filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
       wallet_address: "0x..."  # Your Ethereum wallet address
@@ -478,9 +479,9 @@ chainService:
 **BSC Chain:**
 ```yaml
     bsc:
-      chain_id: "28556963657430695"
-      bridge_contract: "0xdeEbcF78DfDa7494f9Bbe4Ca313C486D29F0EC56"
-      node_url: "wss://base-sepolia-rpc.publicnode.com"
+      chain_id: "422842677816"
+      bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+      node_url: "<bsc_rpc_url>"
       start_height: 1
       filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
       wallet_address: "0x..."  # Your BSC wallet address
@@ -489,9 +490,9 @@ chainService:
 **Base Chain:**
 ```yaml
     base:
-      chain_id: "443067135441324596"
-      bridge_contract: "0x1e12776edb78A5473964cF257E825991ad501533"
-      node_url: "wss://base-sepolia-rpc.publicnode.com"
+      chain_id: "27691695965085957"
+      bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+      node_url: "<base_rpc_url>"
       start_height: 35024380
       filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
       wallet_address: "0x..."  # Your Base wallet address
@@ -500,9 +501,9 @@ chainService:
 **Arbitrum Chain:**
 ```yaml
     arbitrum:
-      chain_id: "438861435819683566"
-      bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
-      node_url: "wss://arbitrum-sepolia.drpc.org"
+      chain_id: "27428839738746033"
+      bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+      node_url: "<arbitrum_rpc_url>"
       start_height: 224887156
       filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
       wallet_address: "0x..."  # Your Arbitrum wallet address
@@ -514,7 +515,7 @@ chainService:
 ```yaml
 chainService:
   collector_service:
-    uri: "https://aleomtls.venture23.xyz/"  # Your collector service URL
+    uri: "<collector_service_url>"  # Your collector service URL
     collector_wait_dur: "1h"
 ```
 
@@ -522,8 +523,8 @@ chainService:
 ```yaml
 chainService:
   metrics:
-    host: "https://pushgateway-aleomtls.venture23.xyz/"  # Your pushgateway URL
-    job_name: "dev-push-gateway"  # Your job name
+    host: "<prometheus_pushgateway_url>"  # Your pushgateway URL
+    job_name: "prod-push-gateway-v200"  # Your job name
 ```
 
 #### Docker Images
