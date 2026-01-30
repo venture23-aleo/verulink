@@ -439,110 +439,25 @@ storage:
 
 ## 3. Prepare Configuration Values
 
-Before deploying, prepare your `values.yaml` file with all required configuration. Review `attestor/attestor-chart/values.yaml` for the complete structure.
+Before deploying, prepare your `values.yaml` file with all required configuration. 
 
-### Required Variables
+### Download the Sample `values.yaml` and Update
 
-#### Attestor Configuration
-```yaml
-chainService:
-  name: "dev_attestor_verulink_xyz"  # Your attestor name
-  version: "1.0.1"
-  mode: "dev"  # Options: "dev", "stag", "prod"
-  db_dir: "/var/lib/attestor/dev"
-```
+```bash
+# Download values.yaml for your environment (dev, staging, or production)
+# Replace <environment> with dev, staging, or prod as needed
 
-#### Chain Configurations (example: mainnet configuration)
+# Production
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/main/attestor/attestor-chart/values.yaml
 
-**Aleo Chain:**
-```yaml
-chainService:
-  chains:
-    aleo:
-      chain_id: "6694886634401"
-      bridge_contract: "vlink_token_bridge_v3.aleo"
-      node_url: "<aleo_rpc_url>"
-      wallet_address: "aleo1..."  # Your Aleo wallet address
-```
+# Staging
 
-**Ethereum Chain:**
-```yaml
-    ethereum:
-      chain_id: "27234042785"
-      bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
-      node_url: "<ethereum_rpc_url>"
-      start_height: 9847133  # Block height to start from
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your Ethereum wallet address
-```
-
-**BSC Chain:**
-```yaml
-    bsc:
-      chain_id: "422842677816"
-      bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
-      node_url: "<bsc_rpc_url>"
-      start_height: 1
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your BSC wallet address
-```
-
-**Base Chain:**
-```yaml
-    base:
-      chain_id: "27691695965085957"
-      bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
-      node_url: "<base_rpc_url>"
-      start_height: 35024380
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your Base wallet address
-```
-
-**Arbitrum Chain:**
-```yaml
-    arbitrum:
-      chain_id: "27428839738746033"
-      bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
-      node_url: "<arbitrum_rpc_url>"
-      start_height: 224887156
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your Arbitrum wallet address
-```
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/staging/attestor/attestor-chart/values.yaml
 
 
 
-**Collector Service:**
-```yaml
-chainService:
-  collector_service:
-    uri: "<collector_service_url>"  # Your collector service URL
-    collector_wait_dur: "1h"
-```
+**Update this values.yaml file** with your environment-specific values:
 
-**Metrics (Prometheus):**
-```yaml
-chainService:
-  metrics:
-    host: "<prometheus_pushgateway_url>"  # Your pushgateway URL
-    job_name: "prod-push-gateway-v200"  # Your job name
-```
-
-#### Docker Images
-```yaml
-image:
-  chain:
-    repository: "venture23/verulink-attestor-chain"
-    tag: "v2.0.2"  # Use appropriate version
-  sign:
-    repository: "venture23/verulink-attestor-sign"
-    tag: "v2.0.2"  # Use appropriate version
-```
-
-#### Secret Reference
-```yaml
-secrets:
-  existingSecretName: "attestor-secret"  # Must match the secret created in step 1
-```
 
 
 
@@ -560,6 +475,13 @@ To view all available versions of the Verulink Attestor Helm Chart, run:
 ```bash
 helm search repo verulink/verulink-attestor --versions
 ```
+### List All Configurable Values in the Chart
+
+
+```bash
+helm show values verulink/verulink-attestor
+```
+
 
 ### First-Time Installation
 
@@ -578,6 +500,17 @@ To upgrade to a newer version of the chart, use:
 helm upgrade verulink-attestor verulink/verulink-attestor \
   --namespace <your-namespace> \
   -f values.yaml
+```
+
+
+#### Upgrading Only the Image
+
+
+```bash
+helm upgrade verulink-attestor verulink/verulink-attestor \
+  --namespace <your-namespace> \
+  --set image.chain.tag=<new-chain-tag> \
+  --set image.sign.tag=<new-signing-tag>
 ```
 
 
