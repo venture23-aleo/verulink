@@ -445,7 +445,6 @@ Before deploying, prepare your `values.yaml` file with all required configuratio
 
 ```bash
 # Download values.yaml for your environment (dev, staging, or production)
-# Replace <environment> with dev, staging, or prod as needed
 
 # Production
 curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/main/attestor/attestor-chart/values.yaml
