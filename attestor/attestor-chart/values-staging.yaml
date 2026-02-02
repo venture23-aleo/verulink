@@ -1,6 +1,6 @@
 chainService:
-  name: stg_attestor_verulink_xyz
-  version: "1.0.1"
+  name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier> # stg_attestor_verulink_xyz
+  version: "2.0.2"
   chains:
     aleo:
       chain_id: "6694886634403"
@@ -34,7 +34,7 @@ chainService:
       chain_type: evm
       wallet_address: <evm_wallet_address>
       bridge_contract: 0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b
-      node_url: wss://base-sepolia-rpc.publicnode.com
+      node_url: wss://bsc-sepolia-rpc.publicnode.com
       filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
 
       retry_packet_wait_dur: 1m0s
@@ -147,18 +147,18 @@ chainService:
     uri: <collector_service_url>
     collector_wait_dur: 1h
     ca_certificate: /configs/.mtls/ca.crt
-    attestor_certificate: /configs/.mtls/stg_attestor_verulink_xyz.crt
-    attestor_key: /configs/.mtls/stg_attestor_verulink_xyz.key
+    attestor_certificate: /configs/.mtls/<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>.crt
+    attestor_key: /configs/.mtls/<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>.key
 
   metrics:
     host: <prometheus_pushgateway_url>
-    job_name: staging-push-gateway
+    job_name: dev-push-gateway
     
 secrets:
   existingSecretName: attestor-secret
 
 storage:
-  type: pvc  # Options: "emptyDir", "pvc", "hostPath"
+  type: emptyDir  # Options: "emptyDir", "pvc", "hostPath"
   # hostPathBase: /tmp/verulink-attestor
   
   # Create a new StorageClass (optional - set to true to create via Helm)
@@ -178,7 +178,7 @@ storage:
   
   # PVC configuration
   pvc:
-    size: 20Gi  # Storage size for staging (e.g., "10Gi", "50Gi", "100Gi")
+    size: 10Gi  # Storage size for staging (e.g., "10Gi", "50Gi", "100Gi")
     storageClassName: "attestor-storage-class"  # Using existing storage class
     accessModes:  # Access modes
       - ReadWriteOnce
@@ -191,14 +191,3 @@ image:
     repository: venture23/verulink-attestor-sign
     tag: staging-v2.0.0-beta1
 
-# ServiceAccount Configuration (optional for staging)
-serviceAccount:
-  create: false
-  name: verulink-attestor-sa
-  annotations: {}
-
-# RBAC Configuration (optional for staging)
-rbac:
-  create: false
-  roleName: verulink-attestor-role
-  roleBindingName: verulink-attestor-rolebinding

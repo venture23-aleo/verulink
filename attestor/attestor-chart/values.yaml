@@ -1,6 +1,6 @@
 chainService:
-  name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>
-  version: "1.0.1"
+  name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier> # prod_attestor_verulink_xyz
+  version: "2.0.2"
   chains:
     aleo:
       chain_id: "6694886634401"
