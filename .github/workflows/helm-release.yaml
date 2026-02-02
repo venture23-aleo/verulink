@@ -9,6 +9,7 @@ on:
       - release/*
       - ci/add-helm-chart
       - ci/add-helm-chart-for-k8s
+      - ci/fix-helm-deployment
     tags:
       - 'v*.*.*'
 
