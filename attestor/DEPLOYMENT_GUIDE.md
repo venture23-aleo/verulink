@@ -504,6 +504,7 @@ To install the Verulink Attestor for the first time, use:
 helm install verulink-attestor verulink/verulink-attestor \
   --namespace <your-namespace> \
   --create-namespace \
+  --version <version> \
   -f values.yaml
 ```
 
@@ -513,6 +514,7 @@ To upgrade to a newer version of the chart, use:
 ```bash
 helm upgrade verulink-attestor verulink/verulink-attestor \
   --namespace <your-namespace> \
+  --version <version> \
   -f values.yaml
 ```
 
