@@ -3,7 +3,7 @@ entries:
   verulink-attestor:
   - apiVersion: v2
     appVersion: 0.0.0-stg.202601260648-beta
-    created: "2026-02-02T03:39:17.903892593Z"
+    created: "2026-02-02T03:55:20.552567031Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 69f47eeae7ccef09b3c79970e7a59f5926ed30246213f7d8c582974f43490bd7
     name: verulink-attestor
@@ -13,7 +13,7 @@ entries:
     version: 0.0.0-stg.202601260648-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512161617-beta
-    created: "2026-02-02T03:39:17.902842656Z"
+    created: "2026-02-02T03:55:20.55184347Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: e4baae090cccb1ffdf7d5c9b029d6ac10420ca1745cb9ef6f1efa4a3f140bcc9
     name: verulink-attestor
@@ -23,7 +23,7 @@ entries:
     version: 0.0.0-stg.202512161617-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512161426-beta
-    created: "2026-02-02T03:39:17.902016415Z"
+    created: "2026-02-02T03:55:20.55141768Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 021c815f97b41e9d4e7fa7499eb2b30b82dc9ab8165af1a735a0df6b50c87c59
     name: verulink-attestor
@@ -33,7 +33,7 @@ entries:
     version: 0.0.0-stg.202512161426-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512161232-beta
-    created: "2026-02-02T03:39:17.901717572Z"
+    created: "2026-02-02T03:55:20.550634835Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: e219ec3779bab60313b6a46ff2c844b23c0199db46f930745856494b55424e1c
     name: verulink-attestor
@@ -43,7 +43,7 @@ entries:
     version: 0.0.0-stg.202512161232-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512161217-beta
-    created: "2026-02-02T03:39:17.901405844Z"
+    created: "2026-02-02T03:55:20.550008524Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 6a775ed686bcdc58a25d1a000275482dd7381a8945440ad07dd8e8a4cf4fbac5
     name: verulink-attestor
@@ -53,7 +53,7 @@ entries:
     version: 0.0.0-stg.202512161217-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512161210-beta
-    created: "2026-02-02T03:39:17.901088126Z"
+    created: "2026-02-02T03:55:20.549707055Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 479823a3cbeb158a95f77bf8e130434f2ff75117fd069b1619d13c6f988f5ede
     name: verulink-attestor
@@ -63,7 +63,7 @@ entries:
     version: 0.0.0-stg.202512161210-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512160341-beta
-    created: "2026-02-02T03:39:17.90079358Z"
+    created: "2026-02-02T03:55:20.549388233Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 8817092c088cb599f952cd84a87c53054c8200c698107f087e9bc328a01ae408
     name: verulink-attestor
@@ -73,7 +73,7 @@ entries:
     version: 0.0.0-stg.202512160341-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512160335-beta
-    created: "2026-02-02T03:39:17.900492973Z"
+    created: "2026-02-02T03:55:20.549088968Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: a7780308e615f5dec67cdc6f6ebcf46cf8d7620e4e490cb0994b9a5667d1b71a
     name: verulink-attestor
@@ -83,7 +83,7 @@ entries:
     version: 0.0.0-stg.202512160335-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512160137-beta
-    created: "2026-02-02T03:39:17.900176527Z"
+    created: "2026-02-02T03:55:20.548785906Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: bb24381946cdfc8c73d3bdf55d6f35b8e13799c7bff92f59a69c933379ed6340
     name: verulink-attestor
@@ -93,7 +93,7 @@ entries:
     version: 0.0.0-stg.202512160137-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512160136-beta
-    created: "2026-02-02T03:39:17.89987578Z"
+    created: "2026-02-02T03:55:20.548470822Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: ccb4ee0087b73c8e4964578f5c1d36d45338fd0ad4a5016c843be44915e387d5
     name: verulink-attestor
@@ -103,7 +103,7 @@ entries:
     version: 0.0.0-stg.202512160136-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202512040628-beta
-    created: "2026-02-02T03:39:17.899571927Z"
+    created: "2026-02-02T03:55:20.548155858Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 2596533073944d61dd45153295a5687385044a679ece5ab9c9bd57e2b0500409
     name: verulink-attestor
@@ -113,7 +113,7 @@ entries:
     version: 0.0.0-stg.202512040628-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202510191140-beta
-    created: "2026-02-02T03:39:17.899251344Z"
+    created: "2026-02-02T03:55:20.547848347Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: d5ecfc7a48a5ad6167bc2cacc56bd3b502e6ab6c5b036a0419b05496fa1d4d45
     name: verulink-attestor
@@ -123,7 +123,7 @@ entries:
     version: 0.0.0-stg.202510191140-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202510191119-beta
-    created: "2026-02-02T03:39:17.898948453Z"
+    created: "2026-02-02T03:55:20.547544454Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: f5807887898bdd5da06503a98c50f80308c88105c74031d0f32b05828e0f9b83
     name: verulink-attestor
@@ -133,7 +133,7 @@ entries:
     version: 0.0.0-stg.202510191119-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202510191112-beta
-    created: "2026-02-02T03:39:17.898646473Z"
+    created: "2026-02-02T03:55:20.547226634Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 1c46f0e248cb4ae7df5f5f914094c5cb1507073091ea9100c47790b3f91b4bbb
     name: verulink-attestor
@@ -143,7 +143,7 @@ entries:
     version: 0.0.0-stg.202510191112-beta
   - apiVersion: v2
     appVersion: 0.0.0-stg.202510170241-beta
-    created: "2026-02-02T03:39:17.898323185Z"
+    created: "2026-02-02T03:55:20.546926257Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: f3c1cda3357274f237bcf78982047db6bcbc1b1a579ff9575b1631068e0cffc5
     name: verulink-attestor
@@ -152,8 +152,18 @@ entries:
     - https://venture23-aleo.github.io/verulink/verulink-attestor-0.0.0-stg.202510170241-beta.tgz
     version: 0.0.0-stg.202510170241-beta
   - apiVersion: v2
+    appVersion: 0.0.0-build.202602020355
+    created: "2026-02-02T03:55:20.546614108Z"
+    description: Helm chart for the Verulink Attestor service (chain + signing)
+    digest: e47ee6dddb6926cf480625bec02efa8fb0ca0122d80b27559db0643af9b3c7d0
+    name: verulink-attestor
+    type: application
+    urls:
+    - https://venture23-aleo.github.io/verulink/verulink-attestor-0.0.0-build.202602020355.tgz
+    version: 0.0.0-build.202602020355
+  - apiVersion: v2
     appVersion: 0.0.0-build.202602020339
-    created: "2026-02-02T03:39:17.898008933Z"
+    created: "2026-02-02T03:55:20.545863486Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: e767f966cef113fa1dd2a65af73682dcb5699de337d9920f652b0c9efecbb1f0
     name: verulink-attestor
@@ -163,7 +173,7 @@ entries:
     version: 0.0.0-build.202602020339
   - apiVersion: v2
     appVersion: 0.0.0-build.202602020200
-    created: "2026-02-02T03:39:17.897221204Z"
+    created: "2026-02-02T03:55:20.545074423Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 3d15e2d8a2390036f238b1833c62815d3a3549061edc1bd3c7c4b83ff8798824
     name: verulink-attestor
@@ -173,7 +183,7 @@ entries:
     version: 0.0.0-build.202602020200
   - apiVersion: v2
     appVersion: 0.0.0-build.202601201418
-    created: "2026-02-02T03:39:17.895729461Z"
+    created: "2026-02-02T03:55:20.543398945Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: bf69d9c805b63476fea95d1122d990dd91d2b026c2733425ccfd8c102c86b129
     name: verulink-attestor
@@ -183,7 +193,7 @@ entries:
     version: 0.0.0-build.202601201418
   - apiVersion: v2
     appVersion: 0.0.0-build.202601201246
-    created: "2026-02-02T03:39:17.895028472Z"
+    created: "2026-02-02T03:55:20.542712131Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 362caac186be3ffb6424eb502a6dabc1275f3e72119a90f7db807920e4e7dc93
     name: verulink-attestor
@@ -193,7 +203,7 @@ entries:
     version: 0.0.0-build.202601201246
   - apiVersion: v2
     appVersion: 0.0.0-build.202601200754
-    created: "2026-02-02T03:39:17.89432514Z"
+    created: "2026-02-02T03:55:20.542022002Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 4eb22dab55db631f3531424b0f718d658524d1ed37e2801a9152c1008aad2838
     name: verulink-attestor
@@ -203,7 +213,7 @@ entries:
     version: 0.0.0-build.202601200754
   - apiVersion: v2
     appVersion: 0.0.0-build.202601200307
-    created: "2026-02-02T03:39:17.893635202Z"
+    created: "2026-02-02T03:55:20.541317976Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 91dba6ec362945641692f761ced23a8dcbff0f9fc7a33da2abf40714c07830b1
     name: verulink-attestor
@@ -213,7 +223,7 @@ entries:
     version: 0.0.0-build.202601200307
   - apiVersion: v2
     appVersion: 0.0.0-build.202510191237
-    created: "2026-02-02T03:39:17.892742959Z"
+    created: "2026-02-02T03:55:20.540634278Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: a0bcfc6705ae1b01b32446323d4608730095c1a2ba8eb832e6e5dc4d783206da
     name: verulink-attestor
@@ -223,7 +233,7 @@ entries:
     version: 0.0.0-build.202510191237
   - apiVersion: v2
     appVersion: 0.0.0-build.202510190946
-    created: "2026-02-02T03:39:17.892401297Z"
+    created: "2026-02-02T03:55:20.540179585Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 13b069b465cdb468b8ba8551541ed22afb3eb999ab46fcbc99b73d596c8bd6a0
     name: verulink-attestor
@@ -233,7 +243,7 @@ entries:
     version: 0.0.0-build.202510190946
   - apiVersion: v2
     appVersion: 0.0.0-build.202510171321
-    created: "2026-02-02T03:39:17.892056668Z"
+    created: "2026-02-02T03:55:20.53985922Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 2206bd590b55c702b141be2cd8daf02e69841e3d11db1682cd5ad28859c9a814
     name: verulink-attestor
@@ -243,7 +253,7 @@ entries:
     version: 0.0.0-build.202510171321
   - apiVersion: v2
     appVersion: 0.0.0-build.202510170446
-    created: "2026-02-02T03:39:17.891721718Z"
+    created: "2026-02-02T03:55:20.539530661Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: d619e10d79ddfba12bd7ce6893795e24a902d9e403956001c254747315aaa105
     name: verulink-attestor
@@ -253,7 +263,7 @@ entries:
     version: 0.0.0-build.202510170446
   - apiVersion: v2
     appVersion: 0.0.0-build.202510170432
-    created: "2026-02-02T03:39:17.891419618Z"
+    created: "2026-02-02T03:55:20.539195489Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: a86650c68a81dd8695fb230f854ee39e8527dc4ec158598520b7064a4de54223
     name: verulink-attestor
@@ -263,7 +273,7 @@ entries:
     version: 0.0.0-build.202510170432
   - apiVersion: v2
     appVersion: 0.0.0-build.202510170414
-    created: "2026-02-02T03:39:17.891096189Z"
+    created: "2026-02-02T03:55:20.53889356Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 85965f6e835dc31454ed8038c951b0128065066b4cac37a5d9d12f40ee09e14b
     name: verulink-attestor
@@ -273,7 +283,7 @@ entries:
     version: 0.0.0-build.202510170414
   - apiVersion: v2
     appVersion: 0.0.0-build.202510161435
-    created: "2026-02-02T03:39:17.890785664Z"
+    created: "2026-02-02T03:55:20.538580749Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: b84f50019b7744389a6789ba9dface1bdb7ac8b5c23b9e444fda88882d292e44
     name: verulink-attestor
@@ -283,7 +293,7 @@ entries:
     version: 0.0.0-build.202510161435
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160752
-    created: "2026-02-02T03:39:17.890467435Z"
+    created: "2026-02-02T03:55:20.538223066Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 779faf87b25bfbbf8c0e6b4e24c8312088779a92efbe724ca5d0c5b1ea658904
     name: verulink-attestor
@@ -293,7 +303,7 @@ entries:
     version: 0.0.0-build.202510160752
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160745
-    created: "2026-02-02T03:39:17.890039682Z"
+    created: "2026-02-02T03:55:20.537891892Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: d9f19a535bf1356442c68261f4254039f7f69a5bd505d75712cf5b5bffb405c8
     name: verulink-attestor
@@ -303,7 +313,7 @@ entries:
     version: 0.0.0-build.202510160745
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160734
-    created: "2026-02-02T03:39:17.889186966Z"
+    created: "2026-02-02T03:55:20.537293402Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: c9152db62e45ae7141d94aa78e3d7008f09904f4464418a0bc50d5c8038a1339
     name: verulink-attestor
@@ -313,7 +323,7 @@ entries:
     version: 0.0.0-build.202510160734
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160713
-    created: "2026-02-02T03:39:17.888707949Z"
+    created: "2026-02-02T03:55:20.536416876Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 2887a7866d0ff006b9ac422f5d1624f1900f43b27036b1551d3e02eed598a7cd
     name: verulink-attestor
@@ -323,7 +333,7 @@ entries:
     version: 0.0.0-build.202510160713
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160505
-    created: "2026-02-02T03:39:17.888412632Z"
+    created: "2026-02-02T03:55:20.536126788Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: fffeb5ab1ff991267a2e64b0e4dc1ef8f7ceba0f97000fb6e76ff0f4e492b9ad
     name: verulink-attestor
@@ -333,7 +343,7 @@ entries:
     version: 0.0.0-build.202510160505
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160444
-    created: "2026-02-02T03:39:17.888136541Z"
+    created: "2026-02-02T03:55:20.535863239Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: ff4cedcbaab23bd0cdf381ea21a87c0a7d64ccb432f7fdac01f02870755d9488
     name: verulink-attestor
@@ -343,7 +353,7 @@ entries:
     version: 0.0.0-build.202510160444
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160223
-    created: "2026-02-02T03:39:17.887870137Z"
+    created: "2026-02-02T03:55:20.535583781Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 23a2dd76e221c244d60609e6ec710cdc6b2da9e4a542454b11eebf132ace621f
     name: verulink-attestor
@@ -353,7 +363,7 @@ entries:
     version: 0.0.0-build.202510160223
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160214
-    created: "2026-02-02T03:39:17.887614935Z"
+    created: "2026-02-02T03:55:20.53529768Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: f8d57cdbc38aea553dca9c1eff98e5df175c0a6ec7043727dfbf44751972b547
     name: verulink-attestor
@@ -363,7 +373,7 @@ entries:
     version: 0.0.0-build.202510160214
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160209
-    created: "2026-02-02T03:39:17.887322373Z"
+    created: "2026-02-02T03:55:20.535036937Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 271286ce41aa90215e714b0dae0f4e54c900523ae956a5f5a4ba8c98ca909dfb
     name: verulink-attestor
@@ -373,7 +383,7 @@ entries:
     version: 0.0.0-build.202510160209
   - apiVersion: v2
     appVersion: 0.0.0-build.202510160202
-    created: "2026-02-02T03:39:17.887033077Z"
+    created: "2026-02-02T03:55:20.534762578Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 36a3100c83a5397a0c1db2ba836835259774597d3d24eaec7505ed72063d2fe0
     name: verulink-attestor
@@ -383,7 +393,7 @@ entries:
     version: 0.0.0-build.202510160202
   - apiVersion: v2
     appVersion: 0.0.0-build.202510151523
-    created: "2026-02-02T03:39:17.886755332Z"
+    created: "2026-02-02T03:55:20.534481066Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: e64bf6b784542b09ceb37e549c424f6d78264aaec2bf4e8e2293b57e0a1bb8fe
     name: verulink-attestor
@@ -393,7 +403,7 @@ entries:
     version: 0.0.0-build.202510151523
   - apiVersion: v2
     appVersion: 0.0.0-build.202510151345
-    created: "2026-02-02T03:39:17.886469633Z"
+    created: "2026-02-02T03:55:20.534160181Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: c08c51b9818f93948f02d58064eaa6311a2cb73384cc9af5c24afaa8cea0b488
     name: verulink-attestor
@@ -403,7 +413,7 @@ entries:
     version: 0.0.0-build.202510151345
   - apiVersion: v2
     appVersion: 0.0.0-build.202510151134
-    created: "2026-02-02T03:39:17.886169628Z"
+    created: "2026-02-02T03:55:20.53388447Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: afd6727b8d03feb5a686c7ba2dc10df53a8b74704ac02c119b00d36a08dad8db
     name: verulink-attestor
@@ -413,7 +423,7 @@ entries:
     version: 0.0.0-build.202510151134
   - apiVersion: v2
     appVersion: 0.0.0-build.202510151128
-    created: "2026-02-02T03:39:17.885879691Z"
+    created: "2026-02-02T03:55:20.533601034Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: b6a9e17a8ed272899ee91489264f2a4a73da5e42ace64401dce9342ddab4512c
     name: verulink-attestor
@@ -423,7 +433,7 @@ entries:
     version: 0.0.0-build.202510151128
   - apiVersion: v2
     appVersion: 0.0.0-build.202510151059
-    created: "2026-02-02T03:39:17.88557151Z"
+    created: "2026-02-02T03:55:20.533274067Z"
     description: Helm chart for the Verulink Attestor service (chain + signing)
     digest: 402d8d7d937d77ba7d3e362cb051f187ff976ab0e30c58bc2c2aaf371b11a660
     name: verulink-attestor
@@ -431,4 +441,4 @@ entries:
     urls:
     - https://venture23-aleo.github.io/verulink/verulink-attestor-0.0.0-build.202510151059.tgz
     version: 0.0.0-build.202510151059
-generated: "2026-02-02T03:39:17.885128249Z"
+generated: "2026-02-02T03:55:20.532840964Z"
