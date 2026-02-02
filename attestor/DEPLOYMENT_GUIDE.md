@@ -378,9 +378,34 @@ kubectl describe secret attestor-secret -n <namespace>
 ```
 
 
-### 2. Configure Storage
 
-### Default: emptyDir (Development/Testing)
+---
+
+## 2. Prepare Configuration Values
+
+Before deploying, prepare your `values.yaml` file with all required configuration. 
+
+### Download the Sample `values.yaml` and Update
+
+
+#### Download values.yaml for your environment (dev, staging, or production)
+
+**Production**
+```bash
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/main/attestor/attestor-chart/values.yaml
+```
+**Staging**
+
+```bash
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/staging/attestor/attestor-chart/values.yaml
+```
+
+
+**Update this values.yaml file** with your environment-specific values:
+
+#### Configure Storage
+
+**Default: emptyDir (Development/Testing)**
 
 The chart defaults to `emptyDir` storage, which is ephemeral and suitable for testing only.
 
@@ -392,7 +417,7 @@ storage:
 
 **Warning:** Data is lost when pods restart. Not suitable for production.
 
-### Production: Persistent Volume Claim (PVC)
+**Production: Persistent Volume Claim (PVC)**
 
 For production deployments, use PVC for persistent storage.
 
@@ -435,32 +460,9 @@ storage:
 
 **Note:** The chart will automatically create the PVC when `storage.type: pvc` is set.
 
----
-
-## 3. Prepare Configuration Values
-
-Before deploying, prepare your `values.yaml` file with all required configuration. 
-
-### Download the Sample `values.yaml` and Update
-
-```bash
-# Download values.yaml for your environment (dev, staging, or production)
-
-# Production
-curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/main/attestor/attestor-chart/values.yaml
-
-# Staging
-
-curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/staging/attestor/attestor-chart/values.yaml
 
 
-
-**Update this values.yaml file** with your environment-specific values:
-
-
-
-
-## 4. Deploy with Helm
+## 3. Deploy with Helm
 
 ### Add Verulink Attestor Helm Repository
 ```bash
@@ -474,12 +476,25 @@ To view all available versions of the Verulink Attestor Helm Chart, run:
 ```bash
 helm search repo verulink/verulink-attestor --versions
 ```
+>To list development chart versions, use:
+>```bash
+>helm search repo verulink/verulink-attestor --versions --devel
+>```
 ### List All Configurable Values in the Chart
 
 
 ```bash
 helm show values verulink/verulink-attestor
 ```
+
+> To list the latest beta/dev version, use the actual version string from `helm search repo` output.
+
+```bash
+# Example: show values for a specific beta version
+helm show values verulink/verulink-attestor \
+  --version 0.0.0-build.202602020200
+```
+
 
 
 ### First-Time Installation
