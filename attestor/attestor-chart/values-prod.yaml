@@ -1,0 +1,7 @@
+# Production Environment Values
+# Note: values.yaml already has production defaults
+# This file is provided for explicit production overrides if needed
+# Usage: helm install <release-name> <chart> -f values.yaml -f values-prod.yaml
+
+# Production defaults are already in values.yaml
+# Override here only if you need different production settings

@@ -332,6 +332,7 @@ docker compose -f ~/verulink_attestor/compose.yml logs -f
    ```bash
    helm version
    ```
+  To install Helm, see the instructions [here](https://helm.sh/docs/intro/install/).
 
 
 ### 1. Setup Kubernetes Secrets
@@ -377,9 +378,34 @@ kubectl describe secret attestor-secret -n <namespace>
 ```
 
 
-### 2. Configure Storage
 
-### Default: emptyDir (Development/Testing)
+---
+
+## 2. Prepare Configuration Values
+
+Before deploying, prepare your `values.yaml` file with all required configuration. 
+
+### Download the Sample `values.yaml` and Update
+
+
+#### Download values.yaml for your environment (dev, staging, or production)
+
+**Production**
+```bash
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/main/attestor/attestor-chart/values.yaml
+```
+**Staging**
+
+```bash
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/staging/attestor/attestor-chart/values.yaml
+```
+
+
+**Update this values.yaml file** with your environment-specific values:
+
+#### Configure Storage
+
+**Default: emptyDir (Development/Testing)**
 
 The chart defaults to `emptyDir` storage, which is ephemeral and suitable for testing only.
 
@@ -391,7 +417,7 @@ storage:
 
 **Warning:** Data is lost when pods restart. Not suitable for production.
 
-### Production: Persistent Volume Claim (PVC)
+**Production: Persistent Volume Claim (PVC)**
 
 For production deployments, use PVC for persistent storage.
 
@@ -434,118 +460,9 @@ storage:
 
 **Note:** The chart will automatically create the PVC when `storage.type: pvc` is set.
 
----
-
-## 3. Prepare Configuration Values
-
-Before deploying, prepare your `values.yaml` file with all required configuration. Review `attestor/attestor-chart/values.yaml` for the complete structure.
-
-### Required Variables
-
-#### Attestor Configuration
-```yaml
-chainService:
-  name: "dev_attestor_verulink_xyz"  # Your attestor name
-  version: "1.0.1"
-  mode: "dev"  # Options: "dev", "stag", "prod"
-  db_dir: "/var/lib/attestor/dev"
-```
-
-#### Chain Configurations
-
-**Aleo Chain:**
-```yaml
-chainService:
-  chains:
-    aleo:
-      chain_id: "6694886634403"
-      bridge_contract: "vlink_token_bridge_v9.aleo"
-      node_url: "https://api.explorer.provable.com/v1|testnet"
-      wallet_address: "aleo1..."  # Your Aleo wallet address
-```
-
-**Ethereum Chain:**
-```yaml
-    ethereum:
-      chain_id: "27234042785"
-      bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
-      node_url: "https://eth.llamarpc.com"
-      start_height: 9847133  # Block height to start from
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your Ethereum wallet address
-```
-
-**BSC Chain:**
-```yaml
-    bsc:
-      chain_id: "28556963657430695"
-      bridge_contract: "0xdeEbcF78DfDa7494f9Bbe4Ca313C486D29F0EC56"
-      node_url: "wss://base-sepolia-rpc.publicnode.com"
-      start_height: 1
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your BSC wallet address
-```
-
-**Base Chain:**
-```yaml
-    base:
-      chain_id: "443067135441324596"
-      bridge_contract: "0x1e12776edb78A5473964cF257E825991ad501533"
-      node_url: "wss://base-sepolia-rpc.publicnode.com"
-      start_height: 35024380
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your Base wallet address
-```
-
-**Arbitrum Chain:**
-```yaml
-    arbitrum:
-      chain_id: "438861435819683566"
-      bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
-      node_url: "wss://arbitrum-sepolia.drpc.org"
-      start_height: 224887156
-      filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-      wallet_address: "0x..."  # Your Arbitrum wallet address
-```
 
 
-
-**Collector Service:**
-```yaml
-chainService:
-  collector_service:
-    uri: "https://aleomtls.venture23.xyz/"  # Your collector service URL
-    collector_wait_dur: "1h"
-```
-
-**Metrics (Prometheus):**
-```yaml
-chainService:
-  metrics:
-    host: "https://pushgateway-aleomtls.venture23.xyz/"  # Your pushgateway URL
-    job_name: "dev-push-gateway"  # Your job name
-```
-
-#### Docker Images
-```yaml
-image:
-  chain:
-    repository: "venture23/verulink-attestor-chain"
-    tag: "v2.0.2"  # Use appropriate version
-  sign:
-    repository: "venture23/verulink-attestor-sign"
-    tag: "v2.0.2"  # Use appropriate version
-```
-
-#### Secret Reference
-```yaml
-secrets:
-  existingSecretName: "attestor-secret"  # Must match the secret created in step 1
-```
-
-
-
-## 4. Deploy with Helm
+## 3. Deploy with Helm
 
 ### Add Verulink Attestor Helm Repository
 ```bash
@@ -559,6 +476,26 @@ To view all available versions of the Verulink Attestor Helm Chart, run:
 ```bash
 helm search repo verulink/verulink-attestor --versions
 ```
+>To list development chart versions, use:
+>```bash
+>helm search repo verulink/verulink-attestor --versions --devel
+>```
+### List All Configurable Values in the Chart
+
+
+```bash
+helm show values verulink/verulink-attestor
+```
+
+> To list the latest beta/dev version, use the actual version string from `helm search repo` output.
+
+```bash
+# Example: show values for a specific beta version
+helm show values verulink/verulink-attestor \
+  --version 0.0.0-build.202602020200
+```
+
+
 
 ### First-Time Installation
 
@@ -567,6 +504,7 @@ To install the Verulink Attestor for the first time, use:
 helm install verulink-attestor verulink/verulink-attestor \
   --namespace <your-namespace> \
   --create-namespace \
+  --version <version> \
   -f values.yaml
 ```
 
@@ -576,7 +514,19 @@ To upgrade to a newer version of the chart, use:
 ```bash
 helm upgrade verulink-attestor verulink/verulink-attestor \
   --namespace <your-namespace> \
+  --version <version> \
   -f values.yaml
+```
+
+
+#### Upgrading Only the Image
+
+
+```bash
+helm upgrade verulink-attestor verulink/verulink-attestor \
+  --namespace <your-namespace> \
+  --set image.chain.tag=<new-chain-tag> \
+  --set image.sign.tag=<new-signing-tag>
 ```
 
 
