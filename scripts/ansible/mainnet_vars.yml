@@ -2,7 +2,6 @@
 # Mainnet Environment Variables for Attestor Service
 
 # Attestor Configuration
-attestor_name: "<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>"
 mode: "prod"
 
 # Aleo Chain Configuration
@@ -16,9 +15,28 @@ aleo_private_key: "<your_aleo_private_key>"
 bsc_chain_id: "422842677816"  # BSC Mainnet
 bsc_wallet_address: "<your_evm_wallet_address>"
 bsc_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
-bsc_node_url: "wss://bsc-rpc.publicnode.com"
-bsc_start_height: 58383959
-bsc_private_key: "<your_evm_private_key>"
+bsc_node_url: "<bsc_rpc_url>"
+bsc_start_height: "71865844"
+
+# Ethereum Chain Configuration
+ethereum_chain_id: "27234042785" # Ethereum Mainnet
+ethereum_bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
+ethereum_node_url: "<ethereum_rpc_url>"
+ethereum_start_height: "24026263"
+
+
+
+# Base Chain Configuration
+base_chain_id: "27691695965085957"  # Base Mainnet
+base_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+base_node_url: "<base_rpc_url>"
+base_start_height: "39558981"
+
+# Arbitrum Chain Configuration
+arbitrum_chain_id: "27428839738746033"  # Arbitrum Mainnet
+arbitrum_bridge_contract: "0x397e47F5072B48681b170199551bdB7fBDa136b7"
+arbitrum_node_url: "<arbitrum_rpc_url>"
+arbitrum_start_height: "415778885"
 
 # Service Configuration
 deploy_dir: "/home/ubuntu/verulink_attestor"  # Deployment directory on target host
@@ -42,6 +60,6 @@ prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
 prometheus_job_name: "prod-push-gateway-v200"
 
 # Docker Image Tags
-docker_image_tag_sign: "v2.0.0"
-docker_image_tag_chain: "v2.0.0"
+docker_image_tag_sign: "v2.0.1"
+docker_image_tag_chain: "v2.0.1"
 deployment_environment: "prod"
