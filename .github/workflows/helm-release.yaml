@@ -40,6 +40,8 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/}
           elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
             VERSION="0.0.0-latest"
+          elif [[ "${GITHUB_REF}" == refs/heads/config/release-v2.0.1-base ]]; then
+            VERSION="0.1.0"
           elif [[ "${GITHUB_REF}" == refs/heads/develop ]]; then
             VERSION="0.0.0-dev.$(date +'%Y%m%d%H%M')-beta"
           elif [[ "${GITHUB_REF}" == refs/heads/staging ]]; then
