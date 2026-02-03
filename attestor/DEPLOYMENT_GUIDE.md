@@ -392,7 +392,7 @@ Before deploying, prepare your `values.yaml` file with all required configuratio
 
 **Production**
 ```bash
-curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/main/attestor/attestor-chart/values.yaml
+curl -o values.yaml https://raw.githubusercontent.com/venture23-aleo/verulink/refs/heads/config/release-v2.0.1-base/attestor/attestor-chart/values.yaml
 ```
 **Staging**
 
