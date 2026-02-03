@@ -54,8 +54,6 @@ chainService:
       wallet_address: <evm_wallet_address>
       bridge_contract: 0x1e12776edb78A5473964cF257E825991ad501533
       node_url: wss://base-sepolia-rpc.publicnode.com
-      start_height: 35024380
-      finality_height: 7050
       filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
       disabled: false
 
@@ -77,8 +75,6 @@ chainService:
       wallet_address: <evm_wallet_address>
       bridge_contract: 0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b
       node_url: wss://arbitrum-sepolia.drpc.org
-      start_height: 224887156
-      finality_height: 7050
       filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
       disabled: false
 
@@ -95,13 +91,11 @@ chainService:
           instant_pkt_wait_dur: 15m0s
 
     ethereum:
-      chain_id: "27234042785"
+      chain_id: "28556963657430695"
       chain_type: evm
       wallet_address: <evm_wallet_address>
-      bridge_contract: 0x7440176A6F367D3Fad1754519bD8033EAF173133
-      node_url: https://eth.llamarpc.com
-      start_height: 9847133
-      finality_height: 7050
+      bridge_contract: 0x54d1540631cACfa5f8d9b3371B88f562355387fA
+      node_url: wss://ethereum-sepolia-rpc.publicnode.com
       filter_topic: 0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0
       disabled: false
 
