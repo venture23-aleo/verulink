@@ -7,7 +7,9 @@ on:
       - develop
       - staging
       - release/*
-      - ci/add-helm-chart
+      - config/release-v2.0.1-base
+      - ci/fix-helm-deployment
+      
     tags:
       - 'v*.*.*'
 

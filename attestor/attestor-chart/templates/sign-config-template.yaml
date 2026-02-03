@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sign-config-template
+data:
+  config.yaml.tmpl: |
+    chains:
+{{- range $name, $chain := .Values.chainService.chains }}
+      - name: {{ $name }}
+        chain_type: {{ $chain.chain_type }}
+        chain_id: {{ $chain.chain_id }}
+{{- end }}
+
+    cred:
+      username: "{{ .SIGNING_SERVICE_USERNAME }}"
+      password: "{{ .SIGNING_SERVICE_PASSWORD }}"

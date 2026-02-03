@@ -205,6 +205,10 @@ generate_json() {
     export ETHEREUM_WALLET_ADDRESS_VAR="$ETHEREUM_WALLET_ADDRESS"
     export ALEO_PRIVATE_KEY_VAR="$ALEO_PRIVATE_KEY"
     export ALEO_WALLET_ADDRESS_VAR="$ALEO_WALLET_ADDRESS"
+    export BASE_PRIVATE_KEY_VAR="${BASE_PRIVATE_KEY:-}"
+    export BASE_WALLET_ADDRESS_VAR="${BASE_WALLET_ADDRESS:-}"
+    export ARBITRUM_PRIVATE_KEY_VAR="${ARBITRUM_PRIVATE_KEY:-}"
+    export ARBITRUM_WALLET_ADDRESS_VAR="${ARBITRUM_WALLET_ADDRESS:-}"
     export SIGNING_SERVICE_USERNAME_VAR="$SIGNING_SERVICE_USERNAME"
     export SIGNING_SERVICE_PASSWORD_VAR="$SIGNING_SERVICE_PASSWORD"
 
@@ -227,6 +231,10 @@ secret = {
         "ethereum_wallet_address": os.environ.get('ETHEREUM_WALLET_ADDRESS_VAR', ''),
         "aleo_private_key": os.environ.get('ALEO_PRIVATE_KEY_VAR', ''),
         "aleo_wallet_address": os.environ.get('ALEO_WALLET_ADDRESS_VAR', ''),
+        "base_private_key": os.environ.get('BASE_PRIVATE_KEY_VAR', ''),
+        "base_wallet_address": os.environ.get('BASE_WALLET_ADDRESS_VAR', ''),
+        "arbitrum_private_key": os.environ.get('ARBITRUM_PRIVATE_KEY_VAR', ''),
+        "arbitrum_wallet_address": os.environ.get('ARBITRUM_WALLET_ADDRESS_VAR', ''),
         "signing_service_username": os.environ.get('SIGNING_SERVICE_USERNAME_VAR', ''),
         "signing_service_password": os.environ.get('SIGNING_SERVICE_PASSWORD_VAR', '')
     }
@@ -237,7 +245,7 @@ with open("$OUTPUT_FILE", "w") as f:
 print("✓ Secret JSON generated")
 PYEOF
 
-    unset BSC_PRIVATE_KEY_VAR BSC_WALLET_ADDRESS_VAR ETHEREUM_PRIVATE_KEY_VAR ETHEREUM_WALLET_ADDRESS_VAR ALEO_PRIVATE_KEY_VAR ALEO_WALLET_ADDRESS_VAR SIGNING_SERVICE_USERNAME_VAR SIGNING_SERVICE_PASSWORD_VAR
+    unset BSC_PRIVATE_KEY_VAR BSC_WALLET_ADDRESS_VAR ETHEREUM_PRIVATE_KEY_VAR ETHEREUM_WALLET_ADDRESS_VAR ALEO_PRIVATE_KEY_VAR ALEO_WALLET_ADDRESS_VAR BASE_PRIVATE_KEY_VAR BASE_WALLET_ADDRESS_VAR ARBITRUM_PRIVATE_KEY_VAR ARBITRUM_WALLET_ADDRESS_VAR SIGNING_SERVICE_USERNAME_VAR SIGNING_SERVICE_PASSWORD_VAR
 
     if command -v jq &>/dev/null; then
         if ! jq empty "$OUTPUT_FILE" 2>/dev/null; then
@@ -801,6 +809,221 @@ configure_gcp_vm_identity() {
     return 0
 }
 
+# Store to Kubernetes Secret
+store_to_k8s() {
+    print_section "Storing to Kubernetes Secret"
+
+    # Check if kubectl is installed
+    if ! command -v kubectl &>/dev/null; then
+        echo -e "${RED}Error: kubectl not found. Please install kubectl.${NC}"
+        echo -e "${YELLOW}Install kubectl: https://kubernetes.io/docs/tasks/tools/${NC}"
+        return 1
+    fi
+
+    # Check Kubernetes cluster connection
+    echo -e "${CYAN}Checking Kubernetes cluster connection...${NC}"
+    if ! kubectl cluster-info &>/dev/null; then
+        echo -e "${RED}Error: Failed to connect to Kubernetes cluster${NC}"
+        echo -e "${YELLOW}Please check:${NC}"
+        echo -e "  1. Your kubeconfig is configured: export KUBECONFIG=~/.kube/config"
+        echo -e "  2. Cluster is accessible: kubectl cluster-info"
+        echo -e "  3. For GKE: gcloud container clusters get-credentials <cluster> --zone <zone>"
+        echo -e "  4. For EKS: aws eks update-kubeconfig --name <cluster> --region <region>"
+        return 1
+    fi
+    echo -e "${GREEN}✓ Connected to Kubernetes cluster${NC}"
+
+    # Get namespace
+    local default_namespace="verulink-attestor"
+    echo -e "${CYAN}Default Namespace: $default_namespace${NC}"
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom namespace:${NC}"
+    read_input "Kubernetes Namespace" K8S_NAMESPACE_INPUT "$default_namespace"
+    
+    if [[ -z "$K8S_NAMESPACE_INPUT" ]] || [[ "$K8S_NAMESPACE_INPUT" == "$default_namespace" ]]; then
+        K8S_NAMESPACE="$default_namespace"
+        echo -e "${GREEN}✓ Using default namespace: $K8S_NAMESPACE${NC}"
+    else
+        K8S_NAMESPACE="$K8S_NAMESPACE_INPUT"
+        echo -e "${GREEN}✓ Using custom namespace: $K8S_NAMESPACE${NC}"
+    fi
+    echo ""
+
+    # Get secret name
+    local default_secret_name="attestor-secret"
+    echo -e "${CYAN}Default Secret Name: $default_secret_name${NC}"
+    echo -e "${YELLOW}Press Enter to use default, or enter a custom secret name:${NC}"
+    read_input "Kubernetes Secret Name" K8S_SECRET_NAME_INPUT "$default_secret_name"
+    
+    if [[ -z "$K8S_SECRET_NAME_INPUT" ]] || [[ "$K8S_SECRET_NAME_INPUT" == "$default_secret_name" ]]; then
+        K8S_SECRET_NAME="$default_secret_name"
+        echo -e "${GREEN}✓ Using default secret name: $K8S_SECRET_NAME${NC}"
+    else
+        K8S_SECRET_NAME="$K8S_SECRET_NAME_INPUT"
+        echo -e "${GREEN}✓ Using custom secret name: $K8S_SECRET_NAME${NC}"
+    fi
+    echo ""
+
+    # Create namespace if it doesn't exist
+    if ! kubectl get namespace "$K8S_NAMESPACE" &>/dev/null; then
+        echo -e "${CYAN}Creating namespace: $K8S_NAMESPACE${NC}"
+        if kubectl create namespace "$K8S_NAMESPACE"; then
+            echo -e "${GREEN}✓ Namespace created${NC}"
+        else
+            echo -e "${RED}✗ Failed to create namespace${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}Namespace already exists: $K8S_NAMESPACE${NC}"
+    fi
+
+    # Parse JSON file to extract values
+    if [[ ! -f "$OUTPUT_FILE" ]]; then
+        echo -e "${RED}Error: Secret JSON file not found: $OUTPUT_FILE${NC}"
+        return 1
+    fi
+
+    # Extract values from JSON (using Python for reliable JSON parsing)
+    local temp_script=$(mktemp)
+    cat > "$temp_script" <<'PYEOF'
+import json
+import base64
+import sys
+
+with open(sys.argv[1], 'r') as f:
+    secret_data = json.load(f)
+
+# Extract mTLS certificates and keys
+ca_cert = secret_data.get('mtls', {}).get('ca_certificate', '')
+attestor_cert = secret_data.get('mtls', {}).get('attestor_certificate', '')
+attestor_key = secret_data.get('mtls', {}).get('attestor_key', '')
+
+# Extract signing service credentials
+bsc_private_key = secret_data.get('signing_service', {}).get('bsc_private_key') or secret_data.get('signing_service', {}).get('ethereum_private_key', '')
+ethereum_private_key = secret_data.get('signing_service', {}).get('ethereum_private_key', '')
+aleo_private_key = secret_data.get('signing_service', {}).get('aleo_private_key', '')
+base_private_key = secret_data.get('signing_service', {}).get('base_private_key', '')
+arbitrum_private_key = secret_data.get('signing_service', {}).get('arbitrum_private_key', '')
+signing_service_username = secret_data.get('signing_service', {}).get('signing_service_username', '')
+signing_service_password = secret_data.get('signing_service', {}).get('signing_service_password', '')
+
+# Extract wallet addresses
+bsc_wallet_address = secret_data.get('signing_service', {}).get('bsc_wallet_address', '')
+ethereum_wallet_address = secret_data.get('signing_service', {}).get('ethereum_wallet_address', '')
+aleo_wallet_address = secret_data.get('signing_service', {}).get('aleo_wallet_address', '')
+base_wallet_address = secret_data.get('signing_service', {}).get('base_wallet_address', '')
+arbitrum_wallet_address = secret_data.get('signing_service', {}).get('arbitrum_wallet_address', '')
+
+# Base64 encode all values (Kubernetes secrets require base64 encoding)
+print(f"CA_MTLS_CERT={base64.b64encode(ca_cert.encode()).decode()}")
+print(f"ATTESTOR_MTLS_CERT={base64.b64encode(attestor_cert.encode()).decode()}")
+print(f"ATTESTOR_MTLS_KEY={base64.b64encode(attestor_key.encode()).decode()}")
+print(f"ALEO_PRIVATE_KEY={base64.b64encode(aleo_private_key.encode()).decode()}")
+print(f"BSC_PRIVATE_KEY={base64.b64encode(bsc_private_key.encode()).decode()}")
+print(f"ETHEREUM_PRIVATE_KEY={base64.b64encode(ethereum_private_key.encode()).decode()}")
+print(f"BASE_PRIVATE_KEY={base64.b64encode(base_private_key.encode()).decode()}")
+print(f"ARBITRUM_PRIVATE_KEY={base64.b64encode(arbitrum_private_key.encode()).decode()}")
+print(f"SIGNING_SERVICE_USERNAME={base64.b64encode(signing_service_username.encode()).decode()}")
+print(f"SIGNING_SERVICE_PASSWORD={base64.b64encode(signing_service_password.encode()).decode()}")
+print(f"BSC_WALLET_ADDRESS={base64.b64encode(bsc_wallet_address.encode()).decode()}")
+print(f"ETHEREUM_WALLET_ADDRESS={base64.b64encode(ethereum_wallet_address.encode()).decode()}")
+print(f"ALEO_WALLET_ADDRESS={base64.b64encode(aleo_wallet_address.encode()).decode()}")
+print(f"BASE_WALLET_ADDRESS={base64.b64encode(base_wallet_address.encode()).decode()}")
+print(f"ARBITRUM_WALLET_ADDRESS={base64.b64encode(arbitrum_wallet_address.encode()).decode()}")
+PYEOF
+
+    # Extract base64 encoded values
+    local encoded_values
+    if ! encoded_values=$(python3 "$temp_script" "$OUTPUT_FILE" 2>/dev/null); then
+        echo -e "${RED}Error: Failed to parse secret JSON file${NC}"
+        rm -f "$temp_script"
+        return 1
+    fi
+    rm -f "$temp_script"
+
+    # Create Kubernetes secret using kubectl create secret
+    echo -e "${CYAN}Creating Kubernetes secret: $K8S_SECRET_NAME in namespace: $K8S_NAMESPACE${NC}"
+    
+    # Check if secret already exists
+    if kubectl get secret "$K8S_SECRET_NAME" -n "$K8S_NAMESPACE" &>/dev/null; then
+        echo -e "${YELLOW}Secret already exists.${NC}"
+        read_input "Update existing secret? (yes/no)" UPDATE_SECRET "no"
+        if [[ "$UPDATE_SECRET" != "yes" ]]; then
+            echo -e "${YELLOW}Skipping secret creation${NC}"
+            return 0
+        fi
+        echo -e "${CYAN}Deleting existing secret...${NC}"
+        kubectl delete secret "$K8S_SECRET_NAME" -n "$K8S_NAMESPACE"
+    fi
+
+    # Create secret using YAML file (more reliable for long base64 values)
+    local secret_yaml=$(mktemp)
+    
+    # Extract individual values
+    local ca_cert_b64=$(echo "$encoded_values" | grep "^CA_MTLS_CERT=" | cut -d= -f2-)
+    local attestor_cert_b64=$(echo "$encoded_values" | grep "^ATTESTOR_MTLS_CERT=" | cut -d= -f2-)
+    local attestor_key_b64=$(echo "$encoded_values" | grep "^ATTESTOR_MTLS_KEY=" | cut -d= -f2-)
+    local aleo_key_b64=$(echo "$encoded_values" | grep "^ALEO_PRIVATE_KEY=" | cut -d= -f2-)
+    local bsc_key_b64=$(echo "$encoded_values" | grep "^BSC_PRIVATE_KEY=" | cut -d= -f2-)
+    local ethereum_key_b64=$(echo "$encoded_values" | grep "^ETHEREUM_PRIVATE_KEY=" | cut -d= -f2-)
+    local base_key_b64=$(echo "$encoded_values" | grep "^BASE_PRIVATE_KEY=" | cut -d= -f2-)
+    local arbitrum_key_b64=$(echo "$encoded_values" | grep "^ARBITRUM_PRIVATE_KEY=" | cut -d= -f2-)
+    local username_b64=$(echo "$encoded_values" | grep "^SIGNING_SERVICE_USERNAME=" | cut -d= -f2-)
+    local password_b64=$(echo "$encoded_values" | grep "^SIGNING_SERVICE_PASSWORD=" | cut -d= -f2-)
+    local bsc_wallet_b64=$(echo "$encoded_values" | grep "^BSC_WALLET_ADDRESS=" | cut -d= -f2-)
+    local ethereum_wallet_b64=$(echo "$encoded_values" | grep "^ETHEREUM_WALLET_ADDRESS=" | cut -d= -f2-)
+    local aleo_wallet_b64=$(echo "$encoded_values" | grep "^ALEO_WALLET_ADDRESS=" | cut -d= -f2-)
+    local base_wallet_b64=$(echo "$encoded_values" | grep "^BASE_WALLET_ADDRESS=" | cut -d= -f2-)
+    local arbitrum_wallet_b64=$(echo "$encoded_values" | grep "^ARBITRUM_WALLET_ADDRESS=" | cut -d= -f2-)
+    
+    # Create YAML file
+    cat > "$secret_yaml" <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: $K8S_SECRET_NAME
+  namespace: $K8S_NAMESPACE
+type: Opaque
+data:
+  CA_MTLS_CERT: $ca_cert_b64
+  ATTESTOR_MTLS_CERT: $attestor_cert_b64
+  ATTESTOR_MTLS_KEY: $attestor_key_b64
+  ALEO_PRIVATE_KEY: $aleo_key_b64
+  BSC_PRIVATE_KEY: $bsc_key_b64
+  ETHEREUM_PRIVATE_KEY: $ethereum_key_b64
+  BASE_PRIVATE_KEY: $base_key_b64
+  ARBITRUM_PRIVATE_KEY: $arbitrum_key_b64
+  SIGNING_SERVICE_USERNAME: $username_b64
+  SIGNING_SERVICE_PASSWORD: $password_b64
+  BSC_WALLET_ADDRESS: $bsc_wallet_b64
+  ETHEREUM_WALLET_ADDRESS: $ethereum_wallet_b64
+  ALEO_WALLET_ADDRESS: $aleo_wallet_b64
+  BASE_WALLET_ADDRESS: $base_wallet_b64
+  ARBITRUM_WALLET_ADDRESS: $arbitrum_wallet_b64
+EOF
+
+    # Apply the secret
+    if kubectl apply -f "$secret_yaml" &>/dev/null; then
+        echo -e "${GREEN}✓ Kubernetes secret created successfully${NC}"
+        rm -f "$secret_yaml"
+        
+        # Verify secret creation
+        if kubectl get secret "$K8S_SECRET_NAME" -n "$K8S_NAMESPACE" &>/dev/null; then
+            echo -e "${GREEN}✓ Secret verified in cluster${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}Warning: Secret created but verification failed${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}✗ Failed to create Kubernetes secret${NC}"
+        echo -e "${YELLOW}Please check:${NC}"
+        echo -e "  - You have permissions to create secrets in namespace $K8S_NAMESPACE"
+        echo -e "  - Cluster is accessible and responsive"
+        rm -f "$secret_yaml"
+        return 1
+    fi
+}
+
 # Main function
 main() {
     print_header
@@ -809,7 +1032,8 @@ main() {
     print_section "Cloud Provider Selection"
     echo -e "${CYAN}1. AWS Secrets Manager${NC}"
     echo -e "${CYAN}2. GCP Secret Manager${NC}"
-    read_input "Select cloud provider (1 or 2)" PROVIDER_CHOICE "1"
+    echo -e "${CYAN}3. Kubernetes Secret${NC}"
+    read_input "Select cloud provider (1, 2, or 3)" PROVIDER_CHOICE "1"
 
     case "$PROVIDER_CHOICE" in
         1)
@@ -825,6 +1049,9 @@ main() {
                 exit 1
             fi
             read_input "GCP Region" GCP_REGION "us-central1"
+            ;;
+        3)
+            CLOUD_PROVIDER="k8s"
             ;;
         *)
             echo -e "${RED}Error: Invalid choice${NC}"
@@ -858,6 +1085,10 @@ main() {
     read_input "Ethereum Wallet Address (0x...)" ETHEREUM_WALLET_ADDRESS ""
     read_masked "Aleo Private Key (APrivateKey1...)" ALEO_PRIVATE_KEY
     read_input "Aleo Wallet Address (aleo1...)" ALEO_WALLET_ADDRESS ""
+    read_masked "Base Private Key (0x...)" BASE_PRIVATE_KEY
+    read_input "Base Wallet Address (0x...)" BASE_WALLET_ADDRESS ""
+    read_masked "Arbitrum Private Key (0x...)" ARBITRUM_PRIVATE_KEY
+    read_input "Arbitrum Wallet Address (0x...)" ARBITRUM_WALLET_ADDRESS ""
     read_input "Signing Service Username" SIGNING_SERVICE_USERNAME ""
     read_masked "Signing Service Password" SIGNING_SERVICE_PASSWORD
 
@@ -901,9 +1132,14 @@ main() {
             echo -e "${RED}Failed to store secret to AWS${NC}"
             exit 1
         fi
-    else
+    elif [[ "$CLOUD_PROVIDER" == "gcp" ]]; then
         if ! store_to_gcp; then
             echo -e "${RED}Failed to store secret to GCP${NC}"
+            exit 1
+        fi
+    elif [[ "$CLOUD_PROVIDER" == "k8s" ]]; then
+        if ! store_to_k8s; then
+            echo -e "${RED}Failed to store secret to Kubernetes${NC}"
             exit 1
         fi
     fi

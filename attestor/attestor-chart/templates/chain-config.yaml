@@ -1,72 +1,36 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: attestor-chain-service-config
+  name: chain-config
 data:
   config.yaml: |
-    name: {{ .Values.attestor_name }}
-    version: 1.0.1
-    chains:
-      - name: aleo
-        chain_id: {{ .Values.aleo_chain_id }}
-        chain_type: aleo
-        wallet_address: {{ .Values.aleo_wallet_address }}
-        bridge_contract: {{ .Values.aleo_bridge_contract }}
-        node_url: {{ .Values.aleo_node_url }}
-        sequence_num_start:
-          bsc: 1
-        retry_packet_wait_dur: 2m0s
-        prune_base_seq_num_wait_dur: 5m0s
-        average_block_gen_dur: 3s
-        dest_chains:
-          bsc:
-            pkt_validity_wait_dur: 15m0s
-            finality_height: 23
-      - name: bsc
-        chain_id: {{ .Values.bsc_chain_id }}
-        chain_type: evm
-        wallet_address: {{ .Values.bsc_wallet_address }}
-        bridge_contract: {{ .Values.bsc_bridge_contract }}
-        node_url: {{ .Values.bsc_node_url }}
-        filter_topic: {{ .Values.bsc_filter_topic }}
-        retry_packet_wait_dur: 1m0s
-        prune_base_seq_num_wait_dur: 1m0s
-        average_block_gen_dur: 2s
-        dest_chains:
-          aleo:
-            pkt_validity_wait_dur: 1m0s
-            finality_height: 21
-            feed_pkt_wait_dur: 1m0s
-            start_height: {{ .Values.bsc_start_height }}
+    name: {{ .Values.chainService.name }}
+    version: {{ .Values.chainService.version }}
 
-    check_health_service: 1m
-    db_dir: {{ .Values.db_dir }}
-    consume_packet_workers: 10
+    chains:
+{{- range $name, $chain := .Values.chainService.chains }}
+      - name: {{ $name }}
+{{- $yamlOutput := toYaml $chain | nindent 8 | trimPrefix "\n" }}
+{{- $chainIdValue := $chain.chain_id | replace "\"" "" | trim }}
+{{- $yamlOutput = $yamlOutput | replace (printf "chain_id: \"%s\"" $chain.chain_id) (printf "chain_id: %s" $chainIdValue) }}
+{{- $yamlOutput = $yamlOutput | replace "\n\n" "\n" }}
+{{ $yamlOutput }}
+{{- end }}
+
+    check_health_service: {{ .Values.chainService.check_health_service }}
+    db_dir: {{ .Values.chainService.db_dir }}
+    consume_packet_workers: {{ .Values.chainService.consume_packet_workers }}
+
     log:
-      encoding: console
-      rotation:
-        max_size: 100
-        max_age: 14
-        max_backups: 10
-        compress: true
-      output_paths:
-        - {{ .Values.log_dir }}
-        - stdout
-    mode: {{ .Values.deployment_environment }}
+{{ toYaml .Values.chainService.log | nindent 6 }}
+
+    mode: {{ .Values.chainService.mode }}
+
     signing_service:
-      host: {{ .Values.signing_service.host }}
-      port: {{ .Values.signing_service.port }}
-      endpoint: "/sign"
-      scheme: "http"
-      username: {{ .Values.signing_service.username }}
-      password: {{ .Values.signing_service.password }}
-      health_end_point: "/health"
+{{ toYaml .Values.chainService.signing_service | nindent 6 }}
+
     collector_service:
-      uri: {{ .Values.collector_service_url }}
-      collector_wait_dur: 1h
-      ca_certificate: /configs/.mtls/ca.crt
-      attestor_certificate: /configs/.mtls/{{ .Values.attestor_name }}.crt
-      attestor_key: /configs/.mtls/{{ .Values.attestor_name }}.key
+{{ toYaml .Values.chainService.collector_service | nindent 6 }}
+
     metrics:
-      host: {{ .Values.prometheus_pushgateway_url }}
-      job_name: {{ .Values.prometheus_job_name }}
+{{ toYaml .Values.chainService.metrics | nindent 6 }}

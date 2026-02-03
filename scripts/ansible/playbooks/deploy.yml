@@ -1,12 +1,17 @@
 - name: Deploy Verulink Attestor
-  hosts: all
-  become: true
+  hosts: "{{ 'localhost' if (deployment_type | default('docker')) == 'k8s' else 'all' }}"
+  connection: "{{ 'local' if (deployment_type | default('docker')) == 'k8s' else 'ssh' }}"
+  become: "{{ false if (deployment_type | default('docker')) == 'k8s' else true }}"
   gather_facts: true
   roles:
-    - cloud_common
-    - secrets  # Always retrieve secrets from cloud Secret Manager first
-    - prechecks
-    - config
+    - role: cloud_common  # Install cloud CLIs (skip for k8s)
+      when: deployment_type | default('docker') != 'k8s'
+    - role: secrets  # Retrieve secrets from cloud Secret Manager (skip for k8s)
+      when: deployment_type | default('docker') != 'k8s'
+    - role: prechecks  # Validate cloud access (skip for k8s)
+      when: deployment_type | default('docker') != 'k8s'
+    - role: config  # Download config templates (skip for k8s, Helm handles config)
+      when: deployment_type | default('docker') != 'k8s'
   tasks:
     - name: Include Docker role
       include_role:

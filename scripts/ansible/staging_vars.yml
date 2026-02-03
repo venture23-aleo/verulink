@@ -2,7 +2,7 @@
 # Staging Environment Variables for Attestor Service
 
 # Attestor Configuration
-# attestor_name: "stg_attestor_verulink_xyz"
+attestor_name: "stg_attestor_verulink_v23"
 mode: "stage"
 
 # Aleo Chain Configuration
@@ -15,29 +15,13 @@ bsc_chain_id: "422842677857"  # BSC Testnet
 bsc_bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
 bsc_node_url: "wss://base-sepolia-rpc.publicnode.com"
 bsc_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-bsc_start_height: 78679869
-
+bsc_start_height: 444444
 # Ethereum Chain Configuration
 ethereum_chain_id: "27234042785"
 ethereum_bridge_contract: "0x7440176A6F367D3Fad1754519bD8033EAF173133"
 ethereum_node_url: "https://eth.llamarpc.com"
-ethereum_start_height: 9847133
+ethereum_start_height: 23555444
 
-
-
-# Base Chain Configuration
-base_chain_id: "443067135441324596"  # Base Testnet
-base_bridge_contract: "0x1e12776edb78A5473964cF257E825991ad501533"
-base_node_url: "wss://base-sepolia-rpc.publicnode.com"
-base_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-base_start_height: 35024380
-
-# Arbitrum Chain Configuration
-arbitrum_chain_id: "438861435819683566"  # Arbirum Testnet
-arbitrum_bridge_contract: "0x2E8e59559F3F0e1b49484F5f5C7d30b0017b543b"
-arbitrum_node_url: "wss://arbitrum-sepolia.drpc.org"
-arbitrum_filter_topic: "0x2ea0473a63d92d3182c86a6f05d1984a63782c7c58f5d32bb629fdf43388c1b0"
-arbitrum_start_height: 224887156
 
 # Service Configuration
 deploy_dir: "/home/ubuntu/verulink_attestor"  # Deployment directory on target host
@@ -50,10 +34,10 @@ signing_service_port: 8080
 
 
 # Collector Service Configuration
-collector_service_url: "<collector_service_url>"
+collector_service_url: "https://aleomtls.venture23.xyz/"
 
 # Metrics Configuration
-prometheus_pushgateway_url: "<prometheus_pushgateway_url>"
+prometheus_pushgateway_url: "https://pushgateway-aleomtls.venture23.xyz/"
 prometheus_job_name: "staging-push-gateway"
 
 # Docker Image Tags
