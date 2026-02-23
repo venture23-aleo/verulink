@@ -383,6 +383,75 @@ kubectl describe secret attestor-secret -n <namespace>
 
 ## 2. Prepare Configuration Values
 
+## Parameters
+
+
+| Key                                                                      | Type   | Default                                                         | Description                                  |
+| ------------------------------------------------------------------------ | ------ | --------------------------------------------------------------- | -------------------------------------------- |
+| **chainService.name**                                                    | string | `<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>` | Unique service identifier                    |
+| **chainService.version**                                                 | string | `"2.0.2"`                                                       | Chain service version                        |
+| **chainService.mode**                                                    | string | `"prod"`                                                        | Application running mode                     |
+| **chainService.check_health_service**                                    | string | `"1m"`                                                          | Health check interval                        |
+| **chainService.db_dir**                                                  | string | `"/var/lib/attestor/prod"`                                      | Database directory path                      |
+| **chainService.consume_packet_workers**                                  | int    | `20`                                                            | Number of packet processing workers          |
+| **chainService.chains.<chain>.chain_id**                                 | string | —                                                               | Chain ID                                     |
+| **chainService.chains.<chain>.chain_type**                               | string | —                                                               | Chain type (`aleo`, `evm`)                   |
+| **chainService.chains.<chain>.wallet_address**                           | string | —                                                               | Wallet address                               |
+| **chainService.chains.<chain>.bridge_contract**                          | string | —                                                               | Bridge contract address/name                 |
+| **chainService.chains.<chain>.node_url**                                 | string | —                                                               | RPC / WebSocket endpoint                     |
+| **chainService.chains.<chain>.filter_topic**                             | string | —                                                               | Event topic filter (EVM only)                |
+| **chainService.chains.<chain>.disabled**                                 | bool   | `false`                                                         | Disable specific chain                       |
+| **chainService.chains.<chain>.retry_packet_wait_dur**                    | string | —                                                               | Retry packet wait duration                   |
+| **chainService.chains.<chain>.prune_base_seq_num_wait_dur**              | string | —                                                               | Prune sequence wait duration                 |
+| **chainService.chains.<chain>.average_block_gen_dur**                    | string | —                                                               | Average block generation duration            |
+| **chainService.chains.<chain>.dest_chains.<dest>.pkt_validity_wait_dur** | string | —                                                               | Packet validity wait duration                |
+| **chainService.chains.<chain>.dest_chains.<dest>.finality_height**       | int    | —                                                               | Finality confirmation height                 |
+| **chainService.chains.<chain>.dest_chains.<dest>.feed_pkt_wait_dur**     | string | —                                                               | Feed packet wait duration                    |
+| **chainService.chains.<chain>.dest_chains.<dest>.start_height**          | int    | —                                                               | Starting block height                        |
+| **chainService.chains.<chain>.dest_chains.<dest>.instant_pkt_wait_dur**  | string | —                                                               | Instant packet wait duration                 |
+| **chainService.signing_service.host**                                    | string | `"signingservice"`                                              | Signing service hostname                     |
+| **chainService.signing_service.port**                                    | int    | `8080`                                                          | Signing service port                         |
+| **chainService.signing_service.endpoint**                                | string | `"/sign"`                                                       | Signing endpoint path                        |
+| **chainService.signing_service.scheme**                                  | string | `"http"`                                                        | Protocol scheme                              |
+| **chainService.signing_service.username**                                | string | `"aleo"`                                                        | Auth username                                |
+| **chainService.signing_service.password**                                | string | `"chain"`                                                       | Auth password                                |
+| **chainService.signing_service.health_end_point**                        | string | `"/health"`                                                     | Health endpoint                              |
+| **chainService.collector_service.uri**                                   | string | —                                                               | Collector service URL                        |
+| **chainService.collector_service.collector_wait_dur**                    | string | `"1h"`                                                          | Collector polling interval                   |
+| **chainService.collector_service.ca_certificate**                        | string | `"/configs/.mtls/ca.crt"`                                       | CA certificate path                          |
+| **chainService.collector_service.attestor_certificate**                  | string | —                                                               | Attestor certificate path                    |
+| **chainService.collector_service.attestor_key**                          | string | —                                                               | Attestor private key path                    |
+| **chainService.metrics.host**                                            | string | —                                                               | Prometheus Pushgateway URL                   |
+| **chainService.metrics.job_name**                                        | string | `"prod-push-gateway-v200"`                                      | Metrics job name                             |
+| **chainService.log.encoding**                                            | string | `"console"`                                                     | Log encoding format                          |
+| **chainService.log.rotation.max_size**                                   | int    | `100`                                                           | Max log size (MB)                            |
+| **chainService.log.rotation.max_age**                                    | int    | `14`                                                            | Max log retention days                       |
+| **chainService.log.rotation.max_backups**                                | int    | `10`                                                            | Max backup files                             |
+| **chainService.log.rotation.compress**                                   | bool   | `true`                                                          | Compress rotated logs                        |
+| **chainService.log.output_paths**                                        | list   | `["/var/log/attestor/dev","stdout"]`                            | Log output paths                             |
+| **secrets.existingSecretName**                                           | string | `"attestor-secret"`                                             | Existing Kubernetes secret                   |
+| **storage.type**                                                         | string | `"pvc"`                                                         | Storage type (`emptyDir`, `pvc`, `hostPath`) |
+| **storage.createStorageClass**                                           | bool   | `false`                                                         | Create StorageClass via Helm                 |
+| **storage.storageClassName**                                             | string | `"attestor-storage-class-prod"`                                 | StorageClass name                            |
+| **storage.provisioner**                                                  | string | `"ebs.csi.aws.com"`                                             | CSI provisioner                              |
+| **storage.reclaimPolicy**                                                | string | `"Retain"`                                                      | Volume reclaim policy                        |
+| **storage.volumeBindingMode**                                            | string | `"WaitForFirstConsumer"`                                        | Volume binding mode                          |
+| **storage.allowVolumeExpansion**                                         | bool   | `true`                                                          | Allow PVC expansion                          |
+| **storage.parameters.type**                                              | string | `"gp3"`                                                         | EBS volume type                              |
+| **storage.parameters.fsType**                                            | string | `"ext4"`                                                        | Filesystem type                              |
+| **storage.parameters.encrypted**                                         | string | —                                                               | Enable encryption                            |
+| **storage.parameters.iops**                                              | string | —                                                               | Provisioned IOPS                             |
+| **storage.parameters.throughput**                                        | string | —                                                               | Provisioned throughput                       |
+| **storage.pvc.size**                                                     | string | `"10Gi"`                                                        | PVC storage size                             |
+| **storage.pvc.storageClassName**                                         | string | `"attestor-storage-class-prod"`                                 | PVC StorageClass                             |
+| **storage.pvc.accessModes**                                              | list   | `["ReadWriteOnce"]`                                             | PVC access modes                             |
+| **image.chain.repository**                                               | string | `"venture23/verulink-attestor-chain"`                           | Chain container image                        |
+| **image.chain.tag**                                                      | string | `"v2.0.2"`                                                      | Chain image tag                              |
+| **image.sign.repository**                                                | string | `"venture23/verulink-attestor-sign"`                            | Sign container image                         |
+| **image.sign.tag**                                                       | string | `"v2.0.2"`                                                      | Sign image tag                               |
+
+---
+
 Before deploying, prepare your `values.yaml` file with all required configuration. 
 
 ### Download the Sample `values.yaml` and Update
@@ -419,46 +488,10 @@ storage:
 
 **Production: Persistent Volume Claim (PVC)**
 
-For production deployments, use PVC for persistent storage.
+For production deployments, use a **PersistentVolumeClaim (PVC)** for persistent storage.
 
-#### Step 1: Prepare StorageClass (if needed)
+By default, the chart uses the cluster’s **default StorageClass** (if one exists). To override the StorageClass, use the `--set storage.pvc.storageClassName=<your-storage-class>` flag.
 
-Check existing StorageClasses:
-```bash
-kubectl get storageclass
-```
-
-If you need to create one, see `attestor/attestor-chart/STORAGECLASS_GUIDE.md` or use:
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: attestor-storage-class
-provisioner: ebs.csi.aws.com  # Adjust for your cloud provider
-parameters:
-  type: gp3
-  fsType: ext4
-reclaimPolicy: Delete
-volumeBindingMode: WaitForFirstConsumer
-allowVolumeExpansion: true
-EOF
-```
-
-#### Step 2: Configure PVC in values.yaml
-
-```yaml
-storage:
-  type: pvc
-  pvc:
-    size: 10Gi  # Adjust based on your needs (e.g., "50Gi", "100Gi")
-    storageClassName: "attestor-storage-class"  # Or use existing StorageClass
-    accessModes:
-      - ReadWriteOnce
-```
-
-**Note:** The chart will automatically create the PVC when `storage.type: pvc` is set.
 
 
 

@@ -123,7 +123,7 @@ chainService:
       max_backups: 10
       compress: true
     output_paths:
-      - /var/log/attestor/dev
+      - /var/log/attestor/prod
       - stdout
 
   mode: prod
