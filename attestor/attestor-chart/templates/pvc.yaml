@@ -1,4 +1,4 @@
-{{- if eq (default "emptyDir" .Values.storage.type) "pvc" }}
+{{- if eq (.Values.storage.type | default "emptyDir") "pvc" }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -9,7 +9,17 @@ spec:
   resources:
     requests:
       storage: {{ .Values.storage.pvc.size }}
-{{- if .Values.storage.pvc.storageClassName }}
-  storageClassName: {{ .Values.storage.pvc.storageClassName | quote }}
-{{- end }}
+
+  {{- /*
+      Resolve storageClassName with priority:
+      1. storage.storageClassName
+      2. storage.pvc.storageClassName (optional backward compatibility)
+      3. If none → omit field → Kubernetes uses default StorageClass
+  */}}
+
+  {{- $sc := .Values.storage.storageClassName | default .Values.storage.pvc.storageClassName }}
+  {{- if $sc }}
+  storageClassName: {{ $sc | quote }}
+  {{- end }}
+
 {{- end }}

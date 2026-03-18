@@ -199,14 +199,37 @@
 
     "secrets": {
       "type": "object",
-      "required": ["existingSecretName"],
       "additionalProperties": false,
       "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
         "existingSecretName": {
           "type": "string",
           "minLength": 1
+        },
+        "aws": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "region": { "type": "string", "minLength": 1 },
+            "secretName": { "type": "string", "minLength": 1 },
+            "accountId": { "type": "string", "minLength": 1 },
+            "roleName": { "type": "string", "minLength": 1 }
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "enabled": { "const": true } }, "required": ["enabled"] },
+          "then": { "required": ["aws"] }
+        },
+        {
+          "if": { "properties": { "enabled": { "const": false } } },
+          "then": { "required": ["existingSecretName"] }
+        }
+      ]
     },
     "serviceAccount": {
       "type": "object",

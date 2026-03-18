@@ -12,6 +12,10 @@ spec:
       labels:
         app: signingservice
     spec:
+{{- if .Values.secrets.enabled }}
+      serviceAccountName: {{ include "attestor.fullname" . }}
+{{- end }}
+{{- if not .Values.secrets.enabled }}
       initContainers:
         # -----------------------------
         # 1. Render signing config.yaml
@@ -80,6 +84,7 @@ spec:
           volumeMounts:
             - name: rendered-secrets
               mountPath: /work
+{{- end }}
 
       containers:
         - name: signingservice
@@ -92,6 +97,11 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
+{{- if .Values.secrets.enabled }}
+            - name: sign-secrets
+              mountPath: /configs
+              readOnly: true
+{{- else }}
             - name: rendered-config
               mountPath: /configs/config.yaml
               subPath: config.yaml
@@ -100,8 +110,17 @@ spec:
               mountPath: /configs/keys.yaml
               subPath: keys.yaml
               readOnly: true
+{{- end }}
 
       volumes:
+{{- if .Values.secrets.enabled }}
+        - name: sign-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "attestor.fullname" . }}-secrets
+{{- else }}
         - name: sign-config-template
           configMap:
             name: sign-config-template
@@ -111,3 +130,4 @@ spec:
 
         - name: rendered-secrets
           emptyDir: {}
+{{- end }}

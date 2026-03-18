@@ -12,6 +12,10 @@ spec:
       labels:
         app: chainservice
     spec:
+{{- if .Values.secrets.enabled }}
+      serviceAccountName: {{ include "attestor.fullname" . }}
+{{- end }}
+{{- if not .Values.secrets.enabled }}
       initContainers:
         - name: mtls-setup
           image: busybox:latest
@@ -31,6 +35,7 @@ spec:
               readOnly: true
             - name: mtls
               mountPath: /mtls-output
+{{- end }}
       containers:
         - name: chainservice
           image: "{{ default "venture23/verulink-attestor-chain" .Values.image.chain.repository }}:{{ default "latest" .Values.image.chain.tag }}"
@@ -69,9 +74,16 @@ spec:
             - name: chain-config
               mountPath: /configs/config.yaml
               subPath: config.yaml
+{{- if .Values.secrets.enabled }}
+    
+            - name: mtls-secret
+              mountPath: /configs/.mtls
+              readOnly: true
+{{- else }}
     
             - name: mtls
               mountPath: /configs/.mtls
+{{- end }}
   
       volumes:
         - name: chain-config
@@ -79,6 +91,13 @@ spec:
             name: chain-config
 
         - name: mtls-secret
+{{- if .Values.secrets.enabled }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "attestor.fullname" . }}-secrets
+{{- else }}
           secret:
             secretName: {{ .Values.secrets.existingSecretName }}
             items:
@@ -88,9 +107,12 @@ spec:
                 path: {{ .Values.chainService.name }}.crt
               - key: ATTESTOR_MTLS_KEY
                 path: {{ .Values.chainService.name }}.key
+{{- end }}
 
+{{- if not .Values.secrets.enabled }}
         - name: mtls
           emptyDir: {}
+{{- end }}
 
         - name: storage
 {{- if eq (default "emptyDir" .Values.storage.type) "pvc" }}

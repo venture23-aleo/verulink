@@ -30,7 +30,12 @@ data:
 {{ toYaml .Values.chainService.signing_service | nindent 6 }}
 
     collector_service:
-{{ toYaml .Values.chainService.collector_service | nindent 6 }}
+      uri: {{ .Values.chainService.collector_service.uri }}
+      collector_wait_dur: {{ .Values.chainService.collector_service.collector_wait_dur }}
+
+      ca_certificate: /configs/.mtls/ca.crt
+      attestor_certificate: /configs/.mtls/{{ .Values.chainService.name }}.crt
+      attestor_key: /configs/.mtls/{{ .Values.chainService.name }}.key
 
     metrics:
 {{ toYaml .Values.chainService.metrics | nindent 6 }}

@@ -149,7 +149,19 @@ chainService:
     job_name: prod-push-gateway-v200
     
 secrets:
-  existingSecretName: attestor-secret
+  enabled: true
+  aws:
+    secretName: prod/verulink/attestor/secrets
+    
+# Service Account Configuration for AWS Secret Manager access
+serviceAccount:
+  create: true
+  # Optional explicit ServiceAccount name. If empty, templates use the chart fullname.
+  name: ""
+  annotations:
+    # IAM role used by the ServiceAccount for AWS Secrets Manager access
+    # Example: arn:aws:iam::123456789012:role/verulink-attestor-role
+    eks.amazonaws.com/role-arn: "arn:aws:iam::<your_aws_account_id>:role/<your_iam_role_name>"
 
 storage:
   type: pvc  # Options: "emptyDir", "pvc", "hostPath"

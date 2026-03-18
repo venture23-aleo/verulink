@@ -1,5 +1,5 @@
 chainService:
-  name: <releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier> # dev_attestor_verulink_xyz
+  name: dev_attestor_verulink_v23 # dev_attestor_verulink_xyz
   version: "2.0.2"
   chains:
     aleo:
@@ -141,23 +141,34 @@ chainService:
     uri: <collector_service_url>
     collector_wait_dur: 1h
     ca_certificate: /configs/.mtls/ca.crt
-    attestor_certificate: /configs/.mtls/<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>.crt
-    attestor_key: /configs/.mtls/<releaseIdentifier>_attestor_verulink_<yourCompanyIdentifier>.key
+    attestor_certificate: /configs/.mtls/{{ .Values.chainService.name }}.crt
+    attestor_key: /configs/.mtls/{{ .Values.chainService.name }}.key
 
   metrics:
     host: <prometheus_pushgateway_url>
     job_name: dev-push-gateway
     
 secrets:
-  existingSecretName: attestor-secret
+  enabled: true  # set true to use AWS Secrets Manager; false for existing K8s secret
+  # existingSecretName: attestor-secret
+  aws:
+    region: us-west-2
+    secretName: dev/verulink/attestor/secrets
+
+# Service Account Configuration for AWS Secret Manager access
+serviceAccount:
+  create: true
+  name: ""
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::<your_aws_account_id>:role/<your_iam_role_name>"
 
 storage:
-  type: emptyDir  # Options: "emptyDir", "pvc", "hostPath"
+  type: pvc  # Options: "emptyDir", "pvc", "hostPath"
   # hostPathBase: /tmp/verulink-attestor
   
   # Create a new StorageClass (optional - set to true to create via Helm)
   createStorageClass: false
-  storageClassName: "attestor-storage-class-prod"  # Name of the storage class to create
+  storageClassName: ""  # Name of the storage class to create
   provisioner: "ebs.csi.aws.com"  # Storage provisioner (ebs.csi.aws.com for AWS EBS)
   reclaimPolicy: "Retain"  # Options: "Delete" or "Retain" - Retain for production data safety
   volumeBindingMode: "WaitForFirstConsumer"  # Options: "Immediate" or "WaitForFirstConsumer"
@@ -172,8 +183,12 @@ storage:
   
   # PVC configuration
   pvc:
-    size: 100Gi  # Storage size for production (e.g., "10Gi", "50Gi", "100Gi")
-    storageClassName: "attestor-storage-class-dev"  # Using existing storage class
+    size: 10Gi  # Storage size for production (e.g., "10Gi", "50Gi", "100Gi")
+    # storageClassName not set: use the default storage class if available.
+    # To determine your default StorageClass, run:
+    #   kubectl get storageclass
+    # The default class will have (default) in the NAME column.
+    # If your cluster has no default StorageClass, either set one, or specify `storageClassName` here.
     accessModes:  # Access modes
       - ReadWriteOnce
 
